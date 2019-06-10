@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Interactions
 
         [Tooltip("Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "cancelled on release.")]
+            + "canceled on release.")]
         public PressBehavior behavior;
 
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem.Interactions
         private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Trigger Behavior",
             "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "cancelled on release.");
+            + "canceled on release.");
     }
     #endif
 }

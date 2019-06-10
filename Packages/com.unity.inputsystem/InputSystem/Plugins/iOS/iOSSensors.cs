@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = 52)]
     public struct MotionDeviceState : IInputStateTypeInfo
@@ -15,9 +15,9 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
         [InputControl][FieldOffset(28)] public Vector3 acceleration;
         [InputControl][FieldOffset(40)] public Vector3 rotationRateUnbiased;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

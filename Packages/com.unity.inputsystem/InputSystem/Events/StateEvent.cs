@@ -52,9 +52,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static int GetEventSizeWithPayload<TState>()
@@ -86,6 +86,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#")]
         public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr,  Allocator allocator = Allocator.Temp)
         {
             if (device == null)

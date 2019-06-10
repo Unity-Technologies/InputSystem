@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.XInput;
 
 public class GamepadButtonState : MonoBehaviour
 {

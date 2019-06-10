@@ -1,0 +1,2 @@
+-analyzer:Microsoft.CodeQuality.Analyzers/analyzers/dotnet/cs/Microsoft.CodeQuality.Analyzers.dll -analyzer:Microsoft.CodeQuality.Analyzers/analyzers/dotnet/cs/Microsoft.CodeQuality.CSharp.Analyzers.dll
+-ruleset:InputSystem.ruleset

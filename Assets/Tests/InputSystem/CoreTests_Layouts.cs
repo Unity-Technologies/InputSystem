@@ -889,7 +889,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
-            Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
+            Throws.TypeOf<InvalidOperationException>().With.Property("Message").Contain("Duplicate control"));
     }
 
     [Test]
@@ -1108,9 +1108,9 @@ partial class CoreTests
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1136,9 +1136,9 @@ partial class CoreTests
     {
         [InputControl] public fixed float buffer[2];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1847,9 +1847,9 @@ partial class CoreTests
         [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -2098,9 +2098,9 @@ partial class CoreTests
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("BASE");
+            get { return new FourCC("BASE"); }
         }
     }
 
@@ -2111,9 +2111,9 @@ partial class CoreTests
 
     private struct DerivedInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("DERI");
+            get { return new FourCC("DERI"); }
         }
     }
 

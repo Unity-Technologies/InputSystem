@@ -8,7 +8,7 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-#if !UNITY_2019_2
+#if !UNITY_2019_2_OR_NEWER
 // The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
 #pragma warning disable 618
 #endif
@@ -36,13 +36,18 @@ namespace UnityEngine.InputSystem.LowLevel
             NativeInputSystem.QueueInputEvent((IntPtr)ptr);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public unsafe long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr)
         {
+            if (commandPtr == null)
+                throw new System.ArgumentNullException(nameof(commandPtr));
+
             return NativeInputSystem.IOCTL(deviceId, commandPtr->type, new IntPtr(commandPtr->payloadPtr), commandPtr->payloadSizeInBytes);
         }
 
         public unsafe InputUpdateDelegate onUpdate
         {
+            get => m_OnUpdate;
             set
             {
                 if (value != null)
@@ -83,11 +88,13 @@ namespace UnityEngine.InputSystem.LowLevel
                     };
                 else
                     NativeInputSystem.onUpdate = null;
+                m_OnUpdate = value;
             }
         }
 
         public Action<InputUpdateType> onBeforeUpdate
         {
+            get => m_OnBeforeUpdate;
             set
             {
                 // This is stupid but the enum prevents us from jacking the delegate in directly.
@@ -96,11 +103,13 @@ namespace UnityEngine.InputSystem.LowLevel
                     NativeInputSystem.onBeforeUpdate = updateType => value((InputUpdateType)updateType);
                 else
                     NativeInputSystem.onBeforeUpdate = null;
+                m_OnBeforeUpdate = value;
             }
         }
 
         public Func<InputUpdateType, bool> onShouldRunUpdate
         {
+            get => m_OnShouldRunUpdate;
             set
             {
                 // This is stupid but the enum prevents us from jacking the delegate in directly.
@@ -109,16 +118,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     NativeInputSystem.onShouldRunUpdate = updateType => value((InputUpdateType)updateType);
                 else
                     NativeInputSystem.onShouldRunUpdate = null;
+                m_OnShouldRunUpdate = value;
             }
         }
 
         public Action<int, string> onDeviceDiscovered
         {
+            get => NativeInputSystem.onDeviceDiscovered;
             set => NativeInputSystem.onDeviceDiscovered = value;
         }
 
         public Action onShutdown
         {
+            get => m_ShutdownMethod;
             set
             {
                 if (value == null)
@@ -144,6 +156,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public Action<bool> onFocusChanged
         {
+            get => m_FocusChangedMethod;
             set
             {
                 if (value == null)
@@ -158,7 +171,12 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public float pollingFrequency
         {
-            set => NativeInputSystem.SetPollingFrequency(value);
+            get => m_PollingFrequency;
+            set
+            {
+                m_PollingFrequency = value;
+                NativeInputSystem.SetPollingFrequency(value);
+            }
         }
 
         public double currentTime => NativeInputSystem.currentTime;
@@ -168,7 +186,10 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
 
         private Action m_ShutdownMethod;
-
+        private InputUpdateDelegate m_OnUpdate;
+        private Action<InputUpdateType> m_OnBeforeUpdate;
+        private Func<InputUpdateType, bool> m_OnShouldRunUpdate;
+        private float m_PollingFrequency = 60.0f;
         private void OnShutdown()
         {
             m_ShutdownMethod();
@@ -194,14 +215,43 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isInPlayMode => EditorApplication.isPlaying;
         public bool isPaused => EditorApplication.isPaused;
 
+        private Action<PlayModeStateChange> m_OnPlayModeChanged;
+        private Action m_OnProjectChanged;
+
+        private void OnPlayModeStateChanged(PlayModeStateChange value)
+        {
+            m_OnPlayModeChanged(value);
+        }
+
+        private void OnProjectChanged()
+        {
+            m_OnProjectChanged();
+        }
+
         public Action<PlayModeStateChange> onPlayModeChanged
         {
-            set => EditorApplication.playModeStateChanged += value;
+            get => m_OnPlayModeChanged;
+            set
+            {
+                if (value == null)
+                    EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+                else if (m_OnPlayModeChanged == null)
+                    EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+                m_OnPlayModeChanged = value;
+            }
         }
 
         public Action onProjectChange
         {
-            set => EditorApplication.projectChanged += value;
+            get => m_OnProjectChanged;
+            set
+            {
+                if (value == null)
+                    EditorApplication.projectChanged -= OnProjectChanged;
+                else if (m_OnProjectChanged == null)
+                    EditorApplication.projectChanged += OnProjectChanged;
+                m_OnProjectChanged = value;
+            }
         }
 
         #endif // UNITY_EDITOR

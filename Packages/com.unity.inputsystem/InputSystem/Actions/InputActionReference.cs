@@ -110,7 +110,12 @@ namespace UnityEngine.InputSystem
 
         public static implicit operator InputAction(InputActionReference reference)
         {
-            return reference.action;
+            return reference?.action;
+        }
+
+        public InputAction ToInputAction()
+        {
+            return action;
         }
 
         public static InputActionReference Create(InputAction action)

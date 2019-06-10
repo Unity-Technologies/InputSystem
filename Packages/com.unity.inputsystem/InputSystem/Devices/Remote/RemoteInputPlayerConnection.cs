@@ -71,6 +71,9 @@ namespace UnityEngine.InputSystem
 
         public IDisposable Subscribe(IObserver<InputRemoting.Message> observer)
         {
+            if (observer == null)
+                throw new System.ArgumentNullException(nameof(observer));
+
             var subscriber = new Subscriber {owner = this, observer = observer};
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 

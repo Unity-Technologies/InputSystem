@@ -21,15 +21,15 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public int character;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static unsafe TextEvent* From(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(eventPtr));
             if (!eventPtr.IsA<TextEvent>())
                 throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into TextEvent",
                     eventPtr.type));

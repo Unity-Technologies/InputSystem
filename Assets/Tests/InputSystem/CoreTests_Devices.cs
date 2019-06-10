@@ -10,7 +10,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.DualShock;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
@@ -1038,9 +1038,9 @@ partial class CoreTests
     {
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("PART");
+            get { return new FourCC("PART"); }
         }
     }
 
@@ -1049,9 +1049,9 @@ partial class CoreTests
         [InputControl(layout = "Axis", arraySize = 5)]
         public fixed float axis[5];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("FULL");
+            get { return new FourCC("FULL"); }
         }
     }
 
@@ -2337,16 +2337,16 @@ partial class CoreTests
         InputSystem.QueueDeltaStateEvent(device.allTouchControls[1],
             new TouchState
             {
-                phase = PointerPhase.Cancelled,
+                phase = PointerPhase.Canceled,
                 touchId = 5,
             });
         InputSystem.Update();
 
-        // For one frame, the ended and cancelled touches should stick around on the active touches list
+        // For one frame, the ended and canceled touches should stick around on the active touches list
 
         Assert.That(device.activeTouches.Count, Is.EqualTo(2));
         Assert.That(device.allTouchControls[0].phase.ReadValue(), Is.EqualTo(PointerPhase.Ended));
-        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Cancelled));
+        Assert.That(device.allTouchControls[1].phase.ReadValue(), Is.EqualTo(PointerPhase.Canceled));
 
         // But then they should disappear from the list.
 
@@ -3489,7 +3489,7 @@ partial class CoreTests
     }
 
     #if UNITY_2019_1_OR_NEWER
-    // NOTE: The focus logic will also implicitly take care of cancelling and restarting actions.
+    // NOTE: The focus logic will also implicitly take care of canceling and restarting actions.
     [Test]
     [Category("Devices")]
     public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
@@ -3595,13 +3595,13 @@ partial class CoreTests
                 return InputDeviceCommand.GenericFailure;
             });
 
-        keyboard.imeEnabled = true;
+        keyboard.SetIMEEnabled(true);
 
         Assert.That(receivedIMEEnabledValue, Is.True);
 
         receivedIMEEnabledValue = null;
 
-        keyboard.imeEnabled = false;
+        keyboard.SetIMEEnabled(false);
 
         Assert.That(receivedIMEEnabledValue, Is.False);
     }
@@ -3631,7 +3631,7 @@ partial class CoreTests
             });
 
         ////REVIEW: should this require IME to be enabled?
-        keyboard.imeCursorPosition = Vector2.one;
+        keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
     }
 }

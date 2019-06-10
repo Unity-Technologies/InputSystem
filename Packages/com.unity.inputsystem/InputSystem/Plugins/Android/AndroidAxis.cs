@@ -2,11 +2,12 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
     public enum AndroidAxis
     {
         X = 0,

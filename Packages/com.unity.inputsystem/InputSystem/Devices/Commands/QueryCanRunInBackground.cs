@@ -21,9 +21,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public bool canRunInBackground;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static QueryCanRunInBackground Create()

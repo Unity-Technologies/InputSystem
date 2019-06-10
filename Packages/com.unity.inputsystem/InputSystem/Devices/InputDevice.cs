@@ -3,7 +3,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.XR;
+using UnityEngine.InputSystem.XR;
 
 ////TODO: runtime remapping of usages on a per-device basis
 

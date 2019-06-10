@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem.Haptics;
 
-namespace UnityEngine.InputSystem.Plugins.Switch
+namespace UnityEngine.InputSystem.Switch
 {
     /// <summary>
     /// Extended dual motor gamepad that adds seperate controls for rumble frequency and amplitude.
@@ -10,16 +10,16 @@ namespace UnityEngine.InputSystem.Plugins.Switch
         /// <summary>
         /// Set rumble for all motors
         /// </summary>
-        void SetMotorSpeeds(float lowAmplitued, float lowFrequency, float highAmplitued, float highFrequency);
+        void SetMotorSpeeds(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency);
 
         /// <summary>
         /// Set rumble for left motor
         /// </summary>
-        void SetMotorSpeedLeft(float lowAmplitued, float lowFrequency, float highAmplitued, float highFrequency);
+        void SetMotorSpeedLeft(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency);
 
         /// <summary>
         /// Set rumble for right motor
         /// </summary>
-        void SetMotorSpeedRight(float lowAmplitued, float lowFrequency, float highAmplitued, float highFrequency);
+        void SetMotorSpeedRight(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency);
     }
 }

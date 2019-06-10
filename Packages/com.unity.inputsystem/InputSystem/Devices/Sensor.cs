@@ -19,9 +19,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -32,9 +32,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -45,9 +45,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -58,9 +58,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -71,9 +71,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -122,6 +122,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             acceleration = builder.GetControl<Vector3Control>("acceleration");
             base.FinishSetup(builder);
         }
@@ -149,6 +152,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
             base.FinishSetup(builder);
         }
@@ -161,6 +167,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             gravity = builder.GetControl<Vector3Control>("gravity");
             base.FinishSetup(builder);
         }
@@ -205,6 +214,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             attitude = builder.GetControl<QuaternionControl>("attitude");
             base.FinishSetup(builder);
         }
@@ -232,6 +244,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             acceleration = builder.GetControl<Vector3Control>("acceleration");
             base.FinishSetup(builder);
         }
@@ -265,6 +280,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             magneticField = builder.GetControl<Vector3Control>("magneticField");
             base.FinishSetup(builder);
         }
@@ -295,6 +313,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             lightLevel = builder.GetControl<AxisControl>("lightLevel");
             base.FinishSetup(builder);
         }
@@ -325,6 +346,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
             base.FinishSetup(builder);
         }
@@ -355,6 +379,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             distance = builder.GetControl<AxisControl>("distance");
             base.FinishSetup(builder);
         }
@@ -385,6 +412,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
             base.FinishSetup(builder);
         }
@@ -415,6 +445,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
             base.FinishSetup(builder);
         }
@@ -445,6 +478,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             stepCounter = builder.GetControl<IntegerControl>("stepCounter");
             base.FinishSetup(builder);
         }

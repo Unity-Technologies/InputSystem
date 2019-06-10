@@ -1,10 +1,10 @@
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // Xbox one controller on OSX. State layout can be found here:
     // https://github.com/360Controller/360Controller/blob/master/360Controller/ControlStruct.h
@@ -88,9 +88,9 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
         [FieldOffset(10)] public short rightStickX;
         [FieldOffset(12)] public short rightStickY;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XInputControllerOSXState WithButton(Button button)
@@ -169,9 +169,9 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
         [FieldOffset(5)] public ushort rightStickX;
         [FieldOffset(7)] public ushort rightStickY;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XInputControllerWirelessOSXState WithButton(Button button)
@@ -195,7 +195,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput.LowLevel
         };
     }
 }
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     public class XInputControllerOSX : XInputController

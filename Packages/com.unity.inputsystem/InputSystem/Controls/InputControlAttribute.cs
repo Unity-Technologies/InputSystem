@@ -30,17 +30,19 @@ namespace UnityEngine.InputSystem.Layouts
     /// </remarks>
     /// <seealso cref="InputControlLayout"/>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-    public class InputControlAttribute : PropertyAttribute
+    public sealed class InputControlAttribute : PropertyAttribute
     {
         public string layout { get; set; }
         public string variants { get; set; }
         public string name { get; set; }
         public string format { get; set; }
         public string usage { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] usages { get; set; }
         public string parameters { get; set; }
         public string processors { get; set; }
         public string alias { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] aliases { get; set; }
         public string useStateFrom { get; set; }
         public uint bit { get; set; } = InputStateBlock.InvalidOffset;

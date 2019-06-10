@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -68,7 +69,7 @@ namespace UnityEngine.InputSystem.Layouts
         public struct ControlItem
         {
             [Flags]
-            public enum Flags
+            private enum Flags
             {
                 IsModifyingChildControlByPath = 1 << 0,
                 IsNoisy = 1 << 1,
@@ -116,7 +117,7 @@ namespace UnityEngine.InputSystem.Layouts
             public uint bit;
             public uint sizeInBits;
             public FourCC format;
-            public Flags flags;
+            private Flags flags;
             public int arraySize;
 
             /// <summary>
@@ -421,6 +422,12 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder WithSynthetic(bool value)
+                {
+                    controls[index].isSynthetic = value;
+                    return this;
+                }
+
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     controls[index].sizeInBits = sizeInBits;
@@ -583,8 +590,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Get state type code from state struct.
                 if (typeof(IInputStateTypeInfo).IsAssignableFrom(layoutAttribute.stateType))
                 {
-                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType))
-                        .GetFormat();
+                    stateFormat = ((IInputStateTypeInfo)Activator.CreateInstance(layoutAttribute.stateType)).format;
                 }
             }
             else
@@ -756,7 +762,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null, layoutName);
+                var controlLayout = CreateControlItemFromMember(member, null);
                 ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                 controlItems.Add(controlLayout);
             }
@@ -764,14 +770,14 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute, layoutName);
+                    var controlLayout = CreateControlItemFromMember(member, attribute);
                     ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
                     controlItems.Add(controlLayout);
                 }
             }
         }
 
-        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute, string layoutName)
+        private static ControlItem CreateControlItemFromMember(MemberInfo member, InputControlAttribute attribute)
         {
             ////REVIEW: make sure that the value type of the field and the value type of the control match?
 
@@ -943,6 +949,9 @@ namespace UnityEngine.InputSystem.Layouts
         /// </remarks>
         public void MergeLayout(InputControlLayout other)
         {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
             if (m_Variants.IsEmpty())
@@ -1173,7 +1182,7 @@ namespace UnityEngine.InputSystem.Layouts
             foreach (var existing in controlLayouts)
                 if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
                     existing.variants == controlItem.variants)
-                    throw new Exception($"Duplicate control '{name}' in layout '{layoutName}'");
+                    throw new InvalidOperationException($"Duplicate control '{name}' in layout '{layoutName}'");
         }
 
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,
@@ -1244,7 +1253,7 @@ namespace UnityEngine.InputSystem.Layouts
                     }
                     else if (!typeof(InputControl).IsAssignableFrom(type))
                     {
-                        throw new Exception($"'{this.type}' used by layout '{name}' is not an InputControl");
+                        throw new InvalidOperationException($"'{this.type}' used by layout '{name}' is not an InputControl");
                     }
                 }
                 else if (string.IsNullOrEmpty(extend))
@@ -1278,7 +1287,7 @@ namespace UnityEngine.InputSystem.Layouts
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new Exception($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
                 }
 
                 // Add common usages.
@@ -1292,7 +1301,7 @@ namespace UnityEngine.InputSystem.Layouts
                     foreach (var control in controls)
                     {
                         if (string.IsNullOrEmpty(control.name))
-                            throw new Exception($"Control with no name in layout '{name}");
+                            throw new InvalidOperationException($"Control with no name in layout '{name}");
                         var controlLayout = control.ToLayout();
                         ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
                         controlLayouts.Add(controlLayout);
@@ -1559,9 +1568,9 @@ namespace UnityEngine.InputSystem.Layouts
                 {
                     var layoutObject = builder.method.Invoke(builder.instance, null);
                     if (layoutObject == null)
-                        throw new Exception($"Layout builder '{name}' returned null when invoked");
+                        throw new InvalidOperationException($"Layout builder '{name}' returned null when invoked");
                     if (!(layoutObject is InputControlLayout layout))
-                        throw new Exception(
+                        throw new InvalidOperationException(
                             $"Layout builder '{name}' returned '{layoutObject}' which is not an InputControlLayout");
                     return layout;
                 }
@@ -1710,13 +1719,34 @@ namespace UnityEngine.InputSystem.Layouts
             public object instance;
         }
 
-        internal class LayoutNotFoundException : Exception
+        public class LayoutNotFoundException : Exception
         {
             public string layout { get; }
-            public LayoutNotFoundException(string name, string message = null)
-                : base(message ?? $"Cannot find control layout '{name}'")
+
+            public LayoutNotFoundException()
+            {
+            }
+
+            public LayoutNotFoundException(string name, string message)
+                : base(message)
             {
                 layout = name;
+            }
+
+            public LayoutNotFoundException(string name)
+                : base($"Cannot find control layout '{name}'")
+            {
+                layout = name;
+            }
+
+            public LayoutNotFoundException(string message, Exception innerException) :
+                base(message, innerException)
+            {
+            }
+
+            protected LayoutNotFoundException(SerializationInfo info,
+                                              StreamingContext context) : base(info, context)
+            {
             }
         }
 

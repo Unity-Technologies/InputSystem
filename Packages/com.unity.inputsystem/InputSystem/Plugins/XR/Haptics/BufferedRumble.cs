@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     public struct BufferedRumble
     {
@@ -7,6 +7,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
 
         public BufferedRumble(InputDevice device)
         {
+            if (device == null)
+                throw new System.ArgumentNullException(nameof(device));
+
             this.device = device;
 
             var command = GetHapticCapabilitiesCommand.Create();
@@ -14,9 +17,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
             capabilities = command.capabilities;
         }
 
-        public void EnqueueRumble(int channel, byte[] samples)
+        public void EnqueueRumble(byte[] samples)
         {
-            var command = SendBufferedHapticCommand.Create(channel, samples);
+            var command = SendBufferedHapticCommand.Create(samples);
             device.ExecuteCommand(ref command);
         }
     }

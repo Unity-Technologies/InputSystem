@@ -13,9 +13,9 @@ public struct MyDeviceState : IInputStateTypeInfo
     [InputControl(layout = "Axis")]
     public float axis1;
 
-    public FourCC GetFormat()
+    public FourCC format
     {
-        return new FourCC('M', 'Y', 'D', 'V');
+        get { return new FourCC('M', 'Y', 'D', 'V'); }
     }
 }
 

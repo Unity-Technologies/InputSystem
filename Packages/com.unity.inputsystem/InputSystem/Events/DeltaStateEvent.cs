@@ -37,9 +37,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static DeltaStateEvent* From(InputEventPtr ptr)

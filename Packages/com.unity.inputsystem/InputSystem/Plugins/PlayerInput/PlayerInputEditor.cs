@@ -7,14 +7,14 @@ using System.Text;
 using UnityEditor;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.UI.Editor;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.UI.Editor;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.InputSystem.Plugins.PlayerInput.Editor
+namespace UnityEngine.InputSystem.PlayerInput.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.

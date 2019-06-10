@@ -7,6 +7,6 @@ namespace UnityEngine.InputSystem.LowLevel
     // from an instance of the struct without having to go through vtable dispatches.
     public interface IInputEventTypeInfo
     {
-        FourCC GetTypeStatic();
+        FourCC typeStatic { get; }
     }
 }

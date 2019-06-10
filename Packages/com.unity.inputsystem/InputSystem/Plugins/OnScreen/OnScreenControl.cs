@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make this survive domain reloads
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// Base class for on-screen controls.
@@ -163,8 +163,8 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
 
             ////TODO: only cast once
             if (!(m_Control is InputControl<TValue> control))
-                throw new Exception(
-                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}");
+                throw new ArgumentException(
+                    $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);

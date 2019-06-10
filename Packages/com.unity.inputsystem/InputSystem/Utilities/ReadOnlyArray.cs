@@ -82,6 +82,7 @@ namespace UnityEngine.InputSystem.Utilities
             return GetEnumerator();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {
             return new ReadOnlyArray<TValue>(array);
@@ -103,7 +104,7 @@ namespace UnityEngine.InputSystem.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 // We allow array to be null as we are patching up ReadOnlyArrays in a separate
                 // path in several places.
                 if (m_Array == null)
@@ -148,7 +149,7 @@ namespace UnityEngine.InputSystem.Utilities
                 get
                 {
                     if (m_Index == m_IndexEnd)
-                        throw new IndexOutOfRangeException();
+                        throw new InvalidOperationException("Iterated beyond end");
                     return m_Array[m_Index];
                 }
             }
