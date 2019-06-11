@@ -57,6 +57,8 @@ internal class AndroidTests : InputTestFixture
         Assert.That(device, Is.TypeOf<AndroidGamepad>());
         var controller = (AndroidGamepad)device;
 
+        var leftStick = new Vector2(0.789f, 0.987f);
+        var rightStick = new Vector2(0.654f, 0.321f);
         // Note: Regarding triggers, android sends different events depending to which device the controller is connected.
         //       For ex., when NVIDIA shield controller when connected to Shield Console, triggers generate events:
         //            Left Trigger -> AndroidAxis.Brake, AndroidAxis.LtTrigger
@@ -71,10 +73,10 @@ internal class AndroidTests : InputTestFixture
             new AndroidGameControllerState()
                 .WithAxis(AndroidAxis.Brake, 0.123f)
                 .WithAxis(AndroidAxis.Gas, 0.456f)
-                .WithAxis(AndroidAxis.X, 0.789f)
-                .WithAxis(AndroidAxis.Y, 0.987f)
-                .WithAxis(AndroidAxis.Z, 0.654f)
-                .WithAxis(AndroidAxis.Rz, 0.321f));
+                .WithAxis(AndroidAxis.X, leftStick.x)
+                .WithAxis(AndroidAxis.Y, leftStick.y)
+                .WithAxis(AndroidAxis.Z, rightStick.x)
+                .WithAxis(AndroidAxis.Rz, rightStick.y));
 
         InputSystem.Update();
 
@@ -82,8 +84,18 @@ internal class AndroidTests : InputTestFixture
         var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
 
         // Y is upside down on Android.
-        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(0.789f, -0.987f))));
-        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.654f, -0.321f))));
+        Assert.That(controller.leftStick.ReadValue(), Is.EqualTo(leftStickDeadzone.Process(new Vector2(leftStick.x, -leftStick.y))));
+        Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(rightStick.x, -rightStick.y))));
+
+        Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(leftStick.x));
+        Assert.That(controller.leftStick.up.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.leftStick.down.ReadValue(), Is.EqualTo(leftStick.y));
+
+        Assert.That(controller.rightStick.left.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.rightStick.right.ReadValue(), Is.EqualTo(rightStick.x));
+        Assert.That(controller.rightStick.up.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.rightStick.down.ReadValue(), Is.EqualTo(rightStick.y));
 
         Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
@@ -98,6 +110,26 @@ internal class AndroidTests : InputTestFixture
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonR1), controller.rightShoulder);
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonStart), controller.startButton);
         AssertButtonPress(controller, new AndroidGameControllerState().WithButton(AndroidKeyCode.ButtonSelect), controller.selectButton);
+
+        // Move sticks to opposite directions
+        InputSystem.QueueStateEvent(controller,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.X, -leftStick.x)
+                .WithAxis(AndroidAxis.Y, -leftStick.y)
+                .WithAxis(AndroidAxis.Z, -rightStick.x)
+                .WithAxis(AndroidAxis.Rz, -rightStick.y));
+
+        InputSystem.Update();
+
+        Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(leftStick.x));
+        Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.leftStick.up.ReadValue(), Is.EqualTo(leftStick.y));
+        Assert.That(controller.leftStick.down.ReadValue(), Is.EqualTo(0.0f));
+
+        Assert.That(controller.rightStick.left.ReadValue(), Is.EqualTo(rightStick.x));
+        Assert.That(controller.rightStick.right.ReadValue(), Is.EqualTo(0.0f));
+        Assert.That(controller.rightStick.up.ReadValue(), Is.EqualTo(rightStick.y));
+        Assert.That(controller.rightStick.down.ReadValue(), Is.EqualTo(0.0f));
     }
 
     [Test]
