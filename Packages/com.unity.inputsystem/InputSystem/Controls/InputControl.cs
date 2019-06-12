@@ -773,13 +773,60 @@ namespace UnityEngine.InputSystem
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
-        public unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
 
-        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
+        // (ASG) begin
+        /// <summary>
+        /// These pointers now first check for an override pointer, before deferring to the default pointers
+        /// from the input system.
+        /// </summary>
+        protected internal unsafe void* currentStatePtr
+        {
+            get
+            {
+                if (device.currentStatePtrOverride != (void*) 0)
+                {
+                    return device.currentStatePtrOverride;
+                }
+                return InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
+            }
+        }
 
-        protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
+        protected internal unsafe void* previousFrameStatePtr
+        {
+            get
+            {
+                if (device.previousFrameStatePtrOverride != (void*) 0)
+                {
+                    return device.previousFrameStatePtrOverride;
+                }
+                return InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
+            }
+        }
 
-        protected internal unsafe void* noiseMaskPtr => InputStateBuffers.s_NoiseMaskBuffer;
+        protected internal unsafe void* defaultStatePtr
+        {
+            get
+            {
+                if (device.defaultStatePtrOverride != (void*) 0)
+                {
+                    return device.defaultStatePtrOverride;
+                }
+                return InputStateBuffers.s_DefaultStateBuffer;
+            }
+        }
+
+        protected internal unsafe void* noiseMaskPtr
+        {
+            get
+            {
+                if (device.noiseMaskPtrOverride != (void*) 0)
+                {
+                    return device.noiseMaskPtrOverride;
+                }
+                return InputStateBuffers.s_NoiseMaskBuffer;
+            }
+        }
+        // (ASG) end
 
         /// <summary>
         /// The offset of this control's state relative to its device root.

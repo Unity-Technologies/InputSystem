@@ -158,6 +158,16 @@ namespace UnityEngine.InputSystem
         internal const int kLocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
+        // (ASG) begin
+        /// NOTE(john): We have modified the Unity input system to allow manually specifying these pointers, rather
+        /// that the default behavior which gets them from the current state of the global <see cref="InputSystem"/>
+        /// See the equivalent modification on <see cref="InputControl.currentStatePtr"/>.
+        public unsafe void* currentStatePtrOverride = (void*) 0x0;
+        public unsafe void* previousFrameStatePtrOverride = (void*) 0x0;
+        public unsafe void* defaultStatePtrOverride = (void*) 0x0;
+        public unsafe void* noiseMaskPtrOverride = (void*) 0x0;
+        // (ASG) end
+
         /// <summary>
         /// Metadata describing the device (product name etc.).
         /// </summary>
@@ -551,11 +561,11 @@ namespace UnityEngine.InputSystem
         /// Timestamp of last event we received.
         /// </summary>
         /// <seealso cref="InputEvent.time"/>
-        internal double m_LastUpdateTimeInternal;
+        public double m_LastUpdateTimeInternal;
 
         // Update count corresponding to the current front buffers that are active on the device.
         // We use this to know when to flip buffers.
-        internal uint m_CurrentUpdateStepCount;
+        public uint m_CurrentUpdateStepCount;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.
@@ -594,7 +604,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void AddDeviceUsage(InternedString usage)
+        public void AddDeviceUsage(InternedString usage)
         {
             var controlUsageCount = m_UsageToControl.LengthSafe();
             var totalUsageCount = controlUsageCount + m_UsageCount;
@@ -604,7 +614,7 @@ namespace UnityEngine.InputSystem
             ++m_UsageCount;
         }
 
-        internal void RemoveDeviceUsage(InternedString usage)
+        public void RemoveDeviceUsage(InternedString usage)
         {
             var controlUsageCount = m_UsageToControl.LengthSafe();
             var totalUsageCount = controlUsageCount + m_UsageCount;
@@ -621,7 +631,7 @@ namespace UnityEngine.InputSystem
                 m_UsageStartIndex = default;
         }
 
-        internal void ClearDeviceUsages()
+        public void ClearDeviceUsages()
         {
             for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
                 m_UsagesForEachControl[i] = default;
