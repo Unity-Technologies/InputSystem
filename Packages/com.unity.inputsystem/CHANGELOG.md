@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Validate all parameters on public APIs.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
+- Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 
 #### Actions
 
