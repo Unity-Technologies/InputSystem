@@ -13,6 +13,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Validate all parameters on public APIs.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
+- Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
+- Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 
 #### Actions
 
@@ -21,6 +23,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
+- Added support for DualShock 3 gamepads on desktops.
+- Added support for Nintendo Switch Pro Controllers on desktops.
 
 ### Changed
 
