@@ -1,3 +1,4 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -227,3 +228,4 @@ namespace UnityEngine.InputSystem.UI
         }
     }
 }
+#endif
