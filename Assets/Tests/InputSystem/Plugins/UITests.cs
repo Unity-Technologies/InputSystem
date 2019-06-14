@@ -582,11 +582,9 @@ internal class UITests : InputTestFixture
         }
     }
 
-    ////FIXME: this is suffering from InputTestFixture's problem with running normal frame updates
     [UnityTest]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public IEnumerator TODO_TrackedDeviceActions_CanDriveUI()
+    public IEnumerator TrackedDeviceActions_CanDriveUI()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -601,7 +599,11 @@ internal class UITests : InputTestFixture
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
         // Create actions.
-        var map = new InputActionMap();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // Create actions.
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
         var trackedPositionAction = map.AddAction("position");
         var trackedOrientationAction = map.AddAction("orientation");
         var trackedSelectAction = map.AddAction("selection");
@@ -612,7 +614,9 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.AddTrackedDevice(new InputActionProperty(trackedPositionAction), new InputActionProperty(trackedOrientationAction), new InputActionProperty(trackedSelectAction));
+        uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        uiModule.trackedDeviceSelect = InputActionReference.Create(trackedSelectAction);
 
         // Enable the whole thing.
         map.Enable();

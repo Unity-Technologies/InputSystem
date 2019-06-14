@@ -83,6 +83,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         public int pointerId { get; private set; }
+        
+        public InputDevice device { get; private set; }
 
         public bool select
         {
@@ -136,9 +138,10 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        public TrackedDeviceModel(int pointerId)
+        public TrackedDeviceModel(int pointerId, InputDevice device)
         {
             this.pointerId = pointerId;
+            this.device = device;
 
             m_Orientation = Quaternion.identity;
             m_Position = Vector3.zero;

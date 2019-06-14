@@ -43,9 +43,27 @@ namespace UnityEngine.InputSystem.UI.Editor
             "ScrollWheel",
             "Move",
             "Submit",
-            "Cancel"
+            "Cancel",
+            "TrackedDevicePosition",
+            "TrackedDeviceOrientation",
+            "TrackedDeviceSelect",
         };
 
+        string MakeNiceUIName(string name)
+        {
+            string result = "";
+
+            for (var i = 0; i < name.Length; i++)
+            {
+                char ch = name[i];
+                if (char.IsUpper(ch) && i > 0)
+                    result += ' ';
+                result += ch;
+            }
+
+            return result;
+        }
+        
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty m_ActionsAsset;
         private InputActionReference[] m_AvailableActionsInAsset;
@@ -78,6 +96,9 @@ namespace UnityEngine.InputSystem.UI.Editor
                 module.move = GetActionReferenceFromAssets(assets, module.move?.action?.name, "Navigate", "Move");
                 module.submit = GetActionReferenceFromAssets(assets, module.submit?.action?.name, "Submit");
                 module.cancel = GetActionReferenceFromAssets(assets, module.cancel?.action?.name, "Cancel", "Esc", "Escape");
+                module.trackedDevicePosition = GetActionReferenceFromAssets(assets, module.trackedDevicePosition?.action?.name, "TrackedDevicePosition", "Position");
+                module.trackedDeviceOrientation = GetActionReferenceFromAssets(assets, module.trackedDeviceOrientation?.action?.name, "TrackedDeviceOrientation", "Orientation");
+                module.trackedDeviceSelect = GetActionReferenceFromAssets(assets, module.trackedDeviceSelect?.action?.name, "TrackedDeviceSelect", "Select");
             }
         }
 
@@ -110,7 +131,7 @@ namespace UnityEngine.InputSystem.UI.Editor
                 {
                     int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
                     EditorGUI.BeginChangeCheck();
-                    index = EditorGUILayout.Popup(s_ActionNames[i], index, m_AvailableActionsInAssetNames);
+                    index = EditorGUILayout.Popup(MakeNiceUIName(s_ActionNames[i]), index, m_AvailableActionsInAssetNames);
 
                     if (EditorGUI.EndChangeCheck())
                         m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
