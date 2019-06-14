@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.UI
         }
 
         public int pointerId { get; private set; }
-        
+
         public InputDevice device { get; private set; }
 
         public bool select

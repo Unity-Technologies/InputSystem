@@ -221,26 +221,26 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
 
-        
+
         public InputActionReference trackedDeviceOrientation
         {
             get => m_TrackedDeviceOrientationAction;
             set => SwapAction(ref m_TrackedDeviceOrientationAction, value, m_ActionsHooked, OnAction);
         }
-        
+
         public InputActionReference trackedDevicePosition
         {
             get => m_TrackedDevicePositionAction;
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, OnAction);
-        }        
+        }
 
         public InputActionReference trackedDeviceSelect
         {
             get => m_TrackedDeviceSelectAction;
             set => SwapAction(ref m_TrackedDeviceSelectAction, value, m_ActionsHooked, OnAction);
-        }        
+        }
 
-        
+
         protected override void Awake()
         {
             base.Awake();
@@ -327,7 +327,7 @@ namespace UnityEngine.InputSystem.UI
                 (m_ScrollWheelAction?.action?.enabled ?? true) &&
                 (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
                 (m_TrackedDevicePositionAction?.action?.enabled ?? true) &&
-                (m_TrackedDeviceSelectAction?.action?.enabled ?? true) ;
+                (m_TrackedDeviceSelectAction?.action?.enabled ?? true);
         }
 
         bool m_OwnsEnabledState;
@@ -385,7 +385,7 @@ namespace UnityEngine.InputSystem.UI
                 m_ScrollWheelAction?.action?.Disable();
                 m_TrackedDeviceOrientationAction?.action?.Disable();
                 m_TrackedDevicePositionAction?.action?.Disable();
-                m_TrackedDeviceSelectAction?.action?.Disable();                
+                m_TrackedDeviceSelectAction?.action?.Disable();
             }
 
             for (var i = 0; i < m_Touches.Count; i++)
@@ -410,6 +410,7 @@ namespace UnityEngine.InputSystem.UI
             trackedDeviceStates.Add(new TrackedDeviceModel(m_RollingPointerId++, context.control.device));
             return trackedDeviceStates.Count - 1;
         }
+
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
@@ -514,7 +515,7 @@ namespace UnityEngine.InputSystem.UI
                 mouseState.OnFrameFinished();
                 foreach (var trackedDeviceState in trackedDeviceStates)
                     trackedDeviceState.OnFrameFinished();
-                
+
                 for (var i = 0; i < m_Touches.Count; i++)
                     m_Touches[i].state.OnFrameFinished();
             }
@@ -529,7 +530,7 @@ namespace UnityEngine.InputSystem.UI
                     ProcessTrackedDevice(ref state);
                     trackedDeviceStates[i] = state;
                 }
-                
+
                 for (var i = 0; i < m_Touches.Count; i++)
                 {
                     var responder = m_Touches[i];
@@ -610,21 +611,21 @@ namespace UnityEngine.InputSystem.UI
                 trackedDeviceOrientationAction.performed += m_OnActionDelegate;
                 trackedDeviceOrientationAction.canceled += m_OnActionDelegate;
             }
-            
+
             var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
             if (trackedDeviceOrientationAction != null)
             {
                 trackedDevicePositionAction.performed += m_OnActionDelegate;
                 trackedDevicePositionAction.canceled += m_OnActionDelegate;
             }
-            
+
             var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
             if (trackedDeviceSelectAction != null)
             {
                 trackedDeviceSelectAction.performed += m_OnActionDelegate;
                 trackedDeviceSelectAction.canceled += m_OnActionDelegate;
-            }            
-            
+            }
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
@@ -695,27 +696,27 @@ namespace UnityEngine.InputSystem.UI
                 scrollAction.performed -= m_OnActionDelegate;
                 scrollAction.canceled -= m_OnActionDelegate;
             }
-            
+
             var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
             if (trackedDeviceOrientationAction != null)
             {
                 trackedDeviceOrientationAction.performed -= m_OnActionDelegate;
                 trackedDeviceOrientationAction.canceled -= m_OnActionDelegate;
             }
-            
+
             var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
             if (trackedDeviceOrientationAction != null)
             {
                 trackedDevicePositionAction.performed -= m_OnActionDelegate;
                 trackedDevicePositionAction.canceled -= m_OnActionDelegate;
             }
-            
+
             var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
             if (trackedDeviceSelectAction != null)
             {
                 trackedDeviceSelectAction.performed -= m_OnActionDelegate;
                 trackedDeviceSelectAction.canceled -= m_OnActionDelegate;
-            }              
+            }
 
             for (var i = 0; i < m_Touches.Count; i++)
             {

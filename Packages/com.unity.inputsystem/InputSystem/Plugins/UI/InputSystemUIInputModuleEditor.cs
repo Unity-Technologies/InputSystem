@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.UI.Editor
 
             return result;
         }
-        
+
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty m_ActionsAsset;
         private InputActionReference[] m_AvailableActionsInAsset;
