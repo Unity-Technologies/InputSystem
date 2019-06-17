@@ -31,6 +31,7 @@ platforms:
     flavor: m1.mac
     runtime: StandaloneOSX   
     scripting-backend: Il2Cpp 
+    installscript: .yamato/install-il2cpp-player.sh
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
@@ -44,6 +45,7 @@ platforms:
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - {% if platform.installscript %} platform.installscript {% endif %} 
     - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
   triggers:
     branches:
