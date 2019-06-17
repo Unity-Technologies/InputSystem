@@ -605,8 +605,11 @@ internal class UITests : InputTestFixture
         var map = new InputActionMap("map");
         asset.AddActionMap(map);
         var trackedPositionAction = map.AddAction("position");
+        trackedPositionAction.passThrough = true;
         var trackedOrientationAction = map.AddAction("orientation");
+        trackedOrientationAction.passThrough = true;
         var trackedSelectAction = map.AddAction("selection");
+        trackedSelectAction.passThrough = true;
 
         trackedPositionAction.AddBinding(trackedDevice.position);
         trackedOrientationAction.AddBinding(trackedDevice.orientation);
