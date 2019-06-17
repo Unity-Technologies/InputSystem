@@ -716,6 +716,165 @@ internal class UITests : InputTestFixture
         }
     }
 
+    [UnityTest]
+    [Category("Actions")]
+    // Check that we can track multiple tracked devices separately, with different pointer ids.
+    public IEnumerator TrackedDeviceActions_CanDriveUIMultipleTrackers()
+    {
+        // Create device.
+        InputSystem.RegisterLayout<TestTrackedDevice>();
+        var trackedDevice = InputSystem.AddDevice<TestTrackedDevice>();
+        var trackedDevice2 = InputSystem.AddDevice<TestTrackedDevice>();
+
+        var objects = CreateScene();
+        var uiModule = objects.uiModule;
+        var eventSystem = objects.eventSystem;
+        var leftChildGameObject = objects.leftGameObject;
+        var leftChildReceiver = leftChildGameObject != null ? leftChildGameObject.GetComponent<UICallbackReceiver>() : null;
+        var rightChildGameObject = objects.rightGameObject;
+        var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
+
+        // Create actions.
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // Create actions.
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position");
+        trackedPositionAction.passThrough = true;
+        var trackedOrientationAction = map.AddAction("orientation");
+        trackedOrientationAction.passThrough = true;
+        var trackedSelectAction = map.AddAction("selection");
+        trackedSelectAction.passThrough = true;
+
+        trackedPositionAction.AddBinding("*/position");
+        trackedOrientationAction.AddBinding("*/orientation");
+        trackedSelectAction.AddBinding("*/select");
+
+        // Wire up actions.
+        // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
+        uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        uiModule.trackedDeviceSelect = InputActionReference.Create(trackedSelectAction);
+
+        // Enable the whole thing.
+        map.Enable();
+
+        // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
+        yield return null;
+
+        using (StateEvent.From(trackedDevice, out var stateEvent))
+        using (StateEvent.From(trackedDevice2, out var stateEvent2))
+        {
+            // Reset to Defaults
+            trackedDevice.position.WriteValueIntoEvent(Vector3.zero, stateEvent);
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+
+            trackedDevice2.position.WriteValueIntoEvent(Vector3.zero, stateEvent2);
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
+            trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+
+            leftChildReceiver.Reset();
+            rightChildReceiver.Reset();
+
+            // Move over left child.
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+
+            // Check basic down/up
+            trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            Assert.That((leftChildReceiver.events[1].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
+            Assert.That((leftChildReceiver.events[2].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
+            Assert.That((leftChildReceiver.events[3].data as PointerEventData).pointerId, Is.EqualTo(1));
+
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+
+            trackedDevice2.select.WriteValueIntoEvent(1f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+
+            // Move to new location on right child
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            rightChildReceiver.Reset();
+
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            rightChildReceiver.Reset();
+        }
+    }
+
     private struct TestTouchLayout : IInputStateTypeInfo
     {
         [InputControl(name = "touch", layout = "Touch")]
