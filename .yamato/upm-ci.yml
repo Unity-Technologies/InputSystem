@@ -16,7 +16,7 @@ platforms:
     flavor: m1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
-    installscript: .yamato/install-il2cpp-player.ps1    
+    installscript: .yamato\install-il2cpp-player.ps1    
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
