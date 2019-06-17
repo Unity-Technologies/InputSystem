@@ -402,6 +402,7 @@ namespace UnityEngine.InputSystem.UI
 
         int GetTrackedDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
+            Debug.Assert(context.action.passThrough, $"XR actions should have the passThrough flag enabled, so the UI can properly distinguish multiple tracked devices. Please set passThrough on the '{context.action.name}' action.");
             for (var i = 0; i < trackedDeviceStates.Count; i++)
             {
                 if (trackedDeviceStates[i].device == context.control.device)
