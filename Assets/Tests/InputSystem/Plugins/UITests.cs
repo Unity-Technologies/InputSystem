@@ -776,7 +776,7 @@ internal class UITests : InputTestFixture
             InputSystem.QueueEvent(stateEvent);
 
             trackedDevice2.position.WriteValueIntoEvent(Vector3.zero, stateEvent2);
-            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent2);
             trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
             InputSystem.QueueEvent(stateEvent2);
             InputSystem.Update();
