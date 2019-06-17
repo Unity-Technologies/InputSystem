@@ -182,6 +182,7 @@ namespace UnityEngine.InputSystem.UI
             eventData.pointerPress = m_InternalData.pressedGameObject;
             eventData.rawPointerPress = m_InternalData.pressedGameObjectRaw;
             eventData.pointerDrag = m_InternalData.draggedGameObject;
+            eventData.pointerId = pointerId;
 
             eventData.hovered.Clear();
             eventData.hovered.AddRange(m_InternalData.hoverTargets);
@@ -197,6 +198,7 @@ namespace UnityEngine.InputSystem.UI
             m_InternalData.pressedGameObject = eventData.pointerPress;
             m_InternalData.pressedGameObjectRaw = eventData.rawPointerPress;
             m_InternalData.draggedGameObject = eventData.pointerDrag;
+            pointerId = eventData.pointerId;
 
             var hoverTargets = m_InternalData.hoverTargets;
             hoverTargets.ClearWithCapacity();
