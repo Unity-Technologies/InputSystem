@@ -16,7 +16,7 @@ platforms:
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
-    installscript: .yamato\install-il2cpp-player.ps1    
+    installscript: c:\python27\Scripts\unity-downloader-cli.exe -u 2019.1 -c editor -c StandaloneSupport-IL2CPP -w    
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
