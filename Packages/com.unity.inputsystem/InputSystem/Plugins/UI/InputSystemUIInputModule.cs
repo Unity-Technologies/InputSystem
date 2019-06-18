@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
-using UnityEngine;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -140,110 +139,6 @@ namespace UnityEngine.InputSystem.UI
             [SerializeField] private InputActionProperty m_Phase;
         }
 
-        [Serializable]
-        private struct TrackedDeviceResponder
-        {
-            public TrackedDeviceResponder(int pointerId, InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
-            {
-                actionCallback = null;
-                m_ActionsHooked = false;
-                state = new TrackedDeviceModel(pointerId);
-                m_Position = position;
-                m_Orientation = orientation;
-                m_Select = select;
-            }
-
-            [NonSerialized]
-            public TrackedDeviceModel state;
-
-            [NonSerialized]
-            public Action<InputAction.CallbackContext> actionCallback;
-
-            public InputActionProperty position
-            {
-                get => m_Position;
-                set => SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback);
-            }
-
-            public InputActionProperty orientation
-            {
-                get => m_Orientation;
-                set => SwapAction(ref m_Orientation, value, m_ActionsHooked, actionCallback);
-            }
-
-            public InputActionProperty select
-            {
-                get => m_Select;
-                set => SwapAction(ref m_Select, value, m_ActionsHooked, actionCallback);
-            }
-
-            public bool actionsHooked => m_ActionsHooked;
-
-            public void HookActions()
-            {
-                if (m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = true;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed += actionCallback;
-                    positionAction.canceled += actionCallback;
-                }
-
-                var orientationAction = m_Orientation.action;
-                if (orientationAction != null)
-                {
-                    orientationAction.performed += actionCallback;
-                    orientationAction.canceled += actionCallback;
-                }
-
-                var selectAction = m_Select.action;
-                if (selectAction != null)
-                {
-                    selectAction.performed += actionCallback;
-                    selectAction.canceled += actionCallback;
-                }
-            }
-
-            public void UnhookActions()
-            {
-                if (!m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = false;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed -= actionCallback;
-                    positionAction.canceled -= actionCallback;
-                }
-
-                var orientationAction = m_Orientation.action;
-                if (orientationAction != null)
-                {
-                    orientationAction.performed -= actionCallback;
-                    orientationAction.canceled -= actionCallback;
-                }
-
-                var selectAction = m_Orientation.action;
-                if (selectAction != null)
-                {
-                    selectAction.performed -= actionCallback;
-                    selectAction.canceled -= actionCallback;
-                }
-            }
-
-            private bool m_ActionsHooked;
-
-            [SerializeField] private InputActionProperty m_Position;
-            [SerializeField] private InputActionProperty m_Orientation;
-            [SerializeField] private InputActionProperty m_Select;
-        }
-
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
         /// </see> used as a cursor for pointing at UI elements.
@@ -324,6 +219,26 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
 
+
+        public InputActionReference trackedDeviceOrientation
+        {
+            get => m_TrackedDeviceOrientationAction;
+            set => SwapAction(ref m_TrackedDeviceOrientationAction, value, m_ActionsHooked, OnAction);
+        }
+
+        public InputActionReference trackedDevicePosition
+        {
+            get => m_TrackedDevicePositionAction;
+            set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, OnAction);
+        }
+
+        public InputActionReference trackedDeviceSelect
+        {
+            get => m_TrackedDeviceSelectAction;
+            set => SwapAction(ref m_TrackedDeviceSelectAction, value, m_ActionsHooked, OnAction);
+        }
+
+
         protected override void Awake()
         {
             base.Awake();
@@ -346,22 +261,6 @@ namespace UnityEngine.InputSystem.UI
                     OnTouchAction(newIndex, context);
                 };
                 m_Touches[i] = responder;
-            }
-
-            if (m_TrackedDevices == null)
-                m_TrackedDevices = new List<TrackedDeviceResponder>();
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.state = new TrackedDeviceModel(m_RollingPointerId++);
-
-                var newIndex = i;
-                responder.actionCallback = delegate(InputAction.CallbackContext context)
-                {
-                    OnTrackedDeviceAction(newIndex, context);
-                };
-                m_TrackedDevices[i] = responder;
             }
         }
 
@@ -414,33 +313,6 @@ namespace UnityEngine.InputSystem.UI
             return id;
         }
 
-        /// <summary>
-        /// Adds Tracked Device UI responses based the Actions provided.
-        /// </summary>
-        /// <param name="position">A <see cref="Vector3"/> unity world space position that represents the position in the world of the device.</param>
-        /// <param name="orientation">A <see cref="Quaternion"/> rotation value representing the orientation of the device.</param>
-        /// <param name="select">A <see cref="bool"/> selection value that represents whether the user wants to select objects or not.</param>
-        /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
-        public int AddTrackedDevice(InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
-        {
-            var id = m_RollingPointerId++;
-
-            var newResponder = new TrackedDeviceResponder(id, position, orientation, select);
-
-            var index = m_TrackedDevices.Count;
-            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
-            {
-                OnTrackedDeviceAction(index, context);
-            };
-
-            m_TrackedDevices.Add(newResponder);
-
-            if (m_ActionsHooked)
-                newResponder.HookActions();
-
-            return id;
-        }
-
         bool IsAnyActionEnabled()
         {
             return (m_PointAction?.action?.enabled ?? true) &&
@@ -450,7 +322,10 @@ namespace UnityEngine.InputSystem.UI
                 (m_MoveAction?.action?.enabled ?? true) &&
                 (m_SubmitAction?.action?.enabled ?? true) &&
                 (m_CancelAction?.action?.enabled ?? true) &&
-                (m_ScrollWheelAction?.action?.enabled ?? true);
+                (m_ScrollWheelAction?.action?.enabled ?? true) &&
+                (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
+                (m_TrackedDevicePositionAction?.action?.enabled ?? true) &&
+                (m_TrackedDeviceSelectAction?.action?.enabled ?? true);
         }
 
         bool m_OwnsEnabledState;
@@ -470,6 +345,9 @@ namespace UnityEngine.InputSystem.UI
                 m_SubmitAction?.action?.Enable();
                 m_CancelAction?.action?.Enable();
                 m_ScrollWheelAction?.action?.Enable();
+                m_TrackedDeviceOrientationAction?.action?.Enable();
+                m_TrackedDevicePositionAction?.action?.Enable();
+                m_TrackedDeviceSelectAction?.action?.Enable();
                 m_OwnsEnabledState = true;
             }
 
@@ -483,20 +361,6 @@ namespace UnityEngine.InputSystem.UI
                 var phaseAction = touch.phase.action;
                 if (phaseAction != null && !phaseAction.enabled)
                     phaseAction.Enable();
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var trackedDevice = m_TrackedDevices[i];
-
-                var positionAction = trackedDevice.position.action;
-                positionAction?.Enable();
-
-                var orientationAction = trackedDevice.orientation.action;
-                orientationAction?.Enable();
-
-                var selectAction = trackedDevice.select.action;
-                selectAction?.Enable();
             }
         }
 
@@ -517,6 +381,9 @@ namespace UnityEngine.InputSystem.UI
                 m_SubmitAction?.action?.Disable();
                 m_CancelAction?.action?.Disable();
                 m_ScrollWheelAction?.action?.Disable();
+                m_TrackedDeviceOrientationAction?.action?.Disable();
+                m_TrackedDevicePositionAction?.action?.Disable();
+                m_TrackedDeviceSelectAction?.action?.Disable();
             }
 
             for (var i = 0; i < m_Touches.Count; i++)
@@ -529,21 +396,18 @@ namespace UnityEngine.InputSystem.UI
                 var phaseAction = touch.phase.action;
                 phaseAction?.Disable();
             }
+        }
 
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
+        int GetTrackedDeviceIndexForCallbackContext(InputAction.CallbackContext context)
+        {
+            Debug.Assert(context.action.passThrough, $"XR actions should have the passThrough flag enabled, so the UI can properly distinguish multiple tracked devices. Please set passThrough on the '{context.action.name}' action.");
+            for (var i = 0; i < trackedDeviceStates.Count; i++)
             {
-                var trackedDevice = m_TrackedDevices[i];
-
-                var positionAction = trackedDevice.position.action;
-                positionAction?.Disable();
-
-                var orientationAction = trackedDevice.orientation.action;
-                orientationAction?.Disable();
-
-                var selectAction = trackedDevice.select.action;
-                if (selectAction != null)
-                    selectAction.Disable();
+                if (trackedDeviceStates[i].device == context.control.device)
+                    return i;
             }
+            trackedDeviceStates.Add(new TrackedDeviceModel(m_RollingPointerId++, context.control.device));
+            return trackedDeviceStates.Count - 1;
         }
 
         void OnAction(InputAction.CallbackContext context)
@@ -593,6 +457,27 @@ namespace UnityEngine.InputSystem.UI
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }
+            else if (action == m_TrackedDeviceOrientationAction?.action)
+            {
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.orientation = context.ReadValue<Quaternion>();
+                trackedDeviceStates[index] = state;
+            }
+            else if (action == m_TrackedDevicePositionAction?.action)
+            {
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.position = context.ReadValue<Vector3>();
+                trackedDeviceStates[index] = state;
+            }
+            else if (action == m_TrackedDeviceSelectAction?.action)
+            {
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.select = context.ReadValue<float>() > 0;
+                trackedDeviceStates[index] = state;
+            }
         }
 
         void OnTouchAction(int touchIndex, InputAction.CallbackContext context)
@@ -615,30 +500,6 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        void OnTrackedDeviceAction(int deviceIndex, InputAction.CallbackContext context)
-        {
-            if (deviceIndex >= 0 && deviceIndex < m_TrackedDevices.Count)
-            {
-                var responder = m_TrackedDevices[deviceIndex];
-
-                var action = context.action;
-                if (action == responder.position)
-                {
-                    responder.state.position = context.ReadValue<Vector3>();
-                }
-                if (action == responder.orientation)
-                {
-                    responder.state.orientation = context.ReadValue<Quaternion>();
-                }
-                if (action == responder.select)
-                {
-                    responder.state.select = context.ReadValue<float>() > 0;
-                }
-
-                m_TrackedDevices[deviceIndex] = responder;
-            }
-        }
-
         public override void Process()
         {
             DoProcess();
@@ -651,30 +512,29 @@ namespace UnityEngine.InputSystem.UI
             {
                 joystickState.OnFrameFinished();
                 mouseState.OnFrameFinished();
+                foreach (var trackedDeviceState in trackedDeviceStates)
+                    trackedDeviceState.OnFrameFinished();
 
                 for (var i = 0; i < m_Touches.Count; i++)
                     m_Touches[i].state.OnFrameFinished();
-
-                for (var i = 0; i < m_TrackedDevices.Count; i++)
-                    m_TrackedDevices[i].state.OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref joystickState);
                 ProcessMouse(ref mouseState);
 
+                for (var i = 0; i < trackedDeviceStates.Count; i++)
+                {
+                    var state = trackedDeviceStates[i];
+                    ProcessTrackedDevice(ref state);
+                    trackedDeviceStates[i] = state;
+                }
+
                 for (var i = 0; i < m_Touches.Count; i++)
                 {
                     var responder = m_Touches[i];
                     ProcessTouch(ref responder.state);
                     m_Touches[i] = responder;
-                }
-
-                for (var i = 0; i < m_TrackedDevices.Count; i++)
-                {
-                    var responder = m_TrackedDevices[i];
-                    ProcessTrackedDevice(ref responder.state);
-                    m_TrackedDevices[i] = responder;
                 }
             }
         }
@@ -744,18 +604,32 @@ namespace UnityEngine.InputSystem.UI
                 scrollAction.canceled += m_OnActionDelegate;
             }
 
+            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
+            if (trackedDeviceOrientationAction != null)
+            {
+                trackedDeviceOrientationAction.performed += m_OnActionDelegate;
+                trackedDeviceOrientationAction.canceled += m_OnActionDelegate;
+            }
+
+            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
+            if (trackedDeviceOrientationAction != null)
+            {
+                trackedDevicePositionAction.performed += m_OnActionDelegate;
+                trackedDevicePositionAction.canceled += m_OnActionDelegate;
+            }
+
+            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
+            if (trackedDeviceSelectAction != null)
+            {
+                trackedDeviceSelectAction.performed += m_OnActionDelegate;
+                trackedDeviceSelectAction.canceled += m_OnActionDelegate;
+            }
+
             for (var i = 0; i < m_Touches.Count; i++)
             {
                 var responder = m_Touches[i];
                 responder.HookActions();
                 m_Touches[i] = responder;
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.HookActions();
-                m_TrackedDevices[i] = responder;
             }
         }
 
@@ -818,8 +692,29 @@ namespace UnityEngine.InputSystem.UI
             var scrollAction = m_ScrollWheelAction?.action;
             if (scrollAction != null)
             {
-                scrollAction.performed += m_OnActionDelegate;
-                scrollAction.canceled += m_OnActionDelegate;
+                scrollAction.performed -= m_OnActionDelegate;
+                scrollAction.canceled -= m_OnActionDelegate;
+            }
+
+            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
+            if (trackedDeviceOrientationAction != null)
+            {
+                trackedDeviceOrientationAction.performed -= m_OnActionDelegate;
+                trackedDeviceOrientationAction.canceled -= m_OnActionDelegate;
+            }
+
+            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
+            if (trackedDeviceOrientationAction != null)
+            {
+                trackedDevicePositionAction.performed -= m_OnActionDelegate;
+                trackedDevicePositionAction.canceled -= m_OnActionDelegate;
+            }
+
+            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
+            if (trackedDeviceSelectAction != null)
+            {
+                trackedDeviceSelectAction.performed -= m_OnActionDelegate;
+                trackedDeviceSelectAction.canceled -= m_OnActionDelegate;
             }
 
             for (var i = 0; i < m_Touches.Count; i++)
@@ -827,13 +722,6 @@ namespace UnityEngine.InputSystem.UI
                 var responder = m_Touches[i];
                 responder.UnhookActions();
                 m_Touches[i] = responder;
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.UnhookActions();
-                m_TrackedDevices[i] = responder;
             }
         }
 
@@ -891,9 +779,12 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] private InputActionReference m_RightClickAction;
         [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelAction;
 
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDevicePositionAction;
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceOrientationAction;
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceSelectAction;
+
         // Hide these while we still have to figure out what to do with these.
         [SerializeField, HideInInspector] private List<TouchResponder> m_Touches = new List<TouchResponder>();
-        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices = new List<TrackedDeviceResponder>();
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
@@ -901,5 +792,6 @@ namespace UnityEngine.InputSystem.UI
 
         [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
+        [NonSerialized] private List<TrackedDeviceModel> trackedDeviceStates = new List<TrackedDeviceModel>();
     }
 }
