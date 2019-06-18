@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Validate all parameters on public APIs.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
+- Fixed Xbox controller support on macOS il2cpp.
 
 #### Actions
 
