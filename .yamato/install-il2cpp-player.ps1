@@ -1,1 +1,0 @@
-c:\python27\Scripts\unity-downloader-cli.exe -u 2019.1 -c editor -c StandaloneSupport-IL2CPP -w
