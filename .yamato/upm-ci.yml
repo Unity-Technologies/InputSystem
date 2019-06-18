@@ -20,16 +20,16 @@ platforms:
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
-    flavor: b1.mac
+    flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
     image: buildfarm/mac:stable
-    flavor: b1.mac
+    flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
     image: buildfarm/mac:stable
-    flavor: b1.mac
+    flavor: m1.mac
     runtime: StandaloneOSX   
     scripting-backend: Il2Cpp 
     installscript: .yamato/install-il2cpp-player.sh
