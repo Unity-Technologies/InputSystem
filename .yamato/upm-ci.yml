@@ -52,6 +52,7 @@ publish:
     flavor: m1.large
   commands:
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
   triggers:
     tags:
@@ -61,10 +62,3 @@ publish:
     artifacts:
       paths:
         - "upm-ci~/packages/*.tgz"
-  dependencies:
-    - .yamato/upm-ci.yml#pack
-    {% for editor in test_editors %}
-    {% for platform in test_platforms %}
-    - .yamato/upm-ci.yml#test_{{ platform.name }}_{{ editor.version }}
-    {% endfor %}
-    {% endfor %}
