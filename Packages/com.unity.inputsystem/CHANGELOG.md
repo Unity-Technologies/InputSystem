@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed Xbox controller support on macOS il2cpp.
 - Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
+- Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
 
 #### Actions
