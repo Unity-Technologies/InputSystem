@@ -4,11 +4,11 @@ platforms:
   - name: win
     type: Unity::VM
     image: package-ci/win10:latest
-    flavor: m1.large
+    flavor: b1.large
   - name: win_standalone
     type: Unity::VM
     image: package-ci/win10:latest
-    flavor: m1.large
+    flavor: b1.large
     runtime: StandaloneWindows64
   - name: mac
     type: Unity::VM::osx
