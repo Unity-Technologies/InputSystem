@@ -929,7 +929,7 @@ namespace UnityEngine.InputSystem
                 return new InputBinding
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
-                    m_Id = string.IsNullOrEmpty(id) ? Guid.NewGuid().ToString() : id,
+                    m_Id = string.IsNullOrEmpty(id) ? null : id,
                     path = string.IsNullOrEmpty(path) ? null : path,
                     action = string.IsNullOrEmpty(action) ? null : action,
                     interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
@@ -946,7 +946,7 @@ namespace UnityEngine.InputSystem
                 return new BindingJson
                 {
                     name = binding.name,
-                    id = string.IsNullOrEmpty(binding.m_Id) ? Guid.NewGuid().ToString() : binding.m_Id,
+                    id = binding.id.ToString(),
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,

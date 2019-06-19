@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.3.0-preview] - 2020-1-1
+## [0.3.1-preview] - 2020-1-1
 
 ### Fixed
 
 - Validate all parameters on public APIs.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
 - Fixed Xbox controller support on macOS il2cpp.
+- Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
+- Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
+- Fixed tracked devices assigning pointer ids for UI pointer events correctly.
 
 #### Actions
 
@@ -22,6 +25,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
+- Added support for DualShock 3 gamepads on desktops.
+- Added support for Nintendo Switch Pro Controllers on desktops.
 
 ### Changed
 
@@ -29,6 +34,7 @@ however, it has to be formatted properly to pass verification tests.
 - Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
+- Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
 
 ## [0.2.10-preview] - 2019-5-17
 
