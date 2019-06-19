@@ -69,30 +69,7 @@ public class TouchDebugInfo : InputDebugInfo
 
         // Disable the ones not used
         for (int i = index + 1; i < infoPool.childCount; i++)
-            infoPool.GetChild(i)?.gameObject.SetActive(false);                
-                    
-
-        //// Add a new section
-        //if (index + 1 > infoPool.childCount)
-        //{
-        //    RectTransform template = infoPool.GetChild(0).GetComponent<RectTransform>();
-        //    Vector3 pos = template.localPosition + new Vector3(template.rect.width * index, 0, 0);
-
-        //    infoSection = Instantiate(template, infoPool);
-        //    infoSection.localPosition = pos;
-        //    infoSection.GetComponent<Text>().text = content;
-        //}
-        ////use an existing one
-        //else
-        //{
-        //    infoSection = infoPool.GetChild(index).GetComponent<RectTransform>();
-        //    infoSection.GetComponent<Text>().text = content;
-        //}
-
-        //// Remove the extra ones
-        //for (int i = index + 1; i < infoPool.childCount; i++)
-        //    Destroy(infoPool.GetChild(i)?.gameObject);       
-        
+            infoPool.GetChild(i)?.gameObject.SetActive(false);   
     }
 
     // Adjust UI width and position

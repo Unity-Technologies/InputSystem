@@ -71,6 +71,8 @@ public class KeyboardMouseISX : MonoBehaviour
                                  + mouse.scroll.ReadValue().ToString() + "\n"
                                  + mouse.delta.ReadValue().ToString("F3");
         }
+
+        Keyboard keyboard = InputSystem.GetDevice<Keyboard>();
     }
 
     // There is a delay in getting current keyboard. For OnEnable to assign event

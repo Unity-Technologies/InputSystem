@@ -121,14 +121,6 @@ public class InputUIPicker : MonoBehaviour
 
     public void SwitchToOtherTest(int value)
     {
-        //switch (value)
-        //{
-        //    case 1:
-        //        SwitchToTestObject(m_interactions);
-        //        break;
-        //    default:
-        //        break;
-        //}    
         if (value == 1)
             SwitchToTestObject(m_interactions);
         m_deviceDropdown.value = 0;
