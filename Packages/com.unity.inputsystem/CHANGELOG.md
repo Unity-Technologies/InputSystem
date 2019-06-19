@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
 - Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
+- Fixed documentation landing page and table of contents.
 
 #### Actions
 
