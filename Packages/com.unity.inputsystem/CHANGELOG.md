@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Validate all parameters on public APIs.
 - Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
+- Fixed Xbox controller support on macOS il2cpp.
 - Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
