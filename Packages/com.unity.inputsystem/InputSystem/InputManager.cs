@@ -2537,19 +2537,19 @@ namespace UnityEngine.InputSystem
                         // Buffer flip.
                         var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);
 
-			            // Now write the state.
-			            #if UNITY_EDITOR
-			            if (updateType == InputUpdateType.Editor)
-			            {
-			                WriteStateChange(m_StateBuffers.m_EditorStateBuffers, deviceIndex, ref stateBlockOfDevice, offsetInDeviceStateToCopyTo,
-			                    ptrToReceivedState, sizeOfStateToCopy, flipped);
-			            }
-			            else
-			            #endif
-			            {
-			                WriteStateChange(m_StateBuffers.m_PlayerStateBuffers, deviceIndex, ref stateBlockOfDevice,
-			                    offsetInDeviceStateToCopyTo, ptrToReceivedState, sizeOfStateToCopy, flipped);
-			            }
+                        // Now write the state.
+                        #if UNITY_EDITOR
+                        if (updateType == InputUpdateType.Editor)
+                        {
+                            WriteStateChange(m_StateBuffers.m_EditorStateBuffers, deviceIndex, ref stateBlockOfDevice, offsetInDeviceStateToCopyTo,
+                                ptrToReceivedState, sizeOfStateToCopy, flipped);
+                        }
+                        else
+                        #endif
+                        {
+                            WriteStateChange(m_StateBuffers.m_PlayerStateBuffers, deviceIndex, ref stateBlockOfDevice,
+                                offsetInDeviceStateToCopyTo, ptrToReceivedState, sizeOfStateToCopy, flipped);
+                        }
 
 
                         if (device.m_LastUpdateTimeInternal <= currentEventTimeInternal)
