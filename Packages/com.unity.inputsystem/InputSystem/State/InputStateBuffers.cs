@@ -140,7 +140,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // Allocates all buffers to serve the given updates and comes up with a spot
         // for the state block of each device. Returns the new state blocks for the
         // devices (it will *NOT* install them on the devices).
-        public uint[] AllocateAll(InputUpdateType updateMask, InputDevice[] devices, int deviceCount)
+        public uint[] AllocateAll(InputDevice[] devices, int deviceCount)
         {
             uint[] newDeviceOffsets = null;
             sizePerBuffer = ComputeSizeOfSingleBufferAndOffsetForEachDevice(devices, deviceCount, ref newDeviceOffsets);

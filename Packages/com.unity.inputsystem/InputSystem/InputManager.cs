@@ -1785,7 +1785,7 @@ namespace UnityEngine.InputSystem
 
             // Allocate new buffers.
             var newBuffers = new InputStateBuffers();
-            var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, m_Devices, m_DevicesCount);
+            var newStateBlockOffsets = newBuffers.AllocateAll(m_Devices, m_DevicesCount);
 
             // Migrate state.
             newBuffers.MigrateAll(m_Devices, m_DevicesCount, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
