@@ -147,8 +147,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerOSX>());
-        var gamepad = (XInputControllerOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxGamepadMacOS>());
+        var gamepad = (XboxGamepadMacOS)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerOSXState
@@ -218,8 +218,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerWirelessOSX>());
-        var gamepad = (XInputControllerWirelessOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxOneGampadMacOSWireless>());
+        var gamepad = (XboxOneGampadMacOSWireless)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerWirelessOSXState
