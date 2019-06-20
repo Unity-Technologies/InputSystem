@@ -10,6 +10,9 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onUpdate"/>.
+    /// </summary>
     public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
     /// <summary>
@@ -179,7 +182,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
 
-    public static class InputRuntimeExtensions
+    internal static class InputRuntimeExtensions
     {
         public static unsafe long DeviceCommand<TCommand>(this IInputRuntime runtime, int deviceId, ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo

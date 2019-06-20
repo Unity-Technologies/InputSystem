@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShock4HIDInputReport : IInputStateTypeInfo
+    internal struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 
@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// Structure of HID input reports for PS3 DualShock 3 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShock3HIDInputReport : IInputStateTypeInfo
+    internal struct DualShock3HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 
@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// PS4 output report sent as command to HID backend.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
+    internal unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 

@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo
+    internal struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('E', 'W', 'P', 'S'); } }
 

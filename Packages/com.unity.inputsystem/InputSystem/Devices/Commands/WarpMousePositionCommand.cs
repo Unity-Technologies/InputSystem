@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct WarpMousePositionCommand : IInputDeviceCommandInfo
+    internal struct WarpMousePositionCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('W', 'P', 'M', 'S'); } }
 

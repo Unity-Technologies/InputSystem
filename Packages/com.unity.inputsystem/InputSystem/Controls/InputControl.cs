@@ -585,7 +585,7 @@ namespace UnityEngine.InputSystem
         internal ControlFlags m_ControlFlags;
 
         ////REVIEW: store these in arrays in InputDevice instead?
-        internal PrimitiveValueOrArray m_DefaultValue;
+        internal PrimitiveValue m_DefaultValue;
         internal PrimitiveValue m_MinValue;
         internal PrimitiveValue m_MaxValue;
 

@@ -1803,7 +1803,7 @@ namespace UnityEngine.InputSystem
                     device.NotifyRemoved();
             }
 
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
             // this should get replaced with an actual InputSettings asset.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;
