@@ -1020,6 +1020,11 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_ChangingStateOfDevice_MarksDeviceAsUpdatedThisFrame()
     {
+        // If there hasn't been an update yet, the device has the same (default) update
+        // count as the system and is thus considered updated. Given this case won't matter
+        // in practice in the player and editor, we don't bother accounting for it.
+        InputSystem.Update();
+
         var device = InputSystem.AddDevice<Gamepad>();
 
         Assert.That(device.wasUpdatedThisFrame, Is.False);
@@ -1848,54 +1853,22 @@ partial class CoreTests
         Assert.That(joystick.trigger, Is.Not.Null);
     }
 
-    // The whole dynamic vs fixed vs before-render vs editor update mechanic is a can of worms. In the
-    // ECS version, all this should be thrown out entirely.
-    //
-    // This test here is another peculiarity we need to watch out for. Events received by the system will
-    // get written into either player or editor buffers. If written into player buffers, they get written
-    // into *both* dynamic and fixed update buffers. However, depending on what the *current* update is
-    // (fixed or dynamic) this means we are writing state into the *next* update of the other type. E.g.
-    // when receiving state during fixed update, we write it both into the current fixed update and into
-    // the *next* dynamic update.
-    //
-    // For the reset logic, this means we have to be extra careful to not overwrite that state we've written
-    // "for the future".
     [Test]
     [Category("Devices")]
-    [Property("TimesliceEvents", "Off")]
-    public void Devices_PointerDeltaUpdatedInFixedUpdate_DoesNotGetResetInDynamicUpdate()
-    {
-        var pointer = InputSystem.AddDevice<Pointer>();
-
-        InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-        Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Property("TimesliceEvents", "Off")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var pointer = InputSystem.AddDevice<Pointer>();
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update(InputUpdateType.Fixed);
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
         Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
-        InputSystem.Update(InputUpdateType.Fixed);
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
         Assert.That(pointer.delta.x.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
         Assert.That(pointer.delta.y.ReadValue(), Is.EqualTo(0.5).Within(0.0000001));
@@ -3488,7 +3461,6 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    #if UNITY_2019_1_OR_NEWER
     // NOTE: The focus logic will also implicitly take care of canceling and restarting actions.
     [Test]
     [Category("Devices")]
@@ -3543,14 +3515,12 @@ partial class CoreTests
                 return InputDeviceCommand.GenericFailure;
             });
 
-        runtime.InvokeFocusChanged(true);
+        runtime.InvokePlayerFocusChanged(true);
 
         Assert.That(keyboardDeviceReset, Is.True);
         Assert.That(gamepadDeviceReset, Is.True);
         Assert.That(pointerDeviceReset, Is.True);
     }
-
-    #endif
 
     [Test]
     [Category("Devices")]

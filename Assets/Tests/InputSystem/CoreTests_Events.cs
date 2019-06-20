@@ -150,35 +150,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
-    public void Events_AreProcessedInBothFixedAndDynamicUpdateByDefault()
-    {
-        var mouse = InputSystem.AddDevice<Mouse>();
-
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
-
-        // Push event through in fixed update.
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        Assert.That(mouse.leftButton.isPressed, Is.True);
-
-        // Push event through in dynamic update.
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(mouse.leftButton.isPressed, Is.False);
-        Assert.That(mouse.rightButton.isPressed, Is.True);
-    }
-
-    [Test]
-    [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_CanSwitchToFullyManualUpdates()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var receivedOnChange = true;
@@ -188,13 +163,6 @@ partial class CoreTests
 
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsManually));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.True);
 
         #if UNITY_EDITOR
         // Edit mode updates shouldn't have been disabled in editor.
@@ -205,34 +173,36 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.Manual);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Fixed), Throws.InvalidOperationException);
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic), Throws.InvalidOperationException);
     }
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
-    public void Events_CanSwitchToProcessingInFixedUpdatesOnly()
+    public void Events_CanSwitchToProcessingInFixedUpdates()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var receivedOnChange = true;
         InputSystem.onSettingsChange += () => receivedOnChange = true;
 
-        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly;
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly));
+        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInFixedUpdate));
         Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.Fixed));
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         InputSystem.Update(InputUpdateType.Fixed);
 
         Assert.That(mouse.leftButton.isPressed, Is.True);
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic), Throws.InvalidOperationException);
+        Assert.That(() => InputSystem.Update(InputUpdateType.Manual), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -260,35 +230,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanSwitchToProcessingInDynamicUpdatesOnly()
-    {
-        var mouse = InputSystem.AddDevice<Mouse>();
-
-        var receivedOnChange = true;
-        InputSystem.onSettingsChange += () => receivedOnChange = true;
-
-        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly;
-
-        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly));
-        Assert.That(receivedOnChange, Is.True);
-        Assert.That(InputSystem.metrics.currentStateSizeInBytes,
-            Is.LessThanOrEqualTo(InputSystem.metrics.maxStateSizeInBytes - mouse.stateBlock.alignedSizeInBytes));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Dynamic, Is.EqualTo(InputUpdateType.Dynamic));
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Fixed).valid, Is.False);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Dynamic).valid, Is.True);
-        Assert.That(InputSystem.s_Manager.m_StateBuffers.GetDoubleBuffersFor(InputUpdateType.Manual).valid, Is.False);
-
-        InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(mouse.leftButton.isPressed, Is.True);
-    }
-
-    [Test]
-    [Category("Events")]
     public unsafe void Events_AreTimeslicedByDefault()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+
         runtime.currentTimeForFixedUpdate = 1;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -373,6 +318,9 @@ partial class CoreTests
     [Category("Events")]
     public unsafe void Events_TimeslicingCanBeTurnedOff()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+        InputSystem.settings.timesliceEvents = true;
+
         // Get first update out of the way with timeslicing on. First fixed update will consume all
         // input so we can't really tell the difference.
         InputSystem.Update(InputUpdateType.Fixed);
@@ -394,8 +342,8 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 3 + 0.001);
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.2345f }, 3 + 0.002);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.3456f}, 3 + 1.0 / 60 + 0.001);
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4567f}, 3 + 2 * (1.0 / 60) + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.3456f }, 3 + 1.0 / 60 + 0.001);
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.4567f }, 3 + 2 * (1.0 / 60) + 0.001);
 
         InputSystem.Update(InputUpdateType.Fixed);
 
@@ -434,7 +382,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_CanInitializeStateEventFromDevice()
+    public unsafe void Events_CanCreateStateEventFromDevice()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -443,13 +391,14 @@ partial class CoreTests
 
         using (var buffer = StateEvent.From(mouse, out var eventPtr))
         {
-            Assert.IsTrue(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal));
+            Assert.That(mouse.delta.x.ReadValueFromEvent(eventPtr, out var xVal), Is.True);
             Assert.That(xVal, Is.EqualTo(1).Within(0.00001));
 
-            Assert.IsTrue(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal));
+            Assert.That(mouse.delta.y.ReadValueFromEvent(eventPtr, out var yVal), Is.True);
             Assert.That(yVal, Is.EqualTo(1).Within(0.00001));
 
             var stateEventPtr = StateEvent.From(eventPtr);
+
             Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
             Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
@@ -462,9 +411,23 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
+        InputSystem.settings.timesliceEvents = false;
+
+        // We need one device that has before-render updates enabled for the update to enable
+        // at all.
+        const string deviceJson = @"
+            {
+                ""name"" : ""CustomGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+
+        InputSystem.RegisterLayout(deviceJson);
+        InputSystem.AddDevice("CustomGamepad");
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var newState = new GamepadState {leftStick = new Vector2(0.123f, 0.456f)};
 
@@ -866,10 +829,7 @@ partial class CoreTests
         public int buttons;
         [InputControl(layout = "Axis")] public float axis2;
 
-        public FourCC format
-        {
-            get { return new FourCC('N', 'S', 'T', 'D'); }
-        }
+        public FourCC format => new FourCC('N', 'S', 'T', 'D');
     }
 
     private struct CustomDeviceState : IInputStateTypeInfo
@@ -878,10 +838,7 @@ partial class CoreTests
 
         public CustomNestedDeviceState nested;
 
-        public FourCC format
-        {
-            get { return new FourCC('C', 'U', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('C', 'U', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
@@ -941,10 +898,7 @@ partial class CoreTests
         public CustomDeviceState baseState;
         public int extra;
 
-        public FourCC format
-        {
-            get { return baseState.format; }
-        }
+        public FourCC format => baseState.format;
     }
 
     // HIDs rely on this behavior as we may only use a subset of a HID's set of
