@@ -292,28 +292,20 @@ class APIVerificationTests
 
     string GenerateDocsDirectory()
     {
-        try
-        {
-            var docsFolder = "Temp/docstest";
-            Directory.CreateDirectory(docsFolder);
-            Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
-            return docsFolder;
-        }
-        catch (IOException)
-        {
-            // This test fails on Yamato on Mac due to wrong file permissions.
-            // We want it to fail silently so we can keep the test working locally and on windows.
-            return null;
-        }
+        var docsFolder = "Temp/docstest";
+        Directory.CreateDirectory(docsFolder);
+        Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
+        return docsFolder;
     }
 
     [Test]
     [Category("API")]
+#if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+#endif
     public void API_DoesNotHaveUndocumentedPublicTypes()
     {
         var docsFolder = GenerateDocsDirectory();
-        if (docsFolder == null)
-            return;
         var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
         Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types.");
     }
@@ -324,8 +316,6 @@ class APIVerificationTests
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
         var docsFolder = GenerateDocsDirectory();
-        if (docsFolder == null)
-            return;
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
     }
