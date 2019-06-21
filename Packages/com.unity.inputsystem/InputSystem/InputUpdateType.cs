@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         Fixed = 1 << 1,
 
+        ////REVIEW: Axe this update type from the public API?
         /// <summary>
         /// Input update that happens right before rendering.
         /// </summary>
@@ -61,14 +62,14 @@ namespace UnityEngine.InputSystem
         ////TODO
         Manual = 1 << 4,
 
+        ////REVIEW: kill?
         Default = Dynamic | Fixed | Editor,
     }
 
     internal static class InputUpdate
     {
         public static InputUpdateType s_LastUpdateType;
-        public static uint s_DynamicUpdateCount;
-        public static uint s_FixedUpdateCount;
+        public static uint s_UpdateStepCount;
         public static uint s_LastUpdateRetainedEventBytes;
         public static uint s_LastUpdateRetainedEventCount;
 
@@ -76,8 +77,7 @@ namespace UnityEngine.InputSystem
         public struct SerializedState
         {
             public InputUpdateType lastUpdateType;
-            public uint dynamicUpdateCount;
-            public uint fixedUpdateCount;
+            public uint updateStepCount;
             public uint lastUpdateRetainedEventBytes;
             public uint lastUpdateRetainedEventCount;
         }
@@ -87,8 +87,7 @@ namespace UnityEngine.InputSystem
             return new SerializedState
             {
                 lastUpdateType = s_LastUpdateType,
-                dynamicUpdateCount = s_DynamicUpdateCount,
-                fixedUpdateCount = s_FixedUpdateCount,
+                updateStepCount = s_UpdateStepCount,
                 lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
                 lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
@@ -97,8 +96,7 @@ namespace UnityEngine.InputSystem
         public static void Restore(SerializedState state)
         {
             s_LastUpdateType = state.lastUpdateType;
-            s_DynamicUpdateCount = state.dynamicUpdateCount;
-            s_FixedUpdateCount = state.fixedUpdateCount;
+            s_UpdateStepCount = state.updateStepCount;
             s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
             s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
         }

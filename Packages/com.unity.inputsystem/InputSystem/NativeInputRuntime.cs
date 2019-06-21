@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     internal class NativeInputRuntime : IInputRuntime
     {
-        public static NativeInputRuntime instance = new NativeInputRuntime();
+        public static readonly NativeInputRuntime instance = new NativeInputRuntime();
 
         public int AllocateDeviceId()
         {
@@ -65,9 +65,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         }
                         catch (Exception e)
                         {
-                            Debug.LogError(string.Format(
-                                "{0} during event processing of {1} update; resetting event buffer",
-                                e.GetType().Name, updateType));
+                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
                             Debug.LogException(e);
                             buffer.Reset();
                         }
@@ -154,18 +152,16 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public Action<bool> onFocusChanged
+        public Action<bool> onPlayerFocusChanged
         {
             get => m_FocusChangedMethod;
             set
             {
                 if (value == null)
-                #if UNITY_2019_1_OR_NEWER
                     Application.focusChanged -= OnFocusChanged;
                 else if (m_FocusChangedMethod == null)
                     Application.focusChanged += OnFocusChanged;
-                #endif
-                    m_FocusChangedMethod = value;
+                m_FocusChangedMethod = value;
             }
         }
 
@@ -181,6 +177,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public double currentTime => NativeInputSystem.currentTime;
 
+        ////REVIEW: this applies the offset, currentTime doesn't
         public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
 
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
@@ -203,10 +200,6 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         public ScreenOrientation screenOrientation => Screen.orientation;
-
-        public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
-
-        public int frameCount => Time.frameCount;
 
         public bool isInBatchMode => Application.isBatchMode;
 

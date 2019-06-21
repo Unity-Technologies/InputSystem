@@ -24,13 +24,6 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
     private void Start()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
-
-        ////FIXME: Solve this properly. ATM, if we have both fixed and dynamic updates enabled, then
-        ////       we run into problems as actions will fire in updates while the actual processing of input
-        ////       happens in Update(). So, if we're looking at m_Look, for example, we will see mouse deltas
-        ////       on it but then also see the deltas get reset between updates meaning that most of the time
-        ////       Update() will end up with a zero m_Look vector.
-        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly;
     }
 
     void OnCollisionStay()

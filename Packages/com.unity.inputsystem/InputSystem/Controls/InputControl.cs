@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem
     /// identifies both where the control stores its state as well as the format it stores it in.
     /// </remarks>
     /// <seealso cref="InputDevice"/>
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    [DebuggerDisplay("{DebuggerDisplay(),nq}")]
     public abstract class InputControl
     {
         ////REVIEW: we could allow the parenthetical characters if we require escaping them in paths

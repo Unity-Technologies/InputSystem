@@ -129,41 +129,6 @@ partial class CoreTests
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25f).Within(0.00001));
     }
 
-    [Test]
-    [Category("State")]
-    public void State_RunningMultipleFixedUpdates_FlipsDynamicUpdateBuffersOnlyOnFirstUpdate()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
-        InputSystem.Update(InputUpdateType.Fixed); // Dynamic: current=0.25, previous=0.0
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
-        InputSystem.Update(InputUpdateType.Fixed); // Dynamic: current=0.75, previous=0.0
-
-        InputSystem.Update(InputUpdateType.Dynamic);
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.Zero);
-    }
-
-    [Test]
-    [Category("State")]
-    [Property("TimesliceEvents", "Off")]
-    public void State_RunningNoFixedUpdateInFrame_StillCapturesStateForNextFixedUpdate()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
-        InputSystem.Update(InputUpdateType.Fixed); // Fixed: current=0.75, previous=0.0
-
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
-        InputSystem.Update(InputUpdateType.Dynamic); // Fixed: current=0.25, previous=0.75
-        InputSystem.Update(InputUpdateType.Fixed); // Unchanged.
-
-        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25).Within(0.000001));
-        Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.75).Within(0.000001));
-    }
-
     // This test makes sure that a double-buffered state scheme does not lose state. In double buffering,
     // this only works if either the entire state is refreshed each step -- which for us is not guaranteed
     // as we don't know if a state event for a device will happen on a frame -- or if state is copied forward
@@ -460,20 +425,10 @@ partial class CoreTests
             receivedUpdateType = type;
         };
 
-        // Dynamic.
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
         Assert.That(receivedUpdate, Is.True);
         Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
-
-        receivedUpdate = false;
-        receivedUpdateType = null;
-
-        // Fixed.
-        InputSystem.Update(InputUpdateType.Fixed);
-
-        Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Fixed));
 
         receivedUpdate = false;
         receivedUpdateType = null;
@@ -936,17 +891,16 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = NumberHelpers.AlignToMultiple(
-            device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
-            device3.stateBlock.alignedSizeInBytes, 4);
+        var combinedDeviceStateSize = (device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
+            device3.stateBlock.alignedSizeInBytes).AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
 
         const int kDoubleBufferCount =
             #if UNITY_EDITOR
-            3     // Dynamic + fixed + editor
+            2     // Dynamic + editor
             #else
-            2     // Dynamic + fixed
+            1     // Dynamic
             #endif
         ;
 
@@ -955,7 +909,7 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
-        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo((kDoubleBufferCount * sizePerBuffer) + (sizeOfSingleBuffer * 2)));
+        Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
@@ -966,18 +920,22 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_FixedUpdatesAreDisabledByDefault()
+    public void State_FixedUpdatesAreDisabledByDefault()
     {
-        Assert.Fail();
+        Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate));
+        Assert.That(runtime.onShouldRunUpdate(InputUpdateType.Fixed), Is.False);
+        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
     }
 
     [Test]
     [Category("State")]
-    [Ignore("TODO")]
-    public void TODO_State_CannotRunUpdatesThatAreNotEnabled()
+    public void State_CannotRunUpdatesThatAreNotEnabled()
     {
-        Assert.Fail();
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+
+        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic),
+            Throws.InvalidOperationException.With.Message.Contains("not enabled").And.Message
+                .Contains("Dynamic").And.Message.Contains("ProcessEventsInFixedUpdate"));
     }
 
     [Test]

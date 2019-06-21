@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
             {
-                GenericMenu menu = new GenericMenu();
+                var menu = new GenericMenu();
                 menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
                 menu.AddSeparator("");
                 for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Editor
                 GUILayout.Space(20);
             }
 
-            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
                 EditorGUILayout.HelpBox(
                     "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
@@ -91,17 +91,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode);
-                var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
-                if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
-                {
-                    // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
-                    // when we have both dynamic and fixed updates in the picture.
-                    ////TODO: enable when action update mode is properly sorted
-                    //EditorGUILayout.PropertyField(m_ActionUpdateMode);
-                }
-
-                ////TODO: enable when backported
-                //EditorGUILayout.PropertyField(m_TimesliceEvents);
+                EditorGUILayout.PropertyField(m_TimesliceEvents);
 
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
@@ -225,7 +215,6 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
-            m_ActionUpdateMode = m_SettingsObject.FindProperty("m_ActionUpdateMode");
             m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
@@ -302,10 +291,7 @@ namespace UnityEngine.InputSystem.Editor
                 InitializeWithCurrentSettings();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
-            ////FIXME: doesn't seem like there's a way to issue a repaint with the 2018.3 API
-            #if UNITY_2019_1_OR_NEWER
             Repaint();
-            #endif
         }
 
         /// <summary>
@@ -323,7 +309,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
-        [NonSerialized] private SerializedProperty m_ActionUpdateMode;
         [NonSerialized] private SerializedProperty m_TimesliceEvents;
         [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
@@ -340,7 +325,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent[] m_AvailableSettingsAssetsOptions;
         [NonSerialized] private int m_CurrentSelectedInputSettingsAsset;
 
-        [NonSerialized] private GUIContent m_NewAssetButtonText = EditorGUIUtility.TrTextContent("New");
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
@@ -352,9 +336,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Force next OnGUI() to re-initialize.
                 s_Instance.m_Settings = null;
-                #if UNITY_2019_1_OR_NEWER
                 s_Instance.Repaint();
-                #endif
             }
         }
     }
