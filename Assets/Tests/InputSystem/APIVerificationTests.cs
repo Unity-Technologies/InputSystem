@@ -6,10 +6,9 @@ using System.IO;
 using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
-using UnityEngine;
 using UnityEngine.InputSystem;
 
-partial class APIVerificationTests
+class APIVerificationTests
 {
     private bool IsValidNameForConstant(string name)
     {
