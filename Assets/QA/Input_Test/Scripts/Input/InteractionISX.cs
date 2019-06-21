@@ -20,7 +20,6 @@ public class InteractionISX : MonoBehaviour
     public Text m_interactionItems;
     public Text m_interactionValues;
 
-    // Start is called before the first frame update
     void Start()
     {
         m_inputAction.Rename(gameObject.name);
@@ -101,7 +100,7 @@ public class InteractionISX : MonoBehaviour
         for (int i = 0; i < fields.Length; i++)
         {
             m_interactionItems.text += fields[i].Name + "\n";
-            m_interactionValues.text += fields[i].GetValue(ctx.interaction) + "\n";
+            m_interactionValues.text += fields[i].GetValue(ctx.interaction).ToString() + "\n";
         }
     }
 }

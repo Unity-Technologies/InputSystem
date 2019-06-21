@@ -11,14 +11,13 @@ public class ProcessorISX : MonoBehaviour
     public InputAction m_inputAction;
 
     [Header("UI element for more info")]
-    public Text m_unprocessedText;
+    public Text m_originalText;
     public Text m_resultText;
 
     // Start is called before the first frame update
     void Start()
     {
         m_inputAction.Rename(gameObject.name);
-        m_inputAction.performed += ctx => OnInputPerformed(ctx);
     }
 
     private void OnEnable()
@@ -29,10 +28,5 @@ public class ProcessorISX : MonoBehaviour
     private void OnDisable()
     {
         m_inputAction?.Disable();
-    }
-
-    private void OnInputPerformed(InputAction.CallbackContext ctx)
-    {
-        
     }
 }
