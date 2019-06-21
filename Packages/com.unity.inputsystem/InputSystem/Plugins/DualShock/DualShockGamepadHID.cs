@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// Structure of HID input reports for PS3 DualShock 3 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShock3HIDInputReport : IInputStateTypeInfo
+    public unsafe struct DualShock3HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] private ushort padding1;
 
