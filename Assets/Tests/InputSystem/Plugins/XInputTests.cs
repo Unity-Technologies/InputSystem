@@ -18,7 +18,8 @@ internal class XInputTests : InputTestFixture
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
+    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XboxGamepadMacOS")]
+    [TestCase("Xbox One Wireless Controller", "Microsoft", "HID", "XboxOneGampadMacOSWireless")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]

@@ -224,8 +224,10 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Switch.NPad).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGamepad).FullName ||
+#if UNITY_EDITOR_OSX
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
+#endif
             type.FullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
