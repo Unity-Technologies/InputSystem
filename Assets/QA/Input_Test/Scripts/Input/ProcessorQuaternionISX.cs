@@ -1,22 +1,22 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ProcessorFloatISX : ProcessorISX
+public class ProcessorQuaternionISX : ProcessorISX
 {
-    private float m_original = 0f;
-    private float m_result = 0f;
+    private Quaternion m_original = new Quaternion(0, 0, 0, 0);
+    private Quaternion m_result = new Quaternion(0, 0, 0, 0);
 
     // Start is called before the first frame update
     void Start()
     {
         m_inputAction.Rename(gameObject.name);
         m_inputAction.performed += ctx => {
-            InputControl<float> control = ctx.control as InputControl<float>;
+            InputControl<Quaternion> control = ctx.control as InputControl<Quaternion>;
             m_original = control.ReadValue();
-            m_result = ctx.ReadValue<float>();
+            m_result = ctx.ReadValue<Quaternion>();
         };
         m_inputAction.canceled += ctx => {
-            m_original = m_result = 0f;
+            m_original = m_result = new Quaternion(0, 0, 0, 0);
         };
     }
 
@@ -33,14 +33,12 @@ public class ProcessorFloatISX : ProcessorISX
     // Update is called once per frame
     void Update()
     {
-        UpdateResult();        
+        UpdateResult();
     }
 
     protected override void UpdateResult()
     {
-        if (m_stickImage != null)
-            m_stickImage.transform.localPosition = new Vector2(m_result * m_stickImageOffsetFactor, 0);
-        m_originalText.text = m_original.ToString("F2");
-        m_resultText.text = m_result.ToString("F2");
+        m_originalText.text = m_original.ToString();
+        m_resultText.text = m_result.ToString();
     }
 }

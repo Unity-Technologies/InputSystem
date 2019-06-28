@@ -22,7 +22,7 @@ public class EventsystemPicker : MonoBehaviour
             toggle.onValueChanged.AddListener( delegate {
                 OnToggleChanged();
             });
-            if (toggle.gameObject.name == "Old")
+            if (toggle.gameObject.name == "New")
                 toggle.isOn = true;
         }
     }

@@ -20,14 +20,7 @@ public class InputUIPicker : MonoBehaviour
 
     [Header("Other Test GameObject")]
     public GameObject m_interactions;
-
-    //[Header("Input Action")]
-    //public InputAction m_switchToKeyboardMouseAction;
-    //public InputAction m_switchToXboxAction;
-    //public InputAction m_switchToGamepadDiagramAction;
-    //public InputAction m_switchToJoystickAction;
-    //public InputAction m_switchToPenAction;
-    //public InputAction m_switchToTouchAction;
+    public GameObject m_processors;
 
     // Current displayed diagram
     private GameObject m_currentDisplay;
@@ -35,37 +28,11 @@ public class InputUIPicker : MonoBehaviour
     void Start()
     {
         SwitchToKeyMouse();
-
-        //m_deviceDropdown.onValueChanged.RemoveAllListeners();
-        //m_otherDropdown.onValueChanged.RemoveAllListeners();
-
-        //m_deviceDropdown.onValueChanged.AddListener(delegate { SwitchToDeviceTest(m_deviceDropdown.value); });
-        //m_deviceDropdown.onValueChanged.AddListener(delegate { SwitchToOtherTest(m_otherDropdown.value); });
     }
-
-    //void OnEnable()
-    //{
-    //    m_switchToKeyboardMouseAction.Enable();
-    //    m_switchToXboxAction.Enable();
-    //    m_switchToGamepadDiagramAction.Enable();
-    //    m_switchToJoystickAction.Enable();
-    //    m_switchToPenAction.Enable();
-    //    m_switchToTouchAction.Enable();
-    //}
-
-    //void OnDisable()
-    //{
-    //    m_switchToKeyboardMouseAction.Disable();
-    //    m_switchToXboxAction.Disable();
-    //    m_switchToGamepadDiagramAction.Disable();
-    //    m_switchToJoystickAction.Disable();
-    //    m_switchToPenAction.Disable();
-    //    m_switchToTouchAction.Disable();
-    //}
    
     void Update()
     {
-        // !!!!!TEMPORARY: Before composite input is implemented
+        // !!!!!TEMPORARY: Only Shortcut for Old Input Manager
         if (InputSystem.GetDevice<Keyboard>() == null) return;
 
         Keyboard currentKeyboard = InputSystem.GetDevice<Keyboard>();
@@ -123,6 +90,8 @@ public class InputUIPicker : MonoBehaviour
     {
         if (value == 1)
             SwitchToTestObject(m_interactions);
+        else if (value == 2)
+            SwitchToTestObject(m_processors);
         m_deviceDropdown.value = 0;
     }
 

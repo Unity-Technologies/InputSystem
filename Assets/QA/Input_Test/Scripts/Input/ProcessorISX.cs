@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
-public class ProcessorISX : MonoBehaviour
+public abstract class ProcessorISX : MonoBehaviour
 {
     [Header("The Input Action with Processors")]
     public InputAction m_inputAction;
@@ -13,20 +13,10 @@ public class ProcessorISX : MonoBehaviour
     [Header("UI element for more info")]
     public Text m_originalText;
     public Text m_resultText;
+    public Image m_stickImage = null;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        m_inputAction.Rename(gameObject.name);
-    }
+    protected int m_stickImageOffsetFactor = 12;
 
-    private void OnEnable()
-    {
-        m_inputAction.Enable();
-    }
+    protected abstract void UpdateResult();
 
-    private void OnDisable()
-    {
-        m_inputAction?.Disable();
-    }
 }

@@ -1,23 +1,24 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ProcessorVector2ISX : ProcessorISX
-{   
-    private Vector2 m_original = new Vector2(0, 0);
-    private Vector2 m_result = new Vector2(0, 0);
+public class ProcessorVector3ISX : ProcessorISX
+{
+    private Vector3 m_original = new Vector3(0, 0, 0);
+    private Vector3 m_result = new Vector3(0, 0, 0);
 
     // Start is called before the first frame update
     void Start()
     {
         m_inputAction.Rename(gameObject.name);
         m_inputAction.performed += ctx => {
-            InputControl<Vector2> control = ctx.control as InputControl<Vector2>;
+            InputControl<Vector3> control = ctx.control as InputControl<Vector3>;
             m_original = control.ReadValue();
-            m_result = ctx.ReadValue<Vector2>();
+            m_result = ctx.ReadValue<Vector3>();
         };
         m_inputAction.canceled += ctx => {
-            m_original = m_result = new Vector2(0, 0);
+            m_original = m_result = new Vector3(0, 0, 0);
         };
+
     }
 
     void OnEnable()
@@ -39,7 +40,13 @@ public class ProcessorVector2ISX : ProcessorISX
     protected override void UpdateResult()
     {
         if (m_stickImage != null)
-            m_stickImage.transform.localPosition = m_result * m_stickImageOffsetFactor;
+        {
+            m_stickImage.transform.localPosition = new Vector2(m_result.x, m_result.y) * m_stickImageOffsetFactor;
+            Vector3 angles = m_stickImage.transform.localEulerAngles;
+            angles.z = m_result.z * 180;
+            m_stickImage.transform.localEulerAngles = angles;
+        }
+            
         m_originalText.text = m_original.ToString();
         m_resultText.text = m_result.ToString();
     }
