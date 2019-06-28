@@ -14,19 +14,16 @@ public class XboxISX : GamepadISX
     {
         //m_stickMaxMove = 0.25f;
 
-        m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>");
+        m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>") { passThrough = true }; ;
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
-        m_buttonAction.canceled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>");
+        m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>") { passThrough = true }; ;
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
-        m_dPadAction.canceled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>");
+        m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>") { passThrough = true }; ;
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
-        m_stickMoveAction.canceled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
 
@@ -39,18 +36,19 @@ public class XboxISX : GamepadISX
 
     private void OnDisable()
     {
-        m_buttonAction.Disable();
-        m_dPadAction.Disable();
-        m_stickMoveAction.Disable();
+        m_buttonAction?.Disable();
+        m_dPadAction?.Disable();
+        m_stickMoveAction?.Disable();
     }
 
-    protected override void StickMove(StickControl control)
+    private void Update()
     {
-        base.StickMove(control);
+        Gamepad m_xbox = Gamepad.current;
+        if (m_xbox != null)
+        {
+            m_leftStickText.text = m_xbox.leftStick.ReadValue().ToString("F2");
+            m_rightStickText.text = m_xbox.rightStick.ReadValue().ToString("F2");
+        }
 
-        if (control.name == "leftStick")
-            m_leftStickText.text = control.ReadValue().ToString("F2");
-        else if (control.name == "rightStick")
-            m_rightStickText.text = control.ReadValue().ToString("F2");
-    }
+    }    
 }
