@@ -19,7 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
- 
+
 #### Actions
 
 - Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
