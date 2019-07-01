@@ -257,7 +257,7 @@ namespace UnityEngine.InputSystem.UI
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
-                mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                mouseState.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
             }
             else if (action == m_LeftClickAction?.action)
             {
