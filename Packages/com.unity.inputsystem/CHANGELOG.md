@@ -42,6 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
 - Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
+- We now use the same hierarchical device picker in the "Add Control Scheme" popup, which is already used in the "Input Settings" window.
 
 ## [0.2.10-preview] - 2019-5-17
 
