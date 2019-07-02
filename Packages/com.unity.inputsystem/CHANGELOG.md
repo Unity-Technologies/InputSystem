@@ -45,6 +45,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
 - Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
+- We now use the same hierarchical device picker in the "Add Control Scheme" popup, which is already used in the "Input Settings" window.
 - Made all `IInputStateTypeInfo` implementations internal, as these did not offer value to the user.
 - Made all `IInputDeviceCommandInfo` implementations internal, as these did not offer value to the user.
 - Removed `ReadWriteArray`, which was only used for making `RebindingOperation.scores` editable, which did not add any value.
