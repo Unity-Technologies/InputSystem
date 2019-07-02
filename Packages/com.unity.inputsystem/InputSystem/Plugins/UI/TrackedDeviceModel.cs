@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.UI
 {
-    public class TrackedPointerEventData : PointerEventData
+    internal class TrackedPointerEventData : PointerEventData
     {
         public TrackedPointerEventData(EventSystem eventSystem)
             : base(eventSystem)

@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: Must match with PenInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 36)]
-    public struct PenState : IInputStateTypeInfo
+    internal struct PenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'E', 'N');
 

@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct KeyboardState : IInputStateTypeInfo
+    internal unsafe struct KeyboardState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
@@ -777,8 +777,20 @@ namespace UnityEngine.InputSystem
         internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 
+    /// <summary>
+    /// No activity has been registered on the pointer yet.
+    /// </summary>
     public static class KeyboardExtensions
     {
+        /// <summary>
+        /// Check if a <see cref="Key"/> enum value represents a modifier key.
+        /// </summary>
+        /// <param name="key">The key enum value you want to check.</param>
+        /// <remarks>
+        /// Returns true if this key is a modifier key, false otherwise.
+        /// Modifier keys are any keys you can hold down to modify the output of other keys pressed simultaneously,
+        /// such as the "shift" or "control" keys.
+        /// </remarks>
         public static bool IsModifierKey(this Key key)
         {
             switch (key)
@@ -797,6 +809,13 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
+        /// <summary>
+        /// Check if a <see cref="Key"/> enum value represents key generating text input.
+        /// </summary>
+        /// <param name="key">The key enum value you want to check.</param>
+        /// <remarks>
+        /// Returns true if this key is a key generating non-whitespace character input, false otherwise.
+        /// </remarks>
         public static bool IsTextInputKey(this Key key)
         {
             switch (key)
