@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Processors;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    public enum AndroidSensorType
+    internal enum AndroidSensorType
     {
         None = 0,
         Accelerometer = 1,
@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [Serializable]
-    public struct AndroidSensorCapabilities
+    internal struct AndroidSensorCapabilities
     {
         public AndroidSensorType sensorType;
 
@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct AndroidSensorState : IInputStateTypeInfo
+    internal unsafe struct AndroidSensorState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 

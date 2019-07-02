@@ -3,6 +3,9 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// An HTC Vive VR headset.
+    /// </summary>
     [InputControlLayout]
     public class ViveHMD : XRHMD
     {
@@ -53,6 +56,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive Wand controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class ViveWand : XRControllerWithRumble
     {
@@ -100,6 +106,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// A Valve Knuckles VR controller.
+    /// </summary>
     [InputControlLayout]
     public class KnucklesController : XRControllerWithRumble
     {
@@ -154,6 +163,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive lighthouse.
+    /// </summary>
     [InputControlLayout]
     public class ViveLighthouse : InputDevice
     {
@@ -176,6 +188,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive tracker.
+    /// </summary>
     public class ViveTracker : InputDevice
     {
         public IntegerControl trackingState { get; private set; }

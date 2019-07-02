@@ -4,8 +4,10 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Interactions
 {
-    // Performs the action if the control is pressed, held for at least the set duration
-    // (which defaults to InputSettings.defaultSlowTapTime) and then *released*.
+    /// <summary>
+    /// Performs the action if the control is pressed, held for at least the set duration
+    /// (which defaults to <see cref="InputSettings.defaultHoldTime"/>) and then released.
+    /// </summary>
     public class SlowTapInteraction : IInputInteraction
     {
         public float duration;

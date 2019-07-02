@@ -326,37 +326,6 @@ public partial class DemoGameTests : DemoGameTestFixture
 
     [Test]
     [Category("Demo")]
-    [Property("Device", "Gamepad")]
-    [Ignore("TODO")]
-    public unsafe void TODO_Demo_RumblesDeviceWhenFiringShot()
-    {
-        float? highFreqMotor = null;
-        float? lowFreqMotor = null;
-
-        input.runtime.SetDeviceCommandCallback(gamepad,
-            (id, command) =>
-            {
-                unsafe
-                {
-                    if (command->type == DualMotorRumbleCommand.Type)
-                    {
-                        Assert.That(highFreqMotor, Is.Null);
-                        Assert.That(lowFreqMotor, Is.Null);
-
-                        var rumbleCommand = (DualMotorRumbleCommand*)command;
-
-                        highFreqMotor = rumbleCommand->highFrequencyMotorSpeed;
-                        lowFreqMotor = rumbleCommand->lowFrequencyMotorSpeed;
-                    }
-                }
-                return InputDeviceCommand.GenericFailure;
-            });
-
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Demo")]
     [Ignore("TODO")]
     public void TODO_Demo_CanQuitGame()
     {

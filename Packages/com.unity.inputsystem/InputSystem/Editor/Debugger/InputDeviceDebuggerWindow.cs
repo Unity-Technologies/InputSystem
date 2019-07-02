@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.Editor
 {
     // Shows status and activity of a single input device in a separate window.
     // Can also be used to alter the state of a device by making up state events.
-    public sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
+    internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
         internal const int kMaxNumEventsInTrace = 64;
 

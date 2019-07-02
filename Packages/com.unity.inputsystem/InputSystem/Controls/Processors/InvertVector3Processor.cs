@@ -1,6 +1,6 @@
 namespace UnityEngine.InputSystem.Processors
 {
-    public class InvertVector3Processor : InputProcessor<Vector3>
+    internal class InvertVector3Processor : InputProcessor<Vector3>
     {
         public bool invertX = true;
         public bool invertY = true;
