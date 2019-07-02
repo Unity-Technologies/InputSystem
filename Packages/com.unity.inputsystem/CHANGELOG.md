@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 - Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
+- Fixed NullReferenceException being thrown when project changes.
 - Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.

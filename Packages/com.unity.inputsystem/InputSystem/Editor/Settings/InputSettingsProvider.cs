@@ -336,7 +336,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Force next OnGUI() to re-initialize.
                 s_Instance.m_Settings = null;
-                s_Instance.Repaint();
+
+                // Request repaint.
+                SettingsService.NotifySettingsProviderChanged();
             }
         }
     }
