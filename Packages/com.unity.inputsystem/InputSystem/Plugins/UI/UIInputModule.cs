@@ -290,36 +290,6 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        internal void ProcessTouch(ref TouchModel touchState)
-        {
-            if (!touchState.changedThisFrame)
-                return;
-
-            var eventData = GetOrCreateCachedPointerEvent();
-            eventData.Reset();
-
-            touchState.CopyTo(eventData);
-
-            if (touchState.selectPhase == PointerPhase.Canceled)
-            {
-                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Canceled) ? new RaycastResult() : PerformRaycast(eventData);
-            }
-            else
-            {
-                eventData.pointerCurrentRaycast = PerformRaycast(eventData);
-            }
-
-            eventData.button = PointerEventData.InputButton.Left;
-
-            ProcessMouseButton(touchState.selectDelta, eventData, false);
-            ProcessMouseMovement(eventData);
-            ProcessMouseButtonDrag(eventData);
-
-            touchState.CopyFrom(eventData);
-
-            touchState.OnFrameFinished();
-        }
-
         internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
         {
             if (!deviceState.changedThisFrame)

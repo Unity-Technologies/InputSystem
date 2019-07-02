@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    public struct JoystickState : IInputStateTypeInfo
+    internal struct JoystickState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 

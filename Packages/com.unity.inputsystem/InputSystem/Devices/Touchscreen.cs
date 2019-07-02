@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
-    public unsafe struct TouchscreenState : IInputStateTypeInfo
+    internal unsafe struct TouchscreenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
 

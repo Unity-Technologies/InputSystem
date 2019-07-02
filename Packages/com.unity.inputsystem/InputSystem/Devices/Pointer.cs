@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Default state structure for pointer devices.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct PointerState : IInputStateTypeInfo
+    internal struct PointerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
@@ -73,6 +73,9 @@ namespace UnityEngine.InputSystem.LowLevel
 namespace UnityEngine.InputSystem
 {
     ////REVIEW: does it really make sense to have this at the pointer level?
+    /// <summary>
+    /// Enum values used by the <see cref="Pointer.phase"/> property.
+    /// </summary>
     public enum PointerPhase
     {
         /// <summary>

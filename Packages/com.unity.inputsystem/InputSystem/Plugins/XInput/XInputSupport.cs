@@ -31,10 +31,10 @@ namespace UnityEngine.InputSystem.XInput
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
 #endif
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-            InputSystem.RegisterLayout<XInputControllerOSX>(
+            InputSystem.RegisterLayout<XboxGamepadMacOS>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wired Controller"));
-            InputSystem.RegisterLayout<XInputControllerWirelessOSX>(
+            InputSystem.RegisterLayout<XboxOneGampadMacOSWireless>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wireless Controller"));
 #endif

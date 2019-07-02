@@ -3,6 +3,9 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// A Windows Mixed Reality XR headset.
+    /// </summary>
     [InputControlLayout]
     public class WMRHMD : XRHMD
     {
@@ -38,6 +41,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// A Windows Mixed Reality XR controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRControllerWithRumble
     {
