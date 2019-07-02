@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 - Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
+- Fixed NullReferenceException being thrown when project changes.
 
 #### Actions
 
