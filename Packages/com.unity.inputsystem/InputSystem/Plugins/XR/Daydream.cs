@@ -3,6 +3,9 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// A head-mounted display powered by Google Daydream.
+    /// </summary>
     [InputControlLayout]
     public class DaydreamHMD : XRHMD
     {
@@ -37,6 +40,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An XR controller powered by Google Daydream.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {

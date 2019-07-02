@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     // }
     // Report size is 14 bytes. First two bytes are header information for the report.
     [StructLayout(LayoutKind.Explicit)]
-    public struct XInputControllerOSXState : IInputStateTypeInfo
+    internal struct XInputControllerOSXState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('H', 'I', 'D');
 
@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public struct XInputControllerWirelessOSXState : IInputStateTypeInfo
+    internal struct XInputControllerWirelessOSXState : IInputStateTypeInfo
     {
         public static FourCC kFormat
         {
@@ -203,12 +203,29 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
-    public class XInputControllerOSX : XInputController
+    /// <summary>
+    /// A wired Xbox Gamepad connected to a macOS computer.
+    /// </summary>
+    /// <remarks>
+    /// An Xbox 360 or Xbox one wired gamepad connected to a mac.
+    /// These controllers don't work on a mac out of the box, but require a driver like https://github.com/360Controller/
+    /// to work.
+    /// </remarks>
+    public class XboxGamepadMacOS : XInputController
     {
     }
 
     [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
-    public class XInputControllerWirelessOSX : XInputController
+    /// <summary>
+    /// A wireless Xbox One Gamepad connected to a macOS computer.
+    /// </summary>
+    /// <remarks>
+    /// An Xbox One wireless gamepad connected to a mac using Bluetooth.
+    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
+    /// </remarks>
+    public class XboxOneGampadMacOSWireless : XInputController
     {
     }
 }

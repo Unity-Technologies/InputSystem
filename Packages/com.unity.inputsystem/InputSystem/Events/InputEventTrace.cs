@@ -10,8 +10,13 @@ using UnityEngine.Profiling;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    // Helper to simplify recording events. Can record events for a specific device
-    // or all events coming in.
+    /// <summary>
+    /// The InputEventTrace lets you record input events for later processing.
+    /// </summary>
+    /// <remarks>
+    /// InputEventTrace lets you record input events into a buffer for either a specific device, or for all events
+    /// received by the input system. This is useful for testing purposes or for replaying recorded input.
+    /// </remarks>
     [Serializable]
     public sealed class InputEventTrace : IDisposable, IEnumerable<InputEventPtr>
     {

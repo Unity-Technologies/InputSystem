@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
+- Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
 
 #### Actions
 
@@ -43,6 +44,13 @@ however, it has to be formatted properly to pass verification tests.
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
 - Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
+- Made all `IInputStateTypeInfo` implementations internal, as these did not offer value to the user.
+- Made all `IInputDeviceCommandInfo` implementations internal, as these did not offer value to the user.
+- Removed `ReadWriteArray`, which was only used for making `RebindingOperation.scores` editable, which did not add any value.
+- Removed `PrimitiveValueOrArray`, as non of it's functionality over `PrimitiveValue` was implemented.
+- Made all `InputProcessor` implementation internal, as access to these types is exposed only through text mode representations.
+- Removed `CurveProcessor` as it was not implemented.
+- Renamed XInputControllerOSX to a more descriptive XboxGamepadMacOS.
 
 ## [0.2.10-preview] - 2019-5-17
 

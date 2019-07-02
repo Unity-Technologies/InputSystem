@@ -158,6 +158,9 @@ namespace UnityEngine.InputSystem.Utilities
         }
     }
 
+    /// <summary>
+    /// Extension methods to help with <see cref="ReadOnlyArrayExtensions"/> contents.
+    /// </summary>
     public static class ReadOnlyArrayExtensions
     {
         public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)

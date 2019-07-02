@@ -3,6 +3,9 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// An Oculus VR headset (such as the Oculus Rift series of devices).
+    /// </summary>
     [InputControlLayout]
     public class OculusHMD : XRHMD
     {
@@ -38,6 +41,9 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An Oculus Touch controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class OculusTouchController : XRControllerWithRumble
     {
@@ -133,6 +139,10 @@ namespace UnityEngine.InputSystem.XR
             deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
         }
     }
+
+    /// <summary>
+    /// An Oculus Remote controller.
+    /// </summary>
 
     public class OculusRemote : InputDevice
     {

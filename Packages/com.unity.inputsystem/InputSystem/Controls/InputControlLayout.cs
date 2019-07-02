@@ -29,6 +29,9 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Layouts
 {
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onFindLayoutForDevice"/> and <see cref="InputSystem.onFindControlLayoutForDevice"/>.
+    /// </summary>
     public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
 
@@ -123,7 +126,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// <summary>
             /// Optional default value for the state memory associated with the control.
             /// </summary>
-            public PrimitiveValueOrArray defaultState;
+            public PrimitiveValue defaultState;
 
             public PrimitiveValue minValue;
             public PrimitiveValue maxValue;
@@ -468,12 +471,6 @@ namespace UnityEngine.InputSystem.Layouts
                 }
 
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
-                {
-                    controls[index].defaultState = new PrimitiveValueOrArray(value);
-                    return this;
-                }
-
-                public ControlBuilder WithDefaultState(PrimitiveValueOrArray value)
                 {
                     controls[index].defaultState = value;
                     return this;
@@ -885,9 +882,9 @@ namespace UnityEngine.InputSystem.Layouts
                 arraySize = attribute.arraySize;
 
             // Determine default state.
-            var defaultState = new PrimitiveValueOrArray();
+            var defaultState = new PrimitiveValue();
             if (attribute != null)
-                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+                defaultState = PrimitiveValue.FromObject(attribute.defaultState);
 
             // Determine min and max value.
             var minValue = new PrimitiveValue();
@@ -1430,7 +1427,7 @@ namespace UnityEngine.InputSystem.Layouts
                     layout.processors = new ReadOnlyArray<NameAndParameters>(NameAndParameters.ParseMultiple(processors).ToArray());
 
                 if (defaultState != null)
-                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
+                    layout.defaultState = PrimitiveValue.FromObject(defaultState);
                 if (minValue != null)
                     layout.minValue = PrimitiveValue.FromObject(minValue);
                 if (maxValue != null)

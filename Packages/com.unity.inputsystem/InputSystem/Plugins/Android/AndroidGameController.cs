@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
+    internal unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
         public const int MaxAxes = 48;
         public const int MaxButtons = 220;
@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    public enum AndroidInputSource
+    internal enum AndroidInputSource
     {
         Keyboard = 257,
         Dpad = 513,
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [Serializable]
-    public struct AndroidDeviceCapabilities
+    internal struct AndroidDeviceCapabilities
     {
         public string deviceDescriptor;
         public int productId;

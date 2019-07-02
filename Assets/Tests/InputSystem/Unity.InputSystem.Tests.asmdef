@@ -3,7 +3,8 @@
     "references": [
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
-        "Unity.ugui"
+        "Unity.ugui",
+        "Unity.PackageManagerDocTools.Editor"        
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
