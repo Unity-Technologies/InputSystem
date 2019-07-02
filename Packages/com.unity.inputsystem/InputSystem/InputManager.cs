@@ -1832,10 +1832,7 @@ namespace UnityEngine.InputSystem
                 if (!control.hasDefaultValue)
                     continue;
 
-                if (control.m_DefaultValue.isArray)
-                    throw new NotImplementedException("default value arrays");
-
-                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue.primitiveValue);
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue);
             }
 
             // Copy default state to all front and back buffers.
@@ -1880,9 +1877,6 @@ namespace UnityEngine.InputSystem
                 var control = controls[n];
                 if (control.noisy)
                     continue;
-
-                if (control.m_DefaultValue.isArray)
-                    throw new NotImplementedException("default value arrays");
 
                 var stateBlock = control.m_StateBlock;
                 Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);

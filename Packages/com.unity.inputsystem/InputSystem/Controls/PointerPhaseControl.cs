@@ -9,6 +9,9 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Controls
 {
+    /// <summary>
+    /// An input control reading pointer phase values.
+    /// </summary>
     [InputControlLayout(hideInUI = true)]
     public class PointerPhaseControl : InputControl<PointerPhase>
     {

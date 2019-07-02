@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    public enum AndroidKeyCode
+    internal enum AndroidKeyCode
     {
         Unknown = 0,
         SoftLeft = 1,

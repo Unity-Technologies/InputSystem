@@ -231,12 +231,12 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("MyDevice");
 
-        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
-        Assert.That(layout["digital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
-        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(0x1234));
+        Assert.That(layout["analog"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["analog"].defaultState.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.ToInt64(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 
     class TestDeviceWithDefaultState : InputDevice
@@ -253,8 +253,8 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("TestDeviceWithDefaultState");
 
-        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(layout["control"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control"].defaultState.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]
@@ -304,12 +304,12 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("DerivedLayout");
 
-        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
-        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
-        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(layout["control1"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control1"].defaultState.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
+        Assert.That(layout["control2"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control2"].defaultState.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
+        Assert.That(layout["control3"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control3"].defaultState.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]

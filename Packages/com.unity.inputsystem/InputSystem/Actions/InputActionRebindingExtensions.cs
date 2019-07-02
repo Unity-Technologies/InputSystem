@@ -352,7 +352,7 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <remarks>
             /// </remarks>
-            public ReadWriteArray<float> scores => new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count);
+            public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
             public InputControl selectedControl
             {

@@ -156,7 +156,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
 
             // Add toplevel item for device.
-            var deviceItem = new DeviceDropdownItem(layout);
+            var deviceItem = new DeviceDropdownItem(layout, searchable: searchable);
             parent.AddChild(deviceItem);
 
             // Add common usage variants.

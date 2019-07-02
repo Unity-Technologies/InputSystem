@@ -5,6 +5,9 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.Controls
 {
     ////TODO: allow format to be any integer format
+    /// <summary>
+    /// A generic input control reading integer values.
+    /// </summary>
     public class IntegerControl : InputControl<int>
     {
         public IntegerControl()

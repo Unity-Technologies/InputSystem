@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
-    public class InputActionImporter : ScriptedImporter
+    internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 6;
 

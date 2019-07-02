@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct MoveControllerStatePS4 : IInputStateTypeInfo
+    internal struct MoveControllerStatePS4 : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'M', 'V');
 
@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the DualShockPS4OutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct MoveControllerPS4OuputCommand : IInputDeviceCommandInfo
+    internal struct MoveControllerPS4OuputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('P', 'S', 'M', 'C');
 
