@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        ////REVIEW: should this trigger Started?
+                        context.Started();
                         if (context.continuous)
                             context.PerformedAndStayPerformed();
                         else
@@ -90,13 +90,17 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease)
                     {
                         if (!isActuated)
+                        {
+                            context.Started();
                             context.PerformedAndGoBackToWaiting();
+                        }
                         // No support for continuous mode.
 
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
+                        context.Started();
                         context.PerformedAndGoBackToWaiting();
                         // No support for continuous mode.
 
