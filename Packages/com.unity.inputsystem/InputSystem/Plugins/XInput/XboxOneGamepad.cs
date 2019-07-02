@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XboxOneGamepadState : IInputStateTypeInfo
+    internal struct XboxOneGamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat
         {
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the GamepadOutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
+    internal struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('X', '1', 'G', 'O'); } }
 
@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     /// Retrieve the slot index, default color and user ID of the controller.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryXboxControllerInfo : IInputDeviceCommandInfo
+    internal struct QueryXboxControllerInfo : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('I', 'N', 'F', 'O'); } }
 
@@ -189,6 +189,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
+    /// <summary>
+    /// An Xbox One Gamepad.
+    /// </summary>
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;

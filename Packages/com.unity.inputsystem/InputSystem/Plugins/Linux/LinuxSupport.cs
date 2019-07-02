@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem.Linux
     // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
 #pragma warning disable 0649
 
-    public enum JoystickFeatureType
+    internal enum JoystickFeatureType
     {
         Invalid = 0,
         Axis,
@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Linux
         Max
     }
 
-    public enum SDLAxisUsage
+    internal enum SDLAxisUsage
     {
         Unknown = 0,
         X,
@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.Linux
         Count
     }
 
-    public enum SDLButtonUsage
+    internal enum SDLButtonUsage
     {
         Unknown = 0,
         Trigger,

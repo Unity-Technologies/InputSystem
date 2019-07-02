@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 30)]
-    public struct MouseState : IInputStateTypeInfo
+    internal struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
     }
 
-    public enum MouseButton
+    internal enum MouseButton
     {
         Left,
         Right,

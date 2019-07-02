@@ -3,6 +3,9 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// Base class for standalone VR headsets powered by Oculus VR.
+    /// </summary>
     [InputControlLayout]
     public class OculusStandaloneHMDBase : XRHMD
     {
@@ -61,9 +64,15 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// An Oculus Go headset.
+    /// </summary>
     public class OculusGo : OculusStandaloneHMDBase
     {}
 
+    /// <summary>
+    /// A standalone VR headset powered by Oculus VR.
+    /// </summary>
     [InputControlLayout]
     public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
     {
@@ -79,10 +88,16 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// A Gear VR headset.
+    /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance")]
     public class GearVR : OculusStandaloneHMDExtended
     {}
 
+    /// <summary>
+    /// A Gear VR controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {

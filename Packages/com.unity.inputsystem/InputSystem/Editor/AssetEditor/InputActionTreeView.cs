@@ -125,6 +125,8 @@ namespace UnityEngine.InputSystem.Editor
 
         #region Filtering
 
+        internal bool hasFilter => m_ItemFilterCriteria != null;
+
         public void ClearItemSearchFilterAndReload()
         {
             if (m_ItemFilterCriteria == null)
@@ -1002,6 +1004,12 @@ namespace UnityEngine.InputSystem.Editor
         private void SelectItemAndBeginRename(SerializedProperty property)
         {
             var item = FindItemFor(property);
+            if (item == null)
+            {
+                // if we could not find the item, try clearing search filters.
+                ClearItemSearchFilterAndReload();
+                item = FindItemFor(property);
+            }
             Debug.Assert(item != null, $"Cannot find newly created item for {property.propertyPath}");
             SetExpandedRecursive(item.id, true);
             SelectItem(item);

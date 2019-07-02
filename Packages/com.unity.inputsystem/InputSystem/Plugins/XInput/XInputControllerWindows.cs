@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout is XINPUT_GAMEPAD
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XInputControllerWindowsState : IInputStateTypeInfo
+    internal struct XInputControllerWindowsState : IInputStateTypeInfo
     {
         public FourCC format
         {
@@ -88,6 +88,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
 namespace UnityEngine.InputSystem.XInput
 {
+    /// <summary>
+    /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
+    /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
     public class XInputControllerWindows : XInputController
     {

@@ -375,6 +375,13 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public string searchText => m_SearchText;
 
+        internal void ResetSearchFilters()
+        {
+            m_SearchText = null;
+            m_SelectedControlSchemeIndex = -1;
+            m_SelectedDeviceRequirementIndex = -1;
+        }
+
         public bool isDirty
         {
             get => m_IsDirty;

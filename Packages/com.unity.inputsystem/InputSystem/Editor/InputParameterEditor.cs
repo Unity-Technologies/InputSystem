@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public abstract class InputParameterEditor
+    internal abstract class InputParameterEditor
     {
         public object target { get; internal set; }
 
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
         private static Dictionary<Type, Type> s_TypeLookupCache;
     }
 
-    public abstract class InputParameterEditor<TObject> : InputParameterEditor
+    internal abstract class InputParameterEditor<TObject> : InputParameterEditor
         where TObject : class
     {
         public new TObject target { get; private set; }
