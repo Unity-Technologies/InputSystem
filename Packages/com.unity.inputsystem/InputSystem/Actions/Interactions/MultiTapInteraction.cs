@@ -17,12 +17,31 @@ namespace UnityEngine.InputSystem.Interactions
     /// </remarks>
     public class MultiTapInteraction : IInputInteraction<float>
     {
+        /// <summary>
+        /// The time in seconds within which the control needs to be pressed and released to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultTapTime"/>) instead.
+        /// </remarks>
         [Tooltip("The maximum time (in seconds) allowed to elapse between pressing and releasing a control for it to register as a tap.")]
         public float tapTime;
 
+        /// <summary>
+        /// The time in seconds which is allowed to pass between taps.
+        /// </summary>
+        /// <remarks>
+        /// If this time is exceeded, the multi-tap interaction is canceled.
+        /// If this value is equal to or smaller than zero, the input system will use the duplicate value of <see cref="tapTime"/> instead.
+        /// </remarks>
         [Tooltip("The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.")]
         public float tapDelay;
 
+        /// <summary>
+        /// The number of taps required to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.
+        /// </remarks>
         [Tooltip("How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.")]
         public int tapCount = 2;
 
