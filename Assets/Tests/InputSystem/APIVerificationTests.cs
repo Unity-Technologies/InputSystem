@@ -258,17 +258,15 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
+            ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPicker).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPickerState).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionDebuggerWindow).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputEditorUserSettings).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputParameterEditor).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputParameterEditor<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Processors.EditorWindowSpaceProcessor).FullName ||
-            // Will not touch touch before the touch refactor has landed to avoid collisions.
-            type.FullName == typeof(UnityEngine.InputSystem.Touch).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.TouchFlags).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.LowLevel.TouchState).FullName ||
             // All our XR stuff completely lacks docs. Get XR team to fix this.
             type.Namespace.StartsWith("UnityEngine.InputSystem.XR") ||
             false;

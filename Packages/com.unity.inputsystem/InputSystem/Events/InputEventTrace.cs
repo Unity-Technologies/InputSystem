@@ -125,6 +125,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void Dispose()
         {
+            Disable();
             Release();
             GC.SuppressFinalize(this);
         }
@@ -157,8 +158,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
         private unsafe void Release()
         {
-            Disable();
-
             if (m_EventBuffer != IntPtr.Zero)
                 UnsafeUtility.Free(m_EventBuffer.ToPointer(), Allocator.Persistent);
 

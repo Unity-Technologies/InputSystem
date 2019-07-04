@@ -6,6 +6,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////FIXME: apparently shutdown events are not coming through in the analytics backend
+
 namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics

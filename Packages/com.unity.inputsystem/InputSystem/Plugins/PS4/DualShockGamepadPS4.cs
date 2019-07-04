@@ -455,7 +455,6 @@ namespace UnityEngine.InputSystem.PS4
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
 
-#if UNITY_2019_1_OR_NEWER
             var capabilities = description.capabilities;
             var deviceDescriptor = PS4InputDeviceDescriptor.FromJson(capabilities);
 
@@ -472,7 +471,6 @@ namespace UnityEngine.InputSystem.PS4
                     m_LightBarColor = PS4ColorIdToColor(m_DefaultColorId);
                 }
             }
-#endif
         }
 
         public override void PauseHaptics()

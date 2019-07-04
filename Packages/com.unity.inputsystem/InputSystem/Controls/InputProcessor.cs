@@ -3,9 +3,9 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
+////TODO: come up with a mechanism to allow (certain) processors to be stateful
 
-////TODO: make processor effects visible on children (e.g. leftStick/x should reflect deadzoning of leftStick)
+////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
 
 namespace UnityEngine.InputSystem
 {

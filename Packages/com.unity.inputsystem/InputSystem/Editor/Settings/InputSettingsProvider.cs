@@ -106,6 +106,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_DefaultTapTime);
                 EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
                 EditorGUILayout.PropertyField(m_DefaultHoldTime);
+                EditorGUILayout.PropertyField(m_TapRadius);
+                EditorGUILayout.PropertyField(m_MultiTapDelayTime);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -224,6 +226,8 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
+            m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
+            m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -319,6 +323,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
+        [NonSerialized] private SerializedProperty m_TapRadius;
+        [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;

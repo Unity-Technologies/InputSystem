@@ -1,7 +1,5 @@
 using UnityEngine.InputSystem.LowLevel;
 
-////TODO: get rid of pressPoint and instead deadzone axis buttons
-
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
 namespace UnityEngine.InputSystem.Controls
