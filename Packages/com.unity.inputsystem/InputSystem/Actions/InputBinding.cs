@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -225,6 +226,14 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(group));
 
             return new InputBinding {groups = group};
+        }
+
+        public static InputBinding MaskByGroups(params string[] groups)
+        {
+            if (groups == null)
+                throw new ArgumentNullException(nameof(groups));
+
+            return new InputBinding {groups = string.Join(kSeparatorString, groups.Where(x => !string.IsNullOrEmpty(x)))};
         }
 
         [SerializeField] private string m_Name;

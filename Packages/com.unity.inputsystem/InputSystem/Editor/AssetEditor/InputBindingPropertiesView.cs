@@ -244,6 +244,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnBindingGroupsChanged()
         {
+            ////FIXME: changing the binding group of a GLOBAL binding when a control scheme is selected does not cause the binding to disappear from the control scheme immediately
+            ////       (same goes for the other way round)
+
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
 

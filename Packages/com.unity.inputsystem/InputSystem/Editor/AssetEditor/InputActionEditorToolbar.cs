@@ -375,6 +375,13 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public string searchText => m_SearchText;
 
+        internal void ResetSearchFilters()
+        {
+            m_SearchText = null;
+            m_SelectedControlSchemeIndex = -1;
+            m_SelectedDeviceRequirementIndex = -1;
+        }
+
         public bool isDirty
         {
             get => m_IsDirty;
@@ -417,8 +424,20 @@ namespace UnityEngine.InputSystem.Editor
                 m_DeviceView.headerHeight = 2;
                 m_DeviceView.onAddCallback += list =>
                 {
-                    var a = new AddDeviceDropdown(AddDeviceRequirement);
-                    a.Show(new Rect(Event.current.mousePosition, Vector2.zero));
+                    var dropdown = new InputControlPickerDropdown(
+                        new InputControlPickerState(),
+                        path =>
+                        {
+                            var requirement = new InputControlScheme.DeviceRequirement
+                            {
+                                controlPath = path,
+                                isOptional = false
+                            };
+
+                            AddDeviceRequirement(requirement);
+                        },
+                        mode: InputControlPicker.Mode.PickDevice);
+                    dropdown.Show(new Rect(Event.current.mousePosition, Vector2.zero));
                 };
                 m_DeviceView.onRemoveCallback += list =>
                 {
@@ -608,59 +627,6 @@ namespace UnityEngine.InputSystem.Editor
                 public override string ToString()
                 {
                     return displayText;
-                }
-            }
-
-            private class AddDeviceDropdown : AdvancedDropdown
-            {
-                private readonly Action<InputControlScheme.DeviceRequirement> m_OnAddRequirement;
-
-                public AddDeviceDropdown(Action<InputControlScheme.DeviceRequirement> onAddRequirement)
-                    : base(new AdvancedDropdownState())
-                {
-                    m_OnAddRequirement = onAddRequirement;
-                }
-
-                protected override AdvancedDropdownItem BuildRoot()
-                {
-                    var root = new AdvancedDropdownItem(string.Empty);
-                    foreach (var layout in EditorInputControlLayoutCache.allLayouts.Where(x => x.isDeviceLayout).OrderBy(x => x.name))
-                    {
-                        root.AddChild(new DeviceItem(layout.name));
-                        foreach (var usage in layout.commonUsages.OrderBy(x => x))
-                            root.AddChild(new DeviceItem(layout.name, usage));
-                    }
-                    return root;
-                }
-
-                protected override void ItemSelected(AdvancedDropdownItem item)
-                {
-                    var deviceItem = (DeviceItem)item;
-                    var requirement = new InputControlScheme.DeviceRequirement
-                    {
-                        controlPath = deviceItem.ToString(),
-                        isOptional = false
-                    };
-
-                    m_OnAddRequirement(requirement);
-                }
-
-                private class DeviceItem : AdvancedDropdownItem
-                {
-                    public string layoutName { get; }
-                    public string usage { get; }
-
-                    public DeviceItem(string layoutName, string usage = null)
-                        : base(string.IsNullOrEmpty(usage) ? layoutName : $"{layoutName} {usage}")
-                    {
-                        this.layoutName = layoutName;
-                        this.usage = usage;
-                    }
-
-                    public override string ToString()
-                    {
-                        return !string.IsNullOrEmpty(usage) ? $"<{layoutName}>{{{usage}}}" : $"<{layoutName}>";
-                    }
                 }
             }
         }

@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Editor
     /// </example>
     /// </remarks>
     [CustomPropertyDrawer(typeof(InputControlAttribute))]
-    public sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
+    internal sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
     {
         private InputControlPathEditor m_Editor;
         private InputControlPickerState m_PickerState;

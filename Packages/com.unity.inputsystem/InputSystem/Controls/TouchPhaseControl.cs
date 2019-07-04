@@ -9,24 +9,31 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Controls
 {
+    /// <summary>
+    /// A control reading a <see cref="TouchPhase"/> value.
+    /// </summary>
+    /// <remarks>
+    /// This is used mainly by <see cref="Touchscreen"/> to read <see cref="TouchState.phase"/>.
+    /// </remarks>
+    /// <seealso cref="Touchscreen"/>
     [InputControlLayout(hideInUI = true)]
-    public class PointerPhaseControl : InputControl<PointerPhase>
+    public class TouchPhaseControl : InputControl<TouchPhase>
     {
-        public PointerPhaseControl()
+        public TouchPhaseControl()
         {
             m_StateBlock.format = InputStateBlock.FormatInt;
         }
 
-        public override unsafe PointerPhase ReadUnprocessedValueFromState(void* statePtr)
+        public override unsafe TouchPhase ReadUnprocessedValueFromState(void* statePtr)
         {
             var intValue = stateBlock.ReadInt(statePtr);
-            return (PointerPhase)intValue;
+            return (TouchPhase)intValue;
         }
 
-        public override unsafe void WriteValueIntoState(PointerPhase value, void* statePtr)
+        public override unsafe void WriteValueIntoState(TouchPhase value, void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            *(PointerPhase*)valuePtr = value;
+            *(TouchPhase*)valuePtr = value;
         }
     }
 }

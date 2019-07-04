@@ -331,6 +331,10 @@ namespace UnityEngine.InputSystem.Utilities
             var lengthOfSecond = secondList.Length;
             while (indexInFirst < lengthOfFirst)
             {
+                // Skip empty elements.
+                if (firstList[indexInFirst] == separator)
+                    ++indexInFirst;
+
                 // Find end of current element.
                 var endIndexInFirst = indexInFirst + 1;
                 while (endIndexInFirst < lengthOfFirst && firstList[endIndexInFirst] != separator)
@@ -342,6 +346,10 @@ namespace UnityEngine.InputSystem.Utilities
                 var indexInSecond = 0;
                 while (indexInSecond < lengthOfSecond)
                 {
+                    // Skip empty elements.
+                    if (secondList[indexInSecond] == separator)
+                        ++indexInSecond;
+
                     // Find end of current element.
                     var endIndexInSecond = indexInSecond + 1;
                     while (endIndexInSecond < lengthOfSecond && secondList[endIndexInSecond] != separator)

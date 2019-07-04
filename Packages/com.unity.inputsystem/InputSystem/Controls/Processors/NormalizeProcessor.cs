@@ -3,7 +3,7 @@ namespace UnityEngine.InputSystem.Processors
     // Normalizes input values in the range [min..max] to unsigned normalized
     // form [0..1] if min is >= 0 and to signed normalized form [-1..1] if
     // min < 0.
-    public class NormalizeProcessor : InputProcessor<float>
+    internal class NormalizeProcessor : InputProcessor<float>
     {
         public float min;
         public float max;

@@ -13,12 +13,16 @@ public class TouchReporter : MonoBehaviour
     void Update()
     {
         var touchscreen = InputSystem.GetDevice<Touchscreen>();
+        if (touchscreen == null)
+            return;
 
-        if (touchscreen != null && touchIndex < touchscreen.activeTouches.Count)
+        var touch = touchscreen.touches[touchIndex];
+        if (touch.isInProgress)
         {
+            var position = touch.position.ReadValue();
             coordinateText.text =
-                touchscreen.activeTouches[touchIndex].ReadValue().position.x.ToString("0000") + ", " +
-                touchscreen.activeTouches[touchIndex].ReadValue().position.y.ToString("0000");
+                position.x.ToString("0000") + ", " +
+                position.y.ToString("0000");
             image.color = Color.red;
         }
         else

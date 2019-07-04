@@ -466,6 +466,9 @@ namespace UnityEngine.InputSystem
         public TControl[] controls => m_Controls;
     }
 
+    /// <summary>
+    /// Extension helper methods to convert enumerables of controls to <see cref="InputControlList"/> instances.
+    /// </summary>
     public static class InputControlListExtensions
     {
         public static InputControlList<TControl> ToControlList<TControl>(this IEnumerable<TControl> list)

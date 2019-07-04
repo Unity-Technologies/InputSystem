@@ -352,7 +352,7 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <remarks>
             /// </remarks>
-            public ReadWriteArray<float> scores => new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count);
+            public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
             public InputControl selectedControl
             {
@@ -771,7 +771,7 @@ namespace UnityEngine.InputSystem
                         continue;
 
                     // Skip controls that have no effective value change.
-                    // NOTE: This will run the full processor stack and is move involved.
+                    // NOTE: This will run the full processor stack and is more involved.
                     if (!control.HasValueChangeInState(statePtr))
                         continue;
 

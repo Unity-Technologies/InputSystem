@@ -1,6 +1,6 @@
 namespace UnityEngine.InputSystem.Processors
 {
-    public class InvertProcessor : InputProcessor<float>
+    internal class InvertProcessor : InputProcessor<float>
     {
         public override float Process(float value, InputControl<float> control)
         {

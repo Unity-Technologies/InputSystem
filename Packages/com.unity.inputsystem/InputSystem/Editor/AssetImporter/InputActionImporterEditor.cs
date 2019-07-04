@@ -30,9 +30,9 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.Space();
 
             // Importer settings UI.
-            var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
-            EditorGUILayout.PropertyField(generateWapperCodeProperty, m_GenerateWrapperCodeLabel);
-            if (generateWapperCodeProperty.boolValue)
+            var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
+            EditorGUILayout.PropertyField(generateWrapperCodeProperty, m_GenerateWrapperCodeLabel);
+            if (generateWrapperCodeProperty.boolValue)
             {
                 var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
                 var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");

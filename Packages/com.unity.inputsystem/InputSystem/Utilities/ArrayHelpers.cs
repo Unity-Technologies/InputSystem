@@ -22,7 +22,22 @@ namespace UnityEngine.InputSystem.Utilities
             return array.Length;
         }
 
-        public static void Clear<TValue>(TValue[] array, ref int count)
+        public static void Clear<TValue>(this TValue[] array)
+        {
+            if (array == null)
+                return;
+
+            Array.Clear(array, 0, array.Length);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, int count)
+        {
+            if (array == null)
+                return;
+            Array.Clear(array, 0, count);
+        }
+
+        public static void Clear<TValue>(this TValue[] array, ref int count)
         {
             if (array == null)
                 return;
@@ -91,13 +106,13 @@ namespace UnityEngine.InputSystem.Utilities
             return IndexOfReference(array, value, count) != -1;
         }
 
-        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second)
+        public static bool HaveEqualElements<TValue>(TValue[] first, TValue[] second, int count = int.MaxValue)
         {
             if (first == null || second == null)
                 return second == first;
 
-            var lengthFirst = first.Length;
-            var lengthSecond = second.Length;
+            var lengthFirst = Math.Min(count, first.Length);
+            var lengthSecond = Math.Min(count, second.Length);
 
             if (lengthFirst != lengthSecond)
                 return false;
@@ -348,6 +363,17 @@ namespace UnityEngine.InputSystem.Utilities
                 Array.Copy(array, index, array, index + 1, oldLength - index);
 
             array[index] = value;
+        }
+
+        public static void InsertAtWithCapacity<TValue>(ref TValue[] array, ref int count, int index, TValue value, int capacityIncrement = 10)
+        {
+            EnsureCapacity(ref array, count, count + 1, capacityIncrement);
+
+            if (index != count)
+                Array.Copy(array, index, array, index + 1, count - index);
+
+            array[index] = value;
+            ++count;
         }
 
         public static void PutAtIfNotSet<TValue>(ref TValue[] array, int index, Func<TValue> valueFn)

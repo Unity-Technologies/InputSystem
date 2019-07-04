@@ -40,18 +40,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public void RefreshControlValues()
         {
-            if (rootItem != null)
-                RefreshControlValuesRecursive(rootItem);
-        }
-
-        private void RefreshControlValuesRecursive(TreeViewItem item)
-        {
-            if (item is ControlItem controlItem)
-                ReadState(controlItem.control, out controlItem.value, out controlItem.values);
-
-            if (item.children != null)
-                foreach (var child in item.children)
-                    RefreshControlValuesRecursive(child);
+            foreach (var item in GetRows())
+                if (item is ControlItem controlItem)
+                    ReadState(controlItem.control, out controlItem.value, out controlItem.values);
         }
 
         private const float kRowHeight = 20f;
@@ -374,7 +365,7 @@ namespace UnityEngine.InputSystem.Editor
                     value = *(double*)ptr;
                 }
 
-                // Stringify enum values, for. ex., PointerPhase
+                // Stringify enum values, for. ex., TouchPhase
                 if (value != null && control.valueType.IsEnum)
                 {
                     var intValue = Convert.ToInt32(value);
