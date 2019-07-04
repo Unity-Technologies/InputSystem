@@ -513,7 +513,7 @@ namespace UnityEngine.InputSystem.Editor
                             GUILayout.Space(4);
                             var isListeningOld = m_Owner.isListening;
                             var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
-                                EditorStyles.miniButton, GUILayout.MaxWidth(40));
+                                EditorStyles.miniButton, GUILayout.MaxWidth(45));
 
                             if (isListeningOld != isListeningNew)
                             {
