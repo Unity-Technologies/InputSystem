@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static Dictionary<Type, Type> s_TypeLookupCache;
     }
-    
+
     /// <summary>
     /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
     /// or <see cref="IInputInteraction"/>.

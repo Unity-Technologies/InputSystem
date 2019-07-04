@@ -276,24 +276,24 @@ namespace UnityEngine.InputSystem
         /// A touch has just begun, i.e. a finger has touched the screen.. Only the first touch input in any given touch will have this phase.
         /// </summary>
         Began,
-        
+
         /// <summary>
         /// An ongoing touch has changed position.
         /// </summary>
         Moved,
-        
+
         /// <summary>
         /// An ongoing touch has just ended, i.e. the respective finger has been lifted off of the screen. Only the last touch input in a
         /// given touch will have this phase.
         /// </summary>
         Ended,
-        
+
         /// <summary>
         /// An ongoing touch has been cancelled, i.e. ended in a way other than through user interaction. This happens, for example, if
         /// focus is moved away from the application while the touch is ongoing.
         /// </summary>
         Canceled,
-        
+
         /// <summary>
         /// An ongoing touch has not been moved (not received any input) in a frame.
         /// </summary>

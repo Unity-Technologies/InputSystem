@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// the buffer flip.
         /// </remarks>
         void OnNextUpdate();
-        
+
         /// <summary>
         /// A new state event has been received and is being processed.
         /// </summary>

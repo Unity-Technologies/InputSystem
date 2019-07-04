@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// The screen that the finger is associated with.
         /// </summary>
         public Touchscreen screen { get; }
-        
+
         /// <summary>
         /// Index of the finger on <see cref="screen"/>. Each finger corresponds to the Nth touch on a screen.
         /// </summary>

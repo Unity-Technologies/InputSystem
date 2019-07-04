@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Use <see cref="InputSystem.AddStateChangeMonitor"/> to install a state change monitor receiving state change
     /// callbacks for a specific control.
     /// </remarks>
-	/// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+    /// <seealso cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
     public interface IInputStateChangeMonitor
     {
         /// <summary>

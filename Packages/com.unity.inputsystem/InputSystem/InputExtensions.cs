@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem
             }
             return false;
         }
-        
+
         /// <summary>
         /// Check if a <see cref="Key"/> enum value represents a modifier key.
         /// </summary>
