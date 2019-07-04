@@ -385,7 +385,8 @@ namespace UnityEngine.InputSystem.Users
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 s_OnUnpairedDeviceUsed.AppendWithCapacity(value);
-                HookIntoDeviceChange();
+                if (s_ListenForUnpairedDeviceActivity > 0)
+                    HookIntoDeviceStateChange();
             }
             remove
             {
@@ -394,8 +395,8 @@ namespace UnityEngine.InputSystem.Users
                 var index = s_OnUnpairedDeviceUsed.IndexOf(value);
                 if (index != -1)
                     s_OnUnpairedDeviceUsed.RemoveAtWithCapacity(index);
-                if (s_OnUnpairedDeviceUsed.length == 0 && s_ListenForUnpairedDeviceActivity == 0)
-                    UnhookFromDeviceChange();
+                if (s_OnUnpairedDeviceUsed.length == 0)
+                    UnhookFromDeviceStateChange();
             }
         }
 
@@ -421,17 +422,13 @@ namespace UnityEngine.InputSystem.Users
             get => s_ListenForUnpairedDeviceActivity;
             set
             {
-                if (value > 0)
-                {
-                    HookIntoDeviceChange();
-                }
-                else if (s_OnUnpairedDeviceUsed.length == 0 && s_AllUserCount == 0)
-                {
-                    UnhookFromDeviceChange();
-                }
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), "Cannot be negative");
+                if (value > 0 && s_OnUnpairedDeviceUsed.length > 0)
+                    HookIntoDeviceStateChange();
+                else if (value == 0)
+                    UnhookFromDeviceStateChange();
                 s_ListenForUnpairedDeviceActivity = value;
-                if (s_ListenForUnpairedDeviceActivity < 0)
-                    s_ListenForUnpairedDeviceActivity = 0;
             }
         }
 
@@ -1032,7 +1029,7 @@ namespace UnityEngine.InputSystem.Users
             ArrayHelpers.EraseAtWithCapacity(s_AllUserData, ref s_AllUserCount, userIndex);
 
             // Remove our hook if we no longer need it.
-            if (s_AllUserCount == 0 && s_ListenForUnpairedDeviceActivity == 0)
+            if (s_AllUserCount == 0)
                 UnhookFromDeviceChange();
         }
 
@@ -1480,7 +1477,7 @@ namespace UnityEngine.InputSystem.Users
         /// <remarks>
         /// We monitor the device setup in the system for activity that impacts the user setup.
         /// </remarks>
-        internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             switch (change)
             {
@@ -1558,86 +1555,6 @@ namespace UnityEngine.InputSystem.Users
                     break;
                 }
 
-                // Device had activity.
-                case InputDeviceChange.StateChanged:
-                {
-                    // Ignore if we're not listening that kind of activity ATM.
-                    if (s_ListenForUnpairedDeviceActivity == 0)
-                        return;
-
-                    // See if it's a device not belonging to any user.
-                    if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
-                    {
-                        // No, it's a device already paired to a player so do nothing.
-                        return;
-                    }
-
-                    Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
-
-                    ////TODO: allow filtering (e.g. by device requirements on user actions)
-
-                    // Yes, it is so let's find out whether there was actual user activity
-                    // on the device. As a first level, we run the noise mask over the state
-                    // while concurrently comparing whatever bits make it through to the default
-                    // state buffer.
-                    if (device.CheckStateIsAtDefaultIgnoringNoise())
-                    {
-                        Profiler.EndSample();
-                        return; // No activity at all.
-                    }
-
-                    // Go through controls and for any one that isn't noisy or synthetic, find out
-                    // if we have a magnitude greater than zero.
-                    var controls = device.allControls;
-                    for (var i = 0; i < controls.Count; ++i)
-                    {
-                        var control = controls[i];
-                        if (control.noisy || control.synthetic)
-                            continue;
-
-                        ////REVIEW: is this safe?
-                        // Ignore non-leaf controls.
-                        if (control.children.Count > 0)
-                            continue;
-
-                        // Check for default state. Cheaper check than magnitude evaluation
-                        // which may involve several virtual method calls.
-                        if (control.CheckStateIsAtDefault())
-                            continue;
-
-                        // Ending up here is costly. We now do per-control work that may involve
-                        // walking all over the place in the InputControl machinery.
-                        var magnitude = control.EvaluateMagnitude();
-                        if (magnitude > 0)
-                        {
-                            // Yes, something was actuated on the device.
-                            var deviceHasBeenPaired = false;
-                            for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
-                            {
-                                var pairingStateVersionBefore = s_PairingStateVersion;
-
-                                s_OnUnpairedDeviceUsed[n](control);
-
-                                if (pairingStateVersionBefore != s_PairingStateVersion
-                                    && FindUserPairedToDevice(device) != null)
-                                {
-                                    deviceHasBeenPaired = true;
-                                    break;
-                                }
-                            }
-
-                            // If the device was paired in one of the callbacks, stop processing
-                            // changes on it.
-                            if (deviceHasBeenPaired)
-                                break;
-                        }
-                    }
-
-                    Profiler.EndSample();
-
-                    break;
-                }
-
                 // Device had its configuration changed which may mean we have a different user account paired
                 // to the device now.
                 case InputDeviceChange.ConfigurationChanged:
@@ -1695,6 +1612,81 @@ namespace UnityEngine.InputSystem.Users
                     break;
                 }
             }
+        }
+
+        internal static void OnDeviceStateChange(InputDevice device)
+        {
+            Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
+                "This should only be called while listening for unpaired device activity");
+            if (s_ListenForUnpairedDeviceActivity == 0)
+                return;
+
+            // See if it's a device not belonging to any user.
+            if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+            {
+                // No, it's a device already paired to a player so do nothing.
+                return;
+            }
+
+            Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
+
+            ////TODO: allow filtering (e.g. by device requirements on user actions)
+
+            // Yes, it is so let's find out whether there was actual user activity
+            // on the device. As a first level, we run the noise mask over the state
+            // while concurrently comparing whatever bits make it through to the default
+            // state buffer.
+            if (device.CheckStateIsAtDefaultIgnoringNoise())
+                return; // No activity at all.
+
+            // Go through controls and for any one that isn't noisy or synthetic, find out
+            // if we have a magnitude greater than zero.
+            var controls = device.allControls;
+            for (var i = 0; i < controls.Count; ++i)
+            {
+                var control = controls[i];
+                if (control.noisy || control.synthetic)
+                    continue;
+
+                ////REVIEW: is this safe?
+                // Ignore non-leaf controls.
+                if (control.children.Count > 0)
+                    continue;
+
+                // Check for default state. Cheaper check than magnitude evaluation
+                // which may involve several virtual method calls.
+                if (control.CheckStateIsAtDefault())
+                    continue;
+
+                // Ending up here is costly. We now do per-control work that may involve
+                // walking all over the place in the InputControl machinery.
+                var magnitude = control.EvaluateMagnitude();
+                if (magnitude > 0)
+                {
+                    // Yes, something was actuated on the device.
+                    var deviceHasBeenPaired = false;
+                    for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
+                    {
+                        var pairingStateVersionBefore = s_PairingStateVersion;
+
+                        s_OnUnpairedDeviceUsed[n](control);
+
+                        if (pairingStateVersionBefore != s_PairingStateVersion
+                            && FindUserPairedToDevice(device) != null)
+                        {
+                            deviceHasBeenPaired = true;
+                            break;
+                        }
+                    }
+
+                    // If the device was paired in one of the callbacks, stop processing
+                    // changes on it.
+                    if (deviceHasBeenPaired)
+                        break;
+                }
+            }
+
+            Profiler.EndSample();
         }
 
         /// <summary>
@@ -1848,7 +1840,9 @@ namespace UnityEngine.InputSystem.Users
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
         private static InlinedArray<Action<InputControl>> s_OnUnpairedDeviceUsed;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
+        private static Action<InputDevice> s_OnDeviceStateChangeDelegate;
         private static bool s_OnDeviceChangeHooked;
+        private static bool s_OnDeviceStateChangeHooked;
         private static int s_ListenForUnpairedDeviceActivity;
 
         private static void HookIntoDeviceChange()
@@ -1867,6 +1861,24 @@ namespace UnityEngine.InputSystem.Users
                 return;
             InputSystem.onDeviceChange -= s_OnDeviceChangeDelegate;
             s_OnDeviceChangeHooked = false;
+        }
+
+        private static void HookIntoDeviceStateChange()
+        {
+            if (s_OnDeviceStateChangeHooked)
+                return;
+            if (s_OnDeviceStateChangeDelegate == null)
+                s_OnDeviceStateChangeDelegate = OnDeviceStateChange;
+            InputState.onChange += s_OnDeviceStateChangeDelegate;
+            s_OnDeviceStateChangeHooked = true;
+        }
+
+        private static void UnhookFromDeviceStateChange()
+        {
+            if (!s_OnDeviceStateChangeHooked)
+                return;
+            InputState.onChange -= s_OnDeviceStateChangeDelegate;
+            s_OnDeviceStateChangeHooked = false;
         }
 
         internal static void ResetGlobals()
@@ -1888,7 +1900,9 @@ namespace UnityEngine.InputSystem.Users
             s_OnChange = new InlinedArray<Action<InputUser, InputUserChange, InputDevice>>();
             s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl>>();
             s_OnDeviceChangeDelegate = null;
+            s_OnDeviceStateChangeDelegate = null;
             s_OnDeviceChangeHooked = false;
+            s_OnDeviceStateChangeHooked = false;
             s_ListenForUnpairedDeviceActivity = 0;
         }
     }

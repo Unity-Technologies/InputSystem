@@ -25,7 +25,11 @@ namespace UnityEngine.InputSystem
         public abstract int valueSizeInBytes { get; }
         public abstract unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize);
         public abstract object ReadValueAsObject(ref InputBindingCompositeContext context);
-        public abstract float EvaluateMagnitude(ref InputBindingCompositeContext context);
+
+        public virtual float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            return -1;
+        }
 
         internal static TypeTable s_Composites;
 

@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.WebGL.LowLevel
 {
-    public unsafe struct WebGLGamepadState : IInputStateTypeInfo
+    internal unsafe struct WebGLGamepadState : IInputStateTypeInfo
     {
         public const int NumAxes = 4;
         public const int NumButtons = 16;
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
     }
 
     [Serializable]
-    public struct WebGLDeviceCapabilities
+    internal struct WebGLDeviceCapabilities
     {
         public int numAxes;
         public int numButtons;
@@ -144,6 +144,7 @@ namespace UnityEngine.InputSystem.WebGL
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.
     /// </summary>
+    ///
     /// <seealso href="https://w3c.github.io/gamepad/#remapping"/>
     [InputControlLayout(stateType = typeof(WebGLGamepadState), displayName = "WebGL Gamepad (\"standard\" mapping)")]
     public class WebGLGamepad : Gamepad

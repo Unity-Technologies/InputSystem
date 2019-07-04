@@ -8,15 +8,29 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
+    /// <summary>
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
+    /// or <see cref="IInputInteraction"/>.
+    /// </summary>
+    /// <remarks>
+    /// When implementing a custom parameter editor, use <see cref="InputParameterEditor{TObject}"/> instead.
+    /// </remarks>
     public abstract class InputParameterEditor
     {
+        /// <summary>
+        /// The <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>
+        /// being edited.
+        /// </summary>
         public object target { get; internal set; }
 
+        /// <summary>
+        /// Callback for implementing a custom UI.
+        /// </summary>
         public abstract void OnGUI();
 
         internal abstract void SetTarget(object target);
 
-        public static Type LookupEditorForType(Type type)
+        internal static Type LookupEditorForType(Type type)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
@@ -59,11 +73,25 @@ namespace UnityEngine.InputSystem.Editor
         private static Dictionary<Type, Type> s_TypeLookupCache;
     }
 
+    /// <summary>
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
+    /// or <see cref="IInputInteraction"/>.
+    /// </summary>
+    /// <remarks>
+    /// Note that a parameter editor takes over the entire editing UI for the object and not just the editing of specific parameters.
+    /// </remarks>
     public abstract class InputParameterEditor<TObject> : InputParameterEditor
         where TObject : class
     {
+        /// <summary>
+        /// The <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>
+        /// being edited.
+        /// </summary>
         public new TObject target { get; private set; }
 
+        /// <summary>
+        /// Called after the parameter editor has been initialized.
+        /// </summary>
         protected virtual void OnEnable()
         {
         }

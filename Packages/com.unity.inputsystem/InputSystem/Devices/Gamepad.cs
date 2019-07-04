@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 28)]
-    public struct GamepadState : IInputStateTypeInfo
+    internal struct GamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 
@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = "A")]
         [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = "X")]
         [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = "Y")]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -110,41 +110,161 @@ namespace UnityEngine.InputSystem.LowLevel
         }
     }
 
+
+    /// <summary>
+    /// Enum of common gamepad buttons.
+    /// </summary>
+    /// <remarks>
+    /// Can be used as an array indexer on the <see cref="Gamepad"/> class to get individual button controls.
+    /// </remarks>
     public enum GamepadButton
     {
         // Dpad buttons. Important to be first in the bitfield as we'll
         // point the DpadControl to it.
         // IMPORTANT: Order has to match what is expected by DpadControl.
+
+        /// <summary>
+        /// The up button on a gamepad's dpad.
+        /// </summary>
         DpadUp,
+
+        /// <summary>
+        /// The down button on a gamepad's dpad.
+        /// </summary>
         DpadDown,
+
+        /// <summary>
+        /// The left button on a gamepad's dpad.
+        /// </summary>
         DpadLeft,
+
+        /// <summary>
+        /// The right button on a gamepad's dpad.
+        /// </summary>
         DpadRight,
 
         // Face buttons. We go with a north/south/east/west naming as that
         // clearly disambiguates where we expect the respective button to be.
+
+        /// <summary>
+        /// The upper action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="Y"/> and <see cref="Triangle"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         North,
+
+        /// <summary>
+        /// The right action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="B"/> and <see cref="Circle"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         East,
+
+        /// <summary>
+        /// The lower action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="A"/> and <see cref="Cross"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         South,
+
+        /// <summary>
+        /// The left action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="X"/> and <see cref="Square"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         West,
 
+
+        /// <summary>
+        /// The button pressed by pressing down the left stick on a gamepad.
+        /// </summary>
         LeftStick,
+
+        /// <summary>
+        /// The button pressed by pressing down the right stick on a gamepad.
+        /// </summary>
         RightStick,
+
+        /// <summary>
+        /// The left shoulder button on a gamepad.
+        /// </summary>
         LeftShoulder,
+
+        /// <summary>
+        /// The right shoulder button on a gamepad.
+        /// </summary>
         RightShoulder,
 
+        /// <summary>
+        /// The start button.
+        /// </summary>
         Start,
+
+        /// <summary>
+        /// The select button.
+        /// </summary>
         Select,
 
-        // Aliases Xbox style.
+        /// <summary>
+        /// The X button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
         X = West,
+        /// <summary>
+        /// The Y button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
         Y = North,
+        /// <summary>
+        /// The A button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
         A = South,
+        /// <summary>
+        /// The B button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
         B = East,
 
-        // Aliases PS4 style.
+        /// <summary>
+        /// The cross button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
         Cross = South,
+        /// <summary>
+        /// The square button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
         Square = West,
+        /// <summary>
+        /// The triangle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
         Triangle = North,
+        /// <summary>
+        /// The circle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
         Circle = East,
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -265,6 +266,25 @@ namespace UnityEngine.InputSystem
             DisposeInternal();
         }
 
+        public override string ToString()
+        {
+            if (count == 0)
+                return "[]";
+
+            var str = new StringBuilder();
+            str.Append('[');
+            var isFirst = true;
+            foreach (var eventPtr in this)
+            {
+                if (!isFirst)
+                    str.Append(",\n");
+                str.Append(eventPtr.ToString());
+                isFirst = false;
+            }
+            str.Append(']');
+            return str.ToString();
+        }
+
         public void Dispose()
         {
             UnsubscribeFromAll();
@@ -473,7 +493,8 @@ namespace UnityEngine.InputSystem
                 if (m_Ptr == null)
                     return "<null>";
 
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                var actionName = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
+                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
         }
 

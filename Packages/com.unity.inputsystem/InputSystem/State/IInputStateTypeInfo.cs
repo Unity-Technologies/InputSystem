@@ -2,7 +2,9 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    // Allows to generically query information from a state struct.
+    /// <summary>
+    /// Interface implemented by all input device state structs which reports the data format identifier of the state.
+    /// </summary>
     public interface IInputStateTypeInfo
     {
         FourCC format { get; }

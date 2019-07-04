@@ -7,7 +7,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class InputActionDebuggerWindow : EditorWindow
+    internal class InputActionDebuggerWindow : EditorWindow
     {
         [NonSerialized] private InputAction m_Action = null;
 

@@ -27,9 +27,9 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: refresh when unrecognized device pops up
 
 ////TODO: context menu
-////      devices: open debugger window, remove device, disable device
+////      devices: open debugger window, remove device, enable/disable device (DONE)
 ////      layouts: copy as json, remove layout
-////      actions: disable action
+////      actions: enable/disable action (have tree for all disabled actions)
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -216,6 +216,11 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private static void ToggleTouchSimulation()
+        {
+            InputEditorUserSettings.simulateTouch = !InputEditorUserSettings.simulateTouch;
+        }
+
         private static void EnableRemoteDevices(bool enable = true)
         {
             foreach (var player in EditorConnection.instance.ConnectedPlayers)
@@ -289,6 +294,7 @@ namespace UnityEngine.InputSystem.Editor
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
                     ToggleLockInputToGameView);
+                menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
                 menu.ShowAsContext();
             }
@@ -320,8 +326,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             public static GUIContent optionsContent = new GUIContent("Options");
             public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
+            public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
             public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
+            public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
+            public static GUIContent removeDevice = new GUIContent("Remove Device");
+            public static GUIContent enableDevice = new GUIContent("Enable Device");
+            public static GUIContent disableDevice = new GUIContent("Disable Device");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -350,6 +361,21 @@ namespace UnityEngine.InputSystem.Editor
 
             protected override void ContextClickedItem(int id)
             {
+                var item = FindItem(id, rootItem);
+                if (item == null)
+                    return;
+
+                if (item is DeviceItem deviceItem)
+                {
+                    var menu = new GenericMenu();
+                    menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
+                    menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
+                    if (deviceItem.device.enabled)
+                        menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
+                    else
+                        menu.AddItem(Contents.enableDevice, false, () => InputSystem.EnableDevice(deviceItem.device));
+                    menu.ShowAsContext();
+                }
             }
 
             protected override void DoubleClickedItem(int id)
@@ -765,7 +791,7 @@ namespace UnityEngine.InputSystem.Editor
             private void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
             {
                 // Add item for action.
-                var name = action.ToString();
+                var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
                 var item = AddChild(parent, name, ref id);

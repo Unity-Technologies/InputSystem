@@ -301,8 +301,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             PlayerUpdateFrontBuffer,
             PlayerUpdateBackBuffer,
-            FixedUpdateFrontBuffer,
-            FixedUpdateBackBuffer,
             EditorUpdateFrontBuffer,
             EditorUpdateBackBuffer,
             COUNT,
@@ -327,10 +325,8 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent showDifferentOnly = new GUIContent("Show Only Differences");
             public static GUIContent[] bufferChoices =
             {
-                new GUIContent("Dynamic Update (Current)"),
-                new GUIContent("Dynamic Update (Previous)"),
-                new GUIContent("Fixed Update (Current)"),
-                new GUIContent("Fixed Update (Previous)"),
+                new GUIContent("Player (Current)"),
+                new GUIContent("Player (Previous)"),
                 new GUIContent("Editor (Current)"),
                 new GUIContent("Editor (Previous)")
             };

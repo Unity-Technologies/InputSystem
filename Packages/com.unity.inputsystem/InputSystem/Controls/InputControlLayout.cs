@@ -29,6 +29,9 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Layouts
 {
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onFindLayoutForDevice"/> and <see cref="InputSystem.onFindControlLayoutForDevice"/>.
+    /// </summary>
     public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
         IInputRuntime runtime);
 
@@ -123,7 +126,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// <summary>
             /// Optional default value for the state memory associated with the control.
             /// </summary>
-            public PrimitiveValueOrArray defaultState;
+            public PrimitiveValue defaultState;
 
             public PrimitiveValue minValue;
             public PrimitiveValue maxValue;
@@ -468,12 +471,6 @@ namespace UnityEngine.InputSystem.Layouts
                 }
 
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
-                {
-                    controls[index].defaultState = new PrimitiveValueOrArray(value);
-                    return this;
-                }
-
-                public ControlBuilder WithDefaultState(PrimitiveValueOrArray value)
                 {
                     controls[index].defaultState = value;
                     return this;
@@ -885,9 +882,9 @@ namespace UnityEngine.InputSystem.Layouts
                 arraySize = attribute.arraySize;
 
             // Determine default state.
-            var defaultState = new PrimitiveValueOrArray();
+            var defaultState = new PrimitiveValue();
             if (attribute != null)
-                defaultState = PrimitiveValueOrArray.FromObject(attribute.defaultState);
+                defaultState = PrimitiveValue.FromObject(attribute.defaultState);
 
             // Determine min and max value.
             var minValue = new PrimitiveValue();
@@ -928,12 +925,20 @@ namespace UnityEngine.InputSystem.Layouts
         ////REVIEW: this tends to cause surprises; is it worth its cost?
         private static string InferLayoutFromValueType(Type type)
         {
-            var typeName = type.Name;
-            if (typeName.EndsWith("Control"))
-                return typeName.Substring(0, typeName.Length - "Control".Length);
-            if (!type.IsPrimitive)
-                return typeName;
-            return null;
+            var layout = s_Layouts.TryFindLayoutForType(type);
+            if (layout.IsEmpty())
+            {
+                var typeName = new InternedString(type.Name);
+                if (s_Layouts.HasLayout(typeName))
+                    layout = typeName;
+                else if (type.Name.EndsWith("Control"))
+                {
+                    typeName = new InternedString(type.Name.Substring(0, type.Name.Length - "Control".Length));
+                    if (s_Layouts.HasLayout(typeName))
+                        layout = typeName;
+                }
+            }
+            return layout;
         }
 
         /// <summary>
@@ -1430,7 +1435,7 @@ namespace UnityEngine.InputSystem.Layouts
                     layout.processors = new ReadOnlyArray<NameAndParameters>(NameAndParameters.ParseMultiple(processors).ToArray());
 
                 if (defaultState != null)
-                    layout.defaultState = PrimitiveValueOrArray.FromObject(defaultState);
+                    layout.defaultState = PrimitiveValue.FromObject(defaultState);
                 if (minValue != null)
                     layout.minValue = PrimitiveValue.FromObject(minValue);
                 if (maxValue != null)

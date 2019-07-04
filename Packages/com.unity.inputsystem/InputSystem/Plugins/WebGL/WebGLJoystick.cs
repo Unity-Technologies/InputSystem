@@ -2,6 +2,9 @@
 
 namespace UnityEngine.InputSystem.WebGL
 {
+    /// <summary>
+    /// A Joystick or Gamepad on WebGL that does not have any known mapping.
+    /// </summary>
     public class WebGLJoystick : Joystick
     {
     }
