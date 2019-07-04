@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
-        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
+        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction", "Submit" }, bit = (int)Button.Trigger)]
         public int buttons;
 
         [InputControl(layout = "Stick", usage = "Primary2DMotion")]
@@ -26,10 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
             Trigger
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 }
 

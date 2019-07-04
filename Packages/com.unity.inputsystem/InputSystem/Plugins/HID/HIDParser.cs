@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.HID
     /// For information about the format, see the <a href="http://www.usb.org/developers/hidpage/HID1_11.pdf">
     /// Device Class Definition for Human Interface Devices</a> section 6.2.2.
     /// </remarks>
-    public static class HIDParser
+    internal static class HIDParser
     {
         /// <summary>
         /// Parse a HID report descriptor as defined by section 6.2.2 of the

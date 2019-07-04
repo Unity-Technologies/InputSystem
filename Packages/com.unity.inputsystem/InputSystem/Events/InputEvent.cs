@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// A chunk of memory signaling a data transfer in the input system.
     /// </summary>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
