@@ -82,8 +82,7 @@ public class PenISX : MonoBehaviour
         if (pen == null) return;        
 
         // Update ISX information text UI
-        m_penInfoText.text = pen.phase.ReadValue().ToString() + "\n"
-                           + pen.position.ReadValue().ToString("F0") + "\n"
+        m_penInfoText.text = pen.position.ReadValue().ToString("F0") + "\n"
                            + pen.tilt.ReadValue().ToString("F2") + "\n"
                            + pen.twist.ReadValue().ToString("F2") + "\n"
                            + pen.delta.ReadValue().ToString("F2");        

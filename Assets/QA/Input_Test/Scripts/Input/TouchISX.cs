@@ -41,11 +41,11 @@ public class TouchISX : MonoBehaviour
         Touchscreen touchscreen = Touchscreen.current;
         if (touchscreen != null && m_touchInfo != null)
         {
-            m_touchInfo.MaxISXCount = touchscreen.activeTouches.Count;
+            m_touchInfo.MaxISXCount = touchscreen.touches.Count;
 
-            for (int i = 0; i < touchscreen.activeTouches.Count; i++)
+            for (int i = 0; i < touchscreen.touches.Count; i++)
             {
-                TouchControl touch = touchscreen.activeTouches[i];
+                TouchControl touch = touchscreen.touches[i];
                 string touchInfo = touch.touchId.ReadValue() + "\n"
                                  + touch.phase.ReadValue().ToString() + "\n"
                                  + touch.position.ReadValue().ToString() + "\n"

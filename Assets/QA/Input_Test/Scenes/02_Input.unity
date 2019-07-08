@@ -28955,7 +28955,6 @@ MonoBehaviour:
   m_TrackedDevicePositionAction: {fileID: 0}
   m_TrackedDeviceOrientationAction: {fileID: 0}
   m_TrackedDeviceSelectAction: {fileID: 0}
-  m_Touches: []
 --- !u!1 &901030015
 GameObject:
   m_ObjectHideFlags: 0
@@ -62373,7 +62372,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -220, y: -260}
-  m_SizeDelta: {x: 220, y: 140}
+  m_SizeDelta: {x: 220, y: 110}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1828426030
 CanvasRenderer:
@@ -66875,9 +66874,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'Phase:
-
-    Position:
+  m_Text: 'Position:
 
     Tilt:
 
