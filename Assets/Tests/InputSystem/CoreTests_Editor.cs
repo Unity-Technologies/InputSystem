@@ -1707,10 +1707,14 @@ partial class CoreTests
         Assert.That(tree["map/action"].children[0].displayName, Is.EqualTo("1D Axis"));
     }
 
-#if NET_4_6
+    #if UNITY_STANDALONE // CodeDom API not available in most players. We only build and run this in the editor but we're
+                         // still affected by the current platform.
     [Test]
     [Category("Editor")]
-    public void Editor_CanGenerateCodeWrapperForInputAsset()
+    [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
+    [TestCase("MyControls (2)", "MyNamespace", "MyClassName", "MyNamespace.MyClassName")]
+    [TestCase("MyControls", "", "MyClassName", "MyClassName")]
+    public void Editor_CanGenerateCodeWrapperForInputAsset(string assetName, string namespaceName, string className, string typeName)
     {
         var map1 = new InputActionMap("set1");
         map1.AddAction("action1", binding: "/gamepad/leftStick");
@@ -1720,10 +1724,10 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
-        asset.name = "My Controls (2)";
+        asset.name = assetName;
 
         var code = InputActionCodeGenerator.GenerateWrapperCode(asset,
-            new InputActionCodeGenerator.Options {namespaceName = "MyNamespace", sourceAssetPath = "test"});
+            new InputActionCodeGenerator.Options {namespaceName = namespaceName, className = className, sourceAssetPath = "test"});
 
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
         var cp = new CompilerParameters();
@@ -1733,7 +1737,7 @@ partial class CoreTests
         Assert.That(cr.Errors, Is.Empty);
         var assembly = cr.CompiledAssembly;
         Assert.That(assembly, Is.Not.Null);
-        var type = assembly.GetType("MyNamespace.MyControls2");
+        var type = assembly.GetType(typeName);
         Assert.That(type, Is.Not.Null);
         var set1Property = type.GetProperty("set1");
         Assert.That(set1Property, Is.Not.Null);
@@ -1748,7 +1752,7 @@ partial class CoreTests
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
 
-#endif
+    #endif
 
     // Can take any given registered layout and generate a cross-platform C# struct for it
     // that collects all the control values from both proper and optional controls (based on

@@ -87,6 +87,16 @@ public class PenISX : MonoBehaviour
                            + pen.tilt.ReadValue().ToString("F2") + "\n"
                            + pen.twist.ReadValue().ToString("F2") + "\n"
                            + pen.delta.ReadValue().ToString("F2");        
+
+        // Update pressure indicator
+        float pressure = pen.pressure.ReadValue();
+        Color newColor = Color.red;
+        newColor.a = pressure;
+        m_pressureText.color = newColor;
+        m_pressureText.text = "Pressure: " + pressure.ToString("F2");
+
+        // Update inRange state/indicator
+        m_outOfRangeSign.SetActive(!pen.inRange.isPressed);
     }
 
     private void ButtonPress(ButtonControl control)

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class TouchISX : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class TouchISX : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/<touch>") { passThrough = true };
+        m_touchAction = new InputAction(name: "TouchAction", binding: "<touchscreen>/touch*"); // Not using <touch> in order to not get primaryTouch, too.
         m_touchAction.performed += callbackContext => TouchInput(callbackContext.control as TouchControl);
         m_touchAction.canceled += callbackContext => EndTouchInput(callbackContext.control as TouchControl);
         m_touchAction.Enable();
@@ -60,17 +61,17 @@ public class TouchISX : MonoBehaviour
     {
         switch (control.phase.ReadValue())
         {
-            case PointerPhase.Began:
+            case TouchPhase.Began:
                 NewTouchInput(control);
                 break;
-            case PointerPhase.Moved:
+            case TouchPhase.Moved:
                 UpdateTouchInput(control);
                 break;
-            case PointerPhase.Canceled:
-            case PointerPhase.Ended:
+            case TouchPhase.Canceled:
+            case TouchPhase.Ended:
                 EndTouchInput(control);
                 break;
-            case PointerPhase.Stationary:
+            case TouchPhase.Stationary:
                 break;
             default:
                 break;

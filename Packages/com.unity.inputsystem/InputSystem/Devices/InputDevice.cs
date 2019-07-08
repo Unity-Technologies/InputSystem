@@ -328,6 +328,8 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        ////TODO: add overridable OnDisable/OnEnable that fire the device commands
+
         ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
         /// <summary>

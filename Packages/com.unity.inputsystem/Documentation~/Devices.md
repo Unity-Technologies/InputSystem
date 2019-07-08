@@ -111,6 +111,28 @@ Each device command TODO
 
 ### Adding Custom Device Comands
 
+## Device State
+
+Like any other type of [control](Controls.md#state), each device has a block of memory allocated to it which stores
+
+### State Changes
+
+State changes are usually initiated through [state events](Events.md#state-events) but can be
+
+#### Monitoring State Changes
+
+### Customizing State Management
+
+Individual devices can alter the way their state is handled to some extent. This is useful for implementing logic such as accumulation-style controls (where each new value adds on top of the current value and then resets at the end of a frame; `<Pointer>/delta` is one such control) or
+
+#### Synthesizing State
+
+It can be desirable to make up new state from existing state. An example of such a use case is the `button` control that `Touchscreen` inherits from `Pointer`. Unlike for the mouse where this is a real button, for `Touchscreen` this is a synthetic control that does not correspond to actual data coming in from the device backend. Instead, the button is considered press if any touch is currently ongoing and released otherwise.
+
+This can be achieved by using `InputState.Change` which allows feeding arbitrary state changes into the system without having to run them through the input event queue. The state changes will be directly and synchronously incorporated. State change [monitors](#monitoring-state-changes), however, will still trigger as expected.
+
+
+
 ## Working With Devices
 
 ### Monitoring Devices

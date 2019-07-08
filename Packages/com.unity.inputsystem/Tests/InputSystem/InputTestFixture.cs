@@ -7,7 +7,7 @@ using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
-
+using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -15,6 +15,8 @@ using UnityEngine.InputSystem.Editor;
 ////TODO: must allow running UnityTests which means we have to be able to get per-frame updates yet not receive input from native
 
 ////TODO: when running tests in players, make sure that remoting is turned off
+
+////REVIEW: always enable event diagnostics in InputTestFixture?
 
 namespace UnityEngine.InputSystem
 {
@@ -79,10 +81,6 @@ namespace UnityEngine.InputSystem
                 // game view.
                 InputEditorUserSettings.lockInputToGameView = true;
                 #endif
-
-                var testProperties = TestContext.CurrentContext.Test.Properties;
-                if (testProperties.ContainsKey("TimesliceEvents") && testProperties["TimesliceEvents"][0].Equals("Off"))
-                    InputSystem.settings.timesliceEvents = false;
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly
                 // the allocation came from so enable full leak detection in tests.
@@ -158,55 +156,80 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public ActionConstraint Started(InputAction action, InputControl control = null)
+        public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null)
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control);
+            return new ActionConstraint(InputActionPhase.Started, action, control, time: time);
         }
 
-        public ActionConstraint Performed(InputAction action, InputControl control = null)
+        public ActionConstraint Started<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+            where TValue : struct
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control);
+            return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time);
         }
 
-        public ActionConstraint Canceled(InputAction action, InputControl control = null)
+        public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null)
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control);
+            return new ActionConstraint(InputActionPhase.Performed, action, control, time: time);
         }
 
-        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null)
+        public ActionConstraint Performed<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+            where TValue : struct
+        {
+            return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time);
+        }
+
+        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null)
+        {
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time);
+        }
+
+        public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+            where TValue : struct
+        {
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, value, time: time);
+        }
+
+        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null, double? time = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction));
+            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction), time: time);
         }
 
-        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null)
+        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null, double? time = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction));
+            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction), time: time);
         }
 
-        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null)
+        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null, double? time = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction));
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
-        public void Press(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Set(button, 1, absoluteTime, timeOffset);
+            Set(button, 1, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
-        public void Release(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        public void Release(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Set(button, 0, absoluteTime, timeOffset);
+            Set(button, 0, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
-        public void PressAndRelease(ButtonControl button, double absoluteTime = -1, double timeOffset = 0)
+        // ReSharper disable once MemberCanBePrivate.Global
+        public void PressAndRelease(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
-            Press(button, absoluteTime, timeOffset);
-            Release(button, absoluteTime, timeOffset);
+            Press(button, time, timeOffset, queueEventOnly: true);  // This one is always just a queue.
+            Release(button, time, timeOffset, queueEventOnly: queueEventOnly);
+        }
+
+        // ReSharper disable once MemberCanBeProtected.Global
+        public void Click(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
+        {
+            PressAndRelease(button, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
         /// <summary>
@@ -222,7 +245,7 @@ namespace UnityEngine.InputSystem
         /// Set(gamepad.leftButton, 1);
         /// </code>
         /// </example>
-        public void Set<TValue>(InputControl<TValue> control, TValue state, double absoluteTime = -1, double timeOffset = 0)
+        public void Set<TValue>(InputControl<TValue> control, TValue state, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
             where TValue : struct
         {
             if (control == null)
@@ -231,17 +254,95 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Device of control '{control}' has not been added to the system", nameof(control));
 
-            using (StateEvent.From(control.device, out var eventPtr))
+            void SetUpAndQueueEvent(InputEventPtr eventPtr)
             {
                 ////REVIEW: should we by default take the time from the device here?
-                if (absoluteTime >= 0)
-                    eventPtr.time = absoluteTime;
+                if (time >= 0)
+                    eventPtr.time = time;
                 eventPtr.time += timeOffset;
                 control.WriteValueIntoEvent(state, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
 
-            InputSystem.Update();
+            // Touchscreen does not support delta events involving TouchState.
+            if (control is TouchControl)
+            {
+                using (StateEvent.From(control.device, out var eventPtr))
+                    SetUpAndQueueEvent(eventPtr);
+            }
+            else
+            {
+                // We use delta state events rather than full state events here to mitigate the following problem:
+                // Grabbing state from the device will preserve the current values of controls covered in the state.
+                // However, running an update may alter the value of one or more of those controls. So with a full
+                // state event, we may be writing outdated data back into the device. For example, in the case of delta
+                // controls which will reset in OnBeforeUpdate().
+                //
+                // Using delta events, we may still grab state outside of just the one control in case we're looking at
+                // bit-addressed controls but at least we can avoid the problem for the majority of controls.
+                using (DeltaStateEvent.From(control, out var eventPtr))
+                    SetUpAndQueueEvent(eventPtr);
+            }
+
+            if (!queueEventOnly)
+                InputSystem.Update();
+        }
+
+        public void Move(InputControl<Vector2> positionControl, Vector2 position, Vector2? delta = null, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
+        {
+            Set(positionControl, position, time: time, timeOffset: timeOffset, queueEventOnly: true);
+
+            var deltaControl = (Vector2Control)positionControl.device.TryGetChildControl("delta");
+            if (deltaControl != null)
+                Set(deltaControl,  delta ?? position - positionControl.ReadValue(), time: time, timeOffset: timeOffset, queueEventOnly: true);
+
+            if (!queueEventOnly)
+                InputSystem.Update();
+        }
+
+        public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
+            double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Began, position, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Moved, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Ended, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default, bool queueEventOnly = true,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            if (screen == null)
+            {
+                screen = Touchscreen.current;
+                if (screen == null)
+                    throw new InvalidOperationException("No touchscreen has been added");
+            }
+
+            InputSystem.QueueStateEvent(screen, new TouchState
+            {
+                touchId = touchId,
+                phase = phase,
+                position = position,
+                delta = delta,
+            }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
+            if (!queueEventOnly)
+                InputSystem.Update();
         }
 
         public void Trigger<TValue>(InputAction action, InputControl<TValue> control, TValue value)
@@ -312,6 +413,7 @@ namespace UnityEngine.InputSystem
         public class ActionConstraint : Constraint
         {
             public InputActionPhase phase { get; set; }
+            public double? time { get; set; }
             public InputAction action { get; set; }
             public InputControl control { get; set; }
             public object value { get; set; }
@@ -319,9 +421,10 @@ namespace UnityEngine.InputSystem
 
             private readonly List<ActionConstraint> m_AndThen = new List<ActionConstraint>();
 
-            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null)
+            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null, double? time = null)
             {
                 this.phase = phase;
+                this.time = time;
                 this.action = action;
                 this.control = control;
                 this.value = value;
@@ -331,17 +434,9 @@ namespace UnityEngine.InputSystem
                 if (interaction != null)
                     interactionText = $"{InputInteraction.s_Interactions.FindNameForType(interaction).ToLower()} of ";
 
-                Description = $"{phase} {interactionText}'{action}'";
-                if (control != null)
-                    Description += $" from '{control}'";
-                if (value != null)
-                    Description += $" with value {value}";
-
-                foreach (var constraint in m_AndThen)
-                {
-                    Description += " and\n";
-                    Description += constraint.Description;
-                }
+                var actionName = action.actionMap != null ? $"{action.actionMap}/{action.name}" : action.name;
+                // Use same text format as InputActionTrace for easier comparison.
+                Description = $"{{ action={actionName} phase={phase} time={time} control={control} value={value} interaction={interactionText} }}";
             }
 
             public override ConstraintResult ApplyTo(object actual)
@@ -358,7 +453,7 @@ namespace UnityEngine.InputSystem
                 var i = 1;
                 foreach (var constraint in m_AndThen)
                 {
-                    if (!constraint.Verify(actions[i]))
+                    if (i >= actions.Length || !constraint.Verify(actions[i]))
                         return new ConstraintResult(this, actual, false);
                     ++i;
                 }
@@ -371,8 +466,14 @@ namespace UnityEngine.InputSystem
 
             private bool Verify(InputActionTrace.ActionEventPtr eventPtr)
             {
+                // NOTE: Using explicit "return false" branches everywhere for easier setting of breakpoints.
+
                 if (eventPtr.action != action ||
                     eventPtr.phase != phase)
+                    return false;
+
+                // Check time.
+                if (time != null && !Mathf.Approximately((float)time.Value, (float)eventPtr.time))
                     return false;
 
                 // Check control.
@@ -385,8 +486,18 @@ namespace UnityEngine.InputSystem
                     return false;
 
                 // Check value.
-                if (value != null && !value.Equals(eventPtr.control.ReadValueAsObject()))
-                    return false;
+                if (value != null)
+                {
+                    var val = eventPtr.ReadValueAsObject();
+                    if (value is float f && !Mathf.Approximately(f, (float)val))
+                        return false;
+                    if (value is Vector2 v2 && !Vector2EqualityComparer.Instance.Equals(v2, (Vector2)val))
+                        return false;
+                    if (value is Vector3 v3 && !Vector3EqualityComparer.Instance.Equals(v3, (Vector3)val))
+                        return false;
+                    if (!value.Equals(val))
+                        return false;
+                }
 
                 return true;
             }
@@ -394,6 +505,8 @@ namespace UnityEngine.InputSystem
             public ActionConstraint AndThen(ActionConstraint constraint)
             {
                 m_AndThen.Add(constraint);
+                Description += " and\n";
+                Description += constraint.Description;
                 return this;
             }
         }

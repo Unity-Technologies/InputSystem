@@ -925,12 +925,20 @@ namespace UnityEngine.InputSystem.Layouts
         ////REVIEW: this tends to cause surprises; is it worth its cost?
         private static string InferLayoutFromValueType(Type type)
         {
-            var typeName = type.Name;
-            if (typeName.EndsWith("Control"))
-                return typeName.Substring(0, typeName.Length - "Control".Length);
-            if (!type.IsPrimitive)
-                return typeName;
-            return null;
+            var layout = s_Layouts.TryFindLayoutForType(type);
+            if (layout.IsEmpty())
+            {
+                var typeName = new InternedString(type.Name);
+                if (s_Layouts.HasLayout(typeName))
+                    layout = typeName;
+                else if (type.Name.EndsWith("Control"))
+                {
+                    typeName = new InternedString(type.Name.Substring(0, type.Name.Length - "Control".Length));
+                    if (s_Layouts.HasLayout(typeName))
+                        layout = typeName;
+                }
+            }
+            return layout;
         }
 
         /// <summary>

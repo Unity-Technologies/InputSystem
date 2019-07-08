@@ -362,6 +362,9 @@ namespace UnityEngine.InputSystem.Editor
         // Returns true if the file was touched, false otherwise.
         public static bool GenerateWrapperCode(string filePath, InputActionAsset asset, Options options)
         {
+            if (!Path.HasExtension(filePath))
+                filePath += ".cs";
+
             // Generate code.
             var code = GenerateWrapperCode(asset, options);
 
@@ -369,6 +372,8 @@ namespace UnityEngine.InputSystem.Editor
             if (File.Exists(filePath))
             {
                 var existingCode = File.ReadAllText(filePath);
+                ////TODO: strip whitespace before comparing so that we're not susceptible to the file getting altered
+                ////       by either our formatting tools or by git's auto-crlf conversion
                 if (existingCode == code)
                     return false;
             }

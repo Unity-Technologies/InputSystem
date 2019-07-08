@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
 - Fixed documentation landing page and table of contents.
 - Fixed tracked devices assigning pointer ids for UI pointer events correctly.
+- Adjusted some UI Elements to fit the Unity 19.3 font.
 - Fixed NullReferenceException being thrown when project changes.
 - Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
@@ -26,9 +27,41 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+- Generated C# wrappers for .inputactions assets are no longer placed in Assets/Assets/ folder on Windows.
 
 ### Added
 
+- Touch support has been reworked and extended.
+  * `Touchscreen.touch[0..9]` are now bindable from the control picker.
+  * `Touchscreen.primaryTouch` is now a separate control which tracks the primary touch on the screen.
+  * The controls `Touchscreen` inherits from `Pointer` (such as `position`, `phase`, and `delta`) are now tied to `Touchscreen.primaryTouch` and allow for `Touchscreen` to function as a generic `Pointer` (like `Mouse` and `Pen`).
+  * `Touchscreen.press` (renamed from `Touchscreen.button`) is now a working, synthetic button that is down whenever at least one finger is on the screen.
+  * Recording of start time and start position has been added to touches.
+    - `TouchControl.startPosition` gives the starting position of the touch.
+    - `TouchControl.startTime` gives the starting time of the touch.
+  * Tap detection has been added to `Touchscreen`.
+    - Tap time (i.e. time within which a press-and-release must be completed for a tap to register) corresponds to `InputSettings.defaultTapTime`.
+    - Tap release must happen within a certain radius of first contact. This is determined by a new setting `InputSettings.tapRadius`.
+    - `TouchControl.tap` is a new button control that triggers then the touch is tapped. Note that this happens instantly when a touch ends. The button will go to 1 and __immediately__ go back to 0. This means that polling the button in `Update`, for example, will never trigger a tap. Either use actions to observe the button or use the `Touch` API from `EnhancedTouch` to poll taps.
+  * `Touchscreen.activeTouches` has been removed. Use `Touch.activeTouches` from the new enhanced touch API instead for more reliable touch tracking.
+  * `Touchscreen.allTouchControls` has been renamed to `Touchscreen.touches`.
+  * A new `EnhancedTouch` plugin has been added which offers an enhanced `Touch` and `Finger` API to reliably track touches and fingers across updates. This obsoletes the need to manually track touch IDs and phases and gives access to individual touch history.
+  * Touch can be simulated from mouse or pen input now. To enable simulation, call `TouchSimulation.Enable()` or put the `TouchSimulation` MonoBehaviour in your scene. Also, in the input debugger, you can now enable touch simulation from the "Options" dropdown.
+- Changing state has been decoupled from events. While input events are the primary means by which to trigger state changes, anyone can perform state changes manually now from anywhere.
+    ```
+    InputState.Change(gamepad.leftStick, new Vector2(123, 234));
+    ```
+  * This change makes it possible to update state __from__ state and thus synthesize input data from other input coming in.
+- A new API for recording state changes over time has been added.
+    ```
+    var history = new InputStateHistory("<Gamepad>/leftStick");
+    history.StartRecording();
+
+    //...
+
+    foreach (var record in history)
+        Debug.Log(record);
+    ```
 - Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
 - Added support for DualShock 3 gamepads on desktops.
 - Added support for Nintendo Switch Pro Controllers on desktops.
@@ -45,6 +78,16 @@ however, it has to be formatted properly to pass verification tests.
 - Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
 - Added getters to all `IInputRuntime` properties.
 - Replace some `GetXxx` methods in our API with `xxx`  properties.
+- `Pointer.phase` has been removed and `PointerPhase` has been renamed to `TouchPhase`. Phases are now specific to touch. `PointerPhaseControl` has been renamed to `TouchPhaseControl`.
+- `Pointer.button` has been renamed to `Pointer.press` and now is a control that indicates whether the pointer is in "press down" state.
+  * For mouse, corresponds to left button press.
+  * For pen, corresponds to tip contact.
+  * For touch, corresponds to primary touch contact (i.e. whether __any__ finger is down).
+- The state change monitor APIs (`IInputStateChangeMonitor` and friends) have been moved out of `InputSystem` into a new static class `InputState` in `UnityEngine.Experimental.Input.LowLevel`.
+  * Rationale: These APIs are fairly low-level and not of general interest so having them out of `InputSystem` reduces the API surface visible to most users.
+- `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
+  * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.onDeviceChange` unnecessarily expensive.
+- `IInputStateCallbackReceiver` has been rewritten from scratch. Now has two simple methods `OnNextUpdate` and `OnEvent`. If implemented by a device, the device now has completely control over changing its own state. Use the `InputState.Change` methods to affect state changes while trigger state change monitors (e.g. for actions) correctly.
 - Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
 - We now use the same hierarchical device picker in the "Add Control Scheme" popup, which is already used in the "Input Settings" window.
 - Made all `IInputStateTypeInfo` implementations internal, as these did not offer value to the user.

@@ -108,7 +108,10 @@ internal class HIDTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
 
-        HIDSupport.shouldCreateHID += (descriptor) => (descriptor.usagePage == hidDescriptor.usagePage && descriptor.usage == hidDescriptor.usage) ? true : (bool?)null;
+        HIDSupport.shouldCreateHID += descriptor =>
+            descriptor.usagePage == (HID.UsagePage) 5678 && descriptor.usage == 1234
+            ? true
+            : (bool?)null;
 
         runtime.ReportNewInputDevice(descriptionJson, deviceId);
         InputSystem.Update();
