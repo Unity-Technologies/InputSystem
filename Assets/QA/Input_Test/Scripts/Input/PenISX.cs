@@ -11,7 +11,7 @@ public class PenISX : MonoBehaviour
     public ParticleSystem m_highlightPS;
 
     [Tooltip("Sign for Out of Range")]
-    public GameObject m_outOfRangeSign;    
+    public GameObject m_outOfRangeSign;
 
     [Header("Info UI")]
     public TextMesh m_pressureText;
@@ -58,7 +58,7 @@ public class PenISX : MonoBehaviour
         m_penAxisAction = new InputAction(name: "PenAxisAction", binding: "<pen>/twist") { passThrough = true };
         m_penAxisAction.AddBinding("<pen>/pressure");
         m_penAxisAction.performed += callbackContext => OnAxisChange(callbackContext.control as AxisControl);
-        m_penAxisAction.Enable();        
+        m_penAxisAction.Enable();
     }
 
     void OnEnable()
@@ -79,13 +79,13 @@ public class PenISX : MonoBehaviour
     void Update()
     {
         Pen pen = InputSystem.GetDevice<Pen>();
-        if (pen == null) return;        
+        if (pen == null) return;
 
         // Update ISX information text UI
         m_penInfoText.text = pen.position.ReadValue().ToString("F0") + "\n"
-                           + pen.tilt.ReadValue().ToString("F2") + "\n"
-                           + pen.twist.ReadValue().ToString("F2") + "\n"
-                           + pen.delta.ReadValue().ToString("F2");        
+            + pen.tilt.ReadValue().ToString("F2") + "\n"
+            + pen.twist.ReadValue().ToString("F2") + "\n"
+            + pen.delta.ReadValue().ToString("F2");
 
         // Update pressure indicator
         float pressure = pen.pressure.ReadValue();
@@ -132,8 +132,7 @@ public class PenISX : MonoBehaviour
                 string str = control.name + ((control.ReadValue() == 0) ? " released" : " pressed");
                 ShowMessage(str);
                 break;
-
-        }        
+        }
     }
 
     // Update visual element for Position and tilt
@@ -150,7 +149,7 @@ public class PenISX : MonoBehaviour
     {
         if (control.name == "twist")
             pen_rotation.GetChild(0).localEulerAngles = m_rotateAdjust + new Vector3(0, control.ReadValue() * -360, 0);
-            
+
         else if (control.name == "pressure")
         {
             Color newColor = Color.red;

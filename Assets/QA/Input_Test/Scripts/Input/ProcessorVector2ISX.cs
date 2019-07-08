@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class ProcessorVector2ISX : ProcessorISX
-{   
+{
     private Vector2 m_original = new Vector2(0, 0);
     private Vector2 m_result = new Vector2(0, 0);
 

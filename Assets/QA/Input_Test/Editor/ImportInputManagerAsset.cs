@@ -60,9 +60,8 @@ public class ImportInputManagerAsset
         }
         else
             m_thisFolder = AssetDatabase.GUIDToAssetPath(thisGUID[0]).Replace("ImportInputManagerAsset.cs", "");
-    
+
         m_inputManAsset = AssetDatabase.LoadAssetAtPath("ProjectSettings/InputManager.asset", typeof(UnityEngine.Object));
         m_inputTestPreset = (Preset)AssetDatabase.LoadAssetAtPath(m_thisFolder + "InputTest.preset", typeof(Preset));
-
-    }    
+    }
 }

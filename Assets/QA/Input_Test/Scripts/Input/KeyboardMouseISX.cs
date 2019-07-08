@@ -65,11 +65,11 @@ public class KeyboardMouseISX : MonoBehaviour
         // Show mouse actions
         Mouse mouse = InputSystem.GetDevice<Mouse>();
         if (mouse != null)
-        {       
+        {
             // Update mouse position
             m_mouseInfoText.text = mouse.position.ReadValue().ToString("F0") + "\n"
-                                 + mouse.scroll.ReadValue().ToString() + "\n"
-                                 + mouse.delta.ReadValue().ToString("F3");
+                + mouse.scroll.ReadValue().ToString() + "\n"
+                + mouse.delta.ReadValue().ToString("F3");
         }
 
         Keyboard keyboard = InputSystem.GetDevice<Keyboard>();

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class ProcessorVector3ISX : ProcessorISX
@@ -18,7 +18,6 @@ public class ProcessorVector3ISX : ProcessorISX
         m_inputAction.canceled += ctx => {
             m_original = m_result = new Vector3(0, 0, 0);
         };
-
     }
 
     void OnEnable()
@@ -46,7 +45,7 @@ public class ProcessorVector3ISX : ProcessorISX
             angles.z = m_result.z * 180;
             m_stickImage.transform.localEulerAngles = angles;
         }
-            
+
         m_originalText.text = m_original.ToString();
         m_resultText.text = m_result.ToString();
     }

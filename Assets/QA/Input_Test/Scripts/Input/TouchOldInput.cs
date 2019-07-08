@@ -36,7 +36,7 @@ public class TouchOldInput : MonoBehaviour
     void Update()
     {
         m_touchInfo.MaxOldInputCount = Input.touchCount;
-                    
+
         for (int i = 0; i < Input.touchCount; i++)
         {
             Touch touch = Input.GetTouch(i);
@@ -44,7 +44,7 @@ public class TouchOldInput : MonoBehaviour
             switch (touch.phase)
             {
                 case TouchPhase.Began:
-                    NewTouchInput(touch);                        
+                    NewTouchInput(touch);
                     break;
                 case TouchPhase.Moved:
                     UpdateTouchInput(touch);
@@ -60,14 +60,14 @@ public class TouchOldInput : MonoBehaviour
 
             // Handling information
             string touchInfo = touch.fingerId + "\n"
-                             + touch.type.ToString() + "\n"
-                             + touch.phase.ToString() + "\n"
-                             + touch.position.ToString() + "\n"
-                             + touch.pressure.ToString() + "\n"
-                             + touch.radius.ToString() + "\n"
-                             + touch.deltaPosition.ToString();
+                + touch.type.ToString() + "\n"
+                + touch.phase.ToString() + "\n"
+                + touch.position.ToString() + "\n"
+                + touch.pressure.ToString() + "\n"
+                + touch.radius.ToString() + "\n"
+                + touch.deltaPosition.ToString();
             m_touchInfo.AddOldInputInfo(touchInfo, i);
-        }        
+        }
     }
 
     private void UpdateTouchInput(Touch touch)
@@ -85,7 +85,7 @@ public class TouchOldInput : MonoBehaviour
     }
 
     private void NewTouchInput(Touch touch)
-    {        
+    {
         if (touch.fingerId < 10)
         {
             Transform highlight = m_HighlightPool.GetChild(touch.fingerId);
@@ -117,5 +117,4 @@ public class TouchOldInput : MonoBehaviour
     {
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
     }
-
 }

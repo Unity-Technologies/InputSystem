@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -38,7 +38,6 @@ public class InteractionISX : MonoBehaviour
         m_inputAction?.Disable();
     }
 
-
     private void OnInputStarted(InputAction.CallbackContext ctx)
     {
         m_phaseText.text = "Started";
@@ -54,23 +53,23 @@ public class InteractionISX : MonoBehaviour
             m_ctxInfoText.text = "";
             m_interactionItems.text = "";
             m_interactionValues.text = "";
-        }        
+        }
     }
 
     private void OnInputCancelled(InputAction.CallbackContext ctx)
     {
         m_phaseText.text += "\nCancelled";
-        
+
         if (m_cancelledToggle.isOn)
         {
             ShowCTXInfo(ctx);
             ShowInteractionFields(ctx);
-        }            
+        }
     }
 
     private void OnInputPerformed(InputAction.CallbackContext ctx)
     {
-        m_phaseText.text += string.IsNullOrEmpty(m_phaseText.text)? "Performed" : "\nPerformed";
+        m_phaseText.text += string.IsNullOrEmpty(m_phaseText.text) ? "Performed" : "\nPerformed";
 
         if (m_performedToggle.isOn)
         {
@@ -83,15 +82,15 @@ public class InteractionISX : MonoBehaviour
     {
         ButtonControl control = ctx.control as ButtonControl;
         m_ctxInfoText.text = ctx.action.name + "\n"
-                           + ctx.phase.ToString() + "\n"
-                           + ctx.startTime.ToString("F2") + "\n"
-                           + ctx.duration.ToString("F2") + "\n"
-                           + ctx.time.ToString("F2") + "\n"
-                           + control?.pressPoint.ToString("F1");
+            + ctx.phase.ToString() + "\n"
+            + ctx.startTime.ToString("F2") + "\n"
+            + ctx.duration.ToString("F2") + "\n"
+            + ctx.time.ToString("F2") + "\n"
+            + control?.pressPoint.ToString("F1");
     }
 
     private void ShowInteractionFields(InputAction.CallbackContext ctx)
-    {        
+    {
         var bindingFlags = BindingFlags.Public | BindingFlags.DeclaredOnly | BindingFlags.Instance;
         FieldInfo[] fields = ctx.interaction.GetType().GetFields(bindingFlags);
 

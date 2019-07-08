@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,5 +18,4 @@ public abstract class ProcessorISX : MonoBehaviour
     protected int m_stickImageOffsetFactor = 12;
 
     protected abstract void UpdateResult();
-
 }

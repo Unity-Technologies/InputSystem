@@ -14,15 +14,15 @@ public class XboxISX : GamepadISX
     {
         //m_stickMaxMove = 0.25f;
 
-        m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>") { passThrough = true }; ;
+        m_buttonAction = new InputAction(name: "XboxButtonAction", binding: "XInputController*/<button>") { passThrough = true };;
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>") { passThrough = true }; ;
+        m_dPadAction = new InputAction(name: "XboxDpadAction", binding: "XInputController*/<dpad>") { passThrough = true };;
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>") { passThrough = true }; ;
+        m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", binding: "XInputController*/<stick>") { passThrough = true };;
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
@@ -49,6 +49,5 @@ public class XboxISX : GamepadISX
             m_leftStickText.text = m_xbox.leftStick.ReadValue().ToString("F2");
             m_rightStickText.text = m_xbox.rightStick.ReadValue().ToString("F2");
         }
-
-    }    
+    }
 }

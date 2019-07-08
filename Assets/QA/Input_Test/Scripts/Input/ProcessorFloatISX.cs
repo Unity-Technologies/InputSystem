@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class ProcessorFloatISX : ProcessorISX
@@ -33,7 +33,7 @@ public class ProcessorFloatISX : ProcessorISX
     // Update is called once per frame
     void Update()
     {
-        UpdateResult();        
+        UpdateResult();
     }
 
     protected override void UpdateResult()

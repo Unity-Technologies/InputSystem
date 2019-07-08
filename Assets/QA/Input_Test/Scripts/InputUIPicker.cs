@@ -29,7 +29,7 @@ public class InputUIPicker : MonoBehaviour
     {
         SwitchToKeyMouse();
     }
-   
+
     void Update()
     {
         // !!!!!TEMPORARY: Only Shortcut for Old Input Manager
@@ -81,7 +81,7 @@ public class InputUIPicker : MonoBehaviour
                 SwitchToTestObject(m_touch);
                 break;
             default:
-                break;                
+                break;
         }
         m_otherDropdown.value = 0;
     }
@@ -115,5 +115,5 @@ public class InputUIPicker : MonoBehaviour
             m_currentDisplay = newDiagram;
             m_currentDisplay.SetActive(true);
         }
-    }       
+    }
 }

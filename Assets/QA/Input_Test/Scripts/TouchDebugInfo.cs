@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,7 +42,7 @@ public class TouchDebugInfo : InputDebugInfo
     // Update is called once per frame
     void Update()
     {
-        CheckShortcut();            
+        CheckShortcut();
     }
 
     public void AddOldInputInfo(string content, int index = 0)
@@ -53,10 +53,10 @@ public class TouchDebugInfo : InputDebugInfo
     public void AddNewInputInfo(string content, int index = 0)
     {
         AddInputInfo(content, m_ISXInfoPool, index);
-    }    
+    }
 
     private void AddInputInfo(string content, Transform infoPool, int index = 0)
-    {        
+    {
         Transform infoSection = infoPool.GetChild(index);
 
         // Enable new section to display info
@@ -65,11 +65,11 @@ public class TouchDebugInfo : InputDebugInfo
             if (!infoSection.gameObject.activeSelf)
                 infoSection.gameObject.SetActive(true);
             infoSection.GetComponent<Text>().text = content;
-        }       
+        }
 
         // Disable the ones not used
         for (int i = index + 1; i < infoPool.childCount; i++)
-            infoPool.GetChild(i)?.gameObject.SetActive(false);   
+            infoPool.GetChild(i)?.gameObject.SetActive(false);
     }
 
     // Adjust UI width and position
