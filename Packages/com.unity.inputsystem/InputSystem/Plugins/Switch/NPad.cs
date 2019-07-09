@@ -346,7 +346,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     /// <summary>
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
@@ -761,7 +761,7 @@ namespace UnityEngine.InputSystem.Switch
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
