@@ -346,7 +346,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
     /// <summary>
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
