@@ -50,9 +50,6 @@ using UnityEngine.Networking.PlayerConnection;
 
 namespace UnityEngine.InputSystem
 {
-    using NotifyControlValueChangeAction = Action<InputControl, double, InputEventPtr, long>;
-    using NotifyTimerExpiredAction = Action<InputControl, double, long, int>;
-
     /// <summary>
     /// This is the central hub for the input system.
     /// </summary>
@@ -950,92 +947,6 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
-        ////TODO: move this entire API out of InputSystem; too low-level and specialized
-        #region State Change Monitors
-
-        public static void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-            if (monitor == null)
-                throw new ArgumentNullException(nameof(monitor));
-            if (control.device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
-                throw new ArgumentException(string.Format("Device for control '{0}' has not been added to system"), nameof(control));
-
-            s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
-        }
-
-        public static IInputStateChangeMonitor AddStateChangeMonitor(InputControl control, NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1, NotifyTimerExpiredAction timerExpiredCallback = null)
-        {
-            if (valueChangeCallback == null)
-                throw new ArgumentNullException(nameof(valueChangeCallback));
-            var monitor = new StateChangeMonitorDelegate
-            {
-                valueChangeCallback = valueChangeCallback,
-                timerExpiredCallback = timerExpiredCallback
-            };
-            AddStateChangeMonitor(control, monitor, monitorIndex);
-            return monitor;
-        }
-
-        public static void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-            if (monitor == null)
-                throw new ArgumentNullException(nameof(monitor));
-
-            s_Manager.RemoveStateChangeMonitor(control, monitor, monitorIndex);
-        }
-
-        /// <summary>
-        /// Put a timeout on a previously registered state change monitor.
-        /// </summary>
-        /// <param name="control"></param>
-        /// <param name="monitor"></param>
-        /// <param name="time"></param>
-        /// <param name="monitorIndex"></param>
-        /// <param name="timerIndex"></param>
-        /// <remarks>
-        /// If by the given <paramref name="time"/>, no state change has been registered on the control monitored
-        /// by the given <paramref name="monitor">state change monitor</paramref>, <see cref="IInputStateChangeMonitor.NotifyTimerExpired"/>
-        /// will be called on <paramref name="monitor"/>. If a state change happens by the given <paramref name="time"/>,
-        /// the monitor is notified as usual and the timer is automatically removed.
-        /// </remarks>
-        public static void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex = -1, int timerIndex = -1)
-        {
-            if (monitor == null)
-                throw new ArgumentNullException(nameof(monitor));
-
-            s_Manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
-        }
-
-        public static void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
-        {
-            if (monitor == null)
-                throw new ArgumentNullException(nameof(monitor));
-
-            s_Manager.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
-        }
-
-        private class StateChangeMonitorDelegate : IInputStateChangeMonitor
-        {
-            public NotifyControlValueChangeAction valueChangeCallback;
-            public NotifyTimerExpiredAction timerExpiredCallback;
-
-            public void NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
-            {
-                valueChangeCallback(control, time, eventPtr, monitorIndex);
-            }
-
-            public void NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
-            {
-                timerExpiredCallback?.Invoke(control, time, monitorIndex, timerIndex);
-            }
-        }
-
-        #endregion
-
         #region Events
 
         public static event Action<InputEventPtr> onEvent
@@ -1214,6 +1125,9 @@ namespace UnityEngine.InputSystem
 
         public static void Update(InputUpdateType updateType)
         {
+            if (updateType != InputUpdateType.None && (s_Manager.updateMask & updateType) == 0)
+                throw new InvalidOperationException(
+                    $"'{updateType}' updates are not enabled; InputSystem.settings.updateMode is set to '{settings.updateMode}'");
             s_Manager.Update(updateType);
         }
 
@@ -1677,6 +1591,7 @@ namespace UnityEngine.InputSystem
 
         private static void OnProjectChange()
         {
+            ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
             InputSettingsProvider.ForceReload();
@@ -1762,7 +1677,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_SWITCH
+            #if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
             Switch.SwitchSupport.Initialize();
             #endif
 
@@ -1801,9 +1716,11 @@ namespace UnityEngine.InputSystem
             {
                 foreach (var device in s_Manager.devices)
                     device.NotifyRemoved();
+
+                s_Manager.UninstallGlobals();
             }
 
-            // Create temporary settings. In the tests, this is all we need. But outside of tests,
+            // Create temporary settings. In the tests, this is all we need. But outside of tests,d
             // this should get replaced with an actual InputSettings asset.
             var settings = ScriptableObject.CreateInstance<InputSettings>();
             settings.hideFlags = HideFlags.HideAndDontSave;

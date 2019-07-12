@@ -543,6 +543,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnGUI()
         {
+            // If the actions tree has lost the filters (because they would not match an item it tried to highlight),
+            // update the Toolbar UI to remove them.
+            if (!m_ActionsTree.hasFilter)
+                m_Toolbar.ResetSearchFilters();
+
             // Allow switching between action map tree and action tree using arrow keys.
             ToggleFocusUsingKeyboard(KeyCode.RightArrow, m_ActionMapsTree, m_ActionsTree);
             ToggleFocusUsingKeyboard(KeyCode.LeftArrow, m_ActionsTree, m_ActionMapsTree);

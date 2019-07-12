@@ -28,6 +28,14 @@ namespace UnityEngine.InputSystem.Interactions
             + "'Default Press Point' in the global input settings.")]
         public float pressPoint;
 
+        /// <summary>
+        /// Determines how button presses trigger the action.
+        /// </summary>
+        /// <remarks>
+        /// By default (PressOnly), the action is performed on press.
+        /// With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is
+        /// performed on press and canceled on release.
+        /// </remarks>
         [Tooltip("Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
             + "canceled on release.")]

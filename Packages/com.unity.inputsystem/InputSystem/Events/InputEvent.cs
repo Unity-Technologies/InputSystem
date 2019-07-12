@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// A chunk of memory signaling a data transfer in the input system.
     /// </summary>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
@@ -131,7 +131,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set => m_Event.time = value;
         }
 
-
+        ////FIXME: this API isn't consistent; time seems to be internalTime whereas time property is external time
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
             if (time < 0)
@@ -180,7 +180,7 @@ namespace UnityEngine.InputSystem.LowLevel
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
             Debug.Assert(currentPtr != null);
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
 
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.LowLevel
             Debug.Assert(currentPtr != null);
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
 
             if (!buffer.Contains(nextPtr))

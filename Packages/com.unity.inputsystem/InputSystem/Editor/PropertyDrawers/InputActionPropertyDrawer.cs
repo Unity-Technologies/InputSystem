@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
     /// and the editor for <see cref="InputAction"/>.
     /// </remarks>
     [CustomPropertyDrawer(typeof(InputActionProperty))]
-    public class InputActionPropertyDrawer : PropertyDrawer
+    internal class InputActionPropertyDrawer : PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {

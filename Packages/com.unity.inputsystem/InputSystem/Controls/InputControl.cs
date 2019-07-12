@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem
     /// identifies both where the control stores its state as well as the format it stores it in.
     /// </remarks>
     /// <seealso cref="InputDevice"/>
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    [DebuggerDisplay("{DebuggerDisplay(),nq}")]
     public abstract class InputControl
     {
         ////REVIEW: we could allow the parenthetical characters if we require escaping them in paths
@@ -343,10 +343,10 @@ namespace UnityEngine.InputSystem
         /// <returns>Amount of actuation of the control or -1 if it cannot be determined.</returns>
         /// <remarks>
         /// Magnitudes do not make sense for all types of controls. For example, for a control that represents
-        /// an enumeration of values (such as <see cref="PointerPhaseControl"/>), there is no meaningful
+        /// an enumeration of values (such as <see cref="TouchPhaseControl"/>), there is no meaningful
         /// linear ordering of values (one could derive a linear ordering through the actual enum values but
-        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="PointerPhase.Canceled"/>
-        /// has a higher or lower "magnitude" as a state of <see cref="PointerPhase.Began"/>).
+        /// their assignment may be entirely arbitrary; it is unclear whether a state of <see cref="TouchPhase.Canceled"/>
+        /// has a higher or lower "magnitude" as a state of <see cref="TouchPhase.Began"/>).
         ///
         /// Controls that have no meaningful magnitude will return -1 when calling this method. Any negative
         /// return value should be considered an invalid value.
@@ -585,7 +585,7 @@ namespace UnityEngine.InputSystem
         internal ControlFlags m_ControlFlags;
 
         ////REVIEW: store these in arrays in InputDevice instead?
-        internal PrimitiveValueOrArray m_DefaultValue;
+        internal PrimitiveValue m_DefaultValue;
         internal PrimitiveValue m_MinValue;
         internal PrimitiveValue m_MaxValue;
 

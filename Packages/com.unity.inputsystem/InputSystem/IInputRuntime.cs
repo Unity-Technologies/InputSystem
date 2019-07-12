@@ -10,6 +10,9 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onUpdate"/>.
+    /// </summary>
     public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
     /// <summary>
@@ -105,7 +108,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Set delegate to call when the application changes focus.
         /// </summary>
         /// <seealso cref="Application.onFocusChanged"/>
-        Action<bool> onFocusChanged { get; set; }
+        Action<bool> onPlayerFocusChanged { get; set; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
@@ -153,8 +156,6 @@ namespace UnityEngine.InputSystem.LowLevel
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
         ScreenOrientation screenOrientation { get; }
-        Vector2 screenSize { get; }
-        int frameCount { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
@@ -179,7 +180,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
 
-    public static class InputRuntimeExtensions
+    internal static class InputRuntimeExtensions
     {
         public static unsafe long DeviceCommand<TCommand>(this IInputRuntime runtime, int deviceId, ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo

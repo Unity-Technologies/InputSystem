@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct DualMotorRumbleCommand : IInputDeviceCommandInfo
+    internal struct DualMotorRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('R', 'M', 'B', 'L'); } }
 

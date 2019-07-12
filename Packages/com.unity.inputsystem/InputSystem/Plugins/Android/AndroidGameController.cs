@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct AndroidGameControllerState : IInputStateTypeInfo
+    internal unsafe struct AndroidGameControllerState : IInputStateTypeInfo
     {
         public const int MaxAxes = 48;
         public const int MaxButtons = 220;
@@ -37,10 +37,14 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "leftStick", variants = kVariantGamepad)]
         [InputControl(name = "leftStick/y", variants = kVariantGamepad, parameters = "invert")]
+        [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "leftStick/down", variants = kVariantGamepad, parameters = "invert=false,clamp,clampMin=0,clampMax=1.0")]
         ////FIXME: state for this control is not contiguous
         [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variants = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
+        [InputControl(name = "rightStick/up", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert,clamp,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "rightStick/down", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert=false,clamp,clampMin=0,clampMax=1.0")]
         public fixed float axis[MaxAxes];
 
         public FourCC format
@@ -71,7 +75,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     // See https://developer.android.com/reference/android/view/InputDevice.html for input source values
-    public enum AndroidInputSource
+    internal enum AndroidInputSource
     {
         Keyboard = 257,
         Dpad = 513,
@@ -85,7 +89,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [Serializable]
-    public struct AndroidDeviceCapabilities
+    internal struct AndroidDeviceCapabilities
     {
         public string deviceDescriptor;
         public int productId;

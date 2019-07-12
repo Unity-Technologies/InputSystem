@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout is XINPUT_GAMEPAD
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XInputControllerWindowsState : IInputStateTypeInfo
+    internal struct XInputControllerWindowsState : IInputStateTypeInfo
     {
         public FourCC format
         {
@@ -60,21 +60,21 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "leftStick/x", offset = 0, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "SHRT")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "SHRT")]
         [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT")]
         [FieldOffset(4)] public short leftStickX;
         [FieldOffset(6)] public short leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "rightStick/x", offset = 0, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "invert=false,normalize=false")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "SHRT")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "SHRT")]
         [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "clamp=false,invert=false,normalize=false")]
-        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
-        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "invert=false,normalize=false")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT")]
         [FieldOffset(8)] public short rightStickX;
         [FieldOffset(10)] public short rightStickY;
 
@@ -88,6 +88,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
 namespace UnityEngine.InputSystem.XInput
 {
+    /// <summary>
+    /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
+    /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
     public class XInputControllerWindows : XInputController
     {

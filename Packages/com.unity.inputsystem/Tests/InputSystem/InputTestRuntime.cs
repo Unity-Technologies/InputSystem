@@ -68,34 +68,24 @@ namespace UnityEngine.InputSystem
 
                     onUpdate(type, ref buffer);
 
-                    #if UNITY_2019_1_OR_NEWER
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
                     if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
                         NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
                         m_EventBuffer = buffer.data;
-                    #else
-                    if (type != InputUpdateType.BeforeRender)
-                    {
-                        m_EventCount = 0;
-                        m_EventWritePosition = 0;
-                    }
-                    #endif
                 }
                 else
                 {
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
-
-                ++frameCount;
             }
         }
 
         public unsafe void QueueEvent(InputEvent* eventPtr)
         {
             var eventSize = eventPtr->sizeInBytes;
-            var alignedEventSize = NumberHelpers.AlignToMultiple(eventSize, 4);
+            var alignedEventSize = eventSize.AlignToMultipleOf(4);
 
             lock (m_Lock)
             {
@@ -203,19 +193,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void InvokeFocusChanged(bool newFocusState)
+        public void InvokePlayerFocusChanged(bool newFocusState)
         {
-            onFocusChanged?.Invoke(newFocusState);
+            onPlayerFocusChanged?.Invoke(newFocusState);
         }
 
-        public void FocusLost()
+        public void PlayerFocusLost()
         {
-            InvokeFocusChanged(false);
+            InvokePlayerFocusChanged(false);
         }
 
-        public void FocusGained()
+        public void PlayerFocusGained()
         {
-            InvokeFocusChanged(true);
+            InvokePlayerFocusChanged(true);
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
@@ -323,18 +313,14 @@ namespace UnityEngine.InputSystem
         public Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
-        public Action<bool> onFocusChanged { get; set; }
+        public Action<bool> onPlayerFocusChanged { get; set; }
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
-        public bool shouldRunInBackground { get; set; }
-        public int frameCount { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
-
-        public Vector2 screenSize { set; get; } = new Vector2(Screen.width, Screen.height);
 
         public List<PairedUser> userAccountPairings
         {

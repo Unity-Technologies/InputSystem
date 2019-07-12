@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct DualShockGamepadStatePS4 : IInputStateTypeInfo
+    internal struct DualShockGamepadStatePS4 : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the DualShockPS4OutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct DualShockPS4OuputCommand : IInputDeviceCommandInfo
+    internal struct DualShockPS4OuputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('P', 'S', 'G', 'O'); } }
 
@@ -190,7 +190,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     /// Retrieve the slot index, default color and user ID of the controller.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryPS4ControllerInfo : IInputDeviceCommandInfo
+    internal struct QueryPS4ControllerInfo : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('S', 'L', 'I', 'D'); } }
 
@@ -455,7 +455,6 @@ namespace UnityEngine.InputSystem.PS4
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
 
-#if UNITY_2019_1_OR_NEWER
             var capabilities = description.capabilities;
             var deviceDescriptor = PS4InputDeviceDescriptor.FromJson(capabilities);
 
@@ -472,7 +471,6 @@ namespace UnityEngine.InputSystem.PS4
                     m_LightBarColor = PS4ColorIdToColor(m_DefaultColorId);
                 }
             }
-#endif
         }
 
         public override void PauseHaptics()

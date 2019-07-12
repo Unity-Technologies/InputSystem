@@ -18,6 +18,18 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         private const string kSavePath = "Library/InputUserSettings.json";
 
+        public static bool simulateTouch
+        {
+            get => s_Settings.simulateTouch;
+            set
+            {
+                if (s_Settings.simulateTouch == value)
+                    return;
+                s_Settings.simulateTouch = value;
+                OnChange();
+            }
+        }
+
         public static bool lockInputToGameView
         {
             get => s_Settings.lockInputToGameView;
@@ -78,6 +90,7 @@ namespace UnityEngine.InputSystem.Editor
             public bool lockInputToGameView;
             public bool addDevicesNotSupportedByProject;
             public bool autoSaveInputActionAssets;
+            public bool simulateTouch;
         }
 
         internal static SerializedState s_Settings;

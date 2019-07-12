@@ -20,17 +20,14 @@ namespace UnityEngine.InputSystem.LowLevel
         // this can't be guaranteed for generic type parameters, they can't be used with pointers.
         // This is why we cannot make InputEventPtr generic or have a generic method that returns
         // a pointer to a specific type of event.
-        private InputEvent* m_EventPtr;
+        private readonly InputEvent* m_EventPtr;
 
         public InputEventPtr(InputEvent* eventPtr)
         {
             m_EventPtr = eventPtr;
         }
 
-        public bool valid
-        {
-            get { return m_EventPtr != null; }
-        }
+        public bool valid => m_EventPtr != null;
 
         public bool handled
         {
@@ -102,7 +99,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public double time
         {
-            get { return valid ? m_EventPtr->time : 0.0; }
+            get => valid ? m_EventPtr->time : 0.0;
             set
             {
                 if (!valid)
@@ -113,7 +110,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal double internalTime
         {
-            get { return valid ? m_EventPtr->internalTime : 0.0; }
+            get => valid ? m_EventPtr->internalTime : 0.0;
             set
             {
                 if (!valid)
@@ -122,9 +119,30 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public InputEvent* data
+        public InputEvent* data => m_EventPtr;
+
+        internal FourCC stateFormat
         {
-            get { return m_EventPtr; }
+            get
+            {
+                if (IsA<StateEvent>())
+                    return StateEvent.From(this)->stateFormat;
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->stateFormat;
+                throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
+            }
+        }
+
+        internal uint stateSizeInBytes
+        {
+            get
+            {
+                if (IsA<StateEvent>())
+                    return StateEvent.From(this)->stateSizeInBytes;
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->deltaStateSizeInBytes;
+                throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
+            }
         }
 
         public bool IsA<TOtherEvent>()
@@ -167,7 +185,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             if (ReferenceEquals(null, obj))
                 return false;
-            return obj is InputEventPtr && Equals((InputEventPtr)obj);
+            return obj is InputEventPtr ptr && Equals(ptr);
         }
 
         public override int GetHashCode()

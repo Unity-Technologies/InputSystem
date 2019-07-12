@@ -114,13 +114,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-#if UNITY_2019_1_OR_NEWER
                 var command = QueryCanRunInBackground.Create();
                 if (ExecuteCommand(ref command) >= 0)
-                {
                     return command.canRunInBackground;
-                }
-#endif
                 return false;
             }
         }
@@ -198,20 +194,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-        public bool wasUpdatedThisFrame
-        {
-            get
-            {
-                var updateType = InputUpdate.s_LastUpdateType;
-                if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.BeforeRender)
-                    return m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount;
-                if (updateType == InputUpdateType.Fixed)
-                    return m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount;
-
-                ////REVIEW: how should this behave in the editor
-                return false;
-            }
-        }
+        public bool wasUpdatedThisFrame => m_CurrentUpdateStepCount == InputUpdate.s_UpdateStepCount;
 
         /// <summary>
         /// A flattened list of controls that make up the device.
@@ -279,12 +262,11 @@ namespace UnityEngine.InputSystem
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
             if (statePtr == null)
-                throw new ArgumentNullException("statePtr");
+                throw new ArgumentNullException(nameof(statePtr));
             if (bufferPtr == null)
-                throw new ArgumentNullException("bufferPtr");
+                throw new ArgumentNullException(nameof(bufferPtr));
             if (bufferSize < valueSizeInBytes)
-                throw new ArgumentException(string.Format("Buffer tool small (expected: {0}, actual: {1}",
-                    valueSizeInBytes, bufferSize));
+                throw new ArgumentException($"Buffer too small (expected: {valueSizeInBytes}, actual: {bufferSize}");
 
             var adjustedStatePtr = (byte*)statePtr + m_StateBlock.byteOffset;
             UnsafeUtility.MemCpy(bufferPtr, adjustedStatePtr, m_StateBlock.alignedSizeInBytes);
@@ -293,9 +275,9 @@ namespace UnityEngine.InputSystem
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
             if (firstStatePtr == null)
-                throw new ArgumentNullException("firstStatePtr");
+                throw new ArgumentNullException(nameof(firstStatePtr));
             if (secondStatePtr == null)
-                throw new ArgumentNullException("secondStatePtr");
+                throw new ArgumentNullException(nameof(secondStatePtr));
 
             var adjustedFirstStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
             var adjustedSecondStatePtr = (byte*)firstStatePtr + m_StateBlock.byteOffset;
@@ -345,6 +327,8 @@ namespace UnityEngine.InputSystem
         protected virtual void OnRemoved()
         {
         }
+
+        ////TODO: add overridable OnDisable/OnEnable that fire the device commands
 
         ////TODO: this should be overridable directly on the device in some form; can't be virtual because of AOT problems; need some other solution
         ////REVIEW: return just bool instead of long and require everything else to go in the command?
@@ -402,11 +386,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputEvent.time"/>
         internal double m_LastUpdateTimeInternal;
 
-        // The dynamic and fixed update count corresponding to the current
-        // front buffers that are active on the device. We use this to know
-        // when to flip buffers.
-        internal uint m_CurrentDynamicUpdateCount;
-        internal uint m_CurrentFixedUpdateCount;
+        // Update count corresponding to the current front buffers that are active on the device.
+        // We use this to know when to flip buffers.
+        internal uint m_CurrentUpdateStepCount;
 
         // List of aliases for all controls. Each control gets a slice of this array.
         // See 'InputControl.aliases'.
@@ -433,7 +415,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal bool hasControlsWithDefaultState
         {
-            get { return (m_DeviceFlags & DeviceFlags.HasControlsWithDefaultState) == DeviceFlags.HasControlsWithDefaultState; }
+            get => (m_DeviceFlags & DeviceFlags.HasControlsWithDefaultState) == DeviceFlags.HasControlsWithDefaultState;
             set
             {
                 if (value)
@@ -446,7 +428,7 @@ namespace UnityEngine.InputSystem
         internal void SetUsage(InternedString usage)
         {
             // Make last entry in m_UsagesForEachControl be our device usage string.
-            var numControlUsages = m_UsageToControl != null ? m_UsageToControl.Length : 0;
+            var numControlUsages = m_UsageToControl?.Length ?? 0;
             Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
             m_UsagesForEachControl[numControlUsages] = usage;
             m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);

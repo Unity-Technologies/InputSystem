@@ -28,14 +28,6 @@ namespace UnityEngine.InputSystem.Interactions
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         public float pressPoint;
 
-        /// <summary>
-        /// If enabled, then while the hold is in <see cref="InputActionPhase.Started"/> phase, <see cref="InputAction.started"/>
-        /// will be triggered every time a bound control changes value.
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        public bool startContinuously;
-
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime;
         private float pressPointOrDefault => pressPoint > 0.0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
@@ -119,8 +111,6 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-            //target.startContinuously = GUILayout.Toggle(target.startContinuously, m_ContinuousStartsLabel);
-
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();
         }

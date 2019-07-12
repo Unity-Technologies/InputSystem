@@ -678,6 +678,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < usageCount; ++i)
             {
                 var usage = usages[i];
+                Debug.Assert(!string.IsNullOrEmpty(usage), "Usage entry is empty");
 
                 // Match usage against path.
                 var usageIsMatch = MatchPathComponent(usage, path, ref indexInPath, PathComponentType.Usage);
@@ -768,17 +769,17 @@ namespace UnityEngine.InputSystem
             Layout
         }
 
-        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType)
+        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
         {
             Debug.Assert(component != null, "Component string is null");
             Debug.Assert(path != null, "Path is null");
 
-            var nameLength = component.Length;
+            var componentLength = component.Length;
             var pathLength = path.Length;
             var startIndex = indexInPath;
 
             // Try to walk the name as far as we can.
-            var indexInName = 0;
+            var indexInComponent = startIndexInComponent;
             while (indexInPath < pathLength)
             {
                 // Check if we've reached a terminator in the path.
@@ -805,37 +806,42 @@ namespace UnityEngine.InputSystem
                     // If we've reached a '*' in the path, skip character in name.
                     if (nextCharInPath == '*')
                     {
-                        // But first let's see if the following character is a match.
+                        // But first let's see if we have something after the wildcard that matches the rest of the component.
+                        // This could be when, for example, we hit "T" on matching "leftTrigger" against "*Trigger". We have to stop
+                        // gobbling up characters for the wildcard when reaching "Trigger" in the component name.
+                        //
+                        // NOTE: Just looking at the very next character only is *NOT* enough. We need to match the entire rest of
+                        //       the path. Otherwise, in the example above, we would stop on seeing the lowercase 't' and then be left
+                        //       trying to match "tTrigger" against "Trigger".
+                        var indexAfterWildcard = indexInPath + 1;
                         if (indexInPath < (pathLength - 1) &&
-                            indexInName < nameLength &&
-                            char.ToLower(path[indexInPath + 1]) == char.ToLower(component[indexInName]))
+                            indexInComponent < componentLength &&
+                            MatchPathComponent(component, path, ref indexAfterWildcard, componentType, indexInComponent))
                         {
-                            ++indexInName;
-                            indexInPath += 2; // Match '*' and following character.
-                        }
-                        else if (indexInName < nameLength)
-                        {
-                            ++indexInName;
-                        }
-                        else
-                        {
+                            indexInPath = indexAfterWildcard;
                             return true;
                         }
+
+                        if (indexInComponent < componentLength)
+                            ++indexInComponent;
+                        else
+                            return true;
+
                         continue;
                     }
                 }
 
                 // If we've reached the end of the component name, we did so before
                 // we've reached a terminator
-                if (indexInName == nameLength)
+                if (indexInComponent == componentLength)
                 {
                     indexInPath = startIndex;
                     return false;
                 }
 
-                if (char.ToLower(component[indexInName]) == char.ToLower(nextCharInPath))
+                if (char.ToLower(component[indexInComponent]) == char.ToLower(nextCharInPath))
                 {
-                    ++indexInName;
+                    ++indexInComponent;
                     ++indexInPath;
                 }
                 else
@@ -846,7 +852,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            if (indexInName == nameLength)
+            if (indexInComponent == componentLength)
                 return true;
 
             indexInPath = startIndex;

@@ -13,24 +13,26 @@ public class PenISX : MonoBehaviour
     [Tooltip("Sign for Out of Range")]
     public GameObject m_outOfRangeSign;
 
-    [Tooltip("Where all the messages go")]
-    public InputField m_MessageWindow;
-
-    [Header("UI Elements for Debug Info")]
+    [Header("Info UI")]
     public TextMesh m_pressureText;
     public Text m_penInfoText;
 
-    private InputAction m_penAction;
+    [Tooltip("Where all the messages go")]
+    public InputField m_MessageWindow;
+
+    private InputAction m_penButtonAction;
+    private InputAction m_penVector2Action;
+    private InputAction m_penAxisAction;
 
     private const float HORIZONTAL_RANGE = 8f;
     private const float VERTICAL_RANGE = 2.7f;
 
     private Transform pen_holder;
     private Transform pen_rotation;
-    private Vector3 original_pos;
-    private Vector3 rotation_adjust;
+    private Vector3 m_originalPos;
+    private Vector3 m_rotateAdjust;
 
-    private bool is_pen_rotating = false;
+    private bool m_isRotating = false;
 
     // Use this for initialization
     void Start()
@@ -41,24 +43,36 @@ public class PenISX : MonoBehaviour
 
         pen_rotation = pen_holder.Find("RotationHolder");
 
-        original_pos = pen_holder.position;
-        rotation_adjust = pen_rotation.GetChild(0).localEulerAngles;
+        m_originalPos = pen_holder.position;
+        m_rotateAdjust = pen_rotation.GetChild(0).localEulerAngles;
 
-        m_penAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>");
-        m_penAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
-        m_penAction.canceled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
-        m_penAction.Enable();
+        m_penButtonAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>") { passThrough = true };
+        m_penButtonAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
+        //m_penAction.cancelled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
+        m_penButtonAction.Enable();
+
+        m_penVector2Action = new InputAction(name: "PenVectorAction", binding: "<pen>/<vector2>") { passThrough = true };
+        m_penVector2Action.performed += callbackContext => OnVector2Change(callbackContext.control as Vector2Control);
+        m_penVector2Action.Enable();
+
+        m_penAxisAction = new InputAction(name: "PenAxisAction", binding: "<pen>/twist") { passThrough = true };
+        m_penAxisAction.AddBinding("<pen>/pressure");
+        m_penAxisAction.performed += callbackContext => OnAxisChange(callbackContext.control as AxisControl);
+        m_penAxisAction.Enable();
     }
 
     void OnEnable()
     {
-        if (m_penAction != null)
-            m_penAction.Enable();
+        m_penButtonAction?.Enable();
+        m_penVector2Action?.Enable();
+        m_penAxisAction?.Enable();
     }
 
     private void OnDisable()
     {
-        m_penAction.Disable();
+        m_penButtonAction?.Disable();
+        m_penVector2Action?.Disable();
+        m_penAxisAction?.Disable();
     }
 
     // Update is called once per frame
@@ -67,24 +81,11 @@ public class PenISX : MonoBehaviour
         Pen pen = InputSystem.GetDevice<Pen>();
         if (pen == null) return;
 
-        // Update position
-        Vector2 pos = pen.position.ReadValue();
-        pen_holder.position = original_pos + new Vector3(pos.x * HORIZONTAL_RANGE / Screen.width,
-            pos.y * VERTICAL_RANGE / Screen.height, 0);
-
-        // Update tilt
-        Vector2 tilt = pen.tilt.ReadValue();
-        pen_rotation.localEulerAngles = new Vector3(tilt.y, 0, tilt.x) * -90;
-
-        // Update twist if available
-        float twist = pen.twist.ReadValue();
-        pen_rotation.GetChild(0).localEulerAngles = rotation_adjust + new Vector3(0, twist * -360, 0);
-
         // Update ISX information text UI
-        m_penInfoText.text = pen.phase.ReadValue().ToString() + "\n"
-            + pos.ToString("F0") + "\n"
-            + tilt.ToString("F2") + "\n"
-            + twist.ToString("F2");
+        m_penInfoText.text = pen.position.ReadValue().ToString("F0") + "\n"
+            + pen.tilt.ReadValue().ToString("F2") + "\n"
+            + pen.twist.ReadValue().ToString("F2") + "\n"
+            + pen.delta.ReadValue().ToString("F2");
 
         // Update pressure indicator
         float pressure = pen.pressure.ReadValue();
@@ -99,53 +100,88 @@ public class PenISX : MonoBehaviour
 
     private void ButtonPress(ButtonControl control)
     {
-        string buttonName = control.name;
-        if (buttonName == "tip" || buttonName == "eraser")
+        switch (control.name)
         {
-            if (control.ReadValue() > 0)
-            {
-                pen_rotation.position -= new Vector3(0, 0.2f, 0);
-                if (buttonName == "tip")
-                    StartRotatePen(0);
+            case "tip":
+            case "eraser":
+                if (control.ReadValue() > 0)
+                {
+                    pen_rotation.position -= new Vector3(0, 0.2f, 0);
+                    if (control.name == "tip")
+                        StartRotatePen(0);
+                    else
+                        StartRotatePen(180);
+                    m_highlightPS.Play();
+                }
                 else
-                    StartRotatePen(180);
-                m_highlightPS.Play();
-            }
-            else
-            {
-                pen_rotation.position += new Vector3(0, 0.2f, 0);
-                StartRotatePen(0);
-                m_highlightPS.Stop();
-            }
-        }
-        // Any other button is listed in the Input Name list
-        else if (buttonName != "inRange")
-        {
-            string str = buttonName + ((control.ReadValue() == 0) ? " released" : " pressed");
-            ShowMessage(str);
+                {
+                    pen_rotation.position += new Vector3(0, 0.2f, 0);
+                    StartRotatePen(0);
+                    m_highlightPS.Stop();
+                }
+                break;
+
+            case "inRange":
+                m_outOfRangeSign.SetActive(control.ReadValue() == 0);
+                break;
+
+            case "button":
+                break;
+
+            default:
+                string str = control.name + ((control.ReadValue() == 0) ? " released" : " pressed");
+                ShowMessage(str);
+                break;
         }
     }
 
-    private void StartRotatePen(int target_angel)
+    // Update visual element for Position and tilt
+    private void OnVector2Change(Vector2Control control)
     {
-        if (Mathf.Abs(rotation_adjust.z - target_angel) < 1)
+        if (control.name == "position")
+            pen_holder.position = new Vector3(control.ReadValue().x * HORIZONTAL_RANGE / Screen.width, control.ReadValue().y * VERTICAL_RANGE / Screen.height, 0) + m_originalPos;
+        else if (control.name == "tilt")
+            pen_rotation.localEulerAngles = new Vector3(control.ReadValue().y, 0, control.ReadValue().x) * -90;
+    }
+
+    // Update visual element for twist and pressue
+    private void OnAxisChange(AxisControl control)
+    {
+        if (control.name == "twist")
+            pen_rotation.GetChild(0).localEulerAngles = m_rotateAdjust + new Vector3(0, control.ReadValue() * -360, 0);
+
+        else if (control.name == "pressure")
+        {
+            Color newColor = Color.red;
+            newColor.a = control.ReadValue();
+            var main = m_highlightPS.main;
+            main.startColor = newColor;
+            m_pressureText.color = newColor;
+            m_pressureText.text = "Pressure: " + control.ReadValue().ToString("F2");
+        }
+    }
+
+    private void StartRotatePen(int targetAngle)
+    {
+        if (Mathf.Abs(m_rotateAdjust.z - targetAngle) < 1)
             return;
 
-        if (is_pen_rotating)
+        if (m_isRotating)
             StopCoroutine("RotatePen");
-        StartCoroutine("RotatePen", target_angel);
+        StartCoroutine("RotatePen", targetAngle);
     }
 
-    private IEnumerator RotatePen(int target_angel)
+    private IEnumerator RotatePen(int targetAngle)
     {
-        is_pen_rotating = true;
-        float step = (target_angel - rotation_adjust.z) * 0.2f;
-        while (Mathf.Abs(rotation_adjust.z - target_angel) > 1)
+        m_isRotating = true;
+        float step = (targetAngle - m_rotateAdjust.z) * 0.2f;
+        while (Mathf.Abs(m_rotateAdjust.z - targetAngle) > 1)
         {
-            rotation_adjust.z += step;
+            m_rotateAdjust.z += step;
+            pen_rotation.GetChild(0).localEulerAngles = m_rotateAdjust;
             yield return new WaitForEndOfFrame();
         }
-        is_pen_rotating = false;
+        m_isRotating = false;
     }
 
     private string FirstLetterToUpper(string str)
