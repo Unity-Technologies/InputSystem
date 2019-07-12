@@ -12,3 +12,5 @@ ScriptedImporter:
   wrapperCodePath: 
   wrapperClassName: 
   wrapperCodeNamespace: 
+  generateActionEvents: 0
+  generateInterfaces: 0
