@@ -521,7 +521,114 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanDetermineIfActionTriggeredInFrame()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        Assert.That(action.triggered, Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(action.triggered, Is.False);
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
+
+        action.Disable();
+
+        // Disabling the action should reset triggered.
+        Assert.That(action.triggered, Is.False);
+
+        action.Enable();
+
+        InputSystem.Update();
+
+        Assert.That(action.triggered, Is.False);
+
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+        Release(gamepad.buttonSouth, queueEventOnly: true);
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.triggered, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanReadValueFromAction()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonAction = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        var triggerAction = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/leftTrigger");
+        var stickAction = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+
+        // Should get all defaults when not enabled.
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(Vector2.zero)
+                .Using(Vector2EqualityComparer.Instance));
+
+        buttonAction.Enable();
+        triggerAction.Enable();
+        stickAction.Enable();
+
+        // Should get all defaults when there was no input yet.
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(Vector2.zero)
+                .Using(Vector2EqualityComparer.Instance));
+
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+        Set(gamepad.leftTrigger, 0.234f, queueEventOnly: true);
+        Set(gamepad.leftStick, new Vector2(0.234f, 0.345f), queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
+
+        InputSystem.Update();
+
+        // NOTE: The button action "resets" its value!
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
+
+        // Disabling an action should result in all default values.
+        buttonAction.Disable();
+        triggerAction.Disable();
+        stickAction.Disable();
+
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(Vector2.zero)
+                .Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueFromAction_InCallback()
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -546,7 +653,7 @@ partial class CoreTests
     // generic ReadValue<TValue>() API isn't sufficient.
     [Test]
     [Category("Actions")]
-    public unsafe void Actions_CanReadValueFromAction_WithoutKnowingValueType()
+    public unsafe void Actions_CanReadValueFromAction_InCallback_WithoutKnowingValueType()
     {
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick");

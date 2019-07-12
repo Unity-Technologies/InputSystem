@@ -68,6 +68,9 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- Actions now also have a __polling API__!
+  * `InputAction.triggered` is true if the action was performed in the current frame.
+  * `InputAction.ReadValue<TValue>()` yields the last value that `started`, `performed`, or `cancelled` (whichever came last) was called with. If the action is disabled, returns `default(TValue)`. For `InputActionType.Button` type actions, returns `1.0f` if `triggered==true` and `0.0f` otherwise.
 - Generated C# wrappers for .inputactions can now placed relative to the .inputactions file by specifying a path starting with './' (e.g. `./foo/bar.cs`).
 
 ### Changed

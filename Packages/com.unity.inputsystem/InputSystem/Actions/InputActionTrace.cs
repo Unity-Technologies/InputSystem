@@ -361,7 +361,7 @@ namespace UnityEngine.InputSystem
                     case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
-                        var actionIndex = triggeredAction.m_ActionIndex;
+                        var actionIndex = triggeredAction.m_ActionIndexInState;
                         var stateForAction = triggeredAction.m_ActionMap.m_State;
 
                         var context = new InputAction.CallbackContext

@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem
                     if (actions != null)
                     {
                         for (var n = 0; n < actions.Length; ++n)
-                            actions[n].m_ActionIndex = kInvalidIndex;
+                            actions[n].m_ActionIndexInState = kInvalidIndex;
                     }
                 }
 
@@ -432,6 +432,7 @@ namespace UnityEngine.InputSystem
             state.startTime = 0;
             state.time = 0;
             state.hasMultipleConcurrentActuations = false;
+            state.lastTriggeredInUpdate = default;
             *actionState = state;
         }
 
@@ -441,9 +442,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have an action map");
             Debug.Assert(action.m_ActionMap.m_MapIndexInState != kInvalidIndex, "Action must have index set");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
-            Debug.Assert(action.m_ActionIndex >= 0 && action.m_ActionIndex < totalActionCount, "Action index is out of range");
+            Debug.Assert(action.m_ActionIndexInState >= 0 && action.m_ActionIndexInState < totalActionCount, "Action index is out of range");
 
-            return ref actionStates[action.m_ActionIndex];
+            return ref actionStates[action.m_ActionIndexInState];
         }
 
         public ActionMapIndices FetchMapIndices(InputActionMap map)
@@ -508,7 +509,7 @@ namespace UnityEngine.InputSystem
             EnableControls(action);
 
             // Put action into waiting state.
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when enabling single action");
             actionStates[actionIndex].phase = InputActionPhase.Waiting;
@@ -524,7 +525,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have action map");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Map must be contained in state");
 
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when enabling controls");
 
@@ -608,7 +609,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
             DisableControls(action);
-            ResetActionState(action.m_ActionIndex, toPhase: InputActionPhase.Disabled);
+            ResetActionState(action.m_ActionIndexInState, toPhase: InputActionPhase.Disabled);
             --action.m_ActionMap.m_EnabledActionsCount;
 
             NotifyListenersOfActionChange(InputActionChange.ActionDisabled, action);
@@ -620,7 +621,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(action.m_ActionMap != null, "Action must have action map");
             Debug.Assert(maps.Contains(action.m_ActionMap), "Action map must be contained in state");
 
-            var actionIndex = action.m_ActionIndex;
+            var actionIndex = action.m_ActionIndexInState;
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
                 "Action index out of range when disabling controls");
 
@@ -1497,6 +1498,10 @@ namespace UnityEngine.InputSystem
             newState.phase = newPhase;
             if (!newState.haveMagnitude)
                 newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            if (newPhase == InputActionPhase.Performed)
+                newState.lastTriggeredInUpdate = InputUpdate.s_UpdateStepCount;
+            else
+                newState.lastTriggeredInUpdate = actionState->lastTriggeredInUpdate;
             *actionState = newState;
 
             // Let listeners know.
@@ -2484,7 +2489,7 @@ namespace UnityEngine.InputSystem
         /// other is to represent the current actuation state of an action as a whole. The latter is stored in <see cref="actionStates"/>
         /// while the former is passed around as temporary instances on the stack.
         /// </remarks>
-        [StructLayout(LayoutKind.Explicit, Size = 32)]
+        [StructLayout(LayoutKind.Explicit, Size = 36)]
         public struct TriggerState
         {
             [FieldOffset(0)] private byte m_Phase;
@@ -2499,6 +2504,7 @@ namespace UnityEngine.InputSystem
             [FieldOffset(24)] private ushort m_BindingIndex;
             [FieldOffset(26)] private ushort m_InteractionIndex;
             [FieldOffset(28)] private float m_Magnitude;
+            [FieldOffset(32)] private uint m_LastTriggeredInUpdate;
 
             /// <summary>
             /// Phase being triggered by the control value change.
@@ -2636,6 +2642,16 @@ namespace UnityEngine.InputSystem
                         m_InteractionIndex = (ushort)value;
                     }
                 }
+            }
+
+            /// <summary>
+            /// Update step count (<see cref="InputUpdate.s_UpdateStepCount"/>) in which action triggered/performed last.
+            /// Zero if the action did not trigger yet. Also reset to zero when the action is disabled.
+            /// </summary>
+            public uint lastTriggeredInUpdate
+            {
+                get => m_LastTriggeredInUpdate;
+                set => m_LastTriggeredInUpdate = value;
             }
 
             /// <summary>

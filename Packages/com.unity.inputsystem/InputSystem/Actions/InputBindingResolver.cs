@@ -459,7 +459,7 @@ namespace UnityEngine.InputSystem
                     var actionIndex = actionStartIndex + i;
 
                     // Correlate action with its trigger state.
-                    action.m_ActionIndex = actionIndex;
+                    action.m_ActionIndexInState = actionIndex;
 
                     // Collect bindings for action.
                     var bindingStartIndexForAction = runningIndexInBindingIndices;

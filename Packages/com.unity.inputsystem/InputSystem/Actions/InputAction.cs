@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
 
@@ -235,6 +236,24 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Whether the action was triggered (i.e. had <see cref="performed"/> called) this frame.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        public unsafe bool triggered
+        {
+            get
+            {
+                var map = GetOrCreateActionMap();
+                if (map.m_State == null)
+                    return false;
+
+                var lastTriggeredInUpdate = map.m_State.actionStates[m_ActionIndexInState].lastTriggeredInUpdate;
+                return lastTriggeredInUpdate != 0 && lastTriggeredInUpdate == InputUpdate.s_UpdateStepCount;
+            }
+        }
+
+        /// <summary>
         /// Whether the action wants a state check on its bound controls as soon as it is enabled.
         /// </summary>
         internal bool wantsInitialStateCheck => type == InputActionType.Value;
@@ -339,6 +358,45 @@ namespace UnityEngine.InputSystem
             return Clone();
         }
 
+        /// <summary>
+        /// Read the current value of the action. This is the last value received on <see cref="started"/>,
+        /// <see cref="performed"/>, or <see cref="canceled"/> (whichever came last) except if the action <see cref="type"/>
+        /// is <see cref="InputActionType.Button"/> in which case <typeparamref name="TValue"/> must be <see cref="float"/>
+        /// and the returned value will be 1 if <see cref="triggered"/> is true and 0 otherwise.
+        /// </summary>
+        /// <typeparam name="TValue">Value type to read. Must match </typeparam>
+        /// <returns></returns>
+        public unsafe TValue ReadValue<TValue>()
+            where TValue : struct
+        {
+            var result = default(TValue);
+
+            if (type == InputActionType.Button)
+            {
+                if (typeof(TValue) != typeof(float))
+                    throw new InvalidOperationException(
+                        $"Value type for Button type action {this} must be float but was {typeof(TValue).Name} instead");
+
+                // Working around limitations in type system to treat TValue as float here.
+
+                var resultPtr = (float*)UnsafeUtility.AddressOf(ref result);
+                *resultPtr = triggered ? 1 : 0;
+            }
+            else
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
+                }
+            }
+
+            return result;
+        }
+
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
@@ -373,7 +431,7 @@ namespace UnityEngine.InputSystem
         /// This is not necessarily the same as the index of the action in its map.
         /// </remarks>
         /// <seealso cref="actionMap"/>
-        [NonSerialized] internal int m_ActionIndex = InputActionState.kInvalidIndex;
+        [NonSerialized] internal int m_ActionIndexInState = InputActionState.kInvalidIndex;
 
         /// <summary>
         /// The action map that owns the action.
@@ -402,7 +460,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_ActionIndex == InputActionState.kInvalidIndex)
+                if (m_ActionIndexInState == InputActionState.kInvalidIndex)
                     return new InputActionState.TriggerState();
                 Debug.Assert(m_ActionMap != null);
                 Debug.Assert(m_ActionMap.m_State != null);
