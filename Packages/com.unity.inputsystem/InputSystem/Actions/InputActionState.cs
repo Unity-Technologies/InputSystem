@@ -115,10 +115,6 @@ namespace UnityEngine.InputSystem
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
 
-        private int m_ContinuousActionCount;
-        private int m_ContinuousActionCountFromPreviousUpdate;
-        private int[] m_ContinuousActions;
-
         /// <summary>
         /// Initialize execution state with given resolved binding information.
         /// </summary>
@@ -437,14 +433,6 @@ namespace UnityEngine.InputSystem
             state.time = 0;
             state.hasMultipleConcurrentActuations = false;
             *actionState = state;
-
-            // Remove if currently on the list of continuous actions.
-            if (state.continuous)
-            {
-                var continuousIndex = ArrayHelpers.IndexOf(m_ContinuousActions, actionIndex, count: m_ContinuousActionCount);
-                if (continuousIndex != -1)
-                    ArrayHelpers.EraseAtByMovingTail(m_ContinuousActions, ref m_ContinuousActionCount, continuousIndex);
-            }
         }
 
         public ref TriggerState FetchActionState(InputAction action)
@@ -779,122 +767,6 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
-        private void OnAfterUpdateProcessContinuousActions(InputUpdateType updateType)
-        {
-            ////TODO: handle update type
-
-            // Everything that is still on the list of continuous actions at the end of a
-            // frame either got there during the frame or is there still from the last frame
-            // (meaning the action didn't get any input this frame). Continuous actions added
-            // this update will all have been added to the end of the array so we know that
-            // everything in between #0 and m_ContinuousActionCountFromPreviousUpdate is
-            // continuous actions left from the previous update.
-
-            var time = InputRuntime.s_Instance.currentTime;
-            for (var i = 0; i < m_ContinuousActionCountFromPreviousUpdate; ++i)
-            {
-                var actionIndex = m_ContinuousActions[i];
-                Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                    "Action index out of range when updating continuous actions");
-
-                var currentPhase = actionStates[actionIndex].phase;
-                Debug.Assert(currentPhase == InputActionPhase.Started || currentPhase == InputActionPhase.Performed,
-                    "Current phase must be Started or Performed");
-
-                // Trigger the action and go back to its current phase (may be
-                actionStates[actionIndex].time = time;
-                ChangePhaseOfAction(InputActionPhase.Performed, ref actionStates[actionIndex],
-                    phaseAfterPerformedOrCanceled: currentPhase);
-            }
-
-            // All actions that are currently in the list become the actions we update by default
-            // on the next update. If events come in during the next update, the action will be
-            // moved out of there using DontTriggerContinuousActionThisUpdate().
-            m_ContinuousActionCountFromPreviousUpdate = m_ContinuousActionCount;
-        }
-
-        /// <summary>
-        /// Add an action to the list of actions we trigger every frame.
-        /// </summary>
-        /// <param name="actionIndex">Index of the action in <see cref="actionStates"/>.</param>
-        private void AddContinuousAction(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                "Action index out of range when adding continuous action");
-            Debug.Assert(!actionStates[actionIndex].onContinuousList, "Action is already in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) == -1,
-                "Action is already on list of continuous actions");
-
-            ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
-            actionStates[actionIndex].onContinuousList = true;
-
-            // Hook into `onAfterUpdate` if we haven't already.
-            if (!m_OnAfterUpdateHooked)
-            {
-                if (m_OnAfterUpdateDelegate == null)
-                    m_OnAfterUpdateDelegate = OnAfterUpdateProcessContinuousActions;
-                InputSystem.s_Manager.onAfterUpdate += m_OnAfterUpdateDelegate;
-                m_OnAfterUpdateHooked = true;
-            }
-        }
-
-        /// <summary>
-        /// Remove an action from the list of actions we trigger every frame.
-        /// </summary>
-        /// <param name="actionIndex"></param>
-        private void RemoveContinuousAction(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount,
-                "Action index out of range when removing continuous action");
-            Debug.Assert(actionStates[actionIndex].onContinuousList, "Action not in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) != -1,
-                "Action is not currently in list of continuous actions");
-            Debug.Assert(m_ContinuousActionCount > 0, "List of continuous actions is empty");
-
-            var index = ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0,
-                count: m_ContinuousActionCount);
-            Debug.Assert(index != -1, "Action not found in list of continuous actions");
-
-            ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
-            actionStates[actionIndex].onContinuousList = false;
-
-            // If the action was in the part of the list that continuous actions we have carried
-            // over from the previous update, adjust for having removed a value there.
-            if (index < m_ContinuousActionCountFromPreviousUpdate)
-                --m_ContinuousActionCountFromPreviousUpdate;
-
-            // Unhook from `onAfterUpdate` if we don't need it anymore.
-            if (m_ContinuousActionCount == 0 && m_OnAfterUpdateHooked)
-            {
-                InputSystem.s_Manager.onAfterUpdate -= m_OnAfterUpdateDelegate;
-                m_OnAfterUpdateHooked = false;
-            }
-        }
-
-        private void DontTriggerContinuousActionThisUpdate(int actionIndex)
-        {
-            Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Index out of range");
-            Debug.Assert(actionStates[actionIndex].onContinuousList, "Action not in list");
-            Debug.Assert(
-                ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0, count: m_ContinuousActionCount) != -1,
-                "Action is not currently in list of continuous actions");
-            Debug.Assert(m_ContinuousActionCount > 0, "List of continuous actions is empty");
-
-            // Check if the action is within the beginning section of the list of actions that we need to check at
-            // the end of the current update. If so, move it out of there.
-            var index = ArrayHelpers.IndexOfValue(m_ContinuousActions, actionIndex, startIndex: 0,
-                count: m_ContinuousActionCount);
-            if (index < m_ContinuousActionCountFromPreviousUpdate)
-            {
-                // Move to end of list.
-                ArrayHelpers.EraseAtWithCapacity(m_ContinuousActions, ref m_ContinuousActionCount, index);
-                --m_ContinuousActionCountFromPreviousUpdate;
-                ArrayHelpers.AppendWithCapacity(ref m_ContinuousActions, ref m_ContinuousActionCount, actionIndex);
-            }
-        }
-
         // Called from InputManager when one of our state change monitors has fired.
         // Tells us the time of the change *according to the state events coming in*.
         // Also tells us which control of the controls we are binding to triggered the
@@ -973,7 +845,6 @@ namespace UnityEngine.InputSystem
                 interactionIndex = kInvalidIndex,
                 time = time,
                 startTime = time,
-                continuous = actionIndex != kInvalidIndex && actionStates[actionIndex].continuous,
                 passThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].passThrough,
             };
 
@@ -1023,11 +894,6 @@ namespace UnityEngine.InputSystem
             {
                 ProcessDefaultInteraction(ref trigger, actionIndex);
             }
-
-            // If the associated action is continuous and is currently on the list to get triggered
-            // this update, move it to the set of continuous actions we do NOT trigger this update.
-            if (actionIndex != kInvalidIndex && actionStates[actionIndex].onContinuousList)
-                DontTriggerContinuousActionThisUpdate(actionIndex);
         }
 
         /// <summary>
@@ -1396,7 +1262,6 @@ namespace UnityEngine.InputSystem
             Debug.Assert(interactionIndex >= 0 && interactionIndex < totalInteractionCount, "Interaction index out of range");
 
             var currentState = interactionStates[interactionIndex];
-            var actionIndex = bindingStates[bindingIndex].actionIndex;
 
             var context = new InputInteractionContext
             {
@@ -1410,7 +1275,6 @@ namespace UnityEngine.InputSystem
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     interactionIndex = interactionIndex,
-                    continuous = actionStates[actionIndex].continuous,
                 },
                 timerHasExpired = true,
             };
@@ -1543,7 +1407,6 @@ namespace UnityEngine.InputSystem
                         var index = interactionStartIndex + i;
                         if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
-                            ////REVIEW: does this handle continuous mode correctly?
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
@@ -1654,19 +1517,7 @@ namespace UnityEngine.InputSystem
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                    {
                         actionState->phase = phaseAfterPerformedOrCanceled;
-
-                        // If the action is continuous and remains in performed or started state, make sure the action
-                        // is on the list of continuous actions that we check every update.
-                        if ((phaseAfterPerformedOrCanceled == InputActionPhase.Started ||
-                             phaseAfterPerformedOrCanceled == InputActionPhase.Performed) &&
-                            actionState->continuous &&
-                            !actionState->onContinuousList)
-                        {
-                            AddContinuousAction(actionIndex);
-                        }
-                    }
                     break;
                 }
 
@@ -1674,20 +1525,7 @@ namespace UnityEngine.InputSystem
                 {
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled);
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                    {
                         actionState->phase = phaseAfterPerformedOrCanceled;
-
-                        // Remove from list of continuous actions, if necessary.
-                        if (actionState->onContinuousList)
-                            RemoveContinuousAction(actionIndex);
-                    }
-                    break;
-                }
-
-                case InputActionPhase.Waiting:
-                {
-                    if (actionState->onContinuousList)
-                        RemoveContinuousAction(actionIndex);
                     break;
                 }
             }
@@ -2077,8 +1915,7 @@ namespace UnityEngine.InputSystem
                 var processorStartIndex = bindingStates[bindingIndex].processorStartIndex;
                 for (var i = 0; i < processorCount; ++i)
                 {
-                    var processor = processors[processorStartIndex + i] as InputProcessor<TValue>;
-                    if (processor != null)
+                    if (processors[processorStartIndex + i] is InputProcessor<TValue> processor)
                         value = processor.Process(value, controlOfType);
                 }
             }
@@ -2802,37 +2639,6 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
-            /// Whether the action associated with the trigger state is marked as continuous.
-            /// </summary>
-            /// <seealso cref="InputAction.continuous"/>
-            public bool continuous
-            {
-                get => (flags & Flags.Continuous) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.Continuous;
-                    else
-                        flags &= ~Flags.Continuous;
-                }
-            }
-
-            /// <summary>
-            /// Whether the action is currently on the list of continuous actions.
-            /// </summary>
-            public bool onContinuousList
-            {
-                get => (flags & Flags.OnContinuousList) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.OnContinuousList;
-                    else
-                        flags &= ~Flags.OnContinuousList;
-                }
-            }
-
-            /// <summary>
             /// Whether the action associated with the trigger state is marked as pass-through.
             /// </summary>
             /// <seealso cref="InputAction.passThrough"/>
@@ -2897,18 +2703,6 @@ namespace UnityEngine.InputSystem
             [Flags]
             public enum Flags
             {
-                /// <summary>
-                /// Whether the action associated with the trigger state is continuous.
-                /// </summary>
-                /// <seealso cref="InputAction.continuous"/>
-                Continuous = 1 << 0,
-
-                /// <summary>
-                /// Whether the action is currently on the list of actions to check continuously.
-                /// </summary>
-                /// <seealso cref="InputActionState.m_ContinuousActions"/>
-                OnContinuousList = 1 << 1,
-
                 /// <summary>
                 /// Whether <see cref="magnitude"/> has been set.
                 /// </summary>

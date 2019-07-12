@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: reuse interaction, processor, and composite instances from prior resolves
@@ -515,7 +514,6 @@ namespace UnityEngine.InputSystem
                         mapIndex = mapIndex,
                         controlIndex = InputActionState.kInvalidIndex,
                         interactionIndex = InputActionState.kInvalidIndex,
-                        continuous = action.continuous,
                         passThrough = isPassThroughAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
                     };

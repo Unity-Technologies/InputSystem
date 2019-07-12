@@ -53,12 +53,7 @@ namespace UnityEngine.InputSystem.Interactions
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (isActuated)
-                        {
-                            if (context.continuous)
-                                context.PerformedAndStayPerformed();
-                        }
-                        else
+                        if (!isActuated)
                         {
                             m_WaitingForRelease = false;
                             // We need to reset the action to waiting state in order to stop it from triggering
@@ -70,11 +65,7 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (isActuated)
                     {
                         ////REVIEW: should this trigger Started?
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                        else
-                            context.PerformedAndGoBackToWaiting();
-
+                        context.PerformedAndGoBackToWaiting();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -84,8 +75,6 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         m_WaitingForRelease = false;
                         context.PerformedAndGoBackToWaiting();
-
-                        // No support for continuous mode.
                     }
                     else if (isActuated)
                     {
@@ -99,15 +88,12 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         if (!isActuated)
                             context.PerformedAndGoBackToWaiting();
-                        // No support for continuous mode.
 
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
                         context.PerformedAndGoBackToWaiting();
-                        // No support for continuous mode.
-
                         m_WaitingForRelease = true;
                     }
                     break;

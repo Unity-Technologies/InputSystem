@@ -98,6 +98,9 @@ however, it has to be formatted properly to pass verification tests.
 - Removed `CurveProcessor` as it was not implemented.
 - Renamed XInputControllerOSX to a more descriptive XboxGamepadMacOS.
 
+#### Actions
+
+- `InputAction.continuous` has been removed. Running logic every frame regardless of input can easily be achieved in game code.
 ## [0.2.10-preview] - 2019-5-17
 
 ### Added

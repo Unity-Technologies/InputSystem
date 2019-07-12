@@ -5,8 +5,6 @@ using UnityEngine.InputSystem.Utilities;
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
 ////       action based on what action the *composite* references.
 
-////REVIEW: should continuous actions *always* trigger as long as they are enabled? (even if no control is actuated)
-
 ////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has
 ////        flexibility but at the same time has abundant opportunity for ending up with dysfunction. Common setups
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
@@ -204,59 +202,6 @@ namespace UnityEngine.InputSystem
                     m_Flags |= ActionFlags.InitialStateCheck;
                 else
                     m_Flags &= ~ActionFlags.InitialStateCheck;
-            }
-        }
-
-        /// <summary>
-        /// If true, the action will continuously trigger <see cref="performed"/> on every input update
-        /// while the action is in the <see cref="InputActionPhase.Performed"/> phase.
-        /// </summary>
-        /// <remarks>
-        /// This is off by default.
-        ///
-        /// An action must be disabled when setting this property.
-        ///
-        /// Continuous actions are useful when otherwise it would be necessary to manually set up an
-        /// action response to run a piece of logic every update. Instead, the fact that input already
-        /// updates in sync with the player loop can be leveraged to have actions triggered continuously.
-        ///
-        /// A typical use case is "move" and "look" functionality tied to gamepad sticks. Even if the gamepad
-        /// stick is not moved in a particular update, the current value of the stick should be applied. A
-        /// simple way to achieve this is by toggling on "continuous" mode through this property.
-        ///
-        /// Note that continuous mode does not affect phases other than <see cref="InputActionPhase.Performed"/>.
-        /// This means that, for example, <see cref="InputActionPhase.Started"/> (and the associated <see cref="started"/>)
-        /// will not be triggered repeatedly even if continuous mode is toggled on for an action.
-        ///
-        /// <example>
-        /// <code>
-        /// // Set up an action that will be performed continuously while the right stick on the gamepad
-        /// // is moved out of its deadzone.
-        /// var action = new InputAction("Look", binding: "&lt;Gamepad&gt;/rightStick);
-        /// action.continuous = true;
-        /// action.performed = ctx => Look(ctx.ReadValue&lt;Vector2&gt;());
-        /// action.Enable();
-        /// </code>
-        /// </example>
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">The action is <see cref="enabled"/>. Continuous
-        /// mode can only be changed while an action is disabled.</exception>
-        /// <seealso cref="phase"/>
-        /// <seealso cref="performed"/>
-        /// <seealso cref="InputActionPhase.Performed"/>
-        public bool continuous
-        {
-            get => (m_Flags & ActionFlags.Continuous) != 0;
-            set
-            {
-                if (enabled)
-                    throw new InvalidOperationException(
-                        $"Cannot change the 'continuous' flag of action '{this} while the action is enabled");
-
-                if (value)
-                    m_Flags |= ActionFlags.Continuous;
-                else
-                    m_Flags &= ~ActionFlags.Continuous;
             }
         }
 
