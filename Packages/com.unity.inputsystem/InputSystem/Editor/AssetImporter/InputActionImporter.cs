@@ -144,7 +144,8 @@ namespace UnityEngine.InputSystem.Editor
                     var fileName = Path.GetFileNameWithoutExtension(assetPath);
                     wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
                 }
-                else if (wrapperFilePath.StartsWith("./") | wrapperFilePath.StartsWith(".\\"))
+                else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                         wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
                 {
                     // User-specified file relative to location of .inputactions file.
                     var assetPath = ctx.assetPath;
