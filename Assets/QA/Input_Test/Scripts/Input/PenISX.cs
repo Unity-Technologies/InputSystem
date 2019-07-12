@@ -46,16 +46,17 @@ public class PenISX : MonoBehaviour
         m_originalPos = pen_holder.position;
         m_rotateAdjust = pen_rotation.GetChild(0).localEulerAngles;
 
-        m_penButtonAction = new InputAction(name: "PenButtonAction", binding: "<pen>/<button>") { passThrough = true };
+        m_penButtonAction =
+            new InputAction(name: "PenButtonAction", InputActionType.PassThrough, binding: "<pen>/<button>");
         m_penButtonAction.performed += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         //m_penAction.cancelled += callbackContext => ButtonPress(callbackContext.control as ButtonControl);
         m_penButtonAction.Enable();
 
-        m_penVector2Action = new InputAction(name: "PenVectorAction", binding: "<pen>/<vector2>") { passThrough = true };
+        m_penVector2Action = new InputAction(name: "PenVectorAction", InputActionType.PassThrough, binding: "<pen>/<vector2>");
         m_penVector2Action.performed += callbackContext => OnVector2Change(callbackContext.control as Vector2Control);
         m_penVector2Action.Enable();
 
-        m_penAxisAction = new InputAction(name: "PenAxisAction", binding: "<pen>/twist") { passThrough = true };
+        m_penAxisAction = new InputAction(name: "PenAxisAction", InputActionType.PassThrough, binding: "<pen>/twist");
         m_penAxisAction.AddBinding("<pen>/pressure");
         m_penAxisAction.performed += callbackContext => OnAxisChange(callbackContext.control as AxisControl);
         m_penAxisAction.Enable();

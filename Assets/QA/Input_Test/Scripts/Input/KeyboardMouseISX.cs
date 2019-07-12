@@ -34,12 +34,12 @@ public class KeyboardMouseISX : MonoBehaviour
         m_keyboardAction.Enable();
 
         m_mouseButtonAction = new InputAction(name: "MouseButtonAction", InputActionType.PassThrough,
-	        binding: "<mouse>/<button>");
+            binding: "<mouse>/<button>");
         m_mouseButtonAction.performed += callbackContext => MouseKeyPress(callbackContext.control as ButtonControl);
         m_mouseButtonAction.Enable();
 
         m_mouseOtherAction = new InputAction(name: "MouseVector2Action", InputActionType.PassThrough,
-	        binding: "<mouse>/<vector2>");
+            binding: "<mouse>/<vector2>");
         m_mouseOtherAction.performed += callbackContext => MouseVector2(callbackContext.control as Vector2Control);
         m_mouseOtherAction.Enable();
     }
