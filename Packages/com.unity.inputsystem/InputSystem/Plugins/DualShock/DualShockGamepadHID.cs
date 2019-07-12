@@ -71,10 +71,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         ////TODO: touchpad
 
-        public FourCC format
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public FourCC format => new FourCC('H', 'I', 'D');
     }
 
     /// <summary>
@@ -175,10 +172,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public byte blueColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 9)] public fixed byte unknown2[23];
 
-        public FourCC typeStatic
-        {
-            get { return Type; }
-        }
+        public FourCC typeStatic => Type;
 
         public void SetMotorSpeeds(float lowFreq, float highFreq)
         {
