@@ -1016,6 +1016,25 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_PressingAndReleasingKeyInSameFrame_DoesNotShowStateChange()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var firstState = new KeyboardState(Key.A);
+        var secondState = new KeyboardState();
+
+        InputSystem.QueueStateEvent(keyboard, firstState);
+        InputSystem.QueueStateEvent(keyboard, secondState);
+
+        InputSystem.Update();
+
+        Assert.That(keyboard.aKey.isPressed, Is.False);
+        Assert.That(keyboard.aKey.wasPressedThisFrame, Is.False);
+        Assert.That(keyboard.aKey.wasReleasedThisFrame, Is.False);
+    }
+
+    [Test]
+    [Category("State")]
     public void State_FixedUpdatesAreDisabledByDefault()
     {
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate));
