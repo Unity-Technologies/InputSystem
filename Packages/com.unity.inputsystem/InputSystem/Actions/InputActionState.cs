@@ -2641,7 +2641,7 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Whether the action associated with the trigger state is marked as pass-through.
             /// </summary>
-            /// <seealso cref="InputAction.passThrough"/>
+            /// <seealso cref="InputActionType.PassThrough"/>
             public bool passThrough
             {
                 get => (flags & Flags.PassThrough) != 0;
@@ -2706,13 +2706,13 @@ namespace UnityEngine.InputSystem
                 /// <summary>
                 /// Whether <see cref="magnitude"/> has been set.
                 /// </summary>
-                HaveMagnitude = 1 << 2,
+                HaveMagnitude = 1 << 0,
 
                 /// <summary>
                 /// Whether the action associated with the trigger state is marked as pass-through.
                 /// </summary>
-                /// <seealso cref="InputAction.passThrough"/>
-                PassThrough = 1 << 3,
+                /// <seealso cref="InputActionType.PassThrough"/>
+                PassThrough = 1 << 1,
 
                 /// <summary>
                 /// Whether the action has more than one control bound to it.
@@ -2722,7 +2722,7 @@ namespace UnityEngine.InputSystem
                 /// at runtime. In that case, this flag is NOT set. We only set it if binding resolution for
                 /// an action indeed ended up with multiple controls able to trigger the same action.
                 /// </remarks>
-                MayNeedConflictResolution = 1 << 4,
+                MayNeedConflictResolution = 1 << 2,
 
                 /// <summary>
                 /// Whether there are currently multiple bound controls that are actuated.
@@ -2730,7 +2730,7 @@ namespace UnityEngine.InputSystem
                 /// <remarks>
                 /// This is only used if <see cref="TriggerState.mayNeedConflictResolution"/> is true.
                 /// </remarks>
-                HasMultipleConcurrentActuations = 1 << 5,
+                HasMultipleConcurrentActuations = 1 << 3,
             }
         }
 

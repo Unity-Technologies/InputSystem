@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
-                            wantsInitialStateCheck = action?.initialStateCheck ?? false
+                            wantsInitialStateCheck = action?.wantsInitialStateCheck ?? false
                         };
                     }
                     catch (Exception exception)
@@ -503,7 +503,7 @@ namespace UnityEngine.InputSystem
                     // See if we may need conflict resolution on this action. Never needed for pass-through actions.
                     // Otherwise, if we have more than one bound control or have several bindings and one of them
                     // is a composite, we enable it.
-                    var isPassThroughAction = action.passThrough;
+                    var isPassThroughAction = action.type == InputActionType.PassThrough;
                     var mayNeedConflictResolution = !isPassThroughAction && numPossibleConcurrentActuations > 1;
 
                     // Initialize initial trigger state.

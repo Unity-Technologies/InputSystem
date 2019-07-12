@@ -1255,7 +1255,7 @@ partial class CoreTests
         action1.AddCompositeBinding("Axis")
             .With("Positive", "<Keyboard>/a")
             .With("Negative", "<Keyboard>/b");
-        map2.AddAction("action2", "<Keyboard>/space");
+        map2.AddAction("action2", binding: "<Keyboard>/space");
 
         var so = new SerializedObject(asset);
         var selectionChanged = false;

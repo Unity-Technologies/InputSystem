@@ -605,12 +605,9 @@ internal class UITests : InputTestFixture
         // Create actions.
         var map = new InputActionMap("map");
         asset.AddActionMap(map);
-        var trackedPositionAction = map.AddAction("position");
-        trackedPositionAction.passThrough = true;
-        var trackedOrientationAction = map.AddAction("orientation");
-        trackedOrientationAction.passThrough = true;
-        var trackedSelectAction = map.AddAction("selection");
-        trackedSelectAction.passThrough = true;
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough);
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough);
+        var trackedSelectAction = map.AddAction("selection", type: InputActionType.PassThrough);
 
         trackedPositionAction.AddBinding(trackedDevice.position);
         trackedOrientationAction.AddBinding(trackedDevice.orientation);
@@ -744,12 +741,9 @@ internal class UITests : InputTestFixture
         // Create actions.
         var map = new InputActionMap("map");
         asset.AddActionMap(map);
-        var trackedPositionAction = map.AddAction("position");
-        trackedPositionAction.passThrough = true;
-        var trackedOrientationAction = map.AddAction("orientation");
-        trackedOrientationAction.passThrough = true;
-        var trackedSelectAction = map.AddAction("selection");
-        trackedSelectAction.passThrough = true;
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough);
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough);
+        var trackedSelectAction = map.AddAction("selection", type: InputActionType.PassThrough);
 
         trackedPositionAction.AddBinding("*/position");
         trackedOrientationAction.AddBinding("*/orientation");

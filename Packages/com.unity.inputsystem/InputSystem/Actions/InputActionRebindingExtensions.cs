@@ -11,6 +11,8 @@ using UnityEngine.InputSystem.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////TODO: for interactive rebinding, if no expected control layout is set, infer it from the action type
+
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
 ////FIXME: properly work with composites
@@ -389,8 +391,8 @@ namespace UnityEngine.InputSystem
                 // If the action has an associated expected layout, constrain ourselves by it.
                 // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
                 //       of derived layouts may share the same control type.
-                if (!string.IsNullOrEmpty(action.expectedControlLayout))
-                    WithExpectedControlLayout(action.expectedControlLayout);
+                if (!string.IsNullOrEmpty(action.expectedControlType))
+                    WithExpectedControlLayout(action.expectedControlType);
 
                 return this;
             }

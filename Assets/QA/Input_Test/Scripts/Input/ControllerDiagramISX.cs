@@ -7,20 +7,17 @@ public class ControllerDiagramISX : GamepadISX
     // Use this for initialization
     void Start()
     {
-        m_buttonAction = new InputAction(name: "ButtonPressAction", binding: "*/<button>");
-        m_buttonAction.passThrough = true;
+        m_buttonAction = new InputAction(name: "ButtonPressAction", InputActionType.PassThrough, binding: "*/<button>");
         m_buttonAction.performed += callbackContext => OnButtonPress(callbackContext.control as ButtonControl);
         m_buttonAction.canceled += callbackContext => OnButtonPress(callbackContext.control as ButtonControl);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "Dpadpressaction", binding: "*/<dpad>");
-        m_dPadAction.passThrough = true;
+        m_dPadAction = new InputAction(name: "Dpadpressaction", InputActionType.PassThrough, binding: "*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.canceled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "StickMoveAction", binding: "*/<stick>");
-        m_stickMoveAction.passThrough = true;
+        m_stickMoveAction = new InputAction(name: "StickMoveAction", InputActionType.PassThrough, binding: "*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.canceled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();

@@ -556,7 +556,12 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.345f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(
+            new[]
+            {
+                new Message("OnOtherAction", 0.234f), // otherAction is a value action which implies an initial state check
+                new Message("OnOtherAction", 0.345f)
+            }));
     }
 
     [Test]
@@ -617,7 +622,7 @@ internal class PlayerInputTests : InputTestFixture
 
         listener.messages.Clear();
 
-        // 'Fire' is not a continuous action. Unlike with continuous actions, PlayerInput should not
+        // 'Fire' is a button action. Unlike with value actions, PlayerInput should not
         // send a message on button release (i.e. when the action cancels).
         Release(gamepad.buttonSouth);
 
@@ -1179,15 +1184,31 @@ internal class PlayerInputTests : InputTestFixture
         Assert.Fail();
     }
 
+    // An action is either
+    //   (a) button-like, or
+    //   (b) axis-like, or
+    //   (c) undefined in behavior.
+    //
+    // (c) is used for actions that are usually chained to lots of inputs (e.g. "bind to all keys on keyboard")
+    // where the action thus becomes a simple input collector.
+    //
+    // (a) and (b) are what is "normal" usage of actions. This is the type of stuff that game actions are made
+    // of.
+    //
+    // (a) acts as a trigger whereas (b) acts
+    //
+    //
+    // isn't (b) and (c) kinda the same in practice??
+
     private const string kActions = @"
         {
             ""maps"" : [
                 {
                     ""name"" : ""gameplay"",
                     ""actions"" : [
-                        { ""name"" : ""fire"" },
-                        { ""name"" : ""look"", ""continuous"" : true },
-                        { ""name"" : ""move"", ""continuous"" : true }
+                        { ""name"" : ""fire"", ""type"" : ""button"" },
+                        { ""name"" : ""look"", ""type"" : ""value"" },
+                        { ""name"" : ""move"", ""type"" : ""value"" }
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },

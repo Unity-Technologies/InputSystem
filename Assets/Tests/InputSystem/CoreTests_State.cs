@@ -388,7 +388,7 @@ partial class CoreTests
     {
         // Turn buttonSouth into float and move to left/x offset (so we can use
         // GamepadState to set it).
-        var json = @"
+        const string json = @"
             {
                 ""name"" : ""CustomGamepad"",
                 ""extend"" : ""Gamepad"",

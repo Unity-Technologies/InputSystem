@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Serialization;
 
 ////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
@@ -12,15 +13,11 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: have single delegate instead of separate performed/started/canceled callbacks?
 
-////REVIEW: remove everything on InputAction that isn't about being an endpoint? (i.e. 'controls' and 'bindings')
-
-////REVIEW: might have to revisit when we fire actions in relation to Update/FixedUpdate
-
-////REVIEW: Do we need to have separate display names for actions? They should definitely be allowed to contain '/' and whatnot
-
-////REVIEW: the entire 'lastXXX' API section is shit and needs a pass
+////REVIEW: Do we need to have separate display names for actions?
 
 ////TODO: allow changing bindings without having to disable
+
+////TODO: polling API
 
 ////REVIEW: what about having the concept of "consumed" on the callback context?
 
@@ -28,17 +25,6 @@ using UnityEngine.InputSystem.Utilities;
 ////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
 
 ////REVIEW: have "Always Enabled" toggle on actions?
-
-// An issue that has come up repeatedly is the request for having a polling-based API that allows actions to be used the same
-// way UnityEngine.Input allows axes to be used. Here's my thoughts. While such an API is a bad fit for how actions operate,
-// the request is definitely reasonable and a simple polling-based API could be created in a relatively straightforward way. It'd
-// have to drop some details on the floor and do some aggregation of state, but where someone reaches the limits, there would always
-// be a possible migration to the callback-based API.
-//
-// However, before launching into creating an entirely separate API to interface with actions, I would first like to try and see
-// if something can be done to obsolete the need for it. The main obstacle with the callback-based API is that setting up and managing
-// the callbacks is very tedious and requires a lot of duct tape. What if instead the setup was trivial and something you never have
-// to worry about? Would the need for a polling-based API still be there? That's what I would like to find out first.
 
 namespace UnityEngine.InputSystem
 {
@@ -72,13 +58,21 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Can be null for anonymous actions created in code.
         ///
-        /// If the action is part of a set, it will have a name and the name
-        /// will be unique in the set.
-        ///
-        /// The name is just the name of the action alone, not a "setName/actionName"
+        /// If the action is part of an <see cref="InputActionMap"/>, it will have a name and the name
+        /// will be unique in the set. The name is just the name of the action alone, not a "mapName/actionName"
         /// combination.
+        ///
+        /// The name should not contain slashes or dots but can contain spaces and punctuation.
         /// </remarks>
         public string name => m_Name;
+
+        /// <summary>
+        /// Behavior type of the action.
+        /// </summary>
+        /// <remarks>
+        /// Determines how the action gets triggered in response to control value changes.
+        /// </remarks>
+        public InputActionType type => m_Type;
 
         /// <summary>
         /// A stable, unique identifier for the action.
@@ -116,10 +110,10 @@ namespace UnityEngine.InputSystem
         /// type and expected input behavior of an action without being reliant on any particular
         /// binding.
         /// </remarks>
-        public string expectedControlLayout
+        public string expectedControlType
         {
-            get => m_ExpectedControlLayout;
-            set => m_ExpectedControlLayout = value;
+            get => m_ExpectedControlType;
+            set => m_ExpectedControlType = value;
         }
 
         public string processors => m_Processors;
@@ -189,52 +183,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool initialStateCheck
-        {
-            get => (m_Flags & ActionFlags.InitialStateCheck) != 0;
-            set
-            {
-                if (enabled)
-                    throw new InvalidOperationException(
-                        $"Cannot change the 'initialStateCheck' flag of action '{this} while the action is enabled");
-
-                if (value)
-                    m_Flags |= ActionFlags.InitialStateCheck;
-                else
-                    m_Flags &= ~ActionFlags.InitialStateCheck;
-            }
-        }
-
-        /// <summary>
-        /// If enabled, the action will not gate any control changes but will instead pass through
-        /// any change on any of the bound controls as is.
-        /// </summary>
-        /// <remarks>
-        /// This behavior is useful for actions that are not meant to model any kind of interaction but
-        /// should rather just listen for input of any kind. By default, an action will be driven based
-        /// on the amount of actuation on the bound controls. Any control with the highest amount of
-        /// actuation gets to drive an action. This can be undesirable. For example, an action may
-        /// want to listen for any kind of activity on any of the bound controls. In this case, set
-        /// this property to true.
-        ///
-        /// This behavior is disabled by default.
-        /// </remarks>
-        public bool passThrough
-        {
-            get => (m_Flags & ActionFlags.PassThrough) != 0;
-            set
-            {
-                if (enabled)
-                    throw new InvalidOperationException(
-                        $"Cannot change the 'passThrough' flag of action '{this} while the action is enabled");
-
-                if (value)
-                    m_Flags |= ActionFlags.PassThrough;
-                else
-                    m_Flags &= ~ActionFlags.PassThrough;
-            }
-        }
-
         /// <summary>
         /// The current phase of the action.
         /// </summary>
@@ -243,8 +191,6 @@ namespace UnityEngine.InputSystem
         /// actions will go through several possible phases. TODO
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
-
-        ////REVIEW: expose these as a struct?
 
         /// <summary>
         /// Whether the action is currently enabled or not.
@@ -288,23 +234,23 @@ namespace UnityEngine.InputSystem
             remove => m_OnPerformed.Remove(value);
         }
 
-        // Constructor we use for serialization and for actions that are part
-        // of sets.
-        internal InputAction()
-        {
-        }
+        /// <summary>
+        /// Whether the action wants a state check on its bound controls as soon as it is enabled.
+        /// </summary>
+        internal bool wantsInitialStateCheck => type == InputActionType.Value;
 
-        public InputAction(string name = null)
+        public InputAction()
         {
-            m_Name = name;
         }
 
         // Construct a disabled action targeting the given sources.
         // NOTE: This constructor is *not* used for actions added to sets. These are constructed
         //       by sets themselves.
-        public InputAction(string name = null, string binding = null, string interactions = null, string processors = null, string expectedControlLayout = null)
-            : this(name)
+        public InputAction(string name = null, InputActionType type = default, string binding = null, string interactions = null, string processors = null, string expectedControlType = null)
         {
+            m_Name = name;
+            m_Type = type;
+
             if (!string.IsNullOrEmpty(binding))
             {
                 m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, processors = processors, action = m_Name}};
@@ -317,7 +263,7 @@ namespace UnityEngine.InputSystem
                 m_Processors = processors;
             }
 
-            m_ExpectedControlLayout = expectedControlLayout;
+            m_ExpectedControlType = expectedControlType;
         }
 
         public void Dispose()
@@ -377,7 +323,6 @@ namespace UnityEngine.InputSystem
             m_ActionMap.m_State.DisableSingleAction(this);
         }
 
-        ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
         // If you clone an action from a set, you get a singleton action in return.
         public InputAction Clone()
         {
@@ -394,26 +339,18 @@ namespace UnityEngine.InputSystem
             return Clone();
         }
 
-        [Flags]
-        internal enum ActionFlags
-        {
-            None = 0,
-            Continuous = 1 << 1,
-            PassThrough = 1 << 2,
-            InitialStateCheck = 1 << 3,
-        }
-
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
         [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
         [SerializeField] internal string m_Name;
+        [SerializeField] internal InputActionType m_Type;
+        [FormerlySerializedAs("m_ExpectedControlLayout")]
         [Tooltip("Type of control expected by the action (e.g. \"Button\" or \"Stick\"). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
-        [SerializeField] internal string m_ExpectedControlLayout;
+        [SerializeField] internal string m_ExpectedControlType;
         [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
             + "without breaking references.")]
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
-        [SerializeField] internal ActionFlags m_Flags;
         [SerializeField] internal string m_Processors;
         [SerializeField] internal string m_Interactions;
 

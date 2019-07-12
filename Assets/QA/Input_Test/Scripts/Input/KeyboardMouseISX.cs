@@ -27,12 +27,14 @@ public class KeyboardMouseISX : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>") { passThrough = true };
+        m_keyboardAction = new InputAction(name: "KeyboardPressAction", InputActionType.PassThrough,
+            binding: "<keyboard>/<key>");
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         //m_keyboardAction.canceled += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
-        m_mouseAction = new InputAction(name: "MousePressAction", binding: "<mouse>/<button>") {passThrough = true};
+        m_mouseAction = new InputAction(name: "MousePressAction", InputActionType.PassThrough,
+            binding: "<mouse>/<button>");
         m_mouseAction.performed += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
         //m_mouseAction.canceled += callbackContext => MouseKeyPress(callbackContext.control.device as Mouse);
         m_mouseAction.Enable();

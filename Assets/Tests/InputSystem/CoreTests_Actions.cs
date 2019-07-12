@@ -187,9 +187,9 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action1 = new InputAction("action1", binding: "<Gamepad>/buttonSouth", interactions: "Hold");
-        var action2 = new InputAction("action2", binding: "<Gamepad>/leftStick");
-        var action3 = new InputAction("action3", binding: "<Gamepad>/rightStick");
+        var action1 = new InputAction("action1", InputActionType.Button, binding: "<Gamepad>/buttonSouth", interactions: "Hold");
+        var action2 = new InputAction("action2", InputActionType.Button, binding: "<Gamepad>/leftStick");
+        var action3 = new InputAction("action3", InputActionType.Button, binding: "<Gamepad>/rightStick");
 
         action1.Enable();
         action2.Enable();
@@ -263,15 +263,14 @@ partial class CoreTests
         }
     }
 
-    // See test after this one for how to switch away from this default behavior.
     [Test]
     [Category("Actions")]
-    public void Actions_ByDefaultDoNotReactToCurrentStateOfControlWhenEnabled()
+    public void Actions_ButtonActionsDoNotReactToCurrentStateOfControlWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         Press(gamepad.buttonSouth);
 
-        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var action = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
 
         using (var trace = new InputActionTrace())
         {
@@ -290,20 +289,16 @@ partial class CoreTests
     // the action pretends for the control to *just* have changed to the state it already has.
     [Test]
     [Category("Actions")]
-    public void Actions_CanPerformInitialStateCheckWhenEnabled()
+    public void Actions_ValueActionsPerformInitialStateCheckWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
         Press(gamepad.buttonSouth);
 
-        var actionWithoutInteraction = new InputAction("ActionWithoutInteraction", binding: "<Gamepad>/leftStick");
-        var actionWithHold = new InputAction("ActionWithHold", binding: "<Gamepad>/buttonSouth", interactions: "Hold");
-        var actionThatShouldNotTrigger = new InputAction("ActionThatShouldNotTrigger", binding: "<Gamepad>/rightStick");
-
-        actionWithoutInteraction.initialStateCheck = true;
-        actionWithHold.initialStateCheck = true;
-        actionThatShouldNotTrigger.initialStateCheck = true;
+        var actionWithoutInteraction = new InputAction("ActionWithoutInteraction", InputActionType.Value, binding: "<Gamepad>/leftStick");
+        var actionWithHold = new InputAction("ActionWithHold", InputActionType.Value, binding: "<Gamepad>/buttonSouth", interactions: "Hold");
+        var actionThatShouldNotTrigger = new InputAction("ActionThatShouldNotTrigger", InputActionType.Value, binding: "<Gamepad>/rightStick");
 
         actionWithHold.performed += ctx => Assert.Fail("Hold should not complete");
         actionThatShouldNotTrigger.started += ctx => Assert.Fail("Action should not start");
@@ -692,13 +687,13 @@ partial class CoreTests
         var map3 = new InputActionMap("map3");
         var map4 = new InputActionMap("map4");
 
-        var action1 = map1.AddAction("action1");
-        var action2 = map1.AddAction("action2");
-        var action3 = map2.AddAction("action3");
-        var action4 = map3.AddAction("action4");
-        var action5 = map3.AddAction("action5");
-        var action6 = map3.AddAction("action6");
-        var action7 = map4.AddAction("action7");
+        var action1 = map1.AddAction("action1", InputActionType.Value);
+        var action2 = map1.AddAction("action2", InputActionType.Button);
+        var action3 = map2.AddAction("action3", InputActionType.Button);
+        var action4 = map3.AddAction("action4", InputActionType.Value);
+        var action5 = map3.AddAction("action5", InputActionType.Button);
+        var action6 = map3.AddAction("action6", InputActionType.Value);
+        var action7 = map4.AddAction("action7", InputActionType.Value);
 
         action1.AddBinding("<Gamepad>/leftStick").WithProcessor("invertVector2(invertY=false)");
         action2.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
@@ -707,8 +702,6 @@ partial class CoreTests
         action5.AddBinding("<Gamepad>/buttonSouth", interactions: "Tap");
         action6.AddBinding("<Gamepad>/leftTrigger").WithProcessor("invert");
         action7.AddBinding("<Gamepad>/leftTrigger").WithProcessor("clamp(min=0,max=0.5)");
-
-        action4.initialStateCheck = true;
 
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -940,12 +933,11 @@ partial class CoreTests
     // they are seeing but rather just pass them on as is. By enabling 'passhthrough' mode on an action,
     [Test]
     [Category("Actions")]
-    public void Actions_CanByPassControlActuationChecks_UsingPasshtroughMode()
+    public void Actions_CanByPassControlActuationChecks_UsingPasshtroughAction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction(binding: "<Gamepad>/*stick");
-        action.passThrough = true;
+        var action = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/*stick");
         action.Enable();
 
         using (var trace = new InputActionTrace())
@@ -1417,7 +1409,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var map = new InputActionMap();
-        var action = map.AddAction("action", "/<Gamepad>/leftTrigger");
+        var action = map.AddAction("action", binding: "/<Gamepad>/leftTrigger");
 
         var wasStarted = false;
         var wasPerformed = false;
@@ -1947,8 +1939,8 @@ partial class CoreTests
         Assert.That(maps[0].actions[1].name, Is.EqualTo("action2"));
         Assert.That(maps[0].actions[0].id, Is.EqualTo(map["action1"].id));
         Assert.That(maps[0].actions[1].id, Is.EqualTo(map["action2"].id));
-        Assert.That(maps[0].actions[0].expectedControlLayout, Is.EqualTo("Button"));
-        Assert.That(maps[0].actions[1].expectedControlLayout, Is.Null);
+        Assert.That(maps[0].actions[0].expectedControlType, Is.EqualTo("Button"));
+        Assert.That(maps[0].actions[1].expectedControlType, Is.Null);
         Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(2));
         Assert.That(maps[0].actions[1].bindings, Has.Count.EqualTo(1));
         Assert.That(maps[0].actions[0].bindings[0].groups, Is.Null);
@@ -1995,7 +1987,7 @@ partial class CoreTests
                             },
                             {
                                 ""path"" : ""<Gamepad>/leftShoulder"",
-                                ""modifiers"" : ""tap""
+                                ""interactions"" : ""tap""
                             }
                         ]
                     },
@@ -2004,7 +1996,7 @@ partial class CoreTests
                         ""bindings"" : [
                             {
                                 ""path"" : ""<Gamepad>/buttonSouth"",
-                                ""modifiers"" : ""slowTap""
+                                ""interactions"" : ""slowTap""
                             }
                         ]
                     }
@@ -2564,7 +2556,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction { passThrough = true };
+        var action = new InputAction(type: InputActionType.PassThrough);
         action.AddBinding("<Gamepad>/leftStick").WithProcessor("scaleVector2(x=2,y=3)");
         action.AddBinding("<Gamepad>/leftTrigger").WithProcessor("scale(factor=2)");
         action.Enable();
@@ -2853,14 +2845,6 @@ partial class CoreTests
             Assert.That(actions[0].ReadValue<float>, Is.EqualTo(0.345).Within(0.00001));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
         }
-    }
-
-    [Test]
-    [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanPerformContinuousStartsOnHold()
-    {
-        Assert.Fail();
     }
 
     [Test]
@@ -3358,7 +3342,7 @@ partial class CoreTests
         asset.AddActionMap(map);
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = map.AddAction("action", "/gamepad/leftTrigger");
+        var action = map.AddAction("action", binding: "/gamepad/leftTrigger");
         asset.Enable();
 
         var wasPerformed = false;
@@ -5083,8 +5067,8 @@ partial class CoreTests
     public void Actions_CanOverrideBindingsWithControlsFromSpecificDevices_OnActionsInMap()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var numOverrides = map.ApplyBindingOverridesOnMatchingControls(gamepad);
@@ -5210,28 +5194,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanCloneActionAssets()
-    {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.name = "Asset";
-        var set1 = new InputActionMap("set1");
-        var set2 = new InputActionMap("set2");
-        asset.AddActionMap(set1);
-        asset.AddActionMap(set2);
-
-        var clone = asset.Clone();
-
-        Assert.That(clone, Is.Not.SameAs(asset));
-        Assert.That(clone.GetInstanceID(), Is.Not.EqualTo(asset.GetInstanceID()));
-        Assert.That(clone.actionMaps, Has.Count.EqualTo(2));
-        Assert.That(clone.actionMaps, Has.None.SameAs(set1));
-        Assert.That(clone.actionMaps, Has.None.SameAs(set2));
-        Assert.That(clone.actionMaps[0].name, Is.EqualTo("set1"));
-        Assert.That(clone.actionMaps[1].name, Is.EqualTo("set2"));
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanResolveActionReference()
     {
         var map = new InputActionMap("map");
@@ -5274,7 +5236,7 @@ partial class CoreTests
         var action1 = new InputAction(binding: "<Gamepad>/leftStick");
         var action2 = new InputAction(binding: "<Gamepad>/rightStick");
         var map = new InputActionMap();
-        var action3 = map.AddAction("action", "<Gamepad>/buttonSouth");
+        var action3 = map.AddAction("action", binding: "<Gamepad>/buttonSouth");
 
         action1.Enable();
         action2.Enable();
@@ -5472,11 +5434,11 @@ partial class CoreTests
     {
         var action = new InputAction();
 
-        Assert.That(action.expectedControlLayout, Is.Null);
+        Assert.That(action.expectedControlType, Is.Null);
 
-        action.expectedControlLayout = "Button";
+        action.expectedControlType = "Button";
 
-        Assert.That(action.expectedControlLayout, Is.EqualTo("Button"));
+        Assert.That(action.expectedControlType, Is.EqualTo("Button"));
     }
 
     [Test]
@@ -5565,11 +5527,11 @@ partial class CoreTests
 
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
-        var primaryTouchAction = new InputAction("PrimaryTouch" , "<Touchscreen>/primaryTouch/position");
-        var touch0Action = new InputAction("Touch0", "<Touchscreen>/touch0/position");
-        var touch1Action = new InputAction("Touch1", "<Touchscreen>/touch1/position");
-        var positionAction = new InputAction("Position", "<Touchscreen>/position");
-        var tapAction = new InputAction("Tap", "<Touchscreen>/tap");
+        var primaryTouchAction = new InputAction("PrimaryTouch" , binding: "<Touchscreen>/primaryTouch/position");
+        var touch0Action = new InputAction("Touch0", binding: "<Touchscreen>/touch0/position");
+        var touch1Action = new InputAction("Touch1", binding: "<Touchscreen>/touch1/position");
+        var positionAction = new InputAction("Position", binding: "<Touchscreen>/position");
+        var tapAction = new InputAction("Tap", binding: "<Touchscreen>/tap");
 
         Assert.That(primaryTouchAction.controls, Is.EquivalentTo(new[] { touchscreen.primaryTouch.position }));
         Assert.That(touch0Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[0].position }));

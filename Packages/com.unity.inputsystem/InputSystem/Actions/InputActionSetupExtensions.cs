@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem
             return map;
         }
 
-        public static InputAction AddAction(this InputActionMap map, string name, string binding = null,
+        public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
             if (map == null)
@@ -38,9 +38,9 @@ namespace UnityEngine.InputSystem
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
             // Append action to array.
-            var action = new InputAction(name)
+            var action = new InputAction(name, type)
             {
-                expectedControlLayout = expectedControlLayout
+                expectedControlType = expectedControlLayout
             };
             action.GenerateId();
             ArrayHelpers.Append(ref map.m_Actions, action);
