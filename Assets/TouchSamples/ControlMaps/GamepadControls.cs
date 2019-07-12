@@ -1,9 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/TouchSamples/ControlMaps/GamepadControls.inputactions'
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -23,170 +21,150 @@ namespace InputSamples.Controls
             ""actions"": [
                 {
                     ""name"": ""movement"",
+                    ""type"": ""Value"",
                     ""id"": ""dc21bb32-67fb-48db-9646-5dd93115cdf2"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""button1Action"",
+                    ""type"": ""Value"",
                     ""id"": ""2b9eb09b-8a1c-443e-8c7a-16b3cea62dcf"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""button2Action"",
+                    ""type"": ""Value"",
                     ""id"": ""69948a22-635b-456f-8308-9700d9c9c1d1"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""00c91ea0-ac4a-4ceb-80c6-eed25a87f19f"",
+                    ""id"": ""82c86c71-d077-46d8-9d79-1e9ee65186f2"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""1d11b9e7-bfb1-419b-abb6-a516a72a556b"",
+                    ""id"": ""2c04063e-f310-4621-9239-18ca1160a3e1"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""86a77f0f-8998-4fad-8be1-67eb49eca24a"",
+                    ""id"": ""183faac1-0217-4cad-861b-e7067c90a028"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""f8cd4a80-de8a-4102-89ee-f483c5cc6406"",
+                    ""id"": ""6fbfef2b-ed01-4b1d-ae06-588329e44ad4"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""8de14253-2102-40a1-a1e2-1e7e3686ebbc"",
+                    ""id"": ""d830f1c5-6105-45dc-b815-2972c9a69a41"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""391076d3-fb41-4537-ad47-760d796077ab"",
+                    ""id"": ""3f502839-3577-46b0-a41c-ad96b9434a24"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""movement"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
-                    ""id"": ""1c751639-1499-4735-af5d-5a1e9795d634"",
+                    ""id"": ""02cdda47-2975-4699-a63a-8bd6086b7d88"",
                     ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""button1Action"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d4548d25-4599-4f84-b061-4f9ced906a8b"",
+                    ""id"": ""8f6891a1-22ca-4118-bc17-2a94ce0b4582"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""button1Action"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""fb724a2d-3927-41ab-8662-8280837c4cb8"",
+                    ""id"": ""d917f46d-6e17-43ad-8cc3-aa84a67cd298"",
                     ""path"": ""<Keyboard>/z"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""button1Action"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""f7b79851-1e84-4d66-b933-68948464a11b"",
+                    ""id"": ""bee26bd4-a054-43b7-b891-e99402a39f29"",
                     ""path"": ""<Gamepad>/buttonEast"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""button2Action"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""6f95a181-cdc2-4787-bf85-1818c20bbe0e"",
+                    ""id"": ""7eed8180-027d-46fe-a6ec-0a678bbecb11"",
                     ""path"": ""<Keyboard>/x"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""button2Action"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -217,10 +195,7 @@ namespace InputSamples.Controls
             set => asset.devices = value;
         }
 
-        public ReadOnlyArray<InputControlScheme> controlSchemes
-        {
-            get => asset.controlSchemes;
-        }
+        public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
         public bool Contains(InputAction action)
         {
@@ -248,23 +223,22 @@ namespace InputSamples.Controls
         }
 
         // gameplay
-        private InputActionMap m_gameplay;
+        private readonly InputActionMap m_gameplay;
         private IGameplayActions m_GameplayActionsCallbackInterface;
-        private InputAction m_gameplay_movement;
-        private InputAction m_gameplay_button1Action;
-        private InputAction m_gameplay_button2Action;
+        private readonly InputAction m_gameplay_movement;
+        private readonly InputAction m_gameplay_button1Action;
+        private readonly InputAction m_gameplay_button2Action;
         public struct GameplayActions
         {
             private GamepadControls m_Wrapper;
             public GameplayActions(GamepadControls wrapper) { m_Wrapper = wrapper; }
-            public InputAction @movement { get { return m_Wrapper.m_gameplay_movement; } }
-            public InputAction @button1Action { get { return m_Wrapper.m_gameplay_button1Action; } }
-            public InputAction @button2Action { get { return m_Wrapper.m_gameplay_button2Action; } }
+            public InputAction @movement => m_Wrapper.m_gameplay_movement;
+            public InputAction @button1Action => m_Wrapper.m_gameplay_button1Action;
+            public InputAction @button2Action => m_Wrapper.m_gameplay_button2Action;
             public InputActionMap Get() { return m_Wrapper.m_gameplay; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
-            public bool enabled { get { return Get().enabled; } }
-            public InputActionMap Clone() { return Get().Clone(); }
+            public bool enabled => Get().enabled;
             public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
             public void SetCallbacks(IGameplayActions instance)
             {
@@ -295,13 +269,7 @@ namespace InputSamples.Controls
                 }
             }
         }
-        public GameplayActions @gameplay
-        {
-            get
-            {
-                return new GameplayActions(this);
-            }
-        }
+        public GameplayActions @gameplay => new GameplayActions(this);
         public interface IGameplayActions
         {
             void OnMovement(InputAction.CallbackContext context);

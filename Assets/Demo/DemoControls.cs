@@ -1,9 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/DemoControls.inputactions'
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -21,58 +19,43 @@ public class DemoControls : IInputActionCollection
             ""actions"": [
                 {
                     ""name"": ""fire"",
+                    ""type"": ""Button"",
                     ""id"": ""1077f913-a9f9-41b1-acb3-b9ee0adbc744"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""move"",
+                    ""type"": ""Value"",
                     ""id"": ""50fd2809-3aa3-4a90-988e-1facf6773553"",
-                    ""expectedControlLayout"": ""Vector2"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""look"",
+                    ""type"": ""Value"",
                     ""id"": ""c60e0974-d140-4597-a40e-9862193067e9"",
-                    ""expectedControlLayout"": ""Vector2"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""menu"",
+                    ""type"": ""Button"",
                     ""id"": ""4ad24240-1211-418c-9678-760c0f5e2f0f"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""steamEnterMenu"",
+                    ""type"": ""Button"",
                     ""id"": ""86bb1c77-7b7d-493c-94be-213881dd4b5b"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -85,8 +68,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse;Gamepad"",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -97,8 +79,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Steam"",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -109,8 +90,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Gamepad"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""Dpad"",
@@ -121,8 +101,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""up"",
@@ -133,8 +112,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""down"",
@@ -145,8 +123,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""left"",
@@ -157,8 +134,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""right"",
@@ -169,8 +145,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
@@ -181,8 +156,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Steam"",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -193,8 +167,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Gamepad"",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -205,8 +178,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -217,8 +189,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Steam"",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -229,8 +200,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""KeyboardMouse"",
                     ""action"": ""menu"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -241,8 +211,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Gamepad"",
                     ""action"": ""menu"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -253,8 +222,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": ""Steam"",
                     ""action"": ""steamEnterMenu"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -264,58 +232,43 @@ public class DemoControls : IInputActionCollection
             ""actions"": [
                 {
                     ""name"": ""navigate"",
+                    ""type"": ""Value"",
                     ""id"": ""21e4672f-7da8-41ac-8a80-59e98f44610f"",
-                    ""expectedControlLayout"": ""Vector2"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""click"",
+                    ""type"": ""Button"",
                     ""id"": ""09cec56e-d919-461b-b769-b5f9040ab3d2"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""steamExitMenu"",
+                    ""type"": ""Button"",
                     ""id"": ""9493c6e9-a5fc-4534-8d0c-8730c350769d"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""submit"",
+                    ""type"": ""Value"",
                     ""id"": ""f6c0c6e8-e423-42cc-9071-06396825f4e2"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""point"",
+                    ""type"": ""Value"",
                     ""id"": ""2e1d701a-4b57-4fab-bee8-5ee788974fa6"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -328,8 +281,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""submit"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -340,8 +292,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""click"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -352,8 +303,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -364,8 +314,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""navigate"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -376,8 +325,7 @@ public class DemoControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""navigate"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -481,10 +429,7 @@ public class DemoControls : IInputActionCollection
         set => asset.devices = value;
     }
 
-    public ReadOnlyArray<InputControlScheme> controlSchemes
-    {
-        get => asset.controlSchemes;
-    }
+    public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
     public bool Contains(InputAction action)
     {
@@ -512,27 +457,26 @@ public class DemoControls : IInputActionCollection
     }
 
     // gameplay
-    private InputActionMap m_gameplay;
+    private readonly InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
-    private InputAction m_gameplay_fire;
-    private InputAction m_gameplay_move;
-    private InputAction m_gameplay_look;
-    private InputAction m_gameplay_menu;
-    private InputAction m_gameplay_steamEnterMenu;
+    private readonly InputAction m_gameplay_fire;
+    private readonly InputAction m_gameplay_move;
+    private readonly InputAction m_gameplay_look;
+    private readonly InputAction m_gameplay_menu;
+    private readonly InputAction m_gameplay_steamEnterMenu;
     public struct GameplayActions
     {
         private DemoControls m_Wrapper;
         public GameplayActions(DemoControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
-        public InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
-        public InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public InputAction @menu { get { return m_Wrapper.m_gameplay_menu; } }
-        public InputAction @steamEnterMenu { get { return m_Wrapper.m_gameplay_steamEnterMenu; } }
+        public InputAction @fire => m_Wrapper.m_gameplay_fire;
+        public InputAction @move => m_Wrapper.m_gameplay_move;
+        public InputAction @look => m_Wrapper.m_gameplay_look;
+        public InputAction @menu => m_Wrapper.m_gameplay_menu;
+        public InputAction @steamEnterMenu => m_Wrapper.m_gameplay_steamEnterMenu;
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public bool enabled { get { return Get().enabled; } }
-        public InputActionMap Clone() { return Get().Clone(); }
+        public bool enabled => Get().enabled;
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
         public void SetCallbacks(IGameplayActions instance)
         {
@@ -575,36 +519,29 @@ public class DemoControls : IInputActionCollection
             }
         }
     }
-    public GameplayActions @gameplay
-    {
-        get
-        {
-            return new GameplayActions(this);
-        }
-    }
+    public GameplayActions @gameplay => new GameplayActions(this);
 
     // menu
-    private InputActionMap m_menu;
+    private readonly InputActionMap m_menu;
     private IMenuActions m_MenuActionsCallbackInterface;
-    private InputAction m_menu_navigate;
-    private InputAction m_menu_click;
-    private InputAction m_menu_steamExitMenu;
-    private InputAction m_menu_submit;
-    private InputAction m_menu_point;
+    private readonly InputAction m_menu_navigate;
+    private readonly InputAction m_menu_click;
+    private readonly InputAction m_menu_steamExitMenu;
+    private readonly InputAction m_menu_submit;
+    private readonly InputAction m_menu_point;
     public struct MenuActions
     {
         private DemoControls m_Wrapper;
         public MenuActions(DemoControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @navigate { get { return m_Wrapper.m_menu_navigate; } }
-        public InputAction @click { get { return m_Wrapper.m_menu_click; } }
-        public InputAction @steamExitMenu { get { return m_Wrapper.m_menu_steamExitMenu; } }
-        public InputAction @submit { get { return m_Wrapper.m_menu_submit; } }
-        public InputAction @point { get { return m_Wrapper.m_menu_point; } }
+        public InputAction @navigate => m_Wrapper.m_menu_navigate;
+        public InputAction @click => m_Wrapper.m_menu_click;
+        public InputAction @steamExitMenu => m_Wrapper.m_menu_steamExitMenu;
+        public InputAction @submit => m_Wrapper.m_menu_submit;
+        public InputAction @point => m_Wrapper.m_menu_point;
         public InputActionMap Get() { return m_Wrapper.m_menu; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public bool enabled { get { return Get().enabled; } }
-        public InputActionMap Clone() { return Get().Clone(); }
+        public bool enabled => Get().enabled;
         public static implicit operator InputActionMap(MenuActions set) { return set.Get(); }
         public void SetCallbacks(IMenuActions instance)
         {
@@ -647,13 +584,7 @@ public class DemoControls : IInputActionCollection
             }
         }
     }
-    public MenuActions @menu
-    {
-        get
-        {
-            return new MenuActions(this);
-        }
-    }
+    public MenuActions @menu => new MenuActions(this);
     private int m_KeyboardMouseSchemeIndex = -1;
     public InputControlScheme KeyboardMouseScheme
     {
