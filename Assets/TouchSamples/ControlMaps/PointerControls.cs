@@ -21,7 +21,7 @@ namespace InputSamples.Controls
             ""actions"": [
                 {
                     ""name"": ""point"",
-                    ""type"": ""PassThrough"",
+                    ""type"": ""Value"",
                     ""id"": ""4d610105-c5af-439c-8a02-4f1976d8da67"",
                     ""expectedControlType"": """",
                     ""processors"": """",

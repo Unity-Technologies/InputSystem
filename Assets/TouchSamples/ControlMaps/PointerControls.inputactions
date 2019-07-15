@@ -7,14 +7,11 @@
             "actions": [
                 {
                     "name": "point",
+                    "type": "Value",
                     "id": "4d610105-c5af-439c-8a02-4f1976d8da67",
-                    "expectedControlLayout": "",
-                    "continuous": false,
-                    "passThrough": true,
-                    "initialStateCheck": false,
+                    "expectedControlType": "",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -27,8 +24,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -39,8 +35,7 @@
                     "groups": ";Mouse",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "contact",
@@ -51,8 +46,7 @@
                     "groups": ";Pen",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -63,8 +57,7 @@
                     "groups": ";Mouse",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -75,8 +68,7 @@
                     "groups": ";Pen",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "tilt",
@@ -87,8 +79,7 @@
                     "groups": ";Pen",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -99,8 +90,7 @@
                     "groups": ";Pen",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "twist",
@@ -111,8 +101,7 @@
                     "groups": ";Pen",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "Touch0",
@@ -123,8 +112,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -135,8 +123,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -147,8 +134,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "radius",
@@ -159,8 +145,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -171,8 +156,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "inputId",
@@ -183,8 +167,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "Touch1",
@@ -195,8 +178,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -207,8 +189,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -219,8 +200,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "radius",
@@ -231,8 +211,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -243,8 +222,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "inputId",
@@ -255,8 +233,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "Touch2",
@@ -267,8 +244,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -279,8 +255,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -291,8 +266,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "radius",
@@ -303,8 +277,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -315,8 +288,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "inputId",
@@ -327,8 +299,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "Touch3",
@@ -339,8 +310,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -351,8 +321,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -363,8 +332,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "radius",
@@ -375,8 +343,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -387,8 +354,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "inputId",
@@ -399,8 +365,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "Touch4",
@@ -411,8 +376,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "contact",
@@ -423,8 +387,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "position",
@@ -435,8 +398,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "radius",
@@ -447,8 +409,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "pressure",
@@ -459,8 +420,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "inputId",
@@ -471,8 +431,7 @@
                     "groups": ";Touch",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 }
             ]
         }

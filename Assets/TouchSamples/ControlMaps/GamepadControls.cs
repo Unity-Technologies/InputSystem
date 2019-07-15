@@ -23,23 +23,23 @@ namespace InputSamples.Controls
                     ""name"": ""movement"",
                     ""type"": ""Value"",
                     ""id"": ""dc21bb32-67fb-48db-9646-5dd93115cdf2"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """"
                 },
                 {
                     ""name"": ""button1Action"",
-                    ""type"": ""Value"",
+                    ""type"": ""Button"",
                     ""id"": ""2b9eb09b-8a1c-443e-8c7a-16b3cea62dcf"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
                 },
                 {
                     ""name"": ""button2Action"",
-                    ""type"": ""Value"",
+                    ""type"": ""Button"",
                     ""id"": ""69948a22-635b-456f-8308-9700d9c9c1d1"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
                 }
@@ -47,7 +47,7 @@ namespace InputSamples.Controls
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""82c86c71-d077-46d8-9d79-1e9ee65186f2"",
+                    ""id"": ""a00b2419-b5d5-423f-ac30-ae4d7df7a5fc"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -58,7 +58,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""2c04063e-f310-4621-9239-18ca1160a3e1"",
+                    ""id"": ""ea686c37-6bac-4b88-b876-a441b70e299b"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -69,7 +69,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""183faac1-0217-4cad-861b-e7067c90a028"",
+                    ""id"": ""93f8e940-87f5-4305-bb2b-42dce0f9aa68"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -80,7 +80,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""6fbfef2b-ed01-4b1d-ae06-588329e44ad4"",
+                    ""id"": ""e3b29276-dd63-4303-8f77-64f32e5156ac"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -91,7 +91,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""d830f1c5-6105-45dc-b815-2972c9a69a41"",
+                    ""id"": ""29d6c791-2321-424c-a8a3-57c9afb87d95"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -102,7 +102,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""3f502839-3577-46b0-a41c-ad96b9434a24"",
+                    ""id"": ""273abca6-a19a-47cd-80d4-a4d2440d057c"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -113,7 +113,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": """",
-                    ""id"": ""02cdda47-2975-4699-a63a-8bd6086b7d88"",
+                    ""id"": ""0177e0b5-bc53-42d0-9af9-6e82dca18b38"",
                     ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -124,7 +124,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": """",
-                    ""id"": ""8f6891a1-22ca-4118-bc17-2a94ce0b4582"",
+                    ""id"": ""c50392dc-0955-4371-b721-7324fd8a05d1"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -135,7 +135,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d917f46d-6e17-43ad-8cc3-aa84a67cd298"",
+                    ""id"": ""8ef499da-b8b4-4653-bbab-d294c56a7174"",
                     ""path"": ""<Keyboard>/z"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -146,7 +146,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": """",
-                    ""id"": ""bee26bd4-a054-43b7-b891-e99402a39f29"",
+                    ""id"": ""d216d29d-4a44-4ef1-ae05-774a9ae130ba"",
                     ""path"": ""<Gamepad>/buttonEast"",
                     ""interactions"": """",
                     ""processors"": """",
@@ -157,7 +157,7 @@ namespace InputSamples.Controls
                 },
                 {
                     ""name"": """",
-                    ""id"": ""7eed8180-027d-46fe-a6ec-0a678bbecb11"",
+                    ""id"": ""fc0fb5a7-e3f9-4f5f-9dcd-a77a0d06ec39"",
                     ""path"": ""<Keyboard>/x"",
                     ""interactions"": """",
                     ""processors"": """",
