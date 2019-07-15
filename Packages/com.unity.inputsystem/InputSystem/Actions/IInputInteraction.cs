@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: allow interactions to be constrained to a specific InputActionType
+
 ////TODO: add way for parameters on interactions and processors to be driven from global value source that is NOT InputSettings
 ////      (ATM it's very hard to e.g. have a scale value on gamepad stick bindings which is determined dynamically from player
 ////      settings in the game)

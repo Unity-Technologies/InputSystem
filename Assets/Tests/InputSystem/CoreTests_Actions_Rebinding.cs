@@ -12,8 +12,8 @@ internal partial class CoreTests
     public void Actions_CanApplyBindingOverridesToMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>(3)
         {
@@ -38,7 +38,7 @@ internal partial class CoreTests
     public void Actions_CannotApplyBindingOverridesToMap_WhenEnabled()
     {
         var map = new InputActionMap();
-        map.AddAction("action1", "/<keyboard>/enter").Enable();
+        map.AddAction("action1", binding: "/<keyboard>/enter").Enable();
 
         var overrides = new List<InputBinding>
         {
@@ -53,8 +53,8 @@ internal partial class CoreTests
     public void Actions_CanRemoveBindingOverridesFromMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>
         {
@@ -75,7 +75,7 @@ internal partial class CoreTests
     public void Actions_CannotRemoveBindingOverridesFromMap_WhenEnabled()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
 
         var overrides = new List<InputBinding>
         {
@@ -94,8 +94,8 @@ internal partial class CoreTests
     public void Actions_CanRemoveAllBindingOverridesFromMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>
         {
@@ -117,7 +117,7 @@ internal partial class CoreTests
     public void Actions_CannotRemoveAllBindingOverridesFromMap_WhenEnabled()
     {
         var map = new InputActionMap();
-        var action = map.AddAction("action1", "/<keyboard>/enter");
+        var action = map.AddAction("action1", binding: "/<keyboard>/enter");
 
         var overrides = new List<InputBinding>
         {
@@ -428,7 +428,7 @@ internal partial class CoreTests
     public void Actions_InteractiveRebinding_UsesSyntheticControlsOnlyWhenBestMatch()
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
-        action.expectedControlLayout = "Axis";
+        action.expectedControlType = "Axis";
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind = action.PerformInteractiveRebinding()
@@ -443,7 +443,7 @@ internal partial class CoreTests
         {
             // Actuate X axis on left stick. This makes both the leftStick/right button (buttons are axes)
             // a candidate as well as leftStick/x. However, leftStick/right is synthetic so X axis should
-            // win. Note that if we set expectedControlLayout to "Button", leftStick/x will get ignored
+            // win. Note that if we set expectedControlType to "Button", leftStick/x will get ignored
             // and leftStick/left will get picked.
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
             InputSystem.Update();
@@ -516,7 +516,7 @@ internal partial class CoreTests
         Assert.Fail();
     }
 
-    // InputAction.expectedControlLayout, if set, will guide the rebinding process as to which
+    // InputAction.expectedControlType, if set, will guide the rebinding process as to which
     // controls we are looking for.
     [Test]
     [Category("Actions")]
@@ -524,7 +524,7 @@ internal partial class CoreTests
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth")
         {
-            expectedControlLayout = "Button",
+            expectedControlType = "Button",
         };
 
         var gamepad = InputSystem.AddDevice<Gamepad>();

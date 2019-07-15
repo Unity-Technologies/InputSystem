@@ -14,15 +14,18 @@ public class DualShockISX : GamepadISX
     // Start is called before the first frame update
     void Start()
     {
-        m_buttonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<button>") { passThrough = true };;
+        m_buttonAction = new InputAction(name: "DualShockButtonAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "DualShockDpadAction", binding: "*DualShock*/<dpad>") { passThrough = true };;
+        m_dPadAction = new InputAction(name: "DualShockDpadAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "DualShockStickMoveAction", binding: "*DualShock*/<stick>") { passThrough = true };;
+        m_stickMoveAction = new InputAction(name: "DualShockStickMoveAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }

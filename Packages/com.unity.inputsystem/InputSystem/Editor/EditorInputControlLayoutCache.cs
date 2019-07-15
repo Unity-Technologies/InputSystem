@@ -1,9 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEditor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Switch;

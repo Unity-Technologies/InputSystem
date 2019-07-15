@@ -28,3 +28,4 @@ Packages/com.unity.inputsystem/.npmrc
 Packages/com.unity.package-manager-doctools/
 Packages/com.unity.package-manager-ui/
 
+.Editor

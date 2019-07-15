@@ -7,58 +7,43 @@
             "actions": [
                 {
                     "name": "fire",
+                    "type": "Button",
                     "id": "1077f913-a9f9-41b1-acb3-b9ee0adbc744",
-                    "expectedControlLayout": "Button",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "move",
+                    "type": "Value",
                     "id": "50fd2809-3aa3-4a90-988e-1facf6773553",
-                    "expectedControlLayout": "Vector2",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Vector2",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "look",
+                    "type": "Value",
                     "id": "c60e0974-d140-4597-a40e-9862193067e9",
-                    "expectedControlLayout": "Vector2",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Vector2",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "menu",
+                    "type": "Button",
                     "id": "4ad24240-1211-418c-9678-760c0f5e2f0f",
-                    "expectedControlLayout": "Button",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "steamEnterMenu",
+                    "type": "Button",
                     "id": "86bb1c77-7b7d-493c-94be-213881dd4b5b",
-                    "expectedControlLayout": "Button",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -71,8 +56,7 @@
                     "groups": "KeyboardMouse;Gamepad",
                     "action": "fire",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -83,8 +67,7 @@
                     "groups": "Steam",
                     "action": "fire",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -95,8 +78,7 @@
                     "groups": "Gamepad",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "Dpad",
@@ -107,8 +89,7 @@
                     "groups": "KeyboardMouse",
                     "action": "move",
                     "isComposite": true,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "up",
@@ -119,8 +100,7 @@
                     "groups": "KeyboardMouse",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "down",
@@ -131,8 +111,7 @@
                     "groups": "KeyboardMouse",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "left",
@@ -143,8 +122,7 @@
                     "groups": "KeyboardMouse",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "right",
@@ -155,8 +133,7 @@
                     "groups": "KeyboardMouse",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": true,
-                    "modifiers": ""
+                    "isPartOfComposite": true
                 },
                 {
                     "name": "",
@@ -167,8 +144,7 @@
                     "groups": "Steam",
                     "action": "move",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -179,8 +155,7 @@
                     "groups": "Gamepad",
                     "action": "look",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -191,8 +166,7 @@
                     "groups": "KeyboardMouse",
                     "action": "look",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -203,8 +177,7 @@
                     "groups": "Steam",
                     "action": "look",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -215,8 +188,7 @@
                     "groups": "KeyboardMouse",
                     "action": "menu",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -227,8 +199,7 @@
                     "groups": "Gamepad",
                     "action": "menu",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -239,8 +210,7 @@
                     "groups": "Steam",
                     "action": "steamEnterMenu",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -250,58 +220,43 @@
             "actions": [
                 {
                     "name": "navigate",
+                    "type": "Value",
                     "id": "21e4672f-7da8-41ac-8a80-59e98f44610f",
-                    "expectedControlLayout": "Vector2",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Vector2",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "click",
+                    "type": "Button",
                     "id": "09cec56e-d919-461b-b769-b5f9040ab3d2",
-                    "expectedControlLayout": "Button",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "steamExitMenu",
+                    "type": "Button",
                     "id": "9493c6e9-a5fc-4534-8d0c-8730c350769d",
-                    "expectedControlLayout": "Button",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Button",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "submit",
+                    "type": "Value",
                     "id": "f6c0c6e8-e423-42cc-9071-06396825f4e2",
-                    "expectedControlLayout": "",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 },
                 {
                     "name": "point",
+                    "type": "Value",
                     "id": "2e1d701a-4b57-4fab-bee8-5ee788974fa6",
-                    "expectedControlLayout": "",
-                    "continuous": false,
-                    "passThrough": false,
-                    "initialStateCheck": false,
+                    "expectedControlType": "Vector2",
                     "processors": "",
-                    "interactions": "",
-                    "bindings": []
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -314,8 +269,7 @@
                     "groups": "",
                     "action": "submit",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -326,8 +280,7 @@
                     "groups": "",
                     "action": "click",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -338,8 +291,7 @@
                     "groups": "",
                     "action": "point",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -350,8 +302,7 @@
                     "groups": "",
                     "action": "navigate",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -362,8 +313,7 @@
                     "groups": "",
                     "action": "navigate",
                     "isComposite": false,
-                    "isPartOfComposite": false,
-                    "modifiers": ""
+                    "isPartOfComposite": false
                 }
             ]
         }

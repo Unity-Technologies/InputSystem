@@ -551,7 +551,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 // Decide on "input_mode". Assume "absolute_mouse" by default and take
                 // anything built on StickControl as "joystick_move".
                 var inputMode = "absolute_mouse";
-                var controlType = EditorInputControlLayoutCache.TryGetLayout(action.expectedControlLayout).type;
+                var controlType = EditorInputControlLayoutCache.TryGetLayout(action.expectedControlType).type;
                 if (typeof(StickControl).IsAssignableFrom(controlType))
                     inputMode = "joystick_move";
                 builder.Append("\t\t\t\t\t\"input_mode\"\t\"");
@@ -574,7 +574,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 throw new ArgumentNullException("action");
 
             // Make sure we have an expected control layout.
-            var expectedControlLayout = action.expectedControlLayout;
+            var expectedControlLayout = action.expectedControlType;
             if (string.IsNullOrEmpty(expectedControlLayout))
                 throw new ArgumentException($"Cannot determine Steam input type for action '{action}' that has no associated expected control layout",
                     nameof(action));

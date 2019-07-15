@@ -28,15 +28,18 @@ public class KeyboardMouseISX : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        m_keyboardAction = new InputAction(name: "KeyboardPressAction", binding: "<keyboard>/<key>") { passThrough = true };
+        m_keyboardAction = new InputAction(name: "KeyboardPressAction", InputActionType.PassThrough,
+            binding: "<keyboard>/<key>");
         m_keyboardAction.performed += callbackContext => KeyboardKeyPress(callbackContext.control as KeyControl);
         m_keyboardAction.Enable();
 
-        m_mouseButtonAction = new InputAction(name: "MouseButtonAction", binding: "<mouse>/<button>") {passThrough = true};
+        m_mouseButtonAction = new InputAction(name: "MouseButtonAction", InputActionType.PassThrough,
+            binding: "<mouse>/<button>");
         m_mouseButtonAction.performed += callbackContext => MouseKeyPress(callbackContext.control as ButtonControl);
         m_mouseButtonAction.Enable();
 
-        m_mouseOtherAction = new InputAction(name: "MouseVector2Action", binding: "<mouse>/<vector2>") { passThrough = true };
+        m_mouseOtherAction = new InputAction(name: "MouseVector2Action", InputActionType.PassThrough,
+            binding: "<mouse>/<vector2>");
         m_mouseOtherAction.performed += callbackContext => MouseVector2(callbackContext.control as Vector2Control);
         m_mouseOtherAction.Enable();
     }

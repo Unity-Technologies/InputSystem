@@ -1,9 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/TouchSamples/ControlMaps/PointerControls.inputactions'
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -23,14 +21,11 @@ namespace InputSamples.Controls
             ""actions"": [
                 {
                     ""name"": ""point"",
+                    ""type"": ""Value"",
                     ""id"": ""4d610105-c5af-439c-8a02-4f1976d8da67"",
-                    ""expectedControlLayout"": """",
-                    ""continuous"": false,
-                    ""passThrough"": true,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -43,8 +38,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -55,8 +49,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Mouse"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""contact"",
@@ -67,8 +60,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Pen"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -79,8 +71,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Mouse"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -91,8 +82,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Pen"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""tilt"",
@@ -103,8 +93,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Pen"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -115,8 +104,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Pen"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""twist"",
@@ -127,8 +115,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Pen"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""Touch0"",
@@ -139,8 +126,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -151,8 +137,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -163,8 +148,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""radius"",
@@ -175,8 +159,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -187,8 +170,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""inputId"",
@@ -199,8 +181,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""Touch1"",
@@ -211,8 +192,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -223,8 +203,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -235,8 +214,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""radius"",
@@ -247,8 +225,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -259,8 +236,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""inputId"",
@@ -271,8 +247,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""Touch2"",
@@ -283,8 +258,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -295,8 +269,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -307,8 +280,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""radius"",
@@ -319,8 +291,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -331,8 +302,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""inputId"",
@@ -343,8 +313,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""Touch3"",
@@ -355,8 +324,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -367,8 +335,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -379,8 +346,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""radius"",
@@ -391,8 +357,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -403,8 +368,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""inputId"",
@@ -415,8 +379,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""Touch4"",
@@ -427,8 +390,7 @@ namespace InputSamples.Controls
                     ""groups"": """",
                     ""action"": ""point"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""contact"",
@@ -439,8 +401,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""position"",
@@ -451,8 +412,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""radius"",
@@ -463,8 +423,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""pressure"",
@@ -475,8 +434,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""inputId"",
@@ -487,8 +445,7 @@ namespace InputSamples.Controls
                     ""groups"": "";Touch"",
                     ""action"": ""point"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 }
             ]
         }
@@ -554,10 +511,7 @@ namespace InputSamples.Controls
             set => asset.devices = value;
         }
 
-        public ReadOnlyArray<InputControlScheme> controlSchemes
-        {
-            get => asset.controlSchemes;
-        }
+        public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
         public bool Contains(InputAction action)
         {
@@ -585,19 +539,18 @@ namespace InputSamples.Controls
         }
 
         // pointer
-        private InputActionMap m_pointer;
+        private readonly InputActionMap m_pointer;
         private IPointerActions m_PointerActionsCallbackInterface;
-        private InputAction m_pointer_point;
+        private readonly InputAction m_pointer_point;
         public struct PointerActions
         {
             private PointerControls m_Wrapper;
             public PointerActions(PointerControls wrapper) { m_Wrapper = wrapper; }
-            public InputAction @point { get { return m_Wrapper.m_pointer_point; } }
+            public InputAction @point => m_Wrapper.m_pointer_point;
             public InputActionMap Get() { return m_Wrapper.m_pointer; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
-            public bool enabled { get { return Get().enabled; } }
-            public InputActionMap Clone() { return Get().Clone(); }
+            public bool enabled => Get().enabled;
             public static implicit operator InputActionMap(PointerActions set) { return set.Get(); }
             public void SetCallbacks(IPointerActions instance)
             {
@@ -616,13 +569,7 @@ namespace InputSamples.Controls
                 }
             }
         }
-        public PointerActions @pointer
-        {
-            get
-            {
-                return new PointerActions(this);
-            }
-        }
+        public PointerActions @pointer => new PointerActions(this);
         private int m_MouseSchemeIndex = -1;
         public InputControlScheme MouseScheme
         {

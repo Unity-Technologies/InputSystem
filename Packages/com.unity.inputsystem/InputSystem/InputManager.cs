@@ -1419,8 +1419,8 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterControlLayout("Key", typeof(KeyControl));
             RegisterControlLayout("Analog", typeof(AxisControl));
-            RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
+            RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Double", typeof(DoubleControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
@@ -1627,26 +1627,6 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
         #endif
-
-        private static void AddTypeRegistration(Dictionary<InternedString, Type> table, string name, Type type)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            var internedName = new InternedString(name);
-            table[internedName] = type;
-        }
-
-        private static Type LookupTypeRegisteration(Dictionary<InternedString, Type> table, string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
-
-            var internedName = new InternedString(name);
-            return table.TryGetValue(internedName, out var type) ? type : null;
-        }
 
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
@@ -2338,6 +2318,7 @@ namespace UnityEngine.InputSystem
                 if (device == null)
                 {
                     #if UNITY_EDITOR
+                    ////TODO: see if this is a device we haven't created and if so, just ignore
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 

@@ -67,6 +67,13 @@ however, it has to be formatted properly to pass verification tests.
 - Added support for DualShock 3 gamepads on desktops.
 - Added support for Nintendo Switch Pro Controllers on desktops.
 
+#### Actions
+
+- Actions now also have a __polling API__!
+  * `InputAction.triggered` is true if the action was performed in the current frame.
+  * `InputAction.ReadValue<TValue>()` yields the last value that `started`, `performed`, or `cancelled` (whichever came last) was called with. If the action is disabled, returns `default(TValue)`. For `InputActionType.Button` type actions, returns `1.0f` if `triggered==true` and `0.0f` otherwise.
+- Generated C# wrappers for .inputactions can now placed relative to the .inputactions file by specifying a path starting with './' (e.g. `./foo/bar.cs`).
+
 ### Changed
 
 - **The system no longer supports processing input in __BOTH__ fixed and dynamic updates**. Instead, a choice has to be made whether to process input before each `FixedUpdate()` or before each `Update()`.
@@ -98,6 +105,16 @@ however, it has to be formatted properly to pass verification tests.
 - Made all `InputProcessor` implementation internal, as access to these types is exposed only through text mode representations.
 - Removed `CurveProcessor` as it was not implemented.
 - Renamed XInputControllerOSX to a more descriptive XboxGamepadMacOS.
+
+#### Actions
+
+- `InputAction.continuous` has been removed. Running logic every frame regardless of input can easily be achieved in game code.
+- The way action behavior is configured has been simplified.
+  * The previous roster of toggles has been replaced with two settings:
+    1. `Action Type`: Determines the behavior of the action. Choices are `Value`, `Button`, and `PassThrough`.
+    2. `Control Type`: Determines the type of control (and implicitly the type of value) the action is looking for if the action is a `Value` or `PassThrough` action.
+  * The previous `Initial State Check` toggle is now implicit in the action type now. `Value` actions perform an initial state check (i.e. trigger if their control is already actuated when the action is enabled). Other types of actions don't.
+  * The previous `Pass Through` toggle is now rolled into the action type.
 
 ## [0.2.10-preview] - 2019-5-17
 

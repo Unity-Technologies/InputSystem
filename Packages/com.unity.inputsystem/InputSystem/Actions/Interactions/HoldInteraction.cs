@@ -8,6 +8,10 @@ namespace UnityEngine.InputSystem.Interactions
     /// Performs the action if the control is pressed and held for at least the
     /// set duration (which defaults to <see cref="InputSettings.defaultHoldTime"/>).
     /// </summary>
+    /// <remarks>
+    /// The action is started when the control is pressed. If the control is released before the
+    /// set <see cref="duration"/>, the action is canceled.
+    /// </remarks>
     public class HoldInteraction : IInputInteraction
     {
         /// <summary>
@@ -15,6 +19,9 @@ namespace UnityEngine.InputSystem.Interactions
         /// </summary>
         /// <remarks>
         /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultHoldTime"/> is used.
+        ///
+        /// Duration is expressed in real time and measured against the timestamps of input events
+        /// (<see cref="LowLevel.InputEvent.time"/>) not against game time (<see cref="Time.time"/>).
         /// </remarks>
         public float duration;
 
@@ -33,14 +40,12 @@ namespace UnityEngine.InputSystem.Interactions
 
         private double m_TimePressed;
 
+        /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
             {
-                if (context.continuous)
-                    context.PerformedAndStayPerformed();
-                else
-                    context.PerformedAndGoBackToWaiting();
+                context.PerformedAndGoBackToWaiting();
                 return;
             }
 
@@ -72,19 +77,13 @@ namespace UnityEngine.InputSystem.Interactions
                     break;
 
                 case InputActionPhase.Performed:
-                    if (context.ControlIsActuated(pressPointOrDefault))
-                    {
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                    }
-                    else
-                    {
+                    if (!context.ControlIsActuated(pressPointOrDefault))
                         context.Canceled();
-                    }
                     break;
             }
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             m_TimePressed = 0;
@@ -115,8 +114,6 @@ namespace UnityEngine.InputSystem.Interactions
             m_DurationSetting.OnGUI();
         }
 
-        private GUIContent m_ContinuousStartsLabel = new GUIContent("Start Continuously",
-            "If enabled, the Hold will triggered 'started' repeatedly for as long as ");
         private CustomOrDefaultSetting m_PressPointSetting;
         private CustomOrDefaultSetting m_DurationSetting;
     }
