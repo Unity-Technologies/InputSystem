@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.3.1-preview] - 2020-1-1
+## [0.9-preview] - 2020-1-1
 
 ### Fixed
 
@@ -23,7 +23,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
-- Fixed inconsistent ifdefs in NPad.cs for the swtich pro controller.
+- Fixed compile errors from Switch Pro controller code on Linux.
+- Fixed GC heap garbage being caused by triggered by event processing.
+  * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
 
 #### Actions
 

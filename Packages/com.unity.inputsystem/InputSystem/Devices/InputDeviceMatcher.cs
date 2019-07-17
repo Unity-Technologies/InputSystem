@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Layouts
 
                     var graph = new JsonParser(deviceDescription.capabilities);
                     if (!graph.NavigateToProperty(key.ToString()) ||
-                        !graph.CurrentPropertyHasValueEqualTo(pattern))
+                        !graph.CurrentPropertyHasValueEqualTo(new JsonParser.JsonValue { type = JsonParser.JsonValueType.Any, anyValue = pattern}))
                         return 0;
                 }
             }

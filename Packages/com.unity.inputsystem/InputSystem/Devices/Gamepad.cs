@@ -304,34 +304,22 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Same as <see cref="buttonSouth"/>.
         /// </summary>
-        public ButtonControl aButton
-        {
-            get { return buttonSouth; }
-        }
+        public ButtonControl aButton => buttonSouth;
 
         /// <summary>
         /// Same as <see cref="buttonEast"/>.
         /// </summary>
-        public ButtonControl bButton
-        {
-            get { return buttonEast; }
-        }
+        public ButtonControl bButton => buttonEast;
 
         /// <summary>
         /// Same as <see cref="buttonWest"/>
         /// </summary>
-        public ButtonControl xButton
-        {
-            get { return buttonWest; }
-        }
+        public ButtonControl xButton => buttonWest;
 
         /// <summary>
         /// Same as <see cref="buttonNorth"/>.
         /// </summary>
-        public ButtonControl yButton
-        {
-            get { return buttonNorth; }
-        }
+        public ButtonControl yButton => buttonNorth;
 
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
@@ -424,10 +412,11 @@ namespace UnityEngine.InputSystem
                 current = null;
 
             // Remove from `all`.
-            var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
-            if (wasFound)
-                --s_GamepadCount;
+            var index = ArrayHelpers.IndexOfReference(s_Gamepads, this, s_GamepadCount);
+            if (index != -1)
+                ArrayHelpers.EraseAtWithCapacity(s_Gamepads, ref s_GamepadCount, index);
+            else
+                Debug.Assert(false, $"Gamepad {this} seems to not have been added but is being removed"); // Put in else to not allocate on normal path.
         }
 
         public virtual void PauseHaptics()

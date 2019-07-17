@@ -65,6 +65,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is signalled when the layout setup in the system changes.
         /// </summary>
+        /// <seealso cref="InputControlLayout"/>
         public static event Action<string, InputControlLayoutChange> onLayoutChange
         {
             add => s_Manager.onLayoutChange += value;
@@ -85,7 +86,7 @@ namespace UnityEngine.InputSystem
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
             if (type == null)
-                throw new System.ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(type));
 
             if (string.IsNullOrEmpty(name))
                 name = type.Name;
@@ -221,7 +222,7 @@ namespace UnityEngine.InputSystem
         ///     public InputControlLayout Build()
         ///     {
         ///         var builder = new InputControlLayout.Builder()
-        ///             .WithType<MyDevice>();
+        ///             .WithType&lt;MyDevice&gt;();
         ///         builder.AddControl("button1").WithLayout("Button");
         ///         return builder.Build();
         ///     }
@@ -443,7 +444,7 @@ namespace UnityEngine.InputSystem
         ///
         /// The value returned by this property should not be held on to. When the device
         /// setup in the system changes, any value previously returned by this property
-        /// becomes invalid. Query the property directly whenever you need it.
+        /// may become invalid. Query the property directly whenever you need it.
         /// </remarks>
         public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
 
