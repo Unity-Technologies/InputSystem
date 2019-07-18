@@ -545,8 +545,8 @@ namespace UnityEngine.InputSystem.Utilities
 
             public bool Equals(JsonString other)
             {
-	            if (hasEscapes == other.hasEscapes)
-		            return Substring.Compare(text, other.text, StringComparison.InvariantCultureIgnoreCase) == 0;
+                if (hasEscapes == other.hasEscapes)
+                    return Substring.Compare(text, other.text, StringComparison.InvariantCultureIgnoreCase) == 0;
 
                 var thisLength = text.length;
                 var otherLength = other.text.length;
@@ -772,48 +772,48 @@ namespace UnityEngine.InputSystem.Utilities
 
                 // anyValue-based comparisons.
                 if (anyValue != null)
-	                return Equals(anyValue, other);
+                    return Equals(anyValue, other);
                 if (other.anyValue != null)
-	                return Equals(other.anyValue, this);
+                    return Equals(other.anyValue, this);
 
                 return false;
             }
 
             private static bool Equals(object obj, JsonValue value)
             {
-	            if (obj == null)
-		            return false;
-	            
+                if (obj == null)
+                    return false;
+
                 if (obj is Regex regex)
                     return regex.IsMatch(value.ToString());
                 if (obj is string str)
                 {
-	                switch (value.type)
-	                {
-		                case JsonValueType.String: return value.stringValue == str;
-		                case JsonValueType.Integer: return long.TryParse(str, out var si) && si == value.integerValue;
-		                case JsonValueType.Real:
-			                return double.TryParse(str, out var sf) && NumberHelpers.Approximately(sf, value.realValue);
-		                case JsonValueType.Bool:
-			                if (value.boolValue)
-				                return str == "True" || str == "true" || str == "1";
-			                return str == "False" || str == "false" || str == "0";
-	                }
+                    switch (value.type)
+                    {
+                        case JsonValueType.String: return value.stringValue == str;
+                        case JsonValueType.Integer: return long.TryParse(str, out var si) && si == value.integerValue;
+                        case JsonValueType.Real:
+                            return double.TryParse(str, out var sf) && NumberHelpers.Approximately(sf, value.realValue);
+                        case JsonValueType.Bool:
+                            if (value.boolValue)
+                                return str == "True" || str == "true" || str == "1";
+                            return str == "False" || str == "false" || str == "0";
+                    }
                 }
                 if (obj is float f)
                 {
-                     if (value.type == JsonValueType.Real)
+                    if (value.type == JsonValueType.Real)
                         return NumberHelpers.Approximately(f, value.realValue);
-                     if (value.type == JsonValueType.String)
-                         return float.TryParse(value.ToString(), out var otherF) && Mathf.Approximately(f, otherF);
+                    if (value.type == JsonValueType.String)
+                        return float.TryParse(value.ToString(), out var otherF) && Mathf.Approximately(f, otherF);
                 }
                 if (obj is double d)
                 {
-                     if (value.type == JsonValueType.Real)
+                    if (value.type == JsonValueType.Real)
                         return NumberHelpers.Approximately(d, value.realValue);
-                     if (value.type == JsonValueType.String)
-                         return double.TryParse(value.ToString(), out var otherD) &&
-                                NumberHelpers.Approximately(d, otherD);
+                    if (value.type == JsonValueType.String)
+                        return double.TryParse(value.ToString(), out var otherD) &&
+                            NumberHelpers.Approximately(d, otherD);
                 }
                 if (obj is int i)
                 {
@@ -831,16 +831,16 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 if (obj is bool b)
                 {
-                     if (value.type == JsonValueType.Bool)
+                    if (value.type == JsonValueType.Bool)
                         return b == value.boolValue;
-                     if (value.type == JsonValueType.String)
-                     {
-                         if (b)
-                             return value.stringValue == "true" || value.stringValue == "True" ||
-                                    value.stringValue == "1";
-                         return value.stringValue == "false" || value.stringValue == "False" ||
-                                value.stringValue == "0";
-                     }
+                    if (value.type == JsonValueType.String)
+                    {
+                        if (b)
+                            return value.stringValue == "true" || value.stringValue == "True" ||
+                                value.stringValue == "1";
+                        return value.stringValue == "false" || value.stringValue == "False" ||
+                            value.stringValue == "0";
+                    }
                 }
                 // NOTE: The enum-based comparisons allocate both on the Convert.ToInt64() and Enum.GetName() path. I've found
                 //       no way to do either comparison in a way that does not allocate.
