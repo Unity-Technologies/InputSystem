@@ -1,6 +1,8 @@
 using System;
 using UnityEngine.InputSystem.Layouts;
 
+////REVIEW: can we make this internal?
+
 ////TODO: ManualThreaded
 
 namespace UnityEngine.InputSystem

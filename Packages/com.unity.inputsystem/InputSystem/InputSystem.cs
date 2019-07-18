@@ -65,6 +65,31 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is signalled when the layout setup in the system changes.
         /// </summary>
+        /// <remarks>
+        /// First parameter is the name of the layout that has changed and second parameter is the
+        /// type of change that has occurred.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.onLayoutChange +=
+        ///     (name, change) =>
+        ///     {
+        ///         switch (change)
+        ///         {
+        ///             case InputControlLayoutChange.Added:
+        ///                 Debug.Log($"New layout {name} has been added");
+        ///                 break;
+        ///             case InputControlLayoutChange.Removed:
+        ///                 Debug.Log($"Layout {name} has been removed");
+        ///                 break;
+        ///             case InputControlLayoutChange.Replaced:
+        ///                 Debug.Log($"Layout {name} has been updated");
+        ///                 break;
+        ///         }
+        ///     }
+        /// </code>
+        /// </example>
+        /// </remarks>
         /// <seealso cref="InputControlLayout"/>
         public static event Action<string, InputControlLayoutChange> onLayoutChange
         {
@@ -76,13 +101,43 @@ namespace UnityEngine.InputSystem
         /// Register a control layout based on a type.
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
-        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
+        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type (<see cref="Type.Name"/>) will be used.</param>
         /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
+        ///
+        /// The type can be annotated with <see cref="InputControlLayoutAttribute"/> for additional options
+        /// but the attribute is not necessary for a type to be usable as a control layout.
+        ///
+        /// <example>
+        /// <code>
+        /// class MyDevice : InputDevice
+        /// {
+        ///     public ButtonControl button;
+        ///     protected override void FinishSetup(InputDeviceBuilder builder)
+        ///     {
+        ///         base.FinishSetup(builder);
+        ///         button = builder.GetControl&lt;ButtonControl&gt;("button");
+        ///     }
+        /// }
+        ///
+        /// //...
+        ///
+        /// InputSystem.RegisterLayout(typeof(MyDevice));
+        /// // AddDevice&lt;T&gt; will actually implicitly register the layout if it hasn't been
+        /// // registered yet so strictly speaking, the RegisterLayout call here is redundant.
+        /// var device = InputDevice.AddDevice&lt;MyDevice&gt;();
+        /// </code>
+        /// </example>
+        ///
+        /// Note that if <paramref name="matches"/> is supplied and there are devices that could not
+        /// have been recognized yet, the matcher will be immediately matched against these devices
+        /// and any match will result in an input device being created (except if the layout happens
+        /// to be suppressed via <see cref="InputSettings.supportedDevices"/>).
         /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
             if (type == null)
@@ -107,7 +162,11 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
+        ///
+        /// This method is equivalent to calling <see cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/> with
+        /// <code>typeof(T)</code>.
         /// </remarks>
+        /// <seealso cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/>
         public static void RegisterLayout<T>(string name = null, InputDeviceMatcher? matches = null)
             where T : InputControl
         {
@@ -145,6 +204,7 @@ namespace UnityEngine.InputSystem
         /// );
         /// </code>
         /// </example>
+        /// <seealso cref="RemoveLayout"/>
         public static void RegisterLayout(string json, string name = null, InputDeviceMatcher? matches = null)
         {
             s_Manager.RegisterControlLayout(json, name);
@@ -179,10 +239,18 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        ///
+        /// Add an additional device matcher to an existing layout.
         /// </summary>
-        /// <param name="layoutName"></param>
-        /// <param name="matcher"></param>
+        /// <param name="layoutName">Name of the device layout that should be instantiated if <paramref name="matcher"/>
+        /// matches an <see cref="InputDeviceDescription"/> of a discovered device.</param>
+        /// <param name="matcher">Specification to match against <see cref="InputDeviceDescription"/> instances.</param>
+        /// <remarks>
+        /// Each device layout can have zero or more matchers associated with it. If any one of the
+        /// matchers matches a given <see cref="InputDeviceDescription"/> (<see cref="InputDeviceMatcher.MatchPercentage"/>)
+        /// better than any other matcher (for the same or any other layout), then the given layout
+        /// will be used for the discovered device.
+        /// </remarks>
+        /// <seealso cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/>
         public static void RegisterLayoutMatcher(string layoutName, InputDeviceMatcher matcher)
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
@@ -1117,14 +1185,33 @@ namespace UnityEngine.InputSystem
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////REVIEW: this should run the "natural" update according to what's configured in the input systems (e.g. manual if manual is chosen there)
-
+        /// <summary>
+        /// Run a single update of input state.
+        /// </summary>
+        /// <remarks>
+        /// Except in tests and when using <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>, this method should not
+        /// normally be called. The input system will automatically update as part of the player loop as
+        /// determined by <see cref="InputSettings.updateMode"/>. Calling this method is equivalent to
+        /// inserting extra frames.
+        ///
+        /// When using <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/> TODO
+        ///
+        /// When using <see cref="InputUpdateType.Manual"/>, this method MUST be called for input to update in the
+        /// player. Not calling the method as part of the player loop may result in excessive memory
+        /// consumption and potential loss of input.
+        ///
+        /// Each update will flush out buffered input events and cause them to be processed. This in turn
+        /// will update the state of input devices (<see cref="InputDevice"/>) and trigger actions (<see cref="InputAction"/>)
+        /// that monitor affected device state.
+        /// </remarks>
+        /// <seealso cref="InputUpdateType"/>
+        /// <seealso cref="InputSettings.updateMode"/>
         public static void Update()
         {
             s_Manager.Update();
         }
 
-        public static void Update(InputUpdateType updateType)
+        internal static void Update(InputUpdateType updateType)
         {
             if (updateType != InputUpdateType.None && (s_Manager.updateMask & updateType) == 0)
                 throw new InvalidOperationException(

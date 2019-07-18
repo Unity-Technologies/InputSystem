@@ -170,12 +170,12 @@ namespace UnityEngine.InputSystem.LowLevel
             // Set up device to buffer mappings.
             var ptr = (byte*)m_AllBuffers;
             m_PlayerStateBuffers =
-                SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer,
+                SetUpDeviceToBufferMappings(deviceCount, ref ptr, sizePerBuffer,
                     mappingTableSizePerBuffer);
 
             #if UNITY_EDITOR
             m_EditorStateBuffers =
-                SetUpDeviceToBufferMappings(devices, deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
+                SetUpDeviceToBufferMappings(deviceCount, ref ptr, sizePerBuffer, mappingTableSizePerBuffer);
             #endif
 
             // Default state and noise filter buffers go last.
@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem.LowLevel
             noiseMaskBuffer = ptr + sizePerBuffer;
         }
 
-        private static DoubleBuffers SetUpDeviceToBufferMappings(InputDevice[] devices, int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
+        private static DoubleBuffers SetUpDeviceToBufferMappings(int deviceCount, ref byte* bufferPtr, uint sizePerBuffer, uint mappingTableSizePerBuffer)
         {
             var front = bufferPtr;
             var back = bufferPtr + sizePerBuffer;
@@ -194,8 +194,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
             for (var i = 0; i < deviceCount; ++i)
             {
-                var deviceIndex = devices[i].m_DeviceIndex;
-
+                var deviceIndex = i;
                 buffers.SetFrontBuffer(deviceIndex, front);
                 buffers.SetBackBuffer(deviceIndex, back);
             }
@@ -279,6 +278,8 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (delta != 0)
                         device.BakeOffsetIntoStateBlockRecursive(delta);
                 }
+
+                Debug.Assert(device.m_StateBlock.byteOffset == newOffset, "Device state offset not set correctly");
 
                 newOffset = NextDeviceOffset(newOffset, device);
             }

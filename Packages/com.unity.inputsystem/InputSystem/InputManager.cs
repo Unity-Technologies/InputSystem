@@ -1100,7 +1100,7 @@ namespace UnityEngine.InputSystem
 
             // Update device indices. Do this after reallocating state buffers as that call requires
             // the old indices to still be in place.
-            for (var i = deviceIndex + 1; i < m_DevicesCount; ++i)
+            for (var i = deviceIndex; i < m_DevicesCount; ++i)
                 --m_Devices[i].m_DeviceIndex; // Indices have shifted down by one.
             device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
 
