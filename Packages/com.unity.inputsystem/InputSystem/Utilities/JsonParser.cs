@@ -31,7 +31,6 @@ namespace UnityEngine.InputSystem.Utilities
         public void Reset()
         {
             m_Position = 0;
-            m_CurrentPropertyIsArray = false;
             m_MatchAnyElementInArray = false;
             m_DryRun = false;
         }
@@ -502,7 +501,6 @@ namespace UnityEngine.InputSystem.Utilities
         private readonly string m_Text;
         private readonly int m_Length;
         private int m_Position;
-        private bool m_CurrentPropertyIsArray;
         private bool m_MatchAnyElementInArray;
         private bool m_DryRun;
 
@@ -547,8 +545,8 @@ namespace UnityEngine.InputSystem.Utilities
 
             public bool Equals(JsonString other)
             {
-                if (hasEscapes == other.hasEscapes)
-                    return text == other.text;
+	            if (hasEscapes == other.hasEscapes)
+		            return Substring.Compare(text, other.text, StringComparison.InvariantCultureIgnoreCase) == 0;
 
                 var thisLength = text.length;
                 var otherLength = other.text.length;
@@ -575,7 +573,7 @@ namespace UnityEngine.InputSystem.Utilities
                         otherChar = other.text[otherIndex];
                     }
 
-                    if (thisChar != otherChar)
+                    if (char.ToUpperInvariant(thisChar) != char.ToUpperInvariant(otherChar))
                         return false;
                 }
 
@@ -772,26 +770,86 @@ namespace UnityEngine.InputSystem.Utilities
                     return false;
                 }
 
-                // Special-case comparisons.
-                if (other.anyValue is Regex otherRegex)
-                    return otherRegex.IsMatch(ToString());
-                if (anyValue is Regex thisRegex)
-                    return thisRegex.IsMatch(other.ToString());
+                // anyValue-based comparisons.
+                if (anyValue != null)
+	                return Equals(anyValue, other);
+                if (other.anyValue != null)
+	                return Equals(other.anyValue, this);
+
+                return false;
+            }
+
+            private static bool Equals(object obj, JsonValue value)
+            {
+	            if (obj == null)
+		            return false;
+	            
+                if (obj is Regex regex)
+                    return regex.IsMatch(value.ToString());
+                if (obj is string str)
+                {
+	                switch (value.type)
+	                {
+		                case JsonValueType.String: return value.stringValue == str;
+		                case JsonValueType.Integer: return long.TryParse(str, out var si) && si == value.integerValue;
+		                case JsonValueType.Real:
+			                return double.TryParse(str, out var sf) && NumberHelpers.Approximately(sf, value.realValue);
+		                case JsonValueType.Bool:
+			                if (value.boolValue)
+				                return str == "True" || str == "true" || str == "1";
+			                return str == "False" || str == "false" || str == "0";
+	                }
+                }
+                if (obj is float f)
+                {
+                     if (value.type == JsonValueType.Real)
+                        return NumberHelpers.Approximately(f, value.realValue);
+                     if (value.type == JsonValueType.String)
+                         return float.TryParse(value.ToString(), out var otherF) && Mathf.Approximately(f, otherF);
+                }
+                if (obj is double d)
+                {
+                     if (value.type == JsonValueType.Real)
+                        return NumberHelpers.Approximately(d, value.realValue);
+                     if (value.type == JsonValueType.String)
+                         return double.TryParse(value.ToString(), out var otherD) &&
+                                NumberHelpers.Approximately(d, otherD);
+                }
+                if (obj is int i)
+                {
+                    if (value.type == JsonValueType.Integer)
+                        return i == value.integerValue;
+                    if (value.type == JsonValueType.String)
+                        return int.TryParse(value.ToString(), out var otherI) && i == otherI;
+                }
+                if (obj is long l)
+                {
+                    if (value.type == JsonValueType.Integer)
+                        return l == value.integerValue;
+                    if (value.type == JsonValueType.String)
+                        return long.TryParse(value.ToString(), out var otherL) && l == otherL;
+                }
+                if (obj is bool b)
+                {
+                     if (value.type == JsonValueType.Bool)
+                        return b == value.boolValue;
+                     if (value.type == JsonValueType.String)
+                     {
+                         if (b)
+                             return value.stringValue == "true" || value.stringValue == "True" ||
+                                    value.stringValue == "1";
+                         return value.stringValue == "false" || value.stringValue == "False" ||
+                                value.stringValue == "0";
+                     }
+                }
                 // NOTE: The enum-based comparisons allocate both on the Convert.ToInt64() and Enum.GetName() path. I've found
                 //       no way to do either comparison in a way that does not allocate.
-                if (other.anyValue is Enum otherEnum)
+                if (obj is Enum)
                 {
-                    if (type == JsonValueType.Integer)
-                        return Convert.ToInt64(otherEnum) == integerValue;
-                    if (type == JsonValueType.String)
-                        return stringValue == Enum.GetName(otherEnum.GetType(), other.anyValue);
-                }
-                if (anyValue is Enum thisEnum)
-                {
-                    if (other.type == JsonValueType.Integer)
-                        return Convert.ToInt64(thisEnum) == other.integerValue;
-                    if (type == JsonValueType.String)
-                        return other.stringValue == Enum.GetName(thisEnum.GetType(), anyValue);
+                    if (value.type == JsonValueType.Integer)
+                        return Convert.ToInt64(obj) == value.integerValue;
+                    if (value.type == JsonValueType.String)
+                        return value.stringValue == Enum.GetName(obj.GetType(), obj);
                 }
 
                 return false;

@@ -109,10 +109,13 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Retry(2)] // Warm up JIT and get rid of noise from first input update
     public void Events_QueuingAndProcessingStateEvent_DoesNotAllocateMemory()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
+        
+        // Warm up JIT and get rid of GC noise from initial input system update.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        InputSystem.Update();
 
         // Make sure we don't get an allocation from the string literal.
         var kProfilerRegion = "Events_ProcessingStateEvent_DoesNotAllocateMemory";

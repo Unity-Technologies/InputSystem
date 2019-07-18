@@ -70,7 +70,8 @@ namespace UnityEngine.InputSystem.Layouts
             // If it's a string, check whether it's a regex.
             if (supportRegex && value is string str)
             {
-                var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch));
+	            var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch)) &&
+	                             !double.TryParse(str, out var _); // Avoid '.' in floats forcing the value to be a regex.
                 if (mayBeRegex)
                     value = new Regex(str, RegexOptions.IgnoreCase);
             }
