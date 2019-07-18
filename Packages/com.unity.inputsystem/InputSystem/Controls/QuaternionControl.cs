@@ -5,6 +5,9 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Controls
 {
+    /// <summary>
+    /// A generic input control reading quaternion (rotation) values.
+    /// </summary>
     public class QuaternionControl : InputControl<Quaternion>
     {
         // Accessing these components as individual controls usually doesn't make too much sense,
@@ -26,6 +29,9 @@ namespace UnityEngine.InputSystem.Controls
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             x = builder.GetControl<AxisControl>(this, "x");
             y = builder.GetControl<AxisControl>(this, "y");
             z = builder.GetControl<AxisControl>(this, "z");

@@ -6,22 +6,22 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.DualShock;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////REVIEW: Should we rename this one to something more convenient? Why not just PS4Controller?
 
 ////TODO: player ID
 #pragma warning disable 0649
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct DualShockGamepadStatePS4 : IInputStateTypeInfo
+    internal struct DualShockGamepadStatePS4 : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'G', 'P');
 
-        public enum Button
+        private enum Button
         {
             L3 = 1,
             R3 = 2,
@@ -109,9 +109,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(80)]
         public PS4Touch touch1;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -120,12 +120,13 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the DualShockPS4OutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct DualShockPS4OuputCommand : IInputDeviceCommandInfo
+    internal struct DualShockPS4OuputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('P', 'S', 'G', 'O'); } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 6;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -137,6 +138,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte largeMotorSpeed;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public byte smallMotorSpeed;
@@ -144,9 +146,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 5)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float largeMotor, float smallMotor)
@@ -188,7 +190,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     /// Retrieve the slot index, default color and user ID of the controller.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryPS4ControllerInfo : IInputDeviceCommandInfo
+    internal struct QueryPS4ControllerInfo : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('S', 'L', 'I', 'D'); } }
 
@@ -206,9 +208,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int userId;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public QueryPS4ControllerInfo WithSlotIndex(int index)
@@ -234,9 +236,10 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     public struct PS4Touch : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
-        public FourCC GetFormat()
+
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         [FieldOffset(0)] public int touchId;
@@ -244,7 +247,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4InputDeviceDefinition in sixaxis.cpp
     [Serializable]
@@ -286,6 +289,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             touchId = builder.GetControl<IntegerControl>(this, "touchId");
             position = builder.GetControl<Vector2Control>(this, "position");
             base.FinishSetup(builder);
@@ -449,7 +455,6 @@ namespace UnityEngine.InputSystem.Plugins.PS4
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
 
-#if UNITY_2019_1_OR_NEWER
             var capabilities = description.capabilities;
             var deviceDescriptor = PS4InputDeviceDescriptor.FromJson(capabilities);
 
@@ -466,7 +471,6 @@ namespace UnityEngine.InputSystem.Plugins.PS4
                     m_LightBarColor = PS4ColorIdToColor(m_DefaultColorId);
                 }
             }
-#endif
         }
 
         public override void PauseHaptics()
@@ -535,15 +539,15 @@ namespace UnityEngine.InputSystem.Plugins.PS4
             m_LightBarColor = null;
         }
 
-        public override void SetMotorSpeeds(float largeMotor, float smallMotor)
+        public override void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             var command = DualShockPS4OuputCommand.Create();
-            command.SetMotorSpeeds(largeMotor, smallMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency);
 
             ExecuteCommand(ref command);
 
-            m_LargeMotor = largeMotor;
-            m_SmallMotor = smallMotor;
+            m_LargeMotor = lowFrequency;
+            m_SmallMotor = highFrequency;
         }
 
         public void ResetOrientation()

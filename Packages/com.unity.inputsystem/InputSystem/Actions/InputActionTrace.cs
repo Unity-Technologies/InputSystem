@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -89,7 +90,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputAction.performed"/>
     /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -265,6 +266,25 @@ namespace UnityEngine.InputSystem
             DisposeInternal();
         }
 
+        public override string ToString()
+        {
+            if (count == 0)
+                return "[]";
+
+            var str = new StringBuilder();
+            str.Append('[');
+            var isFirst = true;
+            foreach (var eventPtr in this)
+            {
+                if (!isFirst)
+                    str.Append(",\n");
+                str.Append(eventPtr.ToString());
+                isFirst = false;
+            }
+            str.Append(']');
+            return str.ToString();
+        }
+
         public void Dispose()
         {
             UnsubscribeFromAll();
@@ -341,7 +361,7 @@ namespace UnityEngine.InputSystem
                     case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
-                        var actionIndex = triggeredAction.m_ActionIndex;
+                        var actionIndex = triggeredAction.m_ActionIndexInState;
                         var stateForAction = triggeredAction.m_ActionMap.m_State;
 
                         var context = new InputAction.CallbackContext
@@ -473,7 +493,8 @@ namespace UnityEngine.InputSystem
                 if (m_Ptr == null)
                     return "<null>";
 
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                var actionName = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
+                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
         }
 

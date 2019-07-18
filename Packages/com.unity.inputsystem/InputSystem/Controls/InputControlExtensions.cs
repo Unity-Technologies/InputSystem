@@ -6,6 +6,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////REVIEW: some of the stuff here is really low-level; should we move it into a separate static class inside of .LowLevel?
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -91,14 +93,6 @@ namespace UnityEngine.InputSystem
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
         }
 
-        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Read the control's default value and return it as an object.
         /// </summary>
@@ -130,6 +124,7 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -158,6 +153,7 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -475,9 +471,43 @@ namespace UnityEngine.InputSystem
             return (byte*)statePtr - (int)stateOffset;
         }
 
+        /// <summary>
+        /// Queue a value change on the given <paramref name="control"/> which will be processed and take effect
+        /// in the next input update.
+        /// </summary>
+        /// <param name="control">Control to change the value of.</param>
+        /// <param name="value">New value for the control.</param>
+        /// <param name="time">Optional time at which the value change should take effect. If set, this will become
+        /// the <see cref="InputEvent.time"/> of the queued event. If the time is in the future, the event will not
+        /// be processed until it falls within the time of an input update slice (except if <see cref="InputSettings.timesliceEvents"/>
+        /// is false, in which case the event will invariably be consumed in the next update).</param>
+        /// <typeparam name="TValue">Type of value.</typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
+        public static void QueueValueChange<TValue>(this InputControl<TValue> control, TValue value, double time = -1)
+            where TValue : struct
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            ////TODO: if it's not a bit-addressing control, send a delta state change only
+            using (StateEvent.From(control.device, out var eventPtr))
+            {
+                if (time >= 0)
+                    eventPtr.time = time;
+                control.WriteValueIntoEvent(value, eventPtr);
+                InputSystem.QueueEvent(eventPtr);
+            }
+        }
+
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
             if (parent is TControl parentAsTControl && predicate(parentAsTControl))
                 controls.Add(parentAsTControl);
 

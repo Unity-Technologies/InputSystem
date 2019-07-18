@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.Plugins.UI;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
@@ -41,7 +41,7 @@ using UnityEngine.InputSystem.Utilities;
 
 // if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.PlayerInput
 {
     /// <summary>
     /// A wrapper around the input system that takes care of managing input actions
@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
     /// can be reimplemented on top of the same API.
     /// </remarks>
     /// <seealso cref="PlayerInputManager"/>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
@@ -407,8 +408,8 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// </summary>
         public InputSystemUIInputModule uiInputModule
         {
-            get { return m_UIInputModule; }
-            set { m_UIInputModule = value; }
+            get => m_UIInputModule;
+            set => m_UIInputModule = value;
         }
 
         /// <summary>
@@ -432,18 +433,6 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         }
 
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
-
-        public static event Action<PlayerInput> onAdded
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
-
-        public static event Action<PlayerInput> onRemoved
-        {
-            add => throw new NotImplementedException();
-            remove => throw new NotImplementedException();
-        }
 
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
@@ -781,9 +770,9 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
             if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents)
                 return;
 
-            // ATM we only care about `performed` and, in the case of continuous actions, `canceled`.
+            // ATM we only care about `performed` and, in the case of value actions, `canceled`.
             var action = context.action;
-            if (!(context.performed || (context.canceled && action.continuous)))
+            if (!(context.performed || (context.canceled && action.type == InputActionType.Value)))
                 return;
 
             // Find message name for action.

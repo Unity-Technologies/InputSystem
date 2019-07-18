@@ -3,8 +3,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.iOS;
-using UnityEngine.InputSystem.Plugins.iOS.LowLevel;
+using UnityEngine.InputSystem.iOS;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
 internal class iOSTests : InputTestFixture

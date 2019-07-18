@@ -7,12 +7,15 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    public class InputActionDebuggerWindow : EditorWindow
+    internal class InputActionDebuggerWindow : EditorWindow
     {
         [NonSerialized] private InputAction m_Action = null;
 
         public static void CreateOrShowExisting(InputAction action)
         {
+            if (action == null)
+                throw new System.ArgumentNullException(nameof(action));
+
             // See if we have an existing window for the action and if so pop it in front.
             if (s_OpenDebuggerWindows != null)
             {

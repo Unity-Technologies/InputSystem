@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.LowLevel;
 ////        associate a user account with each one, and recognize when a controller is passed from one user to the other?
 ////        (NUI on Xbox probably gives us that scenario)
 
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputUser"/> occurred.

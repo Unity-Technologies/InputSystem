@@ -1,5 +1,7 @@
-namespace UnityEngine.InputSystem.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
+/*
+    TODO
     public enum SteamControllerType
     {
         Unknown,
@@ -9,4 +11,5 @@ namespace UnityEngine.InputSystem.Plugins.Steam
         GenericXInput,
         PS4
     }
+    */
 }

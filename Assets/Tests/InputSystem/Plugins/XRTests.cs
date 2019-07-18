@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.XR;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -570,9 +570,9 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('X', 'R', 'S', '0');
+            get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
 
@@ -706,9 +706,9 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('X', 'R', 'S', '0');
+            get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
 }

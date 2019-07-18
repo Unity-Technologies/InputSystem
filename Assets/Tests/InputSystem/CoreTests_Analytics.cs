@@ -146,6 +146,7 @@ partial class CoreTests
 
     #endif
 
+    ////FIXME: these don't seem to actually make it out and to the analytics server
     [Test]
     [Category("Analytics")]
     public void Analytics_ReceivesEventOnShutdown()
@@ -156,10 +157,10 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update(InputUpdateType.Fixed);
+        InputSystem.Update();
 
         var registeredNames = new List<string>();
         string receivedName = null;
@@ -186,7 +187,7 @@ partial class CoreTests
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.ShutdownEventData>());
 
         var shutdownData = (InputAnalytics.ShutdownEventData)receivedData;
-        var metrics = InputSystem.GetMetrics();
+        var metrics = InputSystem.metrics;
 
         Assert.That(shutdownData.max_num_devices, Is.EqualTo(metrics.maxNumDevices));
         Assert.That(shutdownData.max_state_size_in_bytes, Is.EqualTo(metrics.maxStateSizeInBytes));

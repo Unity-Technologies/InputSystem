@@ -1,9 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/SimpleDemo/SimpleControls.inputactions'
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -21,217 +19,191 @@ public class SimpleControls : IInputActionCollection
             ""actions"": [
                 {
                     ""name"": ""fire"",
+                    ""type"": ""Button"",
                     ""id"": ""1077f913-a9f9-41b1-acb3-b9ee0adbc744"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""move"",
+                    ""type"": ""Value"",
                     ""id"": ""50fd2809-3aa3-4a90-988e-1facf6773553"",
-                    ""expectedControlLayout"": ""Stick"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Stick"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""look"",
+                    ""type"": ""Value"",
                     ""id"": ""c60e0974-d140-4597-a40e-9862193067e9"",
-                    ""expectedControlLayout"": ""Vector2"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""jump"",
+                    ""type"": ""Button"",
                     ""id"": ""6890847e-f99c-43ac-a79d-0787d911a0a1"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
                 {
                     ""name"": """",
-                    ""id"": ""09c134e4-92b5-4c1e-9b05-582eb78eb92e"",
+                    ""id"": ""abb776f3-f329-4f7b-bbf8-b577d13be018"",
                     ""path"": ""*/{PrimaryAction}"",
                     ""interactions"": ""Tap,SlowTap"",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""bf9b1d91-7948-4353-9878-ae277d65f79d"",
+                    ""id"": ""6530c131-b549-4f2f-ae63-0ed5c6c242f4"",
                     ""path"": ""<SteamDemoController>/fire"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""8f1f45b4-15a0-484c-88ae-29d16ac86cef"",
+                    ""id"": ""e1b8c4dd-7b3a-4db6-a93a-0889b59b1afc"",
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""Dpad"",
-                    ""id"": ""f25555b4-378d-4717-b24c-5c5caa7fc5af"",
+                    ""id"": ""cefc16fc-557a-44b0-939f-2ad792876b07"",
                     ""path"": ""Dpad"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""up"",
-                    ""id"": ""a980a292-d423-4826-b2ae-c8c9338687ff"",
+                    ""id"": ""07244659-79df-461d-b329-defbe2fbc5f6"",
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""down"",
-                    ""id"": ""f6c5fd4d-c98a-4fb6-a4d3-3031ca1513a0"",
+                    ""id"": ""f0ec75cb-f02c-40d2-a33f-1fd6eab2ae0b"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""left"",
-                    ""id"": ""72aa1192-e011-4dd9-b982-276906c26c6e"",
+                    ""id"": ""21fe6bfe-4721-4483-9f4a-a0031ade105c"",
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""right"",
-                    ""id"": ""4f219e2e-1f87-4309-ad5f-b02fe3a3785a"",
+                    ""id"": ""2dd39746-c75c-4a11-838a-e59eacaf4e0b"",
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d6e54dbd-7201-460e-8911-fa79cad0d147"",
+                    ""id"": ""f96cc25e-7a56-479c-b093-65340e94c1ab"",
                     ""path"": ""<SteamDemoController>/move"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d68bf4a1-76f4-43e5-84ee-09bb91570c47"",
+                    ""id"": ""c106d6e6-2780-47ff-b318-396171bd54cc"",
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""d6a0c9f4-5ca6-4d2b-ac91-09a9aec7e735"",
+                    ""id"": ""578caa03-6827-4797-adfc-a59770c437fe"",
                     ""path"": ""<Pointer>/delta"",
                     ""interactions"": """",
                     ""processors"": ""ScaleVector2(x=2,y=2)"",
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""a8707930-9dd4-492d-bd41-7ff97a2c97c5"",
+                    ""id"": ""f93b4751-8811-456b-8827-af4eb2cf5fab"",
                     ""path"": ""<SteamDemoController>/look"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""c4e6e8f2-7bfc-45ee-9cae-4e31e3fa2915"",
+                    ""id"": ""effab852-cd3c-4564-8a2c-84174c461017"",
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""jump"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""2b589206-67d1-419f-97c0-478fccd8e6b5"",
+                    ""id"": ""72041ffe-e219-4211-afd7-941c8d335e48"",
                     ""path"": ""<Gamepad>/buttonNorth"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""jump"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -263,10 +235,7 @@ public class SimpleControls : IInputActionCollection
         set => asset.devices = value;
     }
 
-    public ReadOnlyArray<InputControlScheme> controlSchemes
-    {
-        get => asset.controlSchemes;
-    }
+    public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
     public bool Contains(InputAction action)
     {
@@ -294,25 +263,24 @@ public class SimpleControls : IInputActionCollection
     }
 
     // gameplay
-    private InputActionMap m_gameplay;
+    private readonly InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
-    private InputAction m_gameplay_fire;
-    private InputAction m_gameplay_move;
-    private InputAction m_gameplay_look;
-    private InputAction m_gameplay_jump;
+    private readonly InputAction m_gameplay_fire;
+    private readonly InputAction m_gameplay_move;
+    private readonly InputAction m_gameplay_look;
+    private readonly InputAction m_gameplay_jump;
     public struct GameplayActions
     {
         private SimpleControls m_Wrapper;
         public GameplayActions(SimpleControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
-        public InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
-        public InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public InputAction @jump { get { return m_Wrapper.m_gameplay_jump; } }
+        public InputAction @fire => m_Wrapper.m_gameplay_fire;
+        public InputAction @move => m_Wrapper.m_gameplay_move;
+        public InputAction @look => m_Wrapper.m_gameplay_look;
+        public InputAction @jump => m_Wrapper.m_gameplay_jump;
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public bool enabled { get { return Get().enabled; } }
-        public InputActionMap Clone() { return Get().Clone(); }
+        public bool enabled => Get().enabled;
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
         public void SetCallbacks(IGameplayActions instance)
         {
@@ -349,13 +317,7 @@ public class SimpleControls : IInputActionCollection
             }
         }
     }
-    public GameplayActions @gameplay
-    {
-        get
-        {
-            return new GameplayActions(this);
-        }
-    }
+    public GameplayActions @gameplay => new GameplayActions(this);
     public interface IGameplayActions
     {
         void OnFire(InputAction.CallbackContext context);

@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 ////REVIEW: apparently EventSystem only supports a single "current" module so the approach here probably
 ////        won't fly and we'll have to roll all non-action modules into one big module
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// Base class for <see cref="BaseInputModule">input modules</see> that send
@@ -288,36 +288,6 @@ namespace UnityEngine.InputSystem.Plugins.UI
                 var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(eventData.pointerEnter);
                 ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
             }
-        }
-
-        internal void ProcessTouch(ref TouchModel touchState)
-        {
-            if (!touchState.changedThisFrame)
-                return;
-
-            var eventData = GetOrCreateCachedPointerEvent();
-            eventData.Reset();
-
-            touchState.CopyTo(eventData);
-
-            if (touchState.selectPhase == PointerPhase.Canceled)
-            {
-                eventData.pointerCurrentRaycast = (touchState.selectPhase == PointerPhase.Canceled) ? new RaycastResult() : PerformRaycast(eventData);
-            }
-            else
-            {
-                eventData.pointerCurrentRaycast = PerformRaycast(eventData);
-            }
-
-            eventData.button = PointerEventData.InputButton.Left;
-
-            ProcessMouseButton(touchState.selectDelta, eventData, false);
-            ProcessMouseMovement(eventData);
-            ProcessMouseButtonDrag(eventData);
-
-            touchState.CopyFrom(eventData);
-
-            touchState.OnFrameFinished();
         }
 
         internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)

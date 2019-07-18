@@ -11,6 +11,8 @@ using UnityEngine.InputSystem.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////TODO: for interactive rebinding, if no expected control layout is set, infer it from the action type
+
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
 ////FIXME: properly work with composites
@@ -125,8 +127,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
-                throw new ArgumentOutOfRangeException(
-                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
+                throw new ArgumentOutOfRangeException(nameof(bindingIndex),
+                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
@@ -185,24 +187,15 @@ namespace UnityEngine.InputSystem
             actionMap.LazyResolveBindings();
         }
 
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Add all overrides that have been applied to this action to the given list.
-        // Returns the number of overrides found.
-        public static int GetBindingOverrides(this InputAction action, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
-        }
-
         ////REVIEW: are the IEnumerable variations worth having?
 
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -213,6 +206,9 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -238,21 +234,6 @@ namespace UnityEngine.InputSystem
             var bindingCount = actionMap.m_Bindings.Length;
             for (var i = 0; i < bindingCount; ++i)
                 ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        /// <summary>
-        /// Get all overrides applied to bindings in the given map.
-        /// </summary>
-        /// <param name="actionMap"></param>
-        /// <returns></returns>
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputActionMap actionMap)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int GetBindingOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
         }
 
         ////REVIEW: how does this system work in combination with actual user overrides
@@ -337,7 +318,7 @@ namespace UnityEngine.InputSystem
         /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
-        public class RebindingOperation : IDisposable
+        public sealed class RebindingOperation : IDisposable
         {
             public const float kDefaultMagnitudeThreshold = 0.2f;
 
@@ -373,7 +354,7 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <remarks>
             /// </remarks>
-            public ReadWriteArray<float> scores => new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count);
+            public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
             public InputControl selectedControl
             {
@@ -410,15 +391,10 @@ namespace UnityEngine.InputSystem
                 // If the action has an associated expected layout, constrain ourselves by it.
                 // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
                 //       of derived layouts may share the same control type.
-                if (!string.IsNullOrEmpty(action.expectedControlLayout))
-                    WithExpectedControlLayout(action.expectedControlLayout);
+                if (!string.IsNullOrEmpty(action.expectedControlType))
+                    WithExpectedControlLayout(action.expectedControlType);
 
                 return this;
-            }
-
-            public RebindingOperation WithCancelAction(InputAction action)
-            {
-                throw new NotImplementedException();
             }
 
             public RebindingOperation WithCancelingThrough(string binding)
@@ -429,6 +405,9 @@ namespace UnityEngine.InputSystem
 
             public RebindingOperation WithCancelingThrough(InputControl control)
             {
+                if (control == null)
+                    throw new ArgumentNullException(nameof(control));
+
                 return WithCancelingThrough(control.path);
             }
 
@@ -794,7 +773,7 @@ namespace UnityEngine.InputSystem
                         continue;
 
                     // Skip controls that have no effective value change.
-                    // NOTE: This will run the full processor stack and is move involved.
+                    // NOTE: This will run the full processor stack and is more involved.
                     if (!control.HasValueChangeInState(statePtr))
                         continue;
 
@@ -986,7 +965,7 @@ namespace UnityEngine.InputSystem
                             if (m_TargetBindingIndex >= 0)
                             {
                                 if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
-                                    throw new Exception(
+                                    throw new InvalidOperationException(
                                         $"Target binding index {m_TargetBindingIndex} out of range for action '{m_ActionToRebind}' with {m_ActionToRebind.bindings.Count} bindings");
 
                                 m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);

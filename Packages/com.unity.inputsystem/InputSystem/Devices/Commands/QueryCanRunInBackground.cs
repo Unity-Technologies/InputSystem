@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 
@@ -9,7 +8,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     /// <seealso cref="InputDevice.canRunInBackground"/>
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(bool))]
-    public unsafe struct QueryCanRunInBackground : IInputDeviceCommandInfo
+    public struct QueryCanRunInBackground : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('Q', 'R', 'I', 'B'); } }
 
@@ -21,9 +20,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public bool canRunInBackground;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static QueryCanRunInBackground Create()

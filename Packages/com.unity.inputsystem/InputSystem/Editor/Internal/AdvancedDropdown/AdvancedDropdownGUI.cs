@@ -10,44 +10,39 @@ namespace UnityEngine.InputSystem.Editor
     {
         private static class Styles
         {
-            public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
-
-            public static GUIStyle itemStyle = new GUIStyle("PR Label");
-            public static GUIStyle richTextItemStyle;
-            public static GUIStyle header = new GUIStyle("In BigTitle");
-            public static GUIStyle headerArrow = new GUIStyle();
-            public static GUIStyle checkMark = new GUIStyle("PR Label");
-            public static GUIContent arrowRightContent = new GUIContent("▸");
-            public static GUIContent arrowLeftContent = new GUIContent("◂");
-
-            static Styles()
-            {
-                itemStyle.alignment = TextAnchor.MiddleLeft;
-                itemStyle.padding = new RectOffset(0, 0, 0, 0);
-                itemStyle.margin = new RectOffset(0, 0, 0, 0);
-                itemStyle.fixedHeight += 1;
-
-                richTextItemStyle = new GUIStyle(itemStyle) {richText = true};
-
-                header.font = EditorStyles.boldLabel.font;
-                header.margin = new RectOffset(0, 0, 0, 0);
-                header.border = new RectOffset(0, 0, 3, 3);
-                header.padding = new RectOffset(6, 6, 6, 6);
-                header.contentOffset = Vector2.zero;
-
-                headerArrow.alignment = TextAnchor.MiddleCenter;
-                headerArrow.fontSize = 20;
-                headerArrow.normal.textColor = Color.gray;
-
-                checkMark.alignment = TextAnchor.MiddleCenter;
-                checkMark.padding = new RectOffset(0, 0, 0, 0);
-                checkMark.margin = new RectOffset(0, 0, 0, 0);
-                checkMark.fixedHeight += 1;
-            }
+            public static readonly GUIStyle toolbarSearchField = "ToolbarSeachTextField";
+            public static readonly GUIStyle itemStyle = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17);
+            public static readonly GUIStyle richTextItemStyle = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17)
+                .WithRichText();
+            public static readonly GUIStyle header = new GUIStyle("In BigTitle")
+                .WithFont(EditorStyles.boldLabel.font)
+                .WithMargin(new RectOffset())
+                .WithBorder(new RectOffset(0, 0, 3, 3))
+                .WithPadding(new RectOffset(6, 6, 6, 6))
+                .WithContentOffset(Vector2.zero);
+            public static readonly GUIStyle headerArrow = new GUIStyle()
+                .WithAlignment(TextAnchor.MiddleCenter)
+                .WithFontSize(20)
+                .WithNormalTextColor(Color.gray);
+            public static readonly GUIStyle checkMark = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleCenter)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17);
+            public static readonly GUIContent arrowRightContent = new GUIContent("▸");
+            public static readonly GUIContent arrowLeftContent = new GUIContent("◂");
         }
 
         //This should ideally match line height
-        private Vector2 s_IconSize = new Vector2(13, 13);
+        private static readonly Vector2 s_IconSize = new Vector2(13, 13);
 
         internal Rect m_SearchRect;
         internal Rect m_HeaderRect;

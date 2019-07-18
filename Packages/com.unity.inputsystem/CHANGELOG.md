@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [0.9.0-preview] - 2019-7-18
+
+### Fixed
+
+- Validate all parameters on public APIs.
+- Fixed an internal bug in `InlinedArray.RemoveAtByMovingTailWithCapacity`, which could cause data corruption.
+- Fixed Xbox controller support on macOS il2cpp.
+- Fixed issue of Xbox gamepads on Windows desktop not being able to navigate left and down in a UI.
+- Allow using InputSystem package if the XR, VR or Physics modules are disabled for smaller builds.
+- Fixed documentation landing page and table of contents.
+- Fixed tracked devices assigning pointer ids for UI pointer events correctly.
+- Adjusted some UI Elements to fit the Unity 19.3 font.
+- Fixed NullReferenceException being thrown when project changes.
+- Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
+- Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
+- Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
+- Fixed inconsistent ifdefs in NPad.cs for the swtich pro controller.
+
+#### Actions
+
+- Fixed `CallbackContext.control` referencing the composite member control which was actually actuated for this trigger for composite bindings.
+- Generated C# wrappers for .inputactions assets are no longer placed in Assets/Assets/ folder on Windows.
+
+### Added
+
+- Touch support has been reworked and extended.
+  * `Touchscreen.touch[0..9]` are now bindable from the control picker.
+  * `Touchscreen.primaryTouch` is now a separate control which tracks the primary touch on the screen.
+  * The controls `Touchscreen` inherits from `Pointer` (such as `position`, `phase`, and `delta`) are now tied to `Touchscreen.primaryTouch` and allow for `Touchscreen` to function as a generic `Pointer` (like `Mouse` and `Pen`).
+  * `Touchscreen.press` (renamed from `Touchscreen.button`) is now a working, synthetic button that is down whenever at least one finger is on the screen.
+  * Recording of start time and start position has been added to touches.
+    - `TouchControl.startPosition` gives the starting position of the touch.
+    - `TouchControl.startTime` gives the starting time of the touch.
+  * Tap detection has been added to `Touchscreen`.
+    - Tap time (i.e. time within which a press-and-release must be completed for a tap to register) corresponds to `InputSettings.defaultTapTime`.
+    - Tap release must happen within a certain radius of first contact. This is determined by a new setting `InputSettings.tapRadius`.
+    - `TouchControl.tap` is a new button control that triggers then the touch is tapped. Note that this happens instantly when a touch ends. The button will go to 1 and __immediately__ go back to 0. This means that polling the button in `Update`, for example, will never trigger a tap. Either use actions to observe the button or use the `Touch` API from `EnhancedTouch` to poll taps.
+  * `Touchscreen.activeTouches` has been removed. Use `Touch.activeTouches` from the new enhanced touch API instead for more reliable touch tracking.
+  * `Touchscreen.allTouchControls` has been renamed to `Touchscreen.touches`.
+  * A new `EnhancedTouch` plugin has been added which offers an enhanced `Touch` and `Finger` API to reliably track touches and fingers across updates. This obsoletes the need to manually track touch IDs and phases and gives access to individual touch history.
+  * Touch can be simulated from mouse or pen input now. To enable simulation, call `TouchSimulation.Enable()` or put the `TouchSimulation` MonoBehaviour in your scene. Also, in the input debugger, you can now enable touch simulation from the "Options" dropdown.
+- Changing state has been decoupled from events. While input events are the primary means by which to trigger state changes, anyone can perform state changes manually now from anywhere.
+    ```
+    InputState.Change(gamepad.leftStick, new Vector2(123, 234));
+    ```
+  * This change makes it possible to update state __from__ state and thus synthesize input data from other input coming in.
+- A new API for recording state changes over time has been added.
+    ```
+    var history = new InputStateHistory("<Gamepad>/leftStick");
+    history.StartRecording();
+
+    //...
+
+    foreach (var record in history)
+        Debug.Log(record);
+    ```
+- Added support for generic joysticks on WebGL (which don't use the standard gamepad mapping).
+- Added support for DualShock 3 gamepads on desktops.
+- Added support for Nintendo Switch Pro Controllers on desktops.
+
+#### Actions
+
+- Actions now also have a __polling API__!
+  * `InputAction.triggered` is true if the action was performed in the current frame.
+  * `InputAction.ReadValue<TValue>()` yields the last value that `started`, `performed`, or `cancelled` (whichever came last) was called with. If the action is disabled, returns `default(TValue)`. For `InputActionType.Button` type actions, returns `1.0f` if `triggered==true` and `0.0f` otherwise.
+- Generated C# wrappers for .inputactions can now placed relative to the .inputactions file by specifying a path starting with './' (e.g. `./foo/bar.cs`).
+
+### Changed
+
+- **The system no longer supports processing input in __BOTH__ fixed and dynamic updates**. Instead, a choice has to be made whether to process input before each `FixedUpdate()` or before each `Update()`.
+  * Rationale: the existing code that supported having both updates receive input independently still had several holes and became increasingly complex and brittle. Our solution was based on not actually processing input twice but on channeling input concurrently into both the state of both updates. Together with the fact that specific inputs have to reset (and possibly accumulate) correctly with respect to their update time slices, this became increasingly hard to do right. This, together with the fact that we've come to increasingly question the value of this feature, led us to removing the capability while preserving the ability to determine where input is processed.
+  * NOTE: Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
+  * `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate` has been removed.
+  * `InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInDynamicUpdate` and is now the default.
+  * `InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInFixedUpdate`.
+- Added icons for PlayerInput, PlayerInputManager, InputSystemUIInputModule and MultiplayerEventSystem components.
+- Changed `Keyboard` IME properties (`imeEnabled`, `imeCursorPosition`) to methods (`SetIMEEnabled`, `SetIMECursorPosition`).
+- Added getters to all `IInputRuntime` properties.
+- Replace some `GetXxx` methods in our API with `xxx`  properties.
+- `Pointer.phase` has been removed and `PointerPhase` has been renamed to `TouchPhase`. Phases are now specific to touch. `PointerPhaseControl` has been renamed to `TouchPhaseControl`.
+- `Pointer.button` has been renamed to `Pointer.press` and now is a control that indicates whether the pointer is in "press down" state.
+  * For mouse, corresponds to left button press.
+  * For pen, corresponds to tip contact.
+  * For touch, corresponds to primary touch contact (i.e. whether __any__ finger is down).
+- The state change monitor APIs (`IInputStateChangeMonitor` and friends) have been moved out of `InputSystem` into a new static class `InputState` in `UnityEngine.Experimental.Input.LowLevel`.
+  * Rationale: These APIs are fairly low-level and not of general interest so having them out of `InputSystem` reduces the API surface visible to most users.
+- `InputDeviceChange.StateChanged` has been removed and is now a separate callback `InputState.onChange`.
+  * Rationale: The other `InputDeviceChange` notifications are low-frequency whereas `StateChanged` is high-frequency. Putting them all on the same callback made adding a callback to `InputSystem.onDeviceChange` unnecessarily expensive.
+- `IInputStateCallbackReceiver` has been rewritten from scratch. Now has two simple methods `OnNextUpdate` and `OnEvent`. If implemented by a device, the device now has completely control over changing its own state. Use the `InputState.Change` methods to affect state changes while trigger state change monitors (e.g. for actions) correctly.
+- Simplified handling of XR input in `InputSystemUIInputModule` by having only one set of actions for all XR devices.
+- We now use the same hierarchical device picker in the "Add Control Scheme" popup, which is already used in the "Input Settings" window.
+- Made all `IInputStateTypeInfo` implementations internal, as these did not offer value to the user.
+- Made all `IInputDeviceCommandInfo` implementations internal, as these did not offer value to the user.
+- Removed `ReadWriteArray`, which was only used for making `RebindingOperation.scores` editable, which did not add any value.
+- Removed `PrimitiveValueOrArray`, as non of it's functionality over `PrimitiveValue` was implemented.
+- Made all `InputProcessor` implementation internal, as access to these types is exposed only through text mode representations.
+- Removed `CurveProcessor` as it was not implemented.
+- Renamed XInputControllerOSX to a more descriptive XboxGamepadMacOS.
+
+#### Actions
+
+- `InputAction.continuous` has been removed. Running logic every frame regardless of input can easily be achieved in game code.
+- The way action behavior is configured has been simplified.
+  * The previous roster of toggles has been replaced with two settings:
+    1. `Action Type`: Determines the behavior of the action. Choices are `Value`, `Button`, and `PassThrough`.
+    2. `Control Type`: Determines the type of control (and implicitly the type of value) the action is looking for if the action is a `Value` or `PassThrough` action.
+  * The previous `Initial State Check` toggle is now implicit in the action type now. `Value` actions perform an initial state check (i.e. trigger if their control is already actuated when the action is enabled). Other types of actions don't.
+  * The previous `Pass Through` toggle is now rolled into the action type.
+
 ## [0.2.10-preview] - 2019-5-17
 
 ### Added
@@ -38,6 +147,7 @@ however, it has to be formatted properly to pass verification tests.
 - `PlayerInput` will no longer disable any actions not in the currently active action map when disabling input or switching action maps.
 - Change some public fields into properties.
 - Input System project settings are now called "Input System Package" in the project window instead of "Input (NEW)".
+- Removed `Plugins` from all namespaces.
 - Rename "Cancelled" -> "Canceled" (US spelling) in all APIs.
 
 ### Fixed
@@ -52,6 +162,7 @@ however, it has to be formatted properly to pass verification tests.
 - Custom inspector for `PlayerInput` no longer adds duplicates of action events if `Invoke Unity Events` notification behavior is selected.
 - Fixed `Hold` interactions firing immediately before the duration has passed.
 - Fixed editing bindings or processors for `InputAction` fields in the inspector (Changes wouldn't persist before).
+- Fixed exception message when calling `CallbackContext.ReadValue<TValue>()` for an action with a composite binding with `TValue` not matching the composite's value type.
 
 ### Added
 

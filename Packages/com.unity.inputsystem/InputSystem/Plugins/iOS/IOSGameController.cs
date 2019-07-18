@@ -2,12 +2,12 @@
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.iOS.LowLevel;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
-    public enum iOSButton
+    internal enum iOSButton
     {
         DpadUp,
         DpadDown,
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
         // Note: If you'll add an element here, be sure to update kMaxButtons const below
     };
 
-    public enum iOSAxis
+    internal enum iOSAxis
     {
         LeftStickX,
         LeftStickY,
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
     };
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct iOSGameControllerState : IInputStateTypeInfo
+    internal unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
         public const int MaxButtons = (int)iOSButton.Select + 1;
@@ -72,9 +72,9 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
         [InputControl(name = "rightStick", offset = (uint)iOSAxis.RightStickX * sizeof(float) + kAxisOffset)]
         public fixed float axisValues[MaxAxis];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public iOSGameControllerState WithButton(iOSButton button, bool value = true, float rawValue = 1.0f)
@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem.Plugins.iOS.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
     public class iOSGameController : Gamepad

@@ -58,13 +58,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 return m_Buffer.Length;
             }
-            set => throw new NotImplementedException();
         }
 
         public NativeArray<byte> data
         {
             get => m_Buffer;
-            set => throw new NotImplementedException();
         }
 
         public InputEventPtr bufferPtr
@@ -140,7 +138,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"sizeInBytes must be >= sizeof(InputEvent) == {InputEvent.kBaseEventSize} (was {sizeInBytes})",
                     nameof(sizeInBytes));
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
+            var alignedSizeInBytes = sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
             // See if we need to enlarge our buffer.
             var currentCapacity = capacityInBytes;
@@ -245,7 +243,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 var numBytes = currentReadPos->sizeInBytes;
                 if (currentReadPos != currentWritePos)
                     UnsafeUtility.MemMove(currentWritePos, currentReadPos, numBytes);
-                currentWritePos = (InputEvent*)((byte*)currentWritePos + NumberHelpers.AlignToMultiple(numBytes, 4));
+                currentWritePos = (InputEvent*)((byte*)currentWritePos + numBytes.AlignToMultipleOf(4));
                 ++numEventsRetainedInBuffer;
             }
 

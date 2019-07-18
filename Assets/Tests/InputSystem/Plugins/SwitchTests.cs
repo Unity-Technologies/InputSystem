@@ -1,15 +1,70 @@
-#if UNITY_EDITOR || UNITY_SWITCH
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Switch;
-using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Switch;
+using UnityEngine.InputSystem.HID;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
 internal class SwitchTests : InputTestFixture
 {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+    [Test]
+    [Category("Devices")]
+    public void Devices_SupportsHIDNpad()
+    {
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            vendorId = 0x57e,
+            productId = 0x2009,
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device, Is.TypeOf<SwitchProControllerHID>());
+        var controller = (SwitchProControllerHID)device;
+
+        InputSystem.QueueStateEvent(controller,
+            new SwitchProControllerHIDInputState
+            {
+                leftStickX = 0x1000,
+                leftStickY = 0x1000,
+                rightStickX = 0x7fff,
+                rightStickY = 0xefff,
+            });
+        InputSystem.Update();
+
+        var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
+        var rightStickDeadzone = controller.rightStick.TryGetProcessor<StickDeadzoneProcessor>();
+
+        Assert.That(Vector2.Distance(controller.leftStick.ReadValue(), leftStickDeadzone.Process(new Vector2(-1.0f, 1.0f))), Is.LessThan(0.0001f));
+        Assert.That(Vector2.Distance(controller.rightStick.ReadValue(), rightStickDeadzone.Process(new Vector2(0.0f, -1.0f))), Is.LessThan(0.0001f));
+
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.A), controller.buttonEast);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.B), controller.buttonSouth);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.X), controller.buttonNorth);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.Y), controller.buttonWest);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.StickL), controller.leftStickButton);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.StickR), controller.rightStickButton);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.L), controller.leftShoulder);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.R), controller.rightShoulder);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.ZL), controller.leftTrigger);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.ZR), controller.rightTrigger);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.Plus), controller.startButton);
+        AssertButtonPress(controller, new SwitchProControllerHIDInputState().WithButton(SwitchProControllerHIDInputState.Button.Minus), controller.selectButton);
+    }
+
+#endif
+
+#if UNITY_EDITOR || UNITY_SWITCH
     [Test]
     [Category("Devices")]
     public void Devices_SupportsSwitchNpad()
@@ -98,7 +153,7 @@ internal class SwitchTests : InputTestFixture
                         receivedCommand = *((NPadStatusReport*)commandPtr);
                         ((NPadStatusReport*)commandPtr)->npadId = NPad.NpadId.Handheld;
                         ((NPadStatusReport*)commandPtr)->orientation = NPad.Orientation.Vertical;
-                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyle.Handheld;
+                        ((NPadStatusReport*)commandPtr)->styleMask = NPad.NpadStyles.Handheld;
 
                         ((NPadStatusReport*)commandPtr)->colorLeftMain = ColorToNNColor(Color.red);
                         ((NPadStatusReport*)commandPtr)->colorLeftSub = ColorToNNColor(Color.black);
@@ -119,7 +174,7 @@ internal class SwitchTests : InputTestFixture
         }
         Assert.That(controller.npadId, Is.EqualTo(NPad.NpadId.Handheld));
         Assert.That(controller.orientation, Is.EqualTo(NPad.Orientation.Vertical));
-        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyle.Handheld));
+        Assert.That(controller.styleMask, Is.EqualTo(NPad.NpadStyles.Handheld));
         Assert.That(controller.leftControllerColor.Main, Is.EqualTo((Color32)Color.red));
         Assert.That(controller.leftControllerColor.Sub, Is.EqualTo((Color32)Color.black));
         Assert.That(controller.rightControllerColor.Main, Is.EqualTo((Color32)Color.cyan));
@@ -250,7 +305,7 @@ internal class SwitchTests : InputTestFixture
         controller.SetMotorSpeeds(0.1234f, 0.5678f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0xFF));
+        Assert.That(receivedCommand.Value.positions, Is.EqualTo(0xFF));
         Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
         Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(NPadDeviceIOCTLOutputCommand.DefaultFrequencyLow));
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.5678f));
@@ -260,7 +315,7 @@ internal class SwitchTests : InputTestFixture
         controller.SetMotorSpeeds(0.1234f, 56.78f, 0.9012f, 345.6f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0xFF));
+        Assert.That(receivedCommand.Value.positions, Is.EqualTo(0xFF));
         Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
         Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
@@ -270,7 +325,7 @@ internal class SwitchTests : InputTestFixture
         controller.SetMotorSpeedLeft(0.1234f, 56.78f, 0.9012f, 345.6f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0x02));
+        Assert.That(receivedCommand.Value.positions, Is.EqualTo(0x02));
         Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
         Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
@@ -280,11 +335,13 @@ internal class SwitchTests : InputTestFixture
         controller.SetMotorSpeedRight(0.1234f, 56.78f, 0.9012f, 345.6f);
 
         Assert.That(receivedCommand.HasValue, Is.True);
-        Assert.That(receivedCommand.Value.positionFlags, Is.EqualTo(0x04));
+        Assert.That(receivedCommand.Value.positions, Is.EqualTo(0x04));
         Assert.That(receivedCommand.Value.amplitudeLow, Is.EqualTo(0.1234f));
         Assert.That(receivedCommand.Value.frequencyLow, Is.EqualTo(56.78f));
         Assert.That(receivedCommand.Value.amplitudeHigh, Is.EqualTo(0.9012f));
         Assert.That(receivedCommand.Value.frequencyHigh, Is.EqualTo(345.6f));
     }
+
+#endif
 }
 #endif

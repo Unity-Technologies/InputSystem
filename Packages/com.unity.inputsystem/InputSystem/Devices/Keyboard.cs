@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct KeyboardState : IInputStateTypeInfo
+    internal unsafe struct KeyboardState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
@@ -140,6 +140,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public KeyboardState(params Key[] pressedKeys)
         {
+            if (pressedKeys == null)
+                throw new ArgumentNullException(nameof(pressedKeys));
+
             fixed(byte* keysPtr = keys)
             {
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
@@ -150,9 +153,9 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -342,7 +345,7 @@ namespace UnityEngine.InputSystem
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
@@ -359,17 +362,13 @@ namespace UnityEngine.InputSystem
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         /// Setting this to On, will enable the OS-level IME system when the user presses keystrokes.
         ///
-        /// See <see cref="Keyboard.imeCursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
+        /// See <see cref="Keyboard.SetIMECursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
-        public bool imeEnabled
+        public void SetIMEEnabled(bool enabled)
         {
-            set
-            {
-                EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(enabled);
+            ExecuteCommand(ref command);
         }
-
 
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
@@ -378,15 +377,12 @@ namespace UnityEngine.InputSystem
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
-        public Vector2 imeCursorPosition
+        public void SetIMECursorPosition(Vector2 position)
         {
-            set
-            {
-                SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(position);
+            ExecuteCommand(ref command);
         }
 
         /// <summary>
@@ -573,14 +569,14 @@ namespace UnityEngine.InputSystem
         public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
-        /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
+        /// True when IME composition is enabled.  Requires <see cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
         ///
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
 
@@ -619,6 +615,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             var keyStrings = new[]
             {
                 "space",
@@ -772,88 +771,9 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal InlinedArray<Action<char>> m_TextInputListeners;
+        private InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
-    }
-
-    public static class KeyboardExtensions
-    {
-        public static bool IsModifierKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                    return true;
-            }
-            return false;
-        }
-
-        ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
-        public static bool IsTextInputKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.ContextMenu:
-                case Key.Escape:
-                case Key.LeftArrow:
-                case Key.RightArrow:
-                case Key.UpArrow:
-                case Key.DownArrow:
-                case Key.Backspace:
-                case Key.PageDown:
-                case Key.PageUp:
-                case Key.Home:
-                case Key.End:
-                case Key.Insert:
-                case Key.Delete:
-                case Key.CapsLock:
-                case Key.NumLock:
-                case Key.PrintScreen:
-                case Key.ScrollLock:
-                case Key.Pause:
-                case Key.None:
-                case Key.Space:
-                case Key.Enter:
-                case Key.Tab:
-                case Key.NumpadEnter:
-                case Key.F1:
-                case Key.F2:
-                case Key.F3:
-                case Key.F4:
-                case Key.F5:
-                case Key.F6:
-                case Key.F7:
-                case Key.F8:
-                case Key.F9:
-                case Key.F10:
-                case Key.F11:
-                case Key.F12:
-                case Key.OEM1:
-                case Key.OEM2:
-                case Key.OEM3:
-                case Key.OEM4:
-                case Key.OEM5:
-                case Key.IMESelected:
-                    return false;
-            }
-            return true;
-        }
+        private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 }

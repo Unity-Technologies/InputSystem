@@ -26,12 +26,13 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow
+    internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
         /// if someone hits the "Edit Asset" button in the importer inspector.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
@@ -542,6 +543,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnGUI()
         {
+            // If the actions tree has lost the filters (because they would not match an item it tried to highlight),
+            // update the Toolbar UI to remove them.
+            if (!m_ActionsTree.hasFilter)
+                m_Toolbar.ResetSearchFilters();
+
             // Allow switching between action map tree and action tree using arrow keys.
             ToggleFocusUsingKeyboard(KeyCode.RightArrow, m_ActionMapsTree, m_ActionsTree);
             ToggleFocusUsingKeyboard(KeyCode.LeftArrow, m_ActionsTree, m_ActionMapsTree);
@@ -714,6 +720,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.isDirty = dirty;
         }
 
+        public void Dispose()
+        {
+            m_BindingPropertyView?.Dispose();
+        }
+
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private InputControlPickerState m_ControlPickerViewState;
@@ -733,10 +744,12 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))

@@ -1,15 +1,16 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Plugins.Android.LowLevel;
+using UnityEngine.InputSystem.Android.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 
-namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
+namespace UnityEngine.InputSystem.Android.LowLevel
 {
-    public enum AndroidSensorType
+    internal enum AndroidSensorType
     {
+        None = 0,
         Accelerometer = 1,
         MagneticField = 2,
         Orientation = 3,            // Was deprecated in API 8 https://developer.android.com/reference/android/hardware/Sensor#TYPE_ORIENTATION
@@ -40,7 +41,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 
     [Serializable]
-    public struct AndroidSensorCapabilities
+    internal struct AndroidSensorCapabilities
     {
         public AndroidSensorType sensorType;
 
@@ -63,7 +64,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct AndroidSensorState : IInputStateTypeInfo
+    internal unsafe struct AndroidSensorState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
 
@@ -102,6 +103,9 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
 
         public AndroidSensorState WithData(params float[] data)
         {
+            if (data == null)
+                throw new System.ArgumentNullException(nameof(data));
+
             fixed(float* dataPtr = this.data)
             {
                 for (var i = 0; i < data.Length && i < 16; i++)
@@ -115,9 +119,9 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -152,7 +156,7 @@ namespace UnityEngine.InputSystem.Plugins.Android.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
     public class AndroidAccelerometer : Accelerometer

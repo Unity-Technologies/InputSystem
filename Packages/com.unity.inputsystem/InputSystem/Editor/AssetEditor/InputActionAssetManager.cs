@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     /// around for editing.
     /// </summary>
     [Serializable]
-    internal class InputActionAssetManager
+    internal class InputActionAssetManager : IDisposable
     {
         [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
@@ -76,6 +76,11 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        public void Dispose()
+        {
+            m_SerializedObject?.Dispose();
+        }
+
         public bool ReInitializeIfAssetHasChanged()
         {
             var asset = importedAsset;
@@ -117,7 +122,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
+                throw new InvalidOperationException("Could not determine asset path for " + m_AssetGUID);
 
             m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
         }

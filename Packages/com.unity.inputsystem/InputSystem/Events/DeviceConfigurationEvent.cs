@@ -20,9 +20,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         ////REVIEW: have some kind of payload that allows indicating what changed in the config?
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public unsafe InputEventPtr ToEventPtr()

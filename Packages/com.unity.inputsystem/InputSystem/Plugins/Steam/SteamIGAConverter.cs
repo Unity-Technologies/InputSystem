@@ -26,7 +26,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: polling in background
 
-namespace UnityEngine.InputSystem.Plugins.Steam.Editor
+namespace UnityEngine.InputSystem.Steam.Editor
 {
     /// <summary>
     /// Converts input actions to and from Steam IGA file format.
@@ -48,6 +48,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
         /// <param name="vdf"></param>
         /// <param name="namespaceAndClassName"></param>
         /// <returns></returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName)
         {
             if (string.IsNullOrEmpty(vdf))
@@ -83,7 +84,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
             builder.Append("using UnityEngine.InputSystem.Controls;\n");
             builder.Append("using UnityEngine.InputSystem.Layouts;\n");
             builder.Append("using UnityEngine.InputSystem.Utilities;\n");
-            builder.Append("using UnityEngine.InputSystem.Plugins.Steam;\n");
+            builder.Append("using UnityEngine.InputSystem.Steam;\n");
             builder.Append("#if UNITY_EDITOR\n");
             builder.Append("using UnityEditor;\n");
             builder.Append("#endif\n");
@@ -365,11 +366,13 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
             builder.Append(stateStructName);
             builder.Append(" : IInputStateTypeInfo\n");
             builder.Append("{\n");
-            builder.Append("    public FourCC GetFormat()\n");
+            builder.Append("    public FourCC format\n");
             builder.Append("    {\n");
+            builder.Append("        get {\n");
             ////TODO: handle class names that are shorter than 4 characters
             ////TODO: uppercase characters
-            builder.Append(string.Format("        return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append(string.Format("            return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append("        }\n");
             builder.Append("    }\n");
             builder.Append("\n");
             var totalButtonCount = 0;
@@ -548,7 +551,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
                 // Decide on "input_mode". Assume "absolute_mouse" by default and take
                 // anything built on StickControl as "joystick_move".
                 var inputMode = "absolute_mouse";
-                var controlType = EditorInputControlLayoutCache.TryGetLayout(action.expectedControlLayout).type;
+                var controlType = EditorInputControlLayoutCache.TryGetLayout(action.expectedControlType).type;
                 if (typeof(StickControl).IsAssignableFrom(controlType))
                     inputMode = "joystick_move";
                 builder.Append("\t\t\t\t\t\"input_mode\"\t\"");
@@ -565,29 +568,21 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
             }
         }
 
-        public static InputActionMap[] ConvertInputActionsFromVDF(string vdf)
-        {
-            throw new NotImplementedException();
-        }
-
         public static string GetSteamControllerInputType(InputAction action)
         {
             if (action == null)
                 throw new ArgumentNullException("action");
 
             // Make sure we have an expected control layout.
-            var expectedControlLayout = action.expectedControlLayout;
+            var expectedControlLayout = action.expectedControlType;
             if (string.IsNullOrEmpty(expectedControlLayout))
-                throw new Exception(string.Format(
-                    "Cannot determine Steam input type for action '{0}' that has no associated expected control layout",
-                    action));
+                throw new ArgumentException($"Cannot determine Steam input type for action '{action}' that has no associated expected control layout",
+                    nameof(action));
 
             // Try to fetch the layout.
             var layout = EditorInputControlLayoutCache.TryGetLayout(expectedControlLayout);
             if (layout == null)
-                throw new Exception(string.Format(
-                    "Cannot determine Steam input type for action '{0}'; cannot find layout '{1}'", action,
-                    expectedControlLayout));
+                throw new ArgumentException($"Cannot determine Steam input type for action '{action}'; cannot find layout '{expectedControlLayout}'", nameof(action));
 
             // Map our supported control types.
             var controlType = layout.type;
@@ -599,9 +594,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
                 return "StickPadGyro";
 
             // Everything else throws.
-            throw new Exception(string.Format(
-                "Cannot determine Steam input type for action '{0}'; layout '{1}' with control type '{2}' has no known representation in the Steam controller API",
-                action, expectedControlLayout, controlType.Name));
+            throw new ArgumentException($"Cannot determine Steam input type for action '{action}'; layout '{expectedControlLayout}' with control type '{ controlType.Name}' has no known representation in the Steam controller API", nameof(action));
         }
 
         public static Dictionary<string, object> ParseVDF(string vdf)
@@ -629,7 +622,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
                 ParseKeyValuePair(result);
                 SkipWhitespace();
                 if (position < length)
-                    throw new Exception(string.Format("Parse error at {0} in '{1}'; not expecting any more input", position, vdf));
+                    throw new InvalidOperationException($"Parse error at {position} in '{vdf}'; not expecting any more input");
                 return result;
             }
 
@@ -641,8 +634,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
 
                 SkipWhitespace();
                 if (position == length)
-                    throw new Exception(string.Format("Expecting value or object at position {0} in '{1}'",
-                        position, vdf));
+                    throw new InvalidOperationException($"Expecting value or object at position {position} in '{vdf}'");
 
                 var nextChar = vdf[position];
                 if (nextChar == '"')
@@ -657,8 +649,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
                 }
                 else
                 {
-                    throw new Exception(string.Format("Expecting value or object at position {0} in '{1}'",
-                        position, vdf));
+                    throw new InvalidOperationException($"Expecting value or object at position {position} in '{vdf}'");
                 }
 
                 return true;
@@ -699,7 +690,7 @@ namespace UnityEngine.InputSystem.Plugins.Steam.Editor
 
                 SkipWhitespace();
                 if (position == length || vdf[position] != '}')
-                    throw new Exception(string.Format("Expecting '}}' at position {0} in '{1}'", position, vdf));
+                    throw new InvalidOperationException($"Expecting '}}' at position {position} in '{vdf}'");
                 ++position;
 
                 return result;

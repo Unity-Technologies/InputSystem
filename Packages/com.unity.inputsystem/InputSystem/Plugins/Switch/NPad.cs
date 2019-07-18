@@ -1,26 +1,27 @@
-#if UNITY_EDITOR || UNITY_SWITCH
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.Switch.LowLevel;
+using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: The Switch controller can be used to point at things; can we somehow help leverage that?
 
-namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
+namespace UnityEngine.InputSystem.Switch.LowLevel
 {
+#if UNITY_EDITOR || UNITY_SWITCH
     /// <summary>
-    /// Structure of HID input reports for Switch NPad controllers.
+    /// Structure of native input reports for Switch NPad controllers.
     /// </summary>
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
     [StructLayout(LayoutKind.Explicit, Size = 60)]
-    public struct NPadInputState : IInputStateTypeInfo
+    internal struct NPadInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('N', 'P', 'A', 'D');
+            get { return new FourCC('N', 'P', 'A', 'D'); }
         }
 
         [InputControl(name = "dpad")]
@@ -116,7 +117,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     /// Switch output report sent as command to the backend.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadStatusReport : IInputDeviceCommandInfo
+    internal struct NPadStatusReport : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'S');
 
@@ -132,7 +133,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)]
         public short padding0;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
-        public NPad.NpadStyle styleMask;
+        public NPad.NpadStyles styleMask;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int colorLeftMain;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)]
@@ -142,9 +143,9 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 20)]
         public int colorRightSub;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static NPadStatusReport Create()
@@ -157,7 +158,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadControllerSupportCommand : IInputDeviceCommandInfo
+    internal struct NPadControllerSupportCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'U');
 
@@ -179,24 +180,24 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
             kStopSixAxisSensor,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
-        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command _command, int _option = 0)
+        public static NPadControllerSupportCommand Create(NPadControllerSupportCommand.Command command, int option = 0)
         {
             return new NPadControllerSupportCommand
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                command = (int)_command,
-                option = _option,
+                command = (int)command,
+                option = option,
             };
         }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSUI");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -204,7 +205,11 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLShowUI Create()
         {
             return new NpadDeviceIOCTLShowUI
@@ -215,7 +220,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSOR");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
@@ -226,19 +231,23 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
         public NPad.Orientation orientation;
 
-        public FourCC GetTypeStatic() { return Type; }
-        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation _orientation)
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
+        public static NpadDeviceIOCTLSetOrientation Create(NPad.Orientation orientation)
         {
             return new NpadDeviceIOCTLSetOrientation
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                orientation = _orientation,
+                orientation = orientation,
             };
         }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXST");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -246,7 +255,11 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStartSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStartSixAxisSensor
@@ -257,7 +270,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXSP");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -265,7 +278,11 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
+
         public static NpadDeviceIOCTLStopSixAxisSensor Create()
         {
             return new NpadDeviceIOCTLStopSixAxisSensor
@@ -279,7 +296,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the NpadDeviceIOCTLOutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
+    internal struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
 
@@ -287,6 +304,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         public const float DefaultFrequencyLow = 160.0f;
         public const float DefaultFrequencyHigh = 320.0f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NPadRumblePostion : byte
         {
             Left = 0x02,
@@ -298,7 +316,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)]
-        public byte positionFlags;
+        public byte positions;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public float amplitudeLow;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
@@ -308,14 +326,17 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 16)]
         public float frequencyHigh;
 
-        public FourCC GetTypeStatic() { return Type; }
+        public FourCC typeStatic
+        {
+            get { return Type; }
+        }
 
         public static NPadDeviceIOCTLOutputCommand Create()
         {
             return new NPadDeviceIOCTLOutputCommand()
             {
                 baseCommand = new InputDeviceCommand(Type, kSize),
-                positionFlags = (byte)NPadRumblePostion.None,
+                positions = (byte)NPadRumblePostion.None,
                 amplitudeLow = 0,
                 frequencyLow = DefaultFrequencyLow,
                 amplitudeHigh = 0,
@@ -323,10 +344,106 @@ namespace UnityEngine.InputSystem.Plugins.Switch.LowLevel
             };
         }
     }
+#endif
+
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+    /// <summary>
+    /// Structure of HID input reports for Switch Pro controllers.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit, Size = 20)]
+    internal struct SwitchProControllerHIDInputState : IInputStateTypeInfo
+    {
+        public FourCC format => new FourCC('H', 'I', 'D');
+
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad",  bit = 24, sizeInBits = 4, defaultState = 8)]
+        [InputControl(name = "dpad/up", format = "BIT", layout = "DiscreteButton", parameters = "minValue=7,maxValue=1,nullValue=8,wrapAtValue=7", bit = 24, sizeInBits = 4)]
+        [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 24, sizeInBits = 4)]
+        [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 24, sizeInBits = 4)]
+        [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 24, sizeInBits = 4)]
+        [InputControl(name = "buttonNorth", displayName = "X", bit = (uint)Button.North)]
+        [InputControl(name = "buttonSouth", displayName = "B", bit = (uint)Button.South, usage = "Back")]
+        [InputControl(name = "buttonWest", displayName = "Y", bit = (uint)Button.West, usage = "SecondaryAction")]
+        [InputControl(name = "buttonEast", displayName = "A", bit = (uint)Button.East, usage = "PrimaryAction")]
+        [InputControl(name = "leftStickPress", displayName = "Left Stick", bit = (uint)Button.StickL)]
+        [InputControl(name = "rightStickPress", displayName = "Right Stick", bit = (uint)Button.StickR)]
+        [InputControl(name = "leftShoulder", displayName = "L", bit = (uint)Button.L)]
+        [InputControl(name = "rightShoulder", displayName = "R", bit = (uint)Button.R)]
+        [InputControl(name = "leftTrigger", displayName = "ZL", format = "BIT", bit = (uint)Button.ZL)]
+        [InputControl(name = "rightTrigger", displayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
+        [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
+        [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
+        [FieldOffset(0)]
+        public uint buttons;
+
+        [InputControl(name = "leftStick", format = "VC2S", layout = "Stick")]
+        [InputControl(name = "leftStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.15,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=0.85")]
+        [InputControl(name = "leftStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.15,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=0.85,invert=false")]
+        [FieldOffset(4)] public ushort leftStickX;
+        [FieldOffset(6)] public ushort leftStickY;
+
+        [InputControl(name = "rightStick", format = "VC2S", layout = "Stick")]
+        [InputControl(name = "rightStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.15,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0.15,normalizeMax=0.85,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=0.85,invert=false")]
+        [FieldOffset(8)] public ushort rightStickX;
+        [FieldOffset(10)] public ushort rightStickY;
+
+        public float leftTrigger => ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f;
+
+        public float rightTrigger => ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f;
+
+        public enum Button
+        {
+            North = 11,
+            South = 8,
+            West = 10,
+            East = 9,
+
+            StickL = 18,
+            StickR = 19,
+            L = 12,
+            R = 13,
+
+            ZL = 14,
+            ZR = 15,
+            Plus = 17,
+            Minus = 16,
+
+            X = North,
+            B = South,
+            Y = West,
+            A = East,
+        }
+
+        public SwitchProControllerHIDInputState WithButton(Button button, bool value = true)
+        {
+            var bit = (uint)1 << (int)button;
+            if (value)
+                buttons |= bit;
+            else
+                buttons &= ~bit;
+            // dpad default state
+            buttons |= 8 << 24;
+            leftStickX = 0x8000;
+            leftStickY = 0x8000;
+            rightStickX = 0x8000;
+            rightStickY = 0x8000;
+            return this;
+        }
+    }
+#endif
 }
 
-namespace UnityEngine.InputSystem.Plugins.Switch
+namespace UnityEngine.InputSystem.Switch
 {
+#if UNITY_EDITOR || UNITY_SWITCH
     /// <summary>
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
@@ -343,6 +460,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
         public QuaternionControl attitude { get; private set; }
         public Vector3Control angularVelocity { get; private set; }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum Orientation : byte
         {
             Vertical,
@@ -350,6 +468,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             Default = Vertical,
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "Need to match native struct data size")]
         public enum NpadId : byte
         {
             No1 = 0x00,
@@ -371,7 +490,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
 
         //each person could play with a different style
         [Flags]
-        public enum NpadStyle
+        public enum NpadStyles
         {
             FullKey = 1 << 0,//separate;or pro controller;only one accel
             Handheld = 1 << 1,//docked to switch
@@ -402,7 +521,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
                 return m_NpadId;
             }
         }
-        public NpadStyle styleMask
+        public NpadStyles styleMask
         {
             get
             {
@@ -432,7 +551,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
 
         private Orientation m_Orientation;
         private NpadId m_NpadId = NpadId.Invalid;
-        private NpadStyle m_StyleMask;
+        private NpadStyles m_StyleMask;
         private JoyConColor m_LeftControllerColor;
         private JoyConColor m_RightControllerColor;
 
@@ -490,9 +609,9 @@ namespace UnityEngine.InputSystem.Plugins.Switch
         }
 
         // NOTE: This function should be static
-        public long SetOrientationToSingleJoyCon(Orientation _orientation)
+        public long SetOrientationToSingleJoyCon(Orientation orientation)
         {
-            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(_orientation);
+            var supportCommand = NpadDeviceIOCTLSetOrientation.Create(orientation);
 
             return ExecuteCommand(ref supportCommand);
         }
@@ -555,7 +674,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             if (m_leftRumbleValues.Equals(m_rightRumbleValues) && m_leftRumbleValues.HasValues)
             {
                 var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+                cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
                 m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                 ExecuteCommand(ref cmd);
             }
@@ -564,14 +683,14 @@ namespace UnityEngine.InputSystem.Plugins.Switch
                 if (m_leftRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
                     m_leftRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
                 if (m_rightRumbleValues.HasValues)
                 {
                     var cmd = NPadDeviceIOCTLOutputCommand.Create();
-                    cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+                    cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
                     m_rightRumbleValues.ApplyRumbleValues(ref cmd);
                     ExecuteCommand(ref cmd);
                 }
@@ -601,7 +720,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.All;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -618,7 +737,7 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             m_leftRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Left;
             m_leftRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
@@ -635,10 +754,21 @@ namespace UnityEngine.InputSystem.Plugins.Switch
             m_rightRumbleValues.SetRumbleValues(lowAmplitude, lowFrequency, highAmplitude, highFrequency);
 
             var cmd = NPadDeviceIOCTLOutputCommand.Create();
-            cmd.positionFlags = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
+            cmd.positions = (byte)NPadDeviceIOCTLOutputCommand.NPadRumblePostion.Right;
             m_rightRumbleValues.ApplyRumbleValues(ref cmd);
             ExecuteCommand(ref cmd);
         }
     }
+#endif
+
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+    /// <summary>
+    /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
+    public class SwitchProControllerHID : Gamepad
+    {
+    }
+#endif
 }
 #endif // UNITY_EDITOR || UNITY_SWITCH

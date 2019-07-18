@@ -5,9 +5,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
-    public class TrackedPointerEventData : PointerEventData
+    internal class TrackedPointerEventData : PointerEventData
     {
         public TrackedPointerEventData(EventSystem eventSystem)
             : base(eventSystem)
@@ -84,6 +84,8 @@ namespace UnityEngine.InputSystem.Plugins.UI
 
         public int pointerId { get; private set; }
 
+        public InputDevice device { get; private set; }
+
         public bool select
         {
             get
@@ -136,9 +138,10 @@ namespace UnityEngine.InputSystem.Plugins.UI
             }
         }
 
-        public TrackedDeviceModel(int pointerId)
+        public TrackedDeviceModel(int pointerId, InputDevice device)
         {
             this.pointerId = pointerId;
+            this.device = device;
 
             m_Orientation = Quaternion.identity;
             m_Position = Vector3.zero;
@@ -179,6 +182,7 @@ namespace UnityEngine.InputSystem.Plugins.UI
             eventData.pointerPress = m_InternalData.pressedGameObject;
             eventData.rawPointerPress = m_InternalData.pressedGameObjectRaw;
             eventData.pointerDrag = m_InternalData.draggedGameObject;
+            eventData.pointerId = pointerId;
 
             eventData.hovered.Clear();
             eventData.hovered.AddRange(m_InternalData.hoverTargets);
@@ -194,6 +198,7 @@ namespace UnityEngine.InputSystem.Plugins.UI
             m_InternalData.pressedGameObject = eventData.pointerPress;
             m_InternalData.pressedGameObjectRaw = eventData.rawPointerPress;
             m_InternalData.draggedGameObject = eventData.pointerDrag;
+            pointerId = eventData.pointerId;
 
             var hoverTargets = m_InternalData.hoverTargets;
             hoverTargets.ClearWithCapacity();

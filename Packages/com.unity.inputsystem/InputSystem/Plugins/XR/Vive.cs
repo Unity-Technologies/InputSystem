@@ -1,8 +1,11 @@
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// An HTC Vive VR headset.
+    /// </summary>
     [InputControlLayout]
     public class ViveHMD : XRHMD
     {
@@ -27,6 +30,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -50,6 +56,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive Wand controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class ViveWand : XRControllerWithRumble
     {
@@ -74,6 +83,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             grip = builder.GetControl<AxisControl>("grip");
@@ -94,6 +106,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// A Valve Knuckles VR controller.
+    /// </summary>
     [InputControlLayout]
     public class KnucklesController : XRControllerWithRumble
     {
@@ -126,6 +141,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");
@@ -145,6 +163,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive lighthouse.
+    /// </summary>
     [InputControlLayout]
     public class ViveLighthouse : InputDevice
     {
@@ -155,6 +176,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -164,6 +188,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// An HTC Vive tracker.
+    /// </summary>
     public class ViveTracker : InputDevice
     {
         public IntegerControl trackingState { get; private set; }
@@ -175,6 +202,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -199,6 +229,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             grip = builder.GetControl<AxisControl>("grip");
             primary = builder.GetControl<ButtonControl>("primary");
             gripPressed = builder.GetControl<ButtonControl>("gripPressed");

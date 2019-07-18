@@ -1,4 +1,7 @@
+using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -6,9 +9,18 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add capabilities indicating whether pressure and tilt is supported
 
+////REVIEW: is there an opportunity to collapse "press" and "pressure" into one? after all, if there's any pressure, isn't the pointer pressed?
+
+////REVIEW: should "displayIndex" be called "windowIndex"? or be part of a better thought-out multi-display API altogether?
+
+////REVIEW: add click and clickCount controls directly to Pointer?
+////        (I gave this a look but in my initial try, found it somewhat difficult to add click detection at the Pointer level due
+////        to the extra state it involves)
+
 ////REVIEW: should we put lock state directly on Pointer?
 
 ////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
+////REVIEW: should we create new devices instead of using pointer IDs?
 
 ////FIXME: pointer deltas in EditorWindows need to be Y *down*
 
@@ -21,7 +33,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Default state structure for pointer devices.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct PointerState : IInputStateTypeInfo
+    internal struct PointerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
@@ -42,7 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure", defaultState = "1.0")]
+        [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
         [InputControl(layout = "Axis", usage = "Twist")]
@@ -54,38 +66,21 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4)]
-        ////TODO: give this control a better name
-        [InputControl(name = "button", layout = "Button", format = "BIT", bit = 4, usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        public ushort flags;
+        [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
+        public ushort buttons;
 
         [InputControl(layout = "Digital")]
         public ushort displayIndex;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
 
 namespace UnityEngine.InputSystem
 {
-    ////REVIEW: does it really make sense to have this at the pointer level?
-    public enum PointerPhase
-    {
-        /// <summary>
-        /// No activity has been registered on the pointer yet.
-        /// </summary>
-        None,
-
-        Began,
-        Moved,
-        Ended,
-        Canceled,
-        Stationary,
-    }
-
     /// <summary>
     /// Base class for pointer-style devices moving on a 2D screen.
     /// </summary>
@@ -95,6 +90,9 @@ namespace UnityEngine.InputSystem
     /// with multiple pointers, only one pointer is considered "primary" and drives the pointer
     /// controls present on the base class.
     /// </remarks>
+    /// <seealso cref="Mouse"/>
+    /// <seealso cref="Pen"/>
+    /// <seealso cref="Touchscreen"/>
     [InputControlLayout(stateType = typeof(PointerState), isGenericTypeOfDevice = true)]
     public class Pointer : InputDevice, IInputStateCallbackReceiver
     {
@@ -146,11 +144,18 @@ namespace UnityEngine.InputSystem
         public AxisControl twist { get; private set; }
 
         public IntegerControl pointerId { get; private set; }
-        public PointerPhaseControl phase { get; private set; }
-        public IntegerControl displayIndex { get; private set; }////TODO: kill this
+        public IntegerControl displayIndex { get; private set; }
 
-        ////TODO: give this a better name; primaryButton?
-        public ButtonControl button { get; private set; }
+        /// <summary>
+        /// Whether the pointer is pressed down.
+        /// </summary>
+        /// <remarks>
+        /// What this means exactly depends on the nature of the pointer. For mice (<see cref="Mouse"/>), it means
+        /// that the left button is pressed. For pens (<see cref="Pen"/>), it means that the pen tip is touching
+        /// the screen/tablet surface. For touchscreens (<see cref="Touchscreen"/>), it means that there is at least
+        /// one finger touching the screen.
+        /// </remarks>
+        public ButtonControl press { get; private set; }
 
         /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
@@ -173,6 +178,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
+
             position = builder.GetControl<Vector2Control>(this, "position");
             delta = builder.GetControl<Vector2Control>(this, "delta");
             tilt = builder.GetControl<Vector2Control>(this, "tilt");
@@ -180,47 +188,47 @@ namespace UnityEngine.InputSystem
             pressure = builder.GetControl<AxisControl>(this, "pressure");
             twist = builder.GetControl<AxisControl>(this, "twist");
             pointerId = builder.GetControl<IntegerControl>(this, "pointerId");
-            phase = builder.GetControl<PointerPhaseControl>(this, "phase");
             displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
-            button = builder.GetControl<ButtonControl>(this, "button");
+            press = builder.GetControl<ButtonControl>(this, "press");
 
             base.FinishSetup(builder);
         }
 
-        protected unsafe bool ResetDelta(void* statePtr, InputControl<float> control)
+        protected static unsafe void Accumulate(InputControl<float> control, void* oldStatePtr, InputEventPtr newState)
         {
-            ////FIXME: this should compare to default *state* (not value) and write default *state* (not value)
-            var value = control.ReadValueFromState(statePtr);
-            if (Mathf.Approximately(0f, value))
-                return false;
-            control.WriteValueIntoState(0f, statePtr);
-            return true;
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            if (!control.ReadUnprocessedValueFromEvent(newState, out var newDelta))
+                return; // Value for the control not contained in the given event.
+
+            var oldDelta = control.ReadUnprocessedValueFromState(oldStatePtr);
+            control.WriteValueIntoEvent(oldDelta + newDelta, newState);
         }
 
-        protected unsafe void AccumulateDelta(void* oldStatePtr, void* newStatePtr, InputControl<float> control)
+        protected void OnNextUpdate()
         {
-            ////FIXME: if there's processors on the delta, this is junk
-            var oldDelta = control.ReadValueFromState(oldStatePtr);
-            var newDelta = control.ReadValueFromState(newStatePtr);
-            control.WriteValueIntoState(oldDelta + newDelta, newStatePtr);
+            InputState.Change(delta, Vector2.zero);
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected unsafe void OnEvent(InputEventPtr eventPtr)
         {
-            var deltaXChanged = ResetDelta(statePtr, delta.x);
-            var deltaYChanged = ResetDelta(statePtr, delta.y);
-            return deltaXChanged || deltaYChanged;
+            var statePtr = currentStatePtr;
+
+            Accumulate(delta.x, statePtr, eventPtr);
+            Accumulate(delta.y, statePtr, eventPtr);
+
+            InputState.Change(this, eventPtr);
         }
 
-        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        void IInputStateCallbackReceiver.OnNextUpdate()
         {
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
+            OnNextUpdate();
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnReceiveStateWithDifferentFormat(void* statePtr, FourCC stateFormat, uint stateSize, ref uint offsetToStoreAt)
+        void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
-            return false;
+            OnEvent(eventPtr);
         }
     }
 }

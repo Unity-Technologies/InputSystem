@@ -28,6 +28,14 @@ namespace UnityEngine.InputSystem.Interactions
             + "'Default Press Point' in the global input settings.")]
         public float pressPoint;
 
+        /// <summary>
+        /// Determines how button presses trigger the action.
+        /// </summary>
+        /// <remarks>
+        /// By default (PressOnly), the action is performed on press.
+        /// With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is
+        /// performed on press and canceled on release.
+        /// </remarks>
         [Tooltip("Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
             + "canceled on release.")]
@@ -45,12 +53,7 @@ namespace UnityEngine.InputSystem.Interactions
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (isActuated)
-                        {
-                            if (context.continuous)
-                                context.PerformedAndStayPerformed();
-                        }
-                        else
+                        if (!isActuated)
                         {
                             m_WaitingForRelease = false;
                             // We need to reset the action to waiting state in order to stop it from triggering
@@ -62,11 +65,7 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (isActuated)
                     {
                         ////REVIEW: should this trigger Started?
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                        else
-                            context.PerformedAndGoBackToWaiting();
-
+                        context.PerformedAndGoBackToWaiting();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -76,8 +75,6 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         m_WaitingForRelease = false;
                         context.PerformedAndGoBackToWaiting();
-
-                        // No support for continuous mode.
                     }
                     else if (isActuated)
                     {
@@ -91,15 +88,12 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         if (!isActuated)
                             context.PerformedAndGoBackToWaiting();
-                        // No support for continuous mode.
 
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
                         context.PerformedAndGoBackToWaiting();
-                        // No support for continuous mode.
-
                         m_WaitingForRelease = true;
                     }
                     break;

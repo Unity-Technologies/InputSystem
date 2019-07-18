@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: Must match with PenInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 36)]
-    public struct PenState : IInputStateTypeInfo
+    internal struct PenState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', 'E', 'N');
 
@@ -44,18 +44,17 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(28)]
         public float twist;
 
-        [InputControl(name = "tip", layout = "Button", bit = (int)PenButton.Tip)]
+        [InputControl(name = "tip", layout = "Button", bit = (int)PenButton.Tip, usage = "PrimaryAction")]
+        [InputControl(name = "press", useStateFrom = "tip", synthetic = true, usages = new string[0])]
         [InputControl(name = "eraser", layout = "Button", bit = (int)PenButton.Eraser)]
-        [InputControl(name = "button", bit = (int)PenButton.Tip, synthetic = true, usage = "")]
         [InputControl(name = "inRange", layout = "Button", bit = (int)PenButton.InRange, synthetic = true)]
-        [InputControl(name = "barrel1", layout = "Button", bit = (int)PenButton.BarrelFirst, alias = "barrelFirst", usages = new[] { "PrimaryAction", "PrimaryTrigger" })]
-        [InputControl(name = "barrel2", layout = "Button", bit = (int)PenButton.BarrelSecond, alias = "barrelSecond", usages = new[] { "SecondaryAction", "SecondaryTrigger" })]
+        [InputControl(name = "barrel1", layout = "Button", bit = (int)PenButton.BarrelFirst, alias = "barrelFirst", usage = "SecondaryAction")]
+        [InputControl(name = "barrel2", layout = "Button", bit = (int)PenButton.BarrelSecond, alias = "barrelSecond")]
         [InputControl(name = "barrel3", layout = "Button", bit = (int)PenButton.BarrelThird, alias = "barrelThird")]
         [InputControl(name = "barrel4", layout = "Button", bit = (int)PenButton.BarrelFourth, alias = "barrelFourth")]
         // "Park" unused controls.
         [InputControl(name = "radius", layout = "Vector2", format = "VEC2", sizeInBits = 64, usage = "Radius", offset = InputStateBlock.AutomaticOffset)]
         [InputControl(name = "pointerId", layout = "Digital", format = "UINT", sizeInBits = 32, offset = InputStateBlock.AutomaticOffset)] ////TODO: this should be used
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BYTE", sizeInBits = 8, offset = InputStateBlock.AutomaticOffset)] ////TODO: this should be used
         [FieldOffset(32)]
         public ushort buttons;
 
@@ -72,9 +71,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
@@ -260,6 +259,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             tip = builder.GetControl<ButtonControl>("tip");
             eraser = builder.GetControl<ButtonControl>("eraser");
             firstBarrelButton = builder.GetControl<ButtonControl>("barrel1");
