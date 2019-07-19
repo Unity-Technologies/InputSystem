@@ -1219,6 +1219,7 @@ namespace UnityEngine.InputSystem
             return numFound;
         }
 
+        ////TODO: this should reset the device to its default state
         public void EnableOrDisableDevice(InputDevice device, bool enable)
         {
             if (device == null)

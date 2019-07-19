@@ -734,6 +734,22 @@ namespace UnityEngine.InputSystem
             s_Manager.AddDevice(device);
         }
 
+        /// <summary>
+        /// Remove a device from the system such that it no longer receives input and is no longer part of the
+        /// set of devices in <see cref="devices"/>.
+        /// </summary>
+        /// <param name="device">Device to remove. If the device has already been removed (i.e. if <see cref="InputDevice.added"/>
+        /// is false), the method does nothing.</param>
+        /// <remarks>
+        /// Actions that are bound to controls on the device will automatically unbind when the device
+        /// is removed.
+        ///
+        /// When a device is removed, <see cref="onDeviceChange"/> will be triggered with <see cref="InputDeviceChange.Removed"/>.
+        /// The device will be removed from <see cref="devices"/> as well as from any device-specific getters such as
+        /// <see cref="Gamepad.all"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <seealso cref="InputDevice.added"/>
         public static void RemoveDevice(InputDevice device)
         {
             s_Manager.RemoveDevice(device);
@@ -778,6 +794,32 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        ////REVIEW: this API seems inconsistent with GetDevice(string); both have very different meaning yet very similar signatures
+        /// <summary>
+        /// Return the device of the given type <typeparamref name="TDevice"/> that has the
+        /// given usage assigned. Returns null if no such device currently exists.
+        /// </summary>
+        /// <param name="usage">Usage of the device, e.g. "LeftHand".</param>
+        /// <typeparam name="TDevice">Type of device to look for.</typeparam>
+        /// <returns>The device with the given type and usage or null.</returns>
+        /// <remarks>
+        /// Devices usages are most commonly employed to "tag" devices for a specific role.
+        /// A common scenario, for example, is to distinguish which hand a specific <see cref="XR.XRController"/>
+        /// is associated with. However, arbitrary usages can be assigned to devices.
+        /// <example>
+        /// <code>
+        /// // Get the left hand XRController.
+        /// var leftHand = InputSystem.GetDevice&lt;XRController&gt;(CommonUsages.leftHand);
+        ///
+        /// // Mark gamepad #2 as being for player 1.
+        /// InputSystem.SetDeviceUsage(Gamepad.all[1], "Player1");
+        /// // And later look it up.
+        /// var player1Gamepad = InputSystem.GetDevice&lt;Gamepad&gt;(new InternedString("Player1"));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="InputControl.usages"/>
         public static TDevice GetDevice<TDevice>(InternedString usage)
             where TDevice : InputDevice
         {
@@ -846,11 +888,54 @@ namespace UnityEngine.InputSystem
             return s_Manager.GetUnsupportedDevices(descriptions);
         }
 
+        /// <summary>
+        /// Re-enable the given device.
+        /// </summary>
+        /// <param name="device">Device to enable. If already enabled, the method will do nothing.</param>
+        /// <remarks>
+        /// This can be used after a device has been disabled with <see cref="DisableDevice"/> or
+        /// with devices that start out in disabled state (usually the case for all <see cref="Sensor"/>
+        /// devices).
+        ///
+        /// When enabled, a device will receive input when available.
+        ///
+        /// <example>
+        /// <code>
+        /// // Enable the gyroscope, if present.
+        /// if (Gyroscope.current != null)
+        ///     InputSystem.EnableDevice(Gyroscope.current);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="DisableDevice"/>
+        /// <seealso cref="InputDevice.enabled"/>
         public static void EnableDevice(InputDevice device)
         {
             s_Manager.EnableOrDisableDevice(device, true);
         }
 
+        /// <summary>
+        /// Disable the given device, i.e. "mute" it.
+        /// </summary>
+        /// <param name="device">Device to disable. If already disabled, the method will do nothing.</param>
+        /// <remarks>
+        /// A disabled device will not receive input and will remain in its default state. It will remain
+        /// present in the system but without actually feeding input into it.
+        ///
+        /// Disabling devices is most useful for <see cref="Sensor"/> devices on battery-powered platforms
+        /// where having a sensor enabled will increase energy consumption. Sensors will usually start
+        /// out in disabled state and can be enabled, when needed, with <see cref="EnableDevice"/> and
+        /// disabled again wth this method.
+        ///
+        /// However, disabling a device can be useful in other situations, too. For example, when simulating
+        /// input (say, mouse input) locally from a remote source, it can be desirable to turn off the respective
+        /// local device.
+        ///
+        /// To remove a device altogether, use <see cref="RemoveDevice"/> instead. This will not only silence
+        /// input but remove the <see cref="InputDevice"/> instance from the system altogether.
+        /// </remarks>
+        /// <seealso cref="EnableDevice"/>
+        /// <seealso cref="InputDevice.enabled"/>
         public static void DisableDevice(InputDevice device)
         {
             s_Manager.EnableOrDisableDevice(device, false);
@@ -965,6 +1050,20 @@ namespace UnityEngine.InputSystem
             s_Manager.SetLayoutVariant(control, variant);
         }
 
+        /// Devices usages are most commonly employed to "tag" devices for a specific role.
+        /// A common scenario, for example, is to distinguish which hand a specific <see cref="XR.XRController"/>
+        /// is associated with. However, arbitrary usages can be assigned to devices.
+        /// <example>
+        /// <code>
+        /// // Get the left hand XRController.
+        /// var leftHand = InputSystem.GetDevice&lt;XRController&gt;(CommonUsages.leftHand);
+        ///
+        /// // Mark gamepad #2 as being for player 1.
+        /// InputSystem.SetDeviceUsage(Gamepad.all[1], "Player1");
+        /// // And later look it up.
+        /// var player1Gamepad = InputSystem.GetDevice&lt;Gamepad&gt;(new InternedString("Player1"));
+        /// </code>
+        /// </example>
         public static void SetDeviceUsage(InputDevice device, string usage)
         {
             SetDeviceUsage(device, new InternedString(usage));
@@ -1049,6 +1148,54 @@ namespace UnityEngine.InputSystem
             public const int kMaxSize = 512;
             public fixed byte data[kMaxSize - 1]; // StateEvent already adds one.
         }
+        /// <summary>
+        /// Queue a <see cref="StateEvent"/> to update the input state of the given device.
+        /// </summary>
+        /// <param name="device">Device whose input state to update</param>
+        /// <param name="state"></param>
+        /// <param name="time">Timestamp for the event. If not supplied, the current time is used. Note
+        /// that if the given time is in the future and timeslicing is active (<see cref="InputSettings.timesliceEvents"/>,
+        /// the event will only get processed once the actual time has caught up with the given time.</param>
+        /// <typeparam name="TState">Type of input state, such as <see cref="MouseState"/>. Must match the expected
+        /// type of state of <paramref name="device"/>.</typeparam>
+        /// <remarks>
+        /// The given state must match exactly what is expected by the given device. If unsure, an alternative
+        /// is to grab the state as an event directly from the device using <see
+        /// cref="StateEvent.From(InputDevice,out InputEventPtr,Unity.Collections.Allocator)"/> which can then
+        /// be queued using <see cref="QueueEvent(InputEventPtr)"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Allocates temporary, unmanaged memory for the event.
+        /// // using statement automatically disposes the memory once we have queued the event.
+        /// using (StateEvent.From(Mouse.current, out var eventPtr))
+        /// {
+        /// 	// Use controls on mouse to write values into event.
+        ///     Mouse.current.position.WriteValueIntoEvent(new Vector(123, 234), eventPtr);
+        ///
+        ///     // Queue event.
+        ///     InputSystem.QueueEvent(eventPtr);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// The event will only be queued and not processed right away. This means that the state of
+        /// <paramref name="device"/> will not change immediately as a result of calling this method. Instead,
+        /// the event will be processed as part of the next input update.
+        ///
+        /// Note that this method updates the complete input state of the device including all of its
+        /// controls. To update just part of the state of a device, you can use <see cref="QueueDeltaStateEvent{TDelta}"/>
+        /// (however, note that there are some restrictions; see documentation).
+        /// <example>
+        /// <code>
+        /// InputSystem.QueueStateEvent(Mouse.current, new MouseState { position = new Vector(123, 234) });
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been added to the system
+        /// (<see cref="AddDevice(InputDevice)"/>) and thus cannot receive events.</exception>
+        /// <exception cref="ArgumentException"></exception>
         public static unsafe void QueueStateEvent<TState>(InputDevice device, TState state, double time = -1)
             where TState : struct, IInputStateTypeInfo
         {
@@ -1094,6 +1241,17 @@ namespace UnityEngine.InputSystem
             public const int kMaxSize = 512;
             public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
         }
+        
+        /// <summary>
+        /// Queue a <see cref="DeltaStateEvent"/> to update part of the input state of the given device.
+        /// </summary>
+        /// <param name="control">Control on a device to update state of.</param>
+        /// <param name="delta">New state for the control. Type of state must match the state of the control.</param>
+        /// <param name="time"></param>
+        /// <typeparam name="TDelta"></typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public static unsafe void QueueDeltaStateEvent<TDelta>(InputControl control, TDelta delta, double time = -1)
             where TDelta : struct
         {
@@ -1144,6 +1302,27 @@ namespace UnityEngine.InputSystem
             s_Manager.QueueEvent(ref eventBuffer.stateEvent);
         }
 
+        /// <summary>
+        /// Queue a <see cref="DeviceConfigurationEvent"/> that signals that the configuration of the given device has changed
+        /// and that cached configuration will thus have to be refreshed.
+        /// </summary>
+        /// <param name="device">Device whose configuration has changed.</param>
+        /// <param name="time">Timestamp for the event. If not supplied, the current time will be used.</param>
+        /// <remarks>
+        /// All state of an input device that is not input or output state is considered its "configuration".
+        /// 
+        /// A simple example is keyboard layouts. A <see cref="Keyboard"/> will typically have an associated
+        /// keyboard layout that dictates the function of each key and which can be changed by the user at the
+        /// system level. In the input system, the current keyboard layout can be queried via <see cref="Keyboard.keyboardLayout"/>.
+        /// When the layout changes at the system level, the input backend sends a configuration change event
+        /// to signal that the configuration of the keyboard has changed and that cached data may be outdated.
+        /// In response, 
+        /// 
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been added
+        /// (<see cref="InputDevice.added"/>; <see cref="AddDevice(InputDevice)"/>) and thus cannot
+        /// receive events.</exception>
         public static void QueueConfigChangeEvent(InputDevice device, double time = -1)
         {
             if (device == null)
@@ -1219,6 +1398,7 @@ namespace UnityEngine.InputSystem
             s_Manager.Update(updateType);
         }
 
+        ////REVIEW: drop update type arg? make update parameters available via InputState?
         /// <summary>
         /// Event that is fired before the input system updates.
         /// </summary>
@@ -1255,6 +1435,14 @@ namespace UnityEngine.InputSystem
 
         #region Settings
 
+        /// <summary>
+        /// The current configuration of the input system.
+        /// </summary>
+        /// <remarks>
+        /// The input system can be configured on a per-project basis. Settings can either be created and
+        /// installed on the fly or persisted as assets in the project.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">Value is null when setting the property.</exception>
         public static InputSettings settings
         {
             get => s_Manager.settings;
@@ -1312,7 +1500,7 @@ namespace UnityEngine.InputSystem
         ///         if (change == InputActionChange.ActionPerformed)
         ///         {
         ///             var action = (InputAction)obj;
-        ///             var control = action.lastTriggerControl;
+        ///             var control = action.lastTriggerControl; TODO this is missing now
         ///             ....
         ///         }
         ///     };
@@ -1374,6 +1562,8 @@ namespace UnityEngine.InputSystem
         {
             RegisterInteraction(typeof(T), name);
         }
+        
+        ////REVIEW: can we move the getters and listers somewhere else? maybe `interactions` and `processors` properties and such?
 
         public static Type TryGetInteraction(string name)
         {
@@ -1479,10 +1669,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: restrict metrics to editor and development builds?
 
-        public static InputMetrics metrics
-        {
-            get { return s_Manager.metrics; }
-        }
+        public static InputMetrics metrics => s_Manager.metrics;
 
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
