@@ -1316,8 +1316,9 @@ namespace UnityEngine.InputSystem
         /// system level. In the input system, the current keyboard layout can be queried via <see cref="Keyboard.keyboardLayout"/>.
         /// When the layout changes at the system level, the input backend sends a configuration change event
         /// to signal that the configuration of the keyboard has changed and that cached data may be outdated.
-        /// In response,
-        ///
+        /// In response, <see cref="Keyboard"/> will flush out cached information such as the name of the keyboard
+        /// layout and display names (<see cref="InputControl.displayName"/>) of individual keys which causes them
+        /// to be fetched again from the backend the next time they are accessed.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been added
@@ -1340,14 +1341,23 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Queue a text input event on the given device.
+        /// Queue a <see cref="TextEvent"/> on the given device.
         /// </summary>
         /// <param name="device">Device to queue the event on.</param>
         /// <param name="character">Text character to input through the event.</param>
         /// <param name="time">Optional event time stamp. If not supplied, the current time will be used.</param>
+        /// <remarks>
+        /// Text input is sent to devices character by character. This allows sending strings of arbitrary
+        /// length without necessary incurring GC overhead.
+        ///
+        /// For the event to have any effect on <paramref name="device"/>, the device must
+        /// implement <see cref="ITextInputReceiver"/>. It will see <see cref="ITextInputReceiver.OnTextInput"/>
+        /// being called when the event is processed.
+        /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="device"/> is a device that has not been
         /// added to the system.</exception>
+        /// <seealso cref="Keyboard.onTextInput"/>
         public static void QueueTextEvent(InputDevice device, char character, double time = -1)
         {
             if (device == null)
