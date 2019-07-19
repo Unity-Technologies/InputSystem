@@ -24,8 +24,6 @@ promotion_test_{{ platform.name }}_{{ editor.version }}:
     logs:
       paths:
         - "upm-ci~/test-results/**/*"
-  dependencies:
-    - .yamato/upm-ci.yml#pack
 {% endfor %}
 {% endfor %}
 
