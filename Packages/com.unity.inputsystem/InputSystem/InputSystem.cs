@@ -1170,7 +1170,7 @@ namespace UnityEngine.InputSystem
         /// // using statement automatically disposes the memory once we have queued the event.
         /// using (StateEvent.From(Mouse.current, out var eventPtr))
         /// {
-        /// 	// Use controls on mouse to write values into event.
+        ///     // Use controls on mouse to write values into event.
         ///     Mouse.current.position.WriteValueIntoEvent(new Vector(123, 234), eventPtr);
         ///
         ///     // Queue event.
@@ -1241,7 +1241,7 @@ namespace UnityEngine.InputSystem
             public const int kMaxSize = 512;
             public fixed byte data[kMaxSize - 1]; // DeltaStateEvent already adds one.
         }
-        
+
         /// <summary>
         /// Queue a <see cref="DeltaStateEvent"/> to update part of the input state of the given device.
         /// </summary>
@@ -1310,14 +1310,14 @@ namespace UnityEngine.InputSystem
         /// <param name="time">Timestamp for the event. If not supplied, the current time will be used.</param>
         /// <remarks>
         /// All state of an input device that is not input or output state is considered its "configuration".
-        /// 
+        ///
         /// A simple example is keyboard layouts. A <see cref="Keyboard"/> will typically have an associated
         /// keyboard layout that dictates the function of each key and which can be changed by the user at the
         /// system level. In the input system, the current keyboard layout can be queried via <see cref="Keyboard.keyboardLayout"/>.
         /// When the layout changes at the system level, the input backend sends a configuration change event
         /// to signal that the configuration of the keyboard has changed and that cached data may be outdated.
-        /// In response, 
-        /// 
+        /// In response,
+        ///
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="device"/> has not been added
@@ -1562,7 +1562,7 @@ namespace UnityEngine.InputSystem
         {
             RegisterInteraction(typeof(T), name);
         }
-        
+
         ////REVIEW: can we move the getters and listers somewhere else? maybe `interactions` and `processors` properties and such?
 
         public static Type TryGetInteraction(string name)
