@@ -9,6 +9,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.9.1-preview] - 2099-1-1
 
+### Fixed
+
+- Fixed GC heap garbage being caused by triggered by event processing.
+  * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+
 ## [0.9.0-preview] - 2019-7-18
 
 ### Fixed
@@ -26,8 +31,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
 - Fixed compile errors from Switch Pro controller code on Linux.
-- Fixed GC heap garbage being caused by triggered by event processing.
-  * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
 
 #### Actions
 

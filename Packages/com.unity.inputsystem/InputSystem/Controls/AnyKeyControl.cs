@@ -1,3 +1,4 @@
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Controls
@@ -7,6 +8,7 @@ namespace UnityEngine.InputSystem.Controls
     /// for whether there's any non-zero bytes. If there are, the control
     /// returns 1.0; otherwise it returns 0.0.
     /// </summary>
+    [InputControlLayout(hideInUI = true)]
     public class AnyKeyControl : ButtonControl
     {
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
