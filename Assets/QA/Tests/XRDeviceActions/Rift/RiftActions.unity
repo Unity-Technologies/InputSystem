@@ -18127,7 +18127,7 @@ GameObject:
   - component: {fileID: 2049263149}
   - component: {fileID: 2049263150}
   m_Layer: 5
-  m_Name: Vector2(Thumbstick) (1)
+  m_Name: Vector2(Thumbstick)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
