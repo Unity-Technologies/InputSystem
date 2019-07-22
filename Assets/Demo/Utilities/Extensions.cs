@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.UI;
 
 public static class Extensions
 {
@@ -56,7 +56,7 @@ public static class Extensions
 
     public static void BindUIActions(this InputSystemUIInputModule uiInputModule, DemoControls.MenuActions menuActions)
     {
-        uiInputModule.move = new InputActionProperty(menuActions.navigate);
-        uiInputModule.leftClick = new InputActionProperty(menuActions.click);
+        uiInputModule.move = InputActionReference.Create(menuActions.navigate);
+        uiInputModule.leftClick = InputActionReference.Create(menuActions.click);
     }
 }

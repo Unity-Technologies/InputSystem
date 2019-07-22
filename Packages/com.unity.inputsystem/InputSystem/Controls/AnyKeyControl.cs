@@ -7,16 +7,14 @@ namespace UnityEngine.InputSystem.Controls
     /// for whether there's any non-zero bytes. If there are, the control
     /// returns 1.0; otherwise it returns 0.0.
     /// </summary>
-    public class AnyKeyControl : InputControl<float>////TODO: this should be a ButtonControl
+    public class AnyKeyControl : ButtonControl
     {
-        public bool isPressed => ReadValue() > 0.0f;
-
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame
 
         public AnyKeyControl()
         {
             m_StateBlock.sizeInBits = 1; // Should be overridden by whoever uses the control.
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)

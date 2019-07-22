@@ -1,5 +1,5 @@
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Plugins.XInput;
+using UnityEngine.InputSystem.XInput;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Processors;
 
 #if UNITY_EDITOR || UNITY_XBOXONE || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
-using UnityEngine.InputSystem.Plugins.XInput.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
 internal class XInputTests : InputTestFixture
@@ -18,7 +18,8 @@ internal class XInputTests : InputTestFixture
     [Test]
     [Category("Devices")]
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XInputControllerOSX")]
+    [TestCase("Xbox One Wired Controller", "Microsoft", "HID", "XboxGamepadMacOS")]
+    [TestCase("Xbox One Wireless Controller", "Microsoft", "HID", "XboxOneGampadMacOSWireless")]
 #endif
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
     [TestCase(null, null, "XInput", "XInputControllerWindows")]
@@ -147,8 +148,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerOSX>());
-        var gamepad = (XInputControllerOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxGamepadMacOS>());
+        var gamepad = (XboxGamepadMacOS)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerOSXState
@@ -218,8 +219,8 @@ internal class XInputTests : InputTestFixture
         });
 
         Assert.That(device, Is.AssignableTo<XInputController>());
-        Assert.That(device, Is.AssignableTo<XInputControllerWirelessOSX>());
-        var gamepad = (XInputControllerWirelessOSX)device;
+        Assert.That(device, Is.AssignableTo<XboxOneGampadMacOSWireless>());
+        var gamepad = (XboxOneGampadMacOSWireless)device;
 
         InputSystem.QueueStateEvent(gamepad,
             new XInputControllerWirelessOSXState

@@ -81,26 +81,15 @@ namespace UnityEngine.InputSystem.Editor
 
         protected static class Styles
         {
-            public static readonly GUIStyle yellowRect = new GUIStyle("Label");
-            public static readonly GUIStyle greenRect = new GUIStyle("Label");
-            public static readonly GUIStyle blueRect = new GUIStyle("Label");
-            public static readonly GUIStyle pinkRect = new GUIStyle("Label");
-
-            static Styles()
+            private static GUIStyle StyleWithBackground(string fileName)
             {
-                yellowRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.SharedResourcesPath + "yellow.png");
-                greenRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.SharedResourcesPath + "green.png");
-                blueRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.SharedResourcesPath + "blue.png");
-                pinkRect.normal.background =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.SharedResourcesPath + "pink.png");
+                return new GUIStyle("Label").WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>($"{InputActionTreeView.SharedResourcesPath}{fileName}.png"));
             }
+
+            public static readonly GUIStyle yellowRect = StyleWithBackground("yellow");
+            public static readonly GUIStyle greenRect = StyleWithBackground("green");
+            public static readonly GUIStyle blueRect = StyleWithBackground("blue");
+            public static readonly GUIStyle pinkRect = StyleWithBackground("pink");
         }
     }
 
@@ -231,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
         public bool isSingletonAction => actionMapProperty == null;
 
         public override string expectedControlLayout =>
-            property.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
+            property.FindPropertyRelative("m_ExpectedControlType").stringValue;
 
         public SerializedProperty bindingsArrayProperty => isSingletonAction
         ? property.FindPropertyRelative("m_SingletonActionBindings")

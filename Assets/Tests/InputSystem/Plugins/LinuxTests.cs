@@ -3,7 +3,7 @@ using NUnit.Framework;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.Linux;
+using UnityEngine.InputSystem.Linux;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -38,18 +38,18 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick["Base5"], Is.TypeOf<ButtonControl>());
         Assert.That(joystick["Base6"], Is.TypeOf<ButtonControl>());
 
-        Assert.That(joystick["Trigger"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Thumb"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Thumb2"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Top"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Top2"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Pinkie"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base2"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base3"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base4"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base5"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
-        Assert.That(joystick["Base6"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeBit));
+        Assert.That(joystick["Trigger"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Thumb"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Thumb2"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Top"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Top2"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Pinkie"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base2"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base3"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base4"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base5"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
+        Assert.That(joystick["Base6"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatBit));
 
         Assert.That(joystick["Trigger"].stateBlock.byteOffset, Is.EqualTo(0));
         Assert.That(joystick["Thumb"].stateBlock.byteOffset, Is.EqualTo(0));
@@ -94,8 +94,8 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick["Stick"], Is.TypeOf<StickControl>());
         Assert.That(joystick["Stick"].stateBlock.byteOffset, Is.EqualTo(4));
         Assert.That(joystick["Stick"].stateBlock.sizeInBits, Is.EqualTo(64));
-        Assert.That(joystick["Stick/x"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(joystick["Stick/y"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
+        Assert.That(joystick["Stick/x"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(joystick["Stick/y"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
         Assert.That(joystick["Stick/x"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["Stick/y"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["Stick/x"].stateBlock.byteOffset, Is.EqualTo(4)); // Parent offset baked in.
@@ -103,11 +103,11 @@ internal class LinuxTests : InputTestFixture
 
         // Axes.
         Assert.That(joystick["RotateZ"], Is.TypeOf<AxisControl>());
-        Assert.That(joystick["RotateZ"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
+        Assert.That(joystick["RotateZ"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
         Assert.That(joystick["RotateZ"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["RotateZ"].stateBlock.byteOffset, Is.EqualTo(12));
         Assert.That(joystick["Throttle"], Is.TypeOf<AxisControl>());
-        Assert.That(joystick["Throttle"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
+        Assert.That(joystick["Throttle"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
         Assert.That(joystick["Throttle"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["Throttle"].stateBlock.byteOffset, Is.EqualTo(16));
 
@@ -115,10 +115,10 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick["Hat"], Is.TypeOf<DpadControl>());
         Assert.That(joystick["Hat"].stateBlock.byteOffset, Is.EqualTo(20));
         Assert.That(joystick["Hat"].stateBlock.sizeInBits, Is.EqualTo(64));
-        Assert.That(joystick["Hat/up"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(joystick["Hat/down"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(joystick["Hat/left"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(joystick["Hat/right"].stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
+        Assert.That(joystick["Hat/up"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(joystick["Hat/down"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(joystick["Hat/left"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(joystick["Hat/right"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
         Assert.That(joystick["Hat/up"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["Hat/down"].stateBlock.sizeInBits, Is.EqualTo(32));
         Assert.That(joystick["Hat/left"].stateBlock.sizeInBits, Is.EqualTo(32));
@@ -130,7 +130,6 @@ internal class LinuxTests : InputTestFixture
 
         // Control properties.
         Assert.That(joystick.trigger, Is.SameAs(joystick["Trigger"]));
-        Assert.That(joystick.hat, Is.SameAs(joystick["Hat"]));
         Assert.That(joystick.stick, Is.SameAs(joystick["Stick"]));
         Assert.That(joystick.twist, Is.SameAs(joystick["RotateZ"]));
 
@@ -178,10 +177,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.True);
         Assert.That(joystick.stick.left.isPressed, Is.True);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.True);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.True);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.00001));
 
@@ -202,10 +197,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.True);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.True);
-        Assert.That(joystick.hat.left.isPressed, Is.True);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(-1).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
 
@@ -218,10 +209,6 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick.stick.down.isPressed, Is.False);
         Assert.That(joystick.stick.left.isPressed, Is.False);
         Assert.That(joystick.stick.right.isPressed, Is.False);
-        Assert.That(joystick.hat.up.isPressed, Is.False);
-        Assert.That(joystick.hat.down.isPressed, Is.False);
-        Assert.That(joystick.hat.left.isPressed, Is.False);
-        Assert.That(joystick.hat.right.isPressed, Is.False);
         Assert.That(joystick.twist.ReadUnprocessedValue(), Is.EqualTo(0).Within(0.00001));
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
     }
@@ -248,9 +235,9 @@ internal class LinuxTests : InputTestFixture
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('L', 'J', 'O', 'Y');
+            get { return new FourCC('L', 'J', 'O', 'Y'); }
         }
 
         public static readonly string descriptorString =

@@ -13,13 +13,13 @@ namespace UnityEngine.InputSystem.Editor
         public void OnEventTimestampOutdated(InputEventPtr eventPtr, InputDevice device)
         {
             Debug.LogError(
-                $"'{eventPtr.type}' input event for device '{device}' is outdated (event time: {eventPtr.time}, device time: {device.lastUpdateTime})");
+                $"'{eventPtr.type}' input event {eventPtr.id} for device '{device}' is outdated (event time: {eventPtr.time}, device time: {device.lastUpdateTime})");
         }
 
         public void OnEventFormatMismatch(InputEventPtr eventPtr, InputDevice device)
         {
             Debug.LogError(
-                $"'{eventPtr.type}' input event for device '{device}' has incorrect format (event format: '{eventPtr.type}', device format: '{device.stateBlock.format}')");
+                $"'{eventPtr.type}' input event {eventPtr.id} for device '{device}' has incorrect format (event format: '{eventPtr.type}', device format: '{device.stateBlock.format}')");
         }
 
         public void OnEventForDisabledDevice(InputEventPtr eventPtr, InputDevice device)

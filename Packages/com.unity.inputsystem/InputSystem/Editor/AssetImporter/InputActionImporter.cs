@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
-    public class InputActionImporter : ScriptedImporter
+    internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 6;
 
@@ -42,6 +42,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx));
+
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
@@ -73,6 +76,10 @@ namespace UnityEngine.InputSystem.Editor
                 DestroyImmediate(asset);
                 return;
             }
+
+            // Force name of asset to be that on the file on disk instead of what may be serialized
+            // as the 'name' property in JSON.
+            asset.name = Path.GetFileNameWithoutExtension(assetPath);
 
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
@@ -131,11 +138,30 @@ namespace UnityEngine.InputSystem.Editor
                 var wrapperFilePath = m_WrapperCodePath;
                 if (string.IsNullOrEmpty(wrapperFilePath))
                 {
+                    // Placed next to .inputactions file.
                     var assetPath = ctx.assetPath;
                     var directory = Path.GetDirectoryName(assetPath);
                     var fileName = Path.GetFileNameWithoutExtension(assetPath);
                     wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
                 }
+                else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                         wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+                {
+                    // User-specified file relative to location of .inputactions file.
+                    var assetPath = ctx.assetPath;
+                    var directory = Path.GetDirectoryName(assetPath);
+                    wrapperFilePath = Path.Combine(directory, wrapperFilePath);
+                }
+                else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
+                         !wrapperFilePath.ToLower().StartsWith("assets\\"))
+                {
+                    // User-specified file in Assets/ folder.
+                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+                }
+
+                var dir = Path.GetDirectoryName(wrapperFilePath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
 
                 var options = new InputActionCodeGenerator.Options
                 {
@@ -143,13 +169,6 @@ namespace UnityEngine.InputSystem.Editor
                     namespaceName = m_WrapperCodeNamespace,
                     className = m_WrapperClassName,
                 };
-
-                if (!wrapperFilePath.ToLower().StartsWith("assets/"))
-                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
-
-                var dir = Path.GetDirectoryName(wrapperFilePath);
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
 
                 if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
                 {

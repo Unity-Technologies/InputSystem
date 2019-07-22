@@ -75,11 +75,13 @@ namespace UnityEngine.InputSystem.Controls
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new ArgumentNullException(nameof(builder));
             up = builder.GetControl<ButtonControl>(this, "up");
             down = builder.GetControl<ButtonControl>(this, "down");
             left = builder.GetControl<ButtonControl>(this, "left");

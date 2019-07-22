@@ -3,7 +3,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: custom icon for OnScreenButton component
 
-namespace UnityEngine.InputSystem.Plugins.OnScreen
+namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>
     /// A button that is visually represented on-screen and triggered by touch or other pointer
@@ -12,12 +12,12 @@ namespace UnityEngine.InputSystem.Plugins.OnScreen
     [AddComponentMenu("Input/On-Screen Button")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
-        public void OnPointerUp(PointerEventData data)
+        public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
         }
 
-        public void OnPointerDown(PointerEventData data)
+        public void OnPointerDown(PointerEventData eventData)
         {
             SendValueToControl(1.0f);
         }

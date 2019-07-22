@@ -2,12 +2,17 @@
 
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// Adds support for XInput controllers.
     /// </summary>
-    public static class XInputSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class XInputSupport
     {
         public static void Initialize()
         {
@@ -26,10 +31,10 @@ namespace UnityEngine.InputSystem.Plugins.XInput
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
 #endif
 #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
-            InputSystem.RegisterLayout<XInputControllerOSX>(
+            InputSystem.RegisterLayout<XboxGamepadMacOS>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wired Controller"));
-            InputSystem.RegisterLayout<XInputControllerWirelessOSX>(
+            InputSystem.RegisterLayout<XboxOneGampadMacOSWireless>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
                     .WithProduct("Xbox.*Wireless Controller"));
 #endif

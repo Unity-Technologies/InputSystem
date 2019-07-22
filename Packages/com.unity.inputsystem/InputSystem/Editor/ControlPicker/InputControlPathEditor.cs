@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
     /// greater control is required than is offered by the <see cref="PropertyDrawer"/> mechanism. In particular,
     /// it allows applying additional constraints such as requiring control paths to match ...
     /// </remarks>
-    public class InputControlPathEditor
+    public sealed class InputControlPathEditor : IDisposable
     {
         /// <summary>
         ///
@@ -34,6 +34,11 @@ namespace UnityEngine.InputSystem.Editor
 
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
+        }
+
+        public void Dispose()
+        {
+            m_PickerDropdown?.Dispose();
         }
 
         public void SetControlPathsToMatch(IEnumerable<string> controlPaths)
@@ -95,9 +100,9 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 15;
+            bindingTextRect.width -= 20;
             editButtonRect.x += bindingTextRect.width;
-            editButtonRect.width = 15;
+            editButtonRect.width = 20;
             editButtonRect.height = 15;
 
             var path = pathProperty.stringValue;

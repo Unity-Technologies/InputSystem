@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 30)]
-    public struct MouseState : IInputStateTypeInfo
+    internal struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
@@ -30,12 +30,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true, usage = "")]
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
+        [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0])]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
-        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usages = new[] { "Forward" }, displayName = "Forward")]
-        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usages = new[] { "Back" }, displayName = "Back")]
+        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usage = "Forward", displayName = "Forward")]
+        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usage = "Back", displayName = "Back")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
@@ -47,14 +47,13 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
         [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
         [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.AutomaticOffset)] ////REVIEW: should this make use of None and Moved?
         public ushort buttons;
 
-        [InputControl(layout = "Digital")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(26)]
         public ushort displayIndex;
 
-        [InputControl(layout = "Digital")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(28)]
         public ushort clickCount;
 
@@ -69,13 +68,13 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
-    public enum MouseButton
+    internal enum MouseButton
     {
         Left,
         Right,
@@ -160,6 +159,9 @@ namespace UnityEngine.InputSystem
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             scroll = builder.GetControl<Vector2Control>(this, "scroll");
             leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
             middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
@@ -170,23 +172,30 @@ namespace UnityEngine.InputSystem
             base.FinishSetup(builder);
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected new void OnNextUpdate()
         {
-            var deltaXChanged = ResetDelta(statePtr, delta.x);
-            var deltaYChanged = ResetDelta(statePtr, delta.y);
-            var scrollXChanged = ResetDelta(statePtr, scroll.x);
-            var scrollYChanged = ResetDelta(statePtr, scroll.y);
-            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+            base.OnNextUpdate();
+            InputState.Change(scroll, Vector2.zero);
         }
 
-        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        protected new unsafe void OnEvent(InputEventPtr eventPtr)
         {
-            ////REVIEW: this sucks for actions; they see each value change but the changes are no longer independent;
-            ////        is accumulation really something we want? should we only reset?
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
-            AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
+            var statePtr = currentStatePtr;
+
+            Accumulate(scroll.x, statePtr, eventPtr);
+            Accumulate(scroll.y, statePtr, eventPtr);
+
+            base.OnEvent(eventPtr);
+        }
+
+        void IInputStateCallbackReceiver.OnNextUpdate()
+        {
+            OnNextUpdate();
+        }
+
+        void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
+        {
+            OnEvent(eventPtr);
         }
     }
 }

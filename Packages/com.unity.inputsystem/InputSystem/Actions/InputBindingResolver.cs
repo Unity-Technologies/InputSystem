@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: reuse interaction, processor, and composite instances from prior resolves
@@ -111,6 +110,7 @@ namespace UnityEngine.InputSystem
         /// This is where all binding resolution happens for actions. The method walks through the binding array
         /// in <paramref name="map"/> and adds any controls, interactions, processors, and composites as it goes.
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public unsafe void AddActionMap(InputActionMap map)
         {
             Debug.Assert(map != null);
@@ -181,12 +181,12 @@ namespace UnityEngine.InputSystem
 
                         // Make sure that if it's part of a composite, we are actually part of a composite.
                         if (isPartOfComposite && currentCompositeBindingIndex == InputActionState.kInvalidIndex)
-                            throw new Exception(
+                            throw new InvalidOperationException(
                                 $"Binding '{unresolvedBinding}' is marked as being part of a composite but the preceding binding is not a composite");
 
                         // Skip binding if it is disabled (path is empty string).
                         var path = unresolvedBinding.effectivePath;
-                        if (unresolvedBinding.path == "")
+                        if (string.IsNullOrEmpty(unresolvedBinding.path))
                             continue;
 
                         // Skip binding if it doesn't match with our binding mask (might be empty).
@@ -358,7 +358,7 @@ namespace UnityEngine.InputSystem
                             // Make sure the binding is named. The name determines what in the composite
                             // to bind to.
                             if (string.IsNullOrEmpty(unresolvedBinding.name))
-                                throw new Exception(
+                                throw new InvalidOperationException(
                                     $"Binding '{unresolvedBinding}' that is part of composite '{composites[currentCompositeIndex]}' is missing a name");
 
                             // Give a part index for the
@@ -390,7 +390,7 @@ namespace UnityEngine.InputSystem
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
-                            wantsInitialStateCheck = action?.initialStateCheck ?? false
+                            wantsInitialStateCheck = action?.wantsInitialStateCheck ?? false
                         };
                     }
                     catch (Exception exception)
@@ -402,7 +402,7 @@ namespace UnityEngine.InputSystem
                         // Don't swallow exceptions that indicate something is wrong in the code rather than
                         // in the data.
                         if (exception.IsExceptionIndicatingBugInCode())
-                            throw exception;
+                            throw;
                     }
                 }
 
@@ -459,7 +459,7 @@ namespace UnityEngine.InputSystem
                     var actionIndex = actionStartIndex + i;
 
                     // Correlate action with its trigger state.
-                    action.m_ActionIndex = actionIndex;
+                    action.m_ActionIndexInState = actionIndex;
 
                     // Collect bindings for action.
                     var bindingStartIndexForAction = runningIndexInBindingIndices;
@@ -503,7 +503,7 @@ namespace UnityEngine.InputSystem
                     // See if we may need conflict resolution on this action. Never needed for pass-through actions.
                     // Otherwise, if we have more than one bound control or have several bindings and one of them
                     // is a composite, we enable it.
-                    var isPassThroughAction = action.passThrough;
+                    var isPassThroughAction = action.type == InputActionType.PassThrough;
                     var mayNeedConflictResolution = !isPassThroughAction && numPossibleConcurrentActuations > 1;
 
                     // Initialize initial trigger state.
@@ -514,7 +514,6 @@ namespace UnityEngine.InputSystem
                         mapIndex = mapIndex,
                         controlIndex = InputActionState.kInvalidIndex,
                         interactionIndex = InputActionState.kInvalidIndex,
-                        continuous = action.continuous,
                         passThrough = isPassThroughAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
                     };
@@ -574,12 +573,12 @@ namespace UnityEngine.InputSystem
                 // Look up interaction.
                 var type = InputInteraction.s_Interactions.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"No interaction with name '{m_Parameters[i].name}' (mentioned in '{interactionString}') has been registered");
 
                 // Instantiate it.
                 if (!(Activator.CreateInstance(type) is IInputInteraction interaction))
-                    throw new Exception($"Interaction '{m_Parameters[i].name}' is not an IInputInteraction");
+                    throw new InvalidOperationException($"Interaction '{m_Parameters[i].name}' (mentioned in '{interactionString}') is not an IInputInteraction");
 
                 // Pass parameters to it.
                 NamedValue.ApplyAllToObject(interaction, m_Parameters[i].parameters);
@@ -602,13 +601,13 @@ namespace UnityEngine.InputSystem
                 // Look up processor.
                 var type = InputProcessor.s_Processors.LookupTypeRegistration(m_Parameters[i].name);
                 if (type == null)
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"No processor with name '{m_Parameters[i].name}' (mentioned in '{processorString}') has been registered");
 
                 // Instantiate it.
                 if (!(Activator.CreateInstance(type) is InputProcessor processor))
-                    throw new Exception(
-                        $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' is not an InputProcessor");
+                    throw new InvalidOperationException(
+                        $"Type '{type.Name}' registered as processor called '{m_Parameters[i].name}' (mentioned in '{processorString}') is not an InputProcessor");
 
                 // Pass parameters to it.
                 NamedValue.ApplyAllToObject(processor, m_Parameters[i].parameters);
@@ -627,12 +626,12 @@ namespace UnityEngine.InputSystem
             // Look up.
             var type = InputBindingComposite.s_Composites.LookupTypeRegistration(nameAndParametersParsed.name);
             if (type == null)
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"No binding composite with name '{nameAndParametersParsed.name}' has been registered");
 
             // Instantiate.
             if (!(Activator.CreateInstance(type) is InputBindingComposite instance))
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"Registered type '{type.Name}' used for '{nameAndParametersParsed.name}' is not an InputBindingComposite");
 
             // Set parameters.
@@ -652,7 +651,7 @@ namespace UnityEngine.InputSystem
             var field = type.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"Cannot find public field '{name}' used as parameter of binding composite '{composite}' of type '{type}'");
 
             ////REVIEW: should we wrap part numbers in a struct instead of using int?
@@ -660,7 +659,7 @@ namespace UnityEngine.InputSystem
             // Type-check.
             var fieldType = field.FieldType;
             if (fieldType != typeof(int))
-                throw new Exception(
+                throw new InvalidOperationException(
                     $"Field '{name}' used as a parameter of binding composite '{composite}' must be of type 'int' but is of type '{type.Name}' instead");
 
             ////REVIEW: this create garbage; need a better solution to get to zero garbage during re-resolving

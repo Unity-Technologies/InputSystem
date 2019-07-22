@@ -12,10 +12,10 @@ using UnityEngine.InputSystem.Utilities;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputSettingsProvider : SettingsProvider
+    internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
-        public const string kSettingsPath = "Project/Input (NEW)";
+        public const string kSettingsPath = "Project/Input System Package";
 
         public static void Open()
         {
@@ -31,17 +31,22 @@ namespace UnityEngine.InputSystem.Editor
         private InputSettingsProvider(string path, SettingsScope scopes)
             : base(path, scopes)
         {
-            label = "Input (NEW)";
+            label = "Input System Package";
             s_Instance = this;
 
             InputSystem.onSettingsChange += OnSettingsChange;
+        }
+
+        public void Dispose()
+        {
+            m_SettingsObject?.Dispose();
         }
 
         public override void OnTitleBarGUI()
         {
             if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
             {
-                GenericMenu menu = new GenericMenu();
+                var menu = new GenericMenu();
                 menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
                 menu.AddSeparator("");
                 for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
@@ -70,7 +75,7 @@ namespace UnityEngine.InputSystem.Editor
                 GUILayout.Space(20);
             }
 
-            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
                 EditorGUILayout.HelpBox(
                     "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
@@ -86,17 +91,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode);
-                var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
-                if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
-                {
-                    // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
-                    // when we have both dynamic and fixed updates in the picture.
-                    ////TODO: enable when action update mode is properly sorted
-                    //EditorGUILayout.PropertyField(m_ActionUpdateMode);
-                }
-
-                ////TODO: enable when backported
-                //EditorGUILayout.PropertyField(m_TimesliceEvents);
+                EditorGUILayout.PropertyField(m_TimesliceEvents);
 
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
@@ -111,6 +106,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_DefaultTapTime);
                 EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
                 EditorGUILayout.PropertyField(m_DefaultHoldTime);
+                EditorGUILayout.PropertyField(m_TapRadius);
+                EditorGUILayout.PropertyField(m_MultiTapDelayTime);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -220,7 +217,6 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
-            m_ActionUpdateMode = m_SettingsObject.FindProperty("m_ActionUpdateMode");
             m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
@@ -230,6 +226,8 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
+            m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
+            m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -247,10 +245,17 @@ namespace UnityEngine.InputSystem.Editor
                         path =>
                         {
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
+                            var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
+                            if (existingIndex != -1)
+                            {
+                                m_SupportedDevices.index = existingIndex;
+                                return;
+                            }
                             var numDevices = supportedDevicesProperty.arraySize;
                             supportedDevicesProperty.InsertArrayElementAtIndex(numDevices);
                             supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
                                 .stringValue = layoutName;
+                            m_SupportedDevices.index = numDevices;
                             Apply();
                         },
                         mode: InputControlPicker.Mode.PickDevice);
@@ -290,10 +295,7 @@ namespace UnityEngine.InputSystem.Editor
                 InitializeWithCurrentSettings();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
-            ////FIXME: doesn't seem like there's a way to issue a repaint with the 2018.3 API
-            #if UNITY_2019_1_OR_NEWER
             Repaint();
-            #endif
         }
 
         /// <summary>
@@ -311,7 +313,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
-        [NonSerialized] private SerializedProperty m_ActionUpdateMode;
         [NonSerialized] private SerializedProperty m_TimesliceEvents;
         [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
@@ -322,13 +323,14 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
+        [NonSerialized] private SerializedProperty m_TapRadius;
+        [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
         [NonSerialized] private GUIContent[] m_AvailableSettingsAssetsOptions;
         [NonSerialized] private int m_CurrentSelectedInputSettingsAsset;
 
-        [NonSerialized] private GUIContent m_NewAssetButtonText = EditorGUIUtility.TrTextContent("New");
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
@@ -340,9 +342,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Force next OnGUI() to re-initialize.
                 s_Instance.m_Settings = null;
-                #if UNITY_2019_1_OR_NEWER
-                s_Instance.Repaint();
-                #endif
+
+                // Request repaint.
+                SettingsService.NotifySettingsProviderChanged();
             }
         }
     }

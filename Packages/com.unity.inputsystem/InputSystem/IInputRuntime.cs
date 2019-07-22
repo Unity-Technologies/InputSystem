@@ -10,6 +10,9 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onUpdate"/>.
+    /// </summary>
     public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
     /// <summary>
@@ -76,7 +79,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Set delegate to be called on input updates.
         /// </summary>
-        InputUpdateDelegate onUpdate { set; }
+        InputUpdateDelegate onUpdate { get; set; }
 
         /// <summary>
         /// Set delegate to be called right before <see cref="onUpdate"/>.
@@ -85,9 +88,9 @@ namespace UnityEngine.InputSystem.LowLevel
         /// This delegate is meant to allow events to be queued that should be processed right
         /// in the upcoming update.
         /// </remarks>
-        Action<InputUpdateType> onBeforeUpdate { set; }
+        Action<InputUpdateType> onBeforeUpdate { get; set; }
 
-        Func<InputUpdateType, bool> onShouldRunUpdate { set; }
+        Func<InputUpdateType, bool> onShouldRunUpdate { get; set; }
 
         /// <summary>
         /// Set delegate to be called when a new device is discovered.
@@ -99,18 +102,18 @@ namespace UnityEngine.InputSystem.LowLevel
         /// First parameter is the ID assigned to the device, second parameter is a description
         /// in JSON format of the device (see <see cref="InputDeviceDescription.FromJson"/>).
         /// </remarks>
-        Action<int, string> onDeviceDiscovered { set; }
+        Action<int, string> onDeviceDiscovered { get; set; }
 
         /// <summary>
         /// Set delegate to call when the application changes focus.
         /// </summary>
         /// <seealso cref="Application.onFocusChanged"/>
-        Action<bool> onFocusChanged { set; }
+        Action<bool> onPlayerFocusChanged { get; set; }
 
         /// <summary>
         /// Set delegate to invoke when system is shutting down.
         /// </summary>
-        Action onShutdown { set; }
+        Action onShutdown { get; set; }
 
         /// <summary>
         /// Set the background polling frequency for devices that have to be polled.
@@ -119,7 +122,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The frequency is in Hz. A value of 60 means that polled devices get sampled
         /// 60 times a second.
         /// </remarks>
-        float pollingFrequency { set; }
+        float pollingFrequency { get; set; }
 
         /// <summary>
         /// The current time on the same timeline that input events are delivered on.
@@ -153,8 +156,6 @@ namespace UnityEngine.InputSystem.LowLevel
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
         ScreenOrientation screenOrientation { get; }
-        Vector2 screenSize { get; }
-        int frameCount { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
@@ -166,8 +167,8 @@ namespace UnityEngine.InputSystem.LowLevel
         bool isInBatchMode { get; }
 
         #if UNITY_EDITOR
-        Action<PlayModeStateChange> onPlayModeChanged { set; }
-        Action onProjectChange { set; }
+        Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isPaused { get; }
         #endif
@@ -179,11 +180,14 @@ namespace UnityEngine.InputSystem.LowLevel
         public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
 
-    public static class InputRuntimeExtensions
+    internal static class InputRuntimeExtensions
     {
         public static unsafe long DeviceCommand<TCommand>(this IInputRuntime runtime, int deviceId, ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            if (runtime == null)
+                throw new System.ArgumentNullException(nameof(runtime));
+
             return runtime.DeviceCommand(deviceId, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }
     }

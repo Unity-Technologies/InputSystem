@@ -2,7 +2,9 @@
     "name": "Unity.InputSystem.Tests",
     "references": [
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "Unity.InputSystem.TestFramework",
+        "Unity.ugui",
+        "Unity.PackageManagerDocTools.Editor"        
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

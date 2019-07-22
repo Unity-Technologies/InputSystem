@@ -1,41 +1,40 @@
 #if UNITY_EDITOR
 
+using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 
-namespace UnityEngine.InputSystem.Plugins.UI.Editor
+namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
     internal class InputSystemUIInputModuleEditor : UnityEditor.Editor
     {
-        private InputActionProperty GetActionReferenceFromAssets(InputActionAsset actions, object[] childAssets, InputActionProperty defaultValue, params string[] actionNames)
+        private static InputActionReference GetActionReferenceFromAssets(InputActionReference[] actions, params string[] actionNames)
         {
-            InputAction action = null;
             foreach (var actionName in actionNames)
             {
-                action = actions.FindAction(actionName);
-                if (action != null)
+                foreach (var action in actions)
                 {
-                    foreach (var asset in childAssets)
-                    {
-                        if (asset is InputActionReference reference)
-                        {
-                            if (reference.m_ActionId == action.m_Id)
-                                return new InputActionProperty(reference);
-                        }
-                    }
+                    if (string.Compare(action.action.name, actionName, true) == 0)
+                        return action;
                 }
             }
-            return defaultValue;
+            return null;
         }
 
-        private enum ActionReferenceType
+        private static InputActionReference[] GetAllActionsFromAsset(InputActionAsset actions)
         {
-            Reference,
-            SerializedData
-        };
+            if (actions != null)
+            {
+                var path = AssetDatabase.GetAssetPath(actions);
+                var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                return assets.Where(asset => asset is InputActionReference).Cast<InputActionReference>().OrderBy(x => x.name).ToArray();
+            }
+            return null;
+        }
 
-        private string[] m_ActionNames = new[]
+        static private readonly string[] s_ActionNames = new[]
         {
             "Point",
             "LeftClick",
@@ -44,106 +43,103 @@ namespace UnityEngine.InputSystem.Plugins.UI.Editor
             "ScrollWheel",
             "Move",
             "Submit",
-            "Cancel"
+            "Cancel",
+            "TrackedDevicePosition",
+            "TrackedDeviceOrientation",
+            "TrackedDeviceSelect",
         };
 
-        private ActionReferenceType[] m_ActionTypes;
+        string MakeNiceUIName(string name)
+        {
+            string result = "";
+
+            for (var i = 0; i < name.Length; i++)
+            {
+                char ch = name[i];
+                if (char.IsUpper(ch) && i > 0)
+                    result += ' ';
+                result += ch;
+            }
+
+            return result;
+        }
+
         private SerializedProperty[] m_ReferenceProperties;
-        private SerializedProperty[] m_DataProperties;
-        private bool m_ActionsFoldout;
+        private SerializedProperty m_ActionsAsset;
+        private InputActionReference[] m_AvailableActionsInAsset;
+        private string[] m_AvailableActionsInAssetNames;
 
         public void OnEnable()
         {
-            var numActions = m_ActionNames.Length;
-            m_ActionTypes = new ActionReferenceType[numActions];
+            var numActions = s_ActionNames.Length;
             m_ReferenceProperties = new SerializedProperty[numActions];
-            m_DataProperties = new SerializedProperty[numActions];
             for (var i = 0; i < numActions; i++)
+                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{s_ActionNames[i]}Action");
+
+            m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
+            m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
+            // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215")) ?? new string[0]).ToArray();
+        }
+
+        public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)
+        {
+            module.actionsAsset = action;
+            var assets = GetAllActionsFromAsset(action);
+            if (assets != null)
             {
-                m_ReferenceProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionReference");
-                m_DataProperties[i] = serializedObject.FindProperty($"m_{m_ActionNames[i]}ActionData");
-                m_ActionTypes[i] = m_ReferenceProperties[i].objectReferenceValue != null ? ActionReferenceType.Reference : ActionReferenceType.SerializedData;
+                module.point = GetActionReferenceFromAssets(assets, module.point?.action?.name, "Point", "MousePosition", "Mouse Position");
+                module.leftClick = GetActionReferenceFromAssets(assets, module.leftClick?.action?.name, "Click", "LeftClick", "Left Click");
+                module.rightClick = GetActionReferenceFromAssets(assets, module.rightClick?.action?.name, "RightClick", "Right Click", "ContextClick", "Context Click", "ContextMenu", "Context Menu");
+                module.middleClick = GetActionReferenceFromAssets(assets, module.middleClick?.action?.name, "MiddleClick", "Middle Click");
+                module.scrollWheel = GetActionReferenceFromAssets(assets, module.scrollWheel?.action?.name, "ScrollWheel", "Scroll Wheel", "Scroll", "Wheel");
+                module.move = GetActionReferenceFromAssets(assets, module.move?.action?.name, "Navigate", "Move");
+                module.submit = GetActionReferenceFromAssets(assets, module.submit?.action?.name, "Submit");
+                module.cancel = GetActionReferenceFromAssets(assets, module.cancel?.action?.name, "Cancel", "Esc", "Escape");
+                module.trackedDevicePosition = GetActionReferenceFromAssets(assets, module.trackedDevicePosition?.action?.name, "TrackedDevicePosition", "Position");
+                module.trackedDeviceOrientation = GetActionReferenceFromAssets(assets, module.trackedDeviceOrientation?.action?.name, "TrackedDeviceOrientation", "Orientation");
+                module.trackedDeviceSelect = GetActionReferenceFromAssets(assets, module.trackedDeviceSelect?.action?.name, "TrackedDeviceSelect", "Select");
             }
         }
 
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            if (Event.current.type == EventType.ExecuteCommand)
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_ActionsAsset);
+            if (EditorGUI.EndChangeCheck())
             {
-                if (Event.current.commandName == "ObjectSelectorUpdated")
+                var actions = m_ActionsAsset.objectReferenceValue as InputActionAsset;
+                if (actions != null)
                 {
-                    if (EditorGUIUtility.GetObjectPickerControlID() == GetInstanceID())
-                    {
-                        var module = target as InputSystemUIInputModule;
-                        var actions = (InputActionAsset)EditorGUIUtility.GetObjectPickerObject();
-                        var path = AssetDatabase.GetAssetPath(actions);
-                        var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+                    serializedObject.ApplyModifiedProperties();
 
-                        module.point = GetActionReferenceFromAssets(actions, assets, module.point, "Point", "MousePosition", "Mouse Position");
-                        module.leftClick = GetActionReferenceFromAssets(actions, assets, module.leftClick, "Click", "LeftClick", "Left Click");
-                        module.rightClick = GetActionReferenceFromAssets(actions, assets, module.rightClick, "RightClick", "Right Click", "ContextClick", "Context Click", "ContextMenu", "Context Menu");
-                        module.middleClick = GetActionReferenceFromAssets(actions, assets, module.middleClick, "MiddleClick", "Middle Click");
-                        module.scrollWheel = GetActionReferenceFromAssets(actions, assets, module.scrollWheel, "ScrollWheel", "Scroll Wheel", "Scroll", "Wheel");
-                        module.move = GetActionReferenceFromAssets(actions, assets, module.move, "Navigate", "Move");
-                        module.submit = GetActionReferenceFromAssets(actions, assets, module.submit, "Submit");
-                        module.cancel = GetActionReferenceFromAssets(actions, assets, module.cancel, "Cancel", "Esc", "Escape");
+                    ReassignActions(target as InputSystemUIInputModule, actions);
 
-                        serializedObject.Update();
+                    serializedObject.Update();
+                }
 
-                        // reinitialize action types
-                        OnEnable();
-                    }
+                // reinitialize action types
+                OnEnable();
+            }
+
+            var numActions = s_ActionNames.Length;
+            for (var i = 0; i < numActions; i++)
+            {
+                if (m_AvailableActionsInAsset != null)
+                {
+                    int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
+                    EditorGUI.BeginChangeCheck();
+                    index = EditorGUILayout.Popup(MakeNiceUIName(s_ActionNames[i]), index, m_AvailableActionsInAssetNames);
+
+                    if (EditorGUI.EndChangeCheck())
+                        m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
                 }
             }
 
-            GUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUI.indentLevel++;
-            m_ActionsFoldout = EditorGUILayout.Foldout(m_ActionsFoldout, "Actions", Styles.s_FoldoutStyle);
-            EditorGUI.indentLevel--;
-
-            if (m_ActionsFoldout)
-            {
-                const string buttonLabel = "Link Actions from Asset…";
-                EditorGUILayout.HelpBox($"You can assign input actions to generate UI events here. Actions can either be stored as serialized data on this component, or as references to actions in an Input Action Asset. Click '{buttonLabel}' below to automatically assign all actions from an input action asset if they match common names for the UI actions.", MessageType.Info);
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(EditorGUIUtility.labelWidth);
-                if (GUILayout.Button(buttonLabel, EditorStyles.miniButton))
-                    EditorGUIUtility.ShowObjectPicker<InputActionAsset>(null, false, "", GetInstanceID());
-                GUILayout.EndHorizontal();
-                GUILayout.Space(5);
-
-                var numActions = m_ActionNames.Length;
-                for (var i = 0; i < numActions; i++)
-                {
-                    GUILayout.Space(2);
-                    GUIHelpers.DrawLineSeparator();
-                    GUILayout.Space(2);
-
-                    GUILayout.BeginHorizontal();
-                    GUILayout.Label(m_ActionNames[i], EditorStyles.boldLabel, GUILayout.Width(EditorGUIUtility.labelWidth));
-                    m_ActionTypes[i] = (ActionReferenceType)EditorGUILayout.EnumPopup(m_ActionTypes[i]);
-                    GUILayout.EndHorizontal();
-                    GUILayout.Space(5);
-
-                    EditorGUILayout.PropertyField(m_ActionTypes[i] == ActionReferenceType.Reference ? m_ReferenceProperties[i] : m_DataProperties[i], GUIContent.none);
-                    if (m_ActionTypes[i] == ActionReferenceType.SerializedData)
-                        m_ReferenceProperties[i].objectReferenceValue = null;
-                }
-            }
-            GUILayout.EndVertical();
             if (GUI.changed)
                 serializedObject.ApplyModifiedProperties();
-        }
-
-        private static class Styles
-        {
-            public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
-
-            static Styles()
-            {
-                s_FoldoutStyle.fontStyle = FontStyle.Bold;
-            }
         }
     }
 }

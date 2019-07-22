@@ -35,29 +35,29 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
-        public InputDeviceMatcher WithInterface(string pattern)
+        public InputDeviceMatcher WithInterface(string pattern, bool supportRegex = true)
         {
-            return With(kInterfaceKey, pattern);
+            return With(kInterfaceKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithDeviceClass(string pattern)
+        public InputDeviceMatcher WithDeviceClass(string pattern, bool supportRegex = true)
         {
-            return With(kDeviceClassKey, pattern);
+            return With(kDeviceClassKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithManufacturer(string pattern)
+        public InputDeviceMatcher WithManufacturer(string pattern, bool supportRegex = true)
         {
-            return With(kManufacturerKey, pattern);
+            return With(kManufacturerKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithProduct(string pattern)
+        public InputDeviceMatcher WithProduct(string pattern, bool supportRegex = true)
         {
-            return With(kProductKey, pattern);
+            return With(kProductKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithVersion(string pattern)
+        public InputDeviceMatcher WithVersion(string pattern, bool supportRegex = true)
         {
-            return With(kVersionKey, pattern);
+            return With(kVersionKey, pattern, supportRegex);
         }
 
         public InputDeviceMatcher WithCapability<TValue>(string path, TValue value)
@@ -65,10 +65,10 @@ namespace UnityEngine.InputSystem.Layouts
             return With(new InternedString(path), value);
         }
 
-        public InputDeviceMatcher With(InternedString key, object value)
+        public InputDeviceMatcher With(InternedString key, object value, bool supportRegex = true)
         {
             // If it's a string, check whether it's a regex.
-            if (value is string str)
+            if (supportRegex && value is string str)
             {
                 var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch));
                 if (mayBeRegex)
@@ -203,15 +203,15 @@ namespace UnityEngine.InputSystem.Layouts
         {
             var matcher = new InputDeviceMatcher();
             if (!string.IsNullOrEmpty(deviceDescription.interfaceName))
-                matcher = matcher.WithInterface(deviceDescription.interfaceName);
+                matcher = matcher.WithInterface(deviceDescription.interfaceName, false);
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
-                matcher = matcher.WithDeviceClass(deviceDescription.deviceClass);
+                matcher = matcher.WithDeviceClass(deviceDescription.deviceClass, false);
             if (!string.IsNullOrEmpty(deviceDescription.manufacturer))
-                matcher = matcher.WithManufacturer(deviceDescription.manufacturer);
+                matcher = matcher.WithManufacturer(deviceDescription.manufacturer, false);
             if (!string.IsNullOrEmpty(deviceDescription.product))
-                matcher = matcher.WithProduct(deviceDescription.product);
+                matcher = matcher.WithProduct(deviceDescription.product, false);
             if (!string.IsNullOrEmpty(deviceDescription.version))
-                matcher = matcher.WithVersion(deviceDescription.version);
+                matcher = matcher.WithVersion(deviceDescription.version, false);
             // We don't include capabilities in this conversion.
             return matcher;
         }
@@ -233,8 +233,12 @@ namespace UnityEngine.InputSystem.Layouts
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public bool Equals(InputDeviceMatcher other)
         {
+            if (other == null)
+                return false;
+
             if (m_Patterns == other.m_Patterns)
                 return true;
 

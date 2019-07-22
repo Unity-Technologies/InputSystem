@@ -13,16 +13,35 @@ namespace UnityEngine.InputSystem.Interactions
     /// The interaction goes into <see cref="InputActionPhase.Started"/> on the first press and then will not
     /// trigger again until either the full tap sequence is performed (in which case the interaction triggers
     /// <see cref="InputActionPhase.Performed"/>) or the multi-tap is aborted by a timeout being hit (in which
-    /// case the interaction will trigger <see cref="InputActionPhase.Cancelled"/>).
+    /// case the interaction will trigger <see cref="InputActionPhase.Canceled"/>).
     /// </remarks>
     public class MultiTapInteraction : IInputInteraction<float>
     {
+        /// <summary>
+        /// The time in seconds within which the control needs to be pressed and released to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultTapTime"/>) instead.
+        /// </remarks>
         [Tooltip("The maximum time (in seconds) allowed to elapse between pressing and releasing a control for it to register as a tap.")]
         public float tapTime;
 
-        [Tooltip("The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is cancelled.")]
+        /// <summary>
+        /// The time in seconds which is allowed to pass between taps.
+        /// </summary>
+        /// <remarks>
+        /// If this time is exceeded, the multi-tap interaction is canceled.
+        /// If this value is equal to or smaller than zero, the input system will use the duplicate value of <see cref="tapTime"/> instead.
+        /// </remarks>
+        [Tooltip("The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.")]
         public float tapDelay;
 
+        /// <summary>
+        /// The number of taps required to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.
+        /// </remarks>
         [Tooltip("How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.")]
         public int tapCount = 2;
 
@@ -38,7 +57,7 @@ namespace UnityEngine.InputSystem.Interactions
             {
                 // We use timers multiple times but no matter what, if they expire it means
                 // that we didn't get input in time.
-                context.Cancelled();
+                context.Canceled();
                 return;
             }
 
@@ -73,7 +92,7 @@ namespace UnityEngine.InputSystem.Interactions
                         }
                         else
                         {
-                            context.Cancelled();
+                            context.Canceled();
                         }
                     }
                     break;
@@ -89,7 +108,7 @@ namespace UnityEngine.InputSystem.Interactions
                         }
                         else
                         {
-                            context.Cancelled();
+                            context.Canceled();
                         }
                     }
                     break;
@@ -127,11 +146,11 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_TapTimeSetting.Initialize("Max Tap Duration",
                 "Time (in seconds) within with a control has to be released again for it to register as a tap. If the control is held "
-                + "for longer than this time, the tap is cancelled.",
+                + "for longer than this time, the tap is canceled.",
                 "Default Tap Time",
                 () => target.tapTime, x => target.tapTime = x, () => InputSystem.settings.defaultTapTime);
             m_TapDelaySetting.Initialize("Max Tap Spacing",
-                "The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is cancelled.",
+                "The maximum delay (in seconds) allowed between each tap. If this time is exceeded, the multi-tap is canceled.",
                 "Default Tap Spacing",
                 () => target.tapDelay, x => target.tapDelay = x, () => target.tapDelayOrDefault,
                 defaultComesFromInputSettings: false);

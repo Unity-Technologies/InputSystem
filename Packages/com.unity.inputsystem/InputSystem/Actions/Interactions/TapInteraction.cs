@@ -5,12 +5,28 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed and released within the set
-    /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>).
+    /// Performs the action if the control is pressed held for at least the set
+    /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
+    /// and then released.
     /// </summary>
     public class TapInteraction : IInputInteraction
     {
+        /// <summary>
+        /// The time in seconds within which the control needs to be pressed and released to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultTapTime"/>) instead.
+        /// </remarks>
         public float duration;
+
+        /// <summary>
+        /// The press point required to perform the interaction.
+        /// </summary>
+        /// <remarks>
+        /// For analog controls (such as trigger axes on a gamepad), the control needs to be engaged by at least this
+        /// value to perform the interaction.
+        /// If this value is equal to or smaller than zero, the input system will use (<see cref="InputSettings.defaultButtonPressPoint"/>) instead.
+        /// </remarks>
         public float pressPoint;
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
@@ -24,7 +40,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.Cancelled();
+                context.Canceled();
                 return;
             }
 
@@ -47,7 +63,7 @@ namespace UnityEngine.InputSystem.Interactions
                 else
                 {
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
-                    context.Cancelled();
+                    context.Canceled();
                 }
             }
         }
@@ -65,7 +81,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.Initialize("Max Tap Duration",
                 "Time (in seconds) within with a control has to be released again for it to register as a tap. If the control is held "
-                + "for longer than this time, the tap is cancelled.",
+                + "for longer than this time, the tap is canceled.",
                 "Default Tap Time",
                 () => target.duration, x => target.duration = x, () => InputSystem.settings.defaultTapTime);
             m_PressPointSetting.Initialize("Press Point",

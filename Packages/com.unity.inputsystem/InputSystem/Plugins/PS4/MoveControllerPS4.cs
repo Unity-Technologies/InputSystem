@@ -6,15 +6,15 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.Plugins.PS4.LowLevel;
+using UnityEngine.InputSystem.PS4.LowLevel;
 
 ////TODO: player ID
 
-namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
+namespace UnityEngine.InputSystem.PS4.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStatePS4 in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct MoveControllerStatePS4 : IInputStateTypeInfo
+    internal struct MoveControllerStatePS4 : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('P', '4', 'M', 'V');
 
@@ -53,9 +53,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
         [FieldOffset(20)]
         public Vector3 gyro;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
@@ -64,12 +64,13 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the DualShockPS4OutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct MoveControllerPS4OuputCommand : IInputDeviceCommandInfo
+    internal struct MoveControllerPS4OuputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('P', 'S', 'M', 'C');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 5;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum Flags
         {
@@ -79,15 +80,16 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 0)] public byte flags;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 1)] public byte motorSpeed;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 2)] public byte redColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 3)] public byte greenColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)] public byte blueColor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeed(float motor)
@@ -114,7 +116,7 @@ namespace UnityEngine.InputSystem.Plugins.PS4.LowLevel
     }
 }
 
-namespace UnityEngine.InputSystem.Plugins.PS4
+namespace UnityEngine.InputSystem.PS4
 {
     //Sync to PS4MoveDeviceDefinition in sixaxis.cpp
     [Serializable]
@@ -231,6 +233,9 @@ namespace UnityEngine.InputSystem.Plugins.PS4
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             selectButton = builder.GetControl<ButtonControl>(this, "select");
             triggerButton = builder.GetControl<ButtonControl>(this, "triggerButton");
             moveButton = builder.GetControl<ButtonControl>(this, "move");

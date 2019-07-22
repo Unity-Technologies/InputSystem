@@ -1,8 +1,11 @@
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// Base class for standalone VR headsets powered by Oculus VR.
+    /// </summary>
     [InputControlLayout]
     public class OculusStandaloneHMDBase : XRHMD
     {
@@ -31,6 +34,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -58,9 +64,15 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// An Oculus Go headset.
+    /// </summary>
     public class OculusGo : OculusStandaloneHMDBase
     {}
 
+    /// <summary>
+    /// A standalone VR headset powered by Oculus VR.
+    /// </summary>
     [InputControlLayout]
     public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
     {
@@ -76,9 +88,16 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// A Gear VR headset.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1501:AvoidExcessiveInheritance")]
     public class GearVR : OculusStandaloneHMDExtended
     {}
 
+    /// <summary>
+    /// A Gear VR controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
@@ -98,6 +117,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             touchpad = builder.GetControl<Vector2Control>("touchpad");

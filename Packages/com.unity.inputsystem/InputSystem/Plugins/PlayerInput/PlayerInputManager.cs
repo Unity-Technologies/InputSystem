@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.InputSystem.Plugins.PlayerInput
+namespace UnityEngine.InputSystem.PlayerInput
 {
     /// <summary>
     /// Manages joining and leaving of players.
@@ -17,22 +17,31 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
     /// <remarks>
     /// This is a singleton component. Only one instance is meant to be active in a game
     /// at any one time. To retrieve the current instance, use <see cref="instance"/>.
+    ///
+    /// Note that a PlayerInputManager is not strictly required to have multiple <see cref="PlayerInput"/> components.
+    /// What PlayerInputManager provides is the implementation of specific player join mechanisms
+    /// (<see cref="joinBehavior"/>) as well as automatic assignment of split-screen areas (<see cref="splitScreen"/>).
+    /// However, you can always implement your own custom logic instead and simply instantiate multiple GameObjects with
+    /// <see cref="PlayerInput"/> yourself.
     /// </remarks>
     [AddComponentMenu("Input/Player Input Manager")]
     public class PlayerInputManager : MonoBehaviour
     {
+        /// <summary>
+        /// Name of the message that is sent when a player joins the game.
+        /// </summary>
         public const string PlayerJoinedMessage = "OnPlayerJoined";
+
         public const string PlayerLeftMessage = "OnPlayerLeft";
         public const string PlayerJoinFailedMessage = "OnPlayerJoinFailed";
         public const string SplitScreenSetupChanged = "OnSplitScreenSetupChanged";
 
         /// <summary>
-        /// If enabled, each player will automatically be assigned
+        /// If enabled, each player will automatically be assigned a portion of the available screen area.
         /// </summary>
         /// <remarks>
-        /// For this to work, the <see cref="GameObject"/> associated with each <see cref="PlayerInput"/>
-        /// component must have a <see cref="Camera"/> component either directly on the GameObject or
-        /// on a child.
+        /// For this to work, each <see cref="PlayerInput"/> component must have an associated <see cref="Camera"/>
+        /// object through <see cref="PlayerInput.camera"/>.
         ///
         /// Note that as player join, the screen may be increasingly subdivided and players may see their
         /// previous screen area getting resized.
@@ -85,29 +94,14 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         ///
         /// This property is irrelevant if <see cref="fixedNumberOfSplitScreens"/> is used.
         /// </remarks>
-        public bool maintainAspectRatioInSplitScreen
-        {
-            get => m_MaintainAspectRatioInSplitScreen;
-            set { throw new NotImplementedException(); }
-        }
+        public bool maintainAspectRatioInSplitScreen => m_MaintainAspectRatioInSplitScreen;
 
-        /// <summary>
-        /// This property
-        /// </summary>
-        public int fixedNumberOfSplitScreens
-        {
-            get => m_FixedNumberOfSplitScreens;
-            set { throw new NotImplementedException(); }
-        }
+        public int fixedNumberOfSplitScreens => m_FixedNumberOfSplitScreens;
 
         /// <summary>
         /// If this is non-zero, split-screen areas will be
         /// </summary>
-        public float splitScreenBorderWidth
-        {
-            get => m_SplitScreenBorderWidth;
-            set { throw new NotImplementedException(); }
-        }
+        public float splitScreenBorderWidth => m_SplitScreenBorderWidth;
 
         /// <summary>
         /// The normalized screen rectangle available for allocating player split-screens into.
@@ -119,12 +113,14 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// If, for example, part of the screen should display a UI/information shared by all players, this
         /// property can be used to cut off the area and not have it used by PlayerInputManager.
         /// </remarks>
-        public Rect splitScreenArea
-        {
-            get => m_SplitScreenRect;
-            set { throw new NotImplementedException(); }
-        }
+        public Rect splitScreenArea => m_SplitScreenRect;
 
+        /// <summary>
+        /// The current number of active players.
+        /// </summary>
+        /// <remarks>
+        /// This count corresponds to all <see cref="PlayerInput"/> instances that are currently enabled.
+        /// </remarks>
         public int playerCount => PlayerInput.s_AllActivePlayersCount;
 
         /// <summary>
@@ -136,17 +132,23 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         /// By default this is set to -1. Any negative value deactivates the player limit and allows
         /// arbitrary many players to join.
         /// </remarks>
-        public int maxPlayerCount
-        {
-            get => m_MaxPlayerCount;
-            set { throw new NotImplementedException(); }
-        }
+        public int maxPlayerCount => m_MaxPlayerCount;
 
-        public bool joiningEnabled
-        {
-            get => m_AllowJoining;
-        }
+        /// <summary>
+        /// Whether new players can currently join.
+        /// </summary>
+        /// <remarks>
+        /// While this is true, new players can join via the mechanism determined by <see cref="joinBehavior"/>.
+        /// </remarks>
+        /// <seealso cref="EnableJoining"/>
+        /// <seealso cref="DisableJoining"/>
+        public bool joiningEnabled => m_AllowJoining;
 
+        /// <summary>
+        /// Determines the mechanism by which players can join when joining is enabled (<see cref="joiningEnabled"/>).
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
         public PlayerJoinBehavior joinBehavior
         {
             get => m_JoinBehavior;
@@ -251,27 +253,6 @@ namespace UnityEngine.InputSystem.Plugins.PlayerInput
         {
             get => m_PlayerPrefab;
             set => m_PlayerPrefab = value;
-        }
-
-        /// <summary>
-        /// Optional delegate that creates players.
-        /// </summary>
-        /// <remarks>
-        /// This can be used in place of <see cref="playerPrefab"/> to take control over how
-        /// player objects are created. If this property is not null, <see cref="playerPrefab"/>
-        /// will be ignored (and can be left at null) and the delegate will be invoked to create
-        /// new players.
-        /// </remarks>
-        public Func<PlayerInput> onCreatePlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
-
-        public Func<PlayerInput> onDestroyPlayer
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
         }
 
         public static PlayerInputManager instance { get; private set; }

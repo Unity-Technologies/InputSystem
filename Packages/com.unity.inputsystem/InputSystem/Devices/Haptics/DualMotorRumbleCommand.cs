@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct DualMotorRumbleCommand : IInputDeviceCommandInfo
+    internal struct DualMotorRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('R', 'M', 'B', 'L'); } }
 
@@ -19,9 +19,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 4)]
         public float highFrequencyMotorSpeed;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static DualMotorRumbleCommand Create(float lowFrequency, float highFrequency)

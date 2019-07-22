@@ -125,6 +125,8 @@ namespace UnityEngine.InputSystem.Editor
 
         #region Filtering
 
+        internal bool hasFilter => m_ItemFilterCriteria != null;
+
         public void ClearItemSearchFilterAndReload()
         {
             if (m_ItemFilterCriteria == null)
@@ -153,6 +155,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
+            ////REVIEW: should we *always* do this? (regardless of whether a control scheme is selected)
             // When filtering by binding group, we tag bindings that are not in any binding group as "{GLOBAL}".
             // This helps when having a specific control scheme selected, to also see the bindings that are active
             // in that control scheme by virtue of not being associated with *any* specific control scheme.
@@ -739,7 +742,7 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                throw new Exception($"Cannot paste {tag} into {location.item.displayName}");
+                throw new InvalidOperationException($"Cannot paste {tag} into {location.item.displayName}");
             }
 
             // If not given a specific index, we paste onto the end of the array.
@@ -1002,6 +1005,12 @@ namespace UnityEngine.InputSystem.Editor
         private void SelectItemAndBeginRename(SerializedProperty property)
         {
             var item = FindItemFor(property);
+            if (item == null)
+            {
+                // if we could not find the item, try clearing search filters.
+                ClearItemSearchFilterAndReload();
+                item = FindItemFor(property);
+            }
             Debug.Assert(item != null, $"Cannot find newly created item for {property.propertyPath}");
             SetExpandedRecursive(item.id, true);
             SelectItem(item);
@@ -1473,34 +1482,21 @@ namespace UnityEngine.InputSystem.Editor
 
         public static class Styles
         {
-            public static readonly GUIStyle text = new GUIStyle("Label");
-            public static readonly GUIStyle selectedText = new GUIStyle("Label");
-            public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label");
-            public static readonly GUIStyle border = new GUIStyle("Label");
-            public static readonly GUIStyle backgroundWithBorder = new GUIStyle("Label");
-            public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar);
-
-            static Styles()
-            {
-                backgroundWithBorder.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png");
-                backgroundWithBorder.border = new RectOffset(3, 3, 3, 3);
-                backgroundWithBorder.margin = new RectOffset(4, 4, 4, 4);
-
-                backgroundWithoutBorder.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    ResourcesPath + "actionTreeBackgroundWithoutBorder.png");
-
-                border.normal.background = AssetDatabase.LoadAssetAtPath<Texture2D>(
-                    ResourcesPath + "actionTreeBackground.png");
-                border.border = new RectOffset(0, 0, 0, 1);
-
-                text.alignment = TextAnchor.MiddleLeft;
-                selectedText.alignment = TextAnchor.MiddleLeft;
-                selectedText.normal.textColor = Color.white;
-
-                columnHeaderLabel.alignment = TextAnchor.MiddleLeft;
-                columnHeaderLabel.fontStyle = FontStyle.Bold;
-                columnHeaderLabel.padding.left = 10;
-            }
+            public static readonly GUIStyle text = new GUIStyle("Label").WithAlignment(TextAnchor.MiddleLeft);
+            public static readonly GUIStyle selectedText = new GUIStyle("Label").WithAlignment(TextAnchor.MiddleLeft).WithNormalTextColor(Color.white);
+            public static readonly GUIStyle backgroundWithoutBorder = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackgroundWithoutBorder.png"));
+            public static readonly GUIStyle border = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png"))
+                .WithBorder(new RectOffset(0, 0, 0, 1));
+            public static readonly GUIStyle backgroundWithBorder = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(ResourcesPath + "actionTreeBackground.png"))
+                .WithBorder(new RectOffset(3, 3, 3, 3))
+                .WithMargin(new RectOffset(4, 4, 4, 4));
+            public static readonly GUIStyle columnHeaderLabel = new GUIStyle(EditorStyles.toolbar)
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithFontStyle(FontStyle.Bold)
+                .WithPadding(new RectOffset(10, 6, 0, 0));
         }
     }
 }

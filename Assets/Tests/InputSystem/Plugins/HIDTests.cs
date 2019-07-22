@@ -7,7 +7,7 @@ using System.Threading;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.HID;
+using UnityEngine.InputSystem.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
@@ -108,7 +108,10 @@ internal class HIDTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
 
-        HIDSupport.shouldCreateHID += (descriptor) => (descriptor.usagePage == hidDescriptor.usagePage && descriptor.usage == hidDescriptor.usage) ? true : (bool?)null;
+        HIDSupport.shouldCreateHID += descriptor =>
+            descriptor.usagePage == (HID.UsagePage) 5678 && descriptor.usage == 1234
+            ? true
+            : (bool?)null;
 
         runtime.ReportNewInputDevice(descriptionJson, deviceId);
         InputSystem.Update();
@@ -447,9 +450,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(7)] public ushort vx;
         [FieldOffset(9)] public short vy;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -977,9 +980,9 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('H', 'I', 'D');
+            get { return new FourCC('H', 'I', 'D'); }
         }
     }
 
@@ -1040,12 +1043,7 @@ internal class HIDTests : InputTestFixture
     [Category("Utilities")]
     public void Utilities_CanRecognizeVendorDefinedUsages()
     {
-        string usagePage;
-        string usage;
-
-        HID.UsageToString((HID.UsagePage) 0xff01, 0x33, out usagePage, out usage);
-
-        Assert.That(usagePage, Is.EqualTo("Vendor-Defined"));
-        Assert.That(usage, Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsagePageToString((HID.UsagePage) 0xff01), Is.EqualTo("Vendor-Defined"));
+        Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
     }
 }

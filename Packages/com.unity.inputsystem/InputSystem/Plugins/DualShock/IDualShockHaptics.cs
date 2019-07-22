@@ -1,6 +1,6 @@
 using UnityEngine.InputSystem.Haptics;
 
-namespace UnityEngine.InputSystem.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// Extended haptics interface for DualShock controllers.

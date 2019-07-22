@@ -4,12 +4,19 @@ platforms:
   - name: win
     type: Unity::VM
     image: package-ci/win10:latest
-    flavor: m1.large
+    flavor: b1.large
   - name: win_standalone
     type: Unity::VM
     image: package-ci/win10:latest
-    flavor: m1.large
+    flavor: b1.large
     runtime: StandaloneWindows64
+  - name: win_standalone_il2cpp
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: b1.large
+    runtime: StandaloneWindows64
+    scripting-backend: Il2Cpp
+    installscript: c:\python27\Scripts\unity-downloader-cli.exe -c editor -c StandaloneSupport-IL2CPP -w -u 
   - name: mac
     type: Unity::VM::osx
     image: buildfarm/mac:stable
@@ -19,6 +26,13 @@ platforms:
     image: buildfarm/mac:stable
     flavor: m1.mac
     runtime: StandaloneOSX
+  - name: mac_standalone_il2cpp
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
+    runtime: StandaloneOSX   
+    scripting-backend: Il2Cpp 
+    installscript: ~/Library/Python/2.7/bin/unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
@@ -29,10 +43,11 @@ platforms:
     image: {{ platform.image }}
     flavor: {{ platform.flavor}}
   commands:
-    - npm install upm-ci-utils -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
-    - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} 
+    - {% if platform.installscript %} {{ platform.installscript }} {{ editor.version }} {% endif %} 
+    - upm-ci~/tools/utr/utr --testproject=. --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
   triggers:
     branches:
       only:
@@ -43,3 +58,22 @@ platforms:
         - "upm-ci~/test-results/**/*"
 {% endfor %}
 {% endfor %}
+
+publish:
+  name: Publish to Internal Registry
+  agent:
+    type: Unity::VM
+    image: package-ci/win10:stable
+    flavor: m1.large
+  commands:
+    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
+  triggers:
+    tags:
+      only:
+        - /^(r|R)(c|C)-\d+\.\d+\.\d+(-preview(\.\d+)?)?$/
+  artifacts:
+    artifacts:
+      paths:
+        - "upm-ci~/packages/*.tgz"

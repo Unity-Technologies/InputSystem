@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
-	"version": "0.2.8-preview",
+	"version": "0.9.1-preview",
 	"unity": "2019.1",
 	"repository": {
 		"type": "git",
@@ -19,5 +19,7 @@
 		"vr",
 		"xr"
 	],
-	"dependencies": {}
+	"dependencies": {
+		"com.unity.ugui": "1.0.0"
+	}
 }

@@ -170,8 +170,9 @@ namespace UnityEngine.InputSystem.Editor
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Button;  // Default to creating button actions.
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-            actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue = string.Empty;
+            actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = string.Empty;
 
             return actionProperty;
         }
@@ -390,6 +391,7 @@ namespace UnityEngine.InputSystem.Editor
             nameProperty.stringValue = FindUniqueName(arrayProperty, baseName, ignoreIndex: arrayIndexOfElement);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly", Justification = "False positive (possibly caused by lambda expression?).")]
         public static string FindUniqueName(SerializedProperty arrayProperty, string baseName, int ignoreIndex = -1)
         {
             return StringHelpers.MakeUniqueName(baseName,

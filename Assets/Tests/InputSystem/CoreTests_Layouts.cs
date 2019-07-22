@@ -164,7 +164,7 @@ partial class CoreTests
         var setup = new InputDeviceBuilder("MyDevice");
         var device = (Gamepad)setup.Finish();
 
-        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
+        Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
     }
 
     [Test]
@@ -231,12 +231,12 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("MyDevice");
 
-        Assert.That(layout["analog"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["analog"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
-        Assert.That(layout["digital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.valueType, Is.EqualTo(TypeCode.Int32));
-        Assert.That(layout["hexDigital"].defaultState.primitiveValue.ToInt64(), Is.EqualTo(0x1234));
+        Assert.That(layout["analog"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["analog"].defaultState.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.ToInt64(), Is.EqualTo(1234));
+        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 
     class TestDeviceWithDefaultState : InputDevice
@@ -253,8 +253,8 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("TestDeviceWithDefaultState");
 
-        Assert.That(layout["control"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(layout["control"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control"].defaultState.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]
@@ -304,12 +304,12 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("DerivedLayout");
 
-        Assert.That(layout["control1"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control1"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
-        Assert.That(layout["control2"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control2"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
-        Assert.That(layout["control3"].defaultState.valueType, Is.EqualTo(TypeCode.Double));
-        Assert.That(layout["control3"].defaultState.primitiveValue.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
+        Assert.That(layout["control1"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control1"].defaultState.ToDouble(), Is.EqualTo(0.9876).Within(0.00001));
+        Assert.That(layout["control2"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control2"].defaultState.ToDouble(), Is.EqualTo(0.3456).Within(0.00001));
+        Assert.That(layout["control3"].defaultState.type, Is.EqualTo(TypeCode.Double));
+        Assert.That(layout["control3"].defaultState.ToDouble(), Is.EqualTo(0.1234).Within(0.00001));
     }
 
     [Test]
@@ -889,7 +889,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
 
         Assert.That(() => InputSystem.AddDevice("MyDevice"),
-            Throws.TypeOf<Exception>().With.Property("Message").Contain("Duplicate control"));
+            Throws.TypeOf<InvalidOperationException>().With.Property("Message").Contain("Duplicate control"));
     }
 
     [Test]
@@ -1108,9 +1108,9 @@ partial class CoreTests
         // No float as that is the default format for Axis anyway.
         [InputControl(layout = "Axis")] public double doubleAxis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1126,19 +1126,19 @@ partial class CoreTests
         InputSystem.RegisterLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
         var setup = new InputDeviceBuilder("Test");
 
-        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeByte));
-        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeShort));
-        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeInt));
-        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.kTypeDouble));
+        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
+        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
+        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatDouble));
     }
 
     private unsafe struct StateWithFixedArray : IInputStateTypeInfo
     {
         [InputControl] public fixed float buffer[2];
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -1403,7 +1403,7 @@ partial class CoreTests
         var derivedLayout = InputSystem.LoadLayout<DerivedClassModifyingControlFromBaseClass>();
 
         Assert.That(baseLayout["controlFromBase"].format, Is.EqualTo(new FourCC())); // Unset in base.
-        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.kTypeShort));
+        Assert.That(derivedLayout["controlFromBase"].format, Is.EqualTo(InputStateBlock.FormatShort));
 
         // This is probably somewhat counterintuitive but if there's InputControlAttributes on a property or field,
         // there won't be a control generated automatically from the field or property.
@@ -1847,9 +1847,9 @@ partial class CoreTests
         [InputControl(name = "axis", layout = "Axis", variants = "B")]
         public float axis;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('T', 'E', 'S', 'T');
+            get { return new FourCC('T', 'E', 'S', 'T'); }
         }
     }
 
@@ -2098,9 +2098,9 @@ partial class CoreTests
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("BASE");
+            get { return new FourCC("BASE"); }
         }
     }
 
@@ -2111,9 +2111,9 @@ partial class CoreTests
 
     private struct DerivedInputState : IInputStateTypeInfo
     {
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC("DERI");
+            get { return new FourCC("DERI"); }
         }
     }
 

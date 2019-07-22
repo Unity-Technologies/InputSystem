@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.InputSystem.Plugins.XR.Haptics
+namespace UnityEngine.InputSystem.XR.Haptics
 {
     public struct HapticCapabilities
     {
@@ -25,9 +25,9 @@ namespace UnityEngine.InputSystem.Plugins.XR.Haptics
 
         const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(uint) * 3;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         [FieldOffset(0)]

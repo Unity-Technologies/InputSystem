@@ -5,8 +5,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.PlayerInput;
-using UnityEngine.InputSystem.Plugins.Users;
+using UnityEngine.InputSystem.PlayerInput;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Processors;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
@@ -88,6 +89,30 @@ internal class PlayerInputTests : InputTestFixture
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanLinkSpecificDeviceToUI()
+    {
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        var player = prefab.AddComponent<PlayerInput>();
+        var ui = prefab.AddComponent<InputSystemUIInputModule>();
+        player.uiInputModule = ui;
+        player.actions = InputActionAsset.FromJson(kActions);
+        ui.actionsAsset = player.actions;
+
+        InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: gamepad);
+
+        Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
     }
 
     [Test]
@@ -284,6 +309,32 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_DuplicatingActions_AssignsNewInstanceToUI()
+    {
+        var go1 = new GameObject();
+        var playerInput1 = go1.AddComponent<PlayerInput>();
+        var ui1 = go1.AddComponent<InputSystemUIInputModule>();
+        playerInput1.uiInputModule = ui1;
+
+        var go2 = new GameObject();
+        var playerInput2 = go2.AddComponent<PlayerInput>();
+        var ui2 = go1.AddComponent<InputSystemUIInputModule>();
+        playerInput2.uiInputModule = ui2;
+
+        var actions = InputActionAsset.FromJson(kActions);
+
+        ui1.actionsAsset = actions;
+        playerInput1.actions = actions;
+        ui2.actionsAsset = actions;
+        playerInput2.actions = actions;
+
+        Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
+        Assert.That(playerInput1.actions, Is.SameAs(ui1.actionsAsset));
+        Assert.That(playerInput2.actions, Is.SameAs(ui2.actionsAsset));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanPassivateAndReactivateInputBySendingMessages()
     {
         var go = new GameObject();
@@ -300,6 +351,83 @@ internal class PlayerInputTests : InputTestFixture
         go.SendMessage("ActivateInput");
 
         Assert.That(playerInput.active, Is.True);
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_PassivatingActionsWillOnlyDisableActionsPlayerInputEnabledItself()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        var moveAction = playerInput.actions.FindAction("move");
+        var navigateAction = playerInput.actions.FindAction("navigate");
+        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.False);
+
+        navigateAction.Enable();
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.True);
+
+        playerInput.PassivateInput();
+
+        Assert.That(playerInput.active, Is.False);
+        Assert.That(gameplayActions.enabled, Is.False);
+        Assert.That(moveAction.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.True);
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_SwitchingActionMapWillOnlyDisableActionsPlayerInputEnabledItself()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        var moveAction = playerInput.actions.FindAction("move");
+        var navigateAction = playerInput.actions.FindAction("navigate");
+        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
+        var otherActions = playerInput.actions.GetActionMap("other");
+
+        Set(gamepad.leftTrigger, 0.234f);
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(otherActions.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.False);
+
+        navigateAction.Enable();
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.True);
+        Assert.That(moveAction.enabled, Is.True);
+        Assert.That(otherActions.enabled, Is.False);
+        Assert.That(navigateAction.enabled, Is.True);
+
+        playerInput.currentActionMap = otherActions;
+
+        Assert.That(playerInput.active, Is.True);
+        Assert.That(gameplayActions.enabled, Is.False);
+        Assert.That(moveAction.enabled, Is.False);
+        Assert.That(otherActions.enabled, Is.True);
+        Assert.That(navigateAction.enabled, Is.True);
     }
 
     [Test]
@@ -422,13 +550,18 @@ internal class PlayerInputTests : InputTestFixture
 
         listener.messages.Clear();
 
-        go.SendMessage("SwitchActions", "other");
+        go.SendMessage("SwitchCurrentActionMap", "other");
 
         Set(gamepad.leftTrigger, 0.345f);
 
         Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.345f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(
+            new[]
+            {
+                new Message("OnOtherAction", 0.234f), // otherAction is a value action which implies an initial state check
+                new Message("OnOtherAction", 0.345f)
+            }));
     }
 
     [Test]
@@ -489,7 +622,7 @@ internal class PlayerInputTests : InputTestFixture
 
         listener.messages.Clear();
 
-        // 'Fire' is not a continuous action. Unlike with continuous actions, PlayerInput should not
+        // 'Fire' is a button action. Unlike with value actions, PlayerInput should not
         // send a message on button release (i.e. when the action cancels).
         Release(gamepad.buttonSouth);
 
@@ -498,7 +631,7 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCancelled()
+    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCanceled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1051,15 +1184,31 @@ internal class PlayerInputTests : InputTestFixture
         Assert.Fail();
     }
 
+    // An action is either
+    //   (a) button-like, or
+    //   (b) axis-like, or
+    //   (c) undefined in behavior.
+    //
+    // (c) is used for actions that are usually chained to lots of inputs (e.g. "bind to all keys on keyboard")
+    // where the action thus becomes a simple input collector.
+    //
+    // (a) and (b) are what is "normal" usage of actions. This is the type of stuff that game actions are made
+    // of.
+    //
+    // (a) acts as a trigger whereas (b) acts
+    //
+    //
+    // isn't (b) and (c) kinda the same in practice??
+
     private const string kActions = @"
         {
             ""maps"" : [
                 {
                     ""name"" : ""gameplay"",
                     ""actions"" : [
-                        { ""name"" : ""fire"" },
-                        { ""name"" : ""look"", ""continuous"" : true },
-                        { ""name"" : ""move"", ""continuous"" : true }
+                        { ""name"" : ""fire"", ""type"" : ""button"" },
+                        { ""name"" : ""look"", ""type"" : ""value"" },
+                        { ""name"" : ""move"", ""type"" : ""value"" }
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },

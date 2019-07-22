@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: set displayNames of the controls according to Xbox controller standards
 
-namespace UnityEngine.InputSystem.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
     /// An XInput compatible game controller.
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput
         }
 
         [Flags]
-        public enum CapabilityFlags
+        public enum DeviceCapabilities
         {
             ForceFeedbackSupported = 0x01,
             Wireless = 0x02,
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Plugins.XInput
         {
             public DeviceType type;
             public DeviceSubType subType;
-            public CapabilityFlags flags;
+            public DeviceCapabilities capabilities;
         }
     }
 }

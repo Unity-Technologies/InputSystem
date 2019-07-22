@@ -135,6 +135,9 @@ namespace UnityEngine.InputSystem
         public InputControlList(IEnumerable<TControl> values, Allocator allocator = Allocator.Persistent)
             : this(allocator)
         {
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
             foreach (var value in values)
                 Add(value);
         }
@@ -142,13 +145,16 @@ namespace UnityEngine.InputSystem
         public InputControlList(params TControl[] values)
             : this()
         {
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
             foreach (var value in values)
                 Add(value);
         }
 
-        public void Add(TControl control)
+        public void Add(TControl item)
         {
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             var allocator = m_Allocator != Allocator.Invalid ? m_Allocator : Allocator.Persistent;
             ArrayHelpers.AppendWithCapacity(ref m_Indices, ref m_Count, index, allocator: allocator);
         }
@@ -173,8 +179,8 @@ namespace UnityEngine.InputSystem
             if (count == 0)
                 return;
             if (sourceIndex + count > list.Count)
-                throw new ArgumentOutOfRangeException(
-                    $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}", "count");
+                throw new ArgumentOutOfRangeException(nameof(count),
+                    $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}");
 
             // Make space in the list.
             if (Capacity < count)
@@ -191,6 +197,9 @@ namespace UnityEngine.InputSystem
 
         public void AddRange(IEnumerable<TControl> list, int count = -1, int destinationIndex = -1)
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             if (count < 0)
                 count = list.Count();
             if (destinationIndex < 0)
@@ -217,12 +226,12 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public bool Remove(TControl control)
+        public bool Remove(TControl item)
         {
             if (m_Count == 0)
                 return false;
 
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             for (var i = 0; i < m_Count; ++i)
             {
                 if (m_Indices[i] == index)
@@ -249,12 +258,12 @@ namespace UnityEngine.InputSystem
             throw new NotImplementedException();
         }
 
-        public int IndexOf(TControl control)
+        public int IndexOf(TControl item)
         {
             if (m_Count == 0)
                 return -1;
 
-            var index = ToIndex(control);
+            var index = ToIndex(item);
             var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
 
             for (var i = 0; i < m_Count; ++i)
@@ -274,9 +283,9 @@ namespace UnityEngine.InputSystem
             m_Count = 0;
         }
 
-        public bool Contains(TControl control)
+        public bool Contains(TControl item)
         {
-            return IndexOf(control) != -1;
+            return IndexOf(item) != -1;
         }
 
         public void SwapElements(int index1, int index2)
@@ -457,11 +466,17 @@ namespace UnityEngine.InputSystem
         public TControl[] controls => m_Controls;
     }
 
+    /// <summary>
+    /// Extension helper methods to convert enumerables of controls to <see cref="InputControlList"/> instances.
+    /// </summary>
     public static class InputControlListExtensions
     {
         public static InputControlList<TControl> ToControlList<TControl>(this IEnumerable<TControl> list)
             where TControl : InputControl
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             var result = new InputControlList<TControl>();
             foreach (var element in list)
                 result.AddRange(list);
@@ -471,6 +486,9 @@ namespace UnityEngine.InputSystem
         public static InputControlList<TControl> ToControlList<TControl>(this IReadOnlyList<TControl> list)
             where TControl : InputControl
         {
+            if (list == null)
+                throw new ArgumentNullException(nameof(list));
+
             var result = new InputControlList<TControl>();
             foreach (var element in list)
                 result.AddSlice(list);

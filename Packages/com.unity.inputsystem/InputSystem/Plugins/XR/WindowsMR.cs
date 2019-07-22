@@ -1,8 +1,11 @@
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.InputSystem.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// A Windows Mixed Reality XR headset.
+    /// </summary>
     [InputControlLayout]
     public class WMRHMD : XRHMD
     {
@@ -20,6 +23,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             trackingState = builder.GetControl<IntegerControl>("trackingState");
@@ -35,6 +41,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
         }
     }
 
+    /// <summary>
+    /// A Windows Mixed Reality XR controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRControllerWithRumble
     {
@@ -62,6 +71,9 @@ namespace UnityEngine.InputSystem.Plugins.XR
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
+            if (builder == null)
+                throw new System.ArgumentNullException(nameof(builder));
+
             base.FinishSetup(builder);
 
             joystick = builder.GetControl<Vector2Control>("joystick");
