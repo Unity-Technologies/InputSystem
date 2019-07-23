@@ -18,6 +18,14 @@ however, it has to be formatted properly to pass verification tests.
     InputDevice.Build<Mouse>();
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+
+### Added
+
+- Devices can now have more than one usage.
+  * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
+  * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
+  * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
+
 ## [0.9.0-preview] - 2019-7-18
 
 ### Fixed

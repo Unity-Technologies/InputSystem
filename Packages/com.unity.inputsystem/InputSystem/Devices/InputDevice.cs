@@ -430,82 +430,38 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void SetUsage(InternedString usage)
+        internal void AddDeviceUsage(InternedString usage)
         {
-            // Make last entry in m_UsagesForEachControl be our device usage string.
-            SetUsage(m_UsageToControl.LengthSafe(), usage);
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = totalUsageCount;
+            ArrayHelpers.AppendWithCapacity(ref m_UsagesForEachControl, ref totalUsageCount, usage);
+            ++m_UsageCount;
         }
 
-        internal void AddUsage(InternedString usage)
+        internal void RemoveDeviceUsage(InternedString usage)
         {
-            var numCOmmonUsages = m_UsagesForEachControl.LengthSafe();
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
 
-            // Check if the usage already exists
-            for (var i = m_UsageToControl.LengthSafe(); i < numCOmmonUsages; ++i)
-            {
-                if (m_UsagesForEachControl[i] == usage)
-                    return;
-            }
-
-            SetUsage(numCOmmonUsages, usage);
-        }
-
-        internal void RemoveUsage(InternedString usage)
-        {
-            var numControlUsages = m_UsageToControl.LengthSafe();
-            var foundUsage = false;
-
-            for (var i = numControlUsages; i < m_UsagesForEachControl.LengthSafe();)
-            {
-                if (m_UsagesForEachControl[i] == usage)
-                {
-                    ArrayHelpers.EraseAt(ref m_UsagesForEachControl, i);
-                    foundUsage = true;
-                    continue;
-                }
-                ++i;
-            }
-            if (!foundUsage)
+            var index = ArrayHelpers.IndexOfValue(m_UsagesForEachControl, usage, m_UsageStartIndex, totalUsageCount);
+            if (index == -1)
                 return;
 
-            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, m_UsagesForEachControl.LengthSafe() - numControlUsages);
+            Debug.Assert(m_UsageCount > 0);
+            ArrayHelpers.EraseAtWithCapacity(m_UsagesForEachControl, ref totalUsageCount, index);
+            --m_UsageCount;
 
-            UpdateUsageArraysOnControls();
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = default;
         }
 
-        private void SetUsage(int usageIndex, InternedString usage)
+        internal void ClearDeviceUsages()
         {
-            // +---+---+---+
-            // | a | b | c |         : an array of usage to each controls (m_UsageToControl)
-            // +---+---+---+---+---+
-            //             | D | E | : device common usages (m_UsagesReadOnly)
-            //             +---+---+
-            //
-            // +---+---+---+---+---+
-            // | a | b | c | D | E | : usages which are for this device or control this device has (m_UsagesForEachControl)
-            // +---+---+---+---+---+
-            Array.Resize(ref m_UsagesForEachControl, usageIndex + 1);
-
-            var numControlUsages = m_UsageToControl.LengthSafe();
-            var commonUsageCount = m_UsagesForEachControl.LengthSafe() - numControlUsages;
-
-            m_UsagesForEachControl[usageIndex] = usage;
-            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, commonUsageCount);
-
-            // Update controls to all point to new usage array.
-            UpdateUsageArraysOnControls();
-        }
-
-        internal void UpdateUsageArraysOnControls()
-        {
-            if (m_UsageToControl == null)
-                return;
-
-            var numControlUsages = m_UsageToControl.LengthSafe();
-            var commonUsageCount = m_UsagesForEachControl.Length - numControlUsages;
-
-            for (var i = 0; i < m_UsageToControl.Length; ++i)
-                m_UsageToControl[i].m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, commonUsageCount);
+            for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
+                m_UsagesForEachControl[i] = default;
+            m_UsageCount = default;
         }
 
         internal void NotifyAdded()

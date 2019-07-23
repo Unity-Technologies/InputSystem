@@ -898,17 +898,27 @@ namespace UnityEngine.InputSystem
         // May generate garbage.
         public static void SetDeviceUsage(InputDevice device, InternedString usage)
         {
-            s_Manager.SetUsage(device, usage);
+            s_Manager.SetDeviceUsage(device, usage);
+        }
+
+        public static void AddDeviceUsage(InputDevice device, string usage)
+        {
+            s_Manager.AddDeviceUsage(device, new InternedString(usage));
         }
 
         public static void AddDeviceUsage(InputDevice device, InternedString usage)
         {
-            s_Manager.AddUsage(device, usage);
+            s_Manager.AddDeviceUsage(device, usage);
+        }
+
+        public static void RemoveDeviceUsage(InputDevice device, string usage)
+        {
+            s_Manager.RemoveDeviceUsage(device, new InternedString(usage));
         }
 
         public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
         {
-            s_Manager.RemoveUsage(device, usage);
+            s_Manager.RemoveDeviceUsage(device, usage);
         }
 
         /// <summary>
