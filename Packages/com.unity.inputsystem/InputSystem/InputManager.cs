@@ -875,9 +875,12 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(device));
             if (device.usages.Count == 1 && device.usages[0] == usage)
                 return;
+            if (device.usages.Count == 0 && usage.IsEmpty())
+                return;
 
             device.ClearDeviceUsages();
-            device.AddDeviceUsage(usage);
+            if (!usage.IsEmpty())
+                device.AddDeviceUsage(usage);
             NotifyUsageChanged(device);
         }
 
@@ -885,6 +888,8 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
+            if (usage.IsEmpty())
+                throw new ArgumentException("Usage string cannot be empty", nameof(usage));
             if (device.usages.Contains(usage))
                 return;
 
@@ -896,6 +901,8 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
+            if (usage.IsEmpty())
+                throw new ArgumentException("Usage string cannot be empty", nameof(usage));
             if (!device.usages.Contains(usage))
                 return;
 
@@ -905,10 +912,13 @@ namespace UnityEngine.InputSystem
 
         private void NotifyUsageChanged(InputDevice device)
         {
+            InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
+
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
 
+            ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
             device.MakeCurrent();
         }

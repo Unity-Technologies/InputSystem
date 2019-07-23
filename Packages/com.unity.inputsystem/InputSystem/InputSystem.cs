@@ -890,32 +890,214 @@ namespace UnityEngine.InputSystem
 
         #region Controls
 
+        /// <summary>
+        /// Set the usage tag of the given device to <paramref name="usage"/>.
+        /// </summary>
+        /// <param name="device">Device to set the usage on.</param>
+        /// <param name="usage">New usage for the device.</param>
+        /// <remarks>
+        /// Usages allow to "tag" a specific device such that the tag can then be used in lookups
+        /// and bindings. A common use is for identifying the handedness of an <see cref="XR.XRController"/>
+        /// but the usages can be arbitrary strings.
+        ///
+        /// This method either sets the usages of the device to a single string (meaning it will
+        /// clear whatever, if any usages, the device has when the method is called) or,
+        /// if <paramref name="usage"/> is null or empty, resets the usages of the device
+        /// to be empty. To add to a device's set of usages, call <see cref="AddDeviceUsage(InputDevice,string)"/>.
+        /// To remove usages from a device, call <see cref="RemoveDeviceUsage(InputDevice,string)"/>.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// <example>
+        /// <code>
+        /// // Tag a gamepad to be associated with player #1.
+        /// InputSystem.SetDeviceUsage(myGamepad, "Player1");
+        ///
+        /// // Create an action that binds to player #1's gamepad specifically.
+        /// var action = new InputAction(binding: "&lt;Gamepad&gt;{Player1}/buttonSouth");
+        ///
+        /// // Move the tag from one gamepad to another.
+        /// InputSystem.SetDeviceUsage(myGamepad, null); // Clears usages on 'myGamepad'.
+        /// InputSystem.SetDeviceUsage(otherGamepad, "Player1");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="AddDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="RemoveDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void SetDeviceUsage(InputDevice device, string usage)
         {
             SetDeviceUsage(device, new InternedString(usage));
         }
 
-        // May generate garbage.
+        /// <summary>
+        /// Set the usage tag of the given device to <paramref name="usage"/>.
+        /// </summary>
+        /// <param name="device">Device to set the usage on.</param>
+        /// <param name="usage">New usage for the device.</param>
+        /// <remarks>
+        /// Usages allow to "tag" a specific device such that the tag can then be used in lookups
+        /// and bindings. A common use is for identifying the handedness of an <see cref="XR.XRController"/>
+        /// but the usages can be arbitrary strings.
+        ///
+        /// This method either sets the usages of the device to a single string (meaning it will
+        /// clear whatever, if any usages, the device has when the method is called) or,
+        /// if <paramref name="usage"/> is null or empty, resets the usages of the device
+        /// to be empty. To add to a device's set of usages, call <see cref="AddDeviceUsage(InputDevice,InternedString)"/>.
+        /// To remove usages from a device, call <see cref="RemoveDeviceUsage(InputDevice,InternedString)"/>.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// If the set of usages on the device changes as a result of calling this method, <see cref="onDeviceChange"/>
+        /// will be triggered with <see cref="InputDeviceChange.UsageChanged"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Tag a gamepad to be associated with player #1.
+        /// InputSystem.SetDeviceUsage(myGamepad, new InternedString("Player1"));
+        ///
+        /// // Create an action that binds to player #1's gamepad specifically.
+        /// var action = new InputAction(binding: "&lt;Gamepad&gt;{Player1}/buttonSouth");
+        ///
+        /// // Move the tag from one gamepad to another.
+        /// InputSystem.SetDeviceUsage(myGamepad, null); // Clears usages on 'myGamepad'.
+        /// InputSystem.SetDeviceUsage(otherGamepad, new InternedString("Player1"));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="AddDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="RemoveDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void SetDeviceUsage(InputDevice device, InternedString usage)
         {
             s_Manager.SetDeviceUsage(device, usage);
         }
 
+        /// <summary>
+        /// Add a usage tag to the given device.
+        /// </summary>
+        /// <param name="device">Device to add the usage to.</param>
+        /// <param name="usage">New usage to add to the device.</param>
+        /// <remarks>
+        /// Usages allow to "tag" a specific device such that the tag can then be used in lookups
+        /// and bindings. A common use is for identifying the handedness of an <see cref="XR.XRController"/>
+        /// but the usages can be arbitrary strings.
+        ///
+        /// This method adds a new usage to the device's set of usages. If the device already has
+        /// the given usage, the method does nothing. To instead set the device's usages to a single
+        /// one, use <see cref="SetDeviceUsage(InputDevice,string)"/>. To remove usages from a device,
+        /// call <see cref="RemoveDeviceUsage(InputDevice,string)"/>.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// If the set of usages on the device changes as a result of calling this method, <see cref="onDeviceChange"/>
+        /// will be triggered with <see cref="InputDeviceChange.UsageChanged"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="usage"/> is null or empty.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="RemoveDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void AddDeviceUsage(InputDevice device, string usage)
         {
             s_Manager.AddDeviceUsage(device, new InternedString(usage));
         }
 
+        /// <summary>
+        /// Add a usage tag to the given device.
+        /// </summary>
+        /// <param name="device">Device to add the usage to.</param>
+        /// <param name="usage">New usage to add to the device.</param>
+        /// <remarks>
+        /// Usages allow to "tag" a specific device such that the tag can then be used in lookups
+        /// and bindings. A common use is for identifying the handedness of an <see cref="XR.XRController"/>
+        /// but the usages can be arbitrary strings.
+        ///
+        /// This method adds a new usage to the device's set of usages. If the device already has
+        /// the given usage, the method does nothing. To instead set the device's usages to a single
+        /// one, use <see cref="SetDeviceUsage(InputDevice,InternedString)"/>. To remove usages from a device,
+        /// call <see cref="RemoveDeviceUsage(InputDevice,InternedString)"/>.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// If the set of usages on the device changes as a result of calling this method, <see cref="onDeviceChange"/>
+        /// will be triggered with <see cref="InputDeviceChange.UsageChanged"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="usage"/> is empty.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="RemoveDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void AddDeviceUsage(InputDevice device, InternedString usage)
         {
             s_Manager.AddDeviceUsage(device, usage);
         }
 
+        /// <summary>
+        /// Remove a usage tag from the given device.
+        /// </summary>
+        /// <param name="device">Device to remove the usage from.</param>
+        /// <param name="usage">Usage to remove from the device.</param>
+        /// <remarks>
+        /// This method removes an existing usage from the given device. If the device does not
+        /// have the given usage tag, the method does nothing. Use <see cref="SetDeviceUsage(InputDevice,string)"/>
+        /// or <see cref="AddDeviceUsage(InputDevice,string)"/> to add usages to a device.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// If the set of usages on the device changes as a result of calling this method, <see cref="onDeviceChange"/>
+        /// will be triggered with <see cref="InputDeviceChange.UsageChanged"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="usage"/> is null or empty.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="AddDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void RemoveDeviceUsage(InputDevice device, string usage)
         {
             s_Manager.RemoveDeviceUsage(device, new InternedString(usage));
         }
 
+        /// <summary>
+        /// Remove a usage tag from the given device.
+        /// </summary>
+        /// <param name="device">Device to remove the usage from.</param>
+        /// <param name="usage">Usage to remove from the device.</param>
+        /// <remarks>
+        /// This method removes an existing usage from the given device. If the device does not
+        /// have the given usage tag, the method does nothing. Use <see cref="SetDeviceUsage(InputDevice,InternedString)"/>
+        /// or <see cref="AddDeviceUsage(InputDevice,InternedString)"/> to add usages to a device.
+        ///
+        /// The set of usages a device has can be queried with <see cref="InputControl.usages"/> (a device
+        /// is an <see cref="InputControl"/> and thus, like controls, has an associated set of usages).
+        ///
+        /// If the set of usages on the device changes as a result of calling this method, <see cref="onDeviceChange"/>
+        /// will be triggered with <see cref="InputDeviceChange.UsageChanged"/>.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="usage"/> is empty.</exception>
+        /// <seealso cref="InputControl.usages"/>
+        /// <seealso cref="SetDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="AddDeviceUsage(InputDevice,InternedString)"/>
+        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
         {
             s_Manager.RemoveDeviceUsage(device, usage);

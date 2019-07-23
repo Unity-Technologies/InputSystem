@@ -9,6 +9,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.9.1-preview] - 2099-1-1
 
+### Fixed
+
+#### Actions
+
+- Fixed actions not updating their set of controls when the usages of a device are changed.
+
 ### Changed
 
 - The way input devices are built internally has been streamlined.

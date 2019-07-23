@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem
         /// The device that this control is a part of.
         /// </summary>
         /// <remarks>
-        /// This is the root of the control hiearchy. For the device at the root, this
+        /// This is the root of the control hierarchy. For the device at the root, this
         /// will point to itself.
         /// </remarks>
         public InputDevice device => m_Device;
@@ -187,6 +187,7 @@ namespace UnityEngine.InputSystem
         /// The immediate parent of the control or null if the control has no parent
         /// (which, once fully constructed) will only be the case for InputDevices).
         /// </summary>
+        /// <seealso cref="children"/>
         public InputControl parent => m_Parent;
 
         /// <summary>
@@ -195,14 +196,46 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
+        /// <seealso cref="parent"/>
         public ReadOnlyArray<InputControl> children =>
             new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, m_ChildStartIndex, m_ChildCount);
 
-        // List of uses for this control. Gives meaning to the control such that you can, for example,
-        // find a button on a device to use as the "back" button regardless of what it is named. The "back"
-        // button is also an example of why there are multiple possible usages of a button as a use may
-        // be context-dependent; if "back" does not make sense in a context, another use may make sense for
-        // the very same button.
+        /// <summary>
+        /// List of usage tags associated with the control.
+        /// </summary>
+        /// <remarks>
+        /// Usages apply "semantics" to a control. Whereas the name of a control identifies a particular
+        /// "endpoint" within the control hierarchy, the usages of a control identify particular roles
+        /// of specific control. A simple example is <see cref="CommonUsages.Back"/> which identifies a
+        /// control generally used to move backwards in the navigation history of a UI. On a keyboard,
+        /// it is the escape key that generally fulfills this role whereas on a gamepad, it is generally
+        /// the "B" / "Circle" button. Some devices may not have a control that generally fulfills this
+        /// function and thus may not have any control with the "Back" usage.
+        ///
+        /// By looking up controls by usage rather than by name, it is possible to locate the correct
+        /// control to use for certain standardized situation without having to know the particulars of
+        /// the device or platform.
+        ///
+        /// <example>
+        /// <code>
+        /// // Bind to any control which is tagged with the "Back" usage on any device.
+        /// var backAction = new InputAction(binding: "*/{Back}");
+        /// </code>
+        /// </example>
+        ///
+        /// Note that usages on devices work slightly differently than usages of controls on devices.
+        /// They are also queried through this property but unlike the usages of controls, the set of
+        /// usages of a device can be changed dynamically as the role of the device changes. For details,
+        /// see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>. Controls, on the other hand,
+        /// can currently only be assigned usages through layouts (<see cref="InputControlAttribute.usage"/>
+        /// or <see cref="InputControlAttribute.usages"/>).
+        /// </remarks>
+        /// <seealso cref="InputControlAttribute.usage"/>
+        /// <seealso cref="InputControlAttribute.usages"/>
+        /// <seealso cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="InputSystem.AddDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="InputSystem.RemoveDeviceUsage(InputDevice,string)"/>
+        /// <seealso cref="CommonUsages"/>
         public ReadOnlyArray<InternedString> usages =>
             new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, m_UsageStartIndex, m_UsageCount);
 

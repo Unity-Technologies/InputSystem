@@ -214,6 +214,39 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanSetUsagesOnDevices()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.AddDeviceUsage(device, "First");
+
+        Assert.That(device.usages, Has.Count.EqualTo(1));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("First")));
+
+        InputSystem.AddDeviceUsage(device, "second");
+
+        Assert.That(device.usages, Has.Count.EqualTo(2));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("First")));
+        Assert.That(device.usages[1], Is.EqualTo(new InternedString("Second")));
+
+        InputSystem.RemoveDeviceUsage(device, "First");
+
+        Assert.That(device.usages, Has.Count.EqualTo(1));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("Second")));
+
+        InputSystem.AddDeviceUsage(device, "Third");
+        InputSystem.SetDeviceUsage(device, "Fourth");
+
+        Assert.That(device.usages, Has.Count.EqualTo(1));
+        Assert.That(device.usages[0], Is.EqualTo(new InternedString("Fourth")));
+
+        InputSystem.SetDeviceUsage(device, null);
+
+        Assert.That(device.usages, Is.Empty);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanFindDeviceByMultipleUsages()
     {
         InputSystem.AddDevice<Gamepad>();
