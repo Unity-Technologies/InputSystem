@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.Switch
@@ -32,4 +32,4 @@ namespace UnityEngine.InputSystem.Switch
         }
     }
 }
-#endif // UNITY_EDITOR || UNITY_SWITCH
+#endif

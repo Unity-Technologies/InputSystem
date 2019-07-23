@@ -1,7 +1,5 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow to restrict state change monitors to specific updates?

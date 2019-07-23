@@ -409,10 +409,15 @@ namespace UnityEngine.InputSystem
                 current = null;
 
             // Remove from `all`.
-            var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
-            if (wasFound)
-                --s_GamepadCount;
+            var index = ArrayHelpers.IndexOfReference(s_Gamepads, this, s_GamepadCount);
+            if (index != -1)
+                ArrayHelpers.EraseAtWithCapacity(s_Gamepads, ref s_GamepadCount, index);
+            else
+            {
+                Debug.Assert(false,
+                    string.Format("Gamepad {0} seems to not have been added but is being removed (gamepad list: {1})",
+                        this, string.Join(", ", all))); // Put in else to not allocate on normal path.
+            }
         }
 
         public virtual void PauseHaptics()

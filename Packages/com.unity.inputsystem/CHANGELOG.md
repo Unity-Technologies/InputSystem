@@ -11,6 +11,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed GC heap garbage being caused by triggered by event processing.
+  * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+
 #### Actions
 
 - Fixed actions not updating their set of controls when the usages of a device are changed.
@@ -48,7 +51,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
-- Fixed inconsistent ifdefs in NPad.cs for the swtich pro controller.
+- Fixed compile errors from Switch Pro controller code on Linux.
 
 #### Actions
 

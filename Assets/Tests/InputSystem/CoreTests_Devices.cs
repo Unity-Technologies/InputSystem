@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
@@ -3250,7 +3251,22 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_RemovingDeviceCleansUpUpdateCallback()
+    public void Devices_RemovingDevice_UpdatesInternalDevicesIndices()
+    {
+        var device1 = InputSystem.AddDevice<Gamepad>();
+        var device2 = InputSystem.AddDevice<Mouse>();
+        var device3 = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.RemoveDevice(device2);
+
+        Assert.That(device1.m_DeviceIndex, Is.EqualTo(0));
+        Assert.That(device2.m_DeviceIndex, Is.EqualTo(InputDevice.kInvalidDeviceIndex));
+        Assert.That(device3.m_DeviceIndex, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingDevice_CleansUpUpdateCallback()
     {
         var device = InputSystem.AddDevice<CustomDeviceWithUpdate>();
         InputSystem.RemoveDevice(device);
@@ -3260,10 +3276,13 @@ partial class CoreTests
         Assert.That(device.onUpdateCallCount, Is.Zero);
     }
 
+    // Sadly, while this one is a respectable effort on InputManager's part, in practice it is limited in usefulness
+    // by the fact that when native sends us the descriptor string, that very string will lead to a GC allocation and
+    // thus already cause garbage (albeit a very small amount). At least InputManager isn't adding any to it, though.
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
+    [Retry(2)] // Warm up JIT
+    public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
         var description =
             new InputDeviceDescription
@@ -3276,16 +3295,39 @@ partial class CoreTests
         var deviceId = runtime.ReportNewInputDevice(description);
         InputSystem.Update();
 
+        // We allow the system to allocate memory the first time the removal happens. In particular,
+        // the array we use to hold removed devices we only allocate the first time we need to put
+        // something in it so we need one run to warm up the system. However, even the first re-adding
+        // should not allocate.
+        var removeEvent1 = DeviceRemoveEvent.Create(deviceId);
+        InputSystem.QueueEvent(ref removeEvent1);
+        InputSystem.Update();
+
+        // Avoid GC hit from string allocation.
+        var kProfilerRegion = "Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory";
+
+        // We don't want a GC hit from the InputDescription->JSON conversion we get from the test runtime.
+        // Doesn't happen when a native backend reports a device.
+        var descriptionJson = description.ToJson();
+
         Assert.That(() =>
         {
+            Profiler.BeginSample(kProfilerRegion);
+
+            // "Plug" it back in.
+            deviceId = runtime.ReportNewInputDevice(descriptionJson);
+            InputSystem.Update();
+
             // "Unplug" device.
-            var removeEvent = DeviceRemoveEvent.Create(deviceId, 0.123);
-            InputSystem.QueueEvent(ref removeEvent);
+            var removeEvent2 = DeviceRemoveEvent.Create(deviceId);
+            InputSystem.QueueEvent(ref removeEvent2);
             InputSystem.Update();
 
             // "Plug" it back in.
-            runtime.ReportNewInputDevice(description);
+            runtime.ReportNewInputDevice(descriptionJson);
             InputSystem.Update();
+
+            Profiler.EndSample();
         }, Is.Not.AllocatingGCMemory());
     }
 

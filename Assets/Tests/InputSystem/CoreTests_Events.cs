@@ -11,6 +11,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -108,19 +109,24 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_ProcessingStateEvent_DoesNotAllocateMemory()
+    public void Events_QueuingAndProcessingStateEvent_DoesNotAllocateMemory()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        ////REVIEW: We do some analytics stuff on the first update that allocates. Probably there's
-        ////        a better way to handle this.
+        // Warm up JIT and get rid of GC noise from initial input system update.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "Events_ProcessingStateEvent_DoesNotAllocateMemory";
 
-        ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
-        Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+            InputSystem.Update();
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
     [Test]

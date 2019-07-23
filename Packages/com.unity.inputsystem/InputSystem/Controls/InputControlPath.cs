@@ -16,7 +16,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Functions to working with control path specs (like "/gamepad/*stick").
+    /// Functions for working with control path specs (like "/gamepad/*stick").
     /// </summary>
     /// <remarks>
     /// The thinking here is somewhat similar to System.IO.Path, i.e. have a range
