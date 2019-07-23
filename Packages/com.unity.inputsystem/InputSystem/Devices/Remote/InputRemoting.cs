@@ -667,7 +667,7 @@ namespace UnityEngine.InputSystem
                     ////TODO: clearing usages and setting multiple usages
 
                     if (data.usages.Length == 1)
-                        receiver.m_LocalManager.SetUsage(device, new InternedString(data.usages[0]));
+                        receiver.m_LocalManager.SetDeviceUsage(device, new InternedString(data.usages[0]));
                 }
             }
         }

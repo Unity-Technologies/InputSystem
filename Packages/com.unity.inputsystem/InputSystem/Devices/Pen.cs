@@ -257,19 +257,16 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            tip = builder.GetControl<ButtonControl>("tip");
-            eraser = builder.GetControl<ButtonControl>("eraser");
-            firstBarrelButton = builder.GetControl<ButtonControl>("barrel1");
-            secondBarrelButton = builder.GetControl<ButtonControl>("barrel2");
-            thirdBarrelButton = builder.GetControl<ButtonControl>("barrel3");
-            fourthBarrelButton = builder.GetControl<ButtonControl>("barrel4");
-            inRange = builder.GetControl<ButtonControl>("inRange");
-            base.FinishSetup(builder);
+            tip = GetChildControl<ButtonControl>("tip");
+            eraser = GetChildControl<ButtonControl>("eraser");
+            firstBarrelButton = GetChildControl<ButtonControl>("barrel1");
+            secondBarrelButton = GetChildControl<ButtonControl>("barrel2");
+            thirdBarrelButton = GetChildControl<ButtonControl>("barrel3");
+            fourthBarrelButton = GetChildControl<ButtonControl>("barrel4");
+            inRange = GetChildControl<ButtonControl>("inRange");
+            base.FinishSetup();
         }
     }
 }

@@ -42,14 +42,14 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(useStateFrom = "x", parameters = "clamp,clampMin=0,clampMax=1", synthetic = true, displayName = "Right", shortDisplayName = "\u2192")]
         public ButtonControl right { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            up = builder.GetControl<ButtonControl>(this, "up");
-            down = builder.GetControl<ButtonControl>(this, "down");
-            left = builder.GetControl<ButtonControl>(this, "left");
-            right = builder.GetControl<ButtonControl>(this, "right");
+            up = GetChildControl<ButtonControl>("up");
+            down = GetChildControl<ButtonControl>("down");
+            left = GetChildControl<ButtonControl>("left");
+            right = GetChildControl<ButtonControl>("right");
         }
     }
 }

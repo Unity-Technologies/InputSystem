@@ -212,16 +212,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void PauseHaptics()
@@ -303,16 +300,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         // TODO: see if we can implement rumble support on DualShock 3

@@ -456,10 +456,11 @@ namespace UnityEngine.InputSystem
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
 
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var match = TryFindControl<TControl>(child, path, indexInPath);
                 if (match != null)
                     return match;
@@ -742,13 +743,14 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             TControl lastMatch = null;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
 
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches, matchMultiple);
 
                 if (childMatch == null)
@@ -889,7 +891,6 @@ namespace UnityEngine.InputSystem
             public Substring displayName;
 
             public bool isWildcard => name == Wildcard;
-
             public bool isDoubleWildcard => name == DoubleWildcard;
 
             public string ToHumanReadableString()
@@ -902,7 +903,7 @@ namespace UnityEngine.InputSystem
                 {
                     var combinedUsages = string.Empty;
 
-                    for (int i = 0; i < usages.Length; ++i)
+                    for (var i = 0; i < usages.Length; ++i)
                     {
                         if (usages[i].isEmpty)
                             continue;

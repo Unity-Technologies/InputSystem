@@ -9,6 +9,15 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.9.1-preview] - 2099-1-1
 
+### Changed
+
+- The way input devices are built internally has been streamlined.
+  * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
+  * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
+    ```
+    InputDevice.Build<Mouse>();
+    ```
+  * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
 ## [0.9.0-preview] - 2019-7-18
 
 ### Fixed

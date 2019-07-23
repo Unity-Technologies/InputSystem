@@ -287,14 +287,11 @@ namespace UnityEngine.InputSystem.PS4
             m_StateBlock.format = new FourCC('P', '4', 'T', 'C');
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            touchId = builder.GetControl<IntegerControl>(this, "touchId");
-            position = builder.GetControl<Vector2Control>(this, "position");
-            base.FinishSetup(builder);
+            touchId = GetChildControl<IntegerControl>("touchId");
+            position = GetChildControl<Vector2Control>("position");
+            base.FinishSetup();
         }
 
         ////FIXME: this suffers from the same problems that TouchControl has in that state layout is hardcoded
@@ -440,18 +437,18 @@ namespace UnityEngine.InputSystem.PS4
                 deviceList[index] = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
-            orientation = builder.GetControl<QuaternionControl>(this, "orientation");
-            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            orientation = GetChildControl<QuaternionControl>("orientation");
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
 
             var touchArray = new PS4TouchControl[2];
 
-            touchArray[0] = builder.GetControl<PS4TouchControl>(this, "touch0");
-            touchArray[1] = builder.GetControl<PS4TouchControl>(this, "touch1");
+            touchArray[0] = GetChildControl<PS4TouchControl>("touch0");
+            touchArray[1] = GetChildControl<PS4TouchControl>("touch1");
 
             touches = new ReadOnlyArray<PS4TouchControl>(touchArray);
 

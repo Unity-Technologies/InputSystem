@@ -50,8 +50,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayout()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = setup.Finish();
+        var device = InputDevice.Build<InputDevice>("Gamepad");
 
         Assert.That(device, Is.TypeOf<Gamepad>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("leftStick"));
@@ -62,8 +61,7 @@ partial class CoreTests
     public void Devices_CanCreateDevice_WithNestedState()
     {
         InputSystem.RegisterLayout<CustomDevice>();
-        var setup = new InputDeviceBuilder("CustomDevice");
-        var device = setup.Finish();
+        var device = InputDevice.Build<CustomDevice>();
 
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1"));
     }
@@ -155,21 +153,18 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayoutVariant()
     {
-        var leftyGamepadSetup = new InputDeviceBuilder("Gamepad", variants: "Lefty");
-        var leftyGamepadPrimary2DMotion = leftyGamepadSetup.GetControl("{Primary2DMotion}");
-        var leftyGamepadSecondary2DMotion = leftyGamepadSetup.GetControl("{Secondary2DMotion}");
-        //var leftyGamepadPrimaryTrigger = leftyGamepadSetup.GetControl("{PrimaryTrigger}");
-        //var leftyGamepadSecondaryTrigger = leftyGamepadSetup.GetControl("{SecondaryTrigger}");
+        var leftyGamepad = InputDevice.Build<Gamepad>(layoutVariants: "Lefty");
+        var leftyGamepadPrimary2DMotion = leftyGamepad.GetChildControl("{Primary2DMotion}");
+        var leftyGamepadSecondary2DMotion = leftyGamepad.GetChildControl("{Secondary2DMotion}");
+        //var leftyGamepadPrimaryTrigger = leftyGamepad.GetChildControl("{PrimaryTrigger}");
+        //var leftyGamepadSecondaryTrigger = leftyGamepad.GetChildControl("{SecondaryTrigger}");
         //shoulder?
 
-        var defaultGamepadSetup = new InputDeviceBuilder("Gamepad");
-        var defaultGamepadPrimary2DMotion = defaultGamepadSetup.GetControl("{Primary2DMotion}");
-        var defaultGamepadSecondary2DMotion = defaultGamepadSetup.GetControl("{Secondary2DMotion}");
-        //var defaultGamepadPrimaryTrigger = defaultGamepadSetup.GetControl("{PrimaryTrigger}");
-        //var defaultGamepadSecondaryTrigger = defaultGamepadSetup.GetControl("{SecondaryTrigger}");
-
-        var leftyGamepad = (Gamepad)leftyGamepadSetup.Finish();
-        var defaultGamepad = (Gamepad)defaultGamepadSetup.Finish();
+        var defaultGamepad = InputDevice.Build<Gamepad>();
+        var defaultGamepadPrimary2DMotion = defaultGamepad.GetChildControl("{Primary2DMotion}");
+        var defaultGamepadSecondary2DMotion = defaultGamepad.GetChildControl("{Secondary2DMotion}");
+        //var defaultGamepadPrimaryTrigger = defaultGamepad.GetChildControl("{PrimaryTrigger}");
+        //var defaultGamepadSecondaryTrigger = defaultGamepad.GetChildControl("{SecondaryTrigger}");
 
         Assert.That(leftyGamepad.variants, Is.EqualTo("Lefty"));
         Assert.That(leftyGamepadPrimary2DMotion, Is.SameAs(leftyGamepad.rightStick));
@@ -177,107 +172,6 @@ partial class CoreTests
 
         Assert.That(defaultGamepadPrimary2DMotion, Is.SameAs(defaultGamepad.leftStick));
         Assert.That(defaultGamepadSecondary2DMotion, Is.SameAs(defaultGamepad.rightStick));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CannotChangeSetupOfDeviceWhileAddedToSystem()
-    {
-        var device = InputSystem.AddDevice<Gamepad>();
-
-        Assert.That(() => new InputDeviceBuilder("Keyboard", existingDevice: device), Throws.InvalidOperationException);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanChangeControlSetupAfterCreation()
-    {
-        const string initialJson = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""controls"" : [
-                    { ""name"" : ""first"", ""layout"" : ""Button"" },
-                    { ""name"" : ""second"", ""layout"" : ""Button"" }
-                ]
-            }
-        ";
-
-        InputSystem.RegisterLayout(initialJson);
-
-        // Create initial version of device.
-        var initialSetup = new InputDeviceBuilder("MyDevice");
-        var initialFirstControl = initialSetup.GetControl("first");
-        var initialSecondControl = initialSetup.GetControl("second");
-        var initialDevice = initialSetup.Finish();
-
-        // Change layout.
-        const string modifiedJson = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""controls"" : [
-                    { ""name"" : ""first"", ""layout"" : ""Button"" },
-                    { ""name"" : ""second"", ""layout"" : ""Axis"" },
-                    { ""name"" : ""third"", ""layout"" : ""Button"" }
-                ]
-            }
-        ";
-        InputSystem.RegisterLayout(modifiedJson);
-
-        // Modify device.
-        var modifiedSetup = new InputDeviceBuilder("MyDevice", existingDevice: initialDevice);
-        var modifiedFirstControl = modifiedSetup.GetControl("first");
-        var modifiedSecondControl = modifiedSetup.GetControl("second");
-        var modifiedThirdControl = modifiedSetup.GetControl("third");
-        var modifiedDevice = modifiedSetup.Finish();
-
-        Assert.That(modifiedDevice, Is.SameAs(initialDevice));
-        Assert.That(modifiedFirstControl, Is.SameAs(initialFirstControl));
-        Assert.That(initialFirstControl, Is.TypeOf<ButtonControl>());
-        Assert.That(modifiedSecondControl, Is.Not.SameAs(initialSecondControl));
-        Assert.That(initialSecondControl, Is.TypeOf<ButtonControl>());
-        Assert.That(modifiedSecondControl, Is.TypeOf<AxisControl>());
-        Assert.That(modifiedThirdControl, Is.TypeOf<ButtonControl>());
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanChangeDeviceTypeAfterCreation()
-    {
-        // Device layout for a generic InputDevice.
-        const string initialJson = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""controls"" : [
-                    { ""name"" : ""buttonSouth"", ""layout"" : ""Button"" }
-                ]
-            }
-        ";
-
-        InputSystem.RegisterLayout(initialJson);
-
-        // Create initial version of device.
-        var initialSetup = new InputDeviceBuilder("MyDevice");
-        var initialButton = initialSetup.GetControl<ButtonControl>("buttonSouth");
-        var initialDevice = initialSetup.Finish();
-
-        // Change layout to now be a gamepad.
-        const string modifiedJson = @"
-            {
-                ""name"" : ""MyDevice"",
-                ""extend"" : ""Gamepad""
-            }
-        ";
-        InputSystem.RegisterLayout(modifiedJson);
-
-        // Modify device.
-        var modifiedSetup = new InputDeviceBuilder("MyDevice", existingDevice: initialDevice);
-        var modifiedButton = modifiedSetup.GetControl<ButtonControl>("buttonSouth");
-        var modifiedDevice = modifiedSetup.Finish();
-
-        Assert.That(modifiedDevice, Is.Not.SameAs(initialDevice));
-        Assert.That(modifiedDevice, Is.TypeOf<Gamepad>());
-        Assert.That(initialDevice, Is.TypeOf<InputDevice>());
-        Assert.That(modifiedButton, Is.SameAs(initialButton)); // Button survives.
     }
 
     [Test]
@@ -526,8 +420,7 @@ partial class CoreTests
         InputSystem.AddDevice(
             "Gamepad"); // Add a gamepad so that when we add another, its name will have to get adjusted.
 
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>();
 
         Assert.That(device.dpad.up.path, Is.EqualTo("/Gamepad/dpad/up"));
 
@@ -540,7 +433,7 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_AddingDevice_MarksItAdded()
     {
-        var device = new InputDeviceBuilder("Gamepad").Finish();
+        var device = InputDevice.Build<Gamepad>();
 
         Assert.That(device.added, Is.False);
 
@@ -1015,10 +908,10 @@ partial class CoreTests
         [InputControl(format = "FLT")]
         public ButtonControl button { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            button = builder.GetControl<ButtonControl>(this, "button");
-            base.FinishSetup(builder);
+            button = GetChildControl<ButtonControl>("button");
+            base.FinishSetup();
         }
 
         public void OnNextUpdate()

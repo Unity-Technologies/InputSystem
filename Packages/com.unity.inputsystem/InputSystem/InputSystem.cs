@@ -890,12 +890,6 @@ namespace UnityEngine.InputSystem
 
         #region Controls
 
-        ////FIXME: we don't really store this on a per-control basis; make this a call that operates on devices instead
-        public static void SetLayoutVariant(InputControl control, string variant)
-        {
-            s_Manager.SetLayoutVariant(control, variant);
-        }
-
         public static void SetDeviceUsage(InputDevice device, string usage)
         {
             SetDeviceUsage(device, new InternedString(usage));

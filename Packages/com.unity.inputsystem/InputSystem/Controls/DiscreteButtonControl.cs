@@ -44,9 +44,9 @@ namespace UnityEngine.InputSystem.Controls
 
         public int nullValue;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             if (!stateBlock.format.IsIntegerFormat())
                 throw new NotSupportedException(

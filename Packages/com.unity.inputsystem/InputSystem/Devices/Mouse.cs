@@ -157,19 +157,16 @@ namespace UnityEngine.InputSystem
             ExecuteCommand(ref command);
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            scroll = builder.GetControl<Vector2Control>(this, "scroll");
-            leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
-            middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
-            rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
-            forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
-            backButton = builder.GetControl<ButtonControl>(this, "backButton");
-            clickCount = builder.GetControl<IntegerControl>(this, "clickCount");
-            base.FinishSetup(builder);
+            scroll = GetChildControl<Vector2Control>("scroll");
+            leftButton = GetChildControl<ButtonControl>("leftButton");
+            middleButton = GetChildControl<ButtonControl>("middleButton");
+            rightButton = GetChildControl<ButtonControl>("rightButton");
+            forwardButton = GetChildControl<ButtonControl>("forwardButton");
+            backButton = GetChildControl<ButtonControl>("backButton");
+            clickCount = GetChildControl<IntegerControl>("clickCount");
+            base.FinishSetup();
         }
 
         protected new void OnNextUpdate()

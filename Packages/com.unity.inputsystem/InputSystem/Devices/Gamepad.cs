@@ -278,7 +278,6 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        ////REVIEW: add PS4 and Xbox style alternate accessors?
         public ButtonControl buttonWest { get; private set; }
         public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -304,34 +303,22 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Same as <see cref="buttonSouth"/>.
         /// </summary>
-        public ButtonControl aButton
-        {
-            get { return buttonSouth; }
-        }
+        public ButtonControl aButton => buttonSouth;
 
         /// <summary>
         /// Same as <see cref="buttonEast"/>.
         /// </summary>
-        public ButtonControl bButton
-        {
-            get { return buttonEast; }
-        }
+        public ButtonControl bButton => buttonEast;
 
         /// <summary>
         /// Same as <see cref="buttonWest"/>
         /// </summary>
-        public ButtonControl xButton
-        {
-            get { return buttonWest; }
-        }
+        public ButtonControl xButton => buttonWest;
 
         /// <summary>
         /// Same as <see cref="buttonNorth"/>.
         /// </summary>
-        public ButtonControl yButton
-        {
-            get { return buttonNorth; }
-        }
+        public ButtonControl yButton => buttonNorth;
 
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
@@ -377,34 +364,32 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            ////REVIEW: what's actually faster/better... storing these in properties or doing the lookup on the fly?
+            buttonWest = GetChildControl<ButtonControl>("buttonWest");
+            buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+            buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+            buttonEast = GetChildControl<ButtonControl>("buttonEast");
 
-            buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
-            buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
-            buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");
-            buttonEast = builder.GetControl<ButtonControl>(this, "buttonEast");
+            startButton = GetChildControl<ButtonControl>("start");
+            selectButton = GetChildControl<ButtonControl>("select");
 
-            startButton = builder.GetControl<ButtonControl>(this, "start");
-            selectButton = builder.GetControl<ButtonControl>(this, "select");
+            leftStickButton = GetChildControl<ButtonControl>("leftStickPress");
+            rightStickButton = GetChildControl<ButtonControl>("rightStickPress");
 
-            leftStickButton = builder.GetControl<ButtonControl>(this, "leftStickPress");
-            rightStickButton = builder.GetControl<ButtonControl>(this, "rightStickPress");
+            dpad = GetChildControl<DpadControl>("dpad");
 
-            dpad = builder.GetControl<DpadControl>(this, "dpad");
+            leftShoulder = GetChildControl<ButtonControl>("leftShoulder");
+            rightShoulder = GetChildControl<ButtonControl>("rightShoulder");
 
-            leftShoulder = builder.GetControl<ButtonControl>(this, "leftShoulder");
-            rightShoulder = builder.GetControl<ButtonControl>(this, "rightShoulder");
+            leftStick = GetChildControl<StickControl>("leftStick");
+            rightStick = GetChildControl<StickControl>("rightStick");
 
-            leftStick = builder.GetControl<StickControl>(this, "leftStick");
-            rightStick = builder.GetControl<StickControl>(this, "rightStick");
+            leftTrigger = GetChildControl<ButtonControl>("leftTrigger");
+            rightTrigger = GetChildControl<ButtonControl>("rightTrigger");
 
-            leftTrigger = builder.GetControl<ButtonControl>(this, "leftTrigger");
-            rightTrigger = builder.GetControl<ButtonControl>(this, "rightTrigger");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void MakeCurrent()

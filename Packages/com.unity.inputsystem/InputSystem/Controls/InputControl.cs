@@ -195,17 +195,20 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Does not allocate.
         /// </remarks>
-        public ReadOnlyArray<InputControl> children => m_ChildrenReadOnly;
+        public ReadOnlyArray<InputControl> children =>
+            new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, m_ChildStartIndex, m_ChildCount);
 
         // List of uses for this control. Gives meaning to the control such that you can, for example,
         // find a button on a device to use as the "back" button regardless of what it is named. The "back"
         // button is also an example of why there are multiple possible usages of a button as a use may
         // be context-dependent; if "back" does not make sense in a context, another use may make sense for
         // the very same button.
-        public ReadOnlyArray<InternedString> usages => m_UsagesReadOnly;
+        public ReadOnlyArray<InternedString> usages =>
+            new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, m_UsageStartIndex, m_UsageCount);
 
         // List of alternate names for the control.
-        public ReadOnlyArray<InternedString> aliases => m_AliasesReadOnly;
+        public ReadOnlyArray<InternedString> aliases =>
+            new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, m_AliasStartIndex, m_AliasCount);
 
         // Information about where the control stores its state.
         public InputStateBlock stateBlock => m_StateBlock;
@@ -502,8 +505,49 @@ namespace UnityEngine.InputSystem
         {
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentNullException(nameof(path));
-
             return InputControlPath.TryFindChild(this, path);
+        }
+
+        public TControl TryGetChildControl<TControl>(string path)
+            where TControl : InputControl
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            var control = TryGetChildControl(path);
+            if (control == null)
+                return null;
+
+            var controlOfType = control as TControl;
+            if (controlOfType == null)
+                throw new InvalidOperationException(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
+
+            return controlOfType;
+        }
+
+        public InputControl GetChildControl(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            var control = TryGetChildControl(path);
+            if (control == null)
+                throw new ArgumentException($"Cannot find input control '{MakeChildPath(path)}'", nameof(path));
+
+            return control;
+        }
+
+        public TControl GetChildControl<TControl>(string path)
+            where TControl : InputControl
+        {
+            var control = GetChildControl(path);
+
+            if (!(control is TControl controlOfType))
+                throw new ArgumentException(
+                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!", nameof(path));
+
+            return controlOfType;
         }
 
         // Constructor for devices which are assigned names once plugged
@@ -518,7 +562,15 @@ namespace UnityEngine.InputSystem
         // Set up of the control has been finalized. This can be used, for example, to look up
         // child controls for fast access.
         // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.
-        protected virtual void FinishSetup(InputDeviceBuilder builder)
+
+        /// <summary>
+        /// Perform final initialization tasks after the control hierarchy has been put into place.
+        /// </summary>
+        /// <remarks>
+        /// This method can be overridden to perform control- or device-specific setup work. The most
+        /// common use case is for looking up child controls and storing them in local getters.
+        /// </remarks>
+        protected virtual void FinishSetup()
         {
         }
 
@@ -576,12 +628,12 @@ namespace UnityEngine.InputSystem
         internal InternedString m_Variants;
         internal InputDevice m_Device;
         internal InputControl m_Parent;
-        ////REVIEW: This is stupid. We're storing the array references on here when in fact they should
-        ////        be fetched on demand from InputDevice. What we do here is needlessly add three extra
-        ////        references to every single InputControl
-        internal ReadOnlyArray<InternedString> m_UsagesReadOnly;
-        internal ReadOnlyArray<InternedString> m_AliasesReadOnly;
-        internal ReadOnlyArray<InputControl> m_ChildrenReadOnly;
+        internal int m_UsageCount;
+        internal int m_UsageStartIndex;
+        internal int m_AliasCount;
+        internal int m_AliasStartIndex;
+        internal int m_ChildCount;
+        internal int m_ChildStartIndex;
         internal ControlFlags m_ControlFlags;
 
         ////REVIEW: store these in arrays in InputDevice instead?
@@ -599,7 +651,7 @@ namespace UnityEngine.InputSystem
 
         internal bool isConfigUpToDate
         {
-            get { return (m_ControlFlags & ControlFlags.ConfigUpToDate) == ControlFlags.ConfigUpToDate; }
+            get => (m_ControlFlags & ControlFlags.ConfigUpToDate) == ControlFlags.ConfigUpToDate;
             set
             {
                 if (value)
@@ -613,12 +665,11 @@ namespace UnityEngine.InputSystem
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().
-        internal void CallFinishSetupRecursive(InputDeviceBuilder builder)
+        internal void CallFinishSetupRecursive()
         {
-            for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
-                m_ChildrenReadOnly[i].CallFinishSetupRecursive(builder);
-
-            FinishSetup(builder);
+            foreach (var child in children)
+                child.CallFinishSetupRecursive();
+            FinishSetup();
         }
 
         internal string MakeChildPath(string path)
@@ -632,8 +683,8 @@ namespace UnityEngine.InputSystem
         {
             m_StateBlock.byteOffset += offset;
 
-            for (var i = 0; i < m_ChildrenReadOnly.Count; ++i)
-                m_ChildrenReadOnly[i].BakeOffsetIntoStateBlockRecursive(offset);
+            foreach (var child in children)
+                child.BakeOffsetIntoStateBlockRecursive(offset);
         }
 
         internal int ResolveDeviceIndex()

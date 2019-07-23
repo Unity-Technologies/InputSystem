@@ -178,7 +178,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is only assigned once a device has been added to the system. No two devices will receive the same
-        /// ID and no device will receive an ID that another device used before even if the device was removed.
+        /// ID and no device will receive an ID that another device used before even if the device was removed. The
+        /// only exception to this is if a device gets re-created as part of a layout change. For example, if a new
+        /// layout is registered that replaces the <see cref="Mouse"/> layout, all <see cref="Mouse"/> devices will
+        /// get recreated but will keep their existing device IDs.
         ///
         /// IDs are assigned by the input runtime.
         /// </remarks>
@@ -400,6 +403,8 @@ namespace UnityEngine.InputSystem
         // NOTE: The device's own usages are part of this array as well. They are always
         //       at the *end* of the array.
         internal InternedString[] m_UsagesForEachControl;
+        // This one does NOT contain the device itself, i.e. it only contains controls on the device
+        // and may this be shorter than m_UsagesForEachControl.
         internal InputControl[] m_UsageToControl;
 
         // List of children for all controls. Each control gets a slice of this array.
@@ -511,6 +516,30 @@ namespace UnityEngine.InputSystem
         internal void NotifyRemoved()
         {
             OnRemoved();
+        }
+
+        public static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default)
+            where TDevice : InputDevice
+        {
+            if (string.IsNullOrEmpty(layoutName))
+            {
+                layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
+                if (string.IsNullOrEmpty(layoutName))
+                    layoutName = typeof(TDevice).Name;
+            }
+
+            using (InputDeviceBuilder.Ref())
+            {
+                InputDeviceBuilder.instance.Setup(new InternedString(layoutName), new InternedString(layoutVariants),
+                    deviceDescription: deviceDescription);
+                var device = InputDeviceBuilder.instance.Finish();
+                if (!(device is TDevice deviceOfType))
+                    throw new ArgumentException(
+                        $"Expected device of type '{typeof(TDevice).Name}' but got device of type '{device.GetType().Name}' instead",
+                        "TDevice");
+
+                return deviceOfType;
+            }
         }
     }
 }
