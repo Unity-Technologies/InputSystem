@@ -4,6 +4,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: option to allow to constrain mouse input to the screen area (i.e. no input once mouse leaves player window)
+
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>

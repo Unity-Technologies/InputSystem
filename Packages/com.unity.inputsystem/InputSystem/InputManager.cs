@@ -1085,26 +1085,24 @@ namespace UnityEngine.InputSystem
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.id;
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
-            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
             {
-                var oldDeviceIndices = new int[m_DevicesCount];
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
-                    m_Devices[i].m_DeviceIndex = i;
-                }
-
                 // Remove from state buffers.
-                ReallocateStateBuffers(oldDeviceIndices);
+                ReallocateStateBuffers();
             }
             else
             {
                 // No more devices. Kill state buffers.
                 m_StateBuffers.FreeAll();
             }
+
+            // Update device indices. Do this after reallocating state buffers as that call requires
+            // the old indices to still be in place.
+            for (var i = deviceIndex; i < m_DevicesCount; ++i)
+                --m_Devices[i].m_DeviceIndex; // Indices have shifted down by one.
+            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
 
             // Update list of available devices.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
@@ -1120,7 +1118,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Unbake offset into global state buffers.
-            device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));
+            device.BakeOffsetIntoStateBlockRecursive((uint)-device.m_StateBlock.byteOffset);
 
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
@@ -1221,6 +1219,7 @@ namespace UnityEngine.InputSystem
             return numFound;
         }
 
+        ////TODO: this should reset the device to its default state
         public void EnableOrDisableDevice(InputDevice device, bool enable)
         {
             if (device == null)
@@ -1578,7 +1577,6 @@ namespace UnityEngine.InputSystem
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
-        internal int m_DeviceSetupVersion;////TODO
         private float m_PollingFrequency;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -1767,16 +1765,16 @@ namespace UnityEngine.InputSystem
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
         // NOTE: Installs the buffers globally.
-        private unsafe void ReallocateStateBuffers(int[] oldDeviceIndices = null)
+        private unsafe void ReallocateStateBuffers()
         {
             var oldBuffers = m_StateBuffers;
 
             // Allocate new buffers.
             var newBuffers = new InputStateBuffers();
-            var newStateBlockOffsets = newBuffers.AllocateAll(m_Devices, m_DevicesCount);
+            newBuffers.AllocateAll(m_Devices, m_DevicesCount);
 
             // Migrate state.
-            newBuffers.MigrateAll(m_Devices, m_DevicesCount, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
+            newBuffers.MigrateAll(m_Devices, m_DevicesCount, oldBuffers);
 
             // Install the new buffers.
             oldBuffers.FreeAll();
@@ -1885,8 +1883,13 @@ namespace UnityEngine.InputSystem
             // had before a domain reload.
             RestoreDevicesAfterDomainReloadIfNecessary();
 
-            // Parse description.
-            var description = InputDeviceDescription.FromJson(deviceDescriptor);
+            // See if we have a disconnected device we can revive.
+            // NOTE: We do this all the way up here as the first thing before we even parse the JSON descriptor so
+            //       if we do have a device we can revive, we can do so without allocating any GC memory.
+            var device = TryMatchDisconnectedDevice(deviceDescriptor);
+
+            // Parse description, if need be.
+            var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
 
             // Add it.
             var markAsRemoved = false;
@@ -1896,7 +1899,7 @@ namespace UnityEngine.InputSystem
                 // we should support.
                 if (m_Settings.supportedDevices.Count > 0)
                 {
-                    var layout = TryFindMatchingControlLayout(ref description, deviceId);
+                    var layout = device != null ? device.m_Layout : TryFindMatchingControlLayout(ref description, deviceId);
                     if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                     {
                         // Not supported. Ignore device. Still will get added to m_AvailableDevices
@@ -1905,18 +1908,6 @@ namespace UnityEngine.InputSystem
                         // and create the device.
                         markAsRemoved = true;
                         return;
-                    }
-                }
-
-                // See if we have a disconnected device we can revive.
-                InputDevice device = null;
-                for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
-                {
-                    if (m_DisconnectedDevices[i].description == description)
-                    {
-                        device = m_DisconnectedDevices[i];
-                        ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
-                        break;
                     }
                 }
 
@@ -1961,6 +1952,38 @@ namespace UnityEngine.InputSystem
                         isRemoved = markAsRemoved,
                     });
             }
+        }
+
+        private InputDevice TryMatchDisconnectedDevice(string deviceDescriptor)
+        {
+            for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
+            {
+                var device = m_DisconnectedDevices[i];
+                var description = device.description;
+
+                // We don't parse the full description but rather go property by property in order to not
+                // allocate GC memory if we can avoid it.
+
+                if (!string.IsNullOrEmpty(description.interfaceName) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.product) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.manufacturer) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.deviceClass) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
+                    continue;
+
+                // We ignore capabilities here.
+
+                ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                return device;
+            }
+
+            return null;
         }
 
         private void InstallBeforeUpdateHookIfNecessary()
@@ -2905,7 +2928,6 @@ namespace UnityEngine.InputSystem
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
-            public int deviceSetupVersion;
             public float pollingFrequency;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -2950,7 +2972,6 @@ namespace UnityEngine.InputSystem
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
-                deviceSetupVersion = m_DeviceSetupVersion,
                 pollingFrequency = m_PollingFrequency,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices?.Take(m_AvailableDeviceCount).ToArray(),
@@ -2971,7 +2992,6 @@ namespace UnityEngine.InputSystem
         {
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
-            m_DeviceSetupVersion = state.deviceSetupVersion + 1;
             updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;

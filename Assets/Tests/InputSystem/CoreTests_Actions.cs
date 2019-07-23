@@ -289,7 +289,7 @@ partial class CoreTests
     // the action pretends for the control to *just* have changed to the state it already has.
     [Test]
     [Category("Actions")]
-    public void Actions_ValueActionsPerformInitialStateCheckWhenEnabled()
+    public void Actions_ValueActionsReactToCurrentStateOfControlWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

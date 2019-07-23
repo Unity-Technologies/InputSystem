@@ -258,6 +258,7 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.Switch.INPadRumble).FullName ||
             ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||
