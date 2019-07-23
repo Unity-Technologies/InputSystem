@@ -270,8 +270,9 @@ namespace UnityEngine.InputSystem
                 {
                     m_ControlFlags |= ControlFlags.IsNoisy;
                     // Making a control noisy makes all its children noisy.
-                    foreach (var child in children)
-                        child.noisy = true;
+                    var list = children;
+                    for (var i = 0; i < list.Count; ++i)
+                        list[i].noisy = true;
                 }
                 else
                     m_ControlFlags &= ~ControlFlags.IsNoisy;
@@ -700,8 +701,9 @@ namespace UnityEngine.InputSystem
         // FinishSetup().
         internal void CallFinishSetupRecursive()
         {
-            foreach (var child in children)
-                child.CallFinishSetupRecursive();
+            var list = children;
+            for (var i = 0; i < list.Count; ++i)
+                list[i].CallFinishSetupRecursive();
             FinishSetup();
         }
 
@@ -716,8 +718,9 @@ namespace UnityEngine.InputSystem
         {
             m_StateBlock.byteOffset += offset;
 
-            foreach (var child in children)
-                child.BakeOffsetIntoStateBlockRecursive(offset);
+            var list = children;
+            for (var i = 0; i < list.Count; ++i)
+                list[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
         internal int ResolveDeviceIndex()
