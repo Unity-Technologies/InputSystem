@@ -231,27 +231,24 @@ namespace UnityEngine.InputSystem.PS4
                 s_Devices[realIndex] = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            selectButton = GetChildControl<ButtonControl>("select");
+            triggerButton = GetChildControl<ButtonControl>("triggerButton");
+            moveButton = GetChildControl<ButtonControl>("move");
+            startButton = GetChildControl<ButtonControl>("start");
 
-            selectButton = builder.GetControl<ButtonControl>(this, "select");
-            triggerButton = builder.GetControl<ButtonControl>(this, "triggerButton");
-            moveButton = builder.GetControl<ButtonControl>(this, "move");
-            startButton = builder.GetControl<ButtonControl>(this, "start");
+            squareButton = GetChildControl<ButtonControl>("square");
+            triangleButton = GetChildControl<ButtonControl>("triangle");
+            circleButton = GetChildControl<ButtonControl>("circle");
+            crossButton = GetChildControl<ButtonControl>("cross");
 
-            squareButton = builder.GetControl<ButtonControl>(this, "square");
-            triangleButton = builder.GetControl<ButtonControl>(this, "triangle");
-            circleButton = builder.GetControl<ButtonControl>(this, "circle");
-            crossButton = builder.GetControl<ButtonControl>(this, "cross");
+            trigger = GetChildControl<ButtonControl>("trigger");
 
-            trigger = builder.GetControl<ButtonControl>(this, "trigger");
+            accelerometer = GetChildControl<Vector3Control>("accelerometer");
+            gyro = GetChildControl<Vector3Control>("gyro");
 
-            accelerometer = builder.GetControl<Vector3Control>(this, "accelerometer");
-            gyro = builder.GetControl<Vector3Control>(this, "gyro");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             var capabilities = description.capabilities;
             var deviceDescriptor = PS4MoveDeviceDescriptor.FromJson(capabilities);

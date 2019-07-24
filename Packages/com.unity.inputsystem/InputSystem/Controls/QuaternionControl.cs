@@ -27,16 +27,13 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatQuaternion;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            x = builder.GetControl<AxisControl>(this, "x");
-            y = builder.GetControl<AxisControl>(this, "y");
-            z = builder.GetControl<AxisControl>(this, "z");
-            w = builder.GetControl<AxisControl>(this, "w");
-            base.FinishSetup(builder);
+            x = GetChildControl<AxisControl>("x");
+            y = GetChildControl<AxisControl>("y");
+            z = GetChildControl<AxisControl>("z");
+            w = GetChildControl<AxisControl>("w");
+            base.FinishSetup();
         }
 
         public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)

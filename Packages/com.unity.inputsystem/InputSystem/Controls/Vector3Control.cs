@@ -21,16 +21,13 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatVector3;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            x = GetChildControl<AxisControl>("x");
+            y = GetChildControl<AxisControl>("y");
+            z = GetChildControl<AxisControl>("z");
 
-            x = builder.GetControl<AxisControl>(this, "x");
-            y = builder.GetControl<AxisControl>(this, "y");
-            z = builder.GetControl<AxisControl>(this, "z");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)

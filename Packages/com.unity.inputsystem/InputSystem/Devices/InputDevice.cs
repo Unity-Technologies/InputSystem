@@ -178,7 +178,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is only assigned once a device has been added to the system. No two devices will receive the same
-        /// ID and no device will receive an ID that another device used before even if the device was removed.
+        /// ID and no device will receive an ID that another device used before even if the device was removed. The
+        /// only exception to this is if a device gets re-created as part of a layout change. For example, if a new
+        /// layout is registered that replaces the <see cref="Mouse"/> layout, all <see cref="Mouse"/> devices will
+        /// get recreated but will keep their existing device IDs.
         ///
         /// IDs are assigned by the input runtime.
         /// </remarks>
@@ -400,6 +403,8 @@ namespace UnityEngine.InputSystem
         // NOTE: The device's own usages are part of this array as well. They are always
         //       at the *end* of the array.
         internal InternedString[] m_UsagesForEachControl;
+        // This one does NOT contain the device itself, i.e. it only contains controls on the device
+        // and may this be shorter than m_UsagesForEachControl.
         internal InputControl[] m_UsageToControl;
 
         // List of children for all controls. Each control gets a slice of this array.
@@ -425,25 +430,38 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void SetUsage(InternedString usage)
+        internal void AddDeviceUsage(InternedString usage)
         {
-            // Make last entry in m_UsagesForEachControl be our device usage string.
-            var numControlUsages = m_UsageToControl?.Length ?? 0;
-            Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
-            m_UsagesForEachControl[numControlUsages] = usage;
-            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);
-
-            // Update controls to all point to new usage array.
-            UpdateUsageArraysOnControls();
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = totalUsageCount;
+            ArrayHelpers.AppendWithCapacity(ref m_UsagesForEachControl, ref totalUsageCount, usage);
+            ++m_UsageCount;
         }
 
-        internal void UpdateUsageArraysOnControls()
+        internal void RemoveDeviceUsage(InternedString usage)
         {
-            if (m_UsageToControl == null)
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
+
+            var index = ArrayHelpers.IndexOfValue(m_UsagesForEachControl, usage, m_UsageStartIndex, totalUsageCount);
+            if (index == -1)
                 return;
 
-            for (var i = 0; i < m_UsageToControl.Length; ++i)
-                m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+            Debug.Assert(m_UsageCount > 0);
+            ArrayHelpers.EraseAtWithCapacity(m_UsagesForEachControl, ref totalUsageCount, index);
+            --m_UsageCount;
+
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = default;
+        }
+
+        internal void ClearDeviceUsages()
+        {
+            for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
+                m_UsagesForEachControl[i] = default;
+            m_UsageCount = default;
         }
 
         internal void NotifyAdded()
@@ -454,6 +472,30 @@ namespace UnityEngine.InputSystem
         internal void NotifyRemoved()
         {
             OnRemoved();
+        }
+
+        public static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default)
+            where TDevice : InputDevice
+        {
+            if (string.IsNullOrEmpty(layoutName))
+            {
+                layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
+                if (string.IsNullOrEmpty(layoutName))
+                    layoutName = typeof(TDevice).Name;
+            }
+
+            using (InputDeviceBuilder.Ref())
+            {
+                InputDeviceBuilder.instance.Setup(new InternedString(layoutName), new InternedString(layoutVariants),
+                    deviceDescription: deviceDescription);
+                var device = InputDeviceBuilder.instance.Finish();
+                if (!(device is TDevice deviceOfType))
+                    throw new ArgumentException(
+                        $"Expected device of type '{typeof(TDevice).Name}' but got device of type '{device.GetType().Name}' instead",
+                        "TDevice");
+
+                return deviceOfType;
+            }
         }
     }
 }

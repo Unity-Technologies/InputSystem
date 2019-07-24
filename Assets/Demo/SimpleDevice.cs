@@ -26,11 +26,11 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
     public ButtonControl button1 { get; private set; }
     public AxisControl axis1 { get; private set; }
 
-    protected override void FinishSetup(InputDeviceBuilder builder)
+    protected override void FinishSetup()
     {
-        button1 = builder.GetControl<ButtonControl>(this, "button1");
-        axis1 = builder.GetControl<AxisControl>(this, "axis1");
-        base.FinishSetup(builder);
+        button1 = GetChildControl<ButtonControl>("button1");
+        axis1 = GetChildControl<AxisControl>("axis1");
+        base.FinishSetup();
     }
 
     public void OnUpdate(InputUpdateType updateType)

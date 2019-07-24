@@ -3134,11 +3134,12 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            Debug.Assert(device != null);
-
-            // We only care about new devices appearing or existing devices disappearing.
-            if (change != InputDeviceChange.Added && change != InputDeviceChange.Removed)
-                return;
+            Debug.Assert(device != null, "Device is null");
+            ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
+            Debug.Assert(
+                change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
+                change == InputDeviceChange.UsageChanged,
+                "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
@@ -3154,11 +3155,12 @@ namespace UnityEngine.InputSystem
                 }
                 var state = (InputActionState)handle.Target;
 
-                // If this state is not affected by the addition or removal of the given
-                // device, skip it.
+                // If this state is not affected by the change, skip.
                 if (change == InputDeviceChange.Added && !state.CanUseDevice(device))
                     continue;
                 if (change == InputDeviceChange.Removed && !state.IsUsingDevice(device))
+                    continue;
+                if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
 
                 // Trigger a lazy-resolve on all action maps in the state.

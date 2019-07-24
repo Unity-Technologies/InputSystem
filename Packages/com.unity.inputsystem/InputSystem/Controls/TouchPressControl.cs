@@ -11,9 +11,9 @@ namespace UnityEngine.InputSystem.Controls
     [InputControlLayout(hideInUI = true)]
     public class TouchPressControl : ButtonControl
     {
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             if (!stateBlock.format.IsIntegerFormat())
                 throw new NotSupportedException(

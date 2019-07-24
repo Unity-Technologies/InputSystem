@@ -30,9 +30,9 @@ namespace UnityEngine.InputSystem.XR
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
         public static XRController rightHand => InputSystem.GetDevice<XRController>(CommonUsages.RightHand);
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);

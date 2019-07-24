@@ -12,7 +12,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
 using Property = NUnit.Framework.PropertyAttribute;
 
 #if UNITY_EDITOR
@@ -25,8 +24,7 @@ partial class CoreTests
     [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var gamepad = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
 
         Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>() * 8));
         Assert.That(gamepad.leftStick.stateBlock.byteOffset,
@@ -40,9 +38,9 @@ partial class CoreTests
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
         InputSystem.RegisterLayout<CustomDevice>();
-        var setup = new InputDeviceBuilder("CustomDevice");
-        var axis2 = setup.GetControl("axis2");
-        setup.Finish();
+
+        var device = InputDevice.Build<CustomDevice>();
+        var axis2 = device.GetChildControl("axis2");
 
         var nestedOffset = Marshal.OffsetOf(typeof(CustomDeviceState), "nested").ToInt32();
         var axis2Offset = nestedOffset + Marshal.OffsetOf(typeof(CustomNestedDeviceState), "axis2").ToInt32();
@@ -54,9 +52,8 @@ partial class CoreTests
     [Category("State")]
     public void State_CanComputeStateLayoutForMultiByteBitfieldWithFixedOffset()
     {
-        var setup = new InputDeviceBuilder("Keyboard");
-        var downArrow = setup.GetControl("DownArrow");
-        var keyboard = setup.Finish();
+        var keyboard = InputDevice.Build<Keyboard>();
+        var downArrow = keyboard.GetChildControl("DownArrow");
 
         Assert.That(downArrow.stateBlock.bitOffset, Is.EqualTo((int)Key.DownArrow));
         Assert.That(downArrow.stateBlock.byteOffset, Is.EqualTo(0));
@@ -67,8 +64,7 @@ partial class CoreTests
     [Category("State")]
     public void State_BeforeAddingDevice_OffsetsInStateLayoutsAreRelativeToRoot()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>();
 
         var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
@@ -198,10 +194,9 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(jsonLayout);
 
-        var setup = new InputDeviceBuilder("CustomGamepad");
-        Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
+        var device = InputDevice.Build<Gamepad>("CustomGamepad");
 
-        var device = (Gamepad)setup.Finish();
+        Assert.That(device.GetChildControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
     }
 
@@ -259,8 +254,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(jsonLayout);
 
-        var setup = new InputDeviceBuilder("CustomGamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>("CustomGamepad");
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
     }
@@ -288,11 +282,9 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var setup = new InputDeviceBuilder("MyDevice");
+        var device = InputDevice.Build<InputDevice>("MyDevice");
 
-        Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
-
-        var device = setup.Finish();
+        Assert.That(device.GetChildControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(15 * 8));
     }
 

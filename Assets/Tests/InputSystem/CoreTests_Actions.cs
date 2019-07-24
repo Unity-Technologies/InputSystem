@@ -2743,6 +2743,28 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceUsagesChange()
+    {
+        var device1 = InputSystem.AddDevice<Mouse>();
+        var device2 = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.SetDeviceUsage(device1, "Test");
+
+        var action = new InputAction(binding: "<Mouse>{Test}/leftButton");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device1.leftButton}));
+
+        InputSystem.SetDeviceUsage(device2, "Test");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device1.leftButton, device2.leftButton}));
+
+        InputSystem.SetDeviceUsage(device1, null);
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device2.leftButton}));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenControlsUpdate_NotificationIsTriggered()
     {
         var action = new InputAction("action", binding: "<Gamepad>/leftTrigger");
@@ -5113,6 +5135,8 @@ partial class CoreTests
         Assert.That(() => action.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
+    // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
+    // machinery allows specifying a binding mask to respect.
     [Test]
     [Category("Actions")]
     public void Actions_CanRestoreDefaultForSpecificOverride()
@@ -5818,5 +5842,13 @@ partial class CoreTests
                 Performed(positionAction, mouse.position, new Vector2(100, 200), time: 0.6)
                     .AndThen(Performed(positionAction, pen.position, new Vector2(300, 400), time: 0.7)));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
+    {
+        Assert.Fail();
     }
 }

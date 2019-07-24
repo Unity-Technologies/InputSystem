@@ -613,11 +613,8 @@ namespace UnityEngine.InputSystem
 
         private KeyControl[] m_Keys;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
             var keyStrings = new[]
             {
                 "space",
@@ -734,7 +731,7 @@ namespace UnityEngine.InputSystem
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
+                m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
@@ -742,10 +739,10 @@ namespace UnityEngine.InputSystem
             }
             Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
                 "keyString array layout doe not match Key enum layout");
-            anyKey = builder.GetControl<AnyKeyControl>("anyKey");
-            imeSelected = builder.GetControl<ButtonControl>("IMESelected");
+            anyKey = GetChildControl<AnyKeyControl>("anyKey");
+            imeSelected = GetChildControl<ButtonControl>("IMESelected");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         protected override void RefreshConfiguration()

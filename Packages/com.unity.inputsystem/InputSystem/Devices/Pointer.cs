@@ -176,22 +176,19 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
+            position = GetChildControl<Vector2Control>("position");
+            delta = GetChildControl<Vector2Control>("delta");
+            tilt = GetChildControl<Vector2Control>("tilt");
+            radius = GetChildControl<Vector2Control>("radius");
+            pressure = GetChildControl<AxisControl>("pressure");
+            twist = GetChildControl<AxisControl>("twist");
+            pointerId = GetChildControl<IntegerControl>("pointerId");
+            displayIndex = GetChildControl<IntegerControl>("displayIndex");
+            press = GetChildControl<ButtonControl>("press");
 
-            position = builder.GetControl<Vector2Control>(this, "position");
-            delta = builder.GetControl<Vector2Control>(this, "delta");
-            tilt = builder.GetControl<Vector2Control>(this, "tilt");
-            radius = builder.GetControl<Vector2Control>(this, "radius");
-            pressure = builder.GetControl<AxisControl>(this, "pressure");
-            twist = builder.GetControl<AxisControl>(this, "twist");
-            pointerId = builder.GetControl<IntegerControl>(this, "pointerId");
-            displayIndex = builder.GetControl<IntegerControl>(this, "displayIndex");
-            press = builder.GetControl<ButtonControl>(this, "press");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         protected static unsafe void Accumulate(InputControl<float> control, void* oldStatePtr, InputEventPtr newState)

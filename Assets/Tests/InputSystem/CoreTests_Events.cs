@@ -913,10 +913,10 @@ partial class CoreTests
     {
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            axis = builder.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(builder);
+            axis = GetChildControl<AxisControl>("axis");
+            base.FinishSetup();
         }
     }
 

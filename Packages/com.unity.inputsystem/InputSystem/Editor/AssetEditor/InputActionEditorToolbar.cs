@@ -306,10 +306,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             ////TODO: need something more flexible to produce correct results for more than the simple string we produce here
             var deviceLayout = InputControlPath.TryGetDeviceLayout(requirement.controlPath);
-            var usage = InputControlPath.TryGetDeviceUsage(requirement.controlPath);
+            var usages = InputControlPath.TryGetDeviceUsages(requirement.controlPath);
 
-            if (!string.IsNullOrEmpty(usage))
-                return $"{deviceLayout} {usage}";
+            if (usages != null && usages.Length > 0)
+                return $"{deviceLayout} {string.Join("}{", usages)}";
 
             return deviceLayout;
         }

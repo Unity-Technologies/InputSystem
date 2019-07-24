@@ -256,9 +256,9 @@ public class DemoControls : IInputActionCollection
                 },
                 {
                     ""name"": ""submit"",
-                    ""type"": ""Value"",
+                    ""type"": ""Button"",
                     ""id"": ""f6c0c6e8-e423-42cc-9071-06396825f4e2"",
-                    ""expectedControlType"": """",
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
                 },

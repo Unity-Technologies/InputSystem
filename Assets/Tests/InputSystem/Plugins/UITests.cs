@@ -573,13 +573,13 @@ internal class UITests : InputTestFixture
         public QuaternionControl orientation { get; private set; }
         public ButtonControl select { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            position = builder.GetControl<Vector3Control>("position");
-            orientation = builder.GetControl<QuaternionControl>("orientation");
-            select = builder.GetControl<ButtonControl>("select");
+            position = GetChildControl<Vector3Control>("position");
+            orientation = GetChildControl<QuaternionControl>("orientation");
+            select = GetChildControl<ButtonControl>("select");
         }
     }
 
@@ -888,11 +888,11 @@ internal class UITests : InputTestFixture
     {
         public TouchControl touch { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            touch = builder.GetControl<TouchControl>("touch");
+            touch = GetChildControl<TouchControl>("touch");
         }
     }
 

@@ -179,9 +179,9 @@ namespace UnityEngine.InputSystem.Steam.Editor
 
             // FinishSetup method.
             builder.Append('\n');
-            builder.Append("    protected override void FinishSetup(InputDeviceBuilder builder)\n");
+            builder.Append("    protected override void FinishSetup()\n");
             builder.Append("    {\n");
-            builder.Append("        base.FinishSetup(builder);\n");
+            builder.Append("        base.FinishSetup();\n");
             foreach (var setEntry in actions)
             {
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
