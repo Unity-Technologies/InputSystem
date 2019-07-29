@@ -103,6 +103,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(3)] public byte buttons2;
 
         [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
+        [InputControl(name = "touchpadButton", layout = "Button", displayName = "Touchpad Press", bit = 1)] // always 0, does not exist on DualShock 3
         [FieldOffset(4)] public byte buttons3;
 
         [FieldOffset(5)] private byte padding2;
