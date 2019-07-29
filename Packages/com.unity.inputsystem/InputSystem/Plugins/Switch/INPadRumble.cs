@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using UnityEngine.InputSystem.Haptics;
 
 namespace UnityEngine.InputSystem.Switch
@@ -23,3 +24,4 @@ namespace UnityEngine.InputSystem.Switch
         void SetMotorSpeedRight(float lowAmplitude, float lowFrequency, float highAmplitude, float highFrequency);
     }
 }
+#endif

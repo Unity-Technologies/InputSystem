@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: reuse interaction, processor, and composite instances from prior resolves
@@ -391,7 +390,7 @@ namespace UnityEngine.InputSystem
                             actionIndex = actionIndexForBinding,
                             compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
-                            wantsInitialStateCheck = action?.initialStateCheck ?? false
+                            wantsInitialStateCheck = action?.wantsInitialStateCheck ?? false
                         };
                     }
                     catch (Exception exception)
@@ -460,7 +459,7 @@ namespace UnityEngine.InputSystem
                     var actionIndex = actionStartIndex + i;
 
                     // Correlate action with its trigger state.
-                    action.m_ActionIndex = actionIndex;
+                    action.m_ActionIndexInState = actionIndex;
 
                     // Collect bindings for action.
                     var bindingStartIndexForAction = runningIndexInBindingIndices;
@@ -504,7 +503,7 @@ namespace UnityEngine.InputSystem
                     // See if we may need conflict resolution on this action. Never needed for pass-through actions.
                     // Otherwise, if we have more than one bound control or have several bindings and one of them
                     // is a composite, we enable it.
-                    var isPassThroughAction = action.passThrough;
+                    var isPassThroughAction = action.type == InputActionType.PassThrough;
                     var mayNeedConflictResolution = !isPassThroughAction && numPossibleConcurrentActuations > 1;
 
                     // Initialize initial trigger state.
@@ -515,7 +514,6 @@ namespace UnityEngine.InputSystem
                         mapIndex = mapIndex,
                         controlIndex = InputActionState.kInvalidIndex,
                         interactionIndex = InputActionState.kInvalidIndex,
-                        continuous = action.continuous,
                         passThrough = isPassThroughAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
                     };

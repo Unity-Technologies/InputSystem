@@ -31,9 +31,10 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
-    [Property("TimesliceEvents", "Off")]
     public void Remote_EventsAreSentToRemotes()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var remote = new FakeRemote())

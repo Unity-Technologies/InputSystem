@@ -8,8 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
 ////        "I expect a 'look' and a 'move' action in here"
 
-////TODO: nuke Clone()
-
 ////REVIEW: rename this from "InputActionAsset" to something else that emphasizes the asset aspect less
 ////        and instead emphasizes the map collection aspect more?
 
@@ -21,7 +19,7 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// Usually imported from JSON using <see cref="Editor.InputActionImporter"/>.
     ///
-    /// Be aware that input action assets do not separate between static data and dynamic
+    /// Be aware that input action assets do not separate between static (configuration) data and dynamic
     /// (instance) data. For audio, for example, <see cref="AudioClip"/> represents the static,
     /// shared data portion of audio playback whereas <see cref="AudioSource"/> represents the
     /// dynamic, per-instance audio playback portion (referencing the clip through <see
@@ -41,7 +39,7 @@ namespace UnityEngine.InputSystem
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
-    public class InputActionAsset : ScriptableObject, ICloneable, IInputActionCollection
+    public class InputActionAsset : ScriptableObject, IInputActionCollection
     {
         public const string Extension = "inputactions";
 
@@ -143,7 +141,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public string ToJson()
         {
-            var fileJson = new FileJson
+            var fileJson = new WriteFileJson
             {
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
@@ -162,7 +160,7 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentNullException(nameof(json));
 
-            var parsedJson = JsonUtility.FromJson<FileJson>(json);
+            var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
             parsedJson.ToAsset(this);
         }
 
@@ -454,27 +452,6 @@ namespace UnityEngine.InputSystem
             return m_ControlSchemes[index];
         }
 
-        /// <summary>
-        /// Duplicate the asset.
-        /// </summary>
-        /// <returns>A new asset that contains a duplicate of all action maps and actions in the asset.</returns>
-        /// <remarks>
-        /// Unlike calling <see cref="UnityEngine.Object.Instantiate(UnityEngine.Object)"/>, cloning an asset will not
-        /// duplicate data such as unique <see cref="InputActionMap.id">map IDs</see> and <see cref="InputAction.id">action
-        /// IDs</see>.
-        /// </remarks>
-        public InputActionAsset Clone()
-        {
-            var clone = (InputActionAsset)CreateInstance(GetType());
-            clone.m_ActionMaps = ArrayHelpers.Clone(m_ActionMaps);
-            return clone;
-        }
-
-        object ICloneable.Clone()
-        {
-            return Clone();
-        }
-
         public void Enable()
         {
             foreach (var map in actionMaps)
@@ -557,10 +534,18 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private InputDevice[] m_DevicesArray;
 
         [Serializable]
-        internal struct FileJson
+        internal struct WriteFileJson
         {
             public string name;
-            public InputActionMap.MapJson[] maps;
+            public InputActionMap.WriteMapJson[] maps;
+            public InputControlScheme.SchemeJson[] controlSchemes;
+        }
+
+        [Serializable]
+        internal struct ReadFileJson
+        {
+            public string name;
+            public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
 
             public void ToAsset(InputActionAsset asset)

@@ -61,7 +61,6 @@ public class GamepadISX : MonoBehaviour
                 else if (isPS) buttonName = control.aliases[1];
                 else           buttonName = control.name.Replace("button", "");
             }
-            Debug.Log(dpadName);
             button = GetInputTransform(FirstLetterToUpper(buttonName), dpadName: dpadName);
         }
 

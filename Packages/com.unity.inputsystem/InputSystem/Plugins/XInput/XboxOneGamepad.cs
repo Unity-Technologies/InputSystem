@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XboxOneGamepadState : IInputStateTypeInfo
+    internal struct XboxOneGamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat
         {
@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the GamepadOutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
+    internal struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('X', '1', 'G', 'O'); } }
 
@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     /// Retrieve the slot index, default color and user ID of the controller.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryXboxControllerInfo : IInputDeviceCommandInfo
+    internal struct QueryXboxControllerInfo : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('I', 'N', 'F', 'O'); } }
 
@@ -189,6 +189,9 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
+    /// <summary>
+    /// An Xbox One Gamepad.
+    /// </summary>
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;
@@ -209,17 +212,14 @@ namespace UnityEngine.InputSystem.XInput
             current = this;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
-            paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
-            paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
-            paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
+            paddle1 = GetChildControl<ButtonControl>("paddle1");
+            paddle2 = GetChildControl<ButtonControl>("paddle2");
+            paddle3 = GetChildControl<ButtonControl>("paddle3");
+            paddle4 = GetChildControl<ButtonControl>("paddle4");
         }
 
         public ulong gamepadId

@@ -100,9 +100,9 @@ namespace UnityEngine.InputSystem.Editor
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 15;
+            bindingTextRect.width -= 20;
             editButtonRect.x += bindingTextRect.width;
-            editButtonRect.width = 15;
+            editButtonRect.width = 20;
             editButtonRect.height = 15;
 
             var path = pathProperty.stringValue;

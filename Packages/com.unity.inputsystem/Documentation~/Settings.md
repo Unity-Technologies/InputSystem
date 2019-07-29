@@ -52,9 +52,9 @@ To counteract this, noise filtering can be enabled. If turned on, when input is 
 
 >NOTE: The system does not currently detect other forms of noise, principally those on gamepad sticks. This means that if the sticks are wiggled a little bit (and on most gameapds this does not require actually actuating the sticks; there will be a small tolerance within which the sticks will move when the entire device is moved) but are still within deadzone limits, the device will still be made current.
 
-## Run In Background
-
 ## Compensate For Screen Orientation
+
+## Tap Radius
 
 ## Supported Devices
 

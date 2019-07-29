@@ -1,9 +1,7 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Demo/SimpleDemo/SimpleControls.inputactions'
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
@@ -21,47 +19,35 @@ public class SimpleControls : IInputActionCollection
             ""actions"": [
                 {
                     ""name"": ""fire"",
+                    ""type"": ""Button"",
                     ""id"": ""1077f913-a9f9-41b1-acb3-b9ee0adbc744"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""move"",
+                    ""type"": ""Value"",
                     ""id"": ""50fd2809-3aa3-4a90-988e-1facf6773553"",
-                    ""expectedControlLayout"": ""Stick"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Stick"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""look"",
+                    ""type"": ""Value"",
                     ""id"": ""c60e0974-d140-4597-a40e-9862193067e9"",
-                    ""expectedControlLayout"": ""Vector2"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 },
                 {
                     ""name"": ""jump"",
+                    ""type"": ""Button"",
                     ""id"": ""6890847e-f99c-43ac-a79d-0787d911a0a1"",
-                    ""expectedControlLayout"": ""Button"",
-                    ""continuous"": false,
-                    ""passThrough"": false,
-                    ""initialStateCheck"": false,
+                    ""expectedControlType"": ""Button"",
                     ""processors"": """",
-                    ""interactions"": """",
-                    ""bindings"": []
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -74,8 +60,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -86,8 +71,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""fire"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -98,8 +82,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""Dpad"",
@@ -110,8 +93,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": true,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": ""up"",
@@ -122,8 +104,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""down"",
@@ -134,8 +115,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""left"",
@@ -146,8 +126,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": ""right"",
@@ -158,8 +137,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": true,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": true
                 },
                 {
                     ""name"": """",
@@ -170,8 +148,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""move"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -182,8 +159,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -194,8 +170,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -206,8 +181,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""look"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -218,8 +192,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""jump"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
@@ -230,8 +203,7 @@ public class SimpleControls : IInputActionCollection
                     ""groups"": """",
                     ""action"": ""jump"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false,
-                    ""modifiers"": """"
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -263,10 +235,7 @@ public class SimpleControls : IInputActionCollection
         set => asset.devices = value;
     }
 
-    public ReadOnlyArray<InputControlScheme> controlSchemes
-    {
-        get => asset.controlSchemes;
-    }
+    public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
     public bool Contains(InputAction action)
     {
@@ -294,25 +263,24 @@ public class SimpleControls : IInputActionCollection
     }
 
     // gameplay
-    private InputActionMap m_gameplay;
+    private readonly InputActionMap m_gameplay;
     private IGameplayActions m_GameplayActionsCallbackInterface;
-    private InputAction m_gameplay_fire;
-    private InputAction m_gameplay_move;
-    private InputAction m_gameplay_look;
-    private InputAction m_gameplay_jump;
+    private readonly InputAction m_gameplay_fire;
+    private readonly InputAction m_gameplay_move;
+    private readonly InputAction m_gameplay_look;
+    private readonly InputAction m_gameplay_jump;
     public struct GameplayActions
     {
         private SimpleControls m_Wrapper;
         public GameplayActions(SimpleControls wrapper) { m_Wrapper = wrapper; }
-        public InputAction @fire { get { return m_Wrapper.m_gameplay_fire; } }
-        public InputAction @move { get { return m_Wrapper.m_gameplay_move; } }
-        public InputAction @look { get { return m_Wrapper.m_gameplay_look; } }
-        public InputAction @jump { get { return m_Wrapper.m_gameplay_jump; } }
+        public InputAction @fire => m_Wrapper.m_gameplay_fire;
+        public InputAction @move => m_Wrapper.m_gameplay_move;
+        public InputAction @look => m_Wrapper.m_gameplay_look;
+        public InputAction @jump => m_Wrapper.m_gameplay_jump;
         public InputActionMap Get() { return m_Wrapper.m_gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
-        public bool enabled { get { return Get().enabled; } }
-        public InputActionMap Clone() { return Get().Clone(); }
+        public bool enabled => Get().enabled;
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
         public void SetCallbacks(IGameplayActions instance)
         {
@@ -349,13 +317,7 @@ public class SimpleControls : IInputActionCollection
             }
         }
     }
-    public GameplayActions @gameplay
-    {
-        get
-        {
-            return new GameplayActions(this);
-        }
-    }
+    public GameplayActions @gameplay => new GameplayActions(this);
     public interface IGameplayActions
     {
         void OnFire(InputAction.CallbackContext context);

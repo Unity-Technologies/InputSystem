@@ -50,15 +50,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// If true, <see cref="action"/> is set to continuous mode (<see cref="InputAction.continuous"/>).
-        /// </summary>
-        /// <remarks>
-        /// In continuous mode, an action, while triggered, is expected to be performed even if there is
-        /// no associated input in a given frame.
-        /// </remarks>
-        public bool continuous => m_TriggerState.continuous;
-
-        /// <summary>
         /// True if the interaction is waiting for input
         /// </summary>
         /// <remarks>

@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// Structure of HID input reports for PS4 DualShock 4 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public struct DualShock4HIDInputReport : IInputStateTypeInfo
+    internal struct DualShock4HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
 
@@ -71,17 +71,14 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         ////TODO: touchpad
 
-        public FourCC format
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public FourCC format => new FourCC('H', 'I', 'D');
     }
 
     /// <summary>
     /// Structure of HID input reports for PS3 DualShock 3 controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 32)]
-    public unsafe struct DualShock3HIDInputReport : IInputStateTypeInfo
+    internal unsafe struct DualShock3HIDInputReport : IInputStateTypeInfo
     {
         [FieldOffset(0)] private ushort padding1;
 
@@ -147,7 +144,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     /// PS4 output report sent as command to HID backend.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
+    internal unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
 
@@ -175,10 +172,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public byte blueColor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 9)] public fixed byte unknown2[23];
 
-        public FourCC typeStatic
-        {
-            get { return Type; }
-        }
+        public FourCC typeStatic => Type;
 
         public void SetMotorSpeeds(float lowFreq, float highFreq)
         {
@@ -218,16 +212,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void PauseHaptics()
@@ -309,16 +300,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         // TODO: see if we can implement rumble support on DualShock 3

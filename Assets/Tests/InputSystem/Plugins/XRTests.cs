@@ -360,11 +360,11 @@ internal class XRTests : InputTestFixture
     {
         public QuaternionControl quaternion { get; private set; }
         public Vector3Control vector3 { get; private set; }
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
-            quaternion = builder.GetControl<QuaternionControl>("quaternion");
-            vector3 = builder.GetControl<Vector3Control>("vector3");
+            base.FinishSetup();
+            quaternion = GetChildControl<QuaternionControl>("quaternion");
+            vector3 = GetChildControl<Vector3Control>("vector3");
         }
     }
 

@@ -37,15 +37,12 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatVector2;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            x = GetChildControl<AxisControl>("x");
+            y = GetChildControl<AxisControl>("y");
 
-            x = builder.GetControl<AxisControl>(this, "x");
-            y = builder.GetControl<AxisControl>(this, "y");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)

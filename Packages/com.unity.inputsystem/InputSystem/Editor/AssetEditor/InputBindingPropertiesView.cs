@@ -244,6 +244,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnBindingGroupsChanged()
         {
+            ////FIXME: changing the binding group of a GLOBAL binding when a control scheme is selected does not cause the binding to disappear from the control scheme immediately
+            ////       (same goes for the other way round)
+
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
 
@@ -296,7 +299,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly InputControlPickerState m_ControlPickerState;
         private readonly InputControlPathEditor m_ControlPathEditor;
 
-        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Type",
+        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Composite Type",
             "Type of composite. Allows changing the composite type retroactively. Doing so will modify the bindings that are part of the composite.");
         private static readonly GUIContent s_UseInControlSchemesLAbel = EditorGUIUtility.TrTextContent("Use in control scheme",
             "In which control schemes the binding is active. A binding can be used by arbitrary many control schemes. If a binding is not "

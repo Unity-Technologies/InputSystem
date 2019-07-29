@@ -5,6 +5,10 @@ using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// The TrackedPoseDriver component applies the current Pose value of a tracked device to the transform of the GameObject.
+    /// TrackedPoseDriver can track multiple types of devices including XR HMDs, controllers, and remotes.
+    /// </summary>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (New Input System)")]
     public class TrackedPoseDriver : MonoBehaviour
@@ -16,8 +20,12 @@ namespace UnityEngine.InputSystem.XR
             PositionOnly
         }
 
+
         [SerializeField]
         TrackingType m_TrackingType;
+        /// <summary>
+        /// The tracking type being used by the tracked pose driver
+        /// </summary>
         public TrackingType trackingType
         {
             get { return m_TrackingType; }
@@ -33,6 +41,9 @@ namespace UnityEngine.InputSystem.XR
 
         [SerializeField]
         UpdateType m_UpdateType = UpdateType.UpdateAndBeforeRender;
+        /// <summary>
+        /// The update type being used by the tracked pose driver
+        /// </summary>
         public UpdateType updateType
         {
             get { return m_UpdateType; }
