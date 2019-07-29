@@ -473,7 +473,7 @@ namespace UnityEngine.InputSystem
                 if (m_Ptr == null)
                     return "<null>";
 
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} duration={duration} }}";
             }
         }
 
