@@ -1901,7 +1901,7 @@ partial class CoreTests
         map.AddAction("action2");
 
         action1.Rename("newName");
-        
+
         Assert.That(action1.name, Is.EqualTo("newName"));
         Assert.That(map["newName"], Is.SameAs(action1));
         Assert.That(map.TryGetAction("action1"), Is.Null);
@@ -1927,7 +1927,7 @@ partial class CoreTests
     public void Actions_CanAddBindingsToActionsInMap()
     {
         var map = new InputActionMap();
-        
+
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
@@ -1954,7 +1954,7 @@ partial class CoreTests
     {
         var map = new InputActionMap();
         map.AddAction("action");
-        
+
         Assert.That(() => map.AddAction("action"), Throws.InvalidOperationException);
     }
 
