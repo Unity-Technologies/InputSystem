@@ -93,8 +93,6 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
-        ////REVIEW: what about explicitly grouping bindings into named sets?
-
         /// <summary>
         /// List of bindings contained in the map.
         /// </summary>
@@ -153,7 +151,7 @@ namespace UnityEngine.InputSystem
                 }
                 else
                 {
-                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    m_DevicesArray.Clear(ref m_DevicesCount);
                     ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
                     m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
                 }
@@ -314,7 +312,6 @@ namespace UnityEngine.InputSystem
             m_State.DisableAllActions(this);
         }
 
-        ////REVIEW: right now the Clone() methods aren't overridable; do we want that?
         public InputActionMap Clone()
         {
             // Internal action sets from singleton actions should not be visible outside of
@@ -906,7 +903,7 @@ namespace UnityEngine.InputSystem
         // as JSON by setting up a separate set of structs that are then read and written using Unity's JSON serializer.
 
         [Serializable]
-        public struct BindingJson
+        internal struct BindingJson
         {
             public string name;
             public string id;
@@ -915,14 +912,8 @@ namespace UnityEngine.InputSystem
             public string processors;
             public string groups;
             public string action;
-            ////TODO: re-enable when chained bindings are implemented
-            //public bool chainWithPrevious;
             public bool isComposite;
             public bool isPartOfComposite;
-
-            // This is for backwards compatibility with existing serialized action data as of 0.0.1-preview.
-            // Ideally we should be able to nuke this before 1.0.
-            public string modifiers;
 
             public InputBinding ToBinding()
             {
@@ -932,10 +923,9 @@ namespace UnityEngine.InputSystem
                     m_Id = string.IsNullOrEmpty(id) ? null : id,
                     path = string.IsNullOrEmpty(path) ? null : path,
                     action = string.IsNullOrEmpty(action) ? null : action,
-                    interactions = string.IsNullOrEmpty(interactions) ? (!string.IsNullOrEmpty(modifiers) ? modifiers : null) : interactions,
+                    interactions = string.IsNullOrEmpty(interactions) ? null : interactions,
                     processors = string.IsNullOrEmpty(processors) ? null : processors,
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
-                    //chainWithPrevious = chainWithPrevious,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
                 };
@@ -952,40 +942,84 @@ namespace UnityEngine.InputSystem
                     interactions = binding.interactions,
                     processors = binding.processors,
                     groups = binding.groups,
-                    //chainWithPrevious = binding.chainWithPrevious,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
                 };
             }
         }
 
+        // Backwards-compatible read format.
         [Serializable]
-        internal struct ActionJson
+        internal struct ReadActionJson
         {
             public string name;
+            public string type;
             public string id;
+            public string expectedControlType;
             public string expectedControlLayout;
-            public bool continuous;
-            public bool passThrough;
-            public bool initialStateCheck;
             public string processors;
             public string interactions;
+            public bool passThrough;
+            public bool initialStateCheck;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
             public BindingJson[] bindings;
 
-            public static ActionJson FromAction(InputAction action)
+            public InputAction ToAction(string actionName = null)
             {
-                // Bindings don't go on the actions when we write them.
-                return new ActionJson
+                // FormerlySerializedAs doesn't seem to work as expected so manually
+                // handling the rename here.
+                if (!string.IsNullOrEmpty(expectedControlLayout))
+                    expectedControlType = expectedControlLayout;
+
+                // Determine type.
+                InputActionType actionType = default;
+                if (!string.IsNullOrEmpty(type))
+                    actionType = (InputActionType)Enum.Parse(typeof(InputActionType), type, true);
+                else
+                {
+                    // Old format that doesn't have type. Try to infer from settings.
+
+                    if (passThrough)
+                        actionType = InputActionType.PassThrough;
+                    else if (initialStateCheck)
+                        actionType = InputActionType.Value;
+                    else if (!string.IsNullOrEmpty(expectedControlType) &&
+                             (expectedControlType == "Button" || expectedControlType == "Key"))
+                        actionType = InputActionType.Button;
+                }
+
+                return new InputAction(actionName ?? name, actionType)
+                {
+                    m_Id = string.IsNullOrEmpty(id) ? null : id,
+                    m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlType)
+                        ? expectedControlType
+                        : null,
+                    m_Processors = processors,
+                    m_Interactions = interactions,
+                };
+            }
+        }
+
+        [Serializable]
+        internal struct WriteActionJson
+        {
+            public string name;
+            public string type;
+            public string id;
+            public string expectedControlType;
+            public string processors;
+            public string interactions;
+
+            public static WriteActionJson FromAction(InputAction action)
+            {
+                return new WriteActionJson
                 {
                     name = action.m_Name,
+                    type = action.m_Type.ToString(),
                     id = action.id.ToString(),
-                    expectedControlLayout = action.m_ExpectedControlLayout,
-                    continuous = action.continuous,
-                    passThrough = action.passThrough,
-                    initialStateCheck = action.initialStateCheck,
+                    expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
                 };
@@ -993,26 +1027,35 @@ namespace UnityEngine.InputSystem
         }
 
         [Serializable]
-        internal struct MapJson
+        internal struct ReadMapJson
         {
             public string name;
             public string id;
-            public ActionJson[] actions;
+            public ReadActionJson[] actions;
+            public BindingJson[] bindings;
+        }
+
+        [Serializable]
+        internal struct WriteMapJson
+        {
+            public string name;
+            public string id;
+            public WriteActionJson[] actions;
             public BindingJson[] bindings;
 
-            public static MapJson FromMap(InputActionMap map)
+            public static WriteMapJson FromMap(InputActionMap map)
             {
-                ActionJson[] jsonActions = null;
+                WriteActionJson[] jsonActions = null;
                 BindingJson[] jsonBindings = null;
 
                 var actions = map.m_Actions;
                 if (actions != null)
                 {
                     var actionCount = actions.Length;
-                    jsonActions = new ActionJson[actionCount];
+                    jsonActions = new WriteActionJson[actionCount];
 
                     for (var i = 0; i < actionCount; ++i)
-                        jsonActions[i] = ActionJson.FromAction(actions[i]);
+                        jsonActions[i] = WriteActionJson.FromAction(actions[i]);
                 }
 
                 var bindings = map.m_Bindings;
@@ -1025,7 +1068,7 @@ namespace UnityEngine.InputSystem
                         jsonBindings[i] = BindingJson.FromBinding(bindings[i]);
                 }
 
-                return new MapJson
+                return new WriteMapJson
                 {
                     name = map.name,
                     id = map.id.ToString(),
@@ -1042,13 +1085,13 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
-            public MapJson[] maps;
+            public WriteMapJson[] maps;
 
             public static WriteFileJson FromMap(InputActionMap map)
             {
                 return new WriteFileJson
                 {
-                    maps = new[] {MapJson.FromMap(map)}
+                    maps = new[] {WriteMapJson.FromMap(map)}
                 };
             }
 
@@ -1058,10 +1101,10 @@ namespace UnityEngine.InputSystem
                 if (mapCount == 0)
                     return new WriteFileJson();
 
-                var mapsJson = new MapJson[mapCount];
+                var mapsJson = new WriteMapJson[mapCount];
                 var index = 0;
                 foreach (var map in maps)
-                    mapsJson[index++] = MapJson.FromMap(map);
+                    mapsJson[index++] = WriteMapJson.FromMap(map);
 
                 return new WriteFileJson {maps = mapsJson};
             }
@@ -1073,8 +1116,8 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
-            public ActionJson[] actions;
-            public MapJson[] maps;
+            public ReadActionJson[] actions;
+            public ReadMapJson[] maps;
 
             public InputActionMap[] ToMaps()
             {
@@ -1131,18 +1174,7 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Create action.
-                    var action = new InputAction(actionName)
-                    {
-                        m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
-                        m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                            ? jsonAction.expectedControlLayout
-                            : null,
-                        continuous = jsonAction.continuous,
-                        passThrough = jsonAction.passThrough,
-                        initialStateCheck = jsonAction.initialStateCheck,
-                        m_Processors = jsonAction.processors,
-                        m_Interactions = jsonAction.interactions,
-                    };
+                    var action = jsonAction.ToAction(actionName);
                     actionLists[mapIndex].Add(action);
 
                     // Add bindings.
@@ -1204,18 +1236,7 @@ namespace UnityEngine.InputSystem
                             throw new InvalidOperationException($"Action number {i + 1} in map '{mapName}' has no name");
 
                         // Create action.
-                        var action = new InputAction(jsonAction.name)
-                        {
-                            m_Id = string.IsNullOrEmpty(jsonAction.id) ? null : jsonAction.id,
-                            m_ExpectedControlLayout = !string.IsNullOrEmpty(jsonAction.expectedControlLayout)
-                                ? jsonAction.expectedControlLayout
-                                : null,
-                            continuous = jsonAction.continuous,
-                            passThrough = jsonAction.passThrough,
-                            initialStateCheck = jsonAction.initialStateCheck,
-                            m_Processors = jsonAction.processors,
-                            m_Interactions = jsonAction.interactions,
-                        };
+                        var action = jsonAction.ToAction();
                         actionLists[mapIndex].Add(action);
 
                         // Add bindings.

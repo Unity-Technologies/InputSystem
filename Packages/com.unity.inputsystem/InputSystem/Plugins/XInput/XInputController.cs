@@ -41,9 +41,9 @@ namespace UnityEngine.InputSystem.XInput
             }
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             menu = startButton;
             view = selectButton;

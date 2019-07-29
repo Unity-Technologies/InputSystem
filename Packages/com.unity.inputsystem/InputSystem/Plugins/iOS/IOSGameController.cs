@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel
 {
-    public enum iOSButton
+    internal enum iOSButton
     {
         DpadUp,
         DpadDown,
@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         // Note: If you'll add an element here, be sure to update kMaxButtons const below
     };
 
-    public enum iOSAxis
+    internal enum iOSAxis
     {
         LeftStickX,
         LeftStickY,
@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     };
 
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct iOSGameControllerState : IInputStateTypeInfo
+    internal unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
         public const int MaxButtons = (int)iOSButton.Select + 1;

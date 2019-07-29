@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -15,7 +16,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Functions to working with control path specs (like "/gamepad/*stick").
+    /// Functions for working with control path specs (like "/gamepad/*stick").
     /// </summary>
     /// <remarks>
     /// The thinking here is somewhat similar to System.IO.Path, i.e. have a range
@@ -96,7 +97,7 @@ namespace UnityEngine.InputSystem
             return buffer.ToString();
         }
 
-        public static string TryGetDeviceUsage(string path)
+        public static string[] TryGetDeviceUsages(string path)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -105,8 +106,10 @@ namespace UnityEngine.InputSystem
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.usage.length > 0)
-                return parser.current.usage.ToString();
+            if (parser.current.usages != null && parser.current.usages.Length > 0)
+            {
+                return Array.ConvertAll<Substring, string>(parser.current.usages, i => { return i.ToString(); });
+            }
 
             return null;
         }
@@ -272,22 +275,30 @@ namespace UnityEngine.InputSystem
             }
 
             // Match usage.
-            var usage = parser.current.usage;
-            if (usage.length > 0)
+            if (parser.current.usages != null)
             {
-                var usageCount = controlItem.usages.Count;
-                var anyUsageMatches = false;
-                for (var i = 0; i < usageCount; ++i)
+                // All of usages should match to the one of usage in the control
+                for (int usageIndex = 0; usageIndex < parser.current.usages.Length; ++usageIndex)
                 {
-                    if (StringMatches(usage, controlItem.usages[i]))
+                    var usage = parser.current.usages[usageIndex];
+
+                    if (usage.length > 0)
                     {
-                        anyUsageMatches = true;
-                        break;
+                        var usageCount = controlItem.usages.Count;
+                        var anyUsageMatches = false;
+                        for (var i = 0; i < usageCount; ++i)
+                        {
+                            if (StringMatches(usage, controlItem.usages[i]))
+                            {
+                                anyUsageMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (!anyUsageMatches)
+                            return false;
                     }
                 }
-
-                if (!anyUsageMatches)
-                    return false;
             }
 
             // Match name.
@@ -445,10 +456,11 @@ namespace UnityEngine.InputSystem
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
 
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var match = TryFindControl<TControl>(child, path, indexInPath);
                 if (match != null)
                     return match;
@@ -554,7 +566,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Match by usage.
-            if (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
+            while (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
             {
                 ++indexInPath;
 
@@ -678,6 +690,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < usageCount; ++i)
             {
                 var usage = usages[i];
+                Debug.Assert(!string.IsNullOrEmpty(usage), "Usage entry is empty");
 
                 // Match usage against path.
                 var usageIsMatch = MatchPathComponent(usage, path, ref indexInPath, PathComponentType.Usage);
@@ -730,13 +743,14 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             TControl lastMatch = null;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
 
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches, matchMultiple);
 
                 if (childMatch == null)
@@ -768,17 +782,17 @@ namespace UnityEngine.InputSystem
             Layout
         }
 
-        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType)
+        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
         {
             Debug.Assert(component != null, "Component string is null");
             Debug.Assert(path != null, "Path is null");
 
-            var nameLength = component.Length;
+            var componentLength = component.Length;
             var pathLength = path.Length;
             var startIndex = indexInPath;
 
             // Try to walk the name as far as we can.
-            var indexInName = 0;
+            var indexInComponent = startIndexInComponent;
             while (indexInPath < pathLength)
             {
                 // Check if we've reached a terminator in the path.
@@ -805,37 +819,42 @@ namespace UnityEngine.InputSystem
                     // If we've reached a '*' in the path, skip character in name.
                     if (nextCharInPath == '*')
                     {
-                        // But first let's see if the following character is a match.
+                        // But first let's see if we have something after the wildcard that matches the rest of the component.
+                        // This could be when, for example, we hit "T" on matching "leftTrigger" against "*Trigger". We have to stop
+                        // gobbling up characters for the wildcard when reaching "Trigger" in the component name.
+                        //
+                        // NOTE: Just looking at the very next character only is *NOT* enough. We need to match the entire rest of
+                        //       the path. Otherwise, in the example above, we would stop on seeing the lowercase 't' and then be left
+                        //       trying to match "tTrigger" against "Trigger".
+                        var indexAfterWildcard = indexInPath + 1;
                         if (indexInPath < (pathLength - 1) &&
-                            indexInName < nameLength &&
-                            char.ToLower(path[indexInPath + 1]) == char.ToLower(component[indexInName]))
+                            indexInComponent < componentLength &&
+                            MatchPathComponent(component, path, ref indexAfterWildcard, componentType, indexInComponent))
                         {
-                            ++indexInName;
-                            indexInPath += 2; // Match '*' and following character.
-                        }
-                        else if (indexInName < nameLength)
-                        {
-                            ++indexInName;
-                        }
-                        else
-                        {
+                            indexInPath = indexAfterWildcard;
                             return true;
                         }
+
+                        if (indexInComponent < componentLength)
+                            ++indexInComponent;
+                        else
+                            return true;
+
                         continue;
                     }
                 }
 
                 // If we've reached the end of the component name, we did so before
                 // we've reached a terminator
-                if (indexInName == nameLength)
+                if (indexInComponent == componentLength)
                 {
                     indexInPath = startIndex;
                     return false;
                 }
 
-                if (char.ToLower(component[indexInName]) == char.ToLower(nextCharInPath))
+                if (char.ToLower(component[indexInComponent]) == char.ToLower(nextCharInPath))
                 {
-                    ++indexInName;
+                    ++indexInComponent;
                     ++indexInPath;
                 }
                 else
@@ -846,7 +865,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            if (indexInName == nameLength)
+            if (indexInComponent == componentLength)
                 return true;
 
             indexInPath = startIndex;
@@ -857,26 +876,21 @@ namespace UnityEngine.InputSystem
         {
             var indexOfNextSlash = path.IndexOf('/', indexInPath);
             if (indexOfNextSlash == -1)
-            {
                 return path.IndexOf('*', indexInPath) != -1 || path.IndexOf('<', indexInPath) != -1;
-            }
-            else
-            {
-                var length = indexOfNextSlash - indexInPath;
-                return path.IndexOf('*', indexInPath, length) != -1 || path.IndexOf('<', indexInPath, length) != -1;
-            }
+
+            var length = indexOfNextSlash - indexInPath;
+            return path.IndexOf('*', indexInPath, length) != -1 || path.IndexOf('<', indexInPath, length) != -1;
         }
 
         // Parsed element between two '/../'.
         internal struct ParsedPathComponent
         {
             public Substring layout;
-            public Substring usage;
+            public Substring[] usages;
             public Substring name;
             public Substring displayName;
 
             public bool isWildcard => name == Wildcard;
-
             public bool isDoubleWildcard => name == DoubleWildcard;
 
             public string ToHumanReadableString()
@@ -884,12 +898,28 @@ namespace UnityEngine.InputSystem
                 var result = string.Empty;
                 if (isWildcard)
                     result += "Any";
-                if (!usage.isEmpty)
+
+                if (usages != null)
                 {
-                    if (!string.IsNullOrEmpty(result))
-                        result += ' ' + ToHumanReadableString(usage);
-                    else
-                        result += ToHumanReadableString(usage);
+                    var combinedUsages = string.Empty;
+
+                    for (var i = 0; i < usages.Length; ++i)
+                    {
+                        if (usages[i].isEmpty)
+                            continue;
+
+                        if (combinedUsages != string.Empty)
+                            combinedUsages += " & " + ToHumanReadableString(usages[i]);
+                        else
+                            combinedUsages = ToHumanReadableString(usages[i]);
+                    }
+                    if (combinedUsages != string.Empty)
+                    {
+                        if (result != string.Empty)
+                            result += ' ' + combinedUsages;
+                        else
+                            result += combinedUsages;
+                    }
                 }
 
                 if (!layout.isEmpty)
@@ -954,19 +984,25 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Match usage.
-                if (!usage.isEmpty)
+                if (usages != null)
                 {
-                    var usages = control.usages;
-                    var haveUsageMatch = false;
-                    for (var i = 0; i < usages.Count; ++i)
-                        if (Substring.Compare(usages[i].ToString(), usage, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    for (int i = 0; i < usages.Length; ++i)
+                    {
+                        if (!usages[i].isEmpty)
                         {
-                            haveUsageMatch = true;
-                            break;
-                        }
+                            var controlUsages = control.usages;
+                            var haveUsageMatch = false;
+                            for (var ci = 0; ci < controlUsages.Count; ++ci)
+                                if (Substring.Compare(controlUsages[ci].ToString(), usages[i], StringComparison.InvariantCultureIgnoreCase) == 0)
+                                {
+                                    haveUsageMatch = true;
+                                    break;
+                                }
 
-                    if (!haveUsageMatch)
-                        return false;
+                            if (!haveUsageMatch)
+                                return false;
+                        }
+                    }
                 }
 
                 // Match name.
@@ -1038,9 +1074,9 @@ namespace UnityEngine.InputSystem
                     layout = ParseComponentPart('>');
 
                 // Parse {...} usage part, if present.
-                var usage = new Substring();
-                if (rightIndexInPath < length && path[rightIndexInPath] == '{')
-                    usage = ParseComponentPart('}');
+                var usages = new List<Substring>();
+                while (rightIndexInPath < length && path[rightIndexInPath] == '{')
+                    usages.Add(ParseComponentPart('}'));
 
                 // Parse display name part, if present.
                 var displayName = new Substring();
@@ -1058,7 +1094,7 @@ namespace UnityEngine.InputSystem
                 current = new ParsedPathComponent
                 {
                     layout = layout,
-                    usage = usage,
+                    usages = usages.ToArray(),
                     name = name,
                     displayName = displayName
                 };

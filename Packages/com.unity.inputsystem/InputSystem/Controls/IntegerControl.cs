@@ -4,7 +4,9 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Controls
 {
-    ////TODO: allow format to be any integer format
+    /// <summary>
+    /// A generic input control reading integer values.
+    /// </summary>
     public class IntegerControl : InputControl<int>
     {
         public IntegerControl()
@@ -14,14 +16,12 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            return *(int*)valuePtr;
+            return m_StateBlock.ReadInt(statePtr);
         }
 
         public override unsafe void WriteValueIntoState(int value, void* statePtr)
         {
-            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            *(int*)valuePtr = value;
+            m_StateBlock.WriteInt(statePtr, value);
         }
     }
 }

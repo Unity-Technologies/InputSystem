@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct KeyboardState : IInputStateTypeInfo
+    internal unsafe struct KeyboardState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
@@ -613,11 +613,8 @@ namespace UnityEngine.InputSystem
 
         private KeyControl[] m_Keys;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
             var keyStrings = new[]
             {
                 "space",
@@ -734,7 +731,7 @@ namespace UnityEngine.InputSystem
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
+                m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
@@ -742,10 +739,10 @@ namespace UnityEngine.InputSystem
             }
             Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
                 "keyString array layout doe not match Key enum layout");
-            anyKey = builder.GetControl<AnyKeyControl>("anyKey");
-            imeSelected = builder.GetControl<ButtonControl>("IMESelected");
+            anyKey = GetChildControl<AnyKeyControl>("anyKey");
+            imeSelected = GetChildControl<ButtonControl>("IMESelected");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         protected override void RefreshConfiguration()
@@ -771,88 +768,9 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal InlinedArray<Action<char>> m_TextInputListeners;
+        private InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
-    }
-
-    public static class KeyboardExtensions
-    {
-        public static bool IsModifierKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                    return true;
-            }
-            return false;
-        }
-
-        ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
-        public static bool IsTextInputKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.ContextMenu:
-                case Key.Escape:
-                case Key.LeftArrow:
-                case Key.RightArrow:
-                case Key.UpArrow:
-                case Key.DownArrow:
-                case Key.Backspace:
-                case Key.PageDown:
-                case Key.PageUp:
-                case Key.Home:
-                case Key.End:
-                case Key.Insert:
-                case Key.Delete:
-                case Key.CapsLock:
-                case Key.NumLock:
-                case Key.PrintScreen:
-                case Key.ScrollLock:
-                case Key.Pause:
-                case Key.None:
-                case Key.Space:
-                case Key.Enter:
-                case Key.Tab:
-                case Key.NumpadEnter:
-                case Key.F1:
-                case Key.F2:
-                case Key.F3:
-                case Key.F4:
-                case Key.F5:
-                case Key.F6:
-                case Key.F7:
-                case Key.F8:
-                case Key.F9:
-                case Key.F10:
-                case Key.F11:
-                case Key.F12:
-                case Key.OEM1:
-                case Key.OEM2:
-                case Key.OEM3:
-                case Key.OEM4:
-                case Key.OEM5:
-                case Key.IMESelected:
-                    return false;
-            }
-            return true;
-        }
+        private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 }

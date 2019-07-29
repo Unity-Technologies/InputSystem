@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem.UI
         /// A flag representing whether any mouse data has changed this frame, meaning that events should be processed.
         /// </summary>
         /// <remarks>
-        /// This only checks for changes in mouse state (<see cref="position"/>, <see cref="leftButton"/>, <see cref="rightButton"/>, <see cref="middleButton"/>, or <see cref="scrollPosition"/>).
+        /// This only checks for changes in mouse state (<see cref="position"/>, <see cref="leftButton"/>, <see cref="rightButton"/>, <see cref="middleButton"/>, or <see cref="scrollDelta"/>).
         /// </remarks>
         public bool changedThisFrame { get; private set; }
 
@@ -210,24 +210,25 @@ namespace UnityEngine.InputSystem.UI
         /// </summary>
         public Vector2 deltaPosition { get; private set; }
 
-        public Vector2 scrollPosition
+        /// <summary>
+        /// The scroll delta input value from a mouse wheel or scroll gesture.
+        /// </summary>
+        /// <remarks>
+        /// For backwards compatibility with the UI event system, this value is represented in "lines of text", where
+        /// the height of a line is defined as 20 pixels.
+        /// </remarks>
+        public Vector2 scrollDelta
         {
-            get { return m_ScrollPosition; }
+            get { return m_ScrollDelta; }
             set
             {
-                if (m_ScrollPosition != value)
+                if (m_ScrollDelta != value)
                 {
                     changedThisFrame = true;
-                    scrollDelta = value - m_ScrollPosition;
-                    m_ScrollPosition = value;
+                    m_ScrollDelta = value;
                 }
             }
         }
-
-        /// <summary>
-        /// The change in <see cref="scrollPosition"/> since the last call to <see cref="OnFrameFinished"/>.
-        /// </summary>
-        public Vector2 scrollDelta { get; private set; }
 
 
         /// <summary>
@@ -282,7 +283,7 @@ namespace UnityEngine.InputSystem.UI
         {
             this.pointerId = pointerId;
             changedThisFrame = false;
-            m_Position = deltaPosition = m_ScrollPosition = scrollDelta = Vector2.zero;
+            m_Position = deltaPosition = m_ScrollDelta = Vector2.zero;
 
             m_LeftButton = new MouseButtonModel();
             m_RightButton = new MouseButtonModel();
@@ -334,7 +335,7 @@ namespace UnityEngine.InputSystem.UI
         }
 
         private Vector2 m_Position;
-        private Vector2 m_ScrollPosition;
+        private Vector2 m_ScrollDelta;
         private MouseButtonModel m_LeftButton;
         private MouseButtonModel m_RightButton;
         private MouseButtonModel m_MiddleButton;

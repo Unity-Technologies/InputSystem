@@ -408,8 +408,8 @@ namespace UnityEngine.InputSystem.PlayerInput
         /// </summary>
         public InputSystemUIInputModule uiInputModule
         {
-            get { return m_UIInputModule; }
-            set { m_UIInputModule = value; }
+            get => m_UIInputModule;
+            set => m_UIInputModule = value;
         }
 
         /// <summary>
@@ -770,9 +770,9 @@ namespace UnityEngine.InputSystem.PlayerInput
             if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents)
                 return;
 
-            // ATM we only care about `performed` and, in the case of continuous actions, `canceled`.
+            // ATM we only care about `performed` and, in the case of value actions, `canceled`.
             var action = context.action;
-            if (!(context.performed || (context.canceled && action.continuous)))
+            if (!(context.performed || (context.canceled && action.type == InputActionType.Value)))
                 return;
 
             // Find message name for action.

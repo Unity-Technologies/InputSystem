@@ -29,6 +29,7 @@ namespace UnityEngine.InputSystem.Utilities
             else
             {
                 ////TODO: I think instead of string.Intern() this should use a custom weak-referenced intern table
+                ////      (this way we can also avoid the garbage from ToLower())
                 m_StringOriginalCase = string.Intern(text);
                 m_StringLowerCase = string.Intern(text.ToLower());
             }

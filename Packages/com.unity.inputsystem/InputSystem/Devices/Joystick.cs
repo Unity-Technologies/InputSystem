@@ -5,11 +5,11 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    public struct JoystickState : IInputStateTypeInfo
+    internal struct JoystickState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
-        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
+        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction", "Submit" }, bit = (int)Button.Trigger)]
         public int buttons;
 
         [InputControl(layout = "Stick", usage = "Primary2DMotion")]
@@ -26,10 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
             Trigger
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 }
 
@@ -53,19 +50,16 @@ namespace UnityEngine.InputSystem
 
         public static Joystick current { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
             // Mandatory controls.
-            trigger = builder.GetControl<ButtonControl>("{PrimaryTrigger}");
-            stick = builder.GetControl<StickControl>("{Primary2DMotion}");
+            trigger = GetChildControl<ButtonControl>("{PrimaryTrigger}");
+            stick = GetChildControl<StickControl>("{Primary2DMotion}");
 
             // Optional controls.
-            twist = builder.TryGetControl<AxisControl>("{Twist}");
+            twist = TryGetChildControl<AxisControl>("{Twist}");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void MakeCurrent()

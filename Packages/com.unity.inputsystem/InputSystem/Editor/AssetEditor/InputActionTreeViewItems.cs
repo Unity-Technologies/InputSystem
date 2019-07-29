@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
         public bool isSingletonAction => actionMapProperty == null;
 
         public override string expectedControlLayout =>
-            property.FindPropertyRelative("m_ExpectedControlLayout").stringValue;
+            property.FindPropertyRelative("m_ExpectedControlType").stringValue;
 
         public SerializedProperty bindingsArrayProperty => isSingletonAction
         ? property.FindPropertyRelative("m_SingletonActionBindings")

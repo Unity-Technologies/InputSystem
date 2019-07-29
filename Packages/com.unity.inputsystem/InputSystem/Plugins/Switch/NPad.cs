@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// </summary>
     /// <seealso href="http://en-americas-support.nintendo.com/app/answers/detail/a_id/22634/~/joy-con-controller-diagram"/>
     [StructLayout(LayoutKind.Explicit, Size = 60)]
-    public struct NPadInputState : IInputStateTypeInfo
+    internal struct NPadInputState : IInputStateTypeInfo
     {
         public FourCC format
         {
@@ -117,7 +117,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// Switch output report sent as command to the backend.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadStatusReport : IInputDeviceCommandInfo
+    internal struct NPadStatusReport : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'S');
 
@@ -158,7 +158,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadControllerSupportCommand : IInputDeviceCommandInfo
+    internal struct NPadControllerSupportCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('N', 'P', 'D', 'U');
 
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLShowUI : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSUI");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLSetOrientation : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("NSOR");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 1;
@@ -247,7 +247,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLStartSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXST");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -270,7 +270,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
+    internal struct NpadDeviceIOCTLStopSixAxisSensor : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC("SXSP");
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
@@ -296,7 +296,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the NpadDeviceIOCTLOutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
+    internal struct NPadDeviceIOCTLOutputCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('N', 'P', 'G', 'O'); } }
 
@@ -346,12 +346,12 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     /// <summary>
     /// Structure of HID input reports for Switch Pro controllers.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = 20)]
-    public struct SwitchProControllerHIDInputState : IInputStateTypeInfo
+    internal struct SwitchProControllerHIDInputState : IInputStateTypeInfo
     {
         public FourCC format => new FourCC('H', 'I', 'D');
 
@@ -630,18 +630,18 @@ namespace UnityEngine.InputSystem.Switch
             return ExecuteCommand(ref supportCommand);
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            leftSL = builder.GetControl<ButtonControl>(this, "leftSL");
-            leftSR = builder.GetControl<ButtonControl>(this, "leftSR");
-            rightSL = builder.GetControl<ButtonControl>(this, "rightSL");
-            rightSR = builder.GetControl<ButtonControl>(this, "rightSR");
+            leftSL = GetChildControl<ButtonControl>("leftSL");
+            leftSR = GetChildControl<ButtonControl>("leftSR");
+            rightSL = GetChildControl<ButtonControl>("rightSL");
+            rightSR = GetChildControl<ButtonControl>("rightSR");
 
-            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
-            attitude = builder.GetControl<QuaternionControl>(this, "attitude");
-            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            attitude = GetChildControl<QuaternionControl>("attitude");
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
         }
 
         private static void ReadNNColorIntoJoyConColor(ref JoyConColor controllerColor, int mainColor, int subColor)
@@ -761,7 +761,10 @@ namespace UnityEngine.InputSystem.Switch
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+    /// <summary>
+    /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
+    /// </summary>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
     public class SwitchProControllerHID : Gamepad
     {

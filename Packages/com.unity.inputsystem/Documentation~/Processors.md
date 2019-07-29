@@ -14,7 +14,9 @@ Processors can be installed on [controls](
 |`scale`||
 |`normalize`||
 |`axisDeadzone`||
-|`stickDeadzone`||
+|[`stickDeadzone`](#stickdeadzone)||
+
+### `stickDeadzone`
 
 ## Writing Custom Processors
 

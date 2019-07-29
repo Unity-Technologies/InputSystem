@@ -194,6 +194,30 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public float tapRadius
+        {
+            get => m_TapRadius;
+            set
+            {
+                if (m_TapRadius == value)
+                    return;
+                m_TapRadius = value;
+                OnChange();
+            }
+        }
+
+        public float multiTapDelayTime
+        {
+            get => m_MultiTapDelayTime;
+            set
+            {
+                if (m_MultiTapDelayTime == value)
+                    return;
+                m_MultiTapDelayTime = value;
+                OnChange();
+            }
+        }
+
         /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
@@ -260,8 +284,9 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
-        //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
+        [SerializeField] private float m_TapRadius = 5;
+        [SerializeField] private float m_MultiTapDelayTime = 0.75f;
 
         internal void OnChange()
         {

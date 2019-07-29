@@ -2,7 +2,7 @@
 
 namespace UnityEngine.InputSystem.Processors
 {
-    public class ClampProcessor : InputProcessor<float>
+    internal class ClampProcessor : InputProcessor<float>
     {
         public float min;
         public float max;

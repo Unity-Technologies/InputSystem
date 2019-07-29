@@ -11,10 +11,12 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using Property = NUnit.Framework.PropertyAttribute;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
 partial class CoreTests
@@ -49,6 +51,34 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanChangeStateOfDeviceDirectlyUsingEvent()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        using (StateEvent.From(mouse, out var eventPtr))
+        {
+            var stateChangeMonitorTriggered = false;
+            InputState.AddChangeMonitor(mouse.delta,
+                (c, t, e, i) => stateChangeMonitorTriggered = true);
+
+            mouse.delta.WriteValueIntoEvent(new Vector2(123, 234), eventPtr);
+
+            InputState.Change(mouse, eventPtr);
+
+            Assert.That(stateChangeMonitorTriggered, Is.True);
+            Assert.That(mouse.delta.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    [Ignore("TODO")]
+    public void TODO_Events_CanUpdateStateOfDeviceWithBatchEvent()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_CanUpdatePartialStateOfDeviceWithEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -79,19 +109,24 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_ProcessingStateEvent_DoesNotAllocateMemory()
+    public void Events_QueuingAndProcessingStateEvent_DoesNotAllocateMemory()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        ////REVIEW: We do some analytics stuff on the first update that allocates. Probably there's
-        ////        a better way to handle this.
+        // Warm up JIT and get rid of GC noise from initial input system update.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "Events_ProcessingStateEvent_DoesNotAllocateMemory";
 
-        ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
-        Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+            InputSystem.Update();
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
     [Test]
@@ -411,6 +446,30 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanCreateDeltaStateEventFromControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Set(gamepad.buttonSouth, 1);
+        Set(gamepad.buttonNorth, 1);
+        Set(gamepad.leftTrigger, 0.123f);
+
+        using (var buffer = DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
+        {
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out var val), Is.True);
+            Assert.That(val, Is.EqualTo(1).Within(0.00001));
+
+            gamepad.buttonNorth.WriteValueIntoEvent(0f, eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonNorth.ReadValue(), Is.Zero);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
         InputSystem.settings.timesliceEvents = false;
@@ -439,9 +498,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_SendingStateToDeviceWithBeforeRenderEnabled_UpdatesDeviceInBeforeRender()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         const string deviceJson = @"
             {
                 ""name"" : ""CustomGamepad"",
@@ -495,9 +555,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_AreProcessedInOrderTheyAreQueuedIn()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         const double kFirstTime = 0.5;
         const double kSecondTime = 1.5;
         const double kThirdTime = 2.5;
@@ -535,9 +596,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_CanQueueAndReceiveEventsAgainstNonExistingDevices()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         // Device IDs are looked up only *after* the system shows the event to us.
 
         var receivedCalls = 0;
@@ -560,9 +622,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_HandledFlagIsResetWhenEventIsQueued()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var receivedCalls = 0;
         var wasHandled = true;
 
@@ -661,9 +724,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public unsafe void Events_CanTraceEventsOfDevice()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var device = InputSystem.AddDevice<Gamepad>();
         var noise = InputSystem.AddDevice<Gamepad>();
 
@@ -705,9 +769,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var device = InputSystem.AddDevice<Gamepad>();
         using (var trace =
                    new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id})
@@ -785,9 +850,10 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.5f}, 2.0);
@@ -806,17 +872,18 @@ partial class CoreTests
     // a sorting pass over all events before queueing them.
     [Test]
     [Category("Events")]
-    [Property("TimesliceEvents", "Off")]
     public void Events_IfOldStateEventIsSentToDevice_IsIgnored_ExceptIfEventIsHandledByIInputStateCallbackReceiver()
     {
+        InputSystem.settings.timesliceEvents = false;
+
         var device = InputSystem.AddDevice<Touchscreen>();
 
         // Sanity check.
         Assert.That(device is IInputStateCallbackReceiver,
             "Test assumes that Touchscreen implements IInputStateCallbackReceiver");
 
-        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.123f, 0.234f) }, 2);
-        InputSystem.QueueStateEvent(device, new TouchState { position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
+        InputSystem.QueueStateEvent(device, new TouchState { touchId = 1, phase = TouchPhase.Began, position = new Vector2(0.123f, 0.234f) }, 2);
+        InputSystem.QueueStateEvent(device, new TouchState { touchId = 1, phase = TouchPhase.Moved, position = new Vector2(0.234f, 0.345f) }, 1);// Goes back in time.
         InputSystem.Update();
 
         Assert.That(device.lastUpdateTime, Is.EqualTo(2).Within(0.00001));
@@ -846,10 +913,10 @@ partial class CoreTests
     {
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            axis = builder.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(builder);
+            axis = GetChildControl<AxisControl>("axis");
+            base.FinishSetup();
         }
     }
 

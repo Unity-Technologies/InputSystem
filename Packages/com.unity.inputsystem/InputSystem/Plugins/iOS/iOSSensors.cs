@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = 52)]
-    public struct MotionDeviceState : IInputStateTypeInfo
+    internal struct MotionDeviceState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'M', 'T', 'N');
 

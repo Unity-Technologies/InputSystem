@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Processors
     /// the coordinates it receives.
     /// </remarks>
     /// <seealso cref="Pointer.position"/>
-    public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
+    internal class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
         {
@@ -30,6 +30,8 @@ namespace UnityEngine.InputSystem.Processors
                 return value;
 
             var command = QueryEditorWindowCoordinatesCommand.Create(value);
+            ////TODO: don't issue this on the device itself but rather on the system mouse; this way
+            ////      it's not necessary for all pointer devices to implement the IOCTL separately
             if (control.device.ExecuteCommand(ref command) > 0)
                 return command.inOutCoordinates;
             return value;
