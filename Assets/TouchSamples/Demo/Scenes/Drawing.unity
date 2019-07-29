@@ -130,7 +130,6 @@ GameObject:
   m_Component:
   - component: {fileID: 48778762}
   - component: {fileID: 48778760}
-  - component: {fileID: 48778761}
   m_Layer: 0
   m_Name: Capture Camera
   m_TagString: MainCamera
@@ -181,14 +180,6 @@ Camera:
   m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &48778761
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 48778759}
-  m_Enabled: 1
 --- !u!4 &48778762
 Transform:
   m_ObjectHideFlags: 0
@@ -2954,8 +2945,9 @@ MonoBehaviour:
     type: 3}
   m_ScrollWheelAction: {fileID: 4502412055082496612, guid: ca9f5fa95ffab41fb9a615ab714db018,
     type: 3}
-  m_Touches: []
-  m_TrackedDevices: []
+  m_TrackedDevicePositionAction: {fileID: 0}
+  m_TrackedDeviceOrientationAction: {fileID: 0}
+  m_TrackedDeviceSelectAction: {fileID: 0}
 --- !u!114 &1813323661
 MonoBehaviour:
   m_ObjectHideFlags: 0
