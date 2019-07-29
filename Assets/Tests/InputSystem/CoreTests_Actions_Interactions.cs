@@ -433,7 +433,7 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Performed<PressInteraction>(pressAction));
+            Assert.That(trace, Started<PressInteraction>(pressAction).AndThen(Performed<PressInteraction>(pressAction)));
 
             trace.Clear();
 
