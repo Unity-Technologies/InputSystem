@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "leftStickPress", bit = 1)]
         [InputControl(name = "rightStickPress", bit = 2)]
         [InputControl(name = "start", displayName = "Options", bit = 3)]
-        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", bit = 4, sizeInBits = 4)]
         [InputControl(name = "dpad/up", bit = 4)]
         [InputControl(name = "dpad/right", bit = 5)]
         [InputControl(name = "dpad/down", bit = 6)]
