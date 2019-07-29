@@ -532,16 +532,16 @@ namespace UnityEngine.InputSystem
                 m_CompositeIndex = compositeIndex;
             }
 
-            public CompositeSyntax With(string name, string binding, string interactions = null, string groups = null)
+            public CompositeSyntax With(string name, string binding, string groups = null)
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
                 int bindingIndex;
                 if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups)
                         .m_BindingIndex;
                 else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups)
                         .m_BindingIndex;
 
                 m_ActionMap.m_Bindings[bindingIndex].name = name;

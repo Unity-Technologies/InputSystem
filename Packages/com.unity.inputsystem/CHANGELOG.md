@@ -28,6 +28,10 @@ however, it has to be formatted properly to pass verification tests.
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
 
+#### Actions
+
+- Individual composite part bindings can now no longer have interactions assigned to them as that never made any sense.
+
 ### Added
 
 - Devices can now have more than one usage.
