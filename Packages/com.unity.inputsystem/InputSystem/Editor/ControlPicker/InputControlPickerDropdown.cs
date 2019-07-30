@@ -103,6 +103,9 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
+            if (!item.enabled)
+                return;
+
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
             m_OnPickCallback(path);
         }
@@ -278,10 +281,6 @@ namespace UnityEngine.InputSystem.Editor
         private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
             InputControlLayout.ControlItem control, string device, string usage, bool searchable)
         {
-            ////FIXME: this also filters children out that match the given layout filter
-            if (!LayoutMatchesExpectedControlLayoutFilter(control.layout))
-                return;
-
             // If it's an array, generate a control entry for each array element.
             for (var i = 0; i < (control.isArray ? control.arraySize : 1); ++i)
             {
@@ -293,11 +292,16 @@ namespace UnityEngine.InputSystem.Editor
                 var child = new ControlDropdownItem(parentControl, name, displayName,
                     device, usage, searchable);
                 child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
-
-                parent.AddChild(child);
-
-                // Add children.
                 var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+
+                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
+                    parent.AddChild(child);
+                else if (controlLayout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)))
+                {
+                    child.enabled = false;
+                    parent.AddChild(child);
+                }
+                // Add children.
                 if (controlLayout != null)
                     AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
                         searchable, child);

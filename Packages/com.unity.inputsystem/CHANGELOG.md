@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed GC heap garbage being caused by triggered by event processing.
   * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+- The bindings selection popup window will now show child controls matching the current action type even if the parent control does not match.
 
 #### Actions
 
