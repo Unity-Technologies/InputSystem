@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed GC heap garbage being caused by triggered by event processing.
   * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+- Fixed `duration` values reported for Hold and Press interactions.
 - DualShock 3 on macOS:
   * Fixed actions bound to the dpad control performing correctly.
   * Fixed non-present touchpad button control being triggered incorrectly.

@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        ////REVIEW: should this trigger Started?
+                        context.Started();
                         context.PerformedAndGoBackToWaiting();
                         m_WaitingForRelease = true;
                     }
@@ -95,12 +95,15 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease)
                     {
                         if (!isActuated)
+                        {
+                            context.Started();
                             context.PerformedAndGoBackToWaiting();
-
+                        }
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
+                        context.Started();
                         context.PerformedAndGoBackToWaiting();
                         m_WaitingForRelease = true;
                     }
