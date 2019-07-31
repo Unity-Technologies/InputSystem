@@ -96,7 +96,7 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
-  m_LightingDataAsset: {fileID: 112000002, guid: 9d482d901db63e648a3a851590a43665,
+  m_LightingDataAsset: {fileID: 112000000, guid: 9d482d901db63e648a3a851590a43665,
     type: 2}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -534,7 +534,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197104
+  m_Name: pb_Mesh20832
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -4489,12 +4489,12 @@ GameObject:
   - component: {fileID: 358280456}
   - component: {fileID: 358280455}
   - component: {fileID: 358280454}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Checkpoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &358280453
 Transform:
@@ -6398,7 +6398,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197098
+  m_Name: pb_Mesh20990
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -6561,7 +6561,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197096
+  m_Name: pb_Mesh20672
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -13488,7 +13488,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197100
+  m_Name: pb_Mesh21030
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -14089,12 +14089,12 @@ GameObject:
   - component: {fileID: 949279500}
   - component: {fileID: 949279499}
   - component: {fileID: 949279498}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: 'Checkpooint '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &949279497
 Transform:
@@ -17402,12 +17402,12 @@ GameObject:
   - component: {fileID: 1103732032}
   - component: {fileID: 1103732031}
   - component: {fileID: 1103732030}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Checkpooint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &1103732029
 Transform:
@@ -65288,7 +65288,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197128
+  m_Name: pb_Mesh20876
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -66020,12 +66020,12 @@ GameObject:
   - component: {fileID: 1913465985}
   - component: {fileID: 1913465984}
   - component: {fileID: 1913465983}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Checkpoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &1913465982
 Transform:
@@ -66807,7 +66807,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-197102
+  m_Name: pb_Mesh21058
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -67142,12 +67142,12 @@ GameObject:
   - component: {fileID: 2055834244}
   - component: {fileID: 2055834243}
   - component: {fileID: 2055834242}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Checkpooint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &2055834241
 Transform:
@@ -67792,12 +67792,12 @@ GameObject:
   - component: {fileID: 2091355972}
   - component: {fileID: 2091355971}
   - component: {fileID: 2091355970}
-  m_Layer: 0
+  m_Layer: 14
   m_Name: Checkpooint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 127
+  m_StaticEditorFlags: 126
   m_IsActive: 1
 --- !u!4 &2091355969
 Transform:
