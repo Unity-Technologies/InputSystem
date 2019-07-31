@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed actions not updating their set of controls when the usages of a device are changed.
+- Composite bindings with the default interaction will now correctly cancel when the composite is released, even if there are multiple composite bindings on the action.
 
 ### Changed
 

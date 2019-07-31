@@ -4815,6 +4815,74 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WithMultipleCompositesCancelsIfCompositeIsReleased()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<LogInteraction>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+        action.Enable();
+
+        InputControl performedControl = null;
+        InputControl canceledControl = null;
+        var value = Vector2.zero;
+        action.performed += ctx =>
+        {
+            performedControl = ctx.control;
+            value = ctx.ReadValue<Vector2>();
+        };
+        action.canceled += ctx =>
+        {
+            canceledControl = ctx.control;
+            value = ctx.ReadValue<Vector2>();
+        };
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        Assert.That(value, Is.EqualTo(Vector2.left));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(value, Is.EqualTo(Vector2.up));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.rightArrowKey));
+        Assert.That(value, Is.EqualTo(Vector2.right));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.EqualTo(keyboard.rightArrowKey));
+        Assert.That(performedControl, Is.Null);
+        Assert.That(value, Is.EqualTo(Vector2.zero));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CompositesReportControlThatTriggeredTheCompositeInCallback()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
