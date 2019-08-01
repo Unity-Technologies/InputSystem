@@ -1169,8 +1169,12 @@ namespace UnityEngine.InputSystem
             // NOTE: We may be looking at a control here that points in a completely direction, for example, even
             //       though it has the same magnitude. However, we require a control to *higher* absolute actuation
             //       before we let it drive the action.
-            if (Mathf.Approximately(trigger.magnitude, actionState->magnitude) && triggerControlIndex != actionStateControlIndex)
+            if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
+                // However, if we have changed the control to a different control on the same composite, we *should* let
+                // it drive the action - this is like a direction change on the same control.
+                if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
+                    return false;
                 if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;

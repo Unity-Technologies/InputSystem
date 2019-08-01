@@ -4823,7 +4823,7 @@ partial class CoreTests
         InputSystem.RegisterInteraction<LogInteraction>();
 
         var action = new InputAction();
-        action.AddCompositeBinding("Dpad")
+        action.AddCompositeBinding("Dpad(normalize=0)")
             .With("Up", "<Keyboard>/w")
             .With("Down", "<Keyboard>/s")
             .With("Left", "<Keyboard>/a")
@@ -4857,11 +4857,19 @@ partial class CoreTests
         Assert.That(value, Is.EqualTo(Vector2.left));
         performedControl = null;
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
         InputSystem.Update();
 
         Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(value, Is.EqualTo(Vector2.up + Vector2.left));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
         Assert.That(value, Is.EqualTo(Vector2.up));
         performedControl = null;
 
