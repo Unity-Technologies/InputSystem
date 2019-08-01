@@ -887,7 +887,7 @@ namespace UnityEngine.InputSystem
             // If we have interactions, let them do all the processing. The presence of an interaction
             // essentially bypasses the default phase progression logic of an action.
             var interactionCount = bindingStatePtr->interactionCount;
-            if (interactionCount > 0)
+            if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
             {
                 ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
             }
