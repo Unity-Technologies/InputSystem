@@ -41,8 +41,8 @@ namespace UnityEngine.InputSystem
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using DeviceStateChangeListener = Action<InputDevice>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
-    using EventListener = Action<InputEventPtr>;
     using UpdateListener = Action<InputUpdateType>;
+    using EventListener = Action<InputEventPtr, InputDevice>;
 
     /// <summary>
     /// Hub of the input system.
@@ -2358,8 +2358,11 @@ namespace UnityEngine.InputSystem
                 var listenerCount = m_EventListeners.length;
                 if (listenerCount > 0)
                 {
+                    if (device == null)
+                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
+
                     for (var i = 0; i < listenerCount; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr));
+                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
 
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
@@ -2372,7 +2375,7 @@ namespace UnityEngine.InputSystem
 
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
-                if (!isBeforeRenderUpdate)
+                if (device == null)
                     device = TryGetDeviceById(currentEventReadPtr->deviceId);
                 if (device == null)
                 {

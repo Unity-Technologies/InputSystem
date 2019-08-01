@@ -892,7 +892,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.onEvent += eventPtr => Assert.Fail("No event should be triggered");
+        InputSystem.onEvent += (e, d) => Assert.Fail("No event should be triggered");
 
         InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
 

@@ -1299,7 +1299,64 @@ namespace UnityEngine.InputSystem
 
         #region Events
 
-        public static event Action<InputEventPtr> onEvent
+        /// <summary>
+        /// Called during <see cref="InputSystem.Update"/> for each event that is processed.
+        /// </summary>
+        /// <remarks>
+        /// Every time the input system updates (see <see cref="InputSettings.updateMode"/>
+        /// or <see cref="InputSystem.Update"/> for details about when and how this happens),
+        /// it flushes all events from the internal event buffer that are due in the current
+        /// update (<see cref="InputSettings.timesliceEvents"/> for details about when events
+        /// may be postponed to a subsequent frame).
+        ///
+        /// As the input system reads events from the buffer one by one, it will trigger this
+        /// callback for each event before then proceeding to process the event. However, if
+        /// any of the callbacks sets <see cref="InputEvent.handled"/> to true, the event will
+        /// be skipped and ignored.
+        ///
+        /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
+        /// Instead, they are consumed in the order they are produced. This means that they
+        /// will also surface on this callback in that order.
+        ///
+        /// Note that the callback will be called for any event picked up from the internal
+        /// event buffer. This may include events for devices that have not been created and thus
+        /// may mean that the <see cref="InputDevice"/> parameter to the callback is null.
+        ///
+        /// <example>
+        /// <code>
+        /// // Treat LMB+RMB as MMB.
+        /// // (Note: This example is more for demonstrative purposes; it isn't necessarily a good use case)
+        /// InputSystem.onEvent +=
+        ///    (eventPtr, device) =>
+        ///    {
+        ///        // Only deal with state events.
+        ///        if (!eventPtr.IsA&lt;StateEvent&gt;())
+        ///            return;
+        ///
+        ///        if (!(device is Mouse mouse))
+        ///            return;
+        ///
+        ///        mouse.leftButton.ReadValueFromEvent(eventPtr, out var lmbDown);
+        ///        mouse.rightButton.ReadValueFromEvent(eventPtr, out var rmbDown);
+        ///
+        ///        if (lmbDown > 0 && rmbDown > 0)
+        ///            mouse.middleButton.WriteValueIntoEvent(1f, eventPtr);
+        ///    };
+        /// </code>
+        /// </example>
+        ///
+        /// If you are looking for a way to capture events, <see cref="InputEventTrace"/> may be of
+        /// interest and an alternative to directly hooking into this event.
+        ///
+        /// If you are looking to monitor changes to specific input controls, state change monitors
+        /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
+        /// are usually a more efficient and convenient way to set this up.
+        /// </remarks>
+        /// <seealso cref="QueueEvent(InputEventPtr)"/>
+        /// <seealso cref="InputEvent"/>
+        /// <seealso cref="Update()"/>
+        /// <seealso cref="InputSettings.updateMode"/>
+        public static event Action<InputEventPtr, InputDevice> onEvent
         {
             add => s_Manager.onEvent += value;
             remove => s_Manager.onEvent -= value;

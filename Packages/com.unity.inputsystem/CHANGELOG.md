@@ -20,6 +20,23 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
+  ```
+  // Before:
+  InputSystem.onEvent +=
+      eventPtr =>
+      {
+          var device = InputSystem.GetDeviceById(eventPtr.device);
+          //...
+      };
+
+  // Now:
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          //...
+      };
+  ```
 - The way input devices are built internally has been streamlined.
   * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
   * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
@@ -34,6 +51,7 @@ however, it has to be formatted properly to pass verification tests.
   * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
   * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
   * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
+- Two components `InputControlVisualizer` and `InputActionVisualizer` have been added to help visualizing/debugging control/device and action activity through in-game overlays.
 
 ## [0.9.0-preview] - 2019-7-18
 

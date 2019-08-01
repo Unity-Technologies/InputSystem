@@ -175,14 +175,12 @@ internal class SteamTests : InputTestFixture
     {
         var receivedStateEvent = false;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             if (!eventPtr.IsA<StateEvent>())
                 return;
-            var device = InputSystem.GetDeviceById(eventPtr.deviceId) as TestController;
-            if (device == null)
+            if (!(device is TestController))
                 return;
-
             receivedStateEvent = true;
         };
 

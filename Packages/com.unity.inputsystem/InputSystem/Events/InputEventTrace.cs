@@ -166,7 +166,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventBufferTail = IntPtr.Zero;
         }
 
-        private unsafe void OnInputEvent(InputEventPtr inputEvent)
+        private unsafe void OnInputEvent(InputEventPtr inputEvent, InputDevice device)
         {
             // Ignore if the event isn't for our device.
             if (m_DeviceId != InputDevice.InvalidDeviceId && inputEvent.deviceId != m_DeviceId)
