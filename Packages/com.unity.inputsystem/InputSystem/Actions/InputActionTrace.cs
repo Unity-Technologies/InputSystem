@@ -494,7 +494,7 @@ namespace UnityEngine.InputSystem
                     return "<null>";
 
                 var actionName = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
-                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} duration={duration} }}";
             }
         }
 

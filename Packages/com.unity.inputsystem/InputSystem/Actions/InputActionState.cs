@@ -1276,6 +1276,7 @@ namespace UnityEngine.InputSystem
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     interactionIndex = interactionIndex,
+                    startTime = currentState.startTime
                 },
                 timerHasExpired = true,
             };
