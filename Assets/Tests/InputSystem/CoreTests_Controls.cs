@@ -1148,6 +1148,7 @@ partial class CoreTests
         var go = new GameObject();
         go.SetActive(false);
         var visualizer = go.AddComponent<InputControlVisualizer>();
+        visualizer.visualization = InputControlVisualizer.Mode.Value;
         visualizer.controlPath = "<Gamepad>/buttonSouth";
         go.SetActive(true);
 
