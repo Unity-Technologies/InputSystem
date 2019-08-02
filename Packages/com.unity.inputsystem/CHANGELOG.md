@@ -59,6 +59,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Added `InputAction.ReadValueAsObject` API.
+- Added `InputAction.activeControl` API.
 
 ## [0.9.0-preview] - 2019-7-18
 

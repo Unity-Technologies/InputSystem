@@ -783,6 +783,32 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanQueryActiveControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddBinding(gamepad.buttonSouth);
+        action.AddBinding(gamepad.buttonNorth);
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonNorth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateActionsWithoutAnActionMap()
     {
         var action = new InputAction();

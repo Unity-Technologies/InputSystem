@@ -266,6 +266,32 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// The currently active control that is driving the action. Null while the action
+        /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
+        /// state. Otherwise the control that last had activity on it which wasn't ignored.
+        /// </summary>
+        /// <remarks>
+        /// Note that the control's value does not necessarily correspond to the value of the
+        /// action (<see cref="ReadValue{TValue}"/>) as the control may be part of a composite.
+        /// </remarks>
+        /// <seealso cref="CallbackContext.control"/>
+        public unsafe InputControl activeControl
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        return state.controls[controlIndex];
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Whether the action wants a state check on its bound controls as soon as it is enabled.
         /// </summary>
         internal bool wantsInitialStateCheck => type == InputActionType.Value;

@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// that queries input state will receive. For example, during editor updates, this will be
         /// <see cref="InputUpdateType.Editor"/> and the state buffers for the editor will be active.
         /// </remarks>
-        public static InputUpdateType currentUpdate => InputUpdate.s_LastUpdateType;
+        public static InputUpdateType currentUpdateType => InputUpdate.s_LastUpdateType;
 
         public static double currentTime => InputRuntime.s_Instance.currentTime + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
