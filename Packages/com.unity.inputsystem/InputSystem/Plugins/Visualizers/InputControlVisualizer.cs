@@ -29,6 +29,21 @@ namespace UnityEngine.InputSystem.Utilities
     public class InputControlVisualizer : InputVisualizer
     {
         /// <summary>
+        /// What kind of visualization to show.
+        /// </summary>
+        public Mode visualization
+        {
+            get => m_Visualization;
+            set
+            {
+                if (m_Visualization == value)
+                    return;
+                m_Visualization = value;
+                SetupVisualizer();
+            }
+        }
+
+        /// <summary>
         /// Path of the control that is to be visualized.
         /// </summary>
         /// <seealso cref="InputControlPath"/>
