@@ -776,7 +776,7 @@ namespace UnityEngine.InputSystem
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
             #if UNITY_EDITOR
-            if (InputState.currentUpdate == InputUpdateType.Editor)
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
             #endif
 
