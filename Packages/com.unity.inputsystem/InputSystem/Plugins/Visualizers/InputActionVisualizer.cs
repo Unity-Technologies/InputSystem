@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 ////TODO: support ProcessEventsManually
 
+// Some fields assigned through only through serialization.
+#pragma warning disable CS0649
+
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>

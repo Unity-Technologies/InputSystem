@@ -11,6 +11,9 @@ using UnityEngine.InputSystem.LowLevel;
 // it a good deal to debug any input collection/processing irregularities that may
 // be seen in players (or the editor, for that matter).
 
+// Some fields assigned through only through serialization.
+#pragma warning disable CS0649
+
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
