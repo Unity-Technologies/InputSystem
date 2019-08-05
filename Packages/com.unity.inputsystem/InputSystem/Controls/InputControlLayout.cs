@@ -94,6 +94,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// This field is required.
             /// </remarks>
             /// <seealso cref="isModifyingChildControlByPath"/>
+            /// <seealso cref="InputControlAttribute.name"/>
             public InternedString name;
 
             public InternedString layout;
@@ -367,6 +368,23 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Return the type of values produced by controls created from the layout.
+        /// </summary>
+        /// <returns>The value type of the control or null if it cannot be determined.</returns>
+        /// <remarks>
+        /// This method only returns the statically inferred value type. This type corresponds
+        /// to the type argument to <see cref="InputControl{TValue}"/> in the inheritance hierarchy
+        /// of <see cref="type"/>. As the type used by the layout may not inherit from
+        /// <see cref="InputControl{TValue}"/>, this may mean that the value type cannot be inferred
+        /// and the method will return null.
+        /// </remarks>
+        /// <seealso cref="InputControl.valueType"/>
+        public Type GetValueType()
+        {
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(type, typeof(InputControl<>), 0);
         }
 
         /// <summary>

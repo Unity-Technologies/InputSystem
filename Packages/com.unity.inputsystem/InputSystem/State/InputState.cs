@@ -24,6 +24,12 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         public static InputUpdateType currentUpdateType => InputUpdate.s_LastUpdateType;
 
+        ////FIXME: ATM this does not work for editor updates
+        /// <summary>
+        /// The number of times the current input state has been updated.
+        /// </summary>
+        public static uint updateCount => InputUpdate.s_UpdateStepCount;
+
         public static double currentTime => InputRuntime.s_Instance.currentTime + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         /// <summary>

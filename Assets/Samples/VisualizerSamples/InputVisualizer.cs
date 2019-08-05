@@ -1,7 +1,7 @@
 #if DEVELOPMENT_BUILD || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 
-namespace UnityEngine.InputSystem.Utilities
+namespace UnityEngine.InputSystem.Samples
 {
     /// <summary>
     /// Base class for <see cref="InputActionVisualizer"/> and <see cref="InputControlVisualizer"/>.

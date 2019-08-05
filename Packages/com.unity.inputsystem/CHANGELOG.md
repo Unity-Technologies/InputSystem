@@ -54,7 +54,8 @@ however, it has to be formatted properly to pass verification tests.
   * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
   * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
   * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
-- Two components `InputControlVisualizer` and `InputActionVisualizer` have been added to help visualizing/debugging control/device and action activity through in-game overlays.
+- A new `VisualizerSamples` sample that can be installed through the package manager.
+  * Contains two components `InputControlVisualizer` and `InputActionVisualizer` that help visualizing/debugging control/device and action activity through in-game overlays. A few sample scenes illustrate how to use them.
 
 #### Actions
 

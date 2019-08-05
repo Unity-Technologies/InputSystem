@@ -1,3 +1,4 @@
+using UnityEngine.InputSystem.Utilities;
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
 using Unity.Collections.LowLevel.Unsafe;
@@ -5,7 +6,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: for vector2 visualizers of sticks, it could be useful to also visualize deadzones and raw values
 
-namespace UnityEngine.InputSystem.Utilities
+namespace UnityEngine.InputSystem.Samples
 {
     internal static class VisualizationHelpers
     {
@@ -20,13 +21,13 @@ namespace UnityEngine.InputSystem.Utilities
         public abstract class ValueVisualizer<TValue> : Visualizer
             where TValue : struct
         {
-            public ArrayHelpers.RingBuffer<TValue> samples;
-            public ArrayHelpers.RingBuffer<GUIContent> samplesText;
+            public RingBuffer<TValue> samples;
+            public RingBuffer<GUIContent> samplesText;
 
             protected ValueVisualizer(int numSamples = 10)
             {
-                samples = new ArrayHelpers.RingBuffer<TValue>(numSamples);
-                samplesText = new ArrayHelpers.RingBuffer<GUIContent>(numSamples);
+                samples = new RingBuffer<TValue>(numSamples);
+                samplesText = new RingBuffer<GUIContent>(numSamples);
             }
 
             public override void AddSample(object value, double time)
@@ -106,7 +107,6 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var leftPtr = UnsafeUtility.AddressOf(ref left);
                 var rightPtr = UnsafeUtility.AddressOf(ref right);
-
                 if (typeof(TValue) == typeof(int))
                     return ((int*)leftPtr)->CompareTo(*(int*)rightPtr);
                 if (typeof(TValue) == typeof(float))
@@ -280,7 +280,7 @@ namespace UnityEngine.InputSystem.Utilities
             public TimeUnit timeUnit { get; set; } = TimeUnit.Seconds;
             public GUIContent valueUnit { get; set; }
             ////REVIEW: should this be per timeline?
-            public int timelineCount => m_Timelines.LengthSafe();
+            public int timelineCount => m_Timelines != null ? m_Timelines.Length : 0;
             public int historyDepth { get; set; } = 100;
 
             public Vector2 limitsY
@@ -303,10 +303,10 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var endTime = Time.realtimeSinceStartup;
                 var startTime = endTime - m_TotalTimeUnitsShown;
-                var endFrame = InputUpdate.s_UpdateStepCount;
+                var endFrame = InputState.updateCount;
                 var startFrame = endFrame - (int)m_TotalTimeUnitsShown;
 
-                for (var i = 0; i < m_Timelines.LengthSafe(); ++i)
+                for (var i = 0; i < timelineCount; ++i)
                 {
                     var timeline = m_Timelines[i];
                     var sampleCount = timeUnit == TimeUnit.Frames
@@ -362,7 +362,7 @@ namespace UnityEngine.InputSystem.Utilities
                     GUI.EndGroup();
                 }
 
-                if (showLegend && m_Timelines.LengthSafe() > 0)
+                if (showLegend && timelineCount > 0)
                 {
                     var legendRect = rect;
                     legendRect.x += rect.width + 2;
@@ -397,7 +397,7 @@ namespace UnityEngine.InputSystem.Utilities
 
             public override void AddSample(object value, double time)
             {
-                if (m_Timelines.LengthSafe() == 0)
+                if (timelineCount == 0)
                     throw new InvalidOperationException("Must have set up a timeline first");
                 AddSample(0, PrimitiveValue.FromObject(value), (float)time);
             }
@@ -411,15 +411,20 @@ namespace UnityEngine.InputSystem.Utilities
                     plotType = plotType,
                 };
                 if (timeUnit == TimeUnit.Frames)
-                    timeline.frameSamples = new ArrayHelpers.RingBuffer<FrameSample>(historyDepth);
+                    timeline.frameSamples = new RingBuffer<FrameSample>(historyDepth);
                 else
-                    timeline.timeSamples = new ArrayHelpers.RingBuffer<TimeSample>(historyDepth);
-                return ArrayHelpers.Append(ref m_Timelines, timeline);
+                    timeline.timeSamples = new RingBuffer<TimeSample>(historyDepth);
+
+                var index = timelineCount;
+                Array.Resize(ref m_Timelines, timelineCount + 1);
+                m_Timelines[index] = timeline;
+
+                return index;
             }
 
             public int GetTimeline(string name)
             {
-                for (var i = 0; i < m_Timelines.LengthSafe(); ++i)
+                for (var i = 0; i < timelineCount; ++i)
                     if (string.Compare(m_Timelines[i].name.text, name, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return i;
                 return -1;
@@ -474,8 +479,8 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 public GUIContent name;
                 public Color color;
-                public ArrayHelpers.RingBuffer<TimeSample> timeSamples;
-                public ArrayHelpers.RingBuffer<FrameSample> frameSamples;
+                public RingBuffer<TimeSample> timeSamples;
+                public RingBuffer<FrameSample> frameSamples;
                 public PrimitiveValue minValue;
                 public PrimitiveValue maxValue;
                 public PlotType plotType;
@@ -616,6 +621,50 @@ namespace UnityEngine.InputSystem.Utilities
                 if (s_OnePixTex == null)
                     s_OnePixTex = new Texture2D(1, 1);
                 return s_OnePixTex;
+            }
+        }
+
+        public struct RingBuffer<TValue>
+        {
+            public TValue[] array;
+            public int head;
+            public int count;
+
+            public RingBuffer(int size)
+            {
+                array = new TValue[size];
+                head = 0;
+                count = 0;
+            }
+
+            public ref TValue Append(TValue value)
+            {
+                int index;
+                var bufferSize = array.Length;
+                if (count < bufferSize)
+                {
+                    Debug.Assert(head == 0, "Head can't have moved if buffer isn't full yet");
+                    index = count;
+                    ++count;
+                }
+                else
+                {
+                    // Buffer is full. Bump head.
+                    index = (head + count) % bufferSize;
+                    ++head;
+                }
+                array[index] = value;
+                return ref array[index];
+            }
+
+            public ref TValue this[int index]
+            {
+                get
+                {
+                    if (index < 0 || index >= count)
+                        throw new ArgumentOutOfRangeException(nameof(index));
+                    return ref array[(head + index) % array.Length];
+                }
             }
         }
     }

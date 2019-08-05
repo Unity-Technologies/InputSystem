@@ -81,46 +81,4 @@ internal class ArrayHelperTests
             array3.Dispose();
         }
     }
-
-    [Test]
-    [Category("Utilities")]
-    public void Utilities_CanSetUpRingBuffer()
-    {
-        var buffer = new ArrayHelpers.RingBuffer<int>(4);
-
-        Assert.That(buffer.count, Is.Zero);
-
-        buffer.Append(123);
-
-        Assert.That(buffer.count, Is.EqualTo(1));
-        Assert.That(buffer[0], Is.EqualTo(123));
-
-        buffer.Append(234);
-        buffer.Append(345);
-        buffer.Append(456);
-
-        Assert.That(buffer.count, Is.EqualTo(4));
-        Assert.That(buffer[0], Is.EqualTo(123));
-        Assert.That(buffer[1], Is.EqualTo(234));
-        Assert.That(buffer[2], Is.EqualTo(345));
-        Assert.That(buffer[3], Is.EqualTo(456));
-
-        buffer.Append(567);
-
-        Assert.That(buffer.count, Is.EqualTo(4));
-        Assert.That(buffer[0], Is.EqualTo(234));
-        Assert.That(buffer[1], Is.EqualTo(345));
-        Assert.That(buffer[2], Is.EqualTo(456));
-        Assert.That(buffer[3], Is.EqualTo(567));
-
-        buffer.Append(678);
-        buffer.Append(789);
-        buffer.Append(890);
-
-        Assert.That(buffer.count, Is.EqualTo(4));
-        Assert.That(buffer[0], Is.EqualTo(567));
-        Assert.That(buffer[1], Is.EqualTo(678));
-        Assert.That(buffer[2], Is.EqualTo(789));
-        Assert.That(buffer[3], Is.EqualTo(890));
-    }
 }

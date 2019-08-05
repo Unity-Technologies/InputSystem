@@ -2,14 +2,13 @@
 using System;
 using System.Collections.Generic;
 
-//allow both picking ahead of time and picking dynamically from what's enabled at runtime
-
 ////TODO: support ProcessEventsManually
+////TODO: add way to pick by player index
 
 // Some fields assigned through only through serialization.
 #pragma warning disable CS0649
 
-namespace UnityEngine.InputSystem.Utilities
+namespace UnityEngine.InputSystem.Samples
 {
     /// <summary>
     /// A component for debugging purposes that adds an on-screen display which shows
@@ -68,6 +67,13 @@ namespace UnityEngine.InputSystem.Utilities
             s_EnabledInstances.Remove(this);
             if (s_EnabledInstances.Count == 0)
                 InputSystem.onActionChange -= OnActionChange;
+
+            if (m_Visualization == Visualization.Interaction && m_Action != null)
+            {
+                m_Action.started -= OnActionTriggered;
+                m_Action.performed -= OnActionTriggered;
+                m_Action.canceled -= OnActionTriggered;
+            }
         }
 
         protected new void OnGUI()
@@ -114,7 +120,8 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Action = m_ActionReference.action;
 
             // If we didn't get an action from that but we have an action name,
-            //
+            // just search through the currently enabled actions for one that
+            // matches by name.
             if (m_Action == null && !string.IsNullOrEmpty(m_ActionName))
             {
                 var slashIndex = m_ActionName.IndexOf('/');
@@ -172,11 +179,9 @@ namespace UnityEngine.InputSystem.Utilities
                             if (!string.IsNullOrEmpty(m_Action.expectedControlType))
                             {
                                 var layout = InputSystem.LoadLayout(m_Action.expectedControlType);
-                                if (layout != null && !layout.isDeviceLayout)
+                                if (layout != null)
                                 {
-                                    var valueType =
-                                        TypeHelpers.GetGenericTypeArgumentFromHierarchy(layout.type, typeof(InputControl<>),
-                                            0);
+                                    var valueType = layout.GetValueType();
                                     if (valueType == typeof(float))
                                         m_Visualizer = new VisualizationHelpers.ScalarVisualizer<float>
                                         {
@@ -291,7 +296,6 @@ namespace UnityEngine.InputSystem.Utilities
         [SerializeField] private Visualization m_Visualization;
         [SerializeField] private InputActionReference m_ActionReference;
         [SerializeField] private string m_ActionName;
-        //[SerializeField] private int m_PlayerIndex;
         [SerializeField] private bool m_ShowControlName;
 
         [NonSerialized] private InputAction m_Action;

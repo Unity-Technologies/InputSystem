@@ -14,7 +14,7 @@ using UnityEngine.InputSystem.LowLevel;
 // Some fields assigned through only through serialization.
 #pragma warning disable CS0649
 
-namespace UnityEngine.InputSystem.Utilities
+namespace UnityEngine.InputSystem.Samples
 {
     /// <summary>
     /// A component for debugging purposes that adds an on-screen display which shows
@@ -270,7 +270,7 @@ namespace UnityEngine.InputSystem.Utilities
             // Ignore very first update as we usually get huge lag spikes and event count
             // spikes in it from stuff that has accumulated while going into play mode or
             // starting up the player.
-            if (InputUpdate.s_UpdateStepCount <= 1)
+            if (InputState.updateCount <= 1)
                 return;
 
             if (InputState.currentUpdateType == InputUpdateType.Editor)
@@ -306,7 +306,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case Mode.Events:
                 {
                     var visualizer = (VisualizationHelpers.TimelineVisualizer)m_Visualizer;
-                    var frame = (int)InputUpdate.s_UpdateStepCount;
+                    var frame = (int)InputState.updateCount;
                     ref var valueRef = ref visualizer.GetOrCreateSample(0, frame);
                     var value = valueRef.ToInt32() + 1;
                     valueRef = value;
@@ -319,7 +319,7 @@ namespace UnityEngine.InputSystem.Utilities
                 {
                     var visualizer = (VisualizationHelpers.TimelineVisualizer)m_Visualizer;
                     var lag = (Time.realtimeSinceStartup - eventPtr.time) * 1000; // In milliseconds.
-                    var frame = (int)InputUpdate.s_UpdateStepCount;
+                    var frame = (int)InputState.updateCount;
                     ref var valueRef = ref visualizer.GetOrCreateSample(0, frame);
 
                     if (lag > valueRef.ToDouble())
@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case Mode.Bytes:
                 {
                     var visualizer = (VisualizationHelpers.TimelineVisualizer)m_Visualizer;
-                    var frame = (int)InputUpdate.s_UpdateStepCount;
+                    var frame = (int)InputState.updateCount;
                     ref var valueRef = ref visualizer.GetOrCreateSample(0, frame);
                     var value = valueRef.ToInt32() + eventPtr.sizeInBytes;
                     valueRef = value;

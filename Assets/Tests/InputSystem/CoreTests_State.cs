@@ -22,6 +22,58 @@ partial class CoreTests
 {
     [Test]
     [Category("State")]
+    public void State_CanGetCurrentUpdateType()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(default(InputUpdateType)));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Manual));
+
+        #if UNITY_EDITOR
+        runtime.onShouldRunUpdate = _ => true;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetUpdateCount()
+    {
+        Assert.That(InputState.updateCount, Is.Zero);
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanGetUpdateCount_ForEditorUpdates()
+    {
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
         var gamepad = InputDevice.Build<Gamepad>();

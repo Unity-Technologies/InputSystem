@@ -1136,45 +1136,4 @@ partial class CoreTests
         Assert.That(UnsafeUtility.SizeOf<TouchState>(), Is.EqualTo(TouchState.kSizeInBytes));
         Assert.That(touchscreen.touches[0].stateBlock.alignedSizeInBytes, Is.EqualTo(TouchState.kSizeInBytes));
     }
-
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
-    [Test]
-    [Category("Controls")]
-    public void Controls_CanAddDebugVisualizerForControl()
-    {
-        var gamepad1 = InputSystem.AddDevice<Gamepad>();
-        InputSystem.AddDevice<Mouse>(); // Noise.
-
-        var go = new GameObject();
-        go.SetActive(false);
-        var visualizer = go.AddComponent<InputControlVisualizer>();
-        visualizer.visualization = InputControlVisualizer.Mode.Value;
-        visualizer.controlPath = "<Gamepad>/buttonSouth";
-        go.SetActive(true);
-
-        Assert.That(visualizer.control, Is.SameAs(gamepad1.buttonSouth));
-
-        InputSystem.RemoveDevice(gamepad1);
-
-        Assert.That(visualizer.control, Is.Null);
-
-        InputSystem.AddDevice(gamepad1);
-        var gamepad2 = InputSystem.AddDevice<Gamepad>();
-
-        Assert.That(visualizer.control, Is.SameAs(gamepad1.buttonSouth));
-
-        visualizer.controlIndex = 1;
-
-        Assert.That(visualizer.control, Is.SameAs(gamepad2.buttonSouth));
-
-        visualizer.controlIndex = 2;
-
-        Assert.That(visualizer.control, Is.SameAs(gamepad1.buttonSouth));
-
-        go.SetActive(false);
-
-        Assert.That(visualizer.control, Is.Null);
-    }
-
-    #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 }
