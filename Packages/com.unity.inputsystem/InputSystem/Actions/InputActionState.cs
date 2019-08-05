@@ -1041,6 +1041,13 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
+            var actionStateControlIndex = actionState->controlIndex;
+            if (bindingStates[actionState->bindingIndex].isPartOfComposite)
+            {
+                var compositeBindingIndex = bindingStates[actionState->bindingIndex].compositeOrCompositeBindingIndex;
+                actionStateControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
+            }
+
             // If the control is actuated *less* then the current level of actuation we
             // recorded for the action *and* the control that changed is the one that is currently
             // driving the action, we have to check whether there is another actuation
@@ -1049,7 +1056,7 @@ namespace UnityEngine.InputSystem
             {
                 // If we're not currently driving the action, it's simple. Doesn't matter that we lowered
                 // actuation as we didn't have the highest actuation anyway.
-                if (triggerControlIndex != actionState->controlIndex)
+                if (triggerControlIndex != actionStateControlIndex)
                 {
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
@@ -1164,6 +1171,10 @@ namespace UnityEngine.InputSystem
             //       before we let it drive the action.
             if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
+                // However, if we have changed the control to a different control on the same composite, we *should* let
+                // it drive the action - this is like a direction change on the same control.
+                if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
+                    return false;
                 if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
