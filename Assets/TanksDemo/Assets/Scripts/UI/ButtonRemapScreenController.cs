@@ -113,7 +113,7 @@ public class ButtonRemapScreenController : MonoBehaviour
                     {
                         if (m_IsUsingComposite)
                         {
-                            m_Action.ApplyBindingOverride(m_DefaultBindingIndex, null);
+                            m_Action.ApplyBindingOverride(m_DefaultBindingIndex, "unbound");
                             m_Action.ApplyBindingOverride(
                                 bindingIndex != m_DefaultBindingIndex ? bindingIndex : m_CompositeBindingIndices[0],
                                 path);
@@ -122,7 +122,7 @@ public class ButtonRemapScreenController : MonoBehaviour
                         {
                             m_Action.ApplyBindingOverride(m_DefaultBindingIndex, path);
                             foreach (var i in m_CompositeBindingIndices)
-                                m_Action.ApplyBindingOverride(i, null);
+                                m_Action.ApplyBindingOverride(i, "unbound");
                         }
                     });
             }
