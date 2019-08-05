@@ -251,9 +251,9 @@ namespace UnityEngine.InputSystem
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
         [NonSerialized] private Guid m_Guid;
 
-        internal string effectivePath => overridePath ?? path;
-        internal string effectiveInteractions => overrideInteractions ?? interactions;
-        internal string effectiveProcessors => overrideProcessors ?? processors;
+        public string effectivePath => overridePath ?? path;
+        public string effectiveInteractions => overrideInteractions ?? interactions;
+        public string effectiveProcessors => overrideProcessors ?? processors;
 
         internal bool isEmpty =>
             string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
