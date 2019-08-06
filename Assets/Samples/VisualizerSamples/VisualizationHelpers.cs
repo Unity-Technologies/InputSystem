@@ -1,6 +1,5 @@
-using UnityEngine.InputSystem.Utilities;
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
 using System;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -669,4 +668,3 @@ namespace UnityEngine.InputSystem.Samples
         }
     }
 }
-#endif

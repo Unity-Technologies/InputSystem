@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 
@@ -321,4 +320,3 @@ namespace UnityEngine.InputSystem.Samples
         }
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR

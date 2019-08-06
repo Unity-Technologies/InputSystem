@@ -1,4 +1,3 @@
-#if DEVELOPMENT_BUILD || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 
 namespace UnityEngine.InputSystem.Samples
@@ -79,4 +78,3 @@ namespace UnityEngine.InputSystem.Samples
         private static GUIStyle s_LabelStyle;
     }
 }
-#endif // DEVELOPMENT_BUILD || UNITY_EDITOR
