@@ -57,17 +57,13 @@ Each `PlayerInput` component represents one player in the game. To receive input
 
 A file requester will pop up that asks you where to create the new asset. Choose a name and folder somewhere inside the "Assets" folder of your project (or just accept the defaults) and click "Okay". This will create a new `.inputactions` asset in your project, connect it to the `PlayerInput` component, and bring up the editor for `.inputactions` files.
 
->__NOTE__
->
->The default set of actions that are created is __still being worked on__. The bindings are incomplete and __missing support for touch__ and a number of other devices. Also, UI support for PlayerInput is not yet implemented.
-
 ![MyGameActions](Images/MyGameActions.png)
 
 The default set can be freely edited to fit the needs of your project. See the in-depth documentation for the [action editor](ActionAssets.md#editing-action-assets) for instructions on how to use the editor.
 
 ## Step 3: Setting Up Action Responses
 
-With the actions in place on the component, all that remains is to set up a response for each action. Through the "Behavior" setting in the inspector, `PlayerInput` gives you several ways by which responses can be set up:
+With the actions in place on the compone nt, all that remains is to set up a response for each action. Through the "Behavior" setting in the inspector, `PlayerInput` gives you several ways by which responses can be set up:
 
 ![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)
 
