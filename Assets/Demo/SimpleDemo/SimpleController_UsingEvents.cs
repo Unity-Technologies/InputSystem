@@ -16,9 +16,9 @@ public class SimpleController_UsingEvents : MonoBehaviour
     public void OnEnable()
     {
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
-            var gamepad = InputSystem.GetDeviceById(eventPtr.deviceId) as Gamepad;
+            var gamepad = device as Gamepad;
             if (gamepad == null)
                 return;
 

@@ -169,7 +169,7 @@ partial class CoreTests
         double? receivedTime = null;
         double? receivedInternalTime = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             receivedTime = eventPtr.time;
             receivedInternalTime = eventPtr.internalTime;
@@ -275,7 +275,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
+            (eventPtr, _) => receivedEvents.Add(*eventPtr.data);
 
         // First fixed update should just take everything.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
@@ -364,7 +364,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
+            (eventPtr, _) => receivedEvents.Add(*eventPtr.data);
 
         bool? receivedOnSettingsChange = null;
         InputSystem.onSettingsChange += () => receivedOnSettingsChange = true;
@@ -454,7 +454,7 @@ partial class CoreTests
         Set(gamepad.buttonNorth, 1);
         Set(gamepad.leftTrigger, 0.123f);
 
-        using (var buffer = DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
+        using (DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
         {
             Assert.That(gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out var val), Is.True);
             Assert.That(val, Is.EqualTo(1).Within(0.00001));
@@ -528,7 +528,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputSystem.onEvent += inputEvent =>
+        InputSystem.onEvent += (inputEvent, _) =>
         {
             ++receivedCalls;
             Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
@@ -569,7 +569,7 @@ partial class CoreTests
         var receivedThirdTime = 0.0;
 
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -605,7 +605,7 @@ partial class CoreTests
         var receivedCalls = 0;
         var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             receivedDeviceId = eventPtr.deviceId;
@@ -630,7 +630,7 @@ partial class CoreTests
         var wasHandled = true;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             wasHandled = eventPtr.handled;
@@ -657,7 +657,7 @@ partial class CoreTests
     public void Events_CanPreventEventsFromBeingProcessed()
     {
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             // If we mark the event handled, the system should skip it and not
             // let it go to the device.
@@ -678,10 +678,7 @@ partial class CoreTests
         [InputControl(layout = "Axis")]
         [FieldOffset(0)] public ushort value;
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(StateWith2Bytes))]
@@ -712,7 +709,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new StateWith2Bytes());
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
             Assert.That((Int64)eventPtr.data % 4, Is.EqualTo(0));
@@ -834,7 +831,7 @@ partial class CoreTests
         var secondId = InputEvent.InvalidId;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -992,7 +989,7 @@ partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // For every control that isn't contained in a state event, GetStatePtrFromStateEvent() should
             // return IntPtr.Zero.

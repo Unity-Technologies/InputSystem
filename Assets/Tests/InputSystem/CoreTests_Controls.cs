@@ -439,7 +439,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             float value;
@@ -479,11 +479,10 @@ partial class CoreTests
 
         float? value = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             Assert.That(value, Is.Null);
-            float eventValue;
-            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out eventValue);
+            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
             value = eventValue;
         };
 
@@ -502,7 +501,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
@@ -523,7 +522,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);

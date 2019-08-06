@@ -26,6 +26,23 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
+  ```
+  // Before:
+  InputSystem.onEvent +=
+      eventPtr =>
+      {
+          var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+          //...
+      };
+
+  // Now:
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          //...
+      };
+  ```
 - The way input devices are built internally has been streamlined.
   * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
   * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
@@ -33,6 +50,9 @@ however, it has to be formatted properly to pass verification tests.
     InputDevice.Build<Mouse>();
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+#### Actions
+
+* `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.
 
 #### Actions
 
@@ -44,6 +64,13 @@ however, it has to be formatted properly to pass verification tests.
   * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
   * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
   * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
+- A new `VisualizerSamples` sample that can be installed through the package manager.
+  * Contains two components `InputControlVisualizer` and `InputActionVisualizer` that help visualizing/debugging control/device and action activity through in-game overlays. A few sample scenes illustrate how to use them.
+
+#### Actions
+
+- Added `InputAction.ReadValueAsObject` API.
+- Added `InputAction.activeControl` API.
 
 ## [0.9.0-preview] - 2019-7-18
 
