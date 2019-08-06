@@ -2202,7 +2202,9 @@ namespace UnityEngine.InputSystem
             #endif
 
             #if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
+                #if !UNITY_STANDALONE_LINUX
             Switch.SwitchSupport.Initialize();
+                #endif
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
