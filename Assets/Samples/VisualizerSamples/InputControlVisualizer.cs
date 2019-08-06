@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.Samples
             base.OnValidate();
         }
 
-        [Tooltip("The type of visualization to perform for the control. TODO")]
+        [Tooltip("The type of visualization to perform for the control.")]
         [SerializeField] private Mode m_Visualization;
         [Tooltip("Path of the control that should be visualized. If at runtime, multiple "
             + "controls match the given path, the 'Control Index' property can be used to decide "

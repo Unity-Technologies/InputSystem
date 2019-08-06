@@ -1324,7 +1324,7 @@ namespace UnityEngine.InputSystem
         ///
         /// <example>
         /// <code>
-        /// // Treat LMB+RMB as MMB.
+        /// // Treat left+right mouse button as middle mouse button.
         /// // (Note: This example is more for demonstrative purposes; it isn't necessarily a good use case)
         /// InputSystem.onEvent +=
         ///    (eventPtr, device) =>
