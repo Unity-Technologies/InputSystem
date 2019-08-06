@@ -25,7 +25,7 @@ Same deal works for other devices.
 
 ## ... find all connected gamepads?
 
-You can ask `Gamepad`.
+You can ask [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html).
 
 ```CSharp
     var allGamepads = Gamepad.all;
@@ -87,8 +87,6 @@ The last solution uses [control paths](Controls.md#control-paths).
 
 For more details, see ["Monitoring Devices"](Devices.md#monitoring-devices).
 
------------
-
 # ... create a simple fire-type action?
 
 One way to do so is directly in code:
@@ -118,7 +116,7 @@ public class MyControllerComponent : MonoBehaviour
 
 In the editor, you will be presented with a nice inspector that allows you to add bindings to the actions and choose where the bindings go without having to fiddle around with path strings.
 
-Note that you still need to enable the action in code and hook up your response. You can do so in the Awake() method of your component.
+Note that you still need to enable the action in code and hook up your response. You can do so in the `Awake` method of your component.
 
 ```C#
 
@@ -201,7 +199,7 @@ Typically you need to deal with multiple actions. In this case you may want to p
 	}
 ```
 
-[//]: # (TODO: For more details, see ["Input Action Assets"](Todo).)
+For more details, see ["Actions"](Actions.md).
 
 # ... require a button to be held for 0.4 seconds before triggering an action?
 
@@ -214,7 +212,7 @@ Put a Hold interaction on the action. In code, this works like so:
 
 ```
 
-To display UI feedback when the button starts being held, use the `started` callback.
+To display UI feedback when the button starts being held, use the [`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) callback.
 
 ```C#
 
@@ -239,7 +237,7 @@ There are parameters available to tweak the axis' behavior. See [here](ActionBin
 
 # ... create a UI to rebind input in my game?
 
-Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use the `InputAction.PerformInteractiveRebinding` to handle the rebinding:
+Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use [`InputAction.PerformInteractiveRebinding`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_) to handle the rebinding:
 
 ```C#
 	void RemapButtonClicked(InputAction actionToRebind)
@@ -287,7 +285,7 @@ However, this is inefficient. The amount of processing an action has to do is di
 
 # ... get all current touches from the touchscreen?
 
-The recommended way is to use `UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches`:
+The recommended way is to use [`EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches):
 
 ```C#
 	using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
@@ -299,7 +297,9 @@ The recommended way is to use `UnityEngine.InputSystem.EnhancedTouch.Touch.activ
 	}
 ```
 
-(You can also use the lower-level `Touchscreen.current.touches` API)
+Note: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+
+(You can also use the lower-level [`Touchscreen.current.touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) API)
 
 # ... create a device?
 
@@ -499,7 +499,7 @@ You can do the same in your C# state structs.
     }
 ```
 
-In fact, the gamepad template already adds a deadzone processor which will take its min and max values from `InputConfiguration.DefaultDeadzoneMin` and `InputConfiguration.DefaultDeadzoneMax`.
+In fact, the gamepad template already adds a deadzone processor which will take its min and max values from [`InputSettings.defaultDeadzoneMin`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMin) and [`InputSettings.defaultDeadzoneMax`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultDeadzoneMax).
 
 [//]: # (I'm still working on a way to do add a deadzone processor conveniently on the fly to an existing gamepad instance.)
 
@@ -515,7 +515,7 @@ First enable before render updates on your device.
     }
 ```
 
-And then make sure you put extra StateEvents for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking, if you want to, by sending a DeltaEvent instead of a full StateEvent.
+And then make sure you put extra StateEvents for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking, if you want to, by sending a delta event instead of a full state event.
 
 [//]: # (TODO: What is the "right queue"?)
 
@@ -567,6 +567,6 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 
 # ... see what devices I have and what state they are in?
 
-Go to `Windows >> Analysis >> Input Debugger`. Double click on a device to see it's controls. You can also remotely see devices from Unity Players deployed to any connected devices, using the "Remote Devices…" popup button.
+Go to [`Windows >> Analysis >> Input Debugger`](Debugging.md). Double click on a device to see it's controls. You can also remotely see devices from Unity Players deployed to any connected devices, using the "Remote Devices…" popup button.
 
 [//]: # (TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor))

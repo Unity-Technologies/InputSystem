@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// An accelerometer let's you measure the acceleration of a device, and can be useful to control content by moving a device around.
     /// Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity
-    /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decouped values
+    /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decoupled values
     /// for these.
     /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
