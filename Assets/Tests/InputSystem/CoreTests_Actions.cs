@@ -2592,7 +2592,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(interactions: "Tap(duration=0.123)");
         action.AddBinding("<Gamepad>/buttonSouth");
         action.Enable();
@@ -2619,7 +2619,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick");
         action.Enable();
@@ -2645,7 +2645,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick/x");
         action.Enable();
@@ -2681,7 +2681,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();

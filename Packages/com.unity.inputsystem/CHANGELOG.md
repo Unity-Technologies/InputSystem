@@ -56,6 +56,8 @@ however, it has to be formatted properly to pass verification tests.
     InputDevice.Build<Mouse>();
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+- `InputSystem.RegisterControlProcessor` has been renamed to just `InputSystem.RegisterProcessor`.
+
 #### Actions
 
 * `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.

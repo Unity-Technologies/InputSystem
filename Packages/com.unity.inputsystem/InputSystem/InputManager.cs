@@ -27,7 +27,7 @@ using UnityEngine.InputSystem.Editor;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterInteraction and RegisterProcessor, have a generic RegisterInterface (or something)?
 
 ////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
 

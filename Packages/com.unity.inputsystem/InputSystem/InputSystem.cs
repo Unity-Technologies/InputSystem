@@ -33,10 +33,6 @@ using UnityEngine.Networking.PlayerConnection;
 
 ////TODO: the onXXX event stuff needs to be thread-safe in order to allow finalizers to clean them up
 
-////TODO: move state change monitor API out of here (static InputStateChangeMonitor class?)
-
-////TODO: rename RegisterControlProcessor to just RegisterProcessor
-
 ////REVIEW: make more APIs thread-safe?
 
 ////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
@@ -466,18 +462,24 @@ namespace UnityEngine.InputSystem
 
         #region Processors
 
-        ////TODO: rename to RegisterProcessor
-
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
         /// </summary>
         /// <param name="type">Type that implements <see cref="InputProcessor{TValue}"/>.</param>
         /// <param name="name">Name to use for the processor. If null or empty, name will be taken from short name
         /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
-        public static void RegisterControlProcessor(Type type, string name = null)
+        /// <remarks>
+        /// Processors are used by both bindings (see <see cref="InputBinding"/>) and by controls
+        /// (see <see cref="InputControl"/>) to post-process input values as they are being requested
+        /// from calls such as <see cref="InputAction.ReadValue{TValue}"/> or <see
+        /// cref="InputControl{T}.ReadValue"/>.
+        /// </remarks>
+        /// <seealso cref="InputBinding.processors"/>
+        /// <seealso cref="InputControlLayout.ControlItem.processors"/>
+        public static void RegisterProcessor(Type type, string name = null)
         {
             if (type == null)
-                throw new System.ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(type));
 
             if (string.IsNullOrEmpty(name))
             {
@@ -489,9 +491,9 @@ namespace UnityEngine.InputSystem
             s_Manager.processors.AddTypeRegistration(name, type);
         }
 
-        public static void RegisterControlProcessor<T>(string name = null)
+        public static void RegisterProcessor<T>(string name = null)
         {
-            RegisterControlProcessor(typeof(T), name);
+            RegisterProcessor(typeof(T), name);
         }
 
         public static Type TryGetProcessor(string name)
