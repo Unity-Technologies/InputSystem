@@ -146,8 +146,6 @@ namespace UnityEngine.InputSystem
     {
         public const string DeviceLostMessage = "OnDeviceLost";
         public const string DeviceRegainedMessage = "OnDeviceRegained";
-        public const string ControlSchemeChangedMessage = "OnControlSchemeChanged";
-        public const string BindingsChangedMessage = "OnBindingsChanged";
 
         public bool active => m_InputActive;
 

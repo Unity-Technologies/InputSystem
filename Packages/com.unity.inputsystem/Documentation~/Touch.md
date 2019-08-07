@@ -2,7 +2,7 @@
 
 * [`Touchscreen` Device](#touchscreen-device)
 * [`Touch` Class](#touch-class)
-    * [Using Touch with Actions](#using-touch-with-actions)
+    * [Using Touch with Actions](#using-touch-with-actionsactionsmd)
 * [Gesture Support](#gesture-support)
 
 Touch support is divided into low-level support in the form of [`Touchscreen`](#touchscreen-device) and into high-level support in the form of the [`Touch`](#touch-class) class.
