@@ -2408,7 +2408,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
             Switch.SwitchSupport.Initialize();
             #endif
 
