@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 class APIVerificationTests
 {
@@ -54,7 +55,7 @@ class APIVerificationTests
                 resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputInteraction).FullName) ||
 
                 // Input state structures use fields for the memory layout and construct Input Controls from the fields.
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputStateTypeInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputStateTypeInfo).FullName) ||
 
                 // These use fields for the explicit memory layout, and have a member for the base type. If we exposed that via a property,
                 // base type values could not be written individually.
