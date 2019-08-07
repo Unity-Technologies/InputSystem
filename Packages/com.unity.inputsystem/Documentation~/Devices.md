@@ -113,7 +113,7 @@ Each device command TODO
 
 ## Device State
 
-Like any other type of [control](Controls.md#state), each device has a block of memory allocated to it which stores
+Like any other type of [control](Controls.md#control-state), each device has a block of memory allocated to it which stores
 
 ### State Changes
 
