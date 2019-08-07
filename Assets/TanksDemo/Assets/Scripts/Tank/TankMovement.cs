@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem.PlayerInput;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class TankMovement : MonoBehaviour

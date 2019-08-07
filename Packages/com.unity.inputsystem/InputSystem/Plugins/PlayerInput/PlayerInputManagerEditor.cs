@@ -3,7 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Users;
 
-namespace UnityEngine.InputSystem.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.
