@@ -75,7 +75,8 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl sourceLossRisk { get; private set; }
         public Vector3Control sourceLossMitigationDirection { get; private set; }
         public Vector3Control pointerPosition { get; private set; }
-        public QuaternionControl pointerOrientation { get; private set; }
+        [InputControl(aliases = new[] { "PointerOrientation" })]
+        public QuaternionControl pointerRotation { get; private set; }
 
         protected override void FinishSetup(InputDeviceBuilder builder)
         {
@@ -102,7 +103,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             sourceLossRisk = builder.GetControl<AxisControl>("sourceLossRisk");
             sourceLossMitigationDirection = builder.GetControl<Vector3Control>("sourceLossMitigationDirection");
             pointerPosition = builder.GetControl<Vector3Control>("pointerPosition");
-            pointerOrientation = builder.GetControl<QuaternionControl>("pointerOrientation");
+            pointerRotation = builder.GetControl<QuaternionControl>("pointerRotation");
         }
     }
 }
