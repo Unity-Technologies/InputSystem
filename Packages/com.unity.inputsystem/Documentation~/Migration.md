@@ -4,7 +4,7 @@
 
 This guide provides a listing of the APIs in `UnityEngine.Input` (and related APIs in `UnityEngine`) and their corresponding APIs in the new input system. Not all APIs have a corresponding version in the new API yet.
 
-Note: The new APIs are currently in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
+>NOTE: The new APIs are currently in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
 
 ## [`UnityEngine.Input`](https://docs.unity3d.com/ScriptReference/Input.html)
 
@@ -76,12 +76,12 @@ Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.Inp
 Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange) event:
 
 ```
-	var compositionString = "";
-	Keyboard.current.onIMECompositionChange += composition =>
-	{
-		compositionString = composition.ToString();
-	};
-```        
+    var compositionString = "";
+    Keyboard.current.onIMECompositionChange += composition =>
+    {
+        compositionString = composition.ToString();
+    };
+```
 
 ### [`UnityEngine.Input.deviceOrientation`](https://docs.unity3d.com/ScriptReference/Input-deviceOrientation.html)
 
@@ -92,9 +92,9 @@ No corresponding API yet.
 The `UnityEngine.Gyroscope` class is replaced by multiple separate sensor devices in the new Input System:
 
 * [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) to measure angular velocity.
-* [`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html) to measure the direction of gravity. 
-* [`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html) to measure the orientation of the device. 
-* [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html) to measure the total acceleration applied to the device. 
+* [`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html) to measure the direction of gravity.
+* [`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html) to measure the orientation of the device.
+* [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html) to measure the total acceleration applied to the device.
 * [`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html) to measure acceleration applied to the device, compensating for gravity.
 
 ### [`UnityEngine.Input.gyro.attitude`](https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html)
@@ -112,7 +112,7 @@ InputSystem.EnableDevice(Gyroscope.current);
 InputSystem.DisableDevice(Gyroscope.current);
 ```
 
-Note: `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed.
+>NOTE: `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed.
 
 ### [`UnityEngine.Input.gyro.gravity`](https://docs.unity3d.com/ScriptReference/Gyroscope-gravity.html)
 
@@ -134,7 +134,7 @@ Use [`Sensor.samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#Unit
 Gyroscope.current.samplingFrequency = 1.0f / updateInterval;`
 ```
 
-Notes: 
+Notes:
 * [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) is in Hz, not in seconds as [`updateInterval`](https://docs.unity3d.com/ScriptReference/Gyroscope-updateInterval.html), so you need to divide 1 by the value.
 * `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed.
 
@@ -174,7 +174,7 @@ No corresponding API yet.
 
 Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html).
 
-Note: Mouse simulation from touch is not implemented yet.
+>NOTE: Mouse simulation from touch is not implemented yet.
 
 ### [`UnityEngine.Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)
 
@@ -196,13 +196,13 @@ No corresponding API yet.
 
 Use [`InputSystem.EnhancedTouch.Touch.activeTouches.Count`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)
 
-Note: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+>NOTE: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html)
 
 Use [`InputSystem.EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches).
 
-Note: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+>NOTE: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)
 
@@ -217,6 +217,8 @@ Use [`Touchscreen.current != null`](../api/UnityEngine.InputSystem.Touchscreen.h
 See [`UnityEngine.Input.accelerationEvents`](#accelerationEvents).
 
 ### <a name="getAxis"></a>[`UnityEngine.Input.GetAxis`](https://docs.unity3d.com/ScriptReference/Input.GetAxis.html)
+
+[//]: # (TODO: we should probably reference PlayerInput here in addition to or instead of the manual action setups described here)
 
 There is no global setup corresponding exactly to "virtual axis" setups in the old player input settings. Instead, sets of ["input actions"](Actions.md) can be set up as independent assets or put directly on your C# components.
 
@@ -233,33 +235,33 @@ As an example, let's recreate the following axis configuration:
        {
            public InputAction fireAction;
    ```
-   
+
 2. Hook up a response to the action.
    ```
-		   void Awake()
-		   {
-			   fireAction.performed += ctx => Fire();
-		   }
+           void Awake()
+           {
+               fireAction.performed += ctx => Fire();
+           }
 
-		   void Fire()
-		   {
-			   //...
-		   }
+           void Fire()
+           {
+               //...
+           }
    ```
 3. Put the component on a `GameObject` and configure bindings in the inspector by clicking the plus sign on the bindings list to add bindings and double-clicking the bindings to pick controls to bind to.
 
    ![MyComponent fireAction](./Images/MyComponentFireAction.png)
 4. Enable and disable the action as needed.
    ```
-		   void OnEnable()
-		   {
-			   fireAction.Enable();
-		   }
+           void OnEnable()
+           {
+               fireAction.Enable();
+           }
 
-		   void OnDisable()
-		   {
-			   fireAction.Disable();
-		   }
+           void OnDisable()
+           {
+               fireAction.Disable();
+           }
    ```
 
 #### Option B: Create input action asset
@@ -280,13 +282,13 @@ As an example, let's recreate the following axis configuration:
    {
        MyControls controls;
    ```
-   
+
 10. Create the instance and hook up a response to the fire action.
 
    ```
        public void Awake()
        {
-		   controls = new MyControls();
+           controls = new MyControls();
            controls.gameplay.fire.performed += ctx => Fire();
        }
    ```
@@ -391,7 +393,7 @@ Keyboard.current[Key.Space].isPressed
 ((KeyControl)Keyboard.current["space"]).isPressed
 ```
 
-Note: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
+>NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetKeyDown`](https://docs.unity3d.com/ScriptReference/Input.GetKeyDown.html)
 
@@ -409,7 +411,7 @@ Keyboard.current[Key.Space].wasPressedThisFrame
 ((KeyControl)Keyboard.current["space"]).wasPressedThisFrame
 ```
 
-Note: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
+>NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetKeyUp`](https://docs.unity3d.com/ScriptReference/Input.GetKeyUp.html)
 
@@ -427,7 +429,7 @@ Keyboard.current[Key.Space].wasReleasedThisFrame
 ((KeyControl)Keyboard.current["space"]).wasReleasedThisFrame
 ```
 
-Note: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
+>NOTE: Keys are identified by physical layout not according to the current language mapping of the keyboard. To query the name of the key according to the language mapping, use [`KeyControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName).
 
 ### [`UnityEngine.Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)
 
@@ -475,7 +477,7 @@ Mouse.current.middleButton.wasReleasedThisFrame
 
 Use [`InputSystem.EnhancedTouch.Touch.activeTouches[i]`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches)
 
-Note: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+>NOTE: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 ### [`UnityEngine.Input.IsJoystickPreconfigured`](https://docs.unity3d.com/ScriptReference/Input.IsJoystickPreconfigured.html)
 

@@ -65,7 +65,7 @@ The last solution uses [control paths](Controls.md#control-paths).
         (device, change) =>
         {
             switch (change)
-            { 
+            {
                 case InputDeviceChange.Added:
                     // New Device
                     break;
@@ -79,8 +79,8 @@ The last solution uses [control paths](Controls.md#control-paths).
                     // Remove from input system entirely; by default, devices stay in the system once discovered
                     break;
                 default:
-                	// See InputDeviceChange reference for other event types.
-                	break;
+                    // See InputDeviceChange reference for other event types.
+                    break;
             }
         }
 ```
@@ -189,14 +189,14 @@ If you are worried about GC from the delegates, you can also use a polling appro
 Typically you need to deal with multiple actions. In this case you may want to put these into an Input Actions asset file. Create an Input Actions asset by selecting `Input Actions` in the `Create` popup button in the Project view. Double click the asset to create and edit one of multiple Input Action maps containing Input Actions. If you then click `Generate C# Class` in the inspector for the asset, Unity will generate a wrapper class for your actions which you can use like this:
 
 ```C#
-	MyInputActionAssetClass actions;
-	
-	public void OnEnable()
+    MyInputActionAssetClass actions;
+
+    public void OnEnable()
     {
         actions = new MyInputActionAssetClass();
         controls.myActionsMap.fire.performed += Fire;
-		controls.myActionsMap.walk.performed += Walk;
-	}
+        controls.myActionsMap.walk.performed += Walk;
+    }
 ```
 
 For more details, see ["Actions"](Actions.md).
@@ -240,17 +240,17 @@ There are parameters available to tweak the axis' behavior. See [here](ActionBin
 Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use [`InputAction.PerformInteractiveRebinding`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_) to handle the rebinding:
 
 ```C#
-	void RemapButtonClicked(InputAction actionToRebind)
-	{
-		var rebindOperation = actionToRebind.PerformInteractiveRebinding()
-					// To avoid accidental input from mouse motion
-	                .WithControlsExcluding("Mouse")
-	                .OnMatchWaitForAnother(0.1f)
-	                .Start();
-	}
+    void RemapButtonClicked(InputAction actionToRebind)
+    {
+        var rebindOperation = actionToRebind.PerformInteractiveRebinding()
+                    // To avoid accidental input from mouse motion
+                    .WithControlsExcluding("Mouse")
+                    .OnMatchWaitForAnother(0.1f)
+                    .Start();
+    }
 ```
 
-[//]: # (TODO: Link the remap screen from tanks demo once that has a linkable home) 
+[//]: # (TODO: Link the remap screen from tanks demo once that has a linkable home)
 
 # ... set up an action to specifically target the left-hand XRController?
 
@@ -288,16 +288,16 @@ However, this is inefficient. The amount of processing an action has to do is di
 The recommended way is to use [`EnhancedTouch.Touch.activeTouches`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html#UnityEngine_InputSystem_EnhancedTouch_Touch_activeTouches):
 
 ```C#
-	using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+    using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
-	public void Update()
-	{
-		foreach (var touch in Touch.activeTouches)
-			Debug.Log($"{touch.touchId}: {touch.screenPosition},{touch.phase}");
-	}
+    public void Update()
+    {
+        foreach (var touch in Touch.activeTouches)
+            Debug.Log($"{touch.touchId}: {touch.screenPosition},{touch.phase}");
+    }
 ```
 
-Note: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
+>NOTE: Enable enhanced touch support first by calling [`InputSystem.EnhancedTouch.Enable()`](../api/UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.html#UnityEngine_InputSystem_EnhancedTouch_EnhancedTouchSupport_Enable).
 
 (You can also use the lower-level [`Touchscreen.current.touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) API)
 
@@ -330,26 +330,26 @@ Two possible ways. If you are okay with using one of the existing C# InputDevice
         "name" : "MyDevice",
         "extend" : "Gamepad", // Or some other thing
         "controls" : [
-            { 
-            	"name" : "firstButton",
-            	"layout" : "Button",
-            	"offset" : 0,
-            	"bit": 0,
-            	"format" : "BIT",
+            {
+                "name" : "firstButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 0,
+                "format" : "BIT",
             },
-            { 
-            	"name" : "secondButton",
-            	"layout" : "Button",
-            	"offset" : 0,
-            	"bit": 1,
-            	"format" : "BIT",
+            {
+                "name" : "secondButton",
+                "layout" : "Button",
+                "offset" : 0,
+                "bit": 1,
+                "format" : "BIT",
             },
-            { 
-            	"name" : "axis",
-            	"layout" : "Axis",
-            	"offset" : 4,
-            	"format" : "FLT",
-            	"parameters" : "clamp=true,clampMin=0,clampMax=1"
+            {
+                "name" : "axis",
+                "layout" : "Axis",
+                "offset" : 4,
+                "format" : "FLT",
+                "parameters" : "clamp=true,clampMin=0,clampMax=1"
             }
         ]
     }
