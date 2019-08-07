@@ -114,6 +114,30 @@ namespace UnityEngine.InputSystem
     /// Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity
     /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decouped values
     /// for these.
+    ///
+    /// <example>
+    /// <code>
+    /// class MyBehavior : MonoBehaviour
+    /// {
+    ///     protected void OnEnable()
+    ///     {
+    ///         // All sensors start out disabled so they have to manually be enabled first.
+    ///         InputSystem.EnableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void OnDisable()
+    ///     {
+    ///         InputSystem.DisableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void Update()
+    ///     {
+    ///         var acceleration = Accelerometer.current.acceleration.ReadValue();
+    ///         //...
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor

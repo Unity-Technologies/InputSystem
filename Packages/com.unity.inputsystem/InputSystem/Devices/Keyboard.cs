@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct KeyboardState : IInputStateTypeInfo
+    public unsafe struct KeyboardState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
 
@@ -595,6 +595,11 @@ namespace UnityEngine.InputSystem
                 return m_Keys[(int)key - 1];
             }
         }
+
+        /// <summary>
+        /// List of all key controls on the keyboard.
+        /// </summary>
+        public ReadOnlyArray<KeyControl> allKeys => new ReadOnlyArray<KeyControl>(m_Keys);
 
         public static Keyboard current { get; private set; }
 

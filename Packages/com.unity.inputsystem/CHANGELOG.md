@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- `MouseState`, `KeyboardState`, and `GamepadState` have been made public again.
 - `PlayerInput` and `PlayerInputManager` have been moved from the `UnityEngine.InputSystem.PlayerInput` namespace to `UnityEngine.InputSystem`.
 - The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
   ```
