@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Interactions
                     else if (isActuated)
                     {
                         context.Started();
-                        context.PerformedAndGoBackToWaiting();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease && !isActuated)
                     {
                         m_WaitingForRelease = false;
-                        context.PerformedAndGoBackToWaiting();
+                        context.Performed();
                     }
                     else if (isActuated)
                     {
@@ -97,14 +97,14 @@ namespace UnityEngine.InputSystem.Interactions
                         if (!isActuated)
                         {
                             context.Started();
-                            context.PerformedAndGoBackToWaiting();
+                            context.Performed();
                         }
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
                         context.Started();
-                        context.PerformedAndGoBackToWaiting();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;

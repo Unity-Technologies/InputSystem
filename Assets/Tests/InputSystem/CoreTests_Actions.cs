@@ -1392,7 +1392,7 @@ partial class CoreTests
         {
             var actuated = context.ControlIsActuated();
             if (!actuated && m_WaitingForRelease)
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
             else if (actuated)
                 m_WaitingForRelease = true;
         }
@@ -4669,7 +4669,7 @@ partial class CoreTests
         public void Process(ref InputInteractionContext context)
         {
             Debug.LogAssertion("LogInteraction.Process");
-            context.PerformedAndGoBackToWaiting();
+            context.Performed();
         }
 
         public void Reset()

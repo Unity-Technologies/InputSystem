@@ -61,6 +61,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 * `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.
+* `InputInteractionContext.PerformedAndGoBackToWaiting` has been renamed to just `InputInteractionContext.Performed`.
 
 #### Actions
 

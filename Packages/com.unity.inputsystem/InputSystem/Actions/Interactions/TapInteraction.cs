@@ -49,8 +49,8 @@ namespace UnityEngine.InputSystem.Interactions
                 m_TapStartTime = context.time;
                 // Set timeout slightly after duration so that if tap comes in exactly at the expiration
                 // time, it still counts as a valid tap.
-                context.SetTimeout(durationOrDefault + 0.00001f);
                 context.Started();
+                context.SetTimeout(durationOrDefault + 0.00001f);
                 return;
             }
 
@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Interactions
             {
                 if (context.time - m_TapStartTime <= durationOrDefault)
                 {
-                    context.PerformedAndGoBackToWaiting();
+                    context.Performed();
                 }
                 else
                 {

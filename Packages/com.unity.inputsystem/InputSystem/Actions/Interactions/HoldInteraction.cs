@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
                 return;
             }
 

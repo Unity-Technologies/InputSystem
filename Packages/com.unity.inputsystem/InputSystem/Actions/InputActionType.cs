@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem
         /// and the left stick goes to (0.5,0.5) and the right stick then goes to (0.25,0.25), the action will perform
         /// twice yielding a value of (0.5,0.5) first and a value of (0.25, 0.25) next. This is different from <see cref="Value"/>
         /// where upon actuation to (0.5,0.5), the left stick would get to drive the action and the actuation of the right
-        /// stick would be ignored.
+        /// stick would be ignored as it does not exceed the magnitude of the actuation on the left stick.
         ///
         /// The second key difference is that only <see cref="InputActionPhase.Performed"/> is used and will get triggered
         /// on every value change regardless of what the value is. This is different from <see cref="Value"/> where the

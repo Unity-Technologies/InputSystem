@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Composites
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>
-        /// Binding for the button that up (i.e. <code>(0,1)</code>) direction of the vector.
+        /// Binding for the button that up (i.e. <c>(0,1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int up = 0;
 
         /// <summary>
-        /// Binding for the button that down (i.e. <code>(0,-1)</code>) direction of the vector.
+        /// Binding for the button that down (i.e. <c>(0,-1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int down = 0;
 
         /// <summary>
-        /// Binding for the button that left (i.e. <code>(-1,0)</code>) direction of the vector.
+        /// Binding for the button that left (i.e. <c>(-1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int left = 0;
 
         /// <summary>
-        /// Binding for the button that right (i.e. <code>(1,0)</code>) direction of the vector.
+        /// Binding for the button that right (i.e. <c>(1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -60,8 +60,8 @@ namespace UnityEngine.InputSystem.Composites
 
         /// <summary>
         /// If true (default), then the resulting vector will be normalized. Otherwise, diagonal
-        /// vectors will have a magnitude > 1 (i.e. will be <code>new Vector2(1,1)</code>, for example,
-        /// instead of <code>new Vector2(1,1).normalized</code>).
+        /// vectors will have a magnitude > 1 (i.e. will be <c>new Vector2(1,1)</c>, for example,
+        /// instead of <c>new Vector2(1,1).normalized</c>).
         /// </summary>
         public bool normalize = true;
 

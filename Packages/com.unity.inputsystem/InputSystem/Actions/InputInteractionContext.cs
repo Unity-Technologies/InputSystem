@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem
         ///         else if (context.isStarted && !context.ControlIsActuated())
         ///         {
         ///             // Interaction has been completed.
-        ///             context.PerformedAndGoBackToWaiting();
+        ///             context.Performed();
         ///         }
         ///     }
         ///
@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem
             m_State.ChangePhaseOfInteraction(InputActionPhase.Started, ref m_TriggerState);
         }
 
-        public void PerformedAndGoBackToWaiting()
+        public void Performed()
         {
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
