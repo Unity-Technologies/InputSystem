@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;

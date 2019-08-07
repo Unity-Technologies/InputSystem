@@ -126,7 +126,6 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
 
-
             return type.GenericTypeArguments[argumentIndex];
         }
     }

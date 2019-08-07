@@ -196,7 +196,7 @@ partial class CoreTests
         var receivedOnEvent = 0;
         var receivedOnDeviceChange = 0;
 
-        InputSystem.onEvent += _ => ++ receivedOnEvent;
+        InputSystem.onEvent += (e, d) => ++ receivedOnEvent;
         InputSystem.onDeviceChange += (c, d) => ++ receivedOnDeviceChange;
 
         InputSystem.Restore();

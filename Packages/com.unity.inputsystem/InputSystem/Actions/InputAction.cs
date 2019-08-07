@@ -239,7 +239,19 @@ namespace UnityEngine.InputSystem
         /// Whether the action was triggered (i.e. had <see cref="performed"/> called) this frame.
         /// </summary>
         /// <remarks>
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (i.e. until the next
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
+        ///
+        /// <example>
+        /// <code>
+        /// if (myControls.gameplay.fire.triggered)
+        ///     Fire();
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputActionType.Button"/>
+        /// <seealso cref="ReadValue{TValue}"/>
         public unsafe bool triggered
         {
             get
@@ -250,6 +262,32 @@ namespace UnityEngine.InputSystem
 
                 var lastTriggeredInUpdate = map.m_State.actionStates[m_ActionIndexInState].lastTriggeredInUpdate;
                 return lastTriggeredInUpdate != 0 && lastTriggeredInUpdate == InputUpdate.s_UpdateStepCount;
+            }
+        }
+
+        /// <summary>
+        /// The currently active control that is driving the action. Null while the action
+        /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
+        /// state. Otherwise the control that last had activity on it which wasn't ignored.
+        /// </summary>
+        /// <remarks>
+        /// Note that the control's value does not necessarily correspond to the value of the
+        /// action (<see cref="ReadValue{TValue}"/>) as the control may be part of a composite.
+        /// </remarks>
+        /// <seealso cref="CallbackContext.control"/>
+        public unsafe InputControl activeControl
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        return state.controls[controlIndex];
+                }
+                return null;
             }
         }
 
@@ -360,41 +398,97 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// <see cref="performed"/>, or <see cref="canceled"/> (whichever came last) except if the action <see cref="type"/>
-        /// is <see cref="InputActionType.Button"/> in which case <typeparamref name="TValue"/> must be <see cref="float"/>
-        /// and the returned value will be 1 if <see cref="triggered"/> is true and 0 otherwise.
+        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
         /// </summary>
-        /// <typeparam name="TValue">Value type to read. Must match </typeparam>
-        /// <returns></returns>
+        /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
+        /// <returns>The current value of the action.</returns>
+        /// <remarks>
+        /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
+        /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
+        /// there. Instead, this API acts more like a polling API that can be called, for example, as part of
+        /// <see cref="MonoBehaviour.Update"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Let's say you have a MyControls.inputactions file with "Generate C# Class" enabled
+        /// // and it has an action map called "gameplay" with a "move" action of type Vector2.
+        /// public class MyBehavior : MonoBehaviour
+        /// {
+        ///     public MyControls controls;
+        ///     public float moveSpeed = 4;
+        ///
+        ///     protected void Awake()
+        ///     {
+        ///         controls = new MyControls();
+        ///     }
+        ///
+        ///     protected void OnEnable()
+        ///     {
+        ///         controls.gameplay.Enable();
+        ///     }
+        ///
+        ///     protected void OnDisable()
+        ///     {
+        ///         controls.gameplay.Disable();
+        ///     }
+        ///
+        ///     protected void Update()
+        ///     {
+        ///         var moveVector = controls.gameplay.move.ReadValue&lt;Vector2&gt;() * (moveSpeed * Time.deltaTime);
+        ///         //...
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// If the action has button-like behavior, then <see cref="triggered"/> is usually a better alternative to
+        /// reading out a float and checking if it is above the button press point.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The given <typeparamref name="TValue"/> type does not match
+        /// the value type of the control or composite currently driving the action.</exception>
+        /// <seealso cref="triggered"/>
+        /// <seealso cref="ReadValueAsObject"/>
+        /// <seealso cref="CallbackContext.ReadValue{TValue}"/>
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
             var result = default(TValue);
 
-            if (type == InputActionType.Button)
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
             {
-                if (typeof(TValue) != typeof(float))
-                    throw new InvalidOperationException(
-                        $"Value type for Button type action {this} must be float but was {typeof(TValue).Name} instead");
-
-                // Working around limitations in type system to treat TValue as float here.
-
-                var resultPtr = (float*)UnsafeUtility.AddressOf(ref result);
-                *resultPtr = triggered ? 1 : 0;
-            }
-            else
-            {
-                var state = GetOrCreateActionMap().m_State;
-                if (state != null)
-                {
-                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var controlIndex = actionStatePtr->controlIndex;
+                if (controlIndex != InputActionState.kInvalidIndex)
+                    result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Same as <see cref="ReadValue{TValue}"/> but read the value without having to know the value type
+        /// of the action.
+        /// </summary>
+        /// <returns>The current value of the action or null if the action is not currently in <see cref="InputActionPhase.Started"/>
+        /// or <see cref="InputActionPhase.Performed"/> phase.</returns>
+        /// <remarks>
+        /// This method allocates GC memory and is thus not a good choice for getting called as part of gameplay
+        /// logic.
+        /// </remarks>
+        /// <seealso cref="ReadValue{TValue}"/>
+        public unsafe object ReadValueAsObject()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state == null)
+                return null;
+
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            var controlIndex = actionStatePtr->controlIndex;
+            if (controlIndex != InputActionState.kInvalidIndex)
+                return state.ReadValueAsObject(actionStatePtr->bindingIndex, controlIndex);
+
+            return null;
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
