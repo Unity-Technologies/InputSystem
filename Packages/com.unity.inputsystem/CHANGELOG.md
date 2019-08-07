@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 - DualShock 3 on macOS:
   * Fixed actions bound to the dpad control performing correctly.
   * Fixed non-present touchpad button control being triggered incorrectly.
+- Leak of unmanaged memory in `InputControlList`.
 
 #### Actions
 
