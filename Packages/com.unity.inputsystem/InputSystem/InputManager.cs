@@ -2054,6 +2054,9 @@ namespace UnityEngine.InputSystem
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
+                ////TODO: have to handle updatecount here, too
+                InputUpdate.s_LastUpdateType = updateType;
+
                 for (var i = 0; i < m_DevicesCount; ++i)
                 {
                     var device = m_Devices[i];
