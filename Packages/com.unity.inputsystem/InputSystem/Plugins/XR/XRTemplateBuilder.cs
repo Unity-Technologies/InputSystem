@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine.Experimental.Input.LowLevel;
 using UnityEngine.Experimental.Input.Utilities;
-using System.Text;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.XR;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -87,13 +88,25 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
+#if UNITY_2019_3_OR_NEWER
+                const InputDeviceCharacteristics controllerCharacteristics = (InputDeviceCharacteristics)(InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller);
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
+                    matchedLayout = "XRHMD";
+                else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
+                    matchedLayout = "XRController";
+#else
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                     matchedLayout = "XRController";
                 else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
                     matchedLayout = "XRHMD";
+#endif
+
             }
 
-            string layoutName = null;
+            if (string.IsNullOrEmpty(matchedLayout))
+                return null;
+
+                string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),

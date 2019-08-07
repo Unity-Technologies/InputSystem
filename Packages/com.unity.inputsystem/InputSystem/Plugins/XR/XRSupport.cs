@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.XR;
 using UnityEngine.Experimental.Input.Layouts;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
@@ -74,7 +75,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public string deviceName;
         public string manufacturer;
         public string serialNumber;
+#if UNITY_2019_3_OR_NEWER
+        public InputDeviceCharacteristics characteristics;
+#else
         public DeviceRole deviceRole;
+#endif
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
@@ -106,13 +111,15 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("(Windows Mixed Reality HMD)|(Acer AH100)")
-                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
+                    .WithProduct("(Windows Mixed Reality HMD)|(Acer AH100)|(Samsung Windows Mixed Reality 800ZAA)")
+                    //.WithManufacturer("(Microsoft)|(WindowsMR)|(^(?![\\s\\S]))")
+                    );
             InputSystem.RegisterLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
-                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
+                    .WithManufacturer("(Microsoft)|(WindowsMR)|(^(Vendor: 1118  Product: 1627))")
+                    );
 
             InputSystem.RegisterLayout<OculusHMD>(
                 matches: new InputDeviceMatcher()

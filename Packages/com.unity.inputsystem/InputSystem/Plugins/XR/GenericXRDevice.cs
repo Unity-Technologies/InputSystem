@@ -1,6 +1,7 @@
 using UnityEngine.Experimental.Input.Plugins.XR.Haptics;
 using UnityEngine.Experimental.Input.Haptics;
 using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.XR;
 
 namespace UnityEngine.Experimental.Input.Plugins.XR
 {
@@ -39,14 +40,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
             if (deviceDescriptor != null)
             {
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
-                {
+#if UNITY_2019_3_OR_NEWER
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Left) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
-                }
-                else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
-                {
+                else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-                }
+#else
+                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
+                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
+                else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
+#endif
             }
         }
     }
