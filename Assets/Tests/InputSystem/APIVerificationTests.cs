@@ -232,12 +232,14 @@ class APIVerificationTests
 #if UNITY_EDITOR_WIN
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
 #endif
+#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             type.FullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamAnalogActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
+#endif
             type.FullName == typeof(UnityEngine.InputSystem.PS4.PS4TouchControl).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.DualShockGamepadPS4).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.MoveControllerPS4).FullName ||
