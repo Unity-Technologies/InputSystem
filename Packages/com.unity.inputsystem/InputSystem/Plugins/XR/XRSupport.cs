@@ -111,14 +111,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
             InputSystem.RegisterLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("(Windows Mixed Reality HMD)|(Acer AH100)|(Samsung Windows Mixed Reality 800ZAA)")
-                    //.WithManufacturer("(Microsoft)|(WindowsMR)|(^(?![\\s\\S]))")
+                    .WithProduct("(Windows Mixed Reality HMD)|(Microsoft HoloLens)|(Acer AH100)|(Samsung Windows Mixed Reality 800ZAA)")
                     );
             InputSystem.RegisterLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
-                    .WithManufacturer("(Microsoft)|(WindowsMR)|(^(Vendor: 1118  Product: 1627))")
+                    );
+            InputSystem.RegisterLayout<HololensHand>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
+                    .WithProduct(@"(^(Hand -))")
                     );
 
             InputSystem.RegisterLayout<OculusHMD>(

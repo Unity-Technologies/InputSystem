@@ -38,6 +38,34 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
     }
 
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    public class HololensHand : XRController
+    {
+        public IntegerControl trackingState { get; private set; }
+        public ButtonControl isTracked { get; private set; }
+        [InputControl(aliases = new[] { "gripPosition" })]
+        public Vector3Control devicePosition { get; private set; }
+        [InputControl(aliases = new[] { "gripOrientation" })]
+        public QuaternionControl deviceRotation { get; private set; }
+        [InputControl(aliases = new[] { "triggerbutton" })]
+        public ButtonControl airTap { get; private set; }
+        public AxisControl sourceLossRisk { get; private set; }
+        public Vector3Control sourceLossMitigationDirection { get; private set; }
+
+        protected override void FinishSetup(InputDeviceBuilder builder)
+        {
+            base.FinishSetup(builder);
+
+            airTap = builder.GetControl<ButtonControl>("airTap");
+            trackingState = builder.GetControl<IntegerControl>("trackingState");
+            isTracked = builder.GetControl<ButtonControl>("isTracked");
+            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
+            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            sourceLossRisk = builder.GetControl<AxisControl>("sourceLossRisk");
+            sourceLossMitigationDirection = builder.GetControl<Vector3Control>("sourceLossMitigationDirection");
+        }
+    }
+
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "thumbstickaxes" })]
