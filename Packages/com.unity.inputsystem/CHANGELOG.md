@@ -45,6 +45,8 @@ however, it has to be formatted properly to pass verification tests.
   ```
 - The signatures of `InputSystem.onBeforeUpdate` and `InputSystem.onAfterUpdate` have changed. The callbacks no longer receive an `InputUpdateType` argument.
   * Use `InputState.currentUpdateType` in case you need to know the type of update being run.
+- `InputUpdateType` has been moved to the `UnityEngine.InputSystem.LowLevel` namespace.
+- `InputSystem.Update(InputUpdateType)` has been removed from the public API.
 - The way input devices are built internally has been streamlined.
   * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
   * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
