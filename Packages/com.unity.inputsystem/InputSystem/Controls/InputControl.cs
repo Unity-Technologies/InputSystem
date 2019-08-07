@@ -23,25 +23,31 @@ using UnityEngine.InputSystem.Layouts;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A typed and named value in a hierarchy of controls.
+    /// A typed and named source of input values in a hierarchy of controls.
     /// </summary>
     /// <remarks>
     /// Controls can have children which in turn may have children. At the root of the child
-    /// hierarchy is always an InputDevice (which themselves are InputControls).
+    /// hierarchy is always an <see cref="InputDevice"/> (which themselves are InputControls).
     ///
-    /// Controls can be looked up by their path (see <see cref="InputDeviceBuilder.GetControl"/> and
-    /// <see cref="InputControlPath.TryFindControl"/>).
+    /// Controls can be looked up by their <see cref="path"/> (see <see cref="InputControlPath.TryFindControl"/>).
     ///
-    /// Each control must have a unique name within its parent (see <see cref="name"/>). Multiple
-    /// names can be assigned to controls using aliases (see <see cref="aliases"/>). Name lookup
-    /// is case-insensitive.
+    /// Each control must have a unique <see cref="name"/> within the <see cref="children"/> of
+    /// its <see cref="parent"/>. Multiple names can be assigned to controls using aliases (see
+    /// <see cref="aliases"/>). Name lookup is case-insensitive.
+    ///
+    /// For display purposes, a control may have a separate <see cref="displayName"/>. This name
+    /// will usually correspond to what the control is caused on the actual underlying hardware.
+    /// For example, on an Xbox gamepad, the control with the name "buttonSouth" will have a display
+    /// name of "A". Controls that have very long display names may also have a <see cref="shortDisplayName"/>.
+    /// This is the case for the "Left Button" on the <see cref="Mouse"/>, for example, which is
+    /// commonly abbreviated "LMB".
     ///
     /// In addition to names, a control may have usages associated with it (see <see cref="usages"/>).
     /// A usage indicates how a control is meant to be used. For example, a button can be assigned
     /// the "PrimaryAction" usage to indicate it is the primary action button the device. Within a
-    /// device, usages have to be unique. See CommonUsages for a list of standardized usages.
+    /// device, usages have to be unique. See <see cref="CommonUsages"/> for a list of standardized usages.
     ///
-    /// Controls do not actually store values. Instead, every control receives an InputStateBlock
+    /// Controls do not actually store values. Instead, every control receives an <see cref="InputStateBlock"/>
     /// which, after the control's device has been added to the system, is used to read out values
     /// from the device's backing store. This backing store is referred to as "state" in the API
     /// as opposed to "values" which represent the data resulting from reading state. The format that
@@ -49,28 +55,70 @@ namespace UnityEngine.InputSystem
     /// of different types but also between controls of the same type. An <see cref="AxisControl"/>,
     /// for example, can be stored as a float or as a byte or in a number of other formats. <see cref="stateBlock"/>
     /// identifies both where the control stores its state as well as the format it stores it in.
+    ///
+    /// Controls are generally not created directly but are created internally by the input system
+    /// from data known as "layouts" (see <see cref="InputControlLayout"/>). Each such layout describes
+    /// the setup of a specific hierarchy of controls. The system internally maintains a registry of
+    /// layouts and produces devices and controls from them as needed. The layout that a control has
+    /// been created from can be queried using <see cref="layout"/>. For most purposes, the intricacies
+    /// of the control layout mechanisms can be ignored and it is sufficient to know the names of a
+    /// small set of common device layouts such as "Keyboard", "Mouse", "Gamepad", and "Touchscreen".
+    ///
+    /// Each control has a single, fixed value type. The type can be queried at runtime using
+    /// <see cref="valueType"/>. Most types of controls are derived from <see cref="InputControl{TValue}"/>
+    /// which has APIs specific to the type of value of the control (e.g. <see cref="InputControl{TValue}.ReadValue()"/>.
+    ///
+    /// The following example demonstrates various common operations performed on input controls:
+    ///
+    /// <example>
+    /// <code>
+    /// // Look up dpad/up control on current gamepad.
+    /// var dpadUpControl = Gamepad.current["dpad/up"];
+    ///
+    /// // Look up the back button on the current gamepad.
+    /// var backButton = Gamepad.current["{Back}"];
+    ///
+    /// // Look up all dpad/up controls on all gamepads in the system.
+    /// using (var controls = InputSystem.FindControls("&lt;Gamepad&gt;/dpad/up"))
+    ///     Debug.Log($"Found {controls.Count} controls");
+    ///
+    /// // Display the value of all controls on the current gamepad.
+    /// foreach (var control in Gamepad.current.allControls)
+    ///     Debug.Log(controls.ReadValueAsObject());
+    ///
+    /// // Track the value of the left stick on the current gamepad over time.
+    /// var leftStickHistory = new InputStateHistory(Gamepad.current.leftStick);
+    /// leftStickHistory.Enable();
+    /// </code>
+    /// </example>
+    /// <example>
+    /// </example>
     /// </remarks>
+    /// <see cref="InputControl{TValue}"/>
     /// <seealso cref="InputDevice"/>
+    /// <seealso cref="InputControlPath"/>
+    /// <seealso cref="InputStateBlock"/>
     [DebuggerDisplay("{DebuggerDisplay(),nq}")]
     public abstract class InputControl
     {
-        ////REVIEW: we could allow the parenthetical characters if we require escaping them in paths
-        /// <summary>
-        /// Characters that may not appear in control names.
-        /// </summary>
-        /// TODO: these are currently not used. Check against these if we think this is useful.
-        // internal const string ReservedCharacters = "/;{}[]<>";
-
         /// <summary>
         /// The name of the control, i.e. the final name part in its path.
         /// </summary>
         /// <remarks>
         /// Names of controls must be unique within the context of their parent.
         ///
+        /// Note that this is the name of the control as assigned internally (like "buttonSouth")
+        /// and not necessarily a good display name. Use <see cref="displayName"/> for
+        /// getting more readable names for display purposes (where available).
+        ///
         /// Lookup of names is case-insensitive.
+        ///
+        /// This is set from the name of the control in the layout.
         /// </remarks>
         /// <seealso cref="path"/>
         /// <seealso cref="aliases"/>
+        /// <seealso cref="InputControlAttribute.name"/>
+        /// <seealso cref="InputControlLayout.ControlItem.name"/>
         public string name => m_Name;
 
         ////TODO: protect against empty strings
@@ -114,7 +162,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// If the control has no abbreviated version, this will be null. Note that this behavior is different
-        /// from <see cref="displayName"/> which will fall back to <see cref="name"/> if not display name has
+        /// from <see cref="displayName"/> which will fall back to <see cref="name"/> if no display name has
         /// been assigned to the control.
         ///
         /// For nested controls, the short display name will include the short display names of all parent controls,
@@ -141,11 +189,19 @@ namespace UnityEngine.InputSystem
         /// Full path all the way from the root.
         /// </summary>
         /// <remarks>
+        /// This will always be the "effective" path of the control, i.e. it will not contain
+        /// elements such as usages (<c>"{Back}"</c>) and other elements that can be part of
+        /// control paths used for matching. Instead, this property will always be a simple
+        /// linear ordering of names leading from the device at the top to the control with each
+        /// element being separated by a forward slash (<c>/</c>).
+        ///
         /// Allocates on first hit. Paths are not created until someone asks for them.
-        /// </remarks>
+        ///
         /// <example>
         /// Example: "/gamepad/leftStick/x"
         /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControlPath"/>
         public string path
         {
             get
@@ -181,6 +237,7 @@ namespace UnityEngine.InputSystem
         /// This is the root of the control hierarchy. For the device at the root, this
         /// will point to itself.
         /// </remarks>
+        /// <seealso cref="InputDevice.allControls"/>
         public InputDevice device => m_Device;
 
         /// <summary>
@@ -495,46 +552,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="CompareState"/>
         public abstract unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr);
 
-        /// <summary>
-        /// Compare the control's stored state in <paramref name="firstStatePtr"/> to <paramref name="secondStatePtr"/>.
-        /// </summary>
-        /// <param name="firstStatePtr">Memory containing the control's <see cref="stateBlock"/>.</param>
-        /// <param name="secondStatePtr">Memory containing the control's <see cref="stateBlock"/></param>
-        /// <param name="maskPtr">Optional mask. If supplied, it will be used to mask the comparison between
-        /// <paramref name="firstStatePtr"/> and <paramref name="secondStatePtr"/> such that any bit not set in the
-        /// mask will be ignored even if different between the two states. This can be used, for example, to ignore
-        /// noise in the state (<see cref="noiseMaskPtr"/>).</param>
-        /// <returns>True if the state is equivalent in both memory buffers.</returns>
-        /// <remarks>
-        /// Unlike <see cref="CompareValue"/>, this method only compares raw memory state. If used on a stick, for example,
-        /// it may mean that this method returns false for two stick values that would compare equal using <see cref="CompareValue"/>
-        /// (e.g. if both stick values fall below the deadzone).
-        /// </remarks>
-        /// <seealso cref="CompareValue"/>
-        public unsafe bool CompareState(void* firstStatePtr, void* secondStatePtr, void* maskPtr = null)
-        {
-            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
-            ////        e.g. from HID input reports; or should we just leave that to maskPtr?
-
-            var firstPtr = (byte*)firstStatePtr + (int)m_StateBlock.byteOffset;
-            var secondPtr = (byte*)secondStatePtr + (int)m_StateBlock.byteOffset;
-            var mask = maskPtr != null ? (byte*)maskPtr + (int)m_StateBlock.byteOffset : null;
-
-            if (m_StateBlock.sizeInBits == 1)
-            {
-                // If we have a mask and the bit is set in the mask, the control is to be ignored
-                // and thus we consider it at default value.
-                if (mask != null && MemoryHelpers.ReadSingleBit(mask, m_StateBlock.bitOffset))
-                    return true;
-
-                return MemoryHelpers.ReadSingleBit(secondPtr, m_StateBlock.bitOffset) ==
-                    MemoryHelpers.ReadSingleBit(firstPtr, m_StateBlock.bitOffset);
-            }
-
-            return MemoryHelpers.MemCmpBitRegion(firstPtr, secondPtr,
-                m_StateBlock.bitOffset, m_StateBlock.sizeInBits, mask);
-        }
-
         public InputControl TryGetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -584,18 +601,11 @@ namespace UnityEngine.InputSystem
             return controlOfType;
         }
 
-        // Constructor for devices which are assigned names once plugged
-        // into the system.
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
             m_StateBlock.byteOffset = InputStateBlock.InvalidOffset; // Request automatic layout by default.
         }
-
-        ////REVIEW: replace InputDeviceBuilder here with an interface?
-        // Set up of the control has been finalized. This can be used, for example, to look up
-        // child controls for fast access.
-        // NOTE: This function will be called repeatedly in case the setup is changed repeatedly.
 
         /// <summary>
         /// Perform final initialization tasks after the control hierarchy has been put into place.
@@ -603,11 +613,98 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method can be overridden to perform control- or device-specific setup work. The most
         /// common use case is for looking up child controls and storing them in local getters.
+        ///
+        /// <example>
+        /// <code>
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public ButtonControl button { get; private set; }
+        ///     public AxisControl axis { get; private set; }
+        ///
+        ///     protected override void OnFinishSetup()
+        ///     {
+        ///         // Cache controls in getters.
+        ///         button = GetChildControl("button");
+        ///         axis = GetChildControl("axis");
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
         /// </remarks>
         protected virtual void FinishSetup()
         {
         }
 
+        /// <summary>
+        /// Call <see cref="RefreshConfiguration"/> if the configuration has in the interim been invalidated
+        /// by a <see cref="DeviceConfigurationEvent"/>.
+        /// </summary>
+        /// <remarks>
+        /// This method is only relevant if you are implementing your own devices or new
+        /// types of controls which are fetching configuration data from the devices (such
+        /// as <see cref="KeyControl"/> which is fetching display names for individual keys
+        /// from the underlying platform).
+        ///
+        /// This method should be called if you are accessing cached data set up by
+        /// <see cref="RefreshConfiguration"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Let's say your device has an associated orientation which it can be held with
+        /// // and you want to surface both as a property and as a usage on the device.
+        /// // Whenever your backend code detects a change in orientation, it should send
+        /// // a DeviceConfigurationEvent to your device to signal that the configuration
+        /// // of the device has changed. You can then implement RefreshConfiguration() to
+        /// // read out and update the device orientation on the managed InputDevice instance.
+        /// public class MyDevice : InputDevice
+        /// {
+        ///     public enum Orientation
+        ///     {
+        ///         Horizontal,
+        ///         Vertical,
+        ///     }
+        ///
+        ///     private Orientation m_Orientation;
+        ///     public Orientation orientation
+        ///     {
+        ///         get
+        ///         {
+        ///             // Call RefreshOrientation if the configuration of the device has been
+        ///             // invalidated since last time we initialized m_Orientation.
+        ///             RefreshConfigurationIfNeeded();
+        ///             return m_Orientation;
+        ///         }
+        ///     }
+        ///     protected override void RefreshConfiguration()
+        ///     {
+        ///         // Fetch the current orientation from the backend. How you do this
+        ///         // depends on your device. Using DeviceCommands is one way.
+        ///         var fetchOrientationCommand = new FetchOrientationCommand();
+        ///         ExecuteCommand(ref fetchOrientationCommand);
+        ///         m_Orientation = fetchOrientation;
+        ///
+        ///         // Reflect the orientation on the device.
+        ///         switch (m_Orientation)
+        ///         {
+        ///             case Orientation.Vertical:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Horizontal);
+        ///                 InputSystem.AddDeviceUsage(this, s_Vertical);
+        ///                 break;
+        ///
+        ///             case Orientation.Horizontal:
+        ///                 InputSystem.RemoveDeviceUsage(this, s_Vertical);
+        ///                 InputSystem.AddDeviceUsage(this, s_Horizontal);
+        ///                 break;
+        ///         }
+        ///     }
+        ///
+        ///     private static InternedString s_Vertical = new InternedString("Vertical");
+        ///     private static InternedString s_Horizontal = new InternedString("Horizontal");
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="RefreshConfiguration"/>
         protected void RefreshConfigurationIfNeeded()
         {
             if (!isConfigUpToDate)

@@ -28,15 +28,24 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// Several aspects of the input system can be customized to tailor how the system functions to the
-    /// specific needs of a project.
+    /// specific needs of a project. These settings are collected in this class. There is one global
+    /// settings object active at any one time. It can be accessed and set through <see cref="InputSystem.settings"/>.
+    ///
+    /// Changing a setting on the object takes effect immediately. It also triggers the
+    /// <see cref="InputSystem.onSettingsChange"/> callback.
     /// </remarks>
     /// <seealso cref="InputSystem.settings"/>
     /// <seealso cref="InputSystem.onSettingsChange"/>
     public class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processing pending input events.
+        /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
+        /// <remarks>
+        /// By default, input updates will automatically be triggered
+        ///
+        /// In the editor,
+        /// </remarks>
         /// <seealso cref="InputSystem.Update()"/>
         /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode

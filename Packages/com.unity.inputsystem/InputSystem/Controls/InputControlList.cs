@@ -6,10 +6,7 @@ using System.Linq;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
-
-////TODO: make Capacity work like in other containers (i.e. total capacity not "how much room is left")
 
 ////TODO: add a device setup version to InputManager and add version check here to ensure we're not going out of sync
 
@@ -26,35 +23,66 @@ namespace UnityEngine.InputSystem
     /// managed memory.
     /// </summary>
     /// <remarks>
+    /// This struct is mainly used by methods such as <see cref="InputSystem.FindControls(string)"/>
+    /// or <see cref="InputControlPath.TryFindControls{TControl}"/> to store an arbitrary length
+    /// list of resulting matches without having to allocate GC memory.
+    ///
     /// Requires the control setup in the system to not change while the list is being used. If devices are
     /// removed from the system, the list will no longer be valid. Also, only works with controls of devices that
-    /// have been added to the system (meaning that it cannot be used with devices created by <see cref="InputDeviceBuilder"/>
-    /// before they have been <see cref="InputSystem.AddDevice{InputDevice}">added</see>).
+    /// have been added to the system (<see cref="InputDevice.added"/>). The reason for these constraints is
+    /// that internally, the list only stores integer indices that are translates to <see cref="InputControl"/>
+    /// references on the fly. If the device setup in the system changes, the indices may become invalid.
     ///
-    /// Allocates unmanaged memory. Must be disposed or will leak memory. By default allocates <see cref="Allocator.Persistent">
-    /// persistent</see> memory. Can direct it to use another allocator with <see cref="InputControlList{Allocator}"/>.
+    /// This struct allocates unmanaged memory and thus must be disposed or it will leak memory. By default
+    /// allocates <see cref="Allocator.Persistent"> persistent</see> memory. You can direct it to use another
+    /// allocator by passing an <see cref="Allocator"/> value to one of the constructors.
+    ///
+    /// <example>
+    /// <code>
+    /// // Find all controls with the "Submit" usage in the system.
+    /// // By wrapping it in a `using` block, the list of controls will automatically be disposed at the end.
+    /// using (var controls = InputSystem.FindControls("*/{Submit}"))
+    ///     /* ... */;
+    /// </code>
+    /// </example>
     /// </remarks>
+    /// <typeparam name="TControl">Type of <see cref="InputControl"/> to store in the list.</typeparam>
     [DebuggerDisplay("Count = {Count}")]
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
     [DebuggerTypeProxy(typeof(InputControlListDebugView<>))]
+    #endif
     public unsafe struct InputControlList<TControl> : IList<TControl>, IReadOnlyList<TControl>, IDisposable
         where TControl : InputControl
     {
         /// <summary>
-        /// Number of controls in the list.
+        /// Current number of controls in the list.
         /// </summary>
+        /// <value>Number of controls currently in the list.</value>
         public int Count => m_Count;
 
         /// <summary>
-        /// Number of controls that can be added before more (unmanaged) memory has to be allocated.
+        /// Total number of controls that can currently be stored in the list.
         /// </summary>
+        /// <value>Total size of array as currently allocated.</value>
+        /// <remarks>
+        /// This can be set ahead of time to avoid repeated allocations.
+        ///
+        /// <example>
+        /// <code>
+        /// // Add all keys from the keyboard to a list.
+        /// var keys = Keyboard.current.allKeys;
+        /// var list = new InputControlList&lt;KeyControl&gt;(keys.Count);
+        /// list.AddRange(keys);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public int Capacity
         {
             get
             {
                 if (!m_Indices.IsCreated)
                     return 0;
-                Debug.Assert(m_Indices.Length >= m_Count);
-                return m_Indices.Length - m_Count;
+                return m_Indices.Length;
             }
             set
             {
@@ -69,12 +97,16 @@ namespace UnityEngine.InputSystem
                     return;
                 }
 
-                var newSize = Count + value;
+                var newSize = value;
                 var allocator = m_Allocator != Allocator.Invalid ? m_Allocator : Allocator.Persistent;
                 ArrayHelpers.Resize(ref m_Indices, newSize, allocator);
             }
         }
 
+        /// <summary>
+        /// This is always false.
+        /// </summary>
+        /// <value>Always false.</value>
         public bool IsReadOnly => false;
 
         /// <summary>
@@ -110,15 +142,16 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Construct a list that allocates unmanaged memory from the given allocator.
         /// </summary>
-        /// <param name="allocator"></param>
-        /// <param name="initialCapacity"></param>
+        /// <param name="allocator">Allocator to use for requesting unmanaged memory.</param>
+        /// <param name="initialCapacity">If greater than zero, will immediately allocate
+        /// memory and set <see cref="Capacity"/> accordingly.</param>
         /// <example>
         /// <code>
         /// // Create a control list that allocates from the temporary memory allocator.
         /// using (var list = new InputControlList(Allocator.Temp))
         /// {
         ///     // Add all gamepads to the list.
-        ///     InputSystem.FindControls("&lt;Gamepad&gt;", list);
+        ///     InputSystem.FindControls("&lt;Gamepad&gt;", ref list);
         /// }
         /// </code>
         /// </example>
@@ -132,6 +165,12 @@ namespace UnityEngine.InputSystem
                 Capacity = initialCapacity;
         }
 
+        /// <summary>
+        /// Construct a list and populate it with the given values.
+        /// </summary>
+        /// <param name="values">Sequence of values to populate the list with.</param>
+        /// <param name="allocator">Allocator to use for requesting unmanaged memory.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="values"/> is <c>null</c>.</exception>
         public InputControlList(IEnumerable<TControl> values, Allocator allocator = Allocator.Persistent)
             : this(allocator)
         {
@@ -142,16 +181,35 @@ namespace UnityEngine.InputSystem
                 Add(value);
         }
 
+        /// <summary>
+        /// Construct a list and add the given values to it.
+        /// </summary>
+        /// <param name="values">Sequence of controls to add to the list.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="values"/> is null.</exception>
         public InputControlList(params TControl[] values)
             : this()
         {
             if (values == null)
                 throw new ArgumentNullException(nameof(values));
 
-            foreach (var value in values)
-                Add(value);
+            var count = values.Length;
+            Capacity = Mathf.Max(count, 10);
+            for (var i = 0; i < count; ++i)
+                Add(values[i]);
         }
 
+        /// <summary>
+        /// Add a control to the list.
+        /// </summary>
+        /// <param name="item">Control to add. Allowed to be <c>null</c>.</param>
+        /// <remarks>
+        /// If necessary, <see cref="Capacity"/> will be increased.
+        ///
+        /// It is allowed to add nulls to the list. This can be useful, for example, when
+        /// specific indices in the list correlate with specific matches and a given match
+        /// needs to be marked as "matches nothing".
+        /// </remarks>
+        /// <seealso cref="Remove"/>
         public void Add(TControl item)
         {
             var index = ToIndex(item);
@@ -162,12 +220,18 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Add a slice of elements taken from the given list.
         /// </summary>
-        /// <param name="list"></param>
-        /// <param name="count"></param>
-        /// <param name="destinationIndex"></param>
-        /// <param name="sourceIndex"></param>
-        /// <typeparam name="TList"></typeparam>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <param name="list">List to take the slice of values from.</param>
+        /// <param name="count">Number of elements to copy from <paramref name="list"/>.</param>
+        /// <param name="destinationIndex">Starting index in the current control list to copy to.
+        /// This can be beyond <see cref="Count"/> or even <see cref="Capacity"/>. Memory is allocated
+        /// as needed.</param>
+        /// <param name="sourceIndex">Source index in <paramref name="list"/> to start copying from.
+        /// <paramref name="count"/> elements are copied starting at <paramref name="sourceIndex"/>.</param>
+        /// <typeparam name="TList">Type of list. This is a type parameter to avoid boxing in case the
+        /// given list is a struct (such as InputControlList itself).</typeparam>
+        /// <exception cref="ArgumentOutOfRangeException">The range of <paramref name="count"/>
+        /// and <paramref name="sourceIndex"/> is at least partially outside the range of values
+        /// available in <paramref name="list"/>.</exception>
         public void AddSlice<TList>(TList list, int count = -1, int destinationIndex = -1, int sourceIndex = 0)
             where TList : IReadOnlyList<TControl>
         {
@@ -183,8 +247,8 @@ namespace UnityEngine.InputSystem
                     $"Count of {count} elements starting at index {sourceIndex} exceeds length of list of {list.Count}");
 
             // Make space in the list.
-            if (Capacity < count)
-                Capacity = Math.Max(count, 10);
+            if (Capacity < m_Count + count)
+                Capacity = Math.Max(m_Count + count, 10);
             if (destinationIndex < Count)
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
                     Count - destinationIndex);
@@ -195,6 +259,19 @@ namespace UnityEngine.InputSystem
             m_Count += count;
         }
 
+        /// <summary>
+        /// Add a sequence of controls to the list.
+        /// </summary>
+        /// <param name="list">Sequence of controls to add.</param>
+        /// <param name="count">Number of controls from <paramref name="list"/> to add. If negative
+        /// (default), all controls from <paramref name="list"/> will be added.</param>
+        /// <param name="destinationIndex">Index in the control list to start inserting controls
+        /// at. If negative (default), controls will be appended to the end of the control list.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="list"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// If <paramref name="count"/> is not supplied, <paramref name="list"/> will be iterated
+        /// over twice.
+        /// </remarks>
         public void AddRange(IEnumerable<TControl> list, int count = -1, int destinationIndex = -1)
         {
             if (list == null)
@@ -209,8 +286,8 @@ namespace UnityEngine.InputSystem
                 return;
 
             // Make space in the list.
-            if (Capacity < count)
-                Capacity = Math.Max(count, 10);
+            if (Capacity < m_Count + count)
+                Capacity = Math.Max(m_Count + count, 10);
             if (destinationIndex < Count)
                 NativeArray<ulong>.Copy(m_Indices, destinationIndex, m_Indices, destinationIndex + count,
                     Count - destinationIndex);
@@ -226,6 +303,12 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Remove a control from the list.
+        /// </summary>
+        /// <param name="item">Control to remove. Can be null.</param>
+        /// <returns>True if the control was found in the list and removed, false otherwise.</returns>
+        /// <seealso cref="Add"/>
         public bool Remove(TControl item)
         {
             if (m_Count == 0)
@@ -244,11 +327,17 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        /// <summary>
+        /// Remove the control at the given index.
+        /// </summary>
+        /// <param name="index">Index of control to remove.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative or equal
+        /// or greater than <see cref="Count"/>.</exception>
         public void RemoveAt(int index)
         {
             if (index < 0 || index >= m_Count)
-                throw new ArgumentException(
-                    $"Index {index} is out of range in list with {m_Count} elements", nameof(index));
+                throw new ArgumentOutOfRangeException(
+                    nameof(index), $"Index {index} is out of range in list with {m_Count} elements");
 
             ArrayHelpers.EraseAtWithCapacity(m_Indices, ref m_Count, index);
         }
@@ -453,6 +542,7 @@ namespace UnityEngine.InputSystem
         }
     }
 
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
     internal struct InputControlListDebugView<TControl>
         where TControl : InputControl
     {
@@ -465,34 +555,5 @@ namespace UnityEngine.InputSystem
 
         public TControl[] controls => m_Controls;
     }
-
-    /// <summary>
-    /// Extension helper methods to convert enumerables of controls to <see cref="InputControlList"/> instances.
-    /// </summary>
-    public static class InputControlListExtensions
-    {
-        public static InputControlList<TControl> ToControlList<TControl>(this IEnumerable<TControl> list)
-            where TControl : InputControl
-        {
-            if (list == null)
-                throw new ArgumentNullException(nameof(list));
-
-            var result = new InputControlList<TControl>();
-            foreach (var element in list)
-                result.AddRange(list);
-            return result;
-        }
-
-        public static InputControlList<TControl> ToControlList<TControl>(this IReadOnlyList<TControl> list)
-            where TControl : InputControl
-        {
-            if (list == null)
-                throw new ArgumentNullException(nameof(list));
-
-            var result = new InputControlList<TControl>();
-            foreach (var element in list)
-                result.AddSlice(list);
-            return result;
-        }
-    }
+    #endif
 }

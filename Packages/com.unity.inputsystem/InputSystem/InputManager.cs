@@ -41,8 +41,8 @@ namespace UnityEngine.InputSystem
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using DeviceStateChangeListener = Action<InputDevice>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
-    using UpdateListener = Action<InputUpdateType>;
     using EventListener = Action<InputEventPtr, InputDevice>;
+    using UpdateListener = Action;
 
     /// <summary>
     /// Hub of the input system.
@@ -1627,6 +1627,7 @@ namespace UnityEngine.InputSystem
         internal int m_AvailableDeviceCount;
         internal AvailableDevice[] m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
+        ////REVIEW: should these be weak-referenced?
         internal int m_DisconnectedDevicesCount;
         internal InputDevice[] m_DisconnectedDevices;
 
@@ -2070,7 +2071,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, updateType, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
         }
 
         /// <summary>
@@ -2296,7 +2297,7 @@ namespace UnityEngine.InputSystem
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
-                InvokeAfterUpdateCallback(updateType);
+                InvokeAfterUpdateCallback();
                 eventBuffer.Reset();
                 return;
             }
@@ -2560,14 +2561,14 @@ namespace UnityEngine.InputSystem
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
-            InvokeAfterUpdateCallback(updateType);
+            InvokeAfterUpdateCallback();
             ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }
 
-        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
+        private void InvokeAfterUpdateCallback()
         {
             for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i](updateType);
+                m_AfterUpdateListeners[i]();
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
@@ -2716,7 +2717,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(eventPtr != null, "Received NULL event ptr");
 
             var stateBlockOfDevice = device.m_StateBlock;
-            var stateBlockSizeOfDevice = stateBlockOfDevice.alignedSizeInBytes;
+            var stateBlockSizeOfDevice = stateBlockOfDevice.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
             var offsetInDeviceStateToCopyTo = 0u;
             uint sizeOfStateToCopy;
             uint receivedStateSize;
@@ -2862,7 +2863,7 @@ namespace UnityEngine.InputSystem
             // NOTE: This copying must only happen once, right after a buffer flip. Otherwise we may copy old,
             //       stale input state from the back buffer over state that has already been updated with newer
             //       data.
-            var deviceStateSize = deviceStateBlock.alignedSizeInBytes;
+            var deviceStateSize = deviceStateBlock.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
             if (flippedBuffers && deviceStateSize != stateSizeInBytes)
             {
                 var backBuffer = buffers.GetBackBuffer(deviceIndex);
