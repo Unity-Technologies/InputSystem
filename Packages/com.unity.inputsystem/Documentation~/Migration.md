@@ -159,10 +159,10 @@ Keyboard.current.SetIMEEnabled(true);
 
 ### [`UnityEngine.Input.inputString`](https://docs.unity3d.com/ScriptReference/Input-inputString.html)
 
-Subscribe to the [`Keyboard.onText`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onText) event:
+Subscribe to the [`Keyboard.onTextInput`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onTextInput) event:
 
 ```
-Keyboard.current.onText +=
+Keyboard.current.onTextInput +=
     character => /* ... */;
 ```
 

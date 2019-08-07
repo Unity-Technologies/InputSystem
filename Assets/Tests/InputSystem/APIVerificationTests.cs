@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
+using HtmlAgilityPack;
 
 class APIVerificationTests
 {
@@ -317,6 +318,78 @@ class APIVerificationTests
         var docsFolder = GenerateDocsDirectory();
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
+    }
+
+    HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
+    {
+        if (!htmlFileCache.ContainsKey(htmlFile))
+        {
+            htmlFileCache[htmlFile] = new HtmlDocument();
+            htmlFileCache[htmlFile].Load(htmlFile);
+        }
+
+        return htmlFileCache[htmlFile];
+    }
+
+    void CheckHTMLFileLinkConsistency(string htmlFile, List<string> unresolvedLinks, Dictionary<string, HtmlDocument> htmlFileCache)
+    {
+        var dir = Path.GetDirectoryName(htmlFile);
+        var doc = LoadHtmlDocument(htmlFile, htmlFileCache);
+        var hrefList = doc.DocumentNode.SelectNodes("//a")
+            .Select(p => p.GetAttributeValue("href", null))
+            .ToList();
+        foreach (var _link in hrefList)
+        {
+            var link = _link;
+            if (string.IsNullOrEmpty(link))
+                continue;
+
+            // ignore external links for now
+            if (link.StartsWith("http://"))
+                continue;
+
+            if (link.StartsWith("https://"))
+                continue;
+
+            if (link == "#top")
+                continue;
+
+            if (link.StartsWith("#"))
+                link = Path.GetFileName(htmlFile) + link;
+
+            var split = link.Split('#');
+            var linkedFile = split[0];
+            var tag = split.Length > 1 ? split[1] : null;
+
+            if (!File.Exists(Path.Combine(dir, linkedFile)))
+            {
+                unresolvedLinks.Add($"{link} in {htmlFile} (File Not Found)");
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(tag))
+            {
+                var linkedDoc = LoadHtmlDocument(Path.Combine(dir, linkedFile), htmlFileCache);
+                var idNode = linkedDoc.DocumentNode.SelectSingleNode($"//*[@id = '{tag}']");
+                if (idNode == null)
+                    unresolvedLinks.Add($"{link} in {htmlFile} (Tag Not Found)");
+            }
+        }
+    }
+
+    [Test]
+    [Category("API")]
+#if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+#endif
+    public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
+    {
+        var docsFolder = GenerateDocsDirectory();
+        var unresolvedLinks = new List<string>();
+        var htmlFileCache = new Dictionary<string, HtmlDocument>();
+        foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
+            CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
+        Assert.That(unresolvedLinks, Is.Empty);
     }
 }
 #endif

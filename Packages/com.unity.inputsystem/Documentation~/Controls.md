@@ -73,7 +73,7 @@ Usages can be arbitrary strings. However, a certain set of usages is very common
 
 >Example: `<Gamepad>/leftStick/x` means "X control on left stick of gamepad".
 
-Controls can be looked up using textual paths. This feature is heavily used by [bindings](Actions.md#bindings) on input actions in order to identify the control(s) from which input is to be read. However, they can also be used for lookup directly on controls and devices or to
+Controls can be looked up using textual paths. This feature is heavily used by [bindings](ActionBindings.md) on input actions in order to identify the control(s) from which input is to be read. However, they can also be used for lookup directly on controls and devices or to
 
 ```CSharp
 var gamepad = Gamepad.all[0];

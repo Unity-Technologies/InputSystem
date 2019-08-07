@@ -2,10 +2,10 @@
 
 Devices:
 
-* [... check if the space key has been pressed this frame?](#check-if-the-space-key-has-been-pressed-this-frame)
-* [... find all connected gamepads?](#find-all-connected-gamepads)
-* [... find the gamepad currently used by the player?](#find-the-gamepad-currently-used-by-the-player)
-* [... know when a new device has been plugged in?](#know-when-a-new-device-has-been-plugged-in)
+* [... check if the space key has been pressed this frame?](#-check-if-the-space-key-has-been-pressed-this-frame)
+* [... find all connected gamepads?](#-find-all-connected-gamepads)
+* [... find the gamepad currently used by the player?](#-find-the-gamepad-currently-used-by-the-player)
+* [... know when a new device has been plugged in?](#-know-when-a-new-device-has-been-plugged-in)
 
 Actions:
 

@@ -33,7 +33,7 @@ This problem is solved by "composite bindings", i.e. bindings that are made up o
 
 >NOTE: Actions set on bindings that are part of composites are ignored. The composite as a whole can trigger an action. Individual parts of the composite cannot.
 
-To see how to create composites in the editor UI, see [here](ActionEditor.md#editing-composite-bindings).
+To see how to create composites in the editor UI, see [here](ActionAssets.md#editing-composite-bindings).
 
 In code, composites can be created using the `AddCompositeBinding` syntax.
 
@@ -215,6 +215,10 @@ This behavior can be overridden by restricting `InputActionAssets` or individual
 ```
 
 >NOTE: `InputUser` and `PlayerInput` make use of this facility automatically. I.e. they will set `InputActionMap.devices` automatically based on the devices that are paired to the user/player.
+
+## Disambiguation
+
+TODO
 
 ## Runtime Rebinding
 
