@@ -1647,7 +1647,6 @@ namespace UnityEngine.InputSystem
             s_Manager.Update(updateType);
         }
 
-        ////REVIEW: drop update type arg? make update parameters available via InputState?
         /// <summary>
         /// Event that is fired before the input system updates.
         /// </summary>
@@ -1662,22 +1661,38 @@ namespace UnityEngine.InputSystem
         /// be fed right into the upcoming update.
         /// </remarks>
         /// <seealso cref="onAfterUpdate"/>
-        /// <seealso cref="Update(InputUpdateType)"/>
-        public static event Action<InputUpdateType> onBeforeUpdate
+        /// <seealso cref="Update()"/>
+        public static event Action onBeforeUpdate
         {
-            add => s_Manager.onBeforeUpdate += value;
-            remove => s_Manager.onBeforeUpdate -= value;
+            add
+            {
+                lock (s_Manager)
+                    s_Manager.onBeforeUpdate += value;
+            }
+            remove
+            {
+                lock (s_Manager)
+                    s_Manager.onBeforeUpdate -= value;
+            }
         }
 
         /// <summary>
         /// Event that is fired after the input system has completed an update and processed all pending events.
         /// </summary>
         /// <seealso cref="onBeforeUpdate"/>
-        /// <seealso cref="Update(InputUpdateType)"/>
-        public static event Action<InputUpdateType> onAfterUpdate
+        /// <seealso cref="Update()"/>
+        public static event Action onAfterUpdate
         {
-            add => s_Manager.onAfterUpdate += value;
-            remove => s_Manager.onAfterUpdate -= value;
+            add
+            {
+                lock (s_Manager)
+                    s_Manager.onAfterUpdate += value;
+            }
+            remove
+            {
+                lock (s_Manager)
+                    s_Manager.onAfterUpdate -= value;
+            }
         }
 
         #endregion

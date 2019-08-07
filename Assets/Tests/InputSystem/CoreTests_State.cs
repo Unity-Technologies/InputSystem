@@ -466,22 +466,18 @@ partial class CoreTests
         runtime.onShouldRunUpdate = _ => true;
 
         var receivedUpdate = false;
-        InputUpdateType? receivedUpdateType = null;
         InputSystem.onBeforeUpdate +=
-            type =>
+            () =>
         {
             Assert.That(receivedUpdate, Is.False);
             receivedUpdate = true;
-            receivedUpdateType = type;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Before render. Disabled by default. Add a device that needs before-render updates
         // so that the update gets enabled.
@@ -497,17 +493,14 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
 
 #if UNITY_EDITOR
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Editor.
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
 #endif
     }
 
