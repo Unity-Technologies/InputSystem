@@ -67,7 +67,7 @@ public class ControlRebindingUI : MonoBehaviour
 
         throw new ArgumentException($"{compositeType} is not a known composite type", nameof(compositeType));
     }
-    
+
     private unsafe float ScoreFunc(string compositeType, InputControl control, InputEventPtr eventPtr)
     {
         var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
