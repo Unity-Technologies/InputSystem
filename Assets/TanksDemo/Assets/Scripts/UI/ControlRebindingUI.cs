@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using System.Linq;
 using System;
+using UnityEngine.InputSystem.Controls;
 
 public class ControlRebindingUI : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class ControlRebindingUI : MonoBehaviour
     private InputAction m_Action;
     private InputActionRebindingExtensions.RebindingOperation m_RebindOperation;
     private int[] m_CompositeBindingIndices;
-    private Type m_ExpectedControlType;
+    private string m_CompositeType;
     private bool m_IsUsingComposite;
 
     public void Start()
@@ -36,9 +37,7 @@ public class ControlRebindingUI : MonoBehaviour
             m_CompositeBindingIndices = Enumerable.Range(0, m_Action.bindings.Count)
                 .Where(x => m_Action.bindings[x].isPartOfComposite).ToArray();
             var compositeBinding = m_Action.bindings.First(x => x.isComposite);
-            if (compositeBinding.name == "2D Vector")
-                m_ExpectedControlType = typeof(InputControl<Vector2>);
-            Debug.Log(m_ExpectedControlType);
+            m_CompositeType = compositeBinding.name;
             for (int i = 0; i < m_CompositeButtons.Length && i < m_CompositeBindingIndices.Length; i++)
             {
                 int compositeBindingIndex = m_CompositeBindingIndices[i];
@@ -55,7 +54,21 @@ public class ControlRebindingUI : MonoBehaviour
         m_RebindOperation?.Dispose();
     }
 
-    private unsafe float ScoreFunc(Type expectedControl, InputControl control, InputEventPtr eventPtr)
+    private bool ControlMatchesCompositeType(InputControl control, string compositeType)
+    {
+        if (compositeType == null)
+            return true;
+
+        if (compositeType == "2D Vector")
+            return typeof(InputControl<Vector2>).IsInstanceOfType(control);
+
+        if (compositeType == "1D Axis")
+            return typeof(AxisControl).IsInstanceOfType(control) && !typeof(ButtonControl).IsInstanceOfType(control);
+
+        throw new ArgumentException($"{compositeType} is not a known composite type", nameof(compositeType));
+    }
+    
+    private unsafe float ScoreFunc(string compositeType, InputControl control, InputEventPtr eventPtr)
     {
         var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
         var magnitude = control.EvaluateMagnitude(statePtr);
@@ -66,10 +79,10 @@ public class ControlRebindingUI : MonoBehaviour
         // Give preference to controls which match the expected type (ie get the Vector2 for a Stick,
         // rather than individual axes), but allow other types to let us construct the control as a
         // composite.
-        if (expectedControl != null && !expectedControl.IsInstanceOfType(control))
-            return magnitude;
+        if (ControlMatchesCompositeType(control, m_CompositeType))
+            return magnitude + 1;
 
-        return magnitude + 1;
+        return magnitude;
     }
 
     void RemapButtonClicked(string name, int bindingIndex = 0)
@@ -84,11 +97,10 @@ public class ControlRebindingUI : MonoBehaviour
         if (m_CompositeBindingIndices != null)
         {
             m_RebindOperation = m_RebindOperation
-                .OnComputeScore((x, y) => ScoreFunc(m_ExpectedControlType, x, y))
+                .OnComputeScore((x, y) => ScoreFunc(m_CompositeType, x, y))
                 .OnGeneratePath(x =>
                 {
-                    if (m_ExpectedControlType != null && m_CompositeBindingIndices != null &&
-                        !m_ExpectedControlType.IsInstanceOfType(x))
+                    if (!ControlMatchesCompositeType(x, m_CompositeType))
                         m_IsUsingComposite = true;
                     else
                         m_IsUsingComposite = false;

@@ -25,7 +25,7 @@
                     "name": "Turret",
                     "type": "Value",
                     "id": "cdfa0440-2012-4dea-a37a-db07b0d31f6a",
-                    "expectedControlType": "",
+                    "expectedControlType": "Axis",
                     "processors": "",
                     "interactions": ""
                 },
@@ -61,7 +61,7 @@
                 {
                     "name": "",
                     "id": "f7758674-6c70-4fa9-8551-5cebdc997243",
-                    "path": "<Gamepad>/leftStick",
+                    "path": "<Gamepad>/leftStick/x",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -70,9 +70,9 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "2D Vector",
+                    "name": "1D Axis",
                     "id": "5108737a-0e21-4ee7-b70c-541ae02a1015",
-                    "path": "2DVector",
+                    "path": "1DAxis",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -81,7 +81,7 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "up",
+                    "name": "Negative",
                     "id": "3c1491e2-3bbb-4db0-bc45-f18d268eee57",
                     "path": "",
                     "interactions": "",
@@ -92,30 +92,8 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "down",
+                    "name": "Positive",
                     "id": "42e6e05c-262b-4aca-bd91-c6ebcab36f60",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Turret",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "left",
-                    "id": "584723e7-d761-4647-b1af-da3c2826c855",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Turret",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "right",
-                    "id": "669afc79-7ef2-472e-a378-7e6d49c22fbb",
                     "path": "",
                     "interactions": "",
                     "processors": "",
