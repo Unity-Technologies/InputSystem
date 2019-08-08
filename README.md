@@ -9,8 +9,4 @@ Issues are expected at this point. However, feel free to report what you find he
 ## How to Use This In Your Own Project
 Please see [Installation](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/Installation.md).
 
-The latest version is: `0.2.7-preview`.
-
-Next version: `0.3-preview` (see [Roadmap](#roadmap)).
-
 Please see [Installation](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/Installation.md).

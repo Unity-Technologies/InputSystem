@@ -66,7 +66,7 @@ publish:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   commands:
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
