@@ -4,7 +4,7 @@ test_platforms:
   - name: win
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
 ---
 {% for editor in test_editors %}
 {% for platform in test_platforms %}
@@ -33,7 +33,7 @@ promotion_test_trigger:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   artifacts:
     logs:
       paths:
@@ -53,7 +53,7 @@ promote:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   variables:
     UPMCI_PROMOTION: 1
   commands:
