@@ -25,7 +25,7 @@
                     "name": "Turret",
                     "type": "Value",
                     "id": "cdfa0440-2012-4dea-a37a-db07b0d31f6a",
-                    "expectedControlType": "Axis",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": ""
                 },

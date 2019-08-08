@@ -96,7 +96,6 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaAO: 1
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
-    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -566,6 +565,7 @@ GameObject:
   - component: {fileID: 314339491}
   - component: {fileID: 314339494}
   - component: {fileID: 314339493}
+  - component: {fileID: 314339495}
   - component: {fileID: 314339492}
   m_Layer: 5
   m_Name: GasValueButton
@@ -677,6 +677,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 314339490}
   m_CullTransparentMesh: 0
+--- !u!114 &314339495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 314339490}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69252387899be4887b73fe4f7dc4626a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Button: {fileID: 0}
+  m_Text: {fileID: 0}
+  m_ActionReference: {fileID: 4659744736448009263, guid: 2960912a48c2ae741891e0507263b631,
+    type: 3}
+  m_DefaultBindingIndex: 0
+  m_CompositeButtons: []
+  m_CompositeTexts: []
 --- !u!1 &469867317
 GameObject:
   m_ObjectHideFlags: 0
@@ -796,7 +815,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 487546129}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5961b4e68deb21c4b8c94f211522c8b1, type: 3}
   m_Name: 
@@ -818,7 +837,6 @@ MonoBehaviour:
   turretMappingValueTextDown: {fileID: 801621308}
   turretMappingValueTextLeft: {fileID: 469867321}
   turretMappingValueTextRight: {fileID: 934252317}
-  okButtonMessageText: {fileID: 1811647191}
   tanksInputActions: {fileID: -944628639613478452, guid: 2960912a48c2ae741891e0507263b631,
     type: 3}
 --- !u!4 &487546131
@@ -2134,6 +2152,7 @@ GameObject:
   - component: {fileID: 1655994321}
   - component: {fileID: 1655994324}
   - component: {fileID: 1655994323}
+  - component: {fileID: 1655994325}
   - component: {fileID: 1655994322}
   m_Layer: 5
   m_Name: TurretValueButton
@@ -2245,6 +2264,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1655994320}
   m_CullTransparentMesh: 0
+--- !u!114 &1655994325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1655994320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69252387899be4887b73fe4f7dc4626a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Button: {fileID: 0}
+  m_Text: {fileID: 0}
+  m_ActionReference: {fileID: -6129975242522833078, guid: 2960912a48c2ae741891e0507263b631,
+    type: 3}
+  m_DefaultBindingIndex: 0
+  m_CompositeButtons:
+  - {fileID: 1013855659}
+  - {fileID: 1354191232}
+  - {fileID: 2189702}
+  - {fileID: 93996322}
+  m_CompositeTexts: []
 --- !u!1 &1811647188
 GameObject:
   m_ObjectHideFlags: 0
@@ -2446,6 +2488,7 @@ GameObject:
   - component: {fileID: 1893932650}
   - component: {fileID: 1893932653}
   - component: {fileID: 1893932652}
+  - component: {fileID: 1893932654}
   - component: {fileID: 1893932651}
   m_Layer: 5
   m_Name: BrakeValueButton
@@ -2557,6 +2600,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1893932649}
   m_CullTransparentMesh: 0
+--- !u!114 &1893932654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1893932649}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69252387899be4887b73fe4f7dc4626a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Button: {fileID: 0}
+  m_Text: {fileID: 0}
+  m_ActionReference: {fileID: -6800830637656548960, guid: 2960912a48c2ae741891e0507263b631,
+    type: 3}
+  m_DefaultBindingIndex: 0
+  m_CompositeButtons: []
+  m_CompositeTexts: []
 --- !u!1 &1954812116
 GameObject:
   m_ObjectHideFlags: 0
@@ -2789,9 +2851,8 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2069918800}
   m_Enabled: 1
-  serializedVersion: 10
+  serializedVersion: 9
   m_Type: 1
-  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
@@ -2867,6 +2928,7 @@ GameObject:
   - component: {fileID: 2119408677}
   - component: {fileID: 2119408680}
   - component: {fileID: 2119408679}
+  - component: {fileID: 2119408681}
   - component: {fileID: 2119408678}
   m_Layer: 5
   m_Name: FireValueButton
@@ -2978,3 +3040,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2119408676}
   m_CullTransparentMesh: 0
+--- !u!114 &2119408681
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2119408676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69252387899be4887b73fe4f7dc4626a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Button: {fileID: 0}
+  m_Text: {fileID: 0}
+  m_ActionReference: {fileID: -3679512165948668398, guid: 2960912a48c2ae741891e0507263b631,
+    type: 3}
+  m_DefaultBindingIndex: 0
+  m_CompositeButtons: []
+  m_CompositeTexts: []
