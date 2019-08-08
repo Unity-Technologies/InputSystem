@@ -6,7 +6,7 @@
   * [Debugging Remotely](#debugging-remotely)
   * [Debugging Devices](#debugging-devices)
   * [Debugging Actions](#debugging-actions)
-  * [Debugging Users/PlayerInput](#debugging-users-playerinput)
+  * [Debugging Users/PlayerInput](#debugging-usersplayerinput)
 * [Input Visualizers](#input-visualizers)
   * [Visualizing Controls](#visualizing-controls)
   * [Visualizing Actions](#visualizing-actions)
@@ -27,7 +27,7 @@ The debugger shows a tree breakdown of the state of the input system.
 |Devices|[Input devices](Devices.md) that are currently added to the system as well as a list of unsupported/unrecognized devices.|
 |Layouts|A breakdown of all registered control and device layouts. This is essentially the database of supported hardware and the knowledge of how to represent a given piece of input hardware.|
 |Actions|Only visible in play mode and only if there are [actions](Actions.md) that are currently enabled.<br><br>Shows the list of all currently enabled actions and the controls they are bound to.<br><br>See [Debugging Actions](#debugging-actions).|
-|Users|Only visible when there is one or more `InputUser` instances. See [documentation](UserManagement.md).<br><br>Lists all currently active uers along with their active control schemes and devices, all their associated actions as well as the controls they are bound to.<br><br>Note that `PlayerInput` uses `InputUser` underneath. This means that when using `PlayerInput` components, each player will have an entry here.<br><br>See [Debugging Users/PlayerInput](#debugging-users-playerinput).|
+|Users|Only visible when there is one or more `InputUser` instances. See [documentation](UserManagement.md).<br><br>Lists all currently active uers along with their active control schemes and devices, all their associated actions as well as the controls they are bound to.<br><br>Note that `PlayerInput` uses `InputUser` underneath. This means that when using `PlayerInput` components, each player will have an entry here.<br><br>See [Debugging Users/PlayerInput](#debugging-usersplayerinput).|
 |Settings||
 |Metrics||
 
