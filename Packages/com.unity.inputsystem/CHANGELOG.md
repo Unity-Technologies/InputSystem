@@ -18,11 +18,17 @@ however, it has to be formatted properly to pass verification tests.
 - DualShock 3 on macOS:
   * Fixed actions bound to the dpad control performing correctly.
   * Fixed non-present touchpad button control being triggered incorrectly.
+- A `RebindingOperation` will now fall back to the default path generation behavior if the callback provided to `OnGeneratePath` returns null.
+- Fixed the Input Action editor window throwing exceptions when trying to view action properties.
 
 #### Actions
 
 - Fixed actions not updating their set of controls when the usages of a device are changed.
 - Composite bindings with the default interaction will now correctly cancel when the composite is released, even if there are multiple composite bindings on the action.
+- `PlayerInput` will now copy overrides when creating duplicate actions.
+- It is now possible to use an empty binding path with a non empty override path.
+- It is now possible to use set an empty override path to disable a binding.
+- It is not possible to query the effectively used path of a binding using `effectivePath`.
 
 ### Changed
 
