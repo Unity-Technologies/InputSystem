@@ -266,7 +266,7 @@ namespace UnityEngine.InputSystem
         /// This is either <see cref="overrideInteractions"/> if that is set, or <see cref="interactions"/> otherwise.
         /// </remarks>
         public string effectiveInteractions => overrideInteractions ?? interactions;
-        
+
         /// <summary>
         /// This is the processor config which is effectively being used.
         /// </summary>

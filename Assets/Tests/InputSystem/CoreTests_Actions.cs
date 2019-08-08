@@ -5188,6 +5188,58 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ApplyingEmptyStringOverride_IsSameAsDisablingBinding()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+
+        bool performed = false;
+        action.performed += _ => performed = true;
+
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed);
+        performed = false;
+
+        action.Disable();
+        action.ApplyBindingOverride(0, "");
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyOverrideToActionWithEmptyBinding()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction();
+        action.AddBinding("");
+
+        bool performed = false;
+        action.performed += _ => performed = true;
+
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed, Is.False);
+
+        action.Disable();
+        action.ApplyBindingOverride(0, "/gamepad/leftTrigger");
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ApplyingOverride_UpdatesControls()
     {
         var action = new InputAction(binding: "<Gamepad>/leftTrigger");

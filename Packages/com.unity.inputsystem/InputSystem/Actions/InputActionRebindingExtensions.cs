@@ -76,8 +76,8 @@ namespace UnityEngine.InputSystem
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 

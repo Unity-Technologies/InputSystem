@@ -71,8 +71,8 @@ namespace UnityEngine.InputSystem
         ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
 
             return AddBinding(action, new InputBinding
             {
@@ -122,8 +122,8 @@ namespace UnityEngine.InputSystem
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
+            if (binding.path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(binding));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: should this reference actions by ID?
@@ -139,8 +139,8 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path,
             string interactions = null, string groups = null, string action = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
 
             return AddBinding(actionMap, new InputBinding
             {
@@ -178,8 +178,8 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
+            if (binding.path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(binding));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindingIndex = AddBindingInternal(actionMap, binding);
