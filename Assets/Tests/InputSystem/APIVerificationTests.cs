@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
 
 class APIVerificationTests
@@ -37,9 +38,9 @@ class APIVerificationTests
 
         if (
             // These have fields popuplated by reflection in the Input System
-            type.FullName == typeof(UnityEngine.InputSystem.InputProcessor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.InputControl).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.InputBindingComposite).FullName
+            type.FullName == typeof(InputProcessor).FullName ||
+            type.FullName == typeof(InputControl).FullName ||
+            type.FullName == typeof(InputBindingComposite).FullName
         )
             return true;
 
@@ -52,15 +53,15 @@ class APIVerificationTests
 
             if (
                 // Interactions have fields populated by reflection in the Input System
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputInteraction).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputInteraction).FullName) ||
 
                 // Input state structures use fields for the memory layout and construct Input Controls from the fields.
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputStateTypeInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputStateTypeInfo).FullName) ||
 
                 // These use fields for the explicit memory layout, and have a member for the base type. If we exposed that via a property,
                 // base type values could not be written individually.
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo).FullName) ||
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputEventTypeInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputDeviceCommandInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
                 resolved.Attributes.HasFlag(TypeAttributes.Serializable)
@@ -77,7 +78,7 @@ class APIVerificationTests
 
     private IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
     {
-        var codeBase = typeof(UnityEngine.InputSystem.InputSystem).Assembly.CodeBase;
+        var codeBase = typeof(InputSystem).Assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
         var path = Uri.UnescapeDataString(uri.Path);
         var asmDef = AssemblyDefinition.ReadAssembly(path);
@@ -232,12 +233,14 @@ class APIVerificationTests
 #if UNITY_EDITOR_WIN
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
 #endif
+#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             type.FullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamAnalogActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
+#endif
             type.FullName == typeof(UnityEngine.InputSystem.PS4.PS4TouchControl).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.DualShockGamepadPS4).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.MoveControllerPS4).FullName ||

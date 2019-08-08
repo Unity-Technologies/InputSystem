@@ -13,7 +13,6 @@ using UnityEngine.Profiling;
 
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
-
 namespace UnityEngine.InputSystem.Users
 {
     /// <summary>

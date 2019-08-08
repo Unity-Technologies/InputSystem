@@ -565,7 +565,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.LocalParticipantId)
+            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.kLocalParticipantId)
             {
                 foreach (var device in devices)
                 {

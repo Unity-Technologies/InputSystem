@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
   * Fixed actions bound to the dpad control performing correctly.
   * Fixed non-present touchpad button control being triggered incorrectly.
 - Fixed compile issues with switch classes on standalone Linux.
+- Leak of unmanaged memory in `InputControlList`.
 
 #### Actions
 
@@ -27,6 +28,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- `MouseState`, `KeyboardState`, and `GamepadState` have been made public again.
+- `PlayerInput` and `PlayerInputManager` have been moved from the `UnityEngine.InputSystem.PlayerInput` namespace to `UnityEngine.InputSystem`.
 - The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
   ```
   // Before:
@@ -44,6 +47,10 @@ however, it has to be formatted properly to pass verification tests.
           //...
       };
   ```
+- The signatures of `InputSystem.onBeforeUpdate` and `InputSystem.onAfterUpdate` have changed. The callbacks no longer receive an `InputUpdateType` argument.
+  * Use `InputState.currentUpdateType` in case you need to know the type of update being run.
+- `InputUpdateType` has been moved to the `UnityEngine.InputSystem.LowLevel` namespace.
+- `InputSystem.Update(InputUpdateType)` has been removed from the public API.
 - The way input devices are built internally has been streamlined.
   * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
   * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
@@ -51,9 +58,12 @@ however, it has to be formatted properly to pass verification tests.
     InputDevice.Build<Mouse>();
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+- `InputSystem.RegisterControlProcessor` has been renamed to just `InputSystem.RegisterProcessor`.
+
 #### Actions
 
 * `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.
+* `InputInteractionContext.PerformedAndGoBackToWaiting` has been renamed to just `InputInteractionContext.Performed`.
 
 #### Actions
 

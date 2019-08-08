@@ -12,6 +12,11 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// A processor that conditions/transforms input values.
     /// </summary>
+    /// <remarks>
+    /// </remarks>
+    /// <seealso cref="InputBinding.processors"/>
+    /// <seealso cref="InputControlLayout.ControlItem.processors"/>
+    /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
     public abstract class InputProcessor
     {
         /// <summary>
@@ -76,7 +81,7 @@ namespace UnityEngine.InputSystem
     /// <code>
     /// // To register the processor, call
     /// //
-    /// //    InputSystem.RegisterControlProcessor&lt;ScalingProcessor&gt;("scale");
+    /// //    InputSystem.RegisterProcessor&lt;ScalingProcessor&gt;("scale");
     /// //
     /// public class ScalingProcessor : InputProcessor&lt;float&gt;
     /// {
@@ -108,7 +113,7 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="InputSystem.RegisterControlProcessor"/>
+    /// <seealso cref="InputSystem.RegisterProcessor"/>
     public abstract class InputProcessor<TValue> : InputProcessor
         where TValue : struct
     {

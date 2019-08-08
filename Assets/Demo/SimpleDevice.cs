@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 public struct MyDeviceState : IInputStateTypeInfo
 {
@@ -13,14 +14,10 @@ public struct MyDeviceState : IInputStateTypeInfo
     [InputControl(layout = "Axis")]
     public float axis1;
 
-    public FourCC format
-    {
-        get { return new FourCC('M', 'Y', 'D', 'V'); }
-    }
+    public FourCC format => new FourCC('M', 'Y', 'D', 'V');
 }
 
 [InputControlLayout(stateType = typeof(MyDeviceState))]
-//[InputPlugin]
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
     public ButtonControl button1 { get; private set; }
@@ -33,16 +30,13 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
         base.FinishSetup();
     }
 
-    public void OnUpdate(InputUpdateType updateType)
+    public void OnUpdate()
     {
-        if (updateType == InputUpdateType.Dynamic)
-        {
-            var isButton1Pressed = Time.frameCount % 100 == 0;
-            if (isButton1Pressed)
-                InputSystem.QueueStateEvent(this, new MyDeviceState {buttons = 1});
-            else
-                InputSystem.QueueStateEvent(this, new MyDeviceState());
-        }
+        var isButton1Pressed = Time.frameCount % 100 == 0;
+        if (isButton1Pressed)
+            InputSystem.QueueStateEvent(this, new MyDeviceState {buttons = 1});
+        else
+            InputSystem.QueueStateEvent(this, new MyDeviceState());
     }
 
     public static void Initialize()

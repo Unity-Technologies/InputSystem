@@ -29,7 +29,7 @@ namespace InputSamples.Gestures
 
         /// <summary>
         /// Average normalized direction of the swipe. This is equivalent to
-        /// <code>(EndPosition - StartPosition).normalized</code>.
+        /// <c>(EndPosition - StartPosition).normalized</c>.
         /// </summary>
         public readonly Vector2 SwipeDirection;
 

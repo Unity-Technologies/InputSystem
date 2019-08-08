@@ -211,6 +211,7 @@ namespace UnityEngine.InputSystem.Utilities
                 // Copy contents from old array.
                 UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(),
                     UnsafeUtility.SizeOf<TValue>() * (newSize < oldSize ? newSize : oldSize));
+                array.Dispose();
             }
             array = newArray;
         }

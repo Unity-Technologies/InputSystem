@@ -273,11 +273,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         }
 
         //only have this hooked when we actually need it
-        internal static void BeginUpdate(InputUpdateType updateType)
+        internal static void BeginUpdate()
         {
             #if UNITY_EDITOR
-            if ((updateType == InputUpdateType.Editor && s_PlayerState.updateMask != InputUpdateType.Editor) ||
-                (updateType != InputUpdateType.Editor && s_PlayerState.updateMask == InputUpdateType.Editor))
+            if ((InputState.currentUpdateType == InputUpdateType.Editor && s_PlayerState.updateMask != InputUpdateType.Editor) ||
+                (InputState.currentUpdateType != InputUpdateType.Editor && s_PlayerState.updateMask == InputUpdateType.Editor))
             {
                 // Either swap in editor state and retain currently active player state in s_EditorState
                 // or swap player state back in.

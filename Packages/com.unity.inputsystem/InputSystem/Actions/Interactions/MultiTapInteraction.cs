@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.Interactions
                             ++m_CurrentTapCount;
                             if (m_CurrentTapCount >= tapCount)
                             {
-                                context.PerformedAndGoBackToWaiting();
+                                context.Performed();
                             }
                             else
                             {

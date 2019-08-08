@@ -83,6 +83,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
             builder.Append("using UnityEngine.InputSystem;\n");
             builder.Append("using UnityEngine.InputSystem.Controls;\n");
             builder.Append("using UnityEngine.InputSystem.Layouts;\n");
+            builder.Append("using UnityEngine.InputSystem.LowLevel;\n");
             builder.Append("using UnityEngine.InputSystem.Utilities;\n");
             builder.Append("using UnityEngine.InputSystem.Steam;\n");
             builder.Append("#if UNITY_EDITOR\n");

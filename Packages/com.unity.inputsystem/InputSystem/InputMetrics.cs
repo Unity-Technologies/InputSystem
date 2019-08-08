@@ -2,7 +2,7 @@ using System;
 
 ////TODO: provide total metric for amount of unmanaged memory (device state + action state)
 
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Provides information on the level of throughput going through the system.
