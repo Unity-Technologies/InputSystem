@@ -6,6 +6,9 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add ability to add to existing arrays rather than creating per-device arrays
 
+////TODO: the next step here is to write a code generator that generates code for a given layout that when
+////      executed, does what InputDeviceBuilder does but without the use of reflection and much more quickly
+
 ////REVIEW: it probably makes sense to have an initial phase where we process the initial set of
 ////        device discoveries from native and keep the layout cache around instead of throwing
 ////        it away after the creation of every single device; best approach may be to just
@@ -40,36 +43,18 @@ namespace UnityEngine.InputSystem.Layouts
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
-    public class InputDeviceBuilder
+    internal struct InputDeviceBuilder
     {
-        // We use this constructor when we create devices in batches.
-        internal InputDeviceBuilder()
+        public void Setup(InternedString layout, InternedString variants,
+            InputDeviceDescription deviceDescription = default)
         {
-        }
-
-        public InputDeviceBuilder(string layout, string variants = null,
-                                  InputDeviceDescription deviceDescription = new InputDeviceDescription(),
-                                  InputDevice existingDevice = null)
-        {
-            Setup(new InternedString(layout), new InternedString(variants), deviceDescription, existingDevice);
-        }
-
-        internal void Setup(InternedString layout, InternedString variants,
-            InputDeviceDescription deviceDescription = new InputDeviceDescription(),
-            InputDevice existingDevice = null)
-        {
-            if (existingDevice != null && existingDevice.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
-                throw new InvalidOperationException(
-                    $"Cannot modify control setup of existing device {existingDevice} while added to system.");
-
-            InstantiateLayout(layout, variants, new InternedString(), null, existingDevice);
+            InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
             m_Device.m_Description = deviceDescription;
-            m_Device.CallFinishSetupRecursive(this);
+            m_Device.CallFinishSetupRecursive();
         }
 
-        ////TODO: do away with this
         // Complete the setup and return the full control hierarchy setup
         // with its device root.
         public InputDevice Finish()
@@ -82,108 +67,7 @@ namespace UnityEngine.InputSystem.Layouts
             return device;
         }
 
-        // Look up a direct or indirect child control.
-        public InputControl TryGetControl(InputControl parent, string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Path string is null or empty", nameof(path));
-
-            if (m_Device == null)
-                return null;
-
-            if (parent == null)
-                parent = m_Device;
-
-            var match = InputControlPath.TryFindChild(parent, path);
-            if (match != null)
-                return match;
-
-            if (ReferenceEquals(parent, m_Device))
-                return InputControlPath.TryFindControl(m_Device, $"{m_Device.name}/{path}");
-
-            return null;
-        }
-
-        // Look up a direct or indirect child control expected to be of a specific type.
-        // Throws if actual type is not compatible.
-        public TControl TryGetControl<TControl>(InputControl parent, string path)
-            where TControl : InputControl
-        {
-            var control = TryGetControl(parent, path);
-            if (control == null)
-                return null;
-
-            var controlOfType = control as TControl;
-            if (controlOfType == null)
-                throw new InvalidOperationException(
-                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
-
-            return controlOfType;
-        }
-
-        // Look up a direct or indirect child control.
-        // Throws if control does not exist.
-        public InputControl GetControl(InputControl parent, string path)
-        {
-            if (parent == null)
-                throw new System.ArgumentNullException(nameof(parent));
-
-            var control = TryGetControl(parent, path);
-            if (control == null)
-                throw new ArgumentException($"Cannot find input control '{parent.MakeChildPath(path)}'", nameof(path));
-            return control;
-        }
-
-        public TControl GetControl<TControl>(InputControl parent, string path)
-            where TControl : InputControl
-        {
-            var control = GetControl(parent, path);
-
-            if (!(control is TControl controlOfType))
-                throw new ArgumentException(
-                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!", nameof(path));
-
-            return controlOfType;
-        }
-
-        public InputControl GetControl(string path)
-        {
-            var control = TryGetControl(path);
-            if (control == null)
-                throw new ArgumentException($"Cannot find input control '{path}'", nameof(path));
-            return control;
-        }
-
-        public InputControl TryGetControl(string path)
-        {
-            return TryGetControl(m_Device, path);
-        }
-
-        public TControl GetControl<TControl>(string path)
-            where TControl : InputControl
-        {
-            var control = TryGetControl<TControl>(path);
-            if (control == null)
-                throw new ArgumentException($"Cannot find input control '{path}'", nameof(path));
-            return control;
-        }
-
-        public TControl TryGetControl<TControl>(string path)
-            where TControl : InputControl
-        {
-            var control = TryGetControl(path);
-            if (control == null)
-                return null;
-
-            var controlOfType = control as TControl;
-            if (controlOfType == null)
-                throw new InvalidOperationException(
-                    $"Expected control '{path}' to be of type '{typeof(TControl).Name}' but is of type '{control.GetType().Name}' instead!");
-
-            return controlOfType;
-        }
-
-        private InputDevice m_Device;
+        internal InputDevice m_Device;
 
         // We construct layouts lazily as we go but keep them cached while we
         // set up hierarchies so that we don't re-construct the same Button layout
@@ -201,46 +85,29 @@ namespace UnityEngine.InputSystem.Layouts
         private void Reset()
         {
             m_Device = null;
-            m_ChildControlOverrides = null;
+            m_ChildControlOverrides?.Clear();
             // Leave the cache in place so we can reuse them in another setup path.
         }
 
-        private InputControl InstantiateLayout(InternedString layout, InternedString variants, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InternedString layout, InternedString variants, InternedString name, InputControl parent)
         {
             // Look up layout by name.
             var layoutInstance = FindOrLoadLayout(layout);
 
             // Create control hierarchy.
-            return InstantiateLayout(layoutInstance, variants, name, parent, existingControl);
+            return InstantiateLayout(layoutInstance, variants, name, parent);
         }
 
-        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variants, InternedString name, InputControl parent, InputControl existingControl)
+        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variants, InternedString name, InputControl parent)
         {
-            InputControl control;
+            Debug.Assert(layout.type != null);
 
-            // If we have an existing control, see whether it's usable.
-            // NOTE: We allow the layout to change to a different layout as long as the new layout uses
-            //       the same type.
-            if (existingControl != null && existingControl.GetType() == layout.type)
+            // No, so create a new control.
+            var controlObject = Activator.CreateInstance(layout.type);
+            if (!(controlObject is InputControl control))
             {
-                control = existingControl;
-
-                ////FIXME: the re-use path probably has some data that could stick around when it shouldn't
-                control.m_UsagesReadOnly = new ReadOnlyArray<InternedString>();
-                control.ClearProcessors();
-            }
-            else
-            {
-                Debug.Assert(layout.type != null);
-
-                // No, so create a new control.
-                var controlObject = Activator.CreateInstance(layout.type);
-                control = controlObject as InputControl;
-                if (control == null)
-                {
-                    throw new InvalidOperationException(
-                        $"Type '{layout.type.Name}' referenced by layout '{layout.name}' is not an InputControl");
-                }
+                throw new InvalidOperationException(
+                    $"Type '{layout.type.Name}' referenced by layout '{layout.name}' is not an InputControl");
             }
 
             // If it's a device, perform some extra work specific to the control
@@ -264,14 +131,6 @@ namespace UnityEngine.InputSystem.Layouts
                 m_Device.m_ChildrenForEachControl = null;
                 m_Device.m_UsagesForEachControl = null;
                 m_Device.m_UsageToControl = null;
-
-                // But we preserve IDs and descriptions of existing devices.
-                if (existingControl != null)
-                {
-                    var existingDevice = (InputDevice)existingControl;
-                    m_Device.m_Id = existingDevice.m_Id;
-                    m_Device.m_Description = existingDevice.m_Description;
-                }
 
                 if (layout.m_UpdateBeforeRender == true)
                     m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
@@ -321,7 +180,6 @@ namespace UnityEngine.InputSystem.Layouts
                 // now be blank) but still want crawling down the hierarchy to preserve existing
                 // controls where possible.
                 AddChildControls(layout, variants, control,
-                    existingControl?.m_ChildrenReadOnly,
                     ref haveChildrenUsingStateFromOtherControl);
             }
             catch
@@ -342,11 +200,11 @@ namespace UnityEngine.InputSystem.Layouts
                     if (string.IsNullOrEmpty(controlLayout.useStateFrom))
                         continue;
 
-                    var child = TryGetControl(control, controlLayout.name);
-                    Debug.Assert(child != null);
+                    var child = InputControlPath.TryFindChild(control, controlLayout.name);
+                    Debug.Assert(child != null, "Could not find child control which should be present at this point");
 
                     // Find the referenced control.
-                    var referencedControl = TryGetControl(control, controlLayout.useStateFrom);
+                    var referencedControl = InputControlPath.TryFindChild(control, controlLayout.useStateFrom);
                     if (referencedControl == null)
                         throw new InvalidOperationException(
                             $"Cannot find control '{controlLayout.useStateFrom}' referenced in 'useStateFrom' of control '{controlLayout.name}' in layout '{layout.name}'");
@@ -367,7 +225,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.InvalidOffset;
 
-        private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent, ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls)
+        private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent, ref bool haveChildrenUsingStateFromOtherControls)
         {
             var controlLayouts = layout.m_Controls;
             if (controlLayouts == null)
@@ -408,6 +266,15 @@ namespace UnityEngine.InputSystem.Layouts
                     ++childCount;
             }
 
+            // Nothing to do if there's no children.
+            if (childCount == 0)
+            {
+                parent.m_ChildCount = default;
+                parent.m_ChildStartIndex = default;
+                haveChildrenUsingStateFromOtherControls = false;
+                return;
+            }
+
             // Add room for us in the device's child array.
             var firstChildIndex = ArrayHelpers.GrowBy(ref m_Device.m_ChildrenForEachControl, childCount);
 
@@ -437,8 +304,9 @@ namespace UnityEngine.InputSystem.Layouts
                     for (var n = 0; n < controlLayout.arraySize; ++n)
                     {
                         var name = controlLayout.name + n;
-                        var control = AddChildControl(layout, variants, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
-                            ref controlLayout, ref childIndex, nameOverride: name);
+                        var control = AddChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
+                            ref controlLayout, childIndex, nameOverride: name);
+                        ++childIndex;
 
                         // Adjust offset, if the control uses explicit offsets.
                         if (control.m_StateBlock.byteOffset != InputStateBlock.InvalidOffset)
@@ -447,19 +315,14 @@ namespace UnityEngine.InputSystem.Layouts
                 }
                 else
                 {
-                    AddChildControl(layout, variants, parent, existingChildren, ref haveChildrenUsingStateFromOtherControls,
-                        ref controlLayout, ref childIndex);
+                    AddChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
+                        ref controlLayout, childIndex);
+                    ++childIndex;
                 }
             }
 
-            // Install child array on parent. We will later patch up the array
-            // reference again as we finalize the hierarchy. However, the reference
-            // will point to a valid child array all the same even while we are
-            // constructing the hierarchy.
-            //
-            // NOTE: It's important to do this *after* the loop above where we call InstantiateLayout for each child
-            //       as each child may end up moving the m_ChildrenForEachControl array around.
-            parent.m_ChildrenReadOnly = new ReadOnlyArray<InputControl>(m_Device.m_ChildrenForEachControl, firstChildIndex, childCount);
+            parent.m_ChildCount = childCount;
+            parent.m_ChildStartIndex = firstChildIndex;
 
             ////TODO: replace the entire post-creation modification logic here with using m_ChildControlOverrides
             ////      (note that we have to *merge* into the table; if there's already overrides, only replace properties that haven't been set)
@@ -486,11 +349,11 @@ namespace UnityEngine.InputSystem.Layouts
         }
 
         private InputControl AddChildControl(InputControlLayout layout, InternedString variants, InputControl parent,
-            ReadOnlyArray<InputControl>? existingChildren, ref bool haveChildrenUsingStateFromOtherControls,
-            ref InputControlLayout.ControlItem controlItem, ref int childIndex, string nameOverride = null)
+            ref bool haveChildrenUsingStateFromOtherControls,
+            ref InputControlLayout.ControlItem controlItem,
+            int childIndex, string nameOverride = null)
         {
             var name = nameOverride ?? controlItem.name;
-            var nameLowerCase = name.ToLower();
             var nameInterned = new InternedString(name);
 
             ////REVIEW: can we check this in InputControlLayout instead?
@@ -513,28 +376,11 @@ namespace UnityEngine.InputSystem.Layouts
             if (controlOverride != null && !controlOverride.Value.layout.IsEmpty())
                 layoutName = controlOverride.Value.layout;
 
-            // See if we have an existing control that we might be able to re-use.
-            InputControl existingControl = null;
-            if (existingChildren != null)
-            {
-                var existingChildCount = existingChildren.Value.Count;
-                for (var n = 0; n < existingChildCount; ++n)
-                {
-                    var existingChild = existingChildren.Value[n];
-                    if (existingChild.layout == layoutName
-                        && existingChild.name.ToLower() == nameLowerCase)
-                    {
-                        existingControl = existingChild;
-                        break;
-                    }
-                }
-            }
-
             // Create control.
             InputControl control;
             try
             {
-                control = InstantiateLayout(layoutName, variants, nameInterned, parent, existingControl);
+                control = InstantiateLayout(layoutName, variants, nameInterned, parent);
             }
             catch (InputControlLayout.LayoutNotFoundException exception)
             {
@@ -548,7 +394,6 @@ namespace UnityEngine.InputSystem.Layouts
             // NOTE: AddChildControls and InstantiateLayout take care of growing the array and making
             //       room for the immediate children of each control.
             m_Device.m_ChildrenForEachControl[childIndex] = control;
-            ++childIndex;
 
             // Set flags and misc things.
             control.noisy = controlItem.isNoisy;
@@ -602,8 +447,8 @@ namespace UnityEngine.InputSystem.Layouts
                 var usageCount = usages.Count;
                 var usageIndex =
                     ArrayHelpers.AppendToImmutable(ref m_Device.m_UsagesForEachControl, usages.m_Array);
-                control.m_UsagesReadOnly =
-                    new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, usageIndex, usageCount);
+                control.m_UsageStartIndex = usageIndex;
+                control.m_UsageCount = usageCount;
 
                 ArrayHelpers.GrowBy(ref m_Device.m_UsageToControl, usageCount);
                 for (var n = 0; n < usageCount; ++n)
@@ -616,8 +461,8 @@ namespace UnityEngine.InputSystem.Layouts
                 var aliasCount = controlItem.aliases.Count;
                 var aliasIndex =
                     ArrayHelpers.AppendToImmutable(ref m_Device.m_AliasesForEachControl, controlItem.aliases.m_Array);
-                control.m_AliasesReadOnly =
-                    new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, aliasIndex, aliasCount);
+                control.m_AliasStartIndex = aliasIndex;
+                control.m_AliasCount = aliasCount;
             }
 
             // Set parameters.
@@ -664,7 +509,7 @@ namespace UnityEngine.InputSystem.Layouts
             var haveChangedLayoutOfParent = false;
 
             // Find the child control.
-            var child = TryGetControl(parent, controlItem.name);
+            var child = InputControlPath.TryFindChild(parent, controlItem.name);
             if (child == null)
             {
                 // We're adding a child somewhere in the existing hierarchy. This is a tricky
@@ -755,29 +600,37 @@ namespace UnityEngine.InputSystem.Layouts
                     $"Path cannot end in '/' (control '{controlItem.name}' in layout '{layout.name}')");
 
             // Make room in the device's child array.
-            var childStartIndex = immediateParent.m_ChildrenReadOnly.m_StartIndex;
-            var childIndex = childStartIndex + immediateParent.m_ChildrenReadOnly.m_Length;
+            var childStartIndex = immediateParent.m_ChildStartIndex;
+            if (childStartIndex == default)
+            {
+                // First child of parent.
+                childStartIndex = m_Device.m_ChildrenForEachControl.LengthSafe();
+                immediateParent.m_ChildStartIndex = childStartIndex;
+            }
+            var childIndex = childStartIndex + immediateParent.m_ChildCount;
+            ShiftChildIndicesInHierarchyOneUp(m_Device, childIndex, immediateParent);
             ArrayHelpers.InsertAt(ref m_Device.m_ChildrenForEachControl, childIndex, null);
-            ++immediateParent.m_ChildrenReadOnly.m_Length;
+            ++immediateParent.m_ChildCount;
 
             // Insert the child.
-            var control = AddChildControl(layout, variant, immediateParent, null,
-                ref haveChildrenUsingStateFromOtherControls, ref controlItem, ref childIndex, controlName);
-
-            // Adjust indices of control's that have been shifted around by our insertion.
-            ShiftChildIndicesInHierarchyOneUp(parent, childIndex);
+            // NOTE: This may *add several* controls depending on the layout of the control we are inserting.
+            //       The children will be appended to the child array.
+            var control = AddChildControl(layout, variant, immediateParent,
+                ref haveChildrenUsingStateFromOtherControls, ref controlItem, childIndex, controlName);
 
             return control;
         }
 
-        private void ShiftChildIndicesInHierarchyOneUp(InputControl root, int startIndex)
+        private static void ShiftChildIndicesInHierarchyOneUp(InputDevice device, int startIndex, InputControl exceptControl)
         {
-            if (root.m_ChildrenReadOnly.m_StartIndex >= startIndex)
-                ++root.m_ChildrenReadOnly.m_StartIndex;
-            root.m_ChildrenReadOnly.m_Array = m_Device.m_ChildrenForEachControl;
-
-            foreach (var child in root.children)
-                ShiftChildIndicesInHierarchyOneUp(child, startIndex);
+            var controls = device.m_ChildrenForEachControl;
+            var count = controls.Length;
+            for (var i = 0; i < count; ++i)
+            {
+                var control = controls[i];
+                if (control != null && control != exceptControl && control.m_ChildStartIndex >= startIndex)
+                    ++control.m_ChildStartIndex;
+            }
         }
 
         // NOTE: We can only do this once we've initialized the names on the parent control. I.e. it has to be
@@ -877,7 +730,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         private static void ComputeStateLayout(InputControl control)
         {
-            var children = control.m_ChildrenReadOnly;
+            var children = control.children;
 
             // If the control has a format but no size specified and the format is a
             // primitive format, just set the size automatically.
@@ -1011,53 +864,59 @@ namespace UnityEngine.InputSystem.Layouts
             control.m_StateBlock.sizeInBits = totalSizeInBytes * 8;
         }
 
-        // Finalize array references in the control hierarchy and make all state offsets relative to the
-        // device root.
         private void FinalizeControlHierarchy()
         {
-            // Running indices.
-            var childArrayIndex = 0;
-            var usageArrayIndex = 0;
-            var aliasArrayIndex = 0;
-
-            FinalizeControlHierarchyRecursive(m_Device, ref childArrayIndex, ref usageArrayIndex,
-                ref aliasArrayIndex);
+            FinalizeControlHierarchyRecursive(m_Device);
         }
 
-        private void FinalizeControlHierarchyRecursive(InputControl control, ref int childArrayIndex,
-            ref int usageArrayIndex, ref int aliasArrayIndex)
+        private void FinalizeControlHierarchyRecursive(InputControl control)
         {
             // Set display names.
             SetDisplayName(control, control.m_DisplayNameFromLayout, false);
             SetDisplayName(control, control.m_ShortDisplayNameFromLayout, true);
 
-            // Finalize child, usage, and alias array references.
-            // When we get here, all the array references are valid but we may have grown the arrays on
-            // m_Device repeatedly so we want all controls to refer to those final arrays now so that the
-            // garbage collector can reclaim the intermediate arrays.
-            FinalizeReadonlyArray(ref control.m_ChildrenReadOnly, m_Device.m_ChildrenForEachControl, ref childArrayIndex);
-            FinalizeReadonlyArray(ref control.m_UsagesReadOnly, m_Device.m_UsagesForEachControl, ref usageArrayIndex);
-            FinalizeReadonlyArray(ref control.m_AliasesReadOnly, m_Device.m_AliasesForEachControl, ref aliasArrayIndex);
-
             // Recurse into children. Also bake our state offset into our children.
             var ourOffset = control.m_StateBlock.byteOffset;
-            foreach (var child in control.m_ChildrenReadOnly)
+            foreach (var child in control.children)
             {
                 child.m_StateBlock.byteOffset += ourOffset;
-                FinalizeControlHierarchyRecursive(child, ref childArrayIndex, ref usageArrayIndex,
-                    ref aliasArrayIndex);
+                FinalizeControlHierarchyRecursive(child);
             }
         }
 
-        private static void FinalizeReadonlyArray<TValue>(ref ReadOnlyArray<TValue> array, TValue[] masterArray,
-            ref int runningIndex)
-        {
-            var elementCount = array.Count;
-            if (elementCount == 0)
-                return;
+        private static InputDeviceBuilder s_Instance;
+        private static int s_InstanceRef;
 
-            array = new ReadOnlyArray<TValue>(masterArray, runningIndex, elementCount);
-            runningIndex += elementCount;
+        internal static ref InputDeviceBuilder instance
+        {
+            get
+            {
+                Debug.Assert(s_InstanceRef > 0, "Must hold an instance reference");
+                return ref s_Instance;
+            }
+        }
+
+        public static RefInstance Ref()
+        {
+            Debug.Assert(s_Instance.m_Device == null,
+                "InputDeviceBuilder is already in use! Cannot use the builder recursively");
+            ++s_InstanceRef;
+            return new RefInstance();
+        }
+
+        // Helper that allows setting up an InputDeviceBuilder such that it will either be created
+        // locally and temporarily or, if one already exists globally, reused.
+        internal struct RefInstance : IDisposable
+        {
+            public void Dispose()
+            {
+                --s_InstanceRef;
+                if (s_InstanceRef == 0)
+                    s_Instance = default;
+                else
+                    // Make sure we reset when there is an exception.
+                    s_Instance.Reset();
+            }
         }
     }
 }

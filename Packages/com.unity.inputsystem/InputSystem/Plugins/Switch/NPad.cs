@@ -630,18 +630,18 @@ namespace UnityEngine.InputSystem.Switch
             return ExecuteCommand(ref supportCommand);
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            leftSL = builder.GetControl<ButtonControl>(this, "leftSL");
-            leftSR = builder.GetControl<ButtonControl>(this, "leftSR");
-            rightSL = builder.GetControl<ButtonControl>(this, "rightSL");
-            rightSR = builder.GetControl<ButtonControl>(this, "rightSR");
+            leftSL = GetChildControl<ButtonControl>("leftSL");
+            leftSR = GetChildControl<ButtonControl>("leftSR");
+            rightSL = GetChildControl<ButtonControl>("rightSL");
+            rightSR = GetChildControl<ButtonControl>("rightSR");
 
-            acceleration = builder.GetControl<Vector3Control>(this, "acceleration");
-            attitude = builder.GetControl<QuaternionControl>(this, "attitude");
-            angularVelocity = builder.GetControl<Vector3Control>(this, "angularVelocity");
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            attitude = GetChildControl<QuaternionControl>("attitude");
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
         }
 
         private static void ReadNNColorIntoJoyConColor(ref JoyConColor controllerColor, int mainColor, int subColor)

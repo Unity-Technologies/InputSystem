@@ -20,23 +20,20 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control centerEyePosition { get; private set; }
         public QuaternionControl centerEyeRotation { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
-            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
-            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            leftEyePosition = GetChildControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = GetChildControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = GetChildControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = GetChildControl<QuaternionControl>("rightEyeRotation");
+            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
         }
     }
 
@@ -63,29 +60,26 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control deviceVelocity { get; private set; }
         public Vector3Control deviceAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
+            touchpad = GetChildControl<Vector2Control>("touchpad");
+            volumeUp = GetChildControl<ButtonControl>("volumeUp");
+            recentered = GetChildControl<ButtonControl>("recentered");
+            volumeDown = GetChildControl<ButtonControl>("volumeDown");
+            recentering = GetChildControl<ButtonControl>("recentering");
+            app = GetChildControl<ButtonControl>("app");
+            home = GetChildControl<ButtonControl>("home");
+            touchpadClicked = GetChildControl<ButtonControl>("touchpadClicked");
+            touchpadTouched = GetChildControl<ButtonControl>("touchpadTouched");
 
-            touchpad = builder.GetControl<Vector2Control>("touchpad");
-            volumeUp = builder.GetControl<ButtonControl>("volumeUp");
-            recentered = builder.GetControl<ButtonControl>("recentered");
-            volumeDown = builder.GetControl<ButtonControl>("volumeDown");
-            recentering = builder.GetControl<ButtonControl>("recentering");
-            app = builder.GetControl<ButtonControl>("app");
-            home = builder.GetControl<ButtonControl>("home");
-            touchpadClicked = builder.GetControl<ButtonControl>("touchpadClicked");
-            touchpadTouched = builder.GetControl<ButtonControl>("touchpadTouched");
-
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
-            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+            deviceAcceleration = GetChildControl<Vector3Control>("deviceAcceleration");
         }
     }
 }

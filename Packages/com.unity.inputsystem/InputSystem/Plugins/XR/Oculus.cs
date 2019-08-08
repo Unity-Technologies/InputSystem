@@ -21,23 +21,20 @@ namespace UnityEngine.InputSystem.XR
         public QuaternionControl centerEyeRotation { get; private set; }
 
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
-            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
-            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            leftEyePosition = GetChildControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = GetChildControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = GetChildControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = GetChildControl<QuaternionControl>("rightEyeRotation");
+            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
         }
     }
 
@@ -83,38 +80,35 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control deviceAcceleration { get; private set; }
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
+            thumbstick = GetChildControl<Vector2Control>("thumbstick");
+            trigger = GetChildControl<AxisControl>("trigger");
+            grip = GetChildControl<AxisControl>("grip");
+            indexNearTouched = GetChildControl<AxisControl>("indexNearTouched");
+            thumbNearTouched = GetChildControl<AxisControl>("thumbNearTouched");
 
-            thumbstick = builder.GetControl<Vector2Control>("thumbstick");
-            trigger = builder.GetControl<AxisControl>("trigger");
-            grip = builder.GetControl<AxisControl>("grip");
-            indexNearTouched = builder.GetControl<AxisControl>("indexNearTouched");
-            thumbNearTouched = builder.GetControl<AxisControl>("thumbNearTouched");
+            primaryButton = GetChildControl<ButtonControl>("primaryButton");
+            secondaryButton = GetChildControl<ButtonControl>("secondaryButton");
+            gripPressed = GetChildControl<ButtonControl>("gripPressed");
+            start = GetChildControl<ButtonControl>("start");
+            thumbstickClicked = GetChildControl<ButtonControl>("thumbstickClicked");
+            primaryTouched = GetChildControl<ButtonControl>("primaryTouched");
+            secondaryTouched = GetChildControl<ButtonControl>("secondaryTouched");
+            indexTouched = GetChildControl<ButtonControl>("indexTouched");
+            thumbstickTouched = GetChildControl<ButtonControl>("thumbstickTouched");
+            thumbrestTouched = GetChildControl<ButtonControl>("thumbrestTouched");
 
-            primaryButton = builder.GetControl<ButtonControl>("primaryButton");
-            secondaryButton = builder.GetControl<ButtonControl>("secondaryButton");
-            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
-            start = builder.GetControl<ButtonControl>("start");
-            thumbstickClicked = builder.GetControl<ButtonControl>("thumbstickClicked");
-            primaryTouched = builder.GetControl<ButtonControl>("primaryTouched");
-            secondaryTouched = builder.GetControl<ButtonControl>("secondaryTouched");
-            indexTouched = builder.GetControl<ButtonControl>("indexTouched");
-            thumbstickTouched = builder.GetControl<ButtonControl>("thumbstickTouched");
-            thumbrestTouched = builder.GetControl<ButtonControl>("thumbrestTouched");
-
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
-            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
-            deviceAcceleration = builder.GetControl<Vector3Control>("deviceAcceleration");
-            deviceAngularAcceleration = builder.GetControl<Vector3Control>("deviceAngularAcceleration");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = GetChildControl<Vector3Control>("deviceAngularVelocity");
+            deviceAcceleration = GetChildControl<Vector3Control>("deviceAcceleration");
+            deviceAngularAcceleration = GetChildControl<Vector3Control>("deviceAngularAcceleration");
         }
     }
 
@@ -126,17 +120,14 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control devicePosition { get; private set; }
         public QuaternionControl deviceRotation { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
         }
     }
 
@@ -150,16 +141,13 @@ namespace UnityEngine.InputSystem.XR
         public ButtonControl start { get; private set; }
         public Vector2Control touchpad { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            back = builder.GetControl<ButtonControl>("back");
-            start = builder.GetControl<ButtonControl>("start");
-            touchpad = builder.GetControl<Vector2Control>("touchpad");
+            back = GetChildControl<ButtonControl>("back");
+            start = GetChildControl<ButtonControl>("start");
+            touchpad = GetChildControl<Vector2Control>("touchpad");
         }
     }
 }

@@ -37,6 +37,11 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Example: Escape on keyboard, B button on gamepad.
+        ///
+        /// In general, the "Back" control is used for moving backwards in the navigation history
+        /// of a UI. This is used, for example, in hierarchical menu structures to move back to parent menus
+        /// (e.g. from the "Settings" menu back to the "Main" menu). Consoles generally have stringent requirements
+        /// as to which button has to fulfill this role.
         /// </remarks>
         public static readonly InternedString Back = new InternedString("Back");
 

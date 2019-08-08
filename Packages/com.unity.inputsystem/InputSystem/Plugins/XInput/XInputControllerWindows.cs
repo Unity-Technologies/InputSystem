@@ -1,6 +1,7 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 

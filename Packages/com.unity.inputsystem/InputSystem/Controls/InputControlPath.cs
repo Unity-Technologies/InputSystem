@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -15,15 +16,78 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Functions to working with control path specs (like "/gamepad/*stick").
+    /// Functions for working with control path specs (like "/gamepad/*stick").
     /// </summary>
     /// <remarks>
-    /// The thinking here is somewhat similar to System.IO.Path, i.e. have a range
-    /// of static methods that perform various operations on paths.
+    /// Control paths are a mini-language similar to regular expressions. They are used throughout
+    /// the input system as string "addresses" of input controls. At runtime, they can be matched
+    /// against the devices and controls present in the system to retrieve the actual endpoints to
+    /// receive input from.
     ///
-    /// Has both methods that work just on paths themselves (like <see cref="TryGetControlLayout"/>)
-    /// and methods that work on paths in combination with controls (like <see cref="TryFindControls"/>).
+    /// Like on a file system, a path is made up of components that are each separated by a
+    /// forward slash (<c>/</c>). Each such component in turn is made up of a set of fields that are
+    /// individually optional. However, one of the fields must be present (e.g. at least a name or
+    /// a wildcard).
+    ///
+    /// <example>
+    /// Field structure of each path component
+    /// <code>
+    /// &lt;Layout&gt;{Usage}#(DisplayName)Name
+    /// </code>
+    /// </example>
+    ///
+    /// * <c>Layout</c>: The name of the layout that the control must be based on (either directly or indirectly).
+    /// * <c>Usage</c>: The usage that the control or device has to have, i.e. must be found in <see
+    ///                 cref="InputControl.usages"/> This field can be repeated several times to require
+    ///                 multiple usages (e.g. <c>"{LeftHand}{Vertical}"</c>).
+    /// * <c>DisplayName</c>: The name that <see cref="InputControl.displayName"/> of the control or device
+    ///                       must match.
+    /// * <c>Name</c>: The name that <see cref="InputControl.name"/> or one of the entries in
+    ///                <see cref="InputControl.aliases"/> must match. Alternatively, this can be a
+    ///                wildcard (<c>*</c>) to match any name.
+    ///
+    /// Note that all matching is case-insensitive.
+    ///
+    /// <example>
+    /// Various examples of control paths
+    /// <code>
+    /// // Matches all gamepads (also gamepads *based* on the Gamepad layout):
+    /// "&lt;Gamepad&gt;"
+    ///
+    /// // Matches the "Submit" control on all devices:
+    /// "*/{Submit}"
+    ///
+    /// // Matches the key that prints the "a" character on the current keyboard layout:
+    /// "&lt;Keyboard&gt;/#(a)"
+    ///
+    /// // Matches the X axis of the left stick on a gamepad.
+    /// "&lt;Gamepad&gt;/leftStick/x"
+    ///
+    /// // Matches the orientation control of the right-hand XR controller:
+    /// "&lt;XRController&gt;{RightHand}/orientation"
+    ///
+    /// // Matches all buttons on a gamepad.
+    /// "&lt;Gamepad&gt;/&lt;Button&gt;"
+    /// </code>
+    /// </example>
+    ///
+    /// The structure of the API of this class is similar in spirit to <c>System.IO.Path</c>, i.e. it offers
+    /// a range of static methods that perform various operations on path strings.
+    ///
+    /// To query controls on devices present in the system using control paths, use
+    /// <see cref="InputSystem.FindControls"/>. Also, control paths can be used with
+    /// <see cref="InputControl.this[string]"/> on every control. This makes it possible
+    /// to do things like:
+    ///
+    /// <example>
+    /// Find key that prints "t" on current keyboard:
+    /// <code>
+    /// Keyboard.current["#(t)"]
+    /// </code>
+    /// </example>
     /// </remarks>
+    /// <seealso cref="InputControl.path"/>
+    /// <seealso cref="InputSystem.FindControls"/>
     public static class InputControlPath
     {
         public const string Wildcard = "*";
@@ -96,7 +160,7 @@ namespace UnityEngine.InputSystem
             return buffer.ToString();
         }
 
-        public static string TryGetDeviceUsage(string path)
+        public static string[] TryGetDeviceUsages(string path)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -105,8 +169,10 @@ namespace UnityEngine.InputSystem
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.usage.length > 0)
-                return parser.current.usage.ToString();
+            if (parser.current.usages != null && parser.current.usages.Length > 0)
+            {
+                return Array.ConvertAll<Substring, string>(parser.current.usages, i => { return i.ToString(); });
+            }
 
             return null;
         }
@@ -272,22 +338,30 @@ namespace UnityEngine.InputSystem
             }
 
             // Match usage.
-            var usage = parser.current.usage;
-            if (usage.length > 0)
+            if (parser.current.usages != null)
             {
-                var usageCount = controlItem.usages.Count;
-                var anyUsageMatches = false;
-                for (var i = 0; i < usageCount; ++i)
+                // All of usages should match to the one of usage in the control
+                for (int usageIndex = 0; usageIndex < parser.current.usages.Length; ++usageIndex)
                 {
-                    if (StringMatches(usage, controlItem.usages[i]))
+                    var usage = parser.current.usages[usageIndex];
+
+                    if (usage.length > 0)
                     {
-                        anyUsageMatches = true;
-                        break;
+                        var usageCount = controlItem.usages.Count;
+                        var anyUsageMatches = false;
+                        for (var i = 0; i < usageCount; ++i)
+                        {
+                            if (StringMatches(usage, controlItem.usages[i]))
+                            {
+                                anyUsageMatches = true;
+                                break;
+                            }
+                        }
+
+                        if (!anyUsageMatches)
+                            return false;
                     }
                 }
-
-                if (!anyUsageMatches)
-                    return false;
             }
 
             // Match name.
@@ -445,10 +519,11 @@ namespace UnityEngine.InputSystem
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
 
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var match = TryFindControl<TControl>(child, path, indexInPath);
                 if (match != null)
                     return match;
@@ -554,7 +629,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Match by usage.
-            if (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
+            while (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
             {
                 ++indexInPath;
 
@@ -731,13 +806,14 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
-            var childCount = control.m_ChildrenReadOnly.Count;
+            var children = control.children;
+            var childCount = children.Count;
             TControl lastMatch = null;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
 
             for (var i = 0; i < childCount; ++i)
             {
-                var child = control.m_ChildrenReadOnly[i];
+                var child = children[i];
                 var childMatch = MatchControlsRecursive(child, path, indexInPath, ref matches, matchMultiple);
 
                 if (childMatch == null)
@@ -863,26 +939,21 @@ namespace UnityEngine.InputSystem
         {
             var indexOfNextSlash = path.IndexOf('/', indexInPath);
             if (indexOfNextSlash == -1)
-            {
                 return path.IndexOf('*', indexInPath) != -1 || path.IndexOf('<', indexInPath) != -1;
-            }
-            else
-            {
-                var length = indexOfNextSlash - indexInPath;
-                return path.IndexOf('*', indexInPath, length) != -1 || path.IndexOf('<', indexInPath, length) != -1;
-            }
+
+            var length = indexOfNextSlash - indexInPath;
+            return path.IndexOf('*', indexInPath, length) != -1 || path.IndexOf('<', indexInPath, length) != -1;
         }
 
         // Parsed element between two '/../'.
         internal struct ParsedPathComponent
         {
             public Substring layout;
-            public Substring usage;
+            public Substring[] usages;
             public Substring name;
             public Substring displayName;
 
             public bool isWildcard => name == Wildcard;
-
             public bool isDoubleWildcard => name == DoubleWildcard;
 
             public string ToHumanReadableString()
@@ -890,12 +961,28 @@ namespace UnityEngine.InputSystem
                 var result = string.Empty;
                 if (isWildcard)
                     result += "Any";
-                if (!usage.isEmpty)
+
+                if (usages != null)
                 {
-                    if (!string.IsNullOrEmpty(result))
-                        result += ' ' + ToHumanReadableString(usage);
-                    else
-                        result += ToHumanReadableString(usage);
+                    var combinedUsages = string.Empty;
+
+                    for (var i = 0; i < usages.Length; ++i)
+                    {
+                        if (usages[i].isEmpty)
+                            continue;
+
+                        if (combinedUsages != string.Empty)
+                            combinedUsages += " & " + ToHumanReadableString(usages[i]);
+                        else
+                            combinedUsages = ToHumanReadableString(usages[i]);
+                    }
+                    if (combinedUsages != string.Empty)
+                    {
+                        if (result != string.Empty)
+                            result += ' ' + combinedUsages;
+                        else
+                            result += combinedUsages;
+                    }
                 }
 
                 if (!layout.isEmpty)
@@ -960,19 +1047,25 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Match usage.
-                if (!usage.isEmpty)
+                if (usages != null)
                 {
-                    var usages = control.usages;
-                    var haveUsageMatch = false;
-                    for (var i = 0; i < usages.Count; ++i)
-                        if (Substring.Compare(usages[i].ToString(), usage, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    for (int i = 0; i < usages.Length; ++i)
+                    {
+                        if (!usages[i].isEmpty)
                         {
-                            haveUsageMatch = true;
-                            break;
-                        }
+                            var controlUsages = control.usages;
+                            var haveUsageMatch = false;
+                            for (var ci = 0; ci < controlUsages.Count; ++ci)
+                                if (Substring.Compare(controlUsages[ci].ToString(), usages[i], StringComparison.InvariantCultureIgnoreCase) == 0)
+                                {
+                                    haveUsageMatch = true;
+                                    break;
+                                }
 
-                    if (!haveUsageMatch)
-                        return false;
+                            if (!haveUsageMatch)
+                                return false;
+                        }
+                    }
                 }
 
                 // Match name.
@@ -1044,9 +1137,9 @@ namespace UnityEngine.InputSystem
                     layout = ParseComponentPart('>');
 
                 // Parse {...} usage part, if present.
-                var usage = new Substring();
-                if (rightIndexInPath < length && path[rightIndexInPath] == '{')
-                    usage = ParseComponentPart('}');
+                var usages = new List<Substring>();
+                while (rightIndexInPath < length && path[rightIndexInPath] == '{')
+                    usages.Add(ParseComponentPart('}'));
 
                 // Parse display name part, if present.
                 var displayName = new Substring();
@@ -1064,7 +1157,7 @@ namespace UnityEngine.InputSystem
                 current = new ParsedPathComponent
                 {
                     layout = layout,
-                    usage = usage,
+                    usages = usages.ToArray(),
                     name = name,
                     displayName = displayName
                 };

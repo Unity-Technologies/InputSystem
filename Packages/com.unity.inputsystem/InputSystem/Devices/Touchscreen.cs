@@ -365,16 +365,13 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            tap = builder.GetControl<ButtonControl>(this, "tap");
-            tapCount = builder.GetControl<IntegerControl>(this, "tapCount");
-            primaryTouch = builder.GetControl<TouchControl>(this, "primaryTouch");
+            tap = GetChildControl<ButtonControl>("tap");
+            tapCount = GetChildControl<IntegerControl>("tapCount");
+            primaryTouch = GetChildControl<TouchControl>("primaryTouch");
 
             // Find out how many touch controls we have.
             var touchControlCount = 0;

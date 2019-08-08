@@ -175,14 +175,12 @@ internal class SteamTests : InputTestFixture
     {
         var receivedStateEvent = false;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             if (!eventPtr.IsA<StateEvent>())
                 return;
-            var device = InputSystem.GetDeviceById(eventPtr.deviceId) as TestController;
-            if (device == null)
+            if (!(device is TestController))
                 return;
-
             receivedStateEvent = true;
         };
 
@@ -240,8 +238,8 @@ internal class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("[InitializeOnLoad]"));
         Assert.That(generatedCode, Contains.Substring("[RuntimeInitializeOnLoadMethod"));
         Assert.That(generatedCode, Contains.Substring("new FourCC('M', 'y', 'S', 't')"));
-        Assert.That(generatedCode, Contains.Substring("protected override void FinishSetup(InputDeviceBuilder builder)"));
-        Assert.That(generatedCode, Contains.Substring("base.FinishSetup(builder);"));
+        Assert.That(generatedCode, Contains.Substring("protected override void FinishSetup()"));
+        Assert.That(generatedCode, Contains.Substring("base.FinishSetup();"));
         Assert.That(generatedCode, Contains.Substring("new InputDeviceMatcher"));
         Assert.That(generatedCode, Contains.Substring("WithInterface(\"Steam\")"));
         Assert.That(generatedCode, Contains.Substring("public override ReadOnlyArray<SteamActionSetInfo> steamActionSets"));
@@ -391,11 +389,11 @@ internal class SteamTests : InputTestFixture
         public SteamHandle<InputAction> fireActionHandle;
         public SteamHandle<InputAction> lookActionHandle;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
-            fire = builder.GetControl<ButtonControl>("fire");
-            look = builder.GetControl<StickControl>("look");
+            base.FinishSetup();
+            fire = GetChildControl<ButtonControl>("fire");
+            look = GetChildControl<StickControl>("look");
         }
 
         public override ReadOnlyArray<SteamActionSetInfo> steamActionSets

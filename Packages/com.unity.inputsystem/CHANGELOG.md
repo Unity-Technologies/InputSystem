@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [0.9.1-preview] - 2019-8-8
+
+### Fixed
+
+- Fixed GC heap garbage being caused by triggered by event processing.
+  * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+- The bindings selection popup window will now show child controls matching the current action type even if the parent control does not match.
+- Fixed `duration` values reported for Hold and Press interactions.
+- DualShock 3 on macOS:
+  * Fixed actions bound to the dpad control performing correctly.
+  * Fixed non-present touchpad button control being triggered incorrectly.
+- Fixed compile issues with switch classes on standalone Linux.
+- Leak of unmanaged memory in `InputControlList`.
+
+#### Actions
+
+- Fixed actions not updating their set of controls when the usages of a device are changed.
+- Composite bindings with the default interaction will now correctly cancel when the composite is released, even if there are multiple composite bindings on the action.
+
+### Changed
+
+- `MouseState`, `KeyboardState`, and `GamepadState` have been made public again.
+- `PlayerInput` and `PlayerInputManager` have been moved from the `UnityEngine.InputSystem.PlayerInput` namespace to `UnityEngine.InputSystem`.
+- The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
+  ```
+  // Before:
+  InputSystem.onEvent +=
+      eventPtr =>
+      {
+          var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+          //...
+      };
+
+  // Now:
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          //...
+      };
+  ```
+- The signatures of `InputSystem.onBeforeUpdate` and `InputSystem.onAfterUpdate` have changed. The callbacks no longer receive an `InputUpdateType` argument.
+  * Use `InputState.currentUpdateType` in case you need to know the type of update being run.
+- `InputUpdateType` has been moved to the `UnityEngine.InputSystem.LowLevel` namespace.
+- `InputSystem.Update(InputUpdateType)` has been removed from the public API.
+- The way input devices are built internally has been streamlined.
+  * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
+  * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
+    ```
+    InputDevice.Build<Mouse>();
+    ```
+  * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+- `InputSystem.RegisterControlProcessor` has been renamed to just `InputSystem.RegisterProcessor`.
+
+#### Actions
+
+* `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.
+* `InputInteractionContext.PerformedAndGoBackToWaiting` has been renamed to just `InputInteractionContext.Performed`.
+
+#### Actions
+
+- Individual composite part bindings can now no longer have interactions assigned to them as that never made any sense.
+
+### Added
+
+- Devices can now have more than one usage.
+  * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
+  * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
+  * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
+- A new `VisualizerSamples` sample that can be installed through the package manager.
+  * Contains two components `InputControlVisualizer` and `InputActionVisualizer` that help visualizing/debugging control/device and action activity through in-game overlays. A few sample scenes illustrate how to use them.
+
+#### Actions
+
+- Added `InputAction.ReadValueAsObject` API.
+- Added `InputAction.activeControl` API.
+
 ## [0.9.0-preview] - 2019-7-18
 
 ### Fixed
@@ -23,7 +99,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed duplicate devices showing in the "Supported Devices" popup when using a search filter.
 - Fixed an error when adding new bindings in the Input Actions editor window when a filter was applied.
 - Fixed scroll wheel handling in `InputSystemUIInputModule` not being smooth.
-- Fixed inconsistent ifdefs in NPad.cs for the swtich pro controller.
+- Fixed compile errors from Switch Pro controller code on Linux.
 
 #### Actions
 
@@ -213,6 +289,7 @@ however, it has to be formatted properly to pass verification tests.
 - In the Input Settings window, asset selection has now been moved to the "gear" popup menu. If no asset is created, we now automatically create one.
 - In the inspector for Input Settings assets, we now show a button to go to the Input Settings window, and a button to make the asset active if it isn't.
 - Tests are now no longer part of the com.unity.inputsystem package. The `InputTestFixture` class still is for when you want to write input-related tests for your project. You can reference the `Unity.InputSystem.TestFixture` assembly when you need to do that.
+- Implemented adding usages to and removing them from devices.
 
 #### Actions
 

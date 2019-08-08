@@ -710,15 +710,10 @@ namespace UnityEngine.InputSystem
                 m_Flags &= ~Flags.OnEventHooked;
             }
 
-            private unsafe void OnEvent(InputEventPtr eventPtr)
+            private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                    return;
-
-                // Fetch device.
-                var device = InputSystem.GetDeviceById(eventPtr.deviceId);
-                if (device == null)
                     return;
 
                 // Go through controls and see if there's anything interesting in the event.
@@ -899,7 +894,7 @@ namespace UnityEngine.InputSystem
                 m_Flags &= ~Flags.OnAfterUpdateHooked;
             }
 
-            private void OnAfterUpdate(InputUpdateType updateType)
+            private void OnAfterUpdate()
             {
                 // If we don't have a match yet but we have a timeout and have expired it,
                 // cancel the operation.
@@ -1063,8 +1058,8 @@ namespace UnityEngine.InputSystem
             private Func<InputControl, string> m_OnGeneratePath;
             private Func<InputControl, InputEventPtr, float> m_OnComputeScore;
             private Action<RebindingOperation, string> m_OnApplyBinding;
-            private Action<InputEventPtr> m_OnEventDelegate;
-            private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+            private Action<InputEventPtr, InputDevice> m_OnEventDelegate;
+            private Action m_OnAfterUpdateDelegate;
             private InputControlLayout.Cache m_LayoutCache;
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;

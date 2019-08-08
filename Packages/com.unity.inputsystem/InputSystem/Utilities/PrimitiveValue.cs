@@ -3,11 +3,18 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 
+////REVIEW: add Vector2 and Vector3 as primitive value types?
+
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A union holding a primitive value.
     /// </summary>
+    /// <remarks>
+    /// This structure is used for storing things such as default values for controls
+    /// (see <see cref="Layouts.InputControlLayout.ControlItem.defaultState"/>). It can
+    /// store one value of any primitive, non-reference C# type (bool, char, int, float, etc).
+    /// </remarks>
     [StructLayout(LayoutKind.Explicit)]
     public struct PrimitiveValue : IEquatable<PrimitiveValue>, IConvertible
     {
@@ -25,10 +32,15 @@ namespace UnityEngine.InputSystem.Utilities
         [FieldOffset(4)] private float m_FloatValue;
         [FieldOffset(4)] private double m_DoubleValue;
 
+        /// <summary>
+        /// Type of value stored in the struct. <see cref="TypeCode.Empty"/>
+        /// if the struct does not hold a value (i.e. has been default-initialized).
+        /// </summary>
         public TypeCode type => m_Type;
 
         /// <summary>
-        /// If true, the struct does not contain a primitive value.
+        /// If true, the struct does not contain a primitive value (i.e. has <see cref="type"/>
+        /// <see cref="TypeCode.Empty"/>).
         /// </summary>
         public bool isEmpty => type == TypeCode.Empty;
 
@@ -293,7 +305,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return NumberHelpers.Approximately(m_DoubleValue, 0);
                 default:
-                    return default(bool);
+                    return default;
             }
         }
 
@@ -316,7 +328,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.UInt64:
                     return (char)ToInt64(provider);
                 default:
-                    return default(char);
+                    return default;
             }
         }
 
@@ -361,7 +373,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return m_DoubleValue;
                 default:
-                    return default(double);
+                    return default;
             }
         }
 
@@ -471,7 +483,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Double:
                     return (ulong)m_DoubleValue;
                 default:
-                    return default(ulong);
+                    return default;
             }
         }
 

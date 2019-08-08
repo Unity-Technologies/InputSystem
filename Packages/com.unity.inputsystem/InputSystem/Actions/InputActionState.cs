@@ -110,8 +110,8 @@ namespace UnityEngine.InputSystem
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
 
-        private Action<InputUpdateType> m_OnBeforeUpdateDelegate;
-        private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+        private Action m_OnBeforeUpdateDelegate;
+        private Action m_OnAfterUpdateDelegate;
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
 
@@ -722,9 +722,10 @@ namespace UnityEngine.InputSystem
         // NOTE: We do this as a callback from onBeforeUpdate rather than directly when the action is enabled
         //       to ensure that the callbacks happen during input processing and not randomly from wherever
         //       an action happens to be enabled.
-        private void OnBeforeInitialUpdate(InputUpdateType type)
+        private void OnBeforeInitialUpdate()
         {
-            ////TODO: deal with update type
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
@@ -776,7 +777,7 @@ namespace UnityEngine.InputSystem
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
             #if UNITY_EDITOR
-            if (InputState.currentUpdate == InputUpdateType.Editor)
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
             #endif
 
@@ -887,7 +888,7 @@ namespace UnityEngine.InputSystem
             // If we have interactions, let them do all the processing. The presence of an interaction
             // essentially bypasses the default phase progression logic of an action.
             var interactionCount = bindingStatePtr->interactionCount;
-            if (interactionCount > 0)
+            if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
             {
                 ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
             }
@@ -1041,6 +1042,13 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
+            var actionStateControlIndex = actionState->controlIndex;
+            if (bindingStates[actionState->bindingIndex].isPartOfComposite)
+            {
+                var compositeBindingIndex = bindingStates[actionState->bindingIndex].compositeOrCompositeBindingIndex;
+                actionStateControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
+            }
+
             // If the control is actuated *less* then the current level of actuation we
             // recorded for the action *and* the control that changed is the one that is currently
             // driving the action, we have to check whether there is another actuation
@@ -1049,7 +1057,7 @@ namespace UnityEngine.InputSystem
             {
                 // If we're not currently driving the action, it's simple. Doesn't matter that we lowered
                 // actuation as we didn't have the highest actuation anyway.
-                if (triggerControlIndex != actionState->controlIndex)
+                if (triggerControlIndex != actionStateControlIndex)
                 {
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
@@ -1164,6 +1172,10 @@ namespace UnityEngine.InputSystem
             //       before we let it drive the action.
             if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
+                // However, if we have changed the control to a different control on the same composite, we *should* let
+                // it drive the action - this is like a direction change on the same control.
+                if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
+                    return false;
                 if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
@@ -1276,6 +1288,7 @@ namespace UnityEngine.InputSystem
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     interactionIndex = interactionIndex,
+                    startTime = currentState.startTime
                 },
                 timerHasExpired = true,
             };
@@ -1408,14 +1421,15 @@ namespace UnityEngine.InputSystem
                         var index = interactionStartIndex + i;
                         if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
+                            var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
                                 controlIndex = interactionStates[index].triggerControlIndex,
                                 bindingIndex = trigger.bindingIndex,
                                 interactionIndex = index,
-                                time = trigger.time,
-                                startTime = interactionStates[index].startTime
+                                time = startTime,
+                                startTime = startTime,
                             };
                             ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
                             break;
@@ -3134,11 +3148,12 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            Debug.Assert(device != null);
-
-            // We only care about new devices appearing or existing devices disappearing.
-            if (change != InputDeviceChange.Added && change != InputDeviceChange.Removed)
-                return;
+            Debug.Assert(device != null, "Device is null");
+            ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
+            Debug.Assert(
+                change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
+                change == InputDeviceChange.UsageChanged,
+                "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
             {
@@ -3154,11 +3169,12 @@ namespace UnityEngine.InputSystem
                 }
                 var state = (InputActionState)handle.Target;
 
-                // If this state is not affected by the addition or removal of the given
-                // device, skip it.
+                // If this state is not affected by the change, skip.
                 if (change == InputDeviceChange.Added && !state.CanUseDevice(device))
                     continue;
                 if (change == InputDeviceChange.Removed && !state.IsUsingDevice(device))
+                    continue;
+                if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
 
                 // Trigger a lazy-resolve on all action maps in the state.

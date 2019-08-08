@@ -7,6 +7,8 @@ using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using HtmlAgilityPack;
 
 class APIVerificationTests
 {
@@ -36,9 +38,9 @@ class APIVerificationTests
 
         if (
             // These have fields popuplated by reflection in the Input System
-            type.FullName == typeof(UnityEngine.InputSystem.InputProcessor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.InputControl).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.InputBindingComposite).FullName
+            type.FullName == typeof(InputProcessor).FullName ||
+            type.FullName == typeof(InputControl).FullName ||
+            type.FullName == typeof(InputBindingComposite).FullName
         )
             return true;
 
@@ -51,15 +53,15 @@ class APIVerificationTests
 
             if (
                 // Interactions have fields populated by reflection in the Input System
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputInteraction).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputInteraction).FullName) ||
 
                 // Input state structures use fields for the memory layout and construct Input Controls from the fields.
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.IInputStateTypeInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputStateTypeInfo).FullName) ||
 
                 // These use fields for the explicit memory layout, and have a member for the base type. If we exposed that via a property,
                 // base type values could not be written individually.
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo).FullName) ||
-                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(UnityEngine.InputSystem.LowLevel.IInputEventTypeInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputDeviceCommandInfo).FullName) ||
+                resolved.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IInputEventTypeInfo).FullName) ||
 
                 // serializable types may depend on the field names to match serialized data (eg. Json)
                 resolved.Attributes.HasFlag(TypeAttributes.Serializable)
@@ -76,7 +78,7 @@ class APIVerificationTests
 
     private IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
     {
-        var codeBase = typeof(UnityEngine.InputSystem.InputSystem).Assembly.CodeBase;
+        var codeBase = typeof(InputSystem).Assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
         var path = Uri.UnescapeDataString(uri.Path);
         var asmDef = AssemblyDefinition.ReadAssembly(path);
@@ -231,12 +233,14 @@ class APIVerificationTests
 #if UNITY_EDITOR_WIN
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
 #endif
+#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             type.FullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamAnalogActionData).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
+#endif
             type.FullName == typeof(UnityEngine.InputSystem.PS4.PS4TouchControl).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.DualShockGamepadPS4).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.PS4.MoveControllerPS4).FullName ||
@@ -258,6 +262,7 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.Switch.INPadRumble).FullName ||
             ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||
@@ -316,6 +321,78 @@ class APIVerificationTests
         var docsFolder = GenerateDocsDirectory();
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
+    }
+
+    HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
+    {
+        if (!htmlFileCache.ContainsKey(htmlFile))
+        {
+            htmlFileCache[htmlFile] = new HtmlDocument();
+            htmlFileCache[htmlFile].Load(htmlFile);
+        }
+
+        return htmlFileCache[htmlFile];
+    }
+
+    void CheckHTMLFileLinkConsistency(string htmlFile, List<string> unresolvedLinks, Dictionary<string, HtmlDocument> htmlFileCache)
+    {
+        var dir = Path.GetDirectoryName(htmlFile);
+        var doc = LoadHtmlDocument(htmlFile, htmlFileCache);
+        var hrefList = doc.DocumentNode.SelectNodes("//a")
+            .Select(p => p.GetAttributeValue("href", null))
+            .ToList();
+        foreach (var _link in hrefList)
+        {
+            var link = _link;
+            if (string.IsNullOrEmpty(link))
+                continue;
+
+            // ignore external links for now
+            if (link.StartsWith("http://"))
+                continue;
+
+            if (link.StartsWith("https://"))
+                continue;
+
+            if (link == "#top")
+                continue;
+
+            if (link.StartsWith("#"))
+                link = Path.GetFileName(htmlFile) + link;
+
+            var split = link.Split('#');
+            var linkedFile = split[0];
+            var tag = split.Length > 1 ? split[1] : null;
+
+            if (!File.Exists(Path.Combine(dir, linkedFile)))
+            {
+                unresolvedLinks.Add($"{link} in {htmlFile} (File Not Found)");
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(tag))
+            {
+                var linkedDoc = LoadHtmlDocument(Path.Combine(dir, linkedFile), htmlFileCache);
+                var idNode = linkedDoc.DocumentNode.SelectSingleNode($"//*[@id = '{tag}']");
+                if (idNode == null)
+                    unresolvedLinks.Add($"{link} in {htmlFile} (Tag Not Found)");
+            }
+        }
+    }
+
+    [Test]
+    [Category("API")]
+#if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+#endif
+    public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
+    {
+        var docsFolder = GenerateDocsDirectory();
+        var unresolvedLinks = new List<string>();
+        var htmlFileCache = new Dictionary<string, HtmlDocument>();
+        foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
+            CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
+        Assert.That(unresolvedLinks, Is.Empty);
     }
 }
 #endif

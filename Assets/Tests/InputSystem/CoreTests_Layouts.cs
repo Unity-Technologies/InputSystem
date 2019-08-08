@@ -22,11 +22,11 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanCreatePrimitiveControlsFromLayout()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
+        var gamepad = InputDevice.Build<Gamepad>();
 
         // The default ButtonControl layout has no controls inside of it.
-        Assert.That(setup.GetControl("start"), Is.TypeOf<ButtonControl>());
-        Assert.That(setup.GetControl("start").children, Is.Empty);
+        Assert.That(gamepad["start"], Is.TypeOf<ButtonControl>());
+        Assert.That(gamepad["start"].children, Is.Empty);
     }
 
     [Test]
@@ -35,11 +35,11 @@ partial class CoreTests
     {
         const int kNumControlsInAStick = 6;
 
-        var setup = new InputDeviceBuilder("Gamepad");
+        var gamepad = InputDevice.Build<Gamepad>();
 
-        Assert.That(setup.GetControl("leftStick"), Is.TypeOf<StickControl>());
-        Assert.That(setup.GetControl("leftStick").children, Has.Count.EqualTo(kNumControlsInAStick));
-        Assert.That(setup.GetControl("leftStick").children, Has.Exactly(1).With.Property("name").EqualTo("x"));
+        Assert.That(gamepad["leftStick"], Is.TypeOf<StickControl>());
+        Assert.That(gamepad["leftStick"].children, Has.Count.EqualTo(kNumControlsInAStick));
+        Assert.That(gamepad["leftStick"].children, Has.Exactly(1).With.Property("name").EqualTo("x"));
     }
 
     [Test]
@@ -68,20 +68,18 @@ partial class CoreTests
         InputSystem.RegisterLayout(deviceJson);
         InputSystem.RegisterLayout(controlJson);
 
-        var setup = new InputDeviceBuilder("MyDevice");
+        var device = InputDevice.Build<InputDevice>("MyDevice");
 
-        Assert.That(setup.GetControl("myThing/x"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.GetControl("myThing"), Has.Property("layout").EqualTo("MyControl"));
-
-        var device = setup.Finish();
         Assert.That(device, Is.TypeOf<InputDevice>());
+        Assert.That(device["myThing/x"], Is.TypeOf<AxisControl>());
+        Assert.That(device["myThing"], Has.Property("layout").EqualTo("MyControl"));
     }
 
     [Test]
     [Category("Layouts")]
     public void Layouts_CannotUseLayoutForControlToBuildDevice()
     {
-        Assert.That(() => new InputDeviceBuilder("Button"), Throws.InvalidOperationException);
+        Assert.That(() => InputDevice.Build<InputDevice>("Button"), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -161,8 +159,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var setup = new InputDeviceBuilder("MyDevice");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>("MyDevice");
 
         Assert.That(device.leftStick.x.stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
     }
@@ -383,7 +380,7 @@ partial class CoreTests
     {
         InputSystem.RegisterLayout<TestDeviceWithArrayOfControls>();
 
-        var device = new InputDeviceBuilder("TestDeviceWithArrayOfControls").Finish();
+        var device = InputDevice.Build<InputDevice>("TestDeviceWithArrayOfControls");
 
         Assert.That(device.allControls, Has.Count.EqualTo(5));
         Assert.That(device["value0"], Is.TypeOf<AxisControl>());
@@ -416,7 +413,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var device = new InputDeviceBuilder("MyDevice").Finish();
+        var device = InputDevice.Build<InputDevice>("MyDevice");
 
         Assert.That(device.allControls, Has.Count.EqualTo(5));
         Assert.That(device["value0"], Is.TypeOf<AxisControl>());
@@ -444,7 +441,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
+        var device = InputDevice.Build<Gamepad>("MyDevice");
 
         Assert.That(device.leftStick.x.clamp, Is.True);
     }
@@ -740,10 +737,10 @@ partial class CoreTests
             }
         ";
 
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Gamepad>();
         InputSystem.RegisterLayoutOverride(json);
 
-        Assert.That(gamepad.leftStick["extraControl"], Is.TypeOf<ButtonControl>());
+        Assert.That(Gamepad.current.leftStick["extraControl"], Is.TypeOf<ButtonControl>());
     }
 
     [Test]
@@ -773,7 +770,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_ApplyingOverrideToExistingLayout_UpdatesAllDevicesUsingTheLayout()
     {
-        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Mouse>();
 
         const string json = @"
             {
@@ -786,7 +783,7 @@ partial class CoreTests
         ";
         InputSystem.RegisterLayoutOverride(json);
 
-        Assert.That(mouse["extraControl"], Is.TypeOf<ButtonControl>());
+        Assert.That(Mouse.current["extraControl"], Is.TypeOf<ButtonControl>());
     }
 
     ////REVIEW: should this just be an open-ended tagging ability?
@@ -926,15 +923,19 @@ partial class CoreTests
         InputSystem.RegisterLayout(derivedDeviceJson);
         InputSystem.RegisterLayout(baseDeviceJson);
 
-        var device = InputSystem.AddDevice("MyDerived");
+        InputSystem.AddDevice("MyDerived");
 
         InputSystem.RegisterLayout(newBaseDeviceJson);
 
+        var device = InputSystem.devices[0];
         Assert.That(device.children, Has.Count.EqualTo(1));
         Assert.That(device.children,
             Has.Exactly(1).With.Property("name").EqualTo("yeah").And.Property("layout").EqualTo("Stick"));
     }
 
+    ////REVIEW: reusing the same device ID has implications; in some situations it is desirable but in others
+    ////        (e.g. when the layout change actually alters the format), it is dangerous and can lead to
+    ////        memory corruption
     [Test]
     [Category("Layouts")]
     public void Layouts_ReplacingDeviceLayoutWithLayoutUsingDifferentType_PreservesDeviceIdAndDescription()
@@ -981,12 +982,12 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_ReplacingControlLayoutAffectsAllDevicesUsingLayout()
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Gamepad>();
 
         // Replace "Button" layout.
         InputSystem.RegisterLayout<MyButtonControl>("Button");
 
-        Assert.That(gamepad.leftTrigger, Is.TypeOf<MyButtonControl>());
+        Assert.That(Gamepad.current.leftTrigger, Is.TypeOf<MyButtonControl>());
     }
 
     [Test]
@@ -1018,7 +1019,7 @@ partial class CoreTests
 
         InputSystem.AddDevice<Mouse>(); // Noise.
 
-        var device = InputSystem.AddDevice(new InputDeviceDescription
+        InputSystem.AddDevice(new InputDeviceDescription
         {
             product = "TestProduct",
             manufacturer = "TestManufacturer",
@@ -1026,10 +1027,12 @@ partial class CoreTests
 
         InputSystem.AddDevice<Mouse>(); // Noise.
 
+        var device = InputSystem.devices.First(x => x.description.product == "TestProduct");
         Assert.That(device.layout, Is.EqualTo("OldLayout"));
 
         InputSystem.RegisterLayout(newLayout);
 
+        device = InputSystem.devices.First(x => x.description.product == "TestProduct");
         Assert.That(device.layout, Is.EqualTo("NewLayout"));
     }
 
@@ -1124,22 +1127,19 @@ partial class CoreTests
     public void Layouts_FormatOfControlWithPrimitiveTypeInStateStructInferredFromType()
     {
         InputSystem.RegisterLayout<DeviceWithStateStructWithPrimitiveFields>("Test");
-        var setup = new InputDeviceBuilder("Test");
+        var device = InputDevice.Build<InputDevice>("Test");
 
-        Assert.That(setup.GetControl("byteAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
-        Assert.That(setup.GetControl("shortAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
-        Assert.That(setup.GetControl("intAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
-        Assert.That(setup.GetControl("doubleAxis").stateBlock.format, Is.EqualTo(InputStateBlock.FormatDouble));
+        Assert.That(device["byteAxis"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatByte));
+        Assert.That(device["shortAxis"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
+        Assert.That(device["intAxis"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatInt));
+        Assert.That(device["doubleAxis"].stateBlock.format, Is.EqualTo(InputStateBlock.FormatDouble));
     }
 
     private unsafe struct StateWithFixedArray : IInputStateTypeInfo
     {
         [InputControl] public fixed float buffer[2];
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(StateWithFixedArray))]
@@ -1153,7 +1153,7 @@ partial class CoreTests
     {
         InputSystem.RegisterLayout<DeviceWithStateStructWithFixedArray>();
 
-        Assert.That(() => new InputDeviceBuilder("DeviceWithStateStructWithFixedArray"),
+        Assert.That(() => InputDevice.Build<InputDevice>("DeviceWithStateStructWithFixedArray"),
             Throws.Exception.With.Message.Contain("Layout has not been set"));
     }
 
@@ -1179,9 +1179,8 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var setup = new InputDeviceBuilder("MyDevice");
-        var testControl = setup.GetControl<AxisControl>("test");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>("MyDevice");
+        var testControl = device.GetChildControl<AxisControl>("test");
 
         Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>()));
         Assert.That(testControl.stateBlock.byteOffset, Is.EqualTo(device.leftStick.x.stateBlock.byteOffset));
@@ -1205,7 +1204,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var device = (Gamepad) new InputDeviceBuilder("TestLayout").Finish();
+        var device = InputDevice.Build<Gamepad>("TestLayout");
 
         ////TODO: this ignores layouting; ATM there's a conflict between the automatic layout used by the added button
         ////      and the manual layouting employed by Gamepad; we don't detect conflicts between manual and automatic
@@ -1247,10 +1246,9 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseJson);
         InputSystem.RegisterLayout(derivedJson);
 
-        var setup = new InputDeviceBuilder("Derived");
-        var stick = setup.GetControl<StickControl>("stick");
+        var device = InputDevice.Build<InputDevice>("Deriver");
 
-        Assert.That(stick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
+        Assert.That(device["stick"].stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }
 
     ////TODO: write combined test that applies all possible modifications to a child control
@@ -1271,8 +1269,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var setup = new InputDeviceBuilder("MyGamepad");
-        var gamepad = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>("MyGamepad");
 
         Assert.That(gamepad.dpad.up.layout, Is.EqualTo("DiscreteButton"));
     }
@@ -1323,7 +1320,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = (Gamepad) new InputDeviceBuilder("MyLayout").Finish();
+        var device = InputDevice.Build<Gamepad>("MyLayout");
 
         Assert.That(device.displayName, Is.EqualTo("Test Gamepad"));
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
@@ -2026,7 +2023,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var device = (Gamepad) new InputDeviceBuilder("MyDevice").Finish();
+        var device = InputDevice.Build<Gamepad>("MyDevice");
 
         Assert.That(device.leftStick.stateBlock.byteOffset, Is.EqualTo(6));
         Assert.That(device.leftStick.stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
@@ -2072,8 +2069,8 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var setup = new InputDeviceBuilder("MyDevice");
-        var leftStickX = setup.GetControl<AxisControl>("leftStick/x");
+        var device = InputDevice.Build<InputDevice>("MyDevice");
+        var leftStickX = device.GetChildControl<AxisControl>("leftStick/x");
 
         Assert.That(leftStickX.processors, Has.Length.EqualTo(2));
         Assert.That(leftStickX.processors[0], Is.TypeOf<InvertProcessor>());
@@ -2098,10 +2095,7 @@ partial class CoreTests
         [InputControl(layout = "Axis")] public float axis;
         public int padding;
 
-        public FourCC format
-        {
-            get { return new FourCC("BASE"); }
-        }
+        public FourCC format => new FourCC("BASE");
     }
 
     [InputControlLayout(stateType = typeof(BaseInputState))]
@@ -2111,10 +2105,7 @@ partial class CoreTests
 
     private struct DerivedInputState : IInputStateTypeInfo
     {
-        public FourCC format
-        {
-            get { return new FourCC("DERI"); }
-        }
+        public FourCC format => new FourCC("DERI");
     }
 
     [InputControlLayout(stateType = typeof(DerivedInputState))]
@@ -2129,5 +2120,48 @@ partial class CoreTests
     {
         //axis should appear in DerivedInputDevice and should have been moved to offset 8 (from automatic assignment)
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanConfigureDeviceUsages()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(gamepad.usages, Is.Empty);
+
+        // Set "Vertical" as usage
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+
+        // Change usage with "Horizontal"
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+
+        // Add "Vertical" to usages
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+        // Set "Horizontal" as the only one usage
+        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+        // Try to add "Horizontal" again
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+
+
+        // Remove the existed "Horizontal" usage from usages
+        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
+        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Horizontal));
+
+        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Vertical);
+        Assert.That(gamepad.usages, Is.Empty);
     }
 }

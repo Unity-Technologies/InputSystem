@@ -5,7 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;
 
-////TODO: runtime remapping of usages on a per-device basis
+////TODO: runtime remapping of control usages on a per-device basis
 
 ////TODO: finer-grained control over what devices deliver input while running in background
 ////      (e.g. get gamepad input but do *not* get mouse and keyboard input)
@@ -29,19 +29,128 @@ using UnityEngine.InputSystem.XR;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// The root of a control hierarchy.
+    /// Represents an input device which is always the root of a hierarchy of <see cref="InputControl"/> instances.
     /// </summary>
     /// <remarks>
     /// Input devices act as the container for control hierarchies. Every hierarchy has to have
-    /// a device at the root. Devices cannot occur inside of hierarchies.
+    /// a device at the root. Devices cannot occur as children of other controls.
     ///
-    /// Unlike other controls, usages of InputDevices are allowed to be changed on the fly
-    /// without requiring a change to the device layout (<see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
+    /// Devices are usually created automatically in response to hardware being discovered by the Unity
+    /// runtime. However, it is possible to manually add devices using methods such as <see
+    /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
+    ///
+    /// <example>
+    /// Add a "synthetic" gamepad that isn't actually backed by hardware:
+    /// <code>
+    /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
+    /// </code>
+    /// </example>
+    ///
+    /// There are subclasses representing the most common types of devices, like <see cref="Mouse"/>,
+    /// <see cref="Keyboard"/>, <see cref="Gamepad"/>, and <see cref="Touchscreen"/>.
+    ///
+    /// To create your own types of devices, you can derive from InputDevice and register your device
+    /// as a new "layout".
+    ///
+    /// <example>
+    /// Creating a custom type of input device.
+    /// <code>
+    /// // InputControlLayoutAttribute attribute is only necessary if you want
+    /// // to override default behavior that occurs when registering your device
+    /// // as a layout.
+    /// // The most common use of InputControlLayoutAttribute is to direct the system
+    /// // to a custom "state struct" through the `stateType` property. See below for details.
+    /// [InputControlLayout(displayName = "My Device", stateType = typeof(MyDeviceState))]
+    /// #if UNITY_EDITOR
+    /// [InitializeOnLoad]
+    /// #endif
+    /// public class MyDevice : InputDevice
+    /// {
+    ///     public ButtonControl button { get; private set; }
+    ///     public AxisControl axis { get; private set; }
+    ///
+    ///     // Register the device.
+    ///     static MyDevice()
+    ///     {
+    ///         // In case you want instance of your device to automatically be created
+    ///         // when specific hardware is detected by the Unity runtime, you have to
+    ///         // add one or more "device matchers" (InputDeviceMatcher) for the layout.
+    ///         // These matchers are compared to an InputDeviceDescription received from
+    ///         // the Unity runtime when a device is connected. You can add them either
+    ///         // using InputSystem.RegisterLayoutMatcher() or by directly specifying a
+    ///         // matcher when registering the layout.
+    ///         InputSystem.RegisterLayout&lt;MyDevice&gt;(
+    ///             // For the sake of demonstration, let's assume your device is a HID
+    ///             // and you want to match by PID and VID.
+    ///             matches: new InputDeviceMatcher()
+    ///                 .WithInterface("HID")
+    ///                 .WithCapability("PID", 1234)
+    ///                 .WithCapability("VID", 5678));
+    ///     }
+    ///
+    ///     // This is only to trigger the static class constructor to automatically run
+    ///     // in the player.
+    ///     [RuntimeInitializeOnLoadMethod]
+    ///     private static void InitializeInPlayer() {}
+    ///
+    ///     protected override void FinishSetup()
+    ///     {
+    ///         base.FinishSetup();
+    ///         button = GetChildControl&lt;ButtonControl&gt;("button");
+    ///         axis = GetChildControl&lt;AxisControl&gt;("axis");
+    ///     }
+    /// }
+    ///
+    /// // A "state struct" describes the memory format used a device. Each device can
+    /// // receive and store memory in its custom format. InputControls are then connected
+    /// // the individual pieces of memory and read out values from them.
+    /// [StructLayout(LayoutKind.Explicit, Size = 32)]
+    /// public struct MyDeviceState : IInputStateTypeInfo
+    /// {
+    ///     // In the case of a HID (which we assume for the sake of this demonstration),
+    ///     // the format will be "HID". In practice, the format will depend on how your
+    ///     // particular device is connected and fed into the input system.
+    ///     // The format is a simple FourCC code that "tags" state memory blocks for the
+    ///     // device to give a base level of safety checks on memory operations.
+    ///     public FourCC format => return new FourCC('H', 'I', 'D');
+    ///
+    ///     // InputControlAttributes on fields tell the input system to create controls
+    ///     // for the public fields found in the struct.
+    ///
+    ///     // Assume a 16bit field of buttons. Create one button that is tied to
+    ///     // bit #3 (zero-based). Note that buttons do not need to be stored as bits.
+    ///     // They can also be stored as floats or shorts, for example.
+    ///     [InputControl(name = "button", layout = "Button", bit = 3)]
+    ///     public ushort buttons;
+    ///
+    ///     // Create a floating-point axis. The name, if not supplied, is taken from
+    ///     // the field.
+    ///     [InputControl(layout = "Axis")]
+    ///     public short axis;
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
+    /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
+    /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
     /// </remarks>
+    /// <seealso cref="InputControl"/>
+    /// <seealso cref="Mouse"/>
+    /// <seealso cref="Keyboard"/>
+    /// <seealso cref="Gamepad"/>
+    /// <seealso cref="Touchscreen"/>
     public class InputDevice : InputControl
     {
+        /// <summary>
+        /// Value of an invalid <see cref="id"/>.
+        /// </summary>
+        /// <remarks>
+        /// The input system will not assigned this ID to any device.
+        /// </remarks>
         public const int InvalidDeviceId = 0;
-        public const int LocalParticipantId = 0;
+
+        internal const int kLocalParticipantId = 0;
         internal const int kInvalidDeviceIndex = -1;
 
         /// <summary>
@@ -78,7 +187,7 @@ namespace UnityEngine.InputSystem
             get
             {
                 // Fetch state from runtime, if necessary.
-                if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueried) != DeviceFlags.DisabledStateHasBeenQueried)
+                if ((m_DeviceFlags & DeviceFlags.DisabledStateHasBeenQueried) == 0)
                 {
                     var command = QueryEnabledStateCommand.Create();
                     if (ExecuteCommand(ref command) >= 0)
@@ -178,7 +287,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This is only assigned once a device has been added to the system. No two devices will receive the same
-        /// ID and no device will receive an ID that another device used before even if the device was removed.
+        /// ID and no device will receive an ID that another device used before even if the device was removed. The
+        /// only exception to this is if a device gets re-created as part of a layout change. For example, if a new
+        /// layout is registered that replaces the <see cref="Mouse"/> layout, all <see cref="Mouse"/> devices will
+        /// get recreated but will keep their existing device IDs.
         ///
         /// IDs are assigned by the input runtime.
         /// </remarks>
@@ -227,11 +339,15 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
 
-        // This has to be public for Activator.CreateInstance() to be happy.
+        /// <summary>
+        /// This constructor is public for the sake of <c>Activator.CreateInstance</c> only. To construct
+        /// devices, use methods such as <see cref="InputSystem.AddDevice{TDevice}(string)"/>. Manually
+        /// using <c>new</c> on InputDevice will not result in a usable device.
+        /// </summary>
         public InputDevice()
         {
             m_Id = InvalidDeviceId;
-            m_ParticipantId = LocalParticipantId;
+            m_ParticipantId = kLocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
 
@@ -400,6 +516,8 @@ namespace UnityEngine.InputSystem
         // NOTE: The device's own usages are part of this array as well. They are always
         //       at the *end* of the array.
         internal InternedString[] m_UsagesForEachControl;
+        // This one does NOT contain the device itself, i.e. it only contains controls on the device
+        // and may this be shorter than m_UsagesForEachControl.
         internal InputControl[] m_UsageToControl;
 
         // List of children for all controls. Each control gets a slice of this array.
@@ -425,25 +543,38 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void SetUsage(InternedString usage)
+        internal void AddDeviceUsage(InternedString usage)
         {
-            // Make last entry in m_UsagesForEachControl be our device usage string.
-            var numControlUsages = m_UsageToControl?.Length ?? 0;
-            Array.Resize(ref m_UsagesForEachControl, numControlUsages + 1);
-            m_UsagesForEachControl[numControlUsages] = usage;
-            m_UsagesReadOnly = new ReadOnlyArray<InternedString>(m_UsagesForEachControl, numControlUsages, 1);
-
-            // Update controls to all point to new usage array.
-            UpdateUsageArraysOnControls();
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = totalUsageCount;
+            ArrayHelpers.AppendWithCapacity(ref m_UsagesForEachControl, ref totalUsageCount, usage);
+            ++m_UsageCount;
         }
 
-        internal void UpdateUsageArraysOnControls()
+        internal void RemoveDeviceUsage(InternedString usage)
         {
-            if (m_UsageToControl == null)
+            var controlUsageCount = m_UsageToControl.LengthSafe();
+            var totalUsageCount = controlUsageCount + m_UsageCount;
+
+            var index = ArrayHelpers.IndexOfValue(m_UsagesForEachControl, usage, m_UsageStartIndex, totalUsageCount);
+            if (index == -1)
                 return;
 
-            for (var i = 0; i < m_UsageToControl.Length; ++i)
-                m_UsageToControl[i].m_UsagesReadOnly.m_Array = m_UsagesForEachControl;
+            Debug.Assert(m_UsageCount > 0);
+            ArrayHelpers.EraseAtWithCapacity(m_UsagesForEachControl, ref totalUsageCount, index);
+            --m_UsageCount;
+
+            if (m_UsageCount == 0)
+                m_UsageStartIndex = default;
+        }
+
+        internal void ClearDeviceUsages()
+        {
+            for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
+                m_UsagesForEachControl[i] = default;
+            m_UsageCount = default;
         }
 
         internal void NotifyAdded()
@@ -454,6 +585,30 @@ namespace UnityEngine.InputSystem
         internal void NotifyRemoved()
         {
             OnRemoved();
+        }
+
+        internal static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default)
+            where TDevice : InputDevice
+        {
+            if (string.IsNullOrEmpty(layoutName))
+            {
+                layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
+                if (string.IsNullOrEmpty(layoutName))
+                    layoutName = typeof(TDevice).Name;
+            }
+
+            using (InputDeviceBuilder.Ref())
+            {
+                InputDeviceBuilder.instance.Setup(new InternedString(layoutName), new InternedString(layoutVariants),
+                    deviceDescription: deviceDescription);
+                var device = InputDeviceBuilder.instance.Finish();
+                if (!(device is TDevice deviceOfType))
+                    throw new ArgumentException(
+                        $"Expected device of type '{typeof(TDevice).Name}' but got device of type '{device.GetType().Name}' instead",
+                        "TDevice");
+
+                return deviceOfType;
+            }
         }
     }
 }

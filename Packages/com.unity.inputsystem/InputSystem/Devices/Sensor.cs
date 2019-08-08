@@ -112,8 +112,32 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// An accelerometer let's you measure the acceleration of a device, and can be useful to control content by moving a device around.
     /// Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity
-    /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decouped values
+    /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decoupled values
     /// for these.
+    ///
+    /// <example>
+    /// <code>
+    /// class MyBehavior : MonoBehaviour
+    /// {
+    ///     protected void OnEnable()
+    ///     {
+    ///         // All sensors start out disabled so they have to manually be enabled first.
+    ///         InputSystem.EnableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void OnDisable()
+    ///     {
+    ///         InputSystem.DisableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void Update()
+    ///     {
+    ///         var acceleration = Accelerometer.current.acceleration.ReadValue();
+    ///         //...
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
@@ -135,13 +159,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(builder);
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            base.FinishSetup();
         }
     }
 
@@ -171,13 +192,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
-            base.FinishSetup(builder);
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
+            base.FinishSetup();
         }
     }
 
@@ -193,13 +211,10 @@ namespace UnityEngine.InputSystem
     {
         public Vector3Control gravity { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            gravity = builder.GetControl<Vector3Control>("gravity");
-            base.FinishSetup(builder);
+            gravity = GetChildControl<Vector3Control>("gravity");
+            base.FinishSetup();
         }
 
         public static GravitySensor current { get; private set; }
@@ -246,13 +261,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            attitude = builder.GetControl<QuaternionControl>("attitude");
-            base.FinishSetup(builder);
+            attitude = GetChildControl<QuaternionControl>("attitude");
+            base.FinishSetup();
         }
     }
 
@@ -284,13 +296,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(builder);
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            base.FinishSetup();
         }
     }
 
@@ -323,13 +332,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            magneticField = builder.GetControl<Vector3Control>("magneticField");
-            base.FinishSetup(builder);
+            magneticField = GetChildControl<Vector3Control>("magneticField");
+            base.FinishSetup();
         }
     }
 
@@ -359,13 +365,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            lightLevel = builder.GetControl<AxisControl>("lightLevel");
-            base.FinishSetup(builder);
+            lightLevel = GetChildControl<AxisControl>("lightLevel");
+            base.FinishSetup();
         }
     }
 
@@ -395,13 +398,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
-            base.FinishSetup(builder);
+            atmosphericPressure = GetChildControl<AxisControl>("atmosphericPressure");
+            base.FinishSetup();
         }
     }
 
@@ -434,13 +434,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            distance = builder.GetControl<AxisControl>("distance");
-            base.FinishSetup(builder);
+            distance = GetChildControl<AxisControl>("distance");
+            base.FinishSetup();
         }
     }
 
@@ -470,13 +467,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
-            base.FinishSetup(builder);
+            relativeHumidity = GetChildControl<AxisControl>("relativeHumidity");
+            base.FinishSetup();
         }
     }
 
@@ -506,13 +500,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
-            base.FinishSetup(builder);
+            ambientTemperature = GetChildControl<AxisControl>("ambientTemperature");
+            base.FinishSetup();
         }
     }
 
@@ -542,13 +533,10 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            stepCounter = builder.GetControl<IntegerControl>("stepCounter");
-            base.FinishSetup(builder);
+            stepCounter = GetChildControl<IntegerControl>("stepCounter");
+            base.FinishSetup();
         }
     }
 }

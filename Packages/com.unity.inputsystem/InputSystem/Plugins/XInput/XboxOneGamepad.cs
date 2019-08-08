@@ -212,17 +212,14 @@ namespace UnityEngine.InputSystem.XInput
             current = this;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            base.FinishSetup();
 
-            base.FinishSetup(builder);
-
-            paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
-            paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
-            paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
-            paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
+            paddle1 = GetChildControl<ButtonControl>("paddle1");
+            paddle2 = GetChildControl<ButtonControl>("paddle2");
+            paddle3 = GetChildControl<ButtonControl>("paddle3");
+            paddle4 = GetChildControl<ButtonControl>("paddle4");
         }
 
         public ulong gamepadId

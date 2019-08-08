@@ -289,7 +289,7 @@ partial class CoreTests
     // the action pretends for the control to *just* have changed to the state it already has.
     [Test]
     [Category("Actions")]
-    public void Actions_ValueActionsPerformInitialStateCheckWhenEnabled()
+    public void Actions_ValueActionsReactToCurrentStateOfControlWhenEnabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -581,6 +581,10 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        ////REVIEW: would be great to get boxed versions of the default values but that's much harder to do
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
 
         buttonAction.Enable();
         triggerAction.Enable();
@@ -592,6 +596,9 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
 
         Press(gamepad.buttonSouth, queueEventOnly: true);
         Set(gamepad.leftTrigger, 0.234f, queueEventOnly: true);
@@ -604,13 +611,22 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(triggerAction.ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValueAsObject(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
 
         InputSystem.Update();
 
-        // NOTE: The button action "resets" its value!
-        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
         Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
         Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(triggerAction.ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValueAsObject(),
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
                 .Using(Vector2EqualityComparer.Instance));
 
@@ -624,6 +640,9 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
     }
 
     [Test]
@@ -760,6 +779,32 @@ partial class CoreTests
         Press(keyboard.digit2Key);
 
         Assert.That(performedWasCalled);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryActiveControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddBinding(gamepad.buttonSouth);
+        action.AddBinding(gamepad.buttonNorth);
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonNorth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
     }
 
     [Test]
@@ -1347,7 +1392,7 @@ partial class CoreTests
         {
             var actuated = context.ControlIsActuated();
             if (!actuated && m_WaitingForRelease)
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
             else if (actuated)
                 m_WaitingForRelease = true;
         }
@@ -2547,7 +2592,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(interactions: "Tap(duration=0.123)");
         action.AddBinding("<Gamepad>/buttonSouth");
         action.Enable();
@@ -2574,7 +2619,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick");
         action.Enable();
@@ -2600,7 +2645,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick/x");
         action.Enable();
@@ -2636,7 +2681,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
@@ -2739,6 +2784,28 @@ partial class CoreTests
         InputSystem.RemoveDevice(gamepad);
 
         Assert.That(action.controls, Has.Count.Zero);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceUsagesChange()
+    {
+        var device1 = InputSystem.AddDevice<Mouse>();
+        var device2 = InputSystem.AddDevice<Mouse>();
+
+        InputSystem.SetDeviceUsage(device1, "Test");
+
+        var action = new InputAction(binding: "<Mouse>{Test}/leftButton");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device1.leftButton}));
+
+        InputSystem.SetDeviceUsage(device2, "Test");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device1.leftButton, device2.leftButton}));
+
+        InputSystem.SetDeviceUsage(device1, null);
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {device2.leftButton}));
     }
 
     [Test]
@@ -4602,7 +4669,7 @@ partial class CoreTests
         public void Process(ref InputInteractionContext context)
         {
             Debug.LogAssertion("LogInteraction.Process");
-            context.PerformedAndGoBackToWaiting();
+            context.Performed();
         }
 
         public void Reset()
@@ -4789,6 +4856,82 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WithMultipleCompositesCancelsIfCompositeIsReleased()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<LogInteraction>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("Dpad(normalize=0)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/upArrow")
+            .With("Down", "<Keyboard>/downArrow")
+            .With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/rightArrow");
+        action.Enable();
+
+        InputControl performedControl = null;
+        InputControl canceledControl = null;
+        var value = Vector2.zero;
+        action.performed += ctx =>
+        {
+            performedControl = ctx.control;
+            value = ctx.ReadValue<Vector2>();
+        };
+        action.canceled += ctx =>
+        {
+            canceledControl = ctx.control;
+            value = ctx.ReadValue<Vector2>();
+        };
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        Assert.That(value, Is.EqualTo(Vector2.left));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(value, Is.EqualTo(Vector2.up + Vector2.left));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.Null);
+        Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
+        Assert.That(value, Is.EqualTo(Vector2.up));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.EqualTo(keyboard.wKey));
+        Assert.That(performedControl, Is.EqualTo(keyboard.rightArrowKey));
+        Assert.That(value, Is.EqualTo(Vector2.right));
+        performedControl = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        Assert.That(canceledControl, Is.EqualTo(keyboard.rightArrowKey));
+        Assert.That(performedControl, Is.Null);
+        Assert.That(value, Is.EqualTo(Vector2.zero));
     }
 
     [Test]
@@ -5113,6 +5256,8 @@ partial class CoreTests
         Assert.That(() => action.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
+    // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
+    // machinery allows specifying a binding mask to respect.
     [Test]
     [Category("Actions")]
     public void Actions_CanRestoreDefaultForSpecificOverride()
@@ -5818,5 +5963,13 @@ partial class CoreTests
                 Performed(positionAction, mouse.position, new Vector2(100, 200), time: 0.6)
                     .AndThen(Performed(positionAction, pen.position, new Vector2(300, 400), time: 0.7)));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
+    {
+        Assert.Fail();
     }
 }

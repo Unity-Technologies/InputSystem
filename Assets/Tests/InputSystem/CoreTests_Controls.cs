@@ -37,21 +37,9 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindControlsInSetupByPath()
-    {
-        var setup = new InputDeviceBuilder("Gamepad");
-
-        Assert.That(setup.TryGetControl("leftStick"), Is.TypeOf<StickControl>());
-        Assert.That(setup.TryGetControl("leftStick/x"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.TryGetControl("leftStick/y"), Is.TypeOf<AxisControl>());
-        Assert.That(setup.TryGetControl("leftStick/up"), Is.TypeOf<ButtonControl>());
-    }
-
-    [Test]
-    [Category("Controls")]
     public void Controls_CanFindChildControlsByPath()
     {
-        var gamepad = (Gamepad) new InputDeviceBuilder("Gamepad").Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
         Assert.That(gamepad["leftStick"], Is.SameAs(gamepad.leftStick));
         Assert.That(gamepad["leftStick/x"], Is.SameAs(gamepad.leftStick.x));
         Assert.That(gamepad.leftStick["x"], Is.SameAs(gamepad.leftStick.x));
@@ -61,8 +49,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_DeviceAndControlsRememberTheirLayouts()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var gamepad = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
 
         Assert.That(gamepad.layout, Is.EqualTo("Gamepad"));
         Assert.That(gamepad.leftStick.layout, Is.EqualTo("Stick"));
@@ -72,8 +59,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_ReferToTheirParent()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var gamepad = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
 
         Assert.That(gamepad.leftStick.parent, Is.SameAs(gamepad));
         Assert.That(gamepad.leftStick.x.parent, Is.SameAs(gamepad.leftStick));
@@ -83,11 +69,8 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_ReferToTheirDevices()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var leftStick = setup.GetControl("leftStick");
-        var device = setup.Finish();
-
-        Assert.That(leftStick.device, Is.SameAs(device));
+        var gamepad = InputDevice.Build<Gamepad>();
+        Assert.That(gamepad.leftStick.device, Is.SameAs(gamepad));
     }
 
     [Test]
@@ -136,7 +119,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = new InputDeviceBuilder("MyDevice").Finish();
+        var device = InputDevice.Build<InputDevice>("MyDevice");
 
         Assert.That(device.allControls.Count,
             Is.EqualTo(2 + 4 + 2)); // 2 toplevel controls, 4 added by Stick, 2 for X and Y
@@ -154,8 +137,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_AskingValueOfControlBeforeDeviceAddedToSystemIsInvalidOperation()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>();
 
         Assert.Throws<InvalidOperationException>(() => { device.leftStick.ReadValue(); });
     }
@@ -457,7 +439,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             float value;
@@ -497,11 +479,10 @@ partial class CoreTests
 
         float? value = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             Assert.That(value, Is.Null);
-            float eventValue;
-            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out eventValue);
+            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
             value = eventValue;
         };
 
@@ -520,7 +501,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
@@ -541,7 +522,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
@@ -745,29 +726,26 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_AssignsFullPathToControls()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var leftStick = setup.GetControl("leftStick");
+        var gamepad = InputDevice.Build<Gamepad>();
 
-        Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
+        Assert.That(gamepad.leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
 
-        var device = setup.Finish();
-        InputSystem.AddDevice(device);
+        InputSystem.AddDevice(gamepad);
 
-        Assert.That(leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
+        Assert.That(gamepad.leftStick.path, Is.EqualTo("/Gamepad/leftStick"));
     }
 
     [Test]
     [Category("Controls")]
     public void Controls_CanQueryValueOfControls_AfterAddingDevice()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
 
-        Assert.That(() => device.leftStick.ReadValue(), Throws.InvalidOperationException);
+        Assert.That(() => gamepad.leftStick.ReadValue(), Throws.InvalidOperationException);
 
-        InputSystem.AddDevice(device);
+        InputSystem.AddDevice(gamepad);
 
-        Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
     }
 
     [Test]
@@ -973,7 +951,7 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var gamepad = (Gamepad) new InputDeviceBuilder("CustomGamepad").Finish();
+        var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
 
         Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
     }
@@ -996,8 +974,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var setup = new InputDeviceBuilder("MyDevice");
-        var control = setup.GetControl("control");
+        var control = InputDevice.Build<InputDevice>("MyDevice")["control"];
 
         Assert.That(control.displayName, Is.EqualTo("control"));
         Assert.That(control.shortDisplayName, Is.Null);
@@ -1051,7 +1028,6 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
 
-    ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]
     public void Controls_CanKeepListsOfControls_WithoutAllocatingGCMemory()
@@ -1060,22 +1036,27 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var list = new InputControlList<InputControl>();
+        var list = default(InputControlList<InputControl>);
+        Assert.That(() => { list = new InputControlList<InputControl>(); }, Is.Not.AllocatingGCMemory());
+
         try
         {
             Assert.That(list.Count, Is.Zero);
             Assert.That(list.ToArray(), Is.Empty);
             Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
 
-            list.Capacity = 10;
+            list.Capacity = 4;
 
-            list.Add(gamepad.leftStick);
-            list.Add(null); // Permissible to add null entry.
-            list.Add(keyboard.spaceKey);
-            list.Add(keyboard);
+            Assert.That(() =>
+            {
+                list.Add(gamepad.leftStick);
+                list.Add(null); // Permissible to add null entry.
+                list.Add(keyboard.spaceKey);
+                list.Add(keyboard);
+            }, Is.Not.AllocatingGCMemory());
 
             Assert.That(list.Count, Is.EqualTo(4));
-            Assert.That(list.Capacity, Is.EqualTo(6));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
             Assert.That(list[1], Is.Null);
             Assert.That(list[2], Is.SameAs(keyboard.spaceKey));
@@ -1088,11 +1069,14 @@ partial class CoreTests
             Assert.That(list.Contains(keyboard.spaceKey));
             Assert.That(list.Contains(keyboard));
 
-            list.RemoveAt(1);
-            list.Remove(keyboard);
+            Assert.That(() =>
+            {
+                list.RemoveAt(1);
+                list.Remove(keyboard);
+            }, Is.Not.AllocatingGCMemory());
 
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list.Capacity, Is.EqualTo(8));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
             Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
             Assert.That(() => list[2], Throws.TypeOf<ArgumentOutOfRangeException>());
@@ -1105,7 +1089,7 @@ partial class CoreTests
             list.AddRange(new InputControl[] {keyboard.aKey, keyboard.bKey}, count: 1, destinationIndex: 0);
 
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list.Capacity, Is.EqualTo(7));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey}));
@@ -1113,16 +1097,16 @@ partial class CoreTests
             list.AddRange(new InputControl[] {keyboard.bKey, keyboard.cKey});
 
             Assert.That(list.Count, Is.EqualTo(5));
-            Assert.That(list.Capacity, Is.EqualTo(5));
+            Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
 
-            using (var toAdd = new InputControl[] {gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest}.ToControlList())
+            using (var toAdd = new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
                 list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
 
             Assert.That(list.Count, Is.EqualTo(6));
-            Assert.That(list.Capacity, Is.EqualTo(4));
+            Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));

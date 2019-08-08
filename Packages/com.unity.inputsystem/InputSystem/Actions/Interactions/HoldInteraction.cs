@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.Interactions
         /// be considered pressed.
         /// </summary>
         /// <remarks>
-        /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultButtonPressPoint"/> is used.
+        /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultButtonPressPoint"/> is used instead.
         /// </remarks>
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         public float pressPoint;
@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
                 return;
             }
 

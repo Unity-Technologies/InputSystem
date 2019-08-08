@@ -78,7 +78,7 @@ Actions can be created in a variety of ways:
 
 ### Using the Action Editor
 
-How to create and edit input action assets using the dedicated editor is described on a [separate page](ActionEditor.md).
+How to create and edit input action assets using the dedicated editor is described on a [separate page](ActionAssets.md).
 
 ![Action Editor Window](Images/MyGameActions.png)
 
@@ -100,7 +100,7 @@ This is presented in the editor like so:
 
 ![MyBehavior Inspector](Images/MyBehaviorInspector.png)
 
-The editors work similar to the [action asset editor](ActionEditor.md).
+The editors work similar to the [action asset editor](ActionAssets.md).
 
 * To add or remote actions or bindings, click the plus or minus icon in the header.
 * To edit binding entries, double-click them.<br>
@@ -109,7 +109,7 @@ The editors work similar to the [action asset editor](ActionEditor.md).
   ![InputAction Inspector](Images/InputActionInspector.png)
 * Entries can also be right-clicked to bring up a context menu and can be dragged around (hold alt to duplicate).
 
-Actions and action maps that are embedded in MonoBehaviour components have to be manually [enabled and disabled](#enabling-and-disabling-actions).
+Actions and action maps that are embedded in MonoBehaviour components have to be manually [enabled and disabled](#using-actions).
 
 ```CSharp
 public class MyBehavior : MonoBehaviour
@@ -207,13 +207,13 @@ By itself, an action does not represent an actual response to input. Instead, an
 There are several ways in which this can be done.
 
 1. Each action has a [`started`, `performed`, and `cancelled` callback](#started-performed-and-cancelled-callbacks).
-2. Each action map has an [`actionTriggered` callback](#inputactionmap-actiontriggered-callback).
-3. There is a global [`InputSystem.onActionChange` callback](#inputsystem-onactionchange-callback).
+2. Each action map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
+3. There is a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
 4. [`InputActionTrace`](#inputactiontrace) can record changes happening on actions.
 
 >NOTE: A polling API for actions is on the TODO list.
 
-There are also higher-level, more streamlined ways of picking up input from actions. One is to use [`PlayerInput`](Components.md#notification-behaviors) and another one is to [generate script code](ActionEditor.md#generating-script-code) that wraps around the input actions.
+There are also higher-level, more streamlined ways of picking up input from actions. One is to use [`PlayerInput`](Components.md#notification-behaviors) and another one is to [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the input actions.
 
 #### `started`, `performed`, and `cancelled` Callbacks
 
@@ -241,7 +241,7 @@ The `Started`, `Performed`, and `Cancelled` phases each have a callback associat
 
 Each callback receives an `InputAction.CallbackContext` structure holding context information that can be used to query the current state of the action and to read out values from controls that triggered the action (`InputAction.CallbackContext.ReadValue`). Note that the contents of the structure are __only valid for the duration of the callback__. In particular, it is not safe to store the received context and later access its properties from outside the callback.
 
-When an how the callbacks are triggered depends on the [interactions](Interactions.md) present on the respective bindings. If no interactions are applied to them, the [default interaction](Interactions.md#default-interactions) applies.
+When an how the callbacks are triggered depends on the [interactions](Interactions.md) present on the respective bindings. If no interactions are applied to them, the [default interaction](Interactions.md#default-interaction) applies.
 
 #### `InputActionMap.actionTriggered` Callback
 
@@ -343,7 +343,7 @@ Once recorded, a trace can be safely read from multiple threads as long as it is
 
 By default, actions will trigger only in response to input events. This means that, for example, an action bound to the left stick of a gamepad will only trigger when the left stick is actually moved. This behavior can be undesirable when an input is meant to register for as long as a control is actuated -- regardless of whether it changes value in a particular frame or not.
 
-This is what "continuous" mode is for. It can be enabled in the UI by selecting the action in the [action editor](ActionEditor.md) and ticking the "Continuous" checkbox.
+This is what "continuous" mode is for. It can be enabled in the UI by selecting the action in the [action editor](ActionAssets.md) and ticking the "Continuous" checkbox.
 
     ////TODO: Update screenshot
 

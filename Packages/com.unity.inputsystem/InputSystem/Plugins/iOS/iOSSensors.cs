@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel

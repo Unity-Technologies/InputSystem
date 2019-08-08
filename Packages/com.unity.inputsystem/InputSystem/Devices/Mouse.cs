@@ -4,6 +4,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: option to allow to constrain mouse input to the screen area (i.e. no input once mouse leaves player window)
+
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
@@ -11,7 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 30)]
-    internal struct MouseState : IInputStateTypeInfo
+    public struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
@@ -68,18 +70,33 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
-    internal enum MouseButton
+    /// <summary>
+    /// Button indices for <see cref="MouseState.buttons"/>.
+    /// </summary>
+    public enum MouseButton
     {
+        /// <summary>
+        /// Left mouse button.
+        /// </summary>
         Left,
+        /// <summary>
+        /// Right mouse button.
+        /// </summary>
         Right,
+        /// <summary>
+        /// Middle mouse button.
+        /// </summary>
         Middle,
+        /// <summary>
+        /// First side button.
+        /// </summary>
         Forward,
+        /// <summary>
+        /// Second side button.
+        /// </summary>
         Back
     }
 }
@@ -157,19 +174,16 @@ namespace UnityEngine.InputSystem
             ExecuteCommand(ref command);
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
-
-            scroll = builder.GetControl<Vector2Control>(this, "scroll");
-            leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
-            middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
-            rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
-            forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
-            backButton = builder.GetControl<ButtonControl>(this, "backButton");
-            clickCount = builder.GetControl<IntegerControl>(this, "clickCount");
-            base.FinishSetup(builder);
+            scroll = GetChildControl<Vector2Control>("scroll");
+            leftButton = GetChildControl<ButtonControl>("leftButton");
+            middleButton = GetChildControl<ButtonControl>("middleButton");
+            rightButton = GetChildControl<ButtonControl>("rightButton");
+            forwardButton = GetChildControl<ButtonControl>("forwardButton");
+            backButton = GetChildControl<ButtonControl>("backButton");
+            clickCount = GetChildControl<IntegerControl>("clickCount");
+            base.FinishSetup();
         }
 
         protected new void OnNextUpdate()

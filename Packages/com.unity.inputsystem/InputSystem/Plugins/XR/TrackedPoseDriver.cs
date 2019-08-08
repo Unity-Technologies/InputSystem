@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.InputSystem.LowLevel;
 #if ENABLE_VR && UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
 #endif
@@ -177,17 +178,12 @@ namespace UnityEngine.InputSystem.XR
 #endif
         }
 
-        protected void UpdateCallback(InputUpdateType type)
+        protected void UpdateCallback()
         {
-            switch (type)
-            {
-                case InputUpdateType.Dynamic:
-                    OnUpdate();
-                    break;
-                case InputUpdateType.BeforeRender:
-                    OnBeforeRender();
-                    break;
-            }
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                OnBeforeRender();
+            else
+                OnUpdate();
         }
 
         protected virtual void OnUpdate()

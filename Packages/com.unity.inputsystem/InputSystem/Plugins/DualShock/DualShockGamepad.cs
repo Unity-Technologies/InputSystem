@@ -64,11 +64,11 @@ namespace UnityEngine.InputSystem.DualShock
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            touchpadButton = builder.GetControl<ButtonControl>(this, "touchpadButton");
+            touchpadButton = GetChildControl<ButtonControl>("touchpadButton");
             optionsButton = startButton;
             shareButton = selectButton;
 

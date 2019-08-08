@@ -3,18 +3,27 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////REVIEW: shouldn't it use Canceled for release on PressAndRelease instead of triggering Performed again?
+
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action when a control is actuated past the button press point and then does not perform
-    /// again until the button is first released and then pressed again.
+    /// Performs the action at specific points in a button press-and-release sequence according top <see cref="behavior"/>.
     /// </summary>
     /// <remarks>
-    /// The exact trigger behavior can be determined via <see cref="behavior"/>.
+    /// By default, uses <see cref="PressBehavior.PressOnly"/> which performs the action as soon as the control crosses the
+    /// button press threshold defined by <see cref="pressPoint"/>. The action then will not trigger again until the control
+    /// is first released.
     ///
-    /// Note that this interaction is not restricted to controls of type <c>float</c>. Actuation is measured
-    /// through magnitudes (<see cref="InputControl.EvaluateMagnitude()"/> and will thus work with any control
-    /// that can return a magnitude of actuation.
+    /// Can be set to instead trigger on release (i.e. when the control goes back below the button press threshold) using
+    /// <see cref="PressBehavior.ReleaseOnly"/> or can be set to trigger on both press and release using <see cref="PressBehavior.PressAndRelease"/>).
+    ///
+    /// Note that using an explicit press interaction is only necessary if the goal is to either customize the press behavior
+    /// of a button or when binding to controls that are not buttons as such (the press interaction compares magnitudes to
+    /// <see cref="pressPoint"/> and thus any type of control that can deliver a magnitude can act as a button). The default
+    /// behavior available out of the box when binding <see cref="InputActionType.Button"/> type actions to button-type controls
+    /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
+    /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
     public class PressInteraction : IInputInteraction
     {
@@ -34,11 +43,10 @@ namespace UnityEngine.InputSystem.Interactions
         /// <remarks>
         /// By default (PressOnly), the action is performed on press.
         /// With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is
-        /// performed on press and canceled on release.
+        /// performed on press and on release.
         /// </remarks>
         [Tooltip("Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
-            + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "canceled on release.")]
+            + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and release.")]
         public PressBehavior behavior;
 
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
@@ -64,8 +72,8 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        ////REVIEW: should this trigger Started?
-                        context.PerformedAndGoBackToWaiting();
+                        context.Started();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -74,7 +82,7 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease && !isActuated)
                     {
                         m_WaitingForRelease = false;
-                        context.PerformedAndGoBackToWaiting();
+                        context.Performed();
                     }
                     else if (isActuated)
                     {
@@ -87,13 +95,16 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease)
                     {
                         if (!isActuated)
-                            context.PerformedAndGoBackToWaiting();
-
+                        {
+                            context.Started();
+                            context.Performed();
+                        }
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        context.PerformedAndGoBackToWaiting();
+                        context.Started();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -115,18 +126,30 @@ namespace UnityEngine.InputSystem.Interactions
         /// <summary>
         /// Perform the action when the button is pressed.
         /// </summary>
+        /// <remarks>
+        /// Triggers <see cref="InputAction.performed"/> when a control crosses the button press threshold.
+        /// </remarks>
         // ReSharper disable once UnusedMember.Global
         PressOnly = 0,
 
         /// <summary>
         /// Perform the action when the button is released.
         /// </summary>
+        /// <remarks>
+        /// Triggers <see cref="InputAction.started"/> when a control crosses the button press threshold and
+        /// <see cref="InputAction.performed"/> when the control goes back below the button press threshold.
+        /// </remarks>
         // ReSharper disable once UnusedMember.Global
         ReleaseOnly = 1,
 
         /// <summary>
-        /// Perform the action when the button is pressed and cancel the action when the button is released.
+        /// Perform the action when the button is pressed and when the button is released.
         /// </summary>
+        /// <remarks>
+        /// Triggers <see cref="InputAction.performed"/> when a control crosses the button press threshold
+        /// and triggers <see cref="InputAction.performed"/> again when it goes back below the button press
+        /// threshold.
+        /// </remarks>
         // ReSharper disable once UnusedMember.Global
         PressAndRelease = 2,
     }

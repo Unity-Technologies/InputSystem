@@ -83,6 +83,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
             builder.Append("using UnityEngine.InputSystem;\n");
             builder.Append("using UnityEngine.InputSystem.Controls;\n");
             builder.Append("using UnityEngine.InputSystem.Layouts;\n");
+            builder.Append("using UnityEngine.InputSystem.LowLevel;\n");
             builder.Append("using UnityEngine.InputSystem.Utilities;\n");
             builder.Append("using UnityEngine.InputSystem.Steam;\n");
             builder.Append("#if UNITY_EDITOR\n");
@@ -179,9 +180,9 @@ namespace UnityEngine.InputSystem.Steam.Editor
 
             // FinishSetup method.
             builder.Append('\n');
-            builder.Append("    protected override void FinishSetup(InputDeviceBuilder builder)\n");
+            builder.Append("    protected override void FinishSetup()\n");
             builder.Append("    {\n");
-            builder.Append("        base.FinishSetup(builder);\n");
+            builder.Append("        base.FinishSetup();\n");
             foreach (var setEntry in actions)
             {
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;

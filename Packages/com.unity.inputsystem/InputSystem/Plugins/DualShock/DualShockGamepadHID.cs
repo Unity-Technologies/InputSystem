@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "leftStickPress", bit = 1)]
         [InputControl(name = "rightStickPress", bit = 2)]
         [InputControl(name = "start", displayName = "Options", bit = 3)]
-        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", sizeInBits = 4)]
+        [InputControl(name = "dpad", format = "BIT", layout = "Dpad", bit = 4, sizeInBits = 4)]
         [InputControl(name = "dpad/up", bit = 4)]
         [InputControl(name = "dpad/right", bit = 5)]
         [InputControl(name = "dpad/down", bit = 6)]
@@ -103,6 +103,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(3)] public byte buttons2;
 
         [InputControl(name = "systemButton", layout = "Button", displayName = "System", bit = 0)]
+        [InputControl(name = "touchpadButton", layout = "Button", displayName = "Touchpad Press", bit = 1)] // always 0, does not exist on DualShock 3
         [FieldOffset(4)] public byte buttons3;
 
         [FieldOffset(5)] private byte padding2;
@@ -212,16 +213,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void PauseHaptics()
@@ -303,16 +301,13 @@ namespace UnityEngine.InputSystem.DualShock
         public ButtonControl rightTriggerButton { get; private set; }
         public ButtonControl playStationButton { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            if (builder == null)
-                throw new System.ArgumentNullException(nameof(builder));
+            leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
+            rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
+            playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            leftTriggerButton = builder.GetControl<ButtonControl>(this, "leftTriggerButton");
-            rightTriggerButton = builder.GetControl<ButtonControl>(this, "rightTriggerButton");
-            playStationButton = builder.GetControl<ButtonControl>(this, "systemButton");
-
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         // TODO: see if we can implement rumble support on DualShock 3

@@ -11,6 +11,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -44,7 +45,6 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
-        Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
     }
 
@@ -108,19 +108,24 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TODO")]
-    public void TODO_Events_ProcessingStateEvent_DoesNotAllocateMemory()
+    public void Events_QueuingAndProcessingStateEvent_DoesNotAllocateMemory()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        ////REVIEW: We do some analytics stuff on the first update that allocates. Probably there's
-        ////        a better way to handle this.
+        // Warm up JIT and get rid of GC noise from initial input system update.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "Events_ProcessingStateEvent_DoesNotAllocateMemory";
 
-        ////FIXME: seeing odd allocations that seem be triggered by the noise filtering stuff
-        Assert.That(() => InputSystem.Update(), Is.Not.AllocatingGCMemory());
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
+            InputSystem.Update();
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
     [Test]
@@ -163,7 +168,7 @@ partial class CoreTests
         double? receivedTime = null;
         double? receivedInternalTime = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             receivedTime = eventPtr.time;
             receivedInternalTime = eventPtr.internalTime;
@@ -269,7 +274,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
+            (eventPtr, _) => receivedEvents.Add(*eventPtr.data);
 
         // First fixed update should just take everything.
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.1234f }, 1);
@@ -358,7 +363,7 @@ partial class CoreTests
 
         var receivedEvents = new List<InputEvent>();
         InputSystem.onEvent +=
-            eventPtr => receivedEvents.Add(*eventPtr.data);
+            (eventPtr, _) => receivedEvents.Add(*eventPtr.data);
 
         bool? receivedOnSettingsChange = null;
         InputSystem.onSettingsChange += () => receivedOnSettingsChange = true;
@@ -448,7 +453,7 @@ partial class CoreTests
         Set(gamepad.buttonNorth, 1);
         Set(gamepad.leftTrigger, 0.123f);
 
-        using (var buffer = DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
+        using (DeltaStateEvent.From(gamepad.buttonNorth, out var eventPtr))
         {
             Assert.That(gamepad.buttonNorth.ReadValueFromEvent(eventPtr, out var val), Is.True);
             Assert.That(val, Is.EqualTo(1).Within(0.00001));
@@ -522,7 +527,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputSystem.onEvent += inputEvent =>
+        InputSystem.onEvent += (inputEvent, _) =>
         {
             ++receivedCalls;
             Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
@@ -563,7 +568,7 @@ partial class CoreTests
         var receivedThirdTime = 0.0;
 
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -599,7 +604,7 @@ partial class CoreTests
         var receivedCalls = 0;
         var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             receivedDeviceId = eventPtr.deviceId;
@@ -624,7 +629,7 @@ partial class CoreTests
         var wasHandled = true;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             wasHandled = eventPtr.handled;
@@ -651,7 +656,7 @@ partial class CoreTests
     public void Events_CanPreventEventsFromBeingProcessed()
     {
         InputSystem.onEvent +=
-            inputEvent =>
+            (inputEvent, _) =>
         {
             // If we mark the event handled, the system should skip it and not
             // let it go to the device.
@@ -672,10 +677,7 @@ partial class CoreTests
         [InputControl(layout = "Axis")]
         [FieldOffset(0)] public ushort value;
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(StateWith2Bytes))]
@@ -706,7 +708,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device, new StateWith2Bytes());
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // Event addresses must be 4-byte aligned but sizeInBytes must not have been altered.
             Assert.That((Int64)eventPtr.data % 4, Is.EqualTo(0));
@@ -828,7 +830,7 @@ partial class CoreTests
         var secondId = InputEvent.InvalidId;
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             ++receivedCalls;
             if (receivedCalls == 1)
@@ -907,10 +909,10 @@ partial class CoreTests
     {
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            axis = builder.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(builder);
+            axis = GetChildControl<AxisControl>("axis");
+            base.FinishSetup();
         }
     }
 
@@ -918,12 +920,10 @@ partial class CoreTests
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;
-        public InputUpdateType onUpdateType;
 
-        public void OnUpdate(InputUpdateType updateType)
+        public void OnUpdate()
         {
             ++onUpdateCallCount;
-            onUpdateType = updateType;
             InputSystem.QueueStateEvent(this, new CustomDeviceState {axis = 0.234f});
         }
     }
@@ -986,7 +986,7 @@ partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
 
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             // For every control that isn't contained in a state event, GetStatePtrFromStateEvent() should
             // return IntPtr.Zero.
@@ -1015,26 +1015,21 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
     {
-        InputUpdateType? receivedUpdateType = null;
-        Action<InputUpdateType> callback =
-            type =>
-        {
-            Assert.That(receivedUpdateType, Is.Null);
-            receivedUpdateType = type;
-        };
+        var receivedCalls = 0;
+        Action callback = () => ++ receivedCalls;
 
         InputSystem.onAfterUpdate += callback;
 
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+        Assert.That(receivedCalls, Is.EqualTo(1));
 
-        receivedUpdateType = null;
+        receivedCalls = 0;
         InputSystem.onAfterUpdate -= callback;
 
         InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.Null);
+        Assert.That(receivedCalls, Is.Zero);
     }
 
     [Test]

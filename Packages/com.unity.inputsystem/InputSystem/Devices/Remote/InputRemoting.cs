@@ -14,6 +14,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: remove remoting of layout information
 
+////REVIEW: it seems that the various XXXMsg struct should be public; AWTM doesn't seem like working with the message interface is practical
+
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
 
@@ -73,7 +75,7 @@ namespace UnityEngine.InputSystem
 
         public bool sending
         {
-            get { return (m_Flags & Flags.Sending) == Flags.Sending; }
+            get => (m_Flags & Flags.Sending) == Flags.Sending;
             private set
             {
                 if (value)
@@ -198,12 +200,10 @@ namespace UnityEngine.InputSystem
             Send(message);
         }
 
-        private unsafe void SendEvent(InputEventPtr eventPtr)
+        private unsafe void SendEvent(InputEventPtr eventPtr, InputDevice device)
         {
             if (m_Subscribers == null)
                 return;
-
-            var device = m_LocalManager.TryGetDeviceById(eventPtr.deviceId);
 
             ////REVIEW: we probably want to have better control over this and allow producing local events
             ////        against remote devices which *are* indeed sent across the wire
@@ -667,7 +667,7 @@ namespace UnityEngine.InputSystem
                     ////TODO: clearing usages and setting multiple usages
 
                     if (data.usages.Length == 1)
-                        receiver.m_LocalManager.SetUsage(device, new InternedString(data.usages[0]));
+                        receiver.m_LocalManager.SetDeviceUsage(device, new InternedString(data.usages[0]));
                 }
             }
         }

@@ -10,7 +10,6 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     public interface IInputUpdateCallbackReceiver
     {
-        ////REVIEW: omit update type arg?
-        void OnUpdate(InputUpdateType updateType);
+        void OnUpdate();
     }
 }
