@@ -36,7 +36,7 @@ public class ButtonRemapScreenController : MonoBehaviour
 
     private InputActionMap playerActionMap;
     private InputActionRebindingExtensions.RebindingOperation rebindOperation;
-    private RemapUI gasUI, brakeUI, fireUI, turrretUI;
+    private RemapUI gasUI, brakeUI, fireUI, turretUI;
 
     public class RemapUI
     {
@@ -74,18 +74,21 @@ public class ButtonRemapScreenController : MonoBehaviour
             ResetButtonMappingTextValue();
         }
 
-        private float ScoreFunc(System.Type expectedControl, InputControl control, InputEventPtr eventPtr)
+        private unsafe float ScoreFunc(Type expectedControl, InputControl control, InputEventPtr eventPtr)
         {
+            var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
+            var magnitude = control.EvaluateMagnitude(statePtr);
+
             if (control.synthetic)
-                return -1;
+                return magnitude - 1;
 
             // Give preference to controls which match the expected type (ie get the Vector2 for a Stick,
             // rather than individual axes), but allow other types to let us construct the control as a
             // composite.
             if (expectedControl != null && !expectedControl.IsInstanceOfType(control))
-                return 0.1f;
+                return magnitude;
 
-            return 1;
+            return magnitude + 1;
         }
 
         void RemapButtonClicked(string name, int bindingIndex = 0)
@@ -93,7 +96,7 @@ public class ButtonRemapScreenController : MonoBehaviour
             m_Button.enabled = false;
             m_Text.text = "Press button/stick for " + name;
             rebindOperation = m_Action.PerformInteractiveRebinding()
-                .WithControlsExcluding("Mouse")
+                .WithControlsExcluding("<Mouse>")
                 .OnMatchWaitForAnother(0.1f)
                 .OnComplete(operation => ButtonRebindCompleted());
             if (m_CompositeBindingIndices != null)
@@ -113,7 +116,7 @@ public class ButtonRemapScreenController : MonoBehaviour
                     {
                         if (m_IsUsingComposite)
                         {
-                            m_Action.ApplyBindingOverride(m_DefaultBindingIndex, "unbound");
+                            m_Action.ApplyBindingOverride(m_DefaultBindingIndex, "");
                             m_Action.ApplyBindingOverride(
                                 bindingIndex != m_DefaultBindingIndex ? bindingIndex : m_CompositeBindingIndices[0],
                                 path);
@@ -122,7 +125,7 @@ public class ButtonRemapScreenController : MonoBehaviour
                         {
                             m_Action.ApplyBindingOverride(m_DefaultBindingIndex, path);
                             foreach (var i in m_CompositeBindingIndices)
-                                m_Action.ApplyBindingOverride(i, "unbound");
+                                m_Action.ApplyBindingOverride(i, "");
                         }
                     });
             }
@@ -136,7 +139,7 @@ public class ButtonRemapScreenController : MonoBehaviour
             if (m_CompositeTexts != null)
                 for (int i = 0; i < m_CompositeTexts.Length; i++)
                 {
-                    m_CompositeTexts[i].text = InputControlPath.ToHumanReadableString(m_Action.bindings[i + 2].effectivePath);
+                    m_CompositeTexts[i].text = InputControlPath.ToHumanReadableString(m_Action.bindings[m_CompositeBindingIndices[i]].effectivePath);
                     m_CompositeButtons[i].gameObject.SetActive(m_IsUsingComposite);
                 }
         }
@@ -157,7 +160,7 @@ public class ButtonRemapScreenController : MonoBehaviour
         gasUI = new RemapUI(gasRemapButton, gasMappingValueText, playerActionMap.actions[gasMapIndex], "Gas");
         brakeUI = new RemapUI(brakeRemapButton, brakeMappingValueText, playerActionMap.actions[brakeMapIndex], "Brake");
         fireUI = new RemapUI(fireRemapButton, fireMappingValueText, playerActionMap.actions[fireMapIndex], "Fire");
-        turrretUI = new RemapUI(turretRemapButton, turretMappingValueText, playerActionMap.actions[turretMapIndex], "Turret",
+        turretUI = new RemapUI(turretRemapButton, turretMappingValueText, playerActionMap.actions[turretMapIndex], "Turret",
             expectedControlType: typeof(InputControl<Vector2>),
             compositeButtons: new[] {turretRemapButtonUp, turretRemapButtonDown, turretRemapButtonLeft, turretRemapButtonRight},
             compositeTexts: new[] {turretMappingValueTextUp, turretMappingValueTextDown, turretMappingValueTextLeft, turretMappingValueTextRight});
