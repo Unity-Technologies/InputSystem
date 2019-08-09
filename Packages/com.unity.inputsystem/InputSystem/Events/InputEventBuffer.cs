@@ -60,10 +60,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public NativeArray<byte> data
-        {
-            get => m_Buffer;
-        }
+        public NativeArray<byte> data => m_Buffer;
 
         public InputEventPtr bufferPtr
         {

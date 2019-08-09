@@ -413,7 +413,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             };
         }
 
-        private static void ReEnableAfterDomainReload(InputUpdateType updateType)
+        private static void ReEnableAfterDomainReload()
         {
             OnSettingsChanged();
             InputSystem.onBeforeUpdate -= ReEnableAfterDomainReload;

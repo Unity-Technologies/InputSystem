@@ -4,7 +4,7 @@ test_platforms:
   - name: win
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
 ---
 {% for editor in test_editors %}
 {% for platform in test_platforms %}
@@ -17,6 +17,8 @@ promotion_test_{{ platform.name }}_{{ editor.version }}:
   variables:
     UPMCI_PROMOTION: 1
   commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
   artifacts:
@@ -33,7 +35,7 @@ promotion_test_trigger:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   artifacts:
     logs:
       paths:
@@ -53,10 +55,12 @@ promote:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   variables:
     UPMCI_PROMOTION: 1
   commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/

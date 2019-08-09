@@ -18,8 +18,25 @@ namespace UnityEngine.InputSystem
     /// A mapping of control input to an action.
     /// </summary>
     /// <remarks>
-    /// A single binding can match arbitrary many controls through its path and then
-    /// map their input to a single action.
+    /// Each binding represents a value received from controls (see <see cref="InputControl"/>).
+    /// There are two main types of bindings: "normal" bindings and "composite" bindings.
+    ///
+    /// Normal bindings directly bind to control(s) by means of <see cref="path"/> which is a "control path"
+    /// (see <see cref="InputControlPath"/> for details about how to form paths). At runtime, the
+    /// path of such a binding may match none, one, or multiple controls. Each control matched by the
+    /// path will feed input into the binding.
+    ///
+    /// Composite bindings do not bind to controls themselves. Instead, they receive their input
+    /// from their "part" bindings and then return a value representing a "composition" of those
+    /// inputs. What composition specifically is performed depends on the type of the composite.
+    /// <see cref="Composites.AxisComposite"/>, for example, will return a floating-point axis value
+    /// computed from the state of two buttons.
+    ///
+    /// The action that is triggered by a binding is determined by its <see cref="action"/> property.
+    /// The resolution to an <see cref="InputAction"/> depends on where the binding is used. For example,
+    /// bindings that are part of <see cref="InputActionMap.bindings"/> will resolve action names to
+    /// actions in the same <see cref="InputActionMap"/>.
+    ///
     ///
     /// A binding can also be used as a override specification. In that scenario, <see cref="path"/>,
     /// <see cref="action"/>, and <see cref="groups"/> become search criteria that can be used to
@@ -251,9 +268,29 @@ namespace UnityEngine.InputSystem
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
         [NonSerialized] private Guid m_Guid;
 
-        internal string effectivePath => overridePath ?? path;
-        internal string effectiveInteractions => overrideInteractions ?? interactions;
-        internal string effectiveProcessors => overrideProcessors ?? processors;
+        /// <summary>
+        /// This is the bindings path which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overridePath"/> if that is set, or <see cref="path"/> otherwise.
+        /// </remarks>
+        public string effectivePath => overridePath ?? path;
+
+        /// <summary>
+        /// This is the interaction config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideInteractions"/> if that is set, or <see cref="interactions"/> otherwise.
+        /// </remarks>
+        public string effectiveInteractions => overrideInteractions ?? interactions;
+
+        /// <summary>
+        /// This is the processor config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideProcessors"/> if that is set, or <see cref="processors"/> otherwise.
+        /// </remarks>
+        public string effectiveProcessors => overrideProcessors ?? processors;
 
         internal bool isEmpty =>
             string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&

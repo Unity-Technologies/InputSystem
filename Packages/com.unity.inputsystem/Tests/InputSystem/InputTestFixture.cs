@@ -6,6 +6,7 @@ using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR

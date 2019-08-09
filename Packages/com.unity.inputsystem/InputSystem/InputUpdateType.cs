@@ -1,11 +1,9 @@
 using System;
 using UnityEngine.InputSystem.Layouts;
 
-////REVIEW: can we make this internal?
-
 ////TODO: ManualThreaded
 
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Enum of different player loop positions where the input system can invoke it's update mechanism.

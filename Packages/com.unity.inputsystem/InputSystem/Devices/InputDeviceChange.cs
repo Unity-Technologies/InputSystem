@@ -6,7 +6,28 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputDevice">input device</see> occurred.
     /// </summary>
-    /// <seealso cref="InputSystem.onDeviceChange"/>
+    /// <remarks>
+    /// Use <see cref="InputSystem.onDeviceChange"/> to receive notifications about changes
+    /// to the input device setup in the system.
+    ///
+    /// <example>
+    /// <code>
+    /// InputSystem.onDeviceChange +=
+    ///     (device, change) =>
+    ///     {
+    ///         switch (change)
+    ///         {
+    ///             case InputDeviceChange.Added:
+    ///                 Debug.Log($"Device {device} was added");
+    ///                 break;
+    ///             case InputDeviceChange.Removed:
+    ///                 Debug.Log($"Device {device} was removed");
+    ///                 break;
+    ///         }
+    ///     };
+    /// </code>
+    /// </example>
+    /// </remarks>
     public enum InputDeviceChange
     {
         /// <summary>
@@ -68,9 +89,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputSystem.SetDeviceUsage(InputDevice,InternedString)"/>
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
-
-        ////REVIEW: nuke this?
-        LayoutVariantChanged,
 
         /// <summary>
         /// The configuration of a device has changed.

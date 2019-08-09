@@ -41,7 +41,7 @@ using UnityEngine.InputSystem.Utilities;
 
 // if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
 
-namespace UnityEngine.InputSystem.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A wrapper around the input system that takes care of managing input actions
@@ -55,10 +55,10 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// The component supports local multiplayer implicitly. Each PlayerInput instance
     /// represents a distinct user with its own set of devices and actions. To orchestrate
     /// player management and facilitate mechanics such as joining by device activity, use
-    /// <see cref="PlayerInputManager"/>.
+    /// <see cref="UnityEngine.InputSystem.PlayerInputManager"/>.
     ///
     /// The way PlayerInput notifies script code of events is determined by <see cref="notificationBehavior"/>.
-    /// By default, this is set to <see cref="PlayerNotifications.SendMessages"/> which will use <see
+    /// By default, this is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> which will use <see
     /// cref="GameObject.SendMessage(string,object)"/> to send messages to the <see cref="GameObject"/>
     /// that PlayerInput sits on.
     ///
@@ -69,8 +69,8 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// 3) when the player switches to a different control scheme,
     /// 4) when the player changes bindings,
     ///
-    /// If <see cref="notificationBehavior"/> is set to <see cref="PlayerNotifications.SendMessages"/> or
-    /// <see cref="PlayerNotifications.BroadcastMessages"/>, then an ... OnFireStarted
+    /// If <see cref="notificationBehavior"/> is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> or
+    /// <see cref="UnityEngine.InputSystem.PlayerNotifications.BroadcastMessages"/>, then an ... OnFireStarted
     ///
     /// <example>
     /// <code>
@@ -138,7 +138,7 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// If the component does not fit the specific requirements of an application, its functionality
     /// can be reimplemented on top of the same API.
     /// </remarks>
-    /// <seealso cref="PlayerInputManager"/>
+    /// <seealso cref="UnityEngine.InputSystem.PlayerInputManager"/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         public int playerIndex => m_PlayerIndex;
 
         /// <summary>
-        /// If split-screen is enabled (<see cref="PlayerInputManager.splitScreen"/>), this is the index of the
+        /// If split-screen is enabled (<see cref="UnityEngine.InputSystem.PlayerInputManager.splitScreen"/>), this is the index of the
         /// screen area used by the player.
         /// </summary>
         /// <seealso cref="camera"/>
@@ -253,7 +253,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         /// </summary>
         /// <remarks>
         /// By default, the component will use <see cref="GameObject.SendMessage(string,object)"/> to send messages
-        /// to the <see cref="GameObject"/>. This can be changed by selecting a different <see cref="PlayerNotifications"/>
+        /// to the <see cref="GameObject"/>. This can be changed by selecting a different <see cref="UnityEngine.InputSystem.PlayerNotifications"/>
         /// behavior.
         /// </remarks>
         /// <seealso cref="actionEvents"/>
@@ -282,7 +282,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         /// </summary>
         /// <remarks>
         /// This array is only used if <see cref="notificationBehavior"/> is set to
-        /// <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         /// </remarks>
         public ReadOnlyArray<ActionEvent> actionEvents
         {
@@ -304,7 +304,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         /// </summary>
         /// <remarks>
         /// This event is only used if <see cref="notificationBehavior"/> is set to
-        /// <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         /// </remarks>
         public DeviceLostEvent deviceLostEvent
         {
@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         /// </summary>
         /// <remarks>
         /// This event is only used if <see cref="notificationBehavior"/> is set to
-        /// <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         /// </remarks>
         public DeviceRegainedEvent deviceRegainedEvent
         {
@@ -504,7 +504,7 @@ namespace UnityEngine.InputSystem.PlayerInput
 
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
             {
-                if (s_AllActivePlayers[i].devices.ContainsReference(device))
+                if (ReadOnlyArrayExtensions.ContainsReference(s_AllActivePlayers[i].devices, device))
                     return s_AllActivePlayers[i];
             }
 
@@ -662,7 +662,14 @@ namespace UnityEngine.InputSystem.PlayerInput
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
+                    InputActionAsset oldActions = m_Actions;
                     m_Actions = Instantiate(m_Actions);
+                    for (int actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+                    {
+                        for (int binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                            m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+                    }
+
                     break;
                 }
 
@@ -1024,8 +1031,8 @@ namespace UnityEngine.InputSystem.PlayerInput
                 for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 {
                     var playerIndex = s_AllActivePlayers[i].playerIndex;
-                    minPlayerIndex = Math.Min(minPlayerIndex, playerIndex);
-                    maxPlayerIndex = Math.Max(maxPlayerIndex, playerIndex);
+                    minPlayerIndex = Math.Min(minPlayerIndex, (int)playerIndex);
+                    maxPlayerIndex = Math.Max(maxPlayerIndex, (int)playerIndex);
                 }
 
                 if (minPlayerIndex != int.MaxValue && minPlayerIndex > 0)
@@ -1133,7 +1140,7 @@ namespace UnityEngine.InputSystem.PlayerInput
         }
 
         /// <summary>
-        /// Debug helper method that can be hooked up to actions when using <see cref="PlayerNotifications.InvokeUnityEvents"/>.
+        /// Debug helper method that can be hooked up to actions when using <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         /// </summary>
         public void DebugLogAction(InputAction.CallbackContext context)
         {
@@ -1218,7 +1225,7 @@ namespace UnityEngine.InputSystem.PlayerInput
 
             // Go through all control schemes and see if there is one usable with the device.
             // If so, switch to it.
-            var controlScheme = InputControlScheme.FindControlSchemeForDevice(control.device, player.m_Actions.controlSchemes);
+            var controlScheme = InputControlScheme.FindControlSchemeForDevice<ReadOnlyArray<InputControlScheme>>(control.device, player.m_Actions.controlSchemes);
             if (controlScheme != null)
             {
                 // First remove the currently paired devices, then pair the device that was used,

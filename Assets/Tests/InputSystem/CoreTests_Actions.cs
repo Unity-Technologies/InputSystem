@@ -1392,7 +1392,7 @@ partial class CoreTests
         {
             var actuated = context.ControlIsActuated();
             if (!actuated && m_WaitingForRelease)
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
             else if (actuated)
                 m_WaitingForRelease = true;
         }
@@ -2592,7 +2592,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(interactions: "Tap(duration=0.123)");
         action.AddBinding("<Gamepad>/buttonSouth");
         action.Enable();
@@ -2619,7 +2619,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick");
         action.Enable();
@@ -2645,7 +2645,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick/x");
         action.Enable();
@@ -2681,7 +2681,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
@@ -4669,7 +4669,7 @@ partial class CoreTests
         public void Process(ref InputInteractionContext context)
         {
             Debug.LogAssertion("LogInteraction.Process");
-            context.PerformedAndGoBackToWaiting();
+            context.Performed();
         }
 
         public void Reset()
@@ -5229,6 +5229,58 @@ partial class CoreTests
         action.ApplyBindingOverride(new InputBinding());
         Assert.That(action.bindings[0].overridePath, Is.Null);
         Assert.That(action.bindings[0].overrideInteractions, Is.Null);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ApplyingEmptyStringOverride_IsSameAsDisablingBinding()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "/gamepad/leftTrigger");
+
+        bool performed = false;
+        action.performed += _ => performed = true;
+
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed);
+        performed = false;
+
+        action.Disable();
+        action.ApplyBindingOverride(0, "");
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanApplyOverrideToActionWithEmptyBinding()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction();
+        action.AddBinding("");
+
+        bool performed = false;
+        action.performed += _ => performed = true;
+
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed, Is.False);
+
+        action.Disable();
+        action.ApplyBindingOverride(0, "/gamepad/leftTrigger");
+        action.Enable();
+
+        Press(gamepad.leftTrigger);
+
+        Assert.That(performed);
     }
 
     [Test]

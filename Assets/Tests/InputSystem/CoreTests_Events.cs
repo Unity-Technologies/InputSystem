@@ -45,7 +45,6 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.onUpdateCallCount, Is.EqualTo(1));
-        Assert.That(device.onUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
         Assert.That(device.axis.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
     }
 
@@ -921,12 +920,10 @@ partial class CoreTests
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;
-        public InputUpdateType onUpdateType;
 
-        public void OnUpdate(InputUpdateType updateType)
+        public void OnUpdate()
         {
             ++onUpdateCallCount;
-            onUpdateType = updateType;
             InputSystem.QueueStateEvent(this, new CustomDeviceState {axis = 0.234f});
         }
     }
@@ -1018,26 +1015,21 @@ partial class CoreTests
     [Category("Events")]
     public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
     {
-        InputUpdateType? receivedUpdateType = null;
-        Action<InputUpdateType> callback =
-            type =>
-        {
-            Assert.That(receivedUpdateType, Is.Null);
-            receivedUpdateType = type;
-        };
+        var receivedCalls = 0;
+        Action callback = () => ++ receivedCalls;
 
         InputSystem.onAfterUpdate += callback;
 
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+        Assert.That(receivedCalls, Is.EqualTo(1));
 
-        receivedUpdateType = null;
+        receivedCalls = 0;
         InputSystem.onAfterUpdate -= callback;
 
         InputSystem.Update();
 
-        Assert.That(receivedUpdateType, Is.Null);
+        Assert.That(receivedCalls, Is.Zero);
     }
 
     [Test]

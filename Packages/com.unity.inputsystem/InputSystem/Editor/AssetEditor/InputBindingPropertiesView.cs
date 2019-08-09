@@ -41,6 +41,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlSchemes = controlSchemes;
 
             var flags = (InputBinding.Flags)bindingProperty.FindPropertyRelative("m_Flags").intValue;
+            m_IsPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) != 0;
             m_IsComposite = (flags & InputBinding.Flags.Composite) != 0;
 
             // Set up control picker for m_Path. Not needed if the binding is a composite.

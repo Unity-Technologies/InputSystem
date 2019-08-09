@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.UI.Editor;
 using UnityEngine.InputSystem.Users;
@@ -14,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.InputSystem.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.
@@ -499,7 +497,7 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
             EditorGUIUtility.TrTextContent("Behavior",
                 "Determine how notifications should be sent when an input-related event associated with the player happens.");
         [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText =
-            EditorGUIUtility.TrTextContent("Default Control Scheme", "Which control scheme to try by default. If not set, PlayerInput "
+            EditorGUIUtility.TrTextContent("Default Scheme", "Which control scheme to try by default. If not set, PlayerInput "
                 + "will simply go through all control schemes in the action asset and try one after the other. If set, PlayerInput will try "
                 + "the given scheme first but if using that fails (e.g. when not required devices are missing) will fall back to trying the other "
                 + "control schemes in order.");

@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem.PlayerInput;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class TankMovement : MonoBehaviour
@@ -138,7 +138,7 @@ public class TankMovement : MonoBehaviour
     // triggered from the "Turret" action.
     private void OnTurret(InputValue value)
     {
-        m_TurnInputValue = value.Get<Vector2>().x;
+        m_TurnInputValue = value.Get<float>();
     }
 
     // The callback from the TanksInputActions Player Input asset that is
