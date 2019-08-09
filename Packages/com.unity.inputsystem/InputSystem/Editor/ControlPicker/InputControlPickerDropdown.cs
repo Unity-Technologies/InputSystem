@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
                     if (m_Mode == InputControlPicker.Mode.PickControl)
-						AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
+                        AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);
                 }
                 deviceItem.AddSeparator();
