@@ -788,7 +788,7 @@ namespace UnityEngine.InputSystem.Editor
                 parent.children?.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
             }
 
-            private void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
+            private unsafe void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
             {
                 // Add item for action.
                 var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
@@ -796,9 +796,41 @@ namespace UnityEngine.InputSystem.Editor
                     name += " (Disabled)";
                 var item = AddChild(parent, name, ref id);
 
+                // Grab state.
+                var actionMap = action.GetOrCreateActionMap();
+                actionMap.ResolveBindingsIfNecessary();
+                var state = actionMap.m_State;
+
                 // Add list of resolved controls.
-                foreach (var control in action.controls)
-                    AddChild(item, control.path, ref id);
+                var actionIndex = action.m_ActionIndexInState;
+                var totalBindingCount = state.totalBindingCount;
+                for (var i = 0; i < totalBindingCount; ++i)
+                {
+                    ref var bindingState = ref state.bindingStates[i];
+                    if (bindingState.actionIndex != actionIndex)
+                        continue;
+
+                    var binding = state.GetBinding(i);
+                    var controlCount = bindingState.controlCount;
+                    var controlStartIndex = bindingState.controlStartIndex;
+                    for (var n = 0; n < controlCount; ++n)
+                    {
+                        var control = state.controls[controlStartIndex + n];
+                        var interactions =
+                            StringHelpers.Join(new[] {binding.effectiveInteractions, action.interactions}, ",");
+
+                        var text = control.path;
+                        if (!string.IsNullOrEmpty(interactions))
+                        {
+                            var namesAndParameters = NameAndParameters.ParseMultiple(interactions);
+                            text += " [";
+                            text += string.Join(",", namesAndParameters.Select(x => x.name));
+                            text += "]";
+                        }
+
+                        AddChild(item, text, ref id);
+                    }
+                }
             }
 
             private TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id, Texture2D icon = null)

@@ -18,9 +18,6 @@ namespace UnityEngine.InputSystem.Editor
             if (bindingOrAction == null)
                 throw new ArgumentNullException(nameof(bindingOrAction));
 
-            var flags = (InputBinding.Flags)bindingOrAction.FindPropertyRelative("m_Flags").intValue;
-            m_IsPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) != 0;
-
             m_InteractionsProperty = bindingOrAction.FindPropertyRelative("m_Interactions");
             m_ProcessorsProperty = bindingOrAction.FindPropertyRelative("m_Processors");
 
@@ -110,7 +107,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
-        protected readonly bool m_IsPartOfComposite;
+        protected bool m_IsPartOfComposite;
 
         private readonly Action<FourCC> m_OnChange;
 

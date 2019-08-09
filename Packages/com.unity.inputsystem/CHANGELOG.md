@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [0.9.2-preview] - 2019-8-9
+
+### Fixed
+
+- A `RebindingOperation` will now fall back to the default path generation behavior if the callback provided to `OnGeneratePath` returns null.
+- Fixed the Input Action editor window throwing exceptions when trying to view action properties.
+
+### Actions
+
+- `PlayerInput` will now copy overrides when creating duplicate actions.
+- It is now possible to use an empty binding path with a non empty override path.
+- It is now possible to use set an empty override path to disable a binding.
+- It is not possible to query the effectively used path of a binding using `effectivePath`.
+- Actions embedded into MonoBehaviour components can now have their properties edited in the inspector. Previously there was no way to get to the properties in this workflow. There is a gear icon now on the action that will open the action properties.
+
+### Changed
+
+### Added
+
+- Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
+
 ## [0.9.1-preview] - 2019-8-8
 
 ### Fixed

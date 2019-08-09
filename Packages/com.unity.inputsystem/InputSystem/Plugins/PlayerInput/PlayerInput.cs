@@ -662,7 +662,14 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
+                    InputActionAsset oldActions = m_Actions;
                     m_Actions = Instantiate(m_Actions);
+                    for (int actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+                    {
+                        for (int binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                            m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
+                    }
+
                     break;
                 }
 

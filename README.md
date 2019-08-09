@@ -8,3 +8,4 @@ Issues are expected at this point. However, feel free to report what you find he
 
 ## How to Use This In Your Own Project
 Please see [Installation](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/Installation.md).
+
