@@ -19,7 +19,7 @@ public void SimpleController_UsingState : MonoBehaviour
         if (gamepad == null)
             return;
 
-        var move = Gameapad.leftStick.ReadValue();
+        var move = Gamepad.leftStick.ReadValue();
         //...
     }
 }
