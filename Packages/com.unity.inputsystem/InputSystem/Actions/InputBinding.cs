@@ -268,9 +268,29 @@ namespace UnityEngine.InputSystem
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
         [NonSerialized] private Guid m_Guid;
 
-        internal string effectivePath => overridePath ?? path;
-        internal string effectiveInteractions => overrideInteractions ?? interactions;
-        internal string effectiveProcessors => overrideProcessors ?? processors;
+        /// <summary>
+        /// This is the bindings path which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overridePath"/> if that is set, or <see cref="path"/> otherwise.
+        /// </remarks>
+        public string effectivePath => overridePath ?? path;
+
+        /// <summary>
+        /// This is the interaction config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideInteractions"/> if that is set, or <see cref="interactions"/> otherwise.
+        /// </remarks>
+        public string effectiveInteractions => overrideInteractions ?? interactions;
+
+        /// <summary>
+        /// This is the processor config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideProcessors"/> if that is set, or <see cref="processors"/> otherwise.
+        /// </remarks>
+        public string effectiveProcessors => overrideProcessors ?? processors;
 
         internal bool isEmpty =>
             string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
