@@ -22,7 +22,10 @@ however, it has to be formatted properly to pass verification tests.
 - It is not possible to query the effectively used path of a binding using `effectivePath`.
 
 ### Changed
+
 ### Added
+
+- Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
 
 ## [0.9.1-preview] - 2019-8-8
 
