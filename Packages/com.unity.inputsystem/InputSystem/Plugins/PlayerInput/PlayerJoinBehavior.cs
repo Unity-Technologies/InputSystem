@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Determines how <see cref="PlayerInputManager"/> joins new players.

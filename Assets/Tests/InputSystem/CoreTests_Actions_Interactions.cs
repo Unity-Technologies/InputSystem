@@ -3,9 +3,40 @@ using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 internal partial class CoreTests
 {
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+            interactions: "tap(duration=1),slowTap");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Press(gamepad.buttonSouth);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action, gamepad.buttonSouth, time: 0));
+
+            trace.Clear();
+
+            // Expire the tap. The system should transitioning from the tap to a slowtap.
+            // Note the starting time of the slowTap will be 0 not 2.
+            runtime.currentTime = 2;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Canceled<TapInteraction>(action, gamepad.buttonSouth)
+                    .AndThen(Started<SlowTapInteraction>(action, gamepad.buttonSouth, time: 0)));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformPressInteraction()

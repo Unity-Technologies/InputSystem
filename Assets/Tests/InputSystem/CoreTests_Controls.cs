@@ -439,7 +439,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             float value;
@@ -479,11 +479,10 @@ partial class CoreTests
 
         float? value = null;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, _) =>
         {
             Assert.That(value, Is.Null);
-            float eventValue;
-            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out eventValue);
+            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
             value = eventValue;
         };
 
@@ -502,7 +501,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
@@ -523,7 +522,7 @@ partial class CoreTests
 
         var receivedCalls = 0;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             ++receivedCalls;
             gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
@@ -1029,7 +1028,6 @@ partial class CoreTests
         Assert.That(InputControlPath.MatchesPrefix("<Gamepad>/rightStick", gamepad.leftStick), Is.False);
     }
 
-    ////TODO: doesnotallocate constraint
     [Test]
     [Category("Controls")]
     public void Controls_CanKeepListsOfControls_WithoutAllocatingGCMemory()
@@ -1038,22 +1036,27 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var list = new InputControlList<InputControl>();
+        var list = default(InputControlList<InputControl>);
+        Assert.That(() => { list = new InputControlList<InputControl>(); }, Is.Not.AllocatingGCMemory());
+
         try
         {
             Assert.That(list.Count, Is.Zero);
             Assert.That(list.ToArray(), Is.Empty);
             Assert.That(() => list[0], Throws.TypeOf<ArgumentOutOfRangeException>());
 
-            list.Capacity = 10;
+            list.Capacity = 4;
 
-            list.Add(gamepad.leftStick);
-            list.Add(null); // Permissible to add null entry.
-            list.Add(keyboard.spaceKey);
-            list.Add(keyboard);
+            Assert.That(() =>
+            {
+                list.Add(gamepad.leftStick);
+                list.Add(null); // Permissible to add null entry.
+                list.Add(keyboard.spaceKey);
+                list.Add(keyboard);
+            }, Is.Not.AllocatingGCMemory());
 
             Assert.That(list.Count, Is.EqualTo(4));
-            Assert.That(list.Capacity, Is.EqualTo(6));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
             Assert.That(list[1], Is.Null);
             Assert.That(list[2], Is.SameAs(keyboard.spaceKey));
@@ -1066,11 +1069,14 @@ partial class CoreTests
             Assert.That(list.Contains(keyboard.spaceKey));
             Assert.That(list.Contains(keyboard));
 
-            list.RemoveAt(1);
-            list.Remove(keyboard);
+            Assert.That(() =>
+            {
+                list.RemoveAt(1);
+                list.Remove(keyboard);
+            }, Is.Not.AllocatingGCMemory());
 
             Assert.That(list.Count, Is.EqualTo(2));
-            Assert.That(list.Capacity, Is.EqualTo(8));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
             Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
             Assert.That(() => list[2], Throws.TypeOf<ArgumentOutOfRangeException>());
@@ -1083,7 +1089,7 @@ partial class CoreTests
             list.AddRange(new InputControl[] {keyboard.aKey, keyboard.bKey}, count: 1, destinationIndex: 0);
 
             Assert.That(list.Count, Is.EqualTo(3));
-            Assert.That(list.Capacity, Is.EqualTo(7));
+            Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey}));
@@ -1091,16 +1097,16 @@ partial class CoreTests
             list.AddRange(new InputControl[] {keyboard.bKey, keyboard.cKey});
 
             Assert.That(list.Count, Is.EqualTo(5));
-            Assert.That(list.Capacity, Is.EqualTo(5));
+            Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
 
-            using (var toAdd = new InputControl[] {gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest}.ToControlList())
+            using (var toAdd = new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
                 list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
 
             Assert.That(list.Count, Is.EqualTo(6));
-            Assert.That(list.Capacity, Is.EqualTo(4));
+            Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                     {keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));

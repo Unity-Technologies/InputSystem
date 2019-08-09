@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 28)]
-    internal struct GamepadState : IInputStateTypeInfo
+    public struct GamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
 

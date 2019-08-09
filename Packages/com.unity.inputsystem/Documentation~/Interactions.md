@@ -91,13 +91,13 @@ Some of the interactions behave differently when the action they are associated 
 
 If no interaction has specifically been added to a binding or its action, then the default interaction applies to the binding. It is designed to represent a "generic" interaction with an input control.
 
-If [pass-through](Actions.md#passthrough-actions) is __disabled__, the behavior is as follows:
+If [pass-through](Actions.md#pass-through-actions) is __disabled__, the behavior is as follows:
 
-1. As soon as a bound control becomes [actuated](Controls.md#control-actuated), the action goes from `Waiting` to `Started` and then immediately to `Performed` and back to `Started` (i.e. you will see on callback on `InputAction.started` followed by one callback on `InputAction.performed`).
+1. As soon as a bound control becomes [actuated](Controls.md#control-actuation), the action goes from `Waiting` to `Started` and then immediately to `Performed` and back to `Started` (i.e. you will see on callback on `InputAction.started` followed by one callback on `InputAction.performed`).
 2. For as long as the bound control remains actuated, the action stays in `Started` and will trigger `Performed` whenever the value of the control changes (i.e. you will see one call to `InputAction.performed`).
 3. When the bound control stops being actuated, the action goes to `Cancelled` and then back to `Waiting` (i.e. you will see one call to `InputAction.cancelled`).
 
-If [pass-through](Actions.md#passthrough-actions) is __enabled__, the TODO
+If [pass-through](Actions.md#pass-through-actions) is __enabled__, the TODO
 
 ### `Press`
 

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
 ////        the actions-update-when-not-expected problem; plus give us access to easy polling
@@ -19,7 +18,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
 
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Records the triggering of actions into a sequence of events that can be replayed at will.

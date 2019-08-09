@@ -581,6 +581,10 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        ////REVIEW: would be great to get boxed versions of the default values but that's much harder to do
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
 
         buttonAction.Enable();
         triggerAction.Enable();
@@ -592,6 +596,9 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
 
         Press(gamepad.buttonSouth, queueEventOnly: true);
         Set(gamepad.leftTrigger, 0.234f, queueEventOnly: true);
@@ -604,13 +611,22 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(triggerAction.ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValueAsObject(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
 
         InputSystem.Update();
 
-        // NOTE: The button action "resets" its value!
-        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
         Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
         Assert.That(stickAction.ReadValue<Vector2>(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+                .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(triggerAction.ReadValueAsObject(), Is.EqualTo(0.234).Within(0.00001));
+        Assert.That(stickAction.ReadValueAsObject(),
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
                 .Using(Vector2EqualityComparer.Instance));
 
@@ -624,6 +640,9 @@ partial class CoreTests
         Assert.That(stickAction.ReadValue<Vector2>(),
             Is.EqualTo(Vector2.zero)
                 .Using(Vector2EqualityComparer.Instance));
+        Assert.That(buttonAction.ReadValueAsObject(), Is.Null);
+        Assert.That(triggerAction.ReadValueAsObject(), Is.Null);
+        Assert.That(stickAction.ReadValueAsObject(), Is.Null);
     }
 
     [Test]
@@ -760,6 +779,32 @@ partial class CoreTests
         Press(keyboard.digit2Key);
 
         Assert.That(performedWasCalled);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanQueryActiveControl()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddBinding(gamepad.buttonSouth);
+        action.AddBinding(gamepad.buttonNorth);
+        action.Enable();
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonSouth));
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action.activeControl, Is.Null);
+
+        Press(gamepad.buttonNorth);
+
+        Assert.That(action.activeControl, Is.SameAs(gamepad.buttonNorth));
     }
 
     [Test]
@@ -1347,7 +1392,7 @@ partial class CoreTests
         {
             var actuated = context.ControlIsActuated();
             if (!actuated && m_WaitingForRelease)
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
             else if (actuated)
                 m_WaitingForRelease = true;
         }
@@ -2547,7 +2592,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(interactions: "Tap(duration=0.123)");
         action.AddBinding("<Gamepad>/buttonSouth");
         action.Enable();
@@ -2574,7 +2619,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick");
         action.Enable();
@@ -2600,7 +2645,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction(processors: "ConstantVector2Test");
         action.AddBinding("<Gamepad>/leftStick/x");
         action.Enable();
@@ -2636,7 +2681,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.RegisterControlProcessor<ConstantVector2TestProcessor>();
+        InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick").WithProcessor<ConstantVector2TestProcessor>();
         action.Enable();
@@ -4624,7 +4669,7 @@ partial class CoreTests
         public void Process(ref InputInteractionContext context)
         {
             Debug.LogAssertion("LogInteraction.Process");
-            context.PerformedAndGoBackToWaiting();
+            context.Performed();
         }
 
         public void Reset()

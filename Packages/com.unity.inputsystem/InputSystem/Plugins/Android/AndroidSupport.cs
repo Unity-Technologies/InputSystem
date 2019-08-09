@@ -85,8 +85,8 @@ namespace UnityEngine.InputSystem.Android
                 , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
                 , AndroidGameControllerState.kVariantGamepad));
 
-            InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
-            InputSystem.RegisterControlProcessor<AndroidCompensateRotationProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();
 
             // Add sensors
             InputSystem.RegisterLayout<AndroidAccelerometer>(

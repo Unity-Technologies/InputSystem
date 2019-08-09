@@ -116,7 +116,7 @@ namespace UnityEngine.InputSystem.Steam
             }
         }
 
-        private static void OnUpdate(InputUpdateType updateType)
+        private static void OnUpdate()
         {
             if (api == null)
                 return;

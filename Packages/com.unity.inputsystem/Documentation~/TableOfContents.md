@@ -26,7 +26,7 @@
     * [Steam](Steam.md)
     * [XR](XR.md)
     * [Sensors](Sensors.md)
-    * [Haptics](Haptics.md) (e.g. rumble)
+    * [Haptics](Haptics.md)
     * [HID](HID.md)
   * [Architecture](Architecture.md)
     * [Actions](Actions.md)

@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.InputSystem.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Manages joining and leaving of players.
@@ -33,8 +33,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         public const string PlayerJoinedMessage = "OnPlayerJoined";
 
         public const string PlayerLeftMessage = "OnPlayerLeft";
-        public const string PlayerJoinFailedMessage = "OnPlayerJoinFailed";
-        public const string SplitScreenSetupChanged = "OnSplitScreenSetupChanged";
 
         /// <summary>
         /// If enabled, each player will automatically be assigned a portion of the available screen area.
@@ -97,11 +95,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         public bool maintainAspectRatioInSplitScreen => m_MaintainAspectRatioInSplitScreen;
 
         public int fixedNumberOfSplitScreens => m_FixedNumberOfSplitScreens;
-
-        /// <summary>
-        /// If this is non-zero, split-screen areas will be
-        /// </summary>
-        public float splitScreenBorderWidth => m_SplitScreenBorderWidth;
 
         /// <summary>
         /// The normalized screen rectangle available for allocating player split-screens into.
@@ -390,7 +383,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [SerializeField] internal int m_MaxPlayerCount = -1;
         [SerializeField] internal bool m_AllowJoining = true;
-        [SerializeField] internal bool m_JoinPlayersWithMissingDevices;
         [SerializeField] internal PlayerJoinBehavior m_JoinBehavior;
         [SerializeField] internal PlayerJoinedEvent m_PlayerJoinedEvent;
         [SerializeField] internal PlayerLeftEvent m_PlayerLeftEvent;
@@ -399,7 +391,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         [SerializeField] internal bool m_SplitScreen;
         [SerializeField] internal bool m_MaintainAspectRatioInSplitScreen;
         [SerializeField] internal int m_FixedNumberOfSplitScreens = -1;
-        [SerializeField] internal float m_SplitScreenBorderWidth;
         [SerializeField] internal Rect m_SplitScreenRect = new Rect(0, 0, 1, 1);
 
         [NonSerialized] private bool m_JoinActionDelegateHooked;

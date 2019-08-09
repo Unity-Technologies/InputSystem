@@ -22,6 +22,58 @@ partial class CoreTests
 {
     [Test]
     [Category("State")]
+    public void State_CanGetCurrentUpdateType()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(default(InputUpdateType)));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Manual));
+
+        #if UNITY_EDITOR
+        runtime.onShouldRunUpdate = _ => true;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetUpdateCount()
+    {
+        Assert.That(InputState.updateCount, Is.Zero);
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanGetUpdateCount_ForEditorUpdates()
+    {
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
         var gamepad = InputDevice.Build<Gamepad>();
@@ -414,22 +466,18 @@ partial class CoreTests
         runtime.onShouldRunUpdate = _ => true;
 
         var receivedUpdate = false;
-        InputUpdateType? receivedUpdateType = null;
         InputSystem.onBeforeUpdate +=
-            type =>
+            () =>
         {
             Assert.That(receivedUpdate, Is.False);
             receivedUpdate = true;
-            receivedUpdateType = type;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Before render. Disabled by default. Add a device that needs before-render updates
         // so that the update gets enabled.
@@ -445,17 +493,14 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
 
 #if UNITY_EDITOR
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Editor.
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
 #endif
     }
 
@@ -892,7 +937,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.onEvent += eventPtr => Assert.Fail("No event should be triggered");
+        InputSystem.onEvent += (e, d) => Assert.Fail("No event should be triggered");
 
         InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
 

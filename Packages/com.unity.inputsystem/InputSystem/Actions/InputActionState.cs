@@ -110,8 +110,8 @@ namespace UnityEngine.InputSystem
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
 
-        private Action<InputUpdateType> m_OnBeforeUpdateDelegate;
-        private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+        private Action m_OnBeforeUpdateDelegate;
+        private Action m_OnAfterUpdateDelegate;
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
 
@@ -722,9 +722,10 @@ namespace UnityEngine.InputSystem
         // NOTE: We do this as a callback from onBeforeUpdate rather than directly when the action is enabled
         //       to ensure that the callbacks happen during input processing and not randomly from wherever
         //       an action happens to be enabled.
-        private void OnBeforeInitialUpdate(InputUpdateType type)
+        private void OnBeforeInitialUpdate()
         {
-            ////TODO: deal with update type
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
@@ -776,7 +777,7 @@ namespace UnityEngine.InputSystem
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
             #if UNITY_EDITOR
-            if (InputState.currentUpdate == InputUpdateType.Editor)
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
             #endif
 
@@ -1420,14 +1421,15 @@ namespace UnityEngine.InputSystem
                         var index = interactionStartIndex + i;
                         if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
+                            var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
                                 controlIndex = interactionStates[index].triggerControlIndex,
                                 bindingIndex = trigger.bindingIndex,
                                 interactionIndex = index,
-                                time = trigger.time,
-                                startTime = interactionStates[index].startTime
+                                time = startTime,
+                                startTime = startTime,
                             };
                             ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
                             break;

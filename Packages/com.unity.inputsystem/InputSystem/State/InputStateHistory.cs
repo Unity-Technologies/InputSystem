@@ -372,7 +372,7 @@ namespace UnityEngine.InputSystem.LowLevel
             InputEventPtr eventPtr, long monitorIndex)
         {
             // Ignore state change if it's in an input update we're not interested in.
-            var currentUpdateType = InputState.currentUpdate;
+            var currentUpdateType = InputState.currentUpdateType;
             var updateTypeMask = updateMask;
             if ((currentUpdateType & updateTypeMask) == 0 &&
                 // EXCEPTION: When we're recording fixed and/or dynamic updates, do NOT ignore the state change

@@ -1,5 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
 
@@ -18,12 +19,7 @@ using UnityEngine.Serialization;
 
 ////TODO: allow changing bindings without having to disable
 
-////TODO: polling API
-
 ////REVIEW: what about having the concept of "consumed" on the callback context?
-
-////REVIEW: should actions basically be handles to data that is stored in an array in the map?
-////        (with this, we could also implement more efficient duplication where we duplicate all the binding data but not the action data)
 
 ////REVIEW: have "Always Enabled" toggle on actions?
 
@@ -33,29 +29,120 @@ namespace UnityEngine.InputSystem
     /// A named input signal that can flexibly decide which input data to tap.
     /// </summary>
     /// <remarks>
-    /// Unlike controls, actions signal value changes rather than the values themselves.
-    /// They sit on top of controls (and each single action may reference several controls
-    /// collectively) and monitor the system for change.
+    /// An input action is an abstraction over the source of input(s) it receives. They are
+    /// most useful for representing input as "logical" concepts (e.g. "jump") rather than
+    /// as "physical" inputs (e.g. "space bar on keyboard pressed").
     ///
-    /// Unlike InputControls, InputActions are not passive. They will actively perform
-    /// processing each frame they are active whereas InputControls just sit there as
-    /// long as no one is asking them directly for a value.
+    /// In its most basic form, an action is simply an object along with a collection of
+    /// bindings that trigger the action.
     ///
-    /// Processors on controls are *NOT* taken into account by actions. A state is
-    /// considered changed if its underlying memory changes not if the final processed
-    /// value changes.
+    /// <example>
+    /// <code>
+    /// // A simple action can be created directly using `new`. If desired, a binding
+    /// // can be specified directly as part of construction.
+    /// var action = new InputAction(binding: "&lt;Gamepad&gt;/buttonSouth");
     ///
-    /// Actions are agnostic to update types. They trigger in whatever update detects
-    /// a change in value.
+    /// // Additional bindings can be added using `AddBinding`.
+    /// action.AddBinding("&lt;Mouse&gt;/leftButton");
+    /// </code>
+    /// </example>
     ///
-    /// Actions are not supported in edit mode.
+    /// Bindings use control path expressions to reference controls. See <see cref="InputBinding"/>
+    /// for more details. There may be arbitrary many bindings targeting a single action. The
+    /// list of bindings targeting an action can be obtained through <see cref="bindings"/>.
+    ///
+    /// By itself an action does not do anything until it is enabled:
+    ///
+    /// <example>
+    /// <code>
+    /// action.Enable();
+    /// </code>
+    /// </example>
+    ///
+    /// Once enabled, the action will actively monitor all controls on devices present
+    /// in the system (see <see cref="InputSystem.devices"/>) that match any of the binding paths
+    /// associated with the action. If you want to restrict the set of bindings used at runtime
+    /// or restrict the set of devices which controls are chosen from, you can do so using
+    /// <see cref="bindingMask"/> or, if the action is part of an <see cref="InputActionMap"/>,
+    /// by setting the <see cref="InputActionMap.devices"/> property of the action map. The
+    /// controls that an action uses can be queried using the <see cref="controls"/> property.
+    ///
+    /// When input is received on controls bound to an action, the action will trigger callbacks
+    /// in response. These callbacks are <see cref="started"/>, <see cref="performed"/>, and
+    /// <see cref="canceled"/>. The callbacks are triggered as part of input system updates
+    /// (see <see cref="InputSystem.Update"/>), i.e. they happen before the respective
+    /// <see cref="MonoBehaviour.Update"/> or <see cref="MonoBehaviour.FixedUpdate"/> methods
+    /// get executed (depending on which <see cref="InputSettings.updateMode"/> the system is
+    /// set to).
+    ///
+    /// In what order and how those callbacks get triggered depends on both the <see cref="type"/>
+    /// of the action as well as on the interactions (see <see cref="IInputInteraction"/>) present
+    /// on the bindings of the action. The default behavior is that when a control is actuated
+    /// (i.e. moving away from its resting position), <see cref="started"/> is called and then
+    /// <see cref="performed"/>. Subsequently, whenever the a control further changes value to
+    /// anything other than its default value, <see cref="performed"/> will be called again.
+    /// Finally, when the control moves back to its default value (i.e. resting position),
+    /// <see cref="canceled"/> is called.
+    ///
+    /// To hook into the callbacks, there are several options available to you. The most obvious
+    /// one is to hook directly into <see cref="started"/>, <see cref="performed"/>, and/or
+    /// <see cref="canceled"/>. In these callbacks, you will receive a <see cref="CallbackContext"/>
+    /// with information about how the action got triggered. For example, you can use <see
+    /// cref="CallbackContext.ReadValue{TValue}"/> to read the value from the binding that triggered
+    /// or use <see cref="CallbackContext.interaction"/> to find the interaction that is in progress.
+    ///
+    /// <example>
+    /// <code>
+    /// action.started += context => Debug.Log($"{context.action} started");
+    /// action.performed += context => Debug.Log($"{context.action} performed");
+    /// action.canceled += context => Debug.Log($"{context.action} canceled");
+    /// </code>
+    /// </example>
+    ///
+    /// Alternatively, you can use the <see cref="InputActionMap.actionTriggered"/> callback for
+    /// actions that are part of an action map or the global <see cref="InputSystem.onActionChange"/>
+    /// callback to globally listen for action activity. To simply record action activity instead
+    /// of responding to it directly, you can use <see cref="InputActionTrace"/>.
+    ///
+    /// If you prefer to poll an action directly as part of your <see cref="MonoBehaviour.Update"/>
+    /// or <see cref="MonoBehaviour.FixedUpdate"/> logic, you can do so using the <see cref="triggered"/>
+    /// and <see cref="ReadValue{TValue}"/> methods.
+    ///
+    /// <example>
+    /// <code>
+    /// protected void Update()
+    /// {
+    ///     // For a button type action.
+    ///     if (action.triggered)
+    ///         /* ... */;
+    ///
+    ///     // For a value type action.
+    ///     // (Vector2 is just an example; pick the value type that is the right
+    ///     // one according to the bindings you have)
+    ///     var v = action.ReadValue&lt;Vector2&gt;();
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// Note that actions are not generally frame-based. What this means is that an action
+    /// will observe any value change on its connected controls, even if the control changes
+    /// value multiple times in the same frame. In practice, this means that, for example,
+    /// no button press will get missed.
+    ///
+    /// Please note that actions are a player-only feature. They are not supported in
+    /// edit mode.
     /// </remarks>
+    /// <seealso cref="InputActionMap"/>
+    /// <seealso cref="InputActionAsset"/>
+    /// <seealso cref="InputBinding"/>
+    /// <seealso cref="InputSystem.ListEnabledActions()"/>
     [Serializable]
     public sealed class InputAction : ICloneable, IDisposable
     {
         /// <summary>
         /// Name of the action.
         /// </summary>
+        /// <value>Plain-text name of the action.</value>
         /// <remarks>
         /// Can be null for anonymous actions created in code.
         ///
@@ -70,6 +157,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Behavior type of the action.
         /// </summary>
+        /// <value>General behavior type of the action.</value>
         /// <remarks>
         /// Determines how the action gets triggered in response to control value changes.
         /// </remarks>
@@ -194,14 +282,21 @@ namespace UnityEngine.InputSystem
         public InputActionPhase phase => currentState.phase;
 
         /// <summary>
-        /// Whether the action is currently enabled or not.
+        /// Whether the action is currently enabled, i.e. responds to input, or not.
         /// </summary>
+        /// <value>True if the action is currently enabled.</value>
         /// <remarks>
         /// An action is enabled by either calling <see cref="Enable"/> on it directly or by calling
         /// <see cref="InputActionMap.Enable"/> on the <see cref="InputActionMap"/> containing the action.
         /// When enabled, an action will listen for changes on the controls it is bound to and trigger
-        /// ...
+        /// callbacks such as <see cref="started"/>, <see cref="performed"/>, and <see cref="canceled"/>
+        /// in response.
         /// </remarks>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="Disable"/>
+        /// <seealso cref="InputActionMap.Enable"/>
+        /// <seealso cref="InputActionMap.Disable"/>
+        /// <seealso cref="InputSystem.ListEnabledActions()"/>
         public bool enabled => phase != InputActionPhase.Disabled;
 
         /// <summary>
@@ -239,7 +334,19 @@ namespace UnityEngine.InputSystem
         /// Whether the action was triggered (i.e. had <see cref="performed"/> called) this frame.
         /// </summary>
         /// <remarks>
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (i.e. until the next
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
+        ///
+        /// <example>
+        /// <code>
+        /// if (myControls.gameplay.fire.triggered)
+        ///     Fire();
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputActionType.Button"/>
+        /// <seealso cref="ReadValue{TValue}"/>
         public unsafe bool triggered
         {
             get
@@ -250,6 +357,32 @@ namespace UnityEngine.InputSystem
 
                 var lastTriggeredInUpdate = map.m_State.actionStates[m_ActionIndexInState].lastTriggeredInUpdate;
                 return lastTriggeredInUpdate != 0 && lastTriggeredInUpdate == InputUpdate.s_UpdateStepCount;
+            }
+        }
+
+        /// <summary>
+        /// The currently active control that is driving the action. Null while the action
+        /// is in waiting (<see cref="InputActionPhase.Waiting"/>) or canceled (<see cref="InputActionPhase.Canceled"/>)
+        /// state. Otherwise the control that last had activity on it which wasn't ignored.
+        /// </summary>
+        /// <remarks>
+        /// Note that the control's value does not necessarily correspond to the value of the
+        /// action (<see cref="ReadValue{TValue}"/>) as the control may be part of a composite.
+        /// </remarks>
+        /// <seealso cref="CallbackContext.control"/>
+        public unsafe InputControl activeControl
+        {
+            get
+            {
+                var state = GetOrCreateActionMap().m_State;
+                if (state != null)
+                {
+                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        return state.controls[controlIndex];
+                }
+                return null;
             }
         }
 
@@ -360,41 +493,97 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Read the current value of the action. This is the last value received on <see cref="started"/>,
-        /// <see cref="performed"/>, or <see cref="canceled"/> (whichever came last) except if the action <see cref="type"/>
-        /// is <see cref="InputActionType.Button"/> in which case <typeparamref name="TValue"/> must be <see cref="float"/>
-        /// and the returned value will be 1 if <see cref="triggered"/> is true and 0 otherwise.
+        /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
         /// </summary>
-        /// <typeparam name="TValue">Value type to read. Must match </typeparam>
-        /// <returns></returns>
+        /// <typeparam name="TValue">Value type to read. Must match the value type of the binding/control that triggered.</typeparam>
+        /// <returns>The current value of the action or <c>default(TValue)</c> if the action is not currently in-progress.</returns>
+        /// <remarks>
+        /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
+        /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
+        /// there. Instead, this API acts more like a polling API that can be called, for example, as part of
+        /// <see cref="MonoBehaviour.Update"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Let's say you have a MyControls.inputactions file with "Generate C# Class" enabled
+        /// // and it has an action map called "gameplay" with a "move" action of type Vector2.
+        /// public class MyBehavior : MonoBehaviour
+        /// {
+        ///     public MyControls controls;
+        ///     public float moveSpeed = 4;
+        ///
+        ///     protected void Awake()
+        ///     {
+        ///         controls = new MyControls();
+        ///     }
+        ///
+        ///     protected void OnEnable()
+        ///     {
+        ///         controls.gameplay.Enable();
+        ///     }
+        ///
+        ///     protected void OnDisable()
+        ///     {
+        ///         controls.gameplay.Disable();
+        ///     }
+        ///
+        ///     protected void Update()
+        ///     {
+        ///         var moveVector = controls.gameplay.move.ReadValue&lt;Vector2&gt;() * (moveSpeed * Time.deltaTime);
+        ///         //...
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// If the action has button-like behavior, then <see cref="triggered"/> is usually a better alternative to
+        /// reading out a float and checking if it is above the button press point.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">The given <typeparamref name="TValue"/> type does not match
+        /// the value type of the control or composite currently driving the action.</exception>
+        /// <seealso cref="triggered"/>
+        /// <seealso cref="ReadValueAsObject"/>
+        /// <seealso cref="CallbackContext.ReadValue{TValue}"/>
         public unsafe TValue ReadValue<TValue>()
             where TValue : struct
         {
             var result = default(TValue);
 
-            if (type == InputActionType.Button)
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
             {
-                if (typeof(TValue) != typeof(float))
-                    throw new InvalidOperationException(
-                        $"Value type for Button type action {this} must be float but was {typeof(TValue).Name} instead");
-
-                // Working around limitations in type system to treat TValue as float here.
-
-                var resultPtr = (float*)UnsafeUtility.AddressOf(ref result);
-                *resultPtr = triggered ? 1 : 0;
-            }
-            else
-            {
-                var state = GetOrCreateActionMap().m_State;
-                if (state != null)
-                {
-                    var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                    var controlIndex = actionStatePtr->controlIndex;
-                    if (controlIndex != InputActionState.kInvalidIndex)
-                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
-                }
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var controlIndex = actionStatePtr->controlIndex;
+                if (controlIndex != InputActionState.kInvalidIndex)
+                    result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Same as <see cref="ReadValue{TValue}"/> but read the value without having to know the value type
+        /// of the action.
+        /// </summary>
+        /// <returns>The current value of the action or null if the action is not currently in <see cref="InputActionPhase.Started"/>
+        /// or <see cref="InputActionPhase.Performed"/> phase.</returns>
+        /// <remarks>
+        /// This method allocates GC memory and is thus not a good choice for getting called as part of gameplay
+        /// logic.
+        /// </remarks>
+        /// <seealso cref="ReadValue{TValue}"/>
+        public unsafe object ReadValueAsObject()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state == null)
+                return null;
+
+            var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+            var controlIndex = actionStatePtr->controlIndex;
+            if (controlIndex != InputActionState.kInvalidIndex)
+                return state.ReadValueAsObject(actionStatePtr->bindingIndex, controlIndex);
+
+            return null;
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
