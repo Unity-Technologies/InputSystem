@@ -103,9 +103,6 @@ namespace UnityEngine.InputSystem.XR
 
             }
 
-            if (string.IsNullOrEmpty(matchedLayout))
-                return null;
-
                 string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
