@@ -9,7 +9,7 @@ This starts off at the lowest level by demonstrating how to wire up input by pol
 The key APIs demonstrated here are `Gamepad.current` and `InputControl.ReadValue`.
 
 ```CSharp
-public void SimpleController_UsingState : MonoBehaviour
+public class SimpleController_UsingState : MonoBehaviour
 {
     //...
 
