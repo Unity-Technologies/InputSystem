@@ -7,7 +7,7 @@ using System.Linq;
 
 ////TODO: switch parsing to use to Substring
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// A combination of a name and an optional list of named parameter values. For example, "Clamp(min=1,max=2)".
@@ -79,7 +79,7 @@ namespace UnityEngine.Experimental.Input.Utilities
                 ++index;
             }
             if (index - nameStart == 0)
-                throw new Exception($"Expecting name at position {nameStart} in '{text}'");
+                throw new ArgumentException($"Expecting name at position {nameStart} in '{text}'", nameof(text));
             var name = text.Substring(nameStart, index - nameStart);
 
             // Skip whitespace.
@@ -93,14 +93,14 @@ namespace UnityEngine.Experimental.Input.Utilities
                 ++index;
                 var closeParenIndex = text.IndexOf(')', index);
                 if (closeParenIndex == -1)
-                    throw new Exception($"Expecting ')' after '(' at position {index} in '{text}'");
+                    throw new ArgumentException($"Expecting ')' after '(' at position {index} in '{text}'", nameof(text));
 
                 var parameterString = text.Substring(index, closeParenIndex - index);
                 parameters = NamedValue.ParseMultiple(parameterString);
                 index = closeParenIndex + 1;
             }
 
-            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.kSeparator))
+            if (index < textLength && (text[index] == ',' || text[index] == InputBinding.Separator))
                 ++index;
 
             return new NameAndParameters {name = name, parameters = new ReadOnlyArray<NamedValue>(parameters)};

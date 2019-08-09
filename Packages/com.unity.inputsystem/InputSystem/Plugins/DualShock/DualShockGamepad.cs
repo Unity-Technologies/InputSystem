@@ -1,9 +1,9 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: speaker, touchpad
 
-namespace UnityEngine.Experimental.Input.Plugins.DualShock
+namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>
     /// A Sony DualShock controller.
@@ -64,11 +64,11 @@ namespace UnityEngine.Experimental.Input.Plugins.DualShock
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            touchpadButton = builder.GetControl<ButtonControl>(this, "touchpadButton");
+            touchpadButton = GetChildControl<ButtonControl>("touchpadButton");
             optionsButton = startButton;
             shareButton = selectButton;
 

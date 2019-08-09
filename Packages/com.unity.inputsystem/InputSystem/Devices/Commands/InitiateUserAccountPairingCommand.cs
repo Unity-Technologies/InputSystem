@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Device command to instruct the underlying platform to pair a user account to the targeted device.
@@ -17,12 +17,13 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'A', 'I', 'R'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public enum Result : long
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Enum values mandated by native code")]
+        public enum Result
         {
             /// <summary>
             /// User pairing UI has been successfully opened.
@@ -32,7 +33,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             /// <summary>
             /// System does not support application-invoked user pairing.
             /// </summary>
-            ErrorNotSupported = InputDeviceCommand.kGenericFailure,
+            ErrorNotSupported = (int)InputDeviceCommand.GenericFailure,
 
             /// <summary>
             /// There already is a pairing operation in progress and the system does not support
@@ -41,9 +42,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             ErrorAlreadyInProgress = -2,
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static InitiateUserAccountPairingCommand Create()

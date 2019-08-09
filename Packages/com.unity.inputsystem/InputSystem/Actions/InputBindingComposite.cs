@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: support nested composites
 
@@ -14,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: when we get blittable type constraints, we can probably do away with the pointer-based ReadValue version
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A binding that synthesizes a value from from several component bindings.
@@ -25,7 +25,11 @@ namespace UnityEngine.Experimental.Input
         public abstract int valueSizeInBytes { get; }
         public abstract unsafe void ReadValue(ref InputBindingCompositeContext context, void* buffer, int bufferSize);
         public abstract object ReadValueAsObject(ref InputBindingCompositeContext context);
-        public abstract float EvaluateMagnitude(ref InputBindingCompositeContext context);
+
+        public virtual float EvaluateMagnitude(ref InputBindingCompositeContext context)
+        {
+            return -1;
+        }
 
         internal static TypeTable s_Composites;
 

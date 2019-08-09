@@ -1,8 +1,7 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.PlayerLoop;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
 
@@ -22,22 +21,31 @@ using UnityEngine.Experimental.PlayerLoop;
 
 ////REVIEW: put default gamepad polling frequency here?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Project-wide input settings.
     /// </summary>
     /// <remarks>
     /// Several aspects of the input system can be customized to tailor how the system functions to the
-    /// specific needs of a project.
+    /// specific needs of a project. These settings are collected in this class. There is one global
+    /// settings object active at any one time. It can be accessed and set through <see cref="InputSystem.settings"/>.
+    ///
+    /// Changing a setting on the object takes effect immediately. It also triggers the
+    /// <see cref="InputSystem.onSettingsChange"/> callback.
     /// </remarks>
     /// <seealso cref="InputSystem.settings"/>
     /// <seealso cref="InputSystem.onSettingsChange"/>
     public class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processing pending input events.
+        /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
+        /// <remarks>
+        /// By default, input updates will automatically be triggered
+        ///
+        /// In the editor,
+        /// </remarks>
         /// <seealso cref="InputSystem.Update()"/>
         /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode
@@ -48,31 +56,6 @@ namespace UnityEngine.Experimental.Input
                 if (m_UpdateMode == value)
                     return;
                 m_UpdateMode = value;
-                OnChange();
-            }
-        }
-
-        public ActionUpdateMode actionUpdateMode
-        {
-            get
-            {
-                // Certain update modes force certain action update modes.
-                switch (updateMode)
-                {
-                    case UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                        return ActionUpdateMode.UpdateActionsInDynamicUpdate;
-
-                    case UpdateMode.ProcessEventsInFixedUpdateOnly:
-                        return ActionUpdateMode.UpdateActionsInFixedUpdate;
-                }
-
-                return m_ActionUpdateMode;
-            }
-            set
-            {
-                if (m_ActionUpdateMode == value)
-                    return;
-                m_ActionUpdateMode = value;
                 OnChange();
             }
         }
@@ -220,6 +203,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public float tapRadius
+        {
+            get => m_TapRadius;
+            set
+            {
+                if (m_TapRadius == value)
+                    return;
+                m_TapRadius = value;
+                OnChange();
+            }
+        }
+
+        public float multiTapDelayTime
+        {
+            get => m_MultiTapDelayTime;
+            set
+            {
+                if (m_MultiTapDelayTime == value)
+                    return;
+                m_MultiTapDelayTime = value;
+                OnChange();
+            }
+        }
+
         /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
@@ -272,10 +279,7 @@ namespace UnityEngine.Experimental.Input
         [SerializeField] private string[] m_SupportedDevices;
         [Tooltip("Determine when Unity processes events. By default, accumulated input events are flushed out before each fixed update and "
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
-        [SerializeField] private UpdateMode m_UpdateMode;
-        [Tooltip("Determine when input actions are triggered. This is only relevant if both fixed and dynamic updates are enabled. By default, "
-            + "actions are triggered right before fixed updates.")]
-        [SerializeField] private ActionUpdateMode m_ActionUpdateMode;
+        [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
 
         [Tooltip("Whether events should be distributed across updates according to their timestamps. This is most relevant when fixed "
             + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
@@ -286,15 +290,12 @@ namespace UnityEngine.Experimental.Input
 
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
-        [SerializeField] private float m_DefaultButtonPressPoint = 0.1f;
+        [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
-        //[SerializeField] private float m_DefaultMultiTapMaximumDelay = 0.75f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
-
-        #if UNITY_EDITOR
-        [SerializeField] private bool m_LockInputToGameView;
-        #endif
+        [SerializeField] private float m_TapRadius = 5;
+        [SerializeField] private float m_MultiTapDelayTime = 0.75f;
 
         internal void OnChange()
         {
@@ -302,18 +303,15 @@ namespace UnityEngine.Experimental.Input
                 InputSystem.s_Manager.ApplySettings();
         }
 
+        internal const int s_OldUnsupportedFixedAndDynamicUpdateSetting = 0;
+
         /// <summary>
         /// How the input system should update.
         /// </summary>
         /// <remarks>
         /// By default, the input system will run event processing as part of the player loop. In the default configuration,
-        /// the processing will happens once before every fixed update (<see cref="FixedUpdate"/>) and once
-        /// before every dynamic update (<see cref="Update"/>), i.e. <see cref="ProcessEventsInBothFixedAndDynamicUpdate"/>
+        /// the processing will happens once before every every dynamic update (<see cref="Update"/>), i.e. <see cref="ProcessEventsInDynamicUpdate"/>
         /// is the default behavior.
-        ///
-        /// Note that as dynamic and fixed update represent different timelines, input state (<see cref="InputStateBlock"/>)
-        /// is stored separately for them. This means that if both dynamic and fixed updates are enabled, twice the memory
-        /// is consumed as compared to enabling only one of the updates.
         ///
         /// There are two types of updates not governed by UpdateMode. One is <see cref="InputUpdateType.Editor"/> which
         /// will always be enabled in the editor and govern input updates for <see cref="UnityEditor.EditorWindow"/>s in
@@ -325,37 +323,31 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         /// <seealso cref="InputSystem.Update()"/>
         /// <seealso cref="InputUpdateType"/>
-        /// <seealso cref="FixedUpdate"/>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="MonoBehaviour.FixedUpdate"/>
+        /// <seealso cref="MonoBehaviour.Update"/>
         public enum UpdateMode
         {
-            /// <summary>
-            /// Automatically run updates both right before <see cref="FixedUpdate"/> and right before
-            /// <see cref="Update"/>.
-            /// </summary>
-            /// <seealso cref="FixedUpdate"/>
-            /// <seealso cref="Update"/>
-            ProcessEventsInBothFixedAndDynamicUpdate,
+            // Removed: ProcessEventsInBothFixedAndDynamicUpdate=0
 
             /// <summary>
-            /// Automatically run updates only right before <see cref="Update"/>.
+            /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
             /// </summary>
             /// <remarks>
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
-            /// <see cref="FixedUpdate"/> will result in errors being logged in the editor and in
+            /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
             /// </remarks>
-            ProcessEventsInDynamicUpdateOnly,
+            ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
-            /// Automatically run updates only right before <see cref="FixedUpdate"/>.
+            /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
             /// </summary>
             /// <remarks>
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
-            /// <see cref="Update"/> will result in errors being logged in the editor and in
+            /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
             /// </remarks>
-            ProcessEventsInFixedUpdateOnly,
+            ProcessEventsInFixedUpdate,
 
             /// <summary>
             /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update()"/> must be called
@@ -368,12 +360,6 @@ namespace UnityEngine.Experimental.Input
             /// accumulating or some input getting lost.
             /// </remarks>
             ProcessEventsManually,
-        }
-
-        public enum ActionUpdateMode
-        {
-            UpdateActionsInFixedUpdate,
-            UpdateActionsInDynamicUpdate,
         }
     }
 }

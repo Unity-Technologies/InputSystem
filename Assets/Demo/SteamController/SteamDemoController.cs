@@ -1,11 +1,12 @@
 // THIS FILE HAS BEEN AUTO-GENERATED
 #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Plugins.Steam;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.Steam;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -45,18 +46,18 @@ public class SteamDemoController : SteamController
     public ButtonControl click { get; protected set; }
     public ButtonControl steamExitMenu { get; protected set; }
 
-    protected override void FinishSetup(InputDeviceBuilder builder)
+    protected override void FinishSetup()
     {
-        base.FinishSetup(builder);
-        move = builder.GetControl<StickControl>("move");
-        look = builder.GetControl<Vector2Control>("look");
-        fire = builder.GetControl<ButtonControl>("fire");
-        jump = builder.GetControl<ButtonControl>("jump");
-        menu = builder.GetControl<ButtonControl>("menu");
-        steamEnterMenu = builder.GetControl<ButtonControl>("steamEnterMenu");
-        navigate = builder.GetControl<Vector2Control>("navigate");
-        click = builder.GetControl<ButtonControl>("click");
-        steamExitMenu = builder.GetControl<ButtonControl>("steamExitMenu");
+        base.FinishSetup();
+        move = GetChildControl<StickControl>("move");
+        look = GetChildControl<Vector2Control>("look");
+        fire = GetChildControl<ButtonControl>("fire");
+        jump = GetChildControl<ButtonControl>("jump");
+        menu = GetChildControl<ButtonControl>("menu");
+        steamEnterMenu = GetChildControl<ButtonControl>("steamEnterMenu");
+        navigate = GetChildControl<Vector2Control>("navigate");
+        click = GetChildControl<ButtonControl>("click");
+        steamExitMenu = GetChildControl<ButtonControl>("steamExitMenu");
     }
 
     protected override void ResolveSteamActions(ISteamControllerAPI api)
@@ -123,9 +124,9 @@ public class SteamDemoController : SteamController
 }
 public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
-    public FourCC GetFormat()
+    public FourCC format
     {
-        return new FourCC('S', 't', 'e', 'a');
+        get { return new FourCC('S', 't', 'e', 'a'); }
     }
 
     [InputControl(name = "fire", layout = "Button", bit = 0)]

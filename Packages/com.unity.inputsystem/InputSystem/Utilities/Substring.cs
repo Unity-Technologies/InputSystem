@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     // Work with substrings without actually allocating strings.
     internal struct Substring : IComparable<Substring>, IEquatable<Substring>
@@ -179,7 +179,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 return m_String[m_Index + index];
             }
         }

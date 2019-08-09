@@ -1,10 +1,13 @@
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: expose euler angle subcontrols?
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
+    /// <summary>
+    /// A generic input control reading quaternion (rotation) values.
+    /// </summary>
     public class QuaternionControl : InputControl<Quaternion>
     {
         // Accessing these components as individual controls usually doesn't make too much sense,
@@ -21,16 +24,16 @@ namespace UnityEngine.Experimental.Input.Controls
         public QuaternionControl()
         {
             m_StateBlock.sizeInBits = sizeof(float) * 4 * 8;
-            m_StateBlock.format = InputStateBlock.kTypeQuaternion;
+            m_StateBlock.format = InputStateBlock.FormatQuaternion;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            x = builder.GetControl<AxisControl>(this, "x");
-            y = builder.GetControl<AxisControl>(this, "y");
-            z = builder.GetControl<AxisControl>(this, "z");
-            w = builder.GetControl<AxisControl>(this, "w");
-            base.FinishSetup(builder);
+            x = GetChildControl<AxisControl>("x");
+            y = GetChildControl<AxisControl>("y");
+            z = GetChildControl<AxisControl>("z");
+            w = GetChildControl<AxisControl>("w");
+            base.FinishSetup();
         }
 
         public override unsafe Quaternion ReadUnprocessedValueFromState(void* statePtr)

@@ -1,14 +1,19 @@
 #if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.Steam
+namespace UnityEngine.InputSystem.Steam
 {
     /// <summary>
     /// Adds support for Steam controllers.
     /// </summary>
-    public static class SteamSupport
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class SteamSupport
     {
         /// <summary>
         /// Wrapper around the Steam controller API.
@@ -24,23 +29,6 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
                 s_API = value;
                 InstallHooks(s_API != null);
             }
-        }
-
-        /// <summary>
-        /// If enabled, if Steam support is in use (i.e. if <see cref="api"/> has been set), then
-        /// any <see cref="Gamepad"/> device that isn't using the <see cref="SteamController.kSteamInterface"/>
-        /// interface will automatically be disabled.
-        /// </summary>
-        /// <remarks>
-        /// Makes sure that input isn't picked up in parallel through both Unity's own gamepad support and
-        /// through Steam's controller support.
-        ///
-        /// Enabled by default.
-        /// </remarks>
-        internal static bool disableNonSteamGamepads
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
         }
 
         internal static ISteamControllerAPI GetAPIAndRequireItToBeSet()
@@ -128,7 +116,7 @@ namespace UnityEngine.Experimental.Input.Plugins.Steam
             }
         }
 
-        private static void OnUpdate(InputUpdateType updateType)
+        private static void OnUpdate()
         {
             if (api == null)
                 return;

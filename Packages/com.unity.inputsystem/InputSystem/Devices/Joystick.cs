@@ -1,16 +1,15 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
-    public struct JoystickState : IInputStateTypeInfo
+    internal struct JoystickState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
-        [InputControl(name = "hat", layout = "Dpad", usage = "Hatswitch")]
-        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction" }, bit = (int)Button.Trigger)]
+        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction", "Submit" }, bit = (int)Button.Trigger)]
         public int buttons;
 
         [InputControl(layout = "Stick", usage = "Primary2DMotion")]
@@ -27,14 +26,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Trigger
         }
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
+        public FourCC format => kFormat;
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A joystick with an arbitrary number of buttons and axes.
@@ -51,21 +47,19 @@ namespace UnityEngine.Experimental.Input
 
         // Optional features. These may be null.
         public AxisControl twist { get; private set; }
-        public DpadControl hat { get; private set; }
 
         public static Joystick current { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
             // Mandatory controls.
-            trigger = builder.GetControl<ButtonControl>("{PrimaryTrigger}");
-            stick = builder.GetControl<StickControl>("{Primary2DMotion}");
+            trigger = GetChildControl<ButtonControl>("{PrimaryTrigger}");
+            stick = GetChildControl<StickControl>("{Primary2DMotion}");
 
             // Optional controls.
-            twist = builder.TryGetControl<AxisControl>("{Twist}");
-            hat = builder.TryGetControl<DpadControl>("{Hatswitch}");
+            twist = TryGetChildControl<AxisControl>("{Twist}");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void MakeCurrent()

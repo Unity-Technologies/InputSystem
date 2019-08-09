@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
 
@@ -10,76 +10,82 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////REVIEW: Is there a better way than having all the sensor classes?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
-    public struct AccelerometerState : IInputStateTypeInfo
+    internal struct AccelerometerState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('A', 'C', 'C', 'L');
 
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
-    public struct GyroscopeState : IInputStateTypeInfo
+    internal struct GyroscopeState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('G', 'Y', 'R', 'O');
 
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
-    public struct GravityState : IInputStateTypeInfo
+    internal struct GravityState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('G', 'R', 'V', ' ');
 
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
-    public struct AttitudeState : IInputStateTypeInfo
+    internal struct AttitudeState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('A', 'T', 'T', 'D');
 
         [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 
-    public struct LinearAccelerationState : IInputStateTypeInfo
+    internal struct LinearAccelerationState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('L', 'A', 'A', 'C');
 
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
+    /// <summary>
+    /// Base class representing any sensor kind of input device.
+    /// </summary>
+    /// <remarks>
+    /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s, <see cref="GravitySensor"/>s and others.
+    /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
     public abstract class Sensor : InputDevice
     {
@@ -100,6 +106,39 @@ namespace UnityEngine.Experimental.Input
         }
     }
 
+    /// <summary>
+    /// Input device representing an accelerometer sensor.
+    /// </summary>
+    /// <remarks>
+    /// An accelerometer let's you measure the acceleration of a device, and can be useful to control content by moving a device around.
+    /// Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity
+    /// pulling the device down. You can use <see cref="GravitySensor"/> and <see cref="LinearAccelerationSensor"/> to get decoupled values
+    /// for these.
+    ///
+    /// <example>
+    /// <code>
+    /// class MyBehavior : MonoBehaviour
+    /// {
+    ///     protected void OnEnable()
+    ///     {
+    ///         // All sensors start out disabled so they have to manually be enabled first.
+    ///         InputSystem.EnableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void OnDisable()
+    ///     {
+    ///         InputSystem.DisableDevice(Accelerometer.current);
+    ///     }
+    ///
+    ///     protected void Update()
+    ///     {
+    ///         var acceleration = Accelerometer.current.acceleration.ReadValue();
+    ///         //...
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
     {
@@ -120,13 +159,19 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(builder);
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing a gyroscope sensor.
+    /// </summary>
+    /// <remarks>
+    /// A gyroscope let's you measure the angular velocity of a device, and can be useful to control content by rotating a device.
+    /// </remarks>
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
@@ -147,22 +192,29 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            angularVelocity = builder.GetControl<Vector3Control>("angularVelocity");
-            base.FinishSetup(builder);
+            angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing a gravity sensor.
+    /// </summary>
+    /// <remarks>
+    /// A gravity sensor let's you determine the direction of the gravity vector relative to a device, and can be useful to control content by device orientation.
+    /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of linear acceleration (see <see cref="LinearAccelerationSensor"/>).
+    /// </remarks>
     [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
     public class GravitySensor : Sensor
     {
         public Vector3Control gravity { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            gravity = builder.GetControl<Vector3Control>("gravity");
-            base.FinishSetup(builder);
+            gravity = GetChildControl<Vector3Control>("gravity");
+            base.FinishSetup();
         }
 
         public static GravitySensor current { get; private set; }
@@ -183,6 +235,12 @@ namespace UnityEngine.Experimental.Input
 
     //// REVIEW: Is this name good enough, possible other name RotationVector, here's how Android docs describe it. "A rotation vector sensor reports the orientation of the device relative to the East-North-Up coordinates frame."
     ////         This is the same as https://docs.unity3d.com/ScriptReference/Gyroscope-attitude.html
+    /// <summary>
+    /// Input device representing an attitude sensor.
+    /// </summary>
+    /// <remarks>
+    /// An attitude sensor let's you determine the orientation of a device, and can be useful to control content by rotating a device.
+    /// </remarks>
     [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
     public class AttitudeSensor : Sensor
     {
@@ -203,13 +261,21 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            attitude = builder.GetControl<QuaternionControl>("attitude");
-            base.FinishSetup(builder);
+            attitude = GetChildControl<QuaternionControl>("attitude");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing linear acceleration affecting the device playing the content.
+    /// </summary>
+    /// <remarks>
+    /// An accelerometer let's you measure the acceleration of a device, and can be useful to control content by moving a device around.
+    /// Linear acceleration is the acceleration of a device unaffected by gravity forces.
+    /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of gravity (see <see cref="GravitySensor"/>).
+    /// </remarks>
     [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
     public class LinearAccelerationSensor : Sensor
     {
@@ -230,13 +296,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            acceleration = builder.GetControl<Vector3Control>("acceleration");
-            base.FinishSetup(builder);
+            acceleration = GetChildControl<Vector3Control>("acceleration");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the magnetic field affecting the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "Magnetic Field")]
     public class MagneticFieldSensor : Sensor
     {
@@ -263,13 +332,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            magneticField = builder.GetControl<Vector3Control>("magneticField");
-            base.FinishSetup(builder);
+            magneticField = GetChildControl<Vector3Control>("magneticField");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the ambient light measured by the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "Light")]
     public class LightSensor : Sensor
     {
@@ -293,13 +365,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            lightLevel = builder.GetControl<AxisControl>("lightLevel");
-            base.FinishSetup(builder);
+            lightLevel = GetChildControl<AxisControl>("lightLevel");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the atmospheric pressure measured by the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "Pressure")]
     public class PressureSensor : Sensor
     {
@@ -323,13 +398,19 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            atmosphericPressure = builder.GetControl<AxisControl>("atmosphericPressure");
-            base.FinishSetup(builder);
+            atmosphericPressure = GetChildControl<AxisControl>("atmosphericPressure");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the proximity of the device playing the content to the user.
+    /// </summary>
+    /// <remarks>
+    /// The proximity sensor is usually used by phones to determine if the user is holding the phone to their ear or not.
+    /// </remarks>
     [InputControlLayout(displayName = "Proximity")]
     public class ProximitySensor : Sensor
     {
@@ -353,13 +434,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            distance = builder.GetControl<AxisControl>("distance");
-            base.FinishSetup(builder);
+            distance = GetChildControl<AxisControl>("distance");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the ambient air humidity measured by the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "Humidity")]
     public class HumiditySensor : Sensor
     {
@@ -383,13 +467,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            relativeHumidity = builder.GetControl<AxisControl>("relativeHumidity");
-            base.FinishSetup(builder);
+            relativeHumidity = GetChildControl<AxisControl>("relativeHumidity");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the ambient air temperature measured by the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "Ambient Temperature")]
     public class AmbientTemperatureSensor : Sensor
     {
@@ -413,13 +500,16 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            ambientTemperature = builder.GetControl<AxisControl>("ambientTemperature");
-            base.FinishSetup(builder);
+            ambientTemperature = GetChildControl<AxisControl>("ambientTemperature");
+            base.FinishSetup();
         }
     }
 
+    /// <summary>
+    /// Input device representing the foot steps taken by the user as measured by the device playing the content.
+    /// </summary>
     [InputControlLayout(displayName = "StepCounter")]
     public class StepCounter : Sensor
     {
@@ -443,10 +533,10 @@ namespace UnityEngine.Experimental.Input
                 current = null;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            stepCounter = builder.GetControl<IntegerControl>("stepCounter");
-            base.FinishSetup(builder);
+            stepCounter = GetChildControl<IntegerControl>("stepCounter");
+            base.FinishSetup();
         }
     }
 }

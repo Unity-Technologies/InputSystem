@@ -1,7 +1,8 @@
 using System;
+using System.Linq;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: do we really need overridable processors and interactions?
 
@@ -11,14 +12,31 @@ using UnityEngine.Experimental.Input.Utilities;
 //   in quite a few areas. There's quite a few bits in InputActionState that could be simplified if a
 //   binding simply maps to a control.
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mapping of control input to an action.
     /// </summary>
     /// <remarks>
-    /// A single binding can match arbitrary many controls through its path and then
-    /// map their input to a single action.
+    /// Each binding represents a value received from controls (see <see cref="InputControl"/>).
+    /// There are two main types of bindings: "normal" bindings and "composite" bindings.
+    ///
+    /// Normal bindings directly bind to control(s) by means of <see cref="path"/> which is a "control path"
+    /// (see <see cref="InputControlPath"/> for details about how to form paths). At runtime, the
+    /// path of such a binding may match none, one, or multiple controls. Each control matched by the
+    /// path will feed input into the binding.
+    ///
+    /// Composite bindings do not bind to controls themselves. Instead, they receive their input
+    /// from their "part" bindings and then return a value representing a "composition" of those
+    /// inputs. What composition specifically is performed depends on the type of the composite.
+    /// <see cref="Composites.AxisComposite"/>, for example, will return a floating-point axis value
+    /// computed from the state of two buttons.
+    ///
+    /// The action that is triggered by a binding is determined by its <see cref="action"/> property.
+    /// The resolution to an <see cref="InputAction"/> depends on where the binding is used. For example,
+    /// bindings that are part of <see cref="InputActionMap.bindings"/> will resolve action names to
+    /// actions in the same <see cref="InputActionMap"/>.
+    ///
     ///
     /// A binding can also be used as a override specification. In that scenario, <see cref="path"/>,
     /// <see cref="action"/>, and <see cref="groups"/> become search criteria that can be used to
@@ -32,8 +50,8 @@ namespace UnityEngine.Experimental.Input
     [Serializable]
     public struct InputBinding : IEquatable<InputBinding>
     {
-        public const char kSeparator = ';';
-        public const string kSeparatorString = ";";
+        public const char Separator = ';';
+        internal const string kSeparatorString = ";";
 
         /// <summary>
         /// Optional name for the binding.
@@ -227,6 +245,14 @@ namespace UnityEngine.Experimental.Input
             return new InputBinding {groups = group};
         }
 
+        public static InputBinding MaskByGroups(params string[] groups)
+        {
+            if (groups == null)
+                throw new ArgumentNullException(nameof(groups));
+
+            return new InputBinding {groups = string.Join(kSeparatorString, groups.Where(x => !string.IsNullOrEmpty(x)))};
+        }
+
         [SerializeField] private string m_Name;
         [SerializeField] internal string m_Id;
         [SerializeField] private string m_Path;
@@ -242,9 +268,29 @@ namespace UnityEngine.Experimental.Input
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
         [NonSerialized] private Guid m_Guid;
 
-        internal string effectivePath => overridePath ?? path;
-        internal string effectiveInteractions => overrideInteractions ?? interactions;
-        internal string effectiveProcessors => overrideProcessors ?? processors;
+        /// <summary>
+        /// This is the bindings path which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overridePath"/> if that is set, or <see cref="path"/> otherwise.
+        /// </remarks>
+        public string effectivePath => overridePath ?? path;
+
+        /// <summary>
+        /// This is the interaction config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideInteractions"/> if that is set, or <see cref="interactions"/> otherwise.
+        /// </remarks>
+        public string effectiveInteractions => overrideInteractions ?? interactions;
+
+        /// <summary>
+        /// This is the processor config which is effectively being used.
+        /// </summary>
+        /// <remarks>
+        /// This is either <see cref="overrideProcessors"/> if that is set, or <see cref="processors"/> otherwise.
+        /// </remarks>
+        public string effectiveProcessors => overrideProcessors ?? processors;
 
         internal bool isEmpty =>
             string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
@@ -327,7 +373,7 @@ namespace UnityEngine.Experimental.Input
             {
                 ////TODO: handle things like ignoring leading '/'
                 if (other.path == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, Separator))
                     return false;
             }
 
@@ -337,14 +383,14 @@ namespace UnityEngine.Experimental.Input
                 ////TODO: handle "map/*" format
                 ////REVIEW: this will not be able to handle cases where one binding references an action by ID and the other by name but both do mean the same action
                 if (other.action == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, Separator))
                     return false;
             }
 
             if (groups != null)
             {
                 if (other.groups == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, kSeparator))
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, Separator))
                     return false;
             }
 

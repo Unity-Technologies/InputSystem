@@ -4,17 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: have tooltips on each entry in the picker
 
 ////TODO: find better way to present controls when filtering to specific devices
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputControlPickerDropdown : AdvancedDropdown
+    internal class InputControlPickerDropdown : AdvancedDropdown, IDisposable
     {
         public InputControlPickerDropdown(
             InputControlPickerState state,
@@ -50,6 +50,11 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
+        }
+
+        public void Dispose()
+        {
+            m_RebindingOperation?.Dispose();
         }
 
         protected override AdvancedDropdownItem BuildRoot()
@@ -98,6 +103,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
+            if (!item.enabled)
+                return;
+
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
             m_OnPickCallback(path);
         }
@@ -127,7 +135,7 @@ namespace UnityEngine.Experimental.Input.Editor
             // We have devices that are based directly on InputDevice but are not marked as generic types
             // of devices (e.g. Vive Lighthouses). We do not want them to clutter the list at the root so we
             // all of them in a group called "Other" at the end of the list.
-            AdvancedDropdownItem otherGroup = new AdvancedDropdownItem("Other");
+            var otherGroup = new AdvancedDropdownItem("Other");
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
                      .Where(x => x.isDeviceLayout && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
                          !x.hideInUI && !x.baseLayouts.Any()).OrderBy(a => a.displayName))
@@ -151,7 +159,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
 
             // Add toplevel item for device.
-            var deviceItem = new DeviceDropdownItem(layout);
+            var deviceItem = new DeviceDropdownItem(layout, searchable: searchable);
             parent.AddChild(deviceItem);
 
             // Add common usage variants.
@@ -213,6 +221,16 @@ namespace UnityEngine.Experimental.Input.Editor
 
                 AddDeviceTreeItemRecursive(childLayout, deviceItem, searchable && !childLayout.isGenericTypeOfDevice);
             }
+
+            // When picking devices, it must be possible to select a device that itself has more specific types
+            // of devices underneath it. However in the dropdown, such a device will be a foldout and not itself
+            // be selectable. We solve this problem by adding an entry for the device underneath the device
+            // itself (e.g. "Gamepad >> Gamepad").
+            if (m_Mode == InputControlPicker.Mode.PickDevice && deviceItem.m_Children.Count > 0)
+            {
+                var item = new DeviceDropdownItem(layout);
+                deviceItem.m_Children.Insert(0, item);
+            }
         }
 
         private void AddControlTreeItemsRecursive(InputControlLayout layout, DeviceDropdownItem parent,
@@ -230,17 +248,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     continue;
                 }
 
-                var child = new ControlDropdownItem(parentControl, control.name, control.displayName,
-                    device, usage, searchable);
-                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
-
-                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
-                    parent.AddChild(child);
-
-                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
-                if (controlLayout != null)
-                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
-                        searchable, child);
+                AddControlItem(parent, parentControl, control, device, usage, searchable);
             }
 
             // Add optional controls for devices.
@@ -250,6 +258,8 @@ namespace UnityEngine.Experimental.Input.Editor
                 var optionalGroup = new AdvancedDropdownItem("Optional Controls");
                 foreach (var optionalControl in optionalControls)
                 {
+                    ////FIXME: this should list children, too
+                    ////FIXME: this should handle arrays, too
                     if (LayoutMatchesExpectedControlLayoutFilter(optionalControl.layout))
                     {
                         var child = new OptionalControlDropdownItem(optionalControl, device, usage);
@@ -265,6 +275,36 @@ namespace UnityEngine.Experimental.Input.Editor
                     parent.AddSeparator("Controls Present on More Specific " + deviceName.GetPlural());
                     parent.AddChild(optionalGroup);
                 }
+            }
+        }
+
+        private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
+            InputControlLayout.ControlItem control, string device, string usage, bool searchable)
+        {
+            // If it's an array, generate a control entry for each array element.
+            for (var i = 0; i < (control.isArray ? control.arraySize : 1); ++i)
+            {
+                var name = control.isArray ? control.name + i : control.name;
+                var displayName = !string.IsNullOrEmpty(control.displayName)
+                    ? (control.isArray ? control.displayName + i : control.displayName)
+                    : name;
+
+                var child = new ControlDropdownItem(parentControl, name, displayName,
+                    device, usage, searchable);
+                child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
+                var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+
+                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
+                    parent.AddChild(child);
+                else if (controlLayout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)))
+                {
+                    child.enabled = false;
+                    parent.AddChild(child);
+                }
+                // Add children.
+                if (controlLayout != null)
+                    AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
+                        searchable, child);
             }
         }
 
@@ -373,7 +413,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 // NOTE: We go for all types of pointers here, not just mice.
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Pointer>/delta")
-                .WithControlsExcluding("<Pointer>/button")
+                .WithControlsExcluding("<Pointer>/press")
                 .WithControlsExcluding("<Mouse>/leftButton")
                 .WithControlsExcluding("<Mouse>/scroll")
                 .OnPotentialMatch(
@@ -469,27 +509,31 @@ namespace UnityEngine.Experimental.Input.Editor
                 {
                     var isListening = false;
 
-                    using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
+                    // When picking controls, have a "Listen" button that allows listening for input.
+                    if (m_Owner.m_Mode == InputControlPicker.Mode.PickControl)
                     {
-                        GUILayout.Space(4);
-                        var isListeningOld = m_Owner.isListening;
-                        var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
-                            EditorStyles.miniButton, GUILayout.MaxWidth(40));
-
-                        if (isListeningOld != isListeningNew)
+                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
                         {
-                            if (isListeningNew)
-                            {
-                                m_Owner.StartListening();
-                            }
-                            else
-                            {
-                                m_Owner.StopListening();
-                                searchString = string.Empty;
-                            }
-                        }
+                            GUILayout.Space(4);
+                            var isListeningOld = m_Owner.isListening;
+                            var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
+                                EditorStyles.miniButton, GUILayout.MaxWidth(45));
 
-                        isListening = isListeningNew;
+                            if (isListeningOld != isListeningNew)
+                            {
+                                if (isListeningNew)
+                                {
+                                    m_Owner.StartListening();
+                                }
+                                else
+                                {
+                                    m_Owner.StopListening();
+                                    searchString = string.Empty;
+                                }
+                            }
+
+                            isListening = isListeningNew;
+                        }
                     }
 
                     ////FIXME: the search box doesn't clear out when listening; no idea why the new string isn't taking effect
@@ -531,12 +575,7 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel");
-
-            static Styles()
-            {
-                waitingForInputLabel.fontSize = 22;
-            }
+            public static readonly GUIStyle waitingForInputLabel = new GUIStyle("WhiteBoldLabel").WithFontSize(22);
         }
     }
 }

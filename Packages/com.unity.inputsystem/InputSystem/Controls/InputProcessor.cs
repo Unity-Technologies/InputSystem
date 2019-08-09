@@ -1,17 +1,22 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+
+////TODO: come up with a mechanism to allow (certain) processors to be stateful
 
 ////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
 
-////TODO: make processor effects visible on children (e.g. leftStick/x should reflect deadzoning of leftStick)
-
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A processor that conditions/transforms input values.
     /// </summary>
+    /// <remarks>
+    /// </remarks>
+    /// <seealso cref="InputBinding.processors"/>
+    /// <seealso cref="InputControlLayout.ControlItem.processors"/>
+    /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
     public abstract class InputProcessor
     {
         /// <summary>
@@ -76,7 +81,7 @@ namespace UnityEngine.Experimental.Input
     /// <code>
     /// // To register the processor, call
     /// //
-    /// //    InputSystem.RegisterControlProcessor&lt;ScalingProcessor&gt;("scale");
+    /// //    InputSystem.RegisterProcessor&lt;ScalingProcessor&gt;("scale");
     /// //
     /// public class ScalingProcessor : InputProcessor&lt;float&gt;
     /// {
@@ -108,7 +113,7 @@ namespace UnityEngine.Experimental.Input
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="InputSystem.RegisterControlProcessor"/>
+    /// <seealso cref="InputSystem.RegisterProcessor"/>
     public abstract class InputProcessor<TValue> : InputProcessor
         where TValue : struct
     {
@@ -130,6 +135,9 @@ namespace UnityEngine.Experimental.Input
 
         public override object ProcessAsObject(object value, InputControl control)
         {
+            if (value == null)
+                throw new ArgumentNullException(nameof(value));
+
             if (!(value is TValue))
                 throw new ArgumentException(
                     $"Expecting value of type '{typeof(TValue).Name}' but got value '{value}' of type '{value.GetType().Name}'",

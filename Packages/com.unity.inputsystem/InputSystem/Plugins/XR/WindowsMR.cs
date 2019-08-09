@@ -1,8 +1,11 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// A Windows Mixed Reality XR headset.
+    /// </summary>
     [InputControlLayout]
     public class WMRHMD : XRHMD
     {
@@ -20,23 +23,26 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public QuaternionControl centerEyeRotation { get; private set; }
 
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            leftEyePosition = builder.GetControl<Vector3Control>("leftEyePosition");
-            leftEyeRotation = builder.GetControl<QuaternionControl>("leftEyeRotation");
-            rightEyePosition = builder.GetControl<Vector3Control>("rightEyePosition");
-            rightEyeRotation = builder.GetControl<QuaternionControl>("rightEyeRotation");
-            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            leftEyePosition = GetChildControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = GetChildControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = GetChildControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = GetChildControl<QuaternionControl>("rightEyeRotation");
+            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
         }
     }
 
+    /// <summary>
+    /// A Windows Mixed Reality XR controller.
+    /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class HololensHand : XRController
     {
@@ -51,17 +57,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         public AxisControl sourceLossRisk { get; private set; }
         public Vector3Control sourceLossMitigationDirection { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            airTap = builder.GetControl<ButtonControl>("airTap");
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            sourceLossRisk = builder.GetControl<AxisControl>("sourceLossRisk");
-            sourceLossMitigationDirection = builder.GetControl<Vector3Control>("sourceLossMitigationDirection");
+            airTap = GetChildControl<ButtonControl>("airTap");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            sourceLossRisk = GetChildControl<AxisControl>("sourceLossRisk");
+            sourceLossMitigationDirection = GetChildControl<Vector3Control>("sourceLossMitigationDirection");
         }
     }
 
@@ -106,32 +112,32 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         [InputControl(aliases = new[] { "PointerOrientation" })]
         public QuaternionControl pointerRotation { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            joystick = builder.GetControl<Vector2Control>("joystick");
-            trigger = builder.GetControl<AxisControl>("trigger");
-            touchpad = builder.GetControl<Vector2Control>("touchpad");
-            grip = builder.GetControl<AxisControl>("grip");
-            gripPressed = builder.GetControl<ButtonControl>("gripPressed");
-            menu = builder.GetControl<ButtonControl>("menu");
-            joystickClicked = builder.GetControl<ButtonControl>("joystickClicked");
-            triggerPressed = builder.GetControl<ButtonControl>("triggerPressed");
-            touchpadClicked = builder.GetControl<ButtonControl>("touchpadClicked");
-            touchpadTouched = builder.GetControl<ButtonControl>("touchPadTouched");
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            deviceVelocity = builder.GetControl<Vector3Control>("deviceVelocity");
-            deviceAngularVelocity = builder.GetControl<Vector3Control>("deviceAngularVelocity");
+            joystick = GetChildControl<Vector2Control>("joystick");
+            trigger = GetChildControl<AxisControl>("trigger");
+            touchpad = GetChildControl<Vector2Control>("touchpad");
+            grip = GetChildControl<AxisControl>("grip");
+            gripPressed = GetChildControl<ButtonControl>("gripPressed");
+            menu = GetChildControl<ButtonControl>("menu");
+            joystickClicked = GetChildControl<ButtonControl>("joystickClicked");
+            triggerPressed = GetChildControl<ButtonControl>("triggerPressed");
+            touchpadClicked = GetChildControl<ButtonControl>("touchpadClicked");
+            touchpadTouched = GetChildControl<ButtonControl>("touchPadTouched");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+            deviceAngularVelocity = GetChildControl<Vector3Control>("deviceAngularVelocity");
 
-            batteryLevel = builder.GetControl<AxisControl>("batteryLevel");
-            sourceLossRisk = builder.GetControl<AxisControl>("sourceLossRisk");
-            sourceLossMitigationDirection = builder.GetControl<Vector3Control>("sourceLossMitigationDirection");
-            pointerPosition = builder.GetControl<Vector3Control>("pointerPosition");
-            pointerRotation = builder.GetControl<QuaternionControl>("pointerRotation");
+            batteryLevel = GetChildControl<AxisControl>("batteryLevel");
+            sourceLossRisk = GetChildControl<AxisControl>("sourceLossRisk");
+            sourceLossMitigationDirection = GetChildControl<Vector3Control>("sourceLossMitigationDirection");
+            pointerPosition = GetChildControl<Vector3Control>("pointerPosition");
+            pointerRotation = GetChildControl<QuaternionControl>("pointerRotation");
         }
     }
 }

@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: nuke this and force raw pointers on all code using events?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
@@ -20,22 +20,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
         // this can't be guaranteed for generic type parameters, they can't be used with pointers.
         // This is why we cannot make InputEventPtr generic or have a generic method that returns
         // a pointer to a specific type of event.
-        private InputEvent* m_EventPtr;
+        private readonly InputEvent* m_EventPtr;
 
         public InputEventPtr(InputEvent* eventPtr)
         {
             m_EventPtr = eventPtr;
         }
 
-        public InputEventPtr(IntPtr eventPtr)
-            : this((InputEvent*)eventPtr)
-        {
-        }
-
-        public bool valid
-        {
-            get { return m_EventPtr != null; }
-        }
+        public bool valid => m_EventPtr != null;
 
         public bool handled
         {
@@ -48,7 +40,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->handled = value;
             }
         }
@@ -64,7 +56,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->eventId = value;
             }
         }
@@ -94,47 +86,63 @@ namespace UnityEngine.Experimental.Input.LowLevel
             get
             {
                 if (!valid)
-                    return InputDevice.kInvalidDeviceId;
+                    return InputDevice.InvalidDeviceId;
                 return m_EventPtr->deviceId;
             }
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->deviceId = value;
             }
         }
 
         public double time
         {
-            get { return valid ? m_EventPtr->time : 0.0; }
+            get => valid ? m_EventPtr->time : 0.0;
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->time = value;
             }
         }
 
         internal double internalTime
         {
-            get { return valid ? m_EventPtr->internalTime : 0.0; }
+            get => valid ? m_EventPtr->internalTime : 0.0;
             set
             {
                 if (!valid)
-                    throw new NullReferenceException();
+                    throw new InvalidOperationException("The InputEventPtr is not valid.");
                 m_EventPtr->internalTime = value;
             }
         }
 
-        public IntPtr data
+        public InputEvent* data => m_EventPtr;
+
+        internal FourCC stateFormat
         {
-            get { return new IntPtr(m_EventPtr); }
+            get
+            {
+                if (IsA<StateEvent>())
+                    return StateEvent.From(this)->stateFormat;
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->stateFormat;
+                throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
+            }
         }
 
-        public InputEvent* ToPointer()
+        internal uint stateSizeInBytes
         {
-            return m_EventPtr;
+            get
+            {
+                if (IsA<StateEvent>())
+                    return StateEvent.From(this)->stateSizeInBytes;
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->deltaStateSizeInBytes;
+                throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
+            }
         }
 
         public bool IsA<TOtherEvent>()
@@ -143,13 +151,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (m_EventPtr == null)
                 return false;
 
-            var otherEventTypeCode = new TOtherEvent().GetTypeStatic();
-            return m_EventPtr->type == otherEventTypeCode;
-        }
-
-        public void CopyTo(void* buffer, int bufferSize)
-        {
-            throw new NotImplementedException();
+            // NOTE: Important to say `default` instead of `new TOtherEvent()` here. The latter will result in a call to
+            //       `Activator.CreateInstance` on Mono and thus allocate GC memory.
+            TOtherEvent otherEvent = default;
+            return m_EventPtr->type == otherEvent.typeStatic;
         }
 
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
@@ -158,7 +163,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr(new IntPtr(new IntPtr(m_EventPtr).ToInt64() + sizeInBytes));
+            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
         }
 
         public override string ToString()
@@ -182,7 +187,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         {
             if (ReferenceEquals(null, obj))
                 return false;
-            return obj is InputEventPtr && Equals((InputEventPtr)obj);
+            return obj is InputEventPtr ptr && Equals(ptr);
         }
 
         public override int GetHashCode()
@@ -205,9 +210,19 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return new InputEventPtr(eventPtr);
         }
 
+        public static InputEventPtr From(InputEvent* eventPtr)
+        {
+            return new InputEventPtr(eventPtr);
+        }
+
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
         {
-            return eventPtr.ToPointer();
+            return eventPtr.data;
+        }
+
+        public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
+        {
+            return eventPtr.data;
         }
     }
 }

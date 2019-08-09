@@ -1,12 +1,12 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditorInternal;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor.Lists
+namespace UnityEngine.InputSystem.Editor.Lists
 {
     /// <summary>
     /// A <see cref="ReorderableList"/> to manage a set of name-and-parameter pairs and a <see cref="ParameterListView"/>
@@ -17,141 +17,165 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     /// </remarks>
     internal abstract class NameAndParameterListView
     {
-        protected NameAndParameterListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
+        protected NameAndParameterListView(SerializedProperty property, Action applyAction, string expectedControlLayout, TypeTable listOptions, Func<Type, Type> getValueType, string itemName)
         {
+            m_ItemName = itemName;
+            m_GetValueType = getValueType;
+            m_DeleteButton = EditorGUIUtility.TrIconContent("Toolbar Minus", $"Delete {itemName}");
+            m_UpButton = EditorGUIUtility.TrIconContent(GUIHelpers.LoadIcon("ChevronUp"), $"Move {itemName} up");
+            m_DownButton = EditorGUIUtility.TrIconContent(GUIHelpers.LoadIcon("ChevronDown"), $"Move {itemName} down");
+
             m_Property = property;
             m_Apply = applyAction;
-            m_ListItems = new List<string>();
-            m_ListOptions = GetOptions();
-            m_EditableParametersForSelectedItem = new ParameterListView {onChange = OnParametersChanged};
-            m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
-            m_ExpectedControlLayout = expectedControlLayout;
-            Type expectedValueType = null;
-            if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
+            m_ListOptions = listOptions;
 
-            foreach (var nameAndParams in m_ParametersForEachListItem)
+            m_ExpectedControlLayout = expectedControlLayout;
+            if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                m_ExpectedValueType = EditorInputControlLayoutCache.GetValueType(m_ExpectedControlLayout);
+
+            m_ParametersForEachListItem = NameAndParameters.ParseMultiple(m_Property.stringValue).ToArray();
+            m_EditableParametersForEachListItem = new ParameterListView[m_ParametersForEachListItem.Length];
+
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
-                var name = ObjectNames.NicifyVariableName(nameAndParams.name);
+                m_EditableParametersForEachListItem[i] = new ParameterListView { onChange = OnParametersChanged };
+                var typeName = m_ParametersForEachListItem[i].name;
+                var rowType = m_ListOptions.LookupTypeRegistration(typeName);
+                m_EditableParametersForEachListItem[i].Initialize(rowType, m_ParametersForEachListItem[i].parameters);
+
+                var name = ObjectNames.NicifyVariableName(typeName);
 
                 ////REVIEW: finding this kind of stuff should probably have better support globally on the asset; e.g. some
                 ////        notification that pops up and allows fixing all occurrences in one click
                 // Find out if we still support this option and indicate it in the list, if we don't.
-                var type = m_ListOptions.LookupTypeRegistration(new InternedString(nameAndParams.name));
-                if (type == null)
+                if (rowType == null)
                     name += " (Obsolete)";
-                else if (expectedValueType != null)
+                else if (m_ExpectedValueType != null)
                 {
-                    var valueType = GetValueType(type);
-                    if (!expectedValueType.IsAssignableFrom(valueType))
+                    var valueType = getValueType(rowType);
+                    if (!m_ExpectedValueType.IsAssignableFrom(valueType))
                         name += " (Ignored)";
                 }
-
-                m_ListItems.Add(name);
+                m_EditableParametersForEachListItem[i].name = name;
             }
-
-            m_ListView = new ReorderableList(m_ListItems, typeof(string))
-            {
-                headerHeight = 3,
-                onAddDropdownCallback = (rect, list) =>
-                {
-                    // Add only original names to the menu and not aliases.
-                    var menu = new GenericMenu();
-                    foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.aliases.Contains(x)).OrderBy(x => x.ToString()))
-                    {
-                        // Skip if not compatible with value type.
-                        if (expectedValueType != null)
-                        {
-                            var type = m_ListOptions.LookupTypeRegistration(name);
-                            var valueType = GetValueType(type);
-                            if (valueType != null && !expectedValueType.IsAssignableFrom(valueType))
-                                continue;
-                        }
-
-                        var niceName = ObjectNames.NicifyVariableName(name);
-                        menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
-                    }
-                    menu.ShowAsContext();
-                },
-                onRemoveCallback = list =>
-                {
-                    var index = list.index;
-                    list.list.RemoveAt(index);
-                    ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, index);
-                    m_EditableParametersForSelectedItem.Clear();
-                    m_Apply();
-                    list.index = -1;
-                },
-                onReorderCallbackWithDetails = (list, oldIndex, newIndex) =>
-                {
-                    MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex],
-                        ref m_ParametersForEachListItem[newIndex]);
-                    OnSelection(list);
-                    m_Apply();
-                },
-                onSelectCallback = OnSelection
-            };
         }
 
-        protected abstract TypeTable GetOptions();
-        protected abstract Type GetValueType(Type type);
+        public void OnAddDropdown(Rect r)
+        {
+            // Add only original names to the menu and not aliases.
+            var menu = new GenericMenu();
+            foreach (var name in m_ListOptions.internedNames.Where(x => !m_ListOptions.ShouldHideInUI(x)).OrderBy(x => x.ToString()))
+            {
+                // Skip if not compatible with value type.
+                if (m_ExpectedValueType != null)
+                {
+                    var type = m_ListOptions.LookupTypeRegistration(name);
+                    var valueType = m_GetValueType(type);
+                    if (valueType != null && !m_ExpectedValueType.IsAssignableFrom(valueType))
+                        continue;
+                }
+
+                var niceName = ObjectNames.NicifyVariableName(name);
+                menu.AddItem(new GUIContent(niceName), false, OnAddElement, name.ToString());
+            }
+            menu.ShowAsContext();
+        }
 
         private void OnAddElement(object data)
         {
             var name = (string)data;
 
-            m_ListItems.Add(ObjectNames.NicifyVariableName(name));
             ArrayHelpers.Append(ref m_ParametersForEachListItem,
                 new NameAndParameters {name = name});
+            ArrayHelpers.Append(ref m_EditableParametersForEachListItem,
+                new ParameterListView { onChange = OnParametersChanged });
+
+            var index = m_EditableParametersForEachListItem.Length - 1;
+            var typeName = m_ParametersForEachListItem[index].name;
+            var rowType = m_ListOptions.LookupTypeRegistration(typeName);
+            m_EditableParametersForEachListItem[index].Initialize(rowType, m_ParametersForEachListItem[index].parameters);
+            m_EditableParametersForEachListItem[index].name = ObjectNames.NicifyVariableName(name);
+
             m_Apply();
         }
 
         private void OnParametersChanged()
         {
-            var selected = m_ListView.index;
-            if (selected < 0)
-                return;
-
-            m_ParametersForEachListItem[selected] = new NameAndParameters
+            for (var i = 0; i < m_ParametersForEachListItem.Length; i++)
             {
-                name = m_ParametersForEachListItem[selected].name,
-                parameters = m_EditableParametersForSelectedItem.GetParameters(),
-            };
+                m_ParametersForEachListItem[i] = new NameAndParameters
+                {
+                    name = m_ParametersForEachListItem[i].name,
+                    parameters = m_EditableParametersForEachListItem[i].GetParameters(),
+                };
+            }
 
             m_Apply();
         }
 
-        private void OnSelection(ReorderableList list)
+        private static class Styles
         {
-            var index = list.index;
-            if (index < 0)
-            {
-                m_EditableParametersForSelectedItem.Clear();
-                return;
-            }
+            public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout").WithFontStyle(FontStyle.Bold);
+            public static readonly GUIStyle s_UpDownButtonStyle = new GUIStyle("label").WithFixedWidth(12).WithFixedHeight(12).WithPadding(new RectOffset());
+        }
 
-            var typeName = m_ParametersForEachListItem[index].name;
-            var rowType =  m_ListOptions.LookupTypeRegistration(typeName);
-
-            m_EditableParametersForSelectedItem.Initialize(rowType, m_ParametersForEachListItem[index].parameters);
+        private void SwapEntry(int oldIndex, int newIndex)
+        {
+            MemoryHelpers.Swap(ref m_ParametersForEachListItem[oldIndex], ref m_ParametersForEachListItem[newIndex]);
+            MemoryHelpers.Swap(ref m_EditableParametersForEachListItem[oldIndex], ref m_EditableParametersForEachListItem[newIndex]);
+            m_Apply();
         }
 
         public void OnGUI()
         {
-            // Use for debugging
-            // EditorGUILayout.LabelField(m_Property.stringValue);
-
-            var listRect = GUILayoutUtility.GetRect(200, m_ListView.GetHeight());
-            listRect = EditorGUI.IndentedRect(listRect);
-            m_ListView.DoList(listRect);
-            if (m_EditableParametersForSelectedItem.hasUIToShow)
+            if (m_EditableParametersForEachListItem == null || m_EditableParametersForEachListItem.Length == 0)
             {
-                var label = $"Parameters for {ObjectNames.NicifyVariableName(m_ParametersForEachListItem[m_ListView.index].name)}";
-                EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
-                m_EditableParametersForSelectedItem.OnGUI();
-                EditorGUI.indentLevel--;
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.LabelField($"No {m_ItemName}s have been added.");
+                    EditorGUI.indentLevel--;
+                }
             }
+            else
+                for (var i = 0; i < m_EditableParametersForEachListItem.Length; i++)
+                {
+                    var editableParams = m_EditableParametersForEachListItem[i];
+                    EditorGUILayout.BeginHorizontal();
+                    if (editableParams.hasUIToShow)
+                        editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, Styles.s_FoldoutStyle);
+                    else
+                    {
+                        GUILayout.Space(16);
+                        EditorGUILayout.LabelField(editableParams.name, EditorStyles.boldLabel);
+                    }
+                    GUILayout.FlexibleSpace();
+                    using (new EditorGUI.DisabledScope(i == 0))
+                    {
+                        if (GUILayout.Button(m_UpButton, Styles.s_UpDownButtonStyle))
+                            SwapEntry(i, i - 1);
+                    }
+                    using (new EditorGUI.DisabledScope(i == m_EditableParametersForEachListItem.Length - 1))
+                    {
+                        if (GUILayout.Button(m_DownButton, Styles.s_UpDownButtonStyle))
+                            SwapEntry(i, i + 1);
+                    }
+                    if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
+                    {
+                        ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
+                        ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
+                        m_Apply();
+                        GUIUtility.ExitGUI();
+                    }
+                    EditorGUILayout.EndHorizontal();
+                    if (editableParams.visible)
+                    {
+                        EditorGUI.indentLevel++;
+                        editableParams.OnGUI();
+                        EditorGUI.indentLevel--;
+                    }
+                    GUIHelpers.DrawLineSeparator();
+                }
         }
 
         public string ToSerializableString()
@@ -163,15 +187,18 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 m_ParametersForEachListItem.Select(x => x.ToString()).ToArray());
         }
 
-        private readonly List<string> m_ListItems;
-        private readonly ReorderableList m_ListView;
+        private Func<Type, Type> m_GetValueType;
         private SerializedProperty m_Property;
-        private TypeTable m_ListOptions;
-        private string m_ExpectedControlLayout;
-
+        private readonly TypeTable m_ListOptions;
+        private readonly string m_ExpectedControlLayout;
+        private readonly Type m_ExpectedValueType;
+        private readonly GUIContent m_DeleteButton;
+        private readonly GUIContent m_UpButton;
+        private readonly GUIContent m_DownButton;
         private NameAndParameters[] m_ParametersForEachListItem;
-        private readonly ParameterListView m_EditableParametersForSelectedItem;
+        private ParameterListView[] m_EditableParametersForEachListItem;
         private readonly Action m_Apply;
+        private string m_ItemName;
     }
 
     /// <summary>
@@ -180,18 +207,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     internal class ProcessorsListView : NameAndParameterListView
     {
         public ProcessorsListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
-            : base(property, applyAction, expectedControlLayout)
+            : base(property, applyAction, expectedControlLayout, InputProcessor.s_Processors, InputProcessor.GetValueTypeFromType, "Processor")
         {
-        }
-
-        protected override TypeTable GetOptions()
-        {
-            return InputProcessor.s_Processors;
-        }
-
-        protected override Type GetValueType(Type type)
-        {
-            return InputProcessor.GetValueTypeFromType(type);
         }
     }
 
@@ -201,18 +218,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
     internal class InteractionsListView : NameAndParameterListView
     {
         public InteractionsListView(SerializedProperty property, Action applyAction, string expectedControlLayout)
-            : base(property, applyAction, expectedControlLayout)
+            : base(property, applyAction, expectedControlLayout, InputInteraction.s_Interactions, InputInteraction.GetValueType, "Interaction")
         {
-        }
-
-        protected override TypeTable GetOptions()
-        {
-            return InputInteraction.s_Interactions;
-        }
-
-        protected override Type GetValueType(Type type)
-        {
-            return InputInteraction.GetValueType(type);
         }
     }
 }

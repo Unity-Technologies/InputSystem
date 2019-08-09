@@ -1,15 +1,15 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.UI;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 #if ENABLE_VR
 using UnityEngine.XR;
 #endif
-using InputDevice = UnityEngine.Experimental.Input.InputDevice;
+using InputDevice = UnityEngine.InputSystem.InputDevice;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -40,7 +40,7 @@ public class DemoGame : MonoBehaviour
     public Canvas mainMenuCanvas;
     public Camera mainMenuCamera;
     public GameObject startGameButton;
-    public UIActionInputModule uiInputModule;
+    public InputSystemUIInputModule uiInputModule;
 
     /// <summary>
     /// The possible states that the game can be in as a whole.
@@ -262,7 +262,8 @@ public class DemoGame : MonoBehaviour
     {
         Debug.Assert(state == State.InMainMenu);
 
-        ////TODO: this should be something that UIActionInputModule can give us without us querying the action directly
+        ////TODO: this should be something that InputSystemUIInputModule can give us without us querying the action directly
+        /*
         // Find out which device clicked the "Start Game" button. We use this to
         // automatically join the player instead of requiring the player who clicked to
         // then issue an explicit join.
@@ -280,6 +281,7 @@ public class DemoGame : MonoBehaviour
         // picker. If the user cancels, we do nothing and just stay in the main menu. If the user
         // picks an account, we end up in OnUserChange().
         InputUser.PerformPairingWithDevice(playerDevice);
+        */
     }
 
     /// <summary>
@@ -401,12 +403,12 @@ public class DemoGame : MonoBehaviour
                 break;
             }
 
-            // If the user has cancelled account selection, we remove the user if there's no devices
+            // If the user has canceled account selection, we remove the user if there's no devices
             // already paired to it. This usually happens when a player initiates a join on a device on
             // Xbox or Switch, has the account picker come up, but then cancels instead of making an
             // account selection. In this case, we want to cancel the join.
             // NOTE: We are only adding DemoPlayerControllers once device pairing is complete
-            case InputUserChange.AccountSelectionCancelled:
+            case InputUserChange.AccountSelectionCanceled:
             {
                 if (user.pairedDevices.Count == 0)
                 {
@@ -597,7 +599,7 @@ public class DemoGame : MonoBehaviour
     private void ShowMainMenu(bool value = true)
     {
         // Enabling or disabling the main menu canvas automatically enables or disables
-        // the actions referenced by the UIActionInputModule sitting on the canvas. We've not
+        // the actions referenced by the InputSystemUIInputModule sitting on the canvas. We've not
         // restricted them by a set of devices or set a binding mask on them so the actions will
         // go and grab whatever devices are present and matching the bindings we have. This means
         // that every local device can be used to drive the main menu.

@@ -3,12 +3,12 @@ using System;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: resolving bindings to actions needs to take "{id}" form into account
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Helpers for doctoring around in InputActions using SerializedProperties.
     internal static class InputActionSerializationHelpers
@@ -170,8 +170,9 @@ namespace UnityEngine.Experimental.Input.Editor
             var actionProperty = actionsArrayProperty.GetArrayElementAtIndex(index);
 
             actionProperty.FindPropertyRelative("m_Name").stringValue = actionName;
+            actionProperty.FindPropertyRelative("m_Type").intValue = (int)InputActionType.Button;  // Default to creating button actions.
             actionProperty.FindPropertyRelative("m_Id").stringValue = Guid.NewGuid().ToString();
-            actionProperty.FindPropertyRelative("m_ExpectedControlLayout").stringValue = string.Empty;
+            actionProperty.FindPropertyRelative("m_ExpectedControlType").stringValue = string.Empty;
 
             return actionProperty;
         }
@@ -390,6 +391,7 @@ namespace UnityEngine.Experimental.Input.Editor
             nameProperty.stringValue = FindUniqueName(arrayProperty, baseName, ignoreIndex: arrayIndexOfElement);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly", Justification = "False positive (possibly caused by lambda expression?).")]
         public static string FindUniqueName(SerializedProperty arrayProperty, string baseName, int ignoreIndex = -1)
         {
             return StringHelpers.MakeUniqueName(baseName,

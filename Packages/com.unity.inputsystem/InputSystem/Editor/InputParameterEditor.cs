@@ -2,21 +2,35 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: generalize this to something beyond just parameters?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
+    /// <summary>
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
+    /// or <see cref="IInputInteraction"/>.
+    /// </summary>
+    /// <remarks>
+    /// When implementing a custom parameter editor, use <see cref="InputParameterEditor{TObject}"/> instead.
+    /// </remarks>
     public abstract class InputParameterEditor
     {
+        /// <summary>
+        /// The <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>
+        /// being edited.
+        /// </summary>
         public object target { get; internal set; }
 
+        /// <summary>
+        /// Callback for implementing a custom UI.
+        /// </summary>
         public abstract void OnGUI();
 
         internal abstract void SetTarget(object target);
 
-        public static Type LookupEditorForType(Type type)
+        internal static Type LookupEditorForType(Type type)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
@@ -59,11 +73,25 @@ namespace UnityEngine.Experimental.Input.Editor
         private static Dictionary<Type, Type> s_TypeLookupCache;
     }
 
+    /// <summary>
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
+    /// or <see cref="IInputInteraction"/>.
+    /// </summary>
+    /// <remarks>
+    /// Note that a parameter editor takes over the entire editing UI for the object and not just the editing of specific parameters.
+    /// </remarks>
     public abstract class InputParameterEditor<TObject> : InputParameterEditor
         where TObject : class
     {
+        /// <summary>
+        /// The <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>
+        /// being edited.
+        /// </summary>
         public new TObject target { get; private set; }
 
+        /// <summary>
+        /// Called after the parameter editor has been initialized.
+        /// </summary>
         protected virtual void OnEnable()
         {
         }
@@ -85,20 +113,28 @@ namespace UnityEngine.Experimental.Input.Editor
         }
 
         /// <summary>
-        /// Helper for parameters that have global defaults.
+        /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
         /// </summary>
+        /// <remarks>
+        /// Has a bool toggle to switch between default and custom value.
+        /// </remarks>
         internal struct CustomOrDefaultSetting
         {
-            public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue, Action<float> setValue, Func<float> getDefaultValue)
+            public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue,
+                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true)
             {
                 m_GetValue = getValue;
                 m_SetValue = setValue;
                 m_GetDefaultValue = getDefaultValue;
                 m_ToggleLabel = EditorGUIUtility.TrTextContent("Default",
-                    $"If enabled, the default {label.ToLower()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW).");
+                    defaultComesFromInputSettings
+                    ? $"If enabled, the default {label.ToLower()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
+                    : "If enabled, the default value is used.");
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
-                m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
+                if (defaultComesFromInputSettings)
+                    m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
                 m_UseDefaultValue = Mathf.Approximately(getValue(), 0);
+                m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
                 m_HelpBoxText =
                     EditorGUIUtility.TrTextContent(
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
@@ -116,7 +152,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (!m_UseDefaultValue)
                     m_SetValue(newValue);
                 EditorGUI.EndDisabledGroup();
-                var newUseDefault = EditorGUILayout.ToggleLeft(m_ToggleLabel, m_UseDefaultValue, GUILayout.ExpandWidth(false));
+                var newUseDefault = GUILayout.Toggle(m_UseDefaultValue, m_ToggleLabel, GUILayout.ExpandWidth(false));
                 if (newUseDefault != m_UseDefaultValue)
                 {
                     if (!newUseDefault)
@@ -126,7 +162,10 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
-                if (m_UseDefaultValue)
+
+                // If we're using a default from global InputSettings, show info text for that and provide
+                // button to open input settings.
+                if (m_UseDefaultValue && m_DefaultComesFromInputSettings)
                 {
                     EditorGUILayout.HelpBox(m_HelpBoxText);
                     EditorGUILayout.BeginHorizontal();
@@ -141,6 +180,7 @@ namespace UnityEngine.Experimental.Input.Editor
             private Action<float> m_SetValue;
             private Func<float> m_GetDefaultValue;
             private bool m_UseDefaultValue;
+            private bool m_DefaultComesFromInputSettings;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;

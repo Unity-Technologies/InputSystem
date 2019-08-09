@@ -1,9 +1,9 @@
 using System;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////REVIEW: should timer expiration be a separate method on IInputInteraction?
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Information passed to <see cref="IInputInteraction">interactions</see>
@@ -50,15 +50,6 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// If true, <see cref="action"/> is set to continuous mode (<see cref="InputAction.continuous"/>).
-        /// </summary>
-        /// <remarks>
-        /// In continuous mode, an action, while triggered, is expected to be performed even if there is
-        /// no associated input in a given frame.
-        /// </remarks>
-        public bool continuous => m_TriggerState.continuous;
-
-        /// <summary>
         /// True if the interaction is waiting for input
         /// </summary>
         /// <remarks>
@@ -95,7 +86,7 @@ namespace UnityEngine.Experimental.Input
         /// Note that this affects the current interaction only. There may be multiple interactions on a binding
         /// and arbitrary many interactions may concurrently be in started state. However, only one interaction
         /// (usually the one that starts first) is allowed to drive the action's state as a whole. If an interaction
-        /// that is currently driving an action is cancelled, however, the next interaction in the list that has
+        /// that is currently driving an action is canceled, however, the next interaction in the list that has
         /// been started will take over and continue driving the action.
         ///
         /// <example>
@@ -112,7 +103,7 @@ namespace UnityEngine.Experimental.Input
         ///         else if (context.isStarted && !context.ControlIsActuated())
         ///         {
         ///             // Interaction has been completed.
-        ///             context.PerformedAndGoBackToWaiting();
+        ///             context.Performed();
         ///         }
         ///     }
         ///
@@ -130,7 +121,7 @@ namespace UnityEngine.Experimental.Input
             m_State.ChangePhaseOfInteraction(InputActionPhase.Started, ref m_TriggerState);
         }
 
-        public void PerformedAndGoBackToWaiting()
+        public void Performed()
         {
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
@@ -147,9 +138,9 @@ namespace UnityEngine.Experimental.Input
                 phaseAfterPerformed: InputActionPhase.Performed);
         }
 
-        public void Cancelled()
+        public void Canceled()
         {
-            m_State.ChangePhaseOfInteraction(InputActionPhase.Cancelled, ref m_TriggerState);
+            m_State.ChangePhaseOfInteraction(InputActionPhase.Canceled, ref m_TriggerState);
         }
 
         public void Waiting()

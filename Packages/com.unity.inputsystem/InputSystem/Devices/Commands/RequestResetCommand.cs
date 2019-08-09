@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A command to tell the runtime to reset the device to it's default state.
@@ -16,14 +16,14 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('R', 'S', 'E', 'T'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static RequestResetCommand Create()

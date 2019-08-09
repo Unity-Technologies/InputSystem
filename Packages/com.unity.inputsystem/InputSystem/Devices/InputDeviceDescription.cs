@@ -1,9 +1,10 @@
 using System;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add a 'devicePath' property that platforms can use to relay their internal device locators
 ////      (but do *not* take it into account when comparing descriptions for disconnected devices)
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Metadata for an input device.
@@ -226,6 +227,21 @@ namespace UnityEngine.Experimental.Input.Layouts
                 version = data.version,
                 capabilities = data.capabilities
             };
+        }
+
+        internal static bool ComparePropertyToDeviceDescriptor(string propertyName, string propertyValue, string deviceDescriptor)
+        {
+            // We use JsonParser instead of JsonUtility.Parse in order to not allocate GC memory here.
+
+            var json = new JsonParser(deviceDescriptor);
+            if (!json.NavigateToProperty(propertyName))
+            {
+                if (string.IsNullOrEmpty(propertyValue))
+                    return true;
+                return false;
+            }
+
+            return json.CurrentPropertyHasValueEqualTo(propertyValue);
         }
 
         [SerializeField] private string m_InterfaceName;

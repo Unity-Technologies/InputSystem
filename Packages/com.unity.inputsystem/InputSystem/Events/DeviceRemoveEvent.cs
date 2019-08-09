@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Notifies about the removal of an input device.
@@ -21,9 +21,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public unsafe InputEventPtr ToEventPtr()

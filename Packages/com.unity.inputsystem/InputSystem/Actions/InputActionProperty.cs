@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A serializable property type that can either reference an action externally defined
@@ -13,6 +13,7 @@ namespace UnityEngine.Experimental.Input
         /// The action held on to by the property.
         /// </summary>
         public InputAction action => m_UseReference ? m_Reference.action : m_Action;
+        public InputActionReference reference => m_UseReference ? m_Reference : null;
 
         public InputActionProperty(InputAction action)
         {
@@ -45,11 +46,11 @@ namespace UnityEngine.Experimental.Input
             return m_Reference == other;
         }
 
-        public override bool Equals(object o)
+        public override bool Equals(object obj)
         {
             if (m_UseReference)
-                return Equals(o as InputActionReference);
-            return Equals(o as InputAction);
+                return Equals(obj as InputActionReference);
+            return Equals(obj as InputAction);
         }
 
         public override int GetHashCode()
@@ -90,6 +91,11 @@ namespace UnityEngine.Experimental.Input
         }
 
         public static implicit operator InputActionProperty(InputAction action)
+        {
+            return new InputActionProperty(action);
+        }
+
+        public static InputActionProperty ToInputActionProperty(InputAction action)
         {
             return new InputActionProperty(action);
         }

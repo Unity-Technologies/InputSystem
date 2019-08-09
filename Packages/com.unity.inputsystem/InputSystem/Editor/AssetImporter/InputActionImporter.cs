@@ -3,10 +3,14 @@ using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
+
+////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
+////       not yet have been imported when the project is imported from scratch; this results in errors in the log and in generic
+////       icons showing up for the assets
 
 #pragma warning disable 0649
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Imports an <see cref="InputActionAsset"/> from JSON.
@@ -15,15 +19,13 @@ namespace UnityEngine.Experimental.Input.Editor
     /// Can generate code wrappers for the contained action sets as a convenience.
     /// Will not overwrite existing wrappers except if the generated code actually differs.
     /// </remarks>
-    [ScriptedImporter(kVersion, InputActionAsset.kExtension)]
-    public class InputActionImporter : ScriptedImporter
+    [ScriptedImporter(kVersion, InputActionAsset.Extension)]
+    internal class InputActionImporter : ScriptedImporter
     {
         private const int kVersion = 6;
 
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add Action@4x.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/Add ActionMap@4x.png";
-        private const string kActionIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add Action@4x.png";
-        private const string kAssetIconDark = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_Add ActionMap@4x.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
 
         [SerializeField] private bool m_GenerateWrapperCode;
         [SerializeField] private string m_WrapperCodePath;
@@ -40,6 +42,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx));
+
             foreach (var callback in s_OnImportCallbacks)
                 callback();
 
@@ -72,11 +77,14 @@ namespace UnityEngine.Experimental.Input.Editor
                 return;
             }
 
+            // Force name of asset to be that on the file on disk instead of what may be serialized
+            // as the 'name' property in JSON.
+            asset.name = Path.GetFileNameWithoutExtension(assetPath);
+
             // Load icons.
             ////REVIEW: the icons won't change if the user changes skin; not sure it makes sense to differentiate here
-            var isDarkSkin = EditorGUIUtility.isProSkin;
-            var assetIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kAssetIconDark : kAssetIcon);
-            var actionIcon = (Texture2D)EditorGUIUtility.Load(isDarkSkin ? kActionIconDark : kActionIcon);
+            var assetIcon = (Texture2D)EditorGUIUtility.Load(kAssetIcon);
+            var actionIcon = (Texture2D)EditorGUIUtility.Load(kActionIcon);
 
             // Add asset.
             ctx.AddObjectToAsset("<root>", asset, assetIcon);
@@ -130,11 +138,30 @@ namespace UnityEngine.Experimental.Input.Editor
                 var wrapperFilePath = m_WrapperCodePath;
                 if (string.IsNullOrEmpty(wrapperFilePath))
                 {
+                    // Placed next to .inputactions file.
                     var assetPath = ctx.assetPath;
                     var directory = Path.GetDirectoryName(assetPath);
                     var fileName = Path.GetFileNameWithoutExtension(assetPath);
                     wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
                 }
+                else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                         wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+                {
+                    // User-specified file relative to location of .inputactions file.
+                    var assetPath = ctx.assetPath;
+                    var directory = Path.GetDirectoryName(assetPath);
+                    wrapperFilePath = Path.Combine(directory, wrapperFilePath);
+                }
+                else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
+                         !wrapperFilePath.ToLower().StartsWith("assets\\"))
+                {
+                    // User-specified file in Assets/ folder.
+                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+                }
+
+                var dir = Path.GetDirectoryName(wrapperFilePath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
 
                 var options = new InputActionCodeGenerator.Options
                 {
@@ -142,13 +169,6 @@ namespace UnityEngine.Experimental.Input.Editor
                     namespaceName = m_WrapperCodeNamespace,
                     className = m_WrapperClassName,
                 };
-
-                if (!wrapperFilePath.ToLower().StartsWith("assets/"))
-                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
-
-                var dir = Path.GetDirectoryName(wrapperFilePath);
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
 
                 if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
                 {
@@ -171,7 +191,7 @@ namespace UnityEngine.Experimental.Input.Editor
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
-            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.kExtension,
+            ProjectWindowUtil.CreateAssetWithContent("New Controls." + InputActionAsset.Extension,
                 kDefaultAssetLayout);
         }
     }

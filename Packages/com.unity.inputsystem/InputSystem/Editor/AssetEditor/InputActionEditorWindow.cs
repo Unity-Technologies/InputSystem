@@ -17,7 +17,7 @@ using UnityEditor.ShortcutManagement;
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// An editor window to edit .inputactions assets.
@@ -26,12 +26,13 @@ namespace UnityEngine.Experimental.Input.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow
+    internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
         /// if someone hits the "Edit Asset" button in the importer inspector.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
@@ -305,7 +306,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Action",
+                title = "Actions",
             };
 
             // Create tree in left pane showing action maps.
@@ -315,9 +316,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     InputActionTreeView.BuildWithJustActionMapsFromAsset(m_ActionAssetManager.serializedObject),
                 onSelectionChanged = OnActionMapTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
-                drawMinusButton = false,
                 onHandleAddNewAction = m_ActionsTree.AddNewAction,
-                title = "Actions Maps",
+                drawMinusButton = false,
+                title = "Action Maps",
             };
             m_ActionMapsTree.Reload();
             m_ActionMapsTree.ExpandAll();
@@ -542,6 +543,11 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnGUI()
         {
+            // If the actions tree has lost the filters (because they would not match an item it tried to highlight),
+            // update the Toolbar UI to remove them.
+            if (!m_ActionsTree.hasFilter)
+                m_Toolbar.ResetSearchFilters();
+
             // Allow switching between action map tree and action tree using arrow keys.
             ToggleFocusUsingKeyboard(KeyCode.RightArrow, m_ActionMapsTree, m_ActionsTree);
             ToggleFocusUsingKeyboard(KeyCode.LeftArrow, m_ActionsTree, m_ActionMapsTree);
@@ -572,9 +578,9 @@ namespace UnityEngine.Experimental.Input.Editor
                 // renaming an item, and then you double click on an item in the action map column, the action map column will
                 // get to use the mouse event before the action collumn gets to see it, which would cause the action map column
                 // to enter rename mode and use the event, before the action column gets a chance to see it and exit rename mode.
-                // Then we end up with two active renaming sessions, which does not work correctly. 
-                // (See https://fogbugz.unity3d.com/f/cases/1140869/). 
-                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see 
+                // Then we end up with two active renaming sessions, which does not work correctly.
+                // (See https://fogbugz.unity3d.com/f/cases/1140869/).
+                // Now, our fix to this problem is to force-end and accept any renaming session on the action column if we see
                 // that the action map column had processed the current event. This is not particularly elegant, but I cannot think
                 // of a better solution as we are limited by the public APIs exposed by TreeView.
                 m_ActionsTree.EndRename(forceAccept: true);
@@ -676,6 +682,8 @@ namespace UnityEngine.Experimental.Input.Editor
             Repaint();
         }
 
+        ////TODO: add shortcut to focus search box
+
         ////TODO: show shortcuts in tooltips
         ////FIXME: the shortcuts seem to have focus problems; often requires clicking away and then back to the window
         [Shortcut("Input Action Editor/Save", typeof(InputActionEditorWindow), KeyCode.S, ShortcutModifiers.Alt)]
@@ -712,6 +720,11 @@ namespace UnityEngine.Experimental.Input.Editor
             m_Toolbar.isDirty = dirty;
         }
 
+        public void Dispose()
+        {
+            m_BindingPropertyView?.Dispose();
+        }
+
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private InputControlPickerState m_ControlPickerViewState;
@@ -726,15 +739,17 @@ namespace UnityEngine.Experimental.Input.Editor
         private InputActionTreeView m_ActionsTree;
 
         private static bool s_RefreshPending;
-        private static readonly string k_FileExtension = "." + InputActionAsset.kExtension;
+        private static readonly string k_FileExtension = "." + InputActionAsset.Extension;
 
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
@@ -753,7 +768,7 @@ namespace UnityEngine.Experimental.Input.Editor
                             "Yes, Delete", "No, Cancel");
                         if (!result)
                         {
-                            // User cancelled. Stop the deletion.
+                            // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;
                         }
 

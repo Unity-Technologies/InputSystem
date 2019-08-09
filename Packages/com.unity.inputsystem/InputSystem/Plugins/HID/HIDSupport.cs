@@ -1,11 +1,14 @@
+using UnityEngine.InputSystem.Utilities;
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
-using UnityEngine.Experimental.Input.Plugins.HID.Editor;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.HID.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Plugins.HID
+namespace UnityEngine.InputSystem.HID
 {
+    using ShouldCreateHIDCallback = System.Func<HID.HIDDeviceDescriptor, bool?>;
+
     /// <summary>
     /// Adds support for generic HID devices to the input system.
     /// </summary>
@@ -25,11 +28,41 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
     /// </remarks>
     public static class HIDSupport
     {
+        public static event ShouldCreateHIDCallback shouldCreateHID
+        {
+            add => s_ShouldCreateHID.Append(value);
+            remove => s_ShouldCreateHID.Remove(value);
+        }
+
+        internal static InlinedArray<ShouldCreateHIDCallback> s_ShouldCreateHID;
+
+        private static bool? DefaultShouldCreateHIDCallback(HID.HIDDeviceDescriptor descriptor)
+        {
+            if (descriptor.usagePage == HID.UsagePage.GenericDesktop)
+            {
+                switch (descriptor.usage)
+                {
+                    case (int)HID.GenericDesktop.Joystick:
+                    case (int)HID.GenericDesktop.Gamepad:
+                    case (int)HID.GenericDesktop.MultiAxisController:
+                        return true;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
         /// </summary>
-        public static void Initialize()
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+        public
+#else
+        internal
+#endif
+        static void Initialize()
         {
+            s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
+
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
 
@@ -51,7 +84,7 @@ namespace UnityEngine.Experimental.Input.Plugins.HID
         }
 
         #if UNITY_EDITOR
-        private static GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
+        private static readonly GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
         #endif
     }
 }

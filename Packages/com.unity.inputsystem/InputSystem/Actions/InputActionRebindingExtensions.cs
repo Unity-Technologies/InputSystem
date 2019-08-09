@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 // The way target bindings for overrides are found:
 // - If specified, directly by index (e.g. "apply this override to the third binding in the map")
@@ -11,13 +11,15 @@ using UnityEngine.Experimental.Input.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
+////TODO: for interactive rebinding, if no expected control layout is set, infer it from the action type
+
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
 ////FIXME: properly work with composites
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in
@@ -74,8 +76,8 @@ namespace UnityEngine.Experimental.Input
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 
@@ -125,8 +127,8 @@ namespace UnityEngine.Experimental.Input
                 throw new ArgumentNullException(nameof(actionMap));
             var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
-                throw new ArgumentOutOfRangeException(
-                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings", "bindingIndex");
+                throw new ArgumentOutOfRangeException(nameof(bindingIndex),
+                    $"Cannot apply override to binding at index {bindingIndex} in map '{actionMap}' with only {bindingsCount} bindings");
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
@@ -185,24 +187,15 @@ namespace UnityEngine.Experimental.Input
             actionMap.LazyResolveBindings();
         }
 
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputAction action)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Add all overrides that have been applied to this action to the given list.
-        // Returns the number of overrides found.
-        public static int GetBindingOverrides(this InputAction action, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
-        }
-
         ////REVIEW: are the IEnumerable variations worth having?
 
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -213,6 +206,9 @@ namespace UnityEngine.Experimental.Input
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+            if (overrides == null)
+                throw new ArgumentNullException(nameof(overrides));
+
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
@@ -238,21 +234,6 @@ namespace UnityEngine.Experimental.Input
             var bindingCount = actionMap.m_Bindings.Length;
             for (var i = 0; i < bindingCount; ++i)
                 ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        /// <summary>
-        /// Get all overrides applied to bindings in the given map.
-        /// </summary>
-        /// <param name="actionMap"></param>
-        /// <returns></returns>
-        public static IEnumerable<InputBinding> GetBindingOverrides(this InputActionMap actionMap)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static int GetBindingOverrides(this InputActionMap actionMap, List<InputBinding> overrides)
-        {
-            throw new NotImplementedException();
         }
 
         ////REVIEW: how does this system work in combination with actual user overrides
@@ -337,7 +318,7 @@ namespace UnityEngine.Experimental.Input
         /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
-        public class RebindingOperation : IDisposable
+        public sealed class RebindingOperation : IDisposable
         {
             public const float kDefaultMagnitudeThreshold = 0.2f;
 
@@ -373,7 +354,7 @@ namespace UnityEngine.Experimental.Input
             /// </summary>
             /// <remarks>
             /// </remarks>
-            public ReadWriteArray<float> scores => new ReadWriteArray<float>(m_Scores, 0, m_Candidates.Count);
+            public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
             public InputControl selectedControl
             {
@@ -390,7 +371,7 @@ namespace UnityEngine.Experimental.Input
 
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
-            public bool cancelled => (m_Flags & Flags.Cancelled) != 0;
+            public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
             public double startTime => m_StartTime;
 
@@ -410,26 +391,24 @@ namespace UnityEngine.Experimental.Input
                 // If the action has an associated expected layout, constrain ourselves by it.
                 // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
                 //       of derived layouts may share the same control type.
-                if (!string.IsNullOrEmpty(action.expectedControlLayout))
-                    WithExpectedControlLayout(action.expectedControlLayout);
+                if (!string.IsNullOrEmpty(action.expectedControlType))
+                    WithExpectedControlLayout(action.expectedControlType);
 
                 return this;
             }
 
-            public RebindingOperation WithCancelAction(InputAction action)
-            {
-                throw new NotImplementedException();
-            }
-
-            public RebindingOperation WithCancellingThrough(string binding)
+            public RebindingOperation WithCancelingThrough(string binding)
             {
                 m_CancelBinding = binding;
                 return this;
             }
 
-            public RebindingOperation WithCancellingThrough(InputControl control)
+            public RebindingOperation WithCancelingThrough(InputControl control)
             {
-                return WithCancellingThrough(control.path);
+                if (control == null)
+                    throw new ArgumentNullException(nameof(control));
+
+                return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlLayout(string layoutName)
@@ -630,7 +609,7 @@ namespace UnityEngine.Experimental.Input
                 HookOnEvent();
 
                 m_Flags |= Flags.Started;
-                m_Flags &= ~Flags.Cancelled;
+                m_Flags &= ~Flags.Canceled;
                 m_Flags &= ~Flags.Completed;
 
                 return this;
@@ -731,15 +710,10 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.OnEventHooked;
             }
 
-            private unsafe void OnEvent(InputEventPtr eventPtr)
+            private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                    return;
-
-                // Fetch device.
-                var device = InputSystem.GetDeviceById(eventPtr.deviceId);
-                if (device == null)
                     return;
 
                 // Go through controls and see if there's anything interesting in the event.
@@ -794,7 +768,7 @@ namespace UnityEngine.Experimental.Input
                         continue;
 
                     // Skip controls that have no effective value change.
-                    // NOTE: This will run the full processor stack and is move involved.
+                    // NOTE: This will run the full processor stack and is more involved.
                     if (!control.HasValueChangeInState(statePtr))
                         continue;
 
@@ -850,7 +824,7 @@ namespace UnityEngine.Experimental.Input
                     }
                 }
 
-                if (haveChangedCandidates && !cancelled)
+                if (haveChangedCandidates && !canceled)
                 {
                     // If we have a callback that wants to control matching, leave it to the callback to decide
                     // whether the rebind is complete or not. Otherwise, just complete.
@@ -920,7 +894,7 @@ namespace UnityEngine.Experimental.Input
                 m_Flags &= ~Flags.OnAfterUpdateHooked;
             }
 
-            private void OnAfterUpdate(InputUpdateType updateType)
+            private void OnAfterUpdate()
             {
                 // If we don't have a match yet but we have a timeout and have expired it,
                 // cancel the operation.
@@ -958,7 +932,7 @@ namespace UnityEngine.Experimental.Input
                         // We have a callback. Give it a shot to generate a path. If it doesn't,
                         // fall back to our default logic.
                         var newPath = m_OnGeneratePath(selectedControl);
-                        if (!string.IsNullOrEmpty(path))
+                        if (!string.IsNullOrEmpty(newPath))
                             path = newPath;
                         else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
                             path = GeneratePathForControl(selectedControl);
@@ -986,7 +960,7 @@ namespace UnityEngine.Experimental.Input
                             if (m_TargetBindingIndex >= 0)
                             {
                                 if (m_TargetBindingIndex >= m_ActionToRebind.bindings.Count)
-                                    throw new Exception(
+                                    throw new InvalidOperationException(
                                         $"Target binding index {m_TargetBindingIndex} out of range for action '{m_ActionToRebind}' with {m_ActionToRebind.bindings.Count} bindings");
 
                                 m_ActionToRebind.ApplyBindingOverride(m_TargetBindingIndex, path);
@@ -1014,7 +988,7 @@ namespace UnityEngine.Experimental.Input
 
             private void OnCancel()
             {
-                m_Flags |= Flags.Cancelled;
+                m_Flags |= Flags.Canceled;
 
                 m_OnCancel?.Invoke(this);
 
@@ -1084,8 +1058,8 @@ namespace UnityEngine.Experimental.Input
             private Func<InputControl, string> m_OnGeneratePath;
             private Func<InputControl, InputEventPtr, float> m_OnComputeScore;
             private Action<RebindingOperation, string> m_OnApplyBinding;
-            private Action<InputEventPtr> m_OnEventDelegate;
-            private Action<InputUpdateType> m_OnAfterUpdateDelegate;
+            private Action<InputEventPtr, InputDevice> m_OnEventDelegate;
+            private Action m_OnAfterUpdateDelegate;
             private InputControlLayout.Cache m_LayoutCache;
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
@@ -1095,7 +1069,7 @@ namespace UnityEngine.Experimental.Input
             {
                 Started = 1 << 0,
                 Completed = 1 << 1,
-                Cancelled = 1 << 2,
+                Canceled = 1 << 2,
                 OnEventHooked = 1 << 3,
                 OnAfterUpdateHooked = 1 << 4,
                 OverwritePath = 1 << 5,

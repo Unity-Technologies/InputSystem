@@ -1,8 +1,8 @@
 using System;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
     /// A control made up of four discrete, directional buttons. Forms a vector
@@ -22,9 +22,9 @@ namespace UnityEngine.Experimental.Input.Controls
         {
             public int component;
 
-            protected override void FinishSetup(InputDeviceBuilder builder)
+            protected override void FinishSetup()
             {
-                base.FinishSetup(builder);
+                base.FinishSetup();
                 component = name == "x" ? 0 : 1;
 
                 // Set the state block to be the parent's state block. We don't use that to read
@@ -75,16 +75,16 @@ namespace UnityEngine.Experimental.Input.Controls
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            up = builder.GetControl<ButtonControl>(this, "up");
-            down = builder.GetControl<ButtonControl>(this, "down");
-            left = builder.GetControl<ButtonControl>(this, "left");
-            right = builder.GetControl<ButtonControl>(this, "right");
-            base.FinishSetup(builder);
+            up = GetChildControl<ButtonControl>("up");
+            down = GetChildControl<ButtonControl>("down");
+            left = GetChildControl<ButtonControl>("left");
+            right = GetChildControl<ButtonControl>("right");
+            base.FinishSetup();
         }
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)

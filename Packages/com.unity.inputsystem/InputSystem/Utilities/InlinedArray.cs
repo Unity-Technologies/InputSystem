@@ -5,7 +5,7 @@ using System.Linq;
 
 ////REVIEW: what about ignoring 'firstValue' entirely in case length > 1 and putting everything into an array in that case
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Helper to avoid array allocations if there's only a single value in the array.
@@ -228,7 +228,7 @@ namespace UnityEngine.Experimental.Input.Utilities
         public void RemoveAtWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new IndexOutOfRangeException(nameof(index));
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
@@ -322,12 +322,13 @@ namespace UnityEngine.Experimental.Input.Utilities
             if (index < 0 || index >= length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
+            var numAdditionalValues = length - 1;
             if (index == 0)
             {
                 if (length > 1)
                 {
-                    firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default;
+                    firstValue = additionalValues[numAdditionalValues - 1];
+                    additionalValues[numAdditionalValues - 1] = default;
                 }
                 else
                 {
@@ -338,7 +339,6 @@ namespace UnityEngine.Experimental.Input.Utilities
             {
                 Debug.Assert(additionalValues != null);
 
-                var numAdditionalValues = length - 1;
                 ArrayHelpers.EraseAtByMovingTail(additionalValues, ref numAdditionalValues, index - 1);
             }
 

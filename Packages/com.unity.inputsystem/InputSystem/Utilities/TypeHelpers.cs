@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static class TypeHelpers
     {
@@ -125,7 +125,6 @@ namespace UnityEngine.Experimental.Input.Utilities
                         return null;
                 }
             }
-
 
             return type.GenericTypeArguments[argumentIndex];
         }

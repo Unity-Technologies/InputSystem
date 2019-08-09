@@ -15,43 +15,58 @@ public class TouchOldInput : MonoBehaviour
     [Tooltip("Where all the messages go")]
     public InputField m_MessageWindow;
 
+    [Header("Script to Show More Info")]
+    public TouchDebugInfo m_touchInfo;
+
     // The old input manager does not support touch input for Standalone build, even when the device does.
-#if !UNITY_STANDALONE
+
     // Use this for initialization
     void Start()
     {
         if (!Input.touchSupported)
-            throw new Exception("Current device does not support touch input for old Input Manager.");
+            ShowMessage("Current device does not support touch input for old Input Manager.");
 
         if (!Input.touchPressureSupported)
             ShowMessage("Touch Pressue is not supported.");
+
+        Input.simulateMouseWithTouches = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.touchCount > 0)
+        m_touchInfo.MaxOldInputCount = Input.touchCount;
+
+        for (int i = 0; i < Input.touchCount; i++)
         {
-            foreach (Touch touch in Input.touches)
+            Touch touch = Input.GetTouch(i);
+            // Handling highlight
+            switch (touch.phase)
             {
-                switch (touch.phase)
-                {
-                    case TouchPhase.Began:
-                        NewTouchInput(touch);
-                        UpdateTouchInput(touch);
-                        break;
-                    case TouchPhase.Moved:
-                        UpdateTouchInput(touch);
-                        break;
-                    case TouchPhase.Canceled:
-                    case TouchPhase.Ended:
-                        RemoveTouchInput(touch);
-                        break;
-                    case TouchPhase.Stationary:
-                    default:
-                        break;
-                }
+                case TouchPhase.Began:
+                    NewTouchInput(touch);
+                    break;
+                case TouchPhase.Moved:
+                    UpdateTouchInput(touch);
+                    break;
+                case TouchPhase.Canceled:
+                case TouchPhase.Ended:
+                    RemoveTouchInput(touch);
+                    break;
+                case TouchPhase.Stationary:
+                default:
+                    break;
             }
+
+            // Handling information
+            string touchInfo = touch.fingerId + "\n"
+                + touch.type.ToString() + "\n"
+                + touch.phase.ToString() + "\n"
+                + touch.position.ToString() + "\n"
+                + touch.pressure.ToString() + "\n"
+                + touch.radius.ToString() + "\n"
+                + touch.deltaPosition.ToString();
+            m_touchInfo.AddOldInputInfo(touchInfo, i);
         }
     }
 
@@ -79,6 +94,8 @@ public class TouchOldInput : MonoBehaviour
             Transform idText = highlight.Find("ID");
             if (idText != null)
                 idText.GetComponent<TextMesh>().text = "ID: " + touch.fingerId;
+
+            UpdateTouchInput(touch);
         }
         else
             ShowMessage("Touch " + touch.fingerId + " Detected.");
@@ -100,6 +117,4 @@ public class TouchOldInput : MonoBehaviour
     {
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
     }
-
-#endif
 }

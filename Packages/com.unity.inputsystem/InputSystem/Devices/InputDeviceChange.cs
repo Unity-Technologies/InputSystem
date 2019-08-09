@@ -1,12 +1,33 @@
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Indicates what type of change related to an <see cref="InputDevice">input device</see> occurred.
     /// </summary>
-    /// <seealso cref="InputSystem.onDeviceChange"/>
+    /// <remarks>
+    /// Use <see cref="InputSystem.onDeviceChange"/> to receive notifications about changes
+    /// to the input device setup in the system.
+    ///
+    /// <example>
+    /// <code>
+    /// InputSystem.onDeviceChange +=
+    ///     (device, change) =>
+    ///     {
+    ///         switch (change)
+    ///         {
+    ///             case InputDeviceChange.Added:
+    ///                 Debug.Log($"Device {device} was added");
+    ///                 break;
+    ///             case InputDeviceChange.Removed:
+    ///                 Debug.Log($"Device {device} was removed");
+    ///                 break;
+    ///         }
+    ///     };
+    /// </code>
+    /// </example>
+    /// </remarks>
     public enum InputDeviceChange
     {
         /// <summary>
@@ -69,9 +90,6 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="InputControl.usages"/>
         UsageChanged,
 
-        ////REVIEW: nuke this?
-        LayoutVariantChanged,
-
         /// <summary>
         /// The configuration of a device has changed.
         /// </summary>
@@ -82,10 +100,6 @@ namespace UnityEngine.Experimental.Input
         /// <seealso cref="DeviceConfigurationEvent"/>
         /// <seealso cref="InputSystem.QueueConfigChangeEvent"/>
         ConfigurationChanged,
-
-        ////REVIEW: it doesn't seem smart to deliver this high-frequency change on the same path
-        ////        as the other low-frequency changes
-        StateChanged,
 
         ////TODO: fire this when we purge disconnected devices
         Destroyed,

@@ -1,27 +1,27 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: this or the layout system needs to detect when the format isn't supported by the control
 
-namespace UnityEngine.Experimental.Input.Controls
+namespace UnityEngine.InputSystem.Controls
 {
-    ////TODO: allow format to be any integer format
+    /// <summary>
+    /// A generic input control reading integer values.
+    /// </summary>
     public class IntegerControl : InputControl<int>
     {
         public IntegerControl()
         {
-            m_StateBlock.format = InputStateBlock.kTypeInt;
+            m_StateBlock.format = InputStateBlock.FormatInt;
         }
 
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
         {
-            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            return *(int*)valuePtr;
+            return m_StateBlock.ReadInt(statePtr);
         }
 
         public override unsafe void WriteValueIntoState(int value, void* statePtr)
         {
-            var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            *(int*)valuePtr = value;
+            m_StateBlock.WriteInt(statePtr, value);
         }
     }
 }

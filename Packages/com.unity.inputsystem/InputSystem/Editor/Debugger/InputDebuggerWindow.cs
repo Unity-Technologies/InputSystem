@@ -3,14 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.Networking.PlayerConnection;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Plugins.Users;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: refresh metrics on demand
 
@@ -27,11 +27,11 @@ using UnityEngine.Experimental.Input.Utilities;
 ////TODO: refresh when unrecognized device pops up
 
 ////TODO: context menu
-////      devices: open debugger window, remove device, disable device
+////      devices: open debugger window, remove device, enable/disable device (DONE)
 ////      layouts: copy as json, remove layout
-////      actions: disable action
+////      actions: enable/disable action (have tree for all disabled actions)
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     // Allows looking at input activity in the editor.
     internal class InputDebuggerWindow : EditorWindow, ISerializationCallbackReceiver
@@ -216,6 +216,11 @@ namespace UnityEngine.Experimental.Input.Editor
             }
         }
 
+        private static void ToggleTouchSimulation()
+        {
+            InputEditorUserSettings.simulateTouch = !InputEditorUserSettings.simulateTouch;
+        }
+
         private static void EnableRemoteDevices(bool enable = true)
         {
             foreach (var player in EditorConnection.instance.ConnectedPlayers)
@@ -289,6 +294,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
                     ToggleLockInputToGameView);
+                menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
                 menu.ShowAsContext();
             }
@@ -320,8 +326,13 @@ namespace UnityEngine.Experimental.Input.Editor
         {
             public static GUIContent optionsContent = new GUIContent("Options");
             public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
+            public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
             public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
+            public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
+            public static GUIContent removeDevice = new GUIContent("Remove Device");
+            public static GUIContent enableDevice = new GUIContent("Enable Device");
+            public static GUIContent disableDevice = new GUIContent("Disable Device");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -350,6 +361,21 @@ namespace UnityEngine.Experimental.Input.Editor
 
             protected override void ContextClickedItem(int id)
             {
+                var item = FindItem(id, rootItem);
+                if (item == null)
+                    return;
+
+                if (item is DeviceItem deviceItem)
+                {
+                    var menu = new GenericMenu();
+                    menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
+                    menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
+                    if (deviceItem.device.enabled)
+                        menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
+                    else
+                        menu.AddItem(Contents.enableDevice, false, () => InputSystem.EnableDevice(deviceItem.device));
+                    menu.ShowAsContext();
+                }
             }
 
             protected override void DoubleClickedItem(int id)
@@ -376,8 +402,20 @@ namespace UnityEngine.Experimental.Input.Editor
                 InputSystem.ListEnabledActions(m_EnabledActions);
                 if (m_EnabledActions.Count > 0)
                 {
-                    actionsItem = AddChild(root, $"Actions ({m_EnabledActions.Count})", ref id);
+                    actionsItem = AddChild(root, "", ref id);
                     AddEnabledActions(actionsItem, ref id);
+
+                    if (!actionsItem.hasChildren)
+                    {
+                        // We are culling actions that are assigned to users so we may end up with an empty
+                        // list even if we have enabled actions. If we do, remove the "Actions" item from the tree.
+                        root.children.Remove(actionsItem);
+                    }
+                    else
+                    {
+                        // Update title to include action count.
+                        actionsItem.displayName = $"Actions ({actionsItem.children.Count})";
+                    }
                 }
 
                 // Users.
@@ -475,7 +513,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 settingsItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
 
                 // Metrics.
-                var metrics = InputSystem.GetMetrics();
+                var metrics = InputSystem.metrics;
                 metricsItem = AddChild(root, "Metrics", ref id);
                 AddChild(metricsItem,
                     "Current State Size in Bytes: " + StringHelpers.NicifyMemorySize(metrics.currentStateSizeInBytes),
@@ -658,9 +696,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     AddChild(item, $"Short Display Name: {control.shortDisplayName}", ref id);
                 if (control.format != 0)
                     AddChild(item, $"Format: {control.format}", ref id);
-                if (control.offset != InputStateBlock.kInvalidOffset)
+                if (control.offset != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Offset: {control.offset}", ref id);
-                if (control.bit != InputStateBlock.kInvalidOffset)
+                if (control.bit != InputStateBlock.InvalidOffset)
                     AddChild(item, $"Bit: {control.bit}", ref id);
                 if (control.sizeInBits != 0)
                     AddChild(item, $"Size In Bits: {control.sizeInBits}", ref id);
@@ -750,17 +788,49 @@ namespace UnityEngine.Experimental.Input.Editor
                 parent.children?.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
             }
 
-            private void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
+            private unsafe void AddActionItem(TreeViewItem parent, InputAction action, ref int id)
             {
                 // Add item for action.
-                var name = action.ToString();
+                var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
                 var item = AddChild(parent, name, ref id);
 
+                // Grab state.
+                var actionMap = action.GetOrCreateActionMap();
+                actionMap.ResolveBindingsIfNecessary();
+                var state = actionMap.m_State;
+
                 // Add list of resolved controls.
-                foreach (var control in action.controls)
-                    AddChild(item, control.path, ref id);
+                var actionIndex = action.m_ActionIndexInState;
+                var totalBindingCount = state.totalBindingCount;
+                for (var i = 0; i < totalBindingCount; ++i)
+                {
+                    ref var bindingState = ref state.bindingStates[i];
+                    if (bindingState.actionIndex != actionIndex)
+                        continue;
+
+                    var binding = state.GetBinding(i);
+                    var controlCount = bindingState.controlCount;
+                    var controlStartIndex = bindingState.controlStartIndex;
+                    for (var n = 0; n < controlCount; ++n)
+                    {
+                        var control = state.controls[controlStartIndex + n];
+                        var interactions =
+                            StringHelpers.Join(new[] {binding.effectiveInteractions, action.interactions}, ",");
+
+                        var text = control.path;
+                        if (!string.IsNullOrEmpty(interactions))
+                        {
+                            var namesAndParameters = NameAndParameters.ParseMultiple(interactions);
+                            text += " [";
+                            text += string.Join(",", namesAndParameters.Select(x => x.name));
+                            text += "]";
+                        }
+
+                        AddChild(item, text, ref id);
+                    }
+                }
             }
 
             private TreeViewItem AddChild(TreeViewItem parent, string displayName, ref int id, Texture2D icon = null)

@@ -4,55 +4,45 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     internal class AdvancedDropdownGUI
     {
         private static class Styles
         {
-            public static GUIStyle toolbarSearchField = "ToolbarSeachTextField";
-
-            public static GUIStyle itemStyle = new GUIStyle("PR Label");
-            public static GUIStyle richTextItemStyle;
-            public static GUIStyle header = new GUIStyle("In BigTitle");
-            public static GUIStyle headerArrow = new GUIStyle();
-            public static GUIStyle checkMark = new GUIStyle("PR Label");
-            public static GUIStyle lineSeparator = new GUIStyle();
-            public static GUIContent arrowRightContent = new GUIContent("▸");
-            public static GUIContent arrowLeftContent = new GUIContent("◂");
-
-            static Styles()
-            {
-                itemStyle.alignment = TextAnchor.MiddleLeft;
-                itemStyle.padding = new RectOffset(0, 0, 0, 0);
-                itemStyle.margin = new RectOffset(0, 0, 0, 0);
-                itemStyle.fixedHeight += 1;
-
-                richTextItemStyle = new GUIStyle(itemStyle) {richText = true};
-
-                header.font = EditorStyles.boldLabel.font;
-                header.margin = new RectOffset(0, 0, 0, 0);
-                header.border = new RectOffset(0, 0, 3, 3);
-                header.padding = new RectOffset(6, 6, 6, 6);
-                header.contentOffset = Vector2.zero;
-
-                headerArrow.alignment = TextAnchor.MiddleCenter;
-                headerArrow.fontSize = 20;
-                headerArrow.normal.textColor = Color.gray;
-
-                lineSeparator.fixedHeight = 1;
-                lineSeparator.margin.bottom = 2;
-                lineSeparator.margin.top = 2;
-
-                checkMark.alignment = TextAnchor.MiddleCenter;
-                checkMark.padding = new RectOffset(0, 0, 0, 0);
-                checkMark.margin = new RectOffset(0, 0, 0, 0);
-                checkMark.fixedHeight += 1;
-            }
+            public static readonly GUIStyle toolbarSearchField = "ToolbarSeachTextField";
+            public static readonly GUIStyle itemStyle = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17);
+            public static readonly GUIStyle richTextItemStyle = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleLeft)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17)
+                .WithRichText();
+            public static readonly GUIStyle header = new GUIStyle("In BigTitle")
+                .WithFont(EditorStyles.boldLabel.font)
+                .WithMargin(new RectOffset())
+                .WithBorder(new RectOffset(0, 0, 3, 3))
+                .WithPadding(new RectOffset(6, 6, 6, 6))
+                .WithContentOffset(Vector2.zero);
+            public static readonly GUIStyle headerArrow = new GUIStyle()
+                .WithAlignment(TextAnchor.MiddleCenter)
+                .WithFontSize(20)
+                .WithNormalTextColor(Color.gray);
+            public static readonly GUIStyle checkMark = new GUIStyle("PR Label")
+                .WithAlignment(TextAnchor.MiddleCenter)
+                .WithPadding(new RectOffset())
+                .WithMargin(new RectOffset())
+                .WithFixedHeight(17);
+            public static readonly GUIContent arrowRightContent = new GUIContent("▸");
+            public static readonly GUIContent arrowLeftContent = new GUIContent("◂");
         }
 
         //This should ideally match line height
-        private Vector2 s_IconSize = new Vector2(13, 13);
+        private static readonly Vector2 s_IconSize = new Vector2(13, 13);
 
         internal Rect m_SearchRect;
         internal Rect m_HeaderRect;
@@ -128,33 +118,6 @@ namespace UnityEngine.Experimental.Input.Editor
                 style.Draw(arrowRect, Styles.arrowRightContent, false, false, false, false);
             }
             EditorGUI.EndDisabledGroup();
-        }
-
-        internal virtual void DrawLineSeparator(string label)
-        {
-            var hasLabel = !string.IsNullOrEmpty(label);
-            EditorGUILayout.BeginVertical();
-            var rect = GUILayoutUtility.GetRect(GUIContent.none, Styles.lineSeparator, GUILayout.ExpandWidth(true));
-            var labelRect = new Rect();
-            GUIContent labelContent = null;
-            if (hasLabel)
-            {
-                labelContent = new GUIContent(label);
-                labelRect = GUILayoutUtility.GetRect(labelContent, EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
-            }
-            EditorGUILayout.EndVertical();
-
-            if (Event.current.type != EventType.Repaint)
-                return;
-
-            var orgColor = GUI.color;
-            var tintColor = EditorGUIUtility.isProSkin ? new Color(0.12f, 0.12f, 0.12f, 1.333f) : new Color(0.6f, 0.6f, 0.6f, 1.333f);
-            GUI.color = GUI.color * tintColor;
-            GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
-            GUI.color = orgColor;
-
-            if (hasLabel)
-                EditorGUI.LabelField(labelRect, labelContent, EditorStyles.miniLabel);
         }
 
         internal virtual void DrawHeader(AdvancedDropdownItem group, Action backButtonPressed, bool hasParent)
@@ -247,7 +210,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 if (child.IsSeparator())
                 {
-                    maxHeight += Styles.lineSeparator.CalcHeight(content, maxWidth) + Styles.lineSeparator.margin.vertical;
+                    maxHeight += GUIHelpers.Styles.lineSeparator.CalcHeight(content, maxWidth) + GUIHelpers.Styles.lineSeparator.margin.vertical;
                 }
                 else
                 {
@@ -281,7 +244,7 @@ namespace UnityEngine.Experimental.Input.Editor
                 }
                 if (child.IsSeparator())
                 {
-                    height += Styles.lineSeparator.CalcHeight(content, 0) + Styles.lineSeparator.margin.vertical;
+                    height += GUIHelpers.Styles.lineSeparator.CalcHeight(content, 0) + GUIHelpers.Styles.lineSeparator.margin.vertical;
                 }
                 else
                 {

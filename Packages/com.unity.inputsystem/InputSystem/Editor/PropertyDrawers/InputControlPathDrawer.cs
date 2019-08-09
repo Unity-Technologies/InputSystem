@@ -1,8 +1,9 @@
 #if UNITY_EDITOR
+using System;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom property drawer for string type fields that represent input control paths.
@@ -21,10 +22,15 @@ namespace UnityEngine.Experimental.Input.Editor
     /// </example>
     /// </remarks>
     [CustomPropertyDrawer(typeof(InputControlAttribute))]
-    public class InputControlPathDrawer : PropertyDrawer
+    internal sealed class InputControlPathDrawer : PropertyDrawer, IDisposable
     {
         private InputControlPathEditor m_Editor;
         private InputControlPickerState m_PickerState;
+
+        public void Dispose()
+        {
+            m_Editor?.Dispose();
+        }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

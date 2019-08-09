@@ -2,7 +2,7 @@
 
 ////TODO: add different deadzone shapes and/or option to min/max X and Y separately
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
@@ -20,18 +20,18 @@ namespace UnityEngine.Experimental.Input.Processors
         public float min;
         public float max;
 
-        public float minOrDefault => min == 0.0f ? InputSystem.settings.defaultDeadzoneMin : min;
-        public float maxOrDefault => max == 0.0f ? InputSystem.settings.defaultDeadzoneMax : max;
+        private float minOrDefault => min == default ? InputSystem.settings.defaultDeadzoneMin : min;
+        private float maxOrDefault => max == default ? InputSystem.settings.defaultDeadzoneMax : max;
 
-        public override Vector2 Process(Vector2 vector, InputControl<Vector2> control = null)
+        public override Vector2 Process(Vector2 value, InputControl<Vector2> control = null)
         {
-            var magnitude = vector.magnitude;
+            var magnitude = value.magnitude;
             var newMagnitude = GetDeadZoneAdjustedValue(magnitude);
             if (newMagnitude == 0)
-                vector = Vector2.zero;
+                value = Vector2.zero;
             else
-                vector *= newMagnitude / magnitude;
-            return vector;
+                value *= newMagnitude / magnitude;
+            return value;
         }
 
         private float GetDeadZoneAdjustedValue(float value)

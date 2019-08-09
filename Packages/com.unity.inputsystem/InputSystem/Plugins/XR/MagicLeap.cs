@@ -1,7 +1,7 @@
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
     [InputControlLayout]
     public class MagicLeapLightwear : XRHMD
@@ -21,20 +21,20 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
         //Need Eyes type Control
 
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            devicePosition = builder.GetControl<Vector3Control>("devicePosition");
-            deviceRotation = builder.GetControl<QuaternionControl>("deviceRotation");
-            centerEyePosition = builder.GetControl<Vector3Control>("centerEyePosition");
-            centerEyeRotation = builder.GetControl<QuaternionControl>("centerEyeRotation");
-            confidence = builder.GetControl<AxisControl>("confidence");
-            fixationPointConfidence = builder.GetControl<AxisControl>("fixationPointConfidence");
-            eyeLeftCenterConfidence = builder.GetControl<AxisControl>("eyeLeftCenterConfidence");
-            eyeRightCenterConfidence = builder.GetControl<AxisControl>("eyeRightCenterConfidence");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
+            confidence = GetChildControl<AxisControl>("confidence");
+            fixationPointConfidence = GetChildControl<AxisControl>("fixationPointConfidence");
+            eyeLeftCenterConfidence = GetChildControl<AxisControl>("eyeLeftCenterConfidence");
+            eyeRightCenterConfidence = GetChildControl<AxisControl>("eyeRightCenterConfidence");
         }
     }
 
@@ -54,20 +54,20 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         //Need Bone control and Hand Control
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            center = builder.GetControl<Vector3Control>("center");
-            rotation = builder.GetControl<QuaternionControl>("rotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            center = GetChildControl<Vector3Control>("center");
+            rotation = GetChildControl<QuaternionControl>("rotation");
 
-            handConfidence = builder.GetControl<AxisControl>("handConfidence");
-            normalizeCenter = builder.GetControl<Vector3Control>("normalizeCenter");
-            wristCenter = builder.GetControl<Vector3Control>("wristCenter");
-            wristUlnar = builder.GetControl<Vector3Control>("wristUlnar");
-            wristRadial = builder.GetControl<Vector3Control>("wristRadial");
+            handConfidence = GetChildControl<AxisControl>("handConfidence");
+            normalizeCenter = GetChildControl<Vector3Control>("normalizeCenter");
+            wristCenter = GetChildControl<Vector3Control>("wristCenter");
+            wristUlnar = GetChildControl<Vector3Control>("wristUlnar");
+            wristRadial = GetChildControl<Vector3Control>("wristRadial");
         }
     }
 
@@ -95,27 +95,27 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
 
         //Need Discrete State for DOF and Type and CalibrationAccuracy
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            trackingState = builder.GetControl<IntegerControl>("trackingState");
-            isTracked = builder.GetControl<ButtonControl>("isTracked");
-            position = builder.GetControl<Vector3Control>("devicePosition");
-            rotation = builder.GetControl<QuaternionControl>("deviceRotation");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            position = GetChildControl<Vector3Control>("devicePosition");
+            rotation = GetChildControl<QuaternionControl>("deviceRotation");
 
-            touchpad1Pressed = builder.GetControl<ButtonControl>("touchpad1Pressed");
-            touchpad1Position = builder.GetControl<Vector2Control>("touchpad1Position");
-            touchpad1Force = builder.GetControl<AxisControl>("touchpad1Force");
+            touchpad1Pressed = GetChildControl<ButtonControl>("touchpad1Pressed");
+            touchpad1Position = GetChildControl<Vector2Control>("touchpad1Position");
+            touchpad1Force = GetChildControl<AxisControl>("touchpad1Force");
 
-            touchpad2Pressed = builder.GetControl<ButtonControl>("touchpad2Pressed");
-            touchpad2Position = builder.GetControl<Vector2Control>("touchpad2Position");
-            touchpad2Force = builder.GetControl<AxisControl>("touchpad2Force");
+            touchpad2Pressed = GetChildControl<ButtonControl>("touchpad2Pressed");
+            touchpad2Position = GetChildControl<Vector2Control>("touchpad2Position");
+            touchpad2Force = GetChildControl<AxisControl>("touchpad2Force");
 
-            triggerButton = builder.GetControl<ButtonControl>("triggerButton");
-            trigger = builder.GetControl<AxisControl>("trigger");
-            bumper = builder.GetControl<ButtonControl>("bumper");
-            menu = builder.GetControl<ButtonControl>("menu");
+            triggerButton = GetChildControl<ButtonControl>("triggerButton");
+            trigger = GetChildControl<AxisControl>("trigger");
+            bumper = GetChildControl<ButtonControl>("bumper");
+            menu = GetChildControl<ButtonControl>("menu");
         }
     }
 }

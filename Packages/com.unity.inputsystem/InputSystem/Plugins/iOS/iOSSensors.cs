@@ -1,12 +1,13 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
+namespace UnityEngine.InputSystem.iOS.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = 52)]
-    public struct MotionDeviceState : IInputStateTypeInfo
+    internal struct MotionDeviceState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'M', 'T', 'N');
 
@@ -15,9 +16,9 @@ namespace UnityEngine.Experimental.Input.Plugins.iOS.LowLevel
         [InputControl][FieldOffset(28)] public Vector3 acceleration;
         [InputControl][FieldOffset(40)] public Vector3 rotationRateUnbiased;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
     }
 }

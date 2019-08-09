@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow associating control schemes with platforms, too?
 
 ////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
 ////        (and thus support it only input assets only)
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A named set of zero or more device requirements along an associated binding group.
@@ -285,16 +285,6 @@ namespace UnityEngine.Experimental.Input
             };
         }
 
-        public string ToJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static InputControlScheme FromJson(string json)
-        {
-            throw new NotImplementedException();
-        }
-
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
@@ -517,6 +507,7 @@ namespace UnityEngine.Experimental.Input
             /// <remarks>
             /// Links the control that was matched with the respective device requirement.
             /// </remarks>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Justification = "Conflicts with UnityEngine.Networking.Match, which is deprecated and will go away.")]
             public struct Match
             {
                 /// <summary>

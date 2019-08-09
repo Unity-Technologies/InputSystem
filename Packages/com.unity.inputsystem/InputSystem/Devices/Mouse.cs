@@ -1,10 +1,12 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+////TODO: option to allow to constrain mouse input to the screen area (i.e. no input once mouse leaves player window)
+
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Combine a single pointer with buttons and a scroll wheel.
@@ -30,31 +32,30 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(16)]
         public Vector2 scroll;
 
-        [InputControl(name = "button", bit = (int)MouseButton.Left, synthetic = true, usage = "")]
-        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usages = new[] { "PrimaryAction", "PrimaryTrigger" }, displayName = "Left Button", shortDisplayName = "LMB")]
-        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usages = new[] { "SecondaryAction", "SecondaryTrigger" }, displayName = "Right Button", shortDisplayName = "RMB")]
+        [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0])]
+        [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
+        [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
         [InputControl(name = "middleButton", layout = "Button", bit = (int)MouseButton.Middle, displayName = "Middle Button", shortDisplayName = "MMB")]
-        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usages = new[] { "Forward" }, displayName = "Forward")]
-        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usages = new[] { "Back" }, displayName = "Back")]
+        [InputControl(name = "forwardButton", layout = "Button", bit = (int)MouseButton.Forward, usage = "Forward", displayName = "Forward")]
+        [InputControl(name = "backButton", layout = "Button", bit = (int)MouseButton.Back, usage = "Back", displayName = "Back")]
         [FieldOffset(24)]
         // "Park" all the controls that are common to pointers but aren't use for mice such that they get
         // appended to the end of device state where they will always have default values.
         ////FIXME: InputDeviceBuilder will get fooled and set up an incorrect state layout if we don't force this to VEC2; InputControlLayout will
         ////       "infer" USHT as the format which will then end up with a layout where two 4 byte float controls are "packed" into a 16bit sized parent;
         ////       in other words, setting VEC2 here manually should *not* be necessary
-        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.kAutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.kAutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.kAutomaticOffset)] // Will stay at 0.
-        [InputControl(name = "phase", layout = "PointerPhase", format = "BIT", sizeInBits = 4, offset = InputStateBlock.kAutomaticOffset)] ////REVIEW: should this make use of None and Moved?
+        [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
+        [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
+        [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
         public ushort buttons;
 
-        [InputControl(layout = "Digital")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(26)]
         public ushort displayIndex;
 
-        [InputControl(layout = "Digital")]
+        [InputControl(layout = "Integer")]
         [FieldOffset(28)]
         public ushort clickCount;
 
@@ -69,23 +70,38 @@ namespace UnityEngine.Experimental.Input.LowLevel
             return this;
         }
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
+        public FourCC format => kFormat;
     }
 
+    /// <summary>
+    /// Button indices for <see cref="MouseState.buttons"/>.
+    /// </summary>
     public enum MouseButton
     {
+        /// <summary>
+        /// Left mouse button.
+        /// </summary>
         Left,
+        /// <summary>
+        /// Right mouse button.
+        /// </summary>
         Right,
+        /// <summary>
+        /// Middle mouse button.
+        /// </summary>
         Middle,
+        /// <summary>
+        /// First side button.
+        /// </summary>
         Forward,
+        /// <summary>
+        /// Second side button.
+        /// </summary>
         Back
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// A mouse input device.
@@ -158,35 +174,42 @@ namespace UnityEngine.Experimental.Input
             ExecuteCommand(ref command);
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            scroll = builder.GetControl<Vector2Control>(this, "scroll");
-            leftButton = builder.GetControl<ButtonControl>(this, "leftButton");
-            middleButton = builder.GetControl<ButtonControl>(this, "middleButton");
-            rightButton = builder.GetControl<ButtonControl>(this, "rightButton");
-            forwardButton = builder.GetControl<ButtonControl>(this, "forwardButton");
-            backButton = builder.GetControl<ButtonControl>(this, "backButton");
-            clickCount = builder.GetControl<IntegerControl>(this, "clickCount");
-            base.FinishSetup(builder);
+            scroll = GetChildControl<Vector2Control>("scroll");
+            leftButton = GetChildControl<ButtonControl>("leftButton");
+            middleButton = GetChildControl<ButtonControl>("middleButton");
+            rightButton = GetChildControl<ButtonControl>("rightButton");
+            forwardButton = GetChildControl<ButtonControl>("forwardButton");
+            backButton = GetChildControl<ButtonControl>("backButton");
+            clickCount = GetChildControl<IntegerControl>("clickCount");
+            base.FinishSetup();
         }
 
-        unsafe bool IInputStateCallbackReceiver.OnCarryStateForward(void* statePtr)
+        protected new void OnNextUpdate()
         {
-            var deltaXChanged = ResetDelta(statePtr, delta.x);
-            var deltaYChanged = ResetDelta(statePtr, delta.y);
-            var scrollXChanged = ResetDelta(statePtr, scroll.x);
-            var scrollYChanged = ResetDelta(statePtr, scroll.y);
-            return deltaXChanged || deltaYChanged || scrollXChanged || scrollYChanged;
+            base.OnNextUpdate();
+            InputState.Change(scroll, Vector2.zero);
         }
 
-        unsafe void IInputStateCallbackReceiver.OnBeforeWriteNewState(void* oldStatePtr, void* newStatePtr)
+        protected new unsafe void OnEvent(InputEventPtr eventPtr)
         {
-            ////REVIEW: this sucks for actions; they see each value change but the changes are no longer independent;
-            ////        is accumulation really something we want? should we only reset?
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, delta.y);
-            AccumulateDelta(oldStatePtr, newStatePtr, scroll.x);
-            AccumulateDelta(oldStatePtr, newStatePtr, scroll.y);
+            var statePtr = currentStatePtr;
+
+            Accumulate(scroll.x, statePtr, eventPtr);
+            Accumulate(scroll.y, statePtr, eventPtr);
+
+            base.OnEvent(eventPtr);
+        }
+
+        void IInputStateCallbackReceiver.OnNextUpdate()
+        {
+            OnNextUpdate();
+        }
+
+        void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
+        {
+            OnEvent(eventPtr);
         }
     }
 }

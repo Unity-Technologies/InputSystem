@@ -1,7 +1,15 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
+    /// <summary>
+    /// A four-character code.
+    /// </summary>
+    /// <remarks>
+    /// A four-character code is a struct containing four byte characters. FourCCs are frequently used in the input system
+    /// to identify the format of data sent to or from the native backend representing events, input device state or
+    /// commands sent to input devices.
+    /// </remarks>
     public struct FourCC : IEquatable<FourCC>
     {
         int m_Code;
@@ -19,6 +27,9 @@ namespace UnityEngine.Experimental.Input.Utilities
         public FourCC(string str)
             : this()
         {
+            if (str == null)
+                throw new System.ArgumentNullException(nameof(str));
+
             var length = str.Length;
             Debug.Assert(length >= 1 && length <= 4, "FourCC string must be one to four characters long!");
 
@@ -35,10 +46,20 @@ namespace UnityEngine.Experimental.Input.Utilities
             return fourCC.m_Code;
         }
 
+        public static int ToInt32(FourCC fourCC)
+        {
+            return fourCC.m_Code;
+        }
+
         public static implicit operator FourCC(int i)
         {
             var fourCC = new FourCC {m_Code = i};
             return fourCC;
+        }
+
+        public static FourCC FromInt32(int i)
+        {
+            return i;
         }
 
         public override string ToString()

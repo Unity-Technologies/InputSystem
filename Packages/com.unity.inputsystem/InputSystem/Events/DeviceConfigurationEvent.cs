@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should this have optional data that identifies *what* has changed?
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Indicates that the configuration of a device has changed.
@@ -20,9 +20,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         ////REVIEW: have some kind of payload that allows indicating what changed in the config?
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public unsafe InputEventPtr ToEventPtr()

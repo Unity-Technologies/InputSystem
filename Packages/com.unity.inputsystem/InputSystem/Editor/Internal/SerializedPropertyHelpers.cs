@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Helpers for working with <see cref="SerializedProperty"/> in the editor.
@@ -272,9 +272,9 @@ namespace UnityEngine.Experimental.Input.Editor
                     parser.ParseStringValue(out var propertyName);
                     parser.ParseToken(':');
 
-                    var childProperty = property.FindPropertyRelative(propertyName);
+                    var childProperty = property.FindPropertyRelative(propertyName.ToString());
                     if (childProperty == null)
-                        throw new Exception($"Cannot find property '{propertyName}' in {property}");
+                        throw new ArgumentException($"Cannot find property '{propertyName}' in {property}", nameof(property));
 
                     RestoreFromJson(childProperty, ref parser);
                     parser.ParseToken(',');
@@ -287,21 +287,21 @@ namespace UnityEngine.Experimental.Input.Editor
                     case SerializedPropertyType.Float:
                     {
                         parser.ParseNumber(out var num);
-                        property.floatValue = Convert.ToSingle(num);
+                        property.floatValue = (float)num.ToDouble();
                         break;
                     }
 
                     case SerializedPropertyType.String:
                     {
                         parser.ParseStringValue(out var str);
-                        property.stringValue = str;
+                        property.stringValue = str.ToString();
                         break;
                     }
 
                     case SerializedPropertyType.Boolean:
                     {
                         parser.ParseBooleanValue(out var b);
-                        property.boolValue = b;
+                        property.boolValue = b.ToBoolean();
                         break;
                     }
 
@@ -309,7 +309,7 @@ namespace UnityEngine.Experimental.Input.Editor
                     case SerializedPropertyType.Integer:
                     {
                         parser.ParseNumber(out var num);
-                        property.intValue = Convert.ToInt32(num);
+                        property.intValue = (int)num.ToInteger();
                         break;
                     }
 

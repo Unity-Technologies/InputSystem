@@ -1,14 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 ////TODO: usages on modifiers so they can be identified regardless of platform conventions
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state layout for keyboards.
@@ -21,8 +21,8 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         // Number of keys rounded up to nearest size of 4.
         private const int kSizeInBytesUnrounded = Keyboard.KeyCount / 8 + (Keyboard.KeyCount % 8 > 0 ? 1 : 0);
-        public const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
-        public const int kSizeInBits = kSizeInBytes * 8;
+        internal const int kSizeInBytes = kSizeInBytesUnrounded + (4 - kSizeInBytesUnrounded % 4);
+        private const int kSizeInBits = kSizeInBytes * 8;
 
         [InputControl(name = "anyKey", layout = "AnyKey", sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
@@ -140,6 +140,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
 
         public KeyboardState(params Key[] pressedKeys)
         {
+            if (pressedKeys == null)
+                throw new ArgumentNullException(nameof(pressedKeys));
+
             fixed(byte* keysPtr = keys)
             {
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
@@ -150,14 +153,11 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public FourCC GetFormat()
-        {
-            return kFormat;
-        }
+        public FourCC format => kFormat;
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Enumeration of key codes.
@@ -169,28 +169,108 @@ namespace UnityEngine.Experimental.Input
     // NOTE: In the keyboard code, we depend on the order of the keys in the various keyboard blocks.
     public enum Key
     {
+        /// <summary>
+        /// Invalid key. Does not represent a key on the keyboard and is only used to have a
+        /// default for the Key enumeration not represent any specific key.
+        /// </summary>
         None,
 
         // Printable keys.
+        /// <summary>
+        /// The <see cref="Keyboard.spaceKey"/>.
+        /// </summary>
         Space,
+
+        /// <summary>
+        /// The <see cref="Keyboard.enterKey"/>.
+        /// </summary>
         Enter,
+
+        /// <summary>
+        /// The <see cref="Keyboard.tabKey"/>.
+        /// </summary>
         Tab,
+
+        /// <summary>
+        /// The <see cref="Keyboard.backquoteKey"/>.
+        /// </summary>
         Backquote,
+
+        /// <summary>
+        /// The <see cref="Keyboard.quoteKey"/>.
+        /// </summary>
         Quote,
+
+        /// <summary>
+        /// The <see cref="Keyboard.semicolonKey"/>.
+        /// </summary>
         Semicolon,
+
+        /// <summary>
+        /// The <see cref="Keyboard.commaKey"/>.
+        /// </summary>
         Comma,
+
+        /// <summary>
+        /// The <see cref="Keyboard.periodKey"/>.
+        /// </summary>
         Period,
+
+        /// <summary>
+        /// The <see cref="Keyboard.slashKey"/>.
+        /// </summary>
         Slash,
+
+        /// <summary>
+        /// The <see cref="Keyboard.backslashKey"/>.
+        /// </summary>
         Backslash,
+
+        /// <summary>
+        /// The <see cref="Keyboard.leftBracketKey"/>.
+        /// </summary>
         LeftBracket,
+
+        /// <summary>
+        /// The <see cref="Keyboard.rightBracketKey"/>.
+        /// </summary>
         RightBracket,
+
+        /// <summary>
+        /// The <see cref="Keyboard.minusKey"/>.
+        /// </summary>
         Minus,
+
+        /// <summary>
+        /// The <see cref="Keyboard.equalsKey"/>.
+        /// </summary>
         Equals,
+
+        /// <summary>
+        /// The <see cref="Keyboard.aKey"/>.
+        /// </summary>
         A,
+
+        /// <summary>
+        /// The <see cref="Keyboard.bKey"/>.
+        /// </summary>
         B,
+
+        /// <summary>
+        /// The <see cref="Keyboard.cKey"/>.
+        /// </summary>
         C,
+
+        /// <summary>
+        /// The <see cref="Keyboard.dKey"/>.
+        /// </summary>
         D,
+
+        /// <summary>
+        /// The <see cref="Keyboard.eKey"/>.
+        /// </summary>
         E,
+
         F,
         G,
         H,
@@ -308,26 +388,53 @@ namespace UnityEngine.Experimental.Input
     }
 
     /// <summary>
-    /// A keyboard input device.
+    /// Represents a standard, physical PC-type keyboard.
     /// </summary>
     /// <remarks>
-    /// Keyboards allow for both individual button input as well as text input.
+    /// Keyboards allow for both individual button input as well as text input. To receive button
+    /// input, use the individual <see cref="KeyControl"/>-type controls present on the keyboard.
+    /// For example, <see cref="aKey"/>. To receive text input, use the <see cref="onTextInput"/>
+    /// callback.
     ///
-    /// Be aware that identification of keys in the system is layout-agnostic. For example, the
-    /// key referred to as the "a" key is always the key to the right of Caps Lock regardless of
-    /// where the current keyboard layout actually puts the "a" character (if it even has any).
-    /// To find what is actually behind a key according to the current keyboard layout, use
-    /// <see cref="InputControl.displayName"/>, <see cref="KeyControl.shiftDisplayName"/>, and
-    /// <see cref="KeyControl.altDisplayName"/>.
+    /// The naming/identification of keys is agnostic to keyboard layouts. This means that <see cref="aKey"/>,
+    /// for example, will always be the key to the right of <see cref="capsLockKey"/> regardless of where
+    /// the current keyboard language layout puts the "a" character. This also means that having a
+    /// binding to <c>"&lt;Keyboard&gt;/a"</c> on an <see cref="InputAction"/>, for example, will
+    /// bind to the same key regardless of locale -- an important feature, for example, for getting
+    /// stable WASD bindings.
+    ///
+    /// To find what text character (if any) is produced by a key, you can use the key's <see
+    /// cref="InputControl.displayName"/> property. This can also be used in bindings.
+    /// <c>"&lt;Keyboard&gt;/#(a)"</c>, for example, will bind to the key that produces the "a"
+    /// character according to the currently active keyboard layout.
+    ///
+    /// To find out which keyboard layout is currently active, you can use the <see cref="keyboardLayout"/>
+    /// property. Note that keyboard layout names are platform-dependent.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
+        /// <summary>
+        /// Total number of key controls on a keyboard, i.e. the number of controls
+        /// in <see cref="allKeys"/>.
+        /// </summary>
+        /// <value>Total number of key controls.</value>
         public const int KeyCount = (int)Key.OEM5;
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
         /// </summary>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// Keyboard.current.onTextInput +=
+        ///     ch =>
+        ///     {
+        ///         TODO
+        ///     }
+        /// </code>
+        /// </example>
+        /// </remarks>
         public event Action<char> onTextInput
         {
             add => m_TextInputListeners.Append(value);
@@ -335,14 +442,14 @@ namespace UnityEngine.Experimental.Input
         }
 
         /// <summary>
-        /// An event that is fired to get IME composition strings.  Fired once for every change, sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
+        /// An event that is fired to get IME composition strings.  Fired once for every change,
+        /// sends the entire string to date, and sends a blank string whenever a composition is submitted or reset.
         /// </summary>
         /// <remarks>
-        ///
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
@@ -359,34 +466,28 @@ namespace UnityEngine.Experimental.Input
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         /// Setting this to On, will enable the OS-level IME system when the user presses keystrokes.
         ///
-        /// See <see cref="Keyboard.imeCursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>, <see cref="Keyboard.imeSelected"/> for more IME settings and data.
+        /// See <see cref="Keyboard.SetIMECursorPosition"/>, <see cref="Keyboard.onIMECompositionChange"/>,
+        /// <see cref="Keyboard.imeSelected"/> for more IME settings and data.
         /// </remarks>
-        public bool imeEnabled
+        public void SetIMEEnabled(bool enabled)
         {
-            set
-            {
-                EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(enabled);
+            ExecuteCommand(ref command);
         }
 
-
+        /// <summary>
         /// Sets the cursor position for IME composition dialogs.  Units are from the upper left, in pixels, moving down and to the right.
         /// </summary>
         /// <remarks>
-        ///
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
-        public Vector2 imeCursorPosition
+        public void SetIMECursorPosition(Vector2 position)
         {
-            set
-            {
-                SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(value);
-                ExecuteCommand(ref command);
-            }
+            SetIMECursorPositionCommand command = SetIMECursorPositionCommand.Create(position);
+            ExecuteCommand(ref command);
         }
 
         /// <summary>
@@ -415,16 +516,19 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
         /// </summary>
+        /// <value>Control representing the synthetic "anyKey".</value>
         public AnyKeyControl anyKey { get; private set; }
 
         /// <summary>
         /// The space bar key.
         /// </summary>
+        /// <value>Control representing the space bar key.</value>
         public KeyControl spaceKey => this[Key.Space];
 
         /// <summary>
         /// The enter/return key in the main key block.
         /// </summary>
+        /// <value>Control representing the enter key.</value>
         /// <remarks>
         /// This key is distinct from the enter key on the numpad which is <see cref="numpadEnterKey"/>.
         /// </remarks>
@@ -433,45 +537,98 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// The tab key.
         /// </summary>
+        /// <value>Control representing the tab key.</value>
         public KeyControl tabKey => this[Key.Tab];
 
         /// <summary>
-        /// The ` key. The leftmost key in the row of digits. Directly above tab.
+        /// The ` key. The leftmost key in the row of digits. Directly above <see cref="tabKey"/>.
         /// </summary>
+        /// <value>Control representing the backtick/quote key.</value>
         public KeyControl backquoteKey => this[Key.Backquote];
 
         /// <summary>
-        /// The ' key. The key immediately to the left of the enter/return key.
+        /// The ' key. The key immediately to the left of <see cref="enterKey"/>.
         /// </summary>
+        /// <value>Control representing the quote key.</value>
         public KeyControl quoteKey => this[Key.Quote];
 
         /// <summary>
-        /// The ';' key. The key immediately to the left of the quote key.
+        /// The ';' key. The key immediately to the left of <see cref="quoteKey"/>.
         /// </summary>
+        /// <value>Control representing the semicolon key.</value>
         public KeyControl semicolonKey => this[Key.Semicolon];
 
         /// <summary>
-        /// The ',' key. Third key to the left of the right shift key.
+        /// The ',' key. Third key to the left of <see cref="rightShiftKey"/>.
         /// </summary>
+        /// <value>Control representing the comma key.</value>
         public KeyControl commaKey => this[Key.Comma];
+
+        /// <summary>
+        /// The '.' key. Second key to the left of <see cref="rightShiftKey"/>.
+        /// </summary>
+        /// <value>Control representing the period key.</value>
         public KeyControl periodKey => this[Key.Period];
+
+        /// <summary>
+        /// The '/' key. The key immediately to the left of <see cref="rightShiftKey"/>.
+        /// </summary>
+        /// <value>Control representing the forward slash key.</value>
         public KeyControl slashKey => this[Key.Slash];
+
+        /// <summary>
+        /// The '\' key. The key immediately to the right of <see cref="rightBracketKey"/> and
+        /// next to or above <see cref="enterKey"/>.
+        /// </summary>
+        /// <value>Control representing the backslash key.</value>
         public KeyControl backslashKey => this[Key.Backslash];
+
+        /// <summary>
+        /// The '[' key. The key immediately to the left of <see cref="rightBracketKey"/>.
+        /// </summary>
+        /// <value>Control representing the left bracket key.</value>
         public KeyControl leftBracketKey => this[Key.LeftBracket];
+
+        /// <summary>
+        /// The ']' key. The key in-between <see cref="leftBracketKey"/> to the left and
+        /// <see cref="backslashKey"/> to the right.
+        /// </summary>
+        /// <value>Control representing the right bracket key.</value>
         public KeyControl rightBracketKey => this[Key.RightBracket];
+
+        /// <summary>
+        /// The '-' key. The second key to the left of <see cref="backspaceKey"/>.
+        /// </summary>
+        /// <value>Control representing the minus key.</value>
         public KeyControl minusKey => this[Key.Minus];
 
         /// <summary>
-        /// The '=' key in the main key block. Key immediately to the left of the backspace key.
+        /// The '=' key in the main key block. The key in-between <see cref="minusKey"/> to the left
+        /// and <see cref="backspaceKey"/> to the right.
         /// </summary>
+        /// <value>Control representing the equals key.</value>
         public KeyControl equalsKey => this[Key.Equals];
 
         /// <summary>
-        /// The 'a' key. Key immediately to the right of the caps lock key.
+        /// The 'a' key. The key immediately to the right of <see cref="capsLockKey"/>.
         /// </summary>
+        /// <value>Control representing the a key.</value>
         public KeyControl aKey => this[Key.A];
+
+        /// <summary>
+        /// The 'b' key. The key in-between the <see cref="vKey"/> to the left and the <see cref="nKey"/>
+        /// to the right in the bottom-most row of alphabetic characters.
+        /// </summary>
+        /// <value>Control representing the b key.</value>
         public KeyControl bKey => this[Key.B];
+
+        /// <summary>
+        /// The 'c' key. The key in-between the <see cref="xKey"/> to the left and the <see cref="vKey"/>
+        /// to the right in the bottom-most row of alphabetic characters.
+        /// </summary>
+        /// <value>Control representing the c key.</value>
         public KeyControl cKey => this[Key.C];
+
         public KeyControl dKey => this[Key.D];
         public KeyControl eKey => this[Key.E];
         public KeyControl fKey => this[Key.F];
@@ -573,14 +730,14 @@ namespace UnityEngine.Experimental.Input
         public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
-        /// True when IME composition is enabled.  Requires <see cref="Keyboard.imeEnabled"/> to be set to true, and the user to enable it at the OS level.
+        /// True when IME composition is enabled.  Requires <see cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
         ///
         /// Some languages use complex input methods which involve opening windows to insert characters.
         /// Typically, this is not desirable while playing a game, as games may just interpret key strokes as game input, not as text.
         ///
-        /// See <see cref="Keyboard.imeEnabled"/> for turning IME on/off
+        /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
         public ButtonControl imeSelected { get; private set; }
 
@@ -600,8 +757,19 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        /// <summary>
+        /// List of all key controls on the keyboard.
+        /// </summary>
+        public ReadOnlyArray<KeyControl> allKeys => new ReadOnlyArray<KeyControl>(m_Keys);
+
         public static Keyboard current { get; private set; }
 
+        /// <summary>
+        /// Make the keyboard the current keyboard (i.e. <see cref="current"/>).
+        /// </summary>
+        /// <remarks>
+        /// A keyboard will automatically be made current when receiving input events.
+        /// </remarks>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
@@ -617,7 +785,8 @@ namespace UnityEngine.Experimental.Input
 
         private KeyControl[] m_Keys;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        /// <inheritdoc/>
+        protected override void FinishSetup()
         {
             var keyStrings = new[]
             {
@@ -735,7 +904,7 @@ namespace UnityEngine.Experimental.Input
             m_Keys = new KeyControl[keyStrings.Length];
             for (var i = 0; i < keyStrings.Length; ++i)
             {
-                m_Keys[i] = builder.GetControl<KeyControl>(keyStrings[i]);
+                m_Keys[i] = GetChildControl<KeyControl>(keyStrings[i]);
 
                 ////REVIEW: Ideally, we'd have a way to do this through layouts; this way nested key controls could work, too,
                 ////        and it just seems somewhat dirty to jam the data into the control here
@@ -743,10 +912,10 @@ namespace UnityEngine.Experimental.Input
             }
             Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
                 "keyString array layout doe not match Key enum layout");
-            anyKey = builder.GetControl<AnyKeyControl>("anyKey");
-            imeSelected = builder.GetControl<ButtonControl>("IMESelected");
+            anyKey = GetChildControl<AnyKeyControl>("anyKey");
+            imeSelected = GetChildControl<ButtonControl>("IMESelected");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         protected override void RefreshConfiguration()
@@ -772,88 +941,9 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        internal InlinedArray<Action<char>> m_TextInputListeners;
+        private InlinedArray<Action<char>> m_TextInputListeners;
         private string m_KeyboardLayoutName;
 
-        internal InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
-    }
-
-    public static class KeyboardExtensions
-    {
-        public static bool IsModifierKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                    return true;
-            }
-            return false;
-        }
-
-        ////REVIEW: Is this a good idea? Ultimately it's up to any one keyboard layout to define this however it wants.
-        public static bool IsTextInputKey(this Key key)
-        {
-            switch (key)
-            {
-                case Key.LeftShift:
-                case Key.RightShift:
-                case Key.LeftAlt:
-                case Key.RightAlt:
-                case Key.LeftCtrl:
-                case Key.RightCtrl:
-                case Key.LeftMeta:
-                case Key.RightMeta:
-                case Key.ContextMenu:
-                case Key.Escape:
-                case Key.LeftArrow:
-                case Key.RightArrow:
-                case Key.UpArrow:
-                case Key.DownArrow:
-                case Key.Backspace:
-                case Key.PageDown:
-                case Key.PageUp:
-                case Key.Home:
-                case Key.End:
-                case Key.Insert:
-                case Key.Delete:
-                case Key.CapsLock:
-                case Key.NumLock:
-                case Key.PrintScreen:
-                case Key.ScrollLock:
-                case Key.Pause:
-                case Key.None:
-                case Key.Space:
-                case Key.Enter:
-                case Key.Tab:
-                case Key.NumpadEnter:
-                case Key.F1:
-                case Key.F2:
-                case Key.F3:
-                case Key.F4:
-                case Key.F5:
-                case Key.F6:
-                case Key.F7:
-                case Key.F8:
-                case Key.F9:
-                case Key.F10:
-                case Key.F11:
-                case Key.F12:
-                case Key.OEM1:
-                case Key.OEM2:
-                case Key.OEM3:
-                case Key.OEM4:
-                case Key.OEM5:
-                case Key.IMESelected:
-                    return false;
-            }
-            return true;
-        }
+        private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
     }
 }

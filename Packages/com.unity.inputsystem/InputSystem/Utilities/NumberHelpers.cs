@@ -1,10 +1,10 @@
 using System;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static class NumberHelpers
     {
-        public static int AlignToMultiple(int number, int alignment)
+        public static int AlignToMultipleOf(this int number, int alignment)
         {
             var remainder = number % alignment;
             if (remainder == 0)
@@ -13,7 +13,7 @@ namespace UnityEngine.Experimental.Input.Utilities
             return number + alignment - remainder;
         }
 
-        public static uint AlignToMultiple(uint number, uint alignment)
+        public static uint AlignToMultipleOf(this uint number, uint alignment)
         {
             var remainder = number % alignment;
             if (remainder == 0)

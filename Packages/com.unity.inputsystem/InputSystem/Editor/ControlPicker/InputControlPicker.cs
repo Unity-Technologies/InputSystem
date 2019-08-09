@@ -3,12 +3,12 @@ using System;
 
 ////REVIEW: should this be a PopupWindowContent?
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A popup that allows picking input controls graphically.
     /// </summary>
-    public class InputControlPicker
+    public sealed class InputControlPicker : IDisposable
     {
         public InputControlPicker(Mode mode, Action<string> onPick, InputControlPickerState state)
         {
@@ -19,6 +19,11 @@ namespace UnityEngine.Experimental.Input.Editor
         public void Show(Rect rect)
         {
             m_Dropdown.Show(rect);
+        }
+
+        public void Dispose()
+        {
+            m_Dropdown?.Dispose();
         }
 
         public InputControlPickerState state => m_State;

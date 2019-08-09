@@ -1,8 +1,8 @@
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem.LowLevel;
 
-namespace UnityEngine.Experimental.Input.Processors
+namespace UnityEngine.InputSystem.Processors
 {
-    public class CompensateRotationProcessor : InputProcessor<Quaternion>
+    internal class CompensateRotationProcessor : InputProcessor<Quaternion>
     {
         public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
         {

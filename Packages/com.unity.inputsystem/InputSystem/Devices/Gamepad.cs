@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Haptics;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Haptics;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: come up with consistent naming for buttons; (xxxButton? xxx?)
 
@@ -14,7 +14,7 @@ using UnityEngine.Experimental.Input.Utilities;
 
 ////TODO: allow to be used for mouse simulation
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Default state layout for gamepads.
@@ -35,7 +35,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = "A")]
         [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = "X")]
         [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = "Y")]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usage = "Back", aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -81,14 +81,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public GamepadState(params GamepadButton[] buttons)
             : this()
         {
+            if (buttons == null)
+                throw new System.ArgumentNullException(nameof(buttons));
+
             foreach (var button in buttons)
             {
                 var bit = (uint)1 << (int)button;
@@ -107,46 +110,166 @@ namespace UnityEngine.Experimental.Input.LowLevel
         }
     }
 
+
+    /// <summary>
+    /// Enum of common gamepad buttons.
+    /// </summary>
+    /// <remarks>
+    /// Can be used as an array indexer on the <see cref="Gamepad"/> class to get individual button controls.
+    /// </remarks>
     public enum GamepadButton
     {
         // Dpad buttons. Important to be first in the bitfield as we'll
         // point the DpadControl to it.
         // IMPORTANT: Order has to match what is expected by DpadControl.
+
+        /// <summary>
+        /// The up button on a gamepad's dpad.
+        /// </summary>
         DpadUp,
+
+        /// <summary>
+        /// The down button on a gamepad's dpad.
+        /// </summary>
         DpadDown,
+
+        /// <summary>
+        /// The left button on a gamepad's dpad.
+        /// </summary>
         DpadLeft,
+
+        /// <summary>
+        /// The right button on a gamepad's dpad.
+        /// </summary>
         DpadRight,
 
         // Face buttons. We go with a north/south/east/west naming as that
         // clearly disambiguates where we expect the respective button to be.
+
+        /// <summary>
+        /// The upper action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="Y"/> and <see cref="Triangle"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         North,
+
+        /// <summary>
+        /// The right action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="B"/> and <see cref="Circle"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         East,
+
+        /// <summary>
+        /// The lower action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="A"/> and <see cref="Cross"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         South,
+
+        /// <summary>
+        /// The left action button on a gamepad.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="X"/> and <see cref="Square"/> which are the Xbox and PlayStation controller names for this button.
+        /// </remarks>
         West,
 
+
+        /// <summary>
+        /// The button pressed by pressing down the left stick on a gamepad.
+        /// </summary>
         LeftStick,
+
+        /// <summary>
+        /// The button pressed by pressing down the right stick on a gamepad.
+        /// </summary>
         RightStick,
+
+        /// <summary>
+        /// The left shoulder button on a gamepad.
+        /// </summary>
         LeftShoulder,
+
+        /// <summary>
+        /// The right shoulder button on a gamepad.
+        /// </summary>
         RightShoulder,
 
+        /// <summary>
+        /// The start button.
+        /// </summary>
         Start,
+
+        /// <summary>
+        /// The select button.
+        /// </summary>
         Select,
 
-        // Aliases Xbox style.
+        /// <summary>
+        /// The X button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
         X = West,
+        /// <summary>
+        /// The Y button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
         Y = North,
+        /// <summary>
+        /// The A button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
         A = South,
+        /// <summary>
+        /// The B button on an Xbox controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
         B = East,
 
-        // Aliases PS4 style.
+        /// <summary>
+        /// The cross button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="South"/>, which is the generic name of this button.
+        /// </remarks>
         Cross = South,
+        /// <summary>
+        /// The square button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="West"/>, which is the generic name of this button.
+        /// </remarks>
         Square = West,
+        /// <summary>
+        /// The triangle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="North"/>, which is the generic name of this button.
+        /// </remarks>
         Triangle = North,
+        /// <summary>
+        /// The circle button on a PlayStation controller.
+        /// </summary>
+        /// <remarks>
+        /// Identical to <see cref="East"/>, which is the generic name of this button.
+        /// </remarks>
         Circle = East,
     }
 }
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
@@ -155,7 +278,6 @@ namespace UnityEngine.Experimental.Input
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
-        ////REVIEW: add PS4 and Xbox style alternate accessors?
         public ButtonControl buttonWest { get; private set; }
         public ButtonControl buttonNorth { get; private set; }
         public ButtonControl buttonSouth { get; private set; }
@@ -181,34 +303,22 @@ namespace UnityEngine.Experimental.Input
         /// <summary>
         /// Same as <see cref="buttonSouth"/>.
         /// </summary>
-        public ButtonControl aButton
-        {
-            get { return buttonSouth; }
-        }
+        public ButtonControl aButton => buttonSouth;
 
         /// <summary>
         /// Same as <see cref="buttonEast"/>.
         /// </summary>
-        public ButtonControl bButton
-        {
-            get { return buttonEast; }
-        }
+        public ButtonControl bButton => buttonEast;
 
         /// <summary>
         /// Same as <see cref="buttonWest"/>
         /// </summary>
-        public ButtonControl xButton
-        {
-            get { return buttonWest; }
-        }
+        public ButtonControl xButton => buttonWest;
 
         /// <summary>
         /// Same as <see cref="buttonNorth"/>.
         /// </summary>
-        public ButtonControl yButton
-        {
-            get { return buttonNorth; }
-        }
+        public ButtonControl yButton => buttonNorth;
 
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
@@ -254,31 +364,32 @@ namespace UnityEngine.Experimental.Input
         /// </remarks>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            buttonWest = builder.GetControl<ButtonControl>(this, "buttonWest");
-            buttonNorth = builder.GetControl<ButtonControl>(this, "buttonNorth");
-            buttonSouth = builder.GetControl<ButtonControl>(this, "buttonSouth");
-            buttonEast = builder.GetControl<ButtonControl>(this, "buttonEast");
+            ////REVIEW: what's actually faster/better... storing these in properties or doing the lookup on the fly?
+            buttonWest = GetChildControl<ButtonControl>("buttonWest");
+            buttonNorth = GetChildControl<ButtonControl>("buttonNorth");
+            buttonSouth = GetChildControl<ButtonControl>("buttonSouth");
+            buttonEast = GetChildControl<ButtonControl>("buttonEast");
 
-            startButton = builder.GetControl<ButtonControl>(this, "start");
-            selectButton = builder.GetControl<ButtonControl>(this, "select");
+            startButton = GetChildControl<ButtonControl>("start");
+            selectButton = GetChildControl<ButtonControl>("select");
 
-            leftStickButton = builder.GetControl<ButtonControl>(this, "leftStickPress");
-            rightStickButton = builder.GetControl<ButtonControl>(this, "rightStickPress");
+            leftStickButton = GetChildControl<ButtonControl>("leftStickPress");
+            rightStickButton = GetChildControl<ButtonControl>("rightStickPress");
 
-            dpad = builder.GetControl<DpadControl>(this, "dpad");
+            dpad = GetChildControl<DpadControl>("dpad");
 
-            leftShoulder = builder.GetControl<ButtonControl>(this, "leftShoulder");
-            rightShoulder = builder.GetControl<ButtonControl>(this, "rightShoulder");
+            leftShoulder = GetChildControl<ButtonControl>("leftShoulder");
+            rightShoulder = GetChildControl<ButtonControl>("rightShoulder");
 
-            leftStick = builder.GetControl<StickControl>(this, "leftStick");
-            rightStick = builder.GetControl<StickControl>(this, "rightStick");
+            leftStick = GetChildControl<StickControl>("leftStick");
+            rightStick = GetChildControl<StickControl>("rightStick");
 
-            leftTrigger = builder.GetControl<ButtonControl>(this, "leftTrigger");
-            rightTrigger = builder.GetControl<ButtonControl>(this, "rightTrigger");
+            leftTrigger = GetChildControl<ButtonControl>("leftTrigger");
+            rightTrigger = GetChildControl<ButtonControl>("rightTrigger");
 
-            base.FinishSetup(builder);
+            base.FinishSetup();
         }
 
         public override void MakeCurrent()
@@ -298,10 +409,15 @@ namespace UnityEngine.Experimental.Input
                 current = null;
 
             // Remove from `all`.
-            var wasFound = ArrayHelpers.Erase(ref s_Gamepads, this);
-            Debug.Assert(wasFound, $"Gamepad {this} seems to not have been added but is being removed");
-            if (wasFound)
-                --s_GamepadCount;
+            var index = ArrayHelpers.IndexOfReference(s_Gamepads, this, s_GamepadCount);
+            if (index != -1)
+                ArrayHelpers.EraseAtWithCapacity(s_Gamepads, ref s_GamepadCount, index);
+            else
+            {
+                Debug.Assert(false,
+                    string.Format("Gamepad {0} seems to not have been added but is being removed (gamepad list: {1})",
+                        this, string.Join(", ", all))); // Put in else to not allocate on normal path.
+            }
         }
 
         public virtual void PauseHaptics()

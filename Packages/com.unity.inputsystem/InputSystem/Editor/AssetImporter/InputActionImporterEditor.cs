@@ -1,13 +1,13 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
 ////TODO: support for multi-editing
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom editor that allows modifying importer settings for an <see cref="InputActionImporter"/>.
@@ -30,9 +30,9 @@ namespace UnityEngine.Experimental.Input.Editor
             EditorGUILayout.Space();
 
             // Importer settings UI.
-            var generateWapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
-            EditorGUILayout.PropertyField(generateWapperCodeProperty, m_GenerateWrapperCodeLabel);
-            if (generateWapperCodeProperty.boolValue)
+            var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
+            EditorGUILayout.PropertyField(generateWrapperCodeProperty, m_GenerateWrapperCodeLabel);
+            if (generateWrapperCodeProperty.boolValue)
             {
                 var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
                 var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
@@ -90,7 +90,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
         private readonly GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("C# Class File");
         private readonly GUIContent m_WrapperClassNameLabel = EditorGUIUtility.TrTextContent("C# Class Name");
-        private GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
+        private readonly GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
     }
 }
 #endif // UNITY_EDITOR

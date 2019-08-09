@@ -2,16 +2,16 @@ using System;
 using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Plugins.DualShock;
-using UnityEngine.Experimental.Input.Plugins.Steam;
-using UnityEngine.Experimental.Input.Plugins.XInput;
-using UnityEngine.Experimental.Input.Plugins.XR;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.Steam;
+using UnityEngine.InputSystem.XInput;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
-using Gyroscope = UnityEngine.Experimental.Input.Gyroscope;
+using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 /// <summary>
 /// Fixture to set up tests for <see cref="DemoGame"/>.
@@ -21,7 +21,6 @@ public class DemoGameTestFixture
 {
     public DemoGame game { get; set; }
     public InputTestFixture input { get; set; }
-    public SteamTestFixture steam { get; set; }
     public RuntimePlatform platform { get; private set; }
 
     public Mouse mouse { get; set; }
@@ -225,7 +224,6 @@ public class DemoGameTestFixture
 
         game = null;
         input = null;
-        steam = null;
 
         mouse = null;
         keyboard = null;

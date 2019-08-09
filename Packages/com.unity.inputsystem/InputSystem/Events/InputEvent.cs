@@ -1,25 +1,34 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
 ////REVIEW: can we get rid of the timestamp offsetting in the player and leave that complication for the editor only?
+#if !UNITY_2019_2_OR_NEWER
+// NativeInputEventType/NativeInputEvent are marked obsolete in 19.1, because they are becoming internal in 19.2
+#pragma warning disable 618
+#endif
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// A chunk of memory signaling a data transfer in the input system.
     /// </summary>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
         private const uint kIdMask = 0x7FFFFFFF;
 
-        public const int kBaseEventSize = 20;
-        public const int kInvalidId = 0;
-        public const int kAlignment = 4;
+#if UNITY_2019_2_OR_NEWER
+        internal const int kBaseEventSize = NativeInputEvent.structSize;
+#else
+        internal const int kBaseEventSize = 20;
+#endif
+
+        public const int InvalidId = 0;
+        internal const int kAlignment = 4;
 
         [FieldOffset(0)]
         private NativeInputEvent m_Event;
@@ -122,14 +131,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set => m_Event.time = value;
         }
 
-        static InputEvent()
-        {
-            unsafe
-            {
-                Debug.Assert(kBaseEventSize == sizeof(NativeInputEvent), "kBaseEventSize sizemust match NativeInputEvent struct size.");
-            }
-        }
-
+        ////FIXME: this API isn't consistent; time seems to be internalTime whereas time property is external time
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
             if (time < 0)
@@ -139,7 +141,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             m_Event.sizeInBytes = (ushort)sizeInBytes;
             m_Event.deviceId = (ushort)deviceId;
             m_Event.time = time;
-            m_Event.eventId = kInvalidId;
+            m_Event.eventId = InvalidId;
         }
 
         // We internally use bits inside m_EventId as flags. IDs are linearly counted up by the
@@ -178,7 +180,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
             Debug.Assert(currentPtr != null);
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
 
@@ -195,7 +197,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             Debug.Assert(currentPtr != null);
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(currentPtr->sizeInBytes, kAlignment);
+            var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             var nextPtr = (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
 
             if (!buffer.Contains(nextPtr))

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using System.Text;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.XR;
 
-namespace UnityEngine.Experimental.Input.Plugins.XR
+namespace UnityEngine.InputSystem.XR
 {
     [Serializable]
     class XRLayoutBuilder
@@ -153,7 +153,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                 updateBeforeRender = true
             };
 
-            var inherittedLayout = InputSystem.TryLoadLayout(parentLayout);
+            var inherittedLayout = InputSystem.LoadLayout(parentLayout);
 
             var currentUsages = new List<string>();
 
@@ -201,7 +201,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Button")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeBit)
+                            .WithFormat(InputStateBlock.FormatBit)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -210,7 +210,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Integer")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeInt)
+                            .WithFormat(InputStateBlock.FormatInt)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -219,7 +219,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeFloat)
+                            .WithFormat(InputStateBlock.FormatFloat)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -228,7 +228,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Vector2")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeVector2)
+                            .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -237,7 +237,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Vector3")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeVector3)
+                            .WithFormat(InputStateBlock.FormatVector3)
                             .WithUsages(currentUsages);
                         break;
                     }
@@ -246,7 +246,7 @@ namespace UnityEngine.Experimental.Input.Plugins.XR
                         builder.AddControl(featureName)
                             .WithLayout("Quaternion")
                             .WithByteOffset(currentOffset)
-                            .WithFormat(InputStateBlock.kTypeQuaternion)
+                            .WithFormat(InputStateBlock.FormatQuaternion)
                             .WithUsages(currentUsages);
                         break;
                     }

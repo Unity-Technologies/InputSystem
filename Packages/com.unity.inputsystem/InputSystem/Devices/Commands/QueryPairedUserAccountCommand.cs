@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.LowLevel
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Query the ID and the name of the user paired to the device the command is sent to.
@@ -18,18 +18,17 @@ namespace UnityEngine.Experimental.Input.LowLevel
     {
         public static FourCC Type { get { return new FourCC('P', 'A', 'C', 'C'); } }
 
-        public const int kMaxNameLength = 256;
-        public const int kMaxIdLength = 256;
+        internal const int kMaxNameLength = 256;
+        internal const int kMaxIdLength = 256;
 
         ////REVIEW: is this too heavy to allocate on the stack?
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "`Result` matches other command result names")]
         [Flags]
         public enum Result : long
         {
-            NotSupported = 1 << 63, // Same as -1.
-
-            // Leave bit #0 unused so as to not lead to possible confusion with kGenericSuccess.
+            // Leave bit #0 unused so as to not lead to possible confusion with GenericSuccess.
 
             /// <summary>
             /// The device is currently paired to a user account.
@@ -64,7 +63,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
             /// The system had been displaying a prompt
             /// </summary>
             /// <seealso cref="InitiateUserAccountPairingCommand"/>
-            UserAccountSelectionCancelled = 1 << 4,
+            UserAccountSelectionCanceled = 1 << 4,
         }
 
         [FieldOffset(0)]
@@ -108,11 +107,10 @@ namespace UnityEngine.Experimental.Input.LowLevel
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 var length = value.Length;
                 if (length > kMaxIdLength)
-                    throw new ArgumentException(string.Format(
-                        "ID '{0}' exceeds maximum supported length of {2} characters", value, kMaxIdLength));
+                    throw new ArgumentException($"ID '{value}' exceeds maximum supported length of {kMaxIdLength} characters", nameof(value));
 
                 fixed(byte* idBufferPtr = idBuffer)
                 {
@@ -137,8 +135,7 @@ namespace UnityEngine.Experimental.Input.LowLevel
                     throw new ArgumentNullException("value");
                 var length = value.Length;
                 if (length > kMaxNameLength)
-                    throw new ArgumentException(string.Format(
-                        "Name '{0}' exceeds maximum supported length of {2} characters", value, kMaxNameLength));
+                    throw new ArgumentException($"Name '{value}' exceeds maximum supported length of {kMaxNameLength} characters", nameof(value));
 
                 fixed(byte* nameBufferPtr = nameBuffer)
                 {
@@ -147,9 +144,9 @@ namespace UnityEngine.Experimental.Input.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static QueryPairedUserAccountCommand Create()

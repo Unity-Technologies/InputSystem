@@ -2,20 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.Experimental.Input.Composites;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem.Composites;
+using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Profiling;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Processors;
-using UnityEngine.Experimental.Input.Interactions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Interactions;
+using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
-using UnityEditor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
 ////TODO: make diagnostics available in dev players and give it a public API to enable them
@@ -28,7 +27,7 @@ using UnityEditor;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterInteraction and RegisterProcessor, have a generic RegisterInterface (or something)?
 
 ////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
 
@@ -37,12 +36,13 @@ using UnityEditor;
 ////REVIEW: do we want to filter out state events that result in no state change?
 
 #pragma warning disable CS0649
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
+    using DeviceStateChangeListener = Action<InputDevice>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
-    using EventListener = Action<InputEventPtr>;
-    using UpdateListener = Action<InputUpdateType>;
+    using EventListener = Action<InputEventPtr, InputDevice>;
+    using UpdateListener = Action;
 
     /// <summary>
     /// Hub of the input system.
@@ -65,8 +65,6 @@ namespace UnityEngine.Experimental.Input
             get
             {
                 var result = m_Metrics;
-                if (m_Runtime != null)
-                    result.totalFrameCount = m_Runtime.frameCount;
 
                 result.currentNumDevices = m_DevicesCount;
                 result.currentStateSizeInBytes = (int)m_StateBuffers.totalSize;
@@ -127,6 +125,30 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        public InputUpdateType defaultUpdateType
+        {
+            get
+            {
+                ////TODO: if we're *inside* an update, this should use the current update type
+
+                #if UNITY_EDITOR
+                if (!gameIsPlayingAndHasFocus)
+                    return InputUpdateType.Editor;
+                #endif
+
+                if ((m_UpdateMask & InputUpdateType.Manual) != 0)
+                    return InputUpdateType.Manual;
+
+                if ((m_UpdateMask & InputUpdateType.Dynamic) != 0)
+                    return InputUpdateType.Dynamic;
+
+                if ((m_UpdateMask & InputUpdateType.Fixed) != 0)
+                    return InputUpdateType.Fixed;
+
+                return InputUpdateType.None;
+            }
+        }
+
         public float pollingFrequency
         {
             get => m_PollingFrequency;
@@ -150,6 +172,17 @@ namespace UnityEngine.Experimental.Input
                 var index = m_DeviceChangeListeners.IndexOf(value);
                 if (index >= 0)
                     m_DeviceChangeListeners.RemoveAtWithCapacity(index);
+            }
+        }
+
+        public event DeviceStateChangeListener onDeviceStateChange
+        {
+            add => m_DeviceStateChangeListeners.AppendWithCapacity(value);
+            remove
+            {
+                var index = m_DeviceStateChangeListeners.IndexOf(value);
+                if (index >= 0)
+                    m_DeviceStateChangeListeners.RemoveAtWithCapacity(index);
             }
         }
 
@@ -240,7 +273,7 @@ namespace UnityEngine.Experimental.Input
 
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     EditorApplication.isPlaying && !EditorApplication.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
 #else
             true;
 #endif
@@ -457,12 +490,13 @@ namespace UnityEngine.Experimental.Input
                 return;
 
             // Remove and re-add the matching devices.
-            var setup = new InputDeviceBuilder();
-            for (var i = 0; i < devicesUsingLayout.Count; ++i)
+            using (InputDeviceBuilder.Ref())
             {
-                ////TODO: preserve state where possible
-                var device = devicesUsingLayout[i];
-                RecreateDevice(device, device.m_Layout, setup);
+                for (var i = 0; i < devicesUsingLayout.Count; ++i)
+                {
+                    var device = devicesUsingLayout[i];
+                    RecreateDevice(device, device.m_Layout);
+                }
             }
         }
 
@@ -534,49 +568,60 @@ namespace UnityEngine.Experimental.Input
             if (m_DevicesCount == 0)
                 return;
 
-            InputDeviceBuilder builder = null;
-            var deviceCount = m_DevicesCount;
-            for (var i = 0; i < deviceCount; ++i)
+            using (InputDeviceBuilder.Ref())
             {
-                var device = m_Devices[i];
-                var deviceDescription = device.description;
-
-                if (deviceDescription.empty || !(deviceMatcher.MatchPercentage(deviceDescription) > 0))
-                    continue;
-
-                var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.id);
-                if (layoutName != device.m_Layout)
+                var deviceCount = m_DevicesCount;
+                for (var i = 0; i < deviceCount; ++i)
                 {
-                    device.m_Description = deviceDescription;
+                    var device = m_Devices[i];
+                    var deviceDescription = device.description;
 
-                    if (builder == null)
-                        builder = new InputDeviceBuilder();
+                    if (deviceDescription.empty || !(deviceMatcher.MatchPercentage(deviceDescription) > 0))
+                        continue;
 
-                    RecreateDevice(device, layoutName, builder);
+                    var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.id);
+                    if (layoutName != device.m_Layout)
+                    {
+                        device.m_Description = deviceDescription;
 
-                    // We're removing devices in the middle of the array and appending
-                    // them at the end. Adjust our index and device count to make sure
-                    // we're not iterating all the way into already processed devices.
+                        RecreateDevice(device, layoutName);
 
-                    --i;
-                    --deviceCount;
+                        // We're removing devices in the middle of the array and appending
+                        // them at the end. Adjust our index and device count to make sure
+                        // we're not iterating all the way into already processed devices.
+
+                        --i;
+                        --deviceCount;
+                    }
                 }
             }
         }
 
-        private InputDevice RecreateDevice(InputDevice device, InternedString newLayout, InputDeviceBuilder builder)
+        private void RecreateDevice(InputDevice oldDevice, InternedString newLayout)
         {
             // Remove.
-            RemoveDevice(device, keepOnListOfAvailableDevices: true);
+            RemoveDevice(oldDevice, keepOnListOfAvailableDevices: true);
 
             // Re-setup device.
-            builder.Setup(newLayout, device.m_Variants, deviceDescription: device.m_Description,
-                existingDevice: device);
-            var newDevice = builder.Finish();
+            var newDevice = InputDevice.Build<InputDevice>(newLayout, oldDevice.m_Variants,
+                deviceDescription: oldDevice.m_Description);
+
+            // Preserve device properties that should not be changed by the re-creation
+            // of a device.
+            newDevice.m_Id = oldDevice.m_Id;
+            newDevice.m_Description = oldDevice.m_Description;
+            if (oldDevice.native)
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
+            if (oldDevice.remote)
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
+            if (!oldDevice.enabled)
+            {
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledStateHasBeenQueried;
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Disabled;
+            }
 
             // Re-add.
             AddDevice(newDevice);
-            return newDevice;
         }
 
         private void AddAvailableDevicesMatchingDescription(InputDeviceMatcher matcher, InternedString layout)
@@ -676,7 +721,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         ////FIXME: allowing the description to be modified as part of this is surprising; find a better way
-        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.kInvalidDeviceId)
+        public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             Profiler.BeginSample("InputSystem.TryFindMatchingControlLayout");
             ////TODO: this will want to take overrides into account
@@ -793,27 +838,6 @@ namespace UnityEngine.Experimental.Input
             return layouts.Count - countBefore;
         }
 
-        // Processes a path specification that may match more than a single control.
-        // Adds all controls that match to the given list.
-        // Returns true if at least one control was matched.
-        // Must not generate garbage!
-        public bool TryGetControls(string path, List<InputControl> controls)
-        {
-            throw new NotImplementedException();
-        }
-
-        // Return the first match for the given path or null if no control matches.
-        // Must not generate garbage!
-        public InputControl TryGetControl(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        public InputControl GetControl(string path)
-        {
-            throw new NotImplementedException();
-        }
-
         // Adds all controls that match the given path spec to the given list.
         // Returns number of controls added to the list.
         // NOTE: Does not create garbage.
@@ -845,28 +869,56 @@ namespace UnityEngine.Experimental.Input
             return numMatches;
         }
 
-        public void SetLayoutVariant(InputControl control, string variant)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-            if (string.IsNullOrEmpty(variant))
-                variant = "Default";
-
-            //how can we do this efficiently without having to take the control's device out of the system?
-
-            throw new NotImplementedException();
-        }
-
-        public void SetUsage(InputDevice device, InternedString usage)
+        public void SetDeviceUsage(InputDevice device, InternedString usage)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            device.SetUsage(usage);
+            if (device.usages.Count == 1 && device.usages[0] == usage)
+                return;
+            if (device.usages.Count == 0 && usage.IsEmpty())
+                return;
+
+            device.ClearDeviceUsages();
+            if (!usage.IsEmpty())
+                device.AddDeviceUsage(usage);
+            NotifyUsageChanged(device);
+        }
+
+        public void AddDeviceUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (usage.IsEmpty())
+                throw new ArgumentException("Usage string cannot be empty", nameof(usage));
+            if (device.usages.Contains(usage))
+                return;
+
+            device.AddDeviceUsage(usage);
+            NotifyUsageChanged(device);
+        }
+
+        public void RemoveDeviceUsage(InputDevice device, InternedString usage)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (usage.IsEmpty())
+                throw new ArgumentException("Usage string cannot be empty", nameof(usage));
+            if (!device.usages.Contains(usage))
+                return;
+
+            device.RemoveDeviceUsage(usage);
+            NotifyUsageChanged(device);
+        }
+
+        private void NotifyUsageChanged(InputDevice device)
+        {
+            InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
 
+            ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
             device.MakeCurrent();
         }
@@ -894,7 +946,7 @@ namespace UnityEngine.Experimental.Input
 
             // Note that since we go through the normal by-name lookup here, this will
             // still work if the layout from the type was override with a string layout.
-            return AddDevice(layoutName);
+            return AddDevice(layoutName, name);
         }
 
         // Creates a device from the given layout and adds it to the system.
@@ -904,11 +956,7 @@ namespace UnityEngine.Experimental.Input
             if (string.IsNullOrEmpty(layout))
                 throw new ArgumentNullException(nameof(layout));
 
-            var internedLayoutName = new InternedString(layout);
-
-            var setup = new InputDeviceBuilder();
-            setup.Setup(internedLayoutName, variants);
-            var device = setup.Finish();
+            var device = InputDevice.Build<InputDevice>(layout, variants);
 
             if (!string.IsNullOrEmpty(name))
                 device.m_Name = new InternedString(name);
@@ -920,17 +968,20 @@ namespace UnityEngine.Experimental.Input
 
         // Add device with a forced ID. Used when creating devices reported to us by native.
         private InputDevice AddDevice(InternedString layout, int deviceId,
+            string deviceName = null,
             InputDeviceDescription deviceDescription = new InputDeviceDescription(),
             InputDevice.DeviceFlags deviceFlags = 0,
             InternedString variants = default)
         {
-            var setup = new InputDeviceBuilder();
-            setup.Setup(new InternedString(layout), deviceDescription: deviceDescription, variants: variants);
-            var device = setup.Finish();
+            var device = InputDevice.Build<InputDevice>(new InternedString(layout),
+                deviceDescription: deviceDescription,
+                layoutVariants: variants);
 
             device.m_Id = deviceId;
             device.m_Description = deviceDescription;
             device.m_DeviceFlags |= deviceFlags;
+            if (!string.IsNullOrEmpty(deviceName))
+                device.m_Name = new InternedString(deviceName);
 
             // Default display name to product name.
             if (!string.IsNullOrEmpty(deviceDescription.product))
@@ -967,7 +1018,7 @@ namespace UnityEngine.Experimental.Input
             m_DevicesById[device.id] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
-            device.m_StateBlock.byteOffset = InputStateBlock.kInvalidOffset;
+            device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
 
             // Update state buffers.
             ReallocateStateBuffers();
@@ -996,7 +1047,7 @@ namespace UnityEngine.Experimental.Input
                 onBeforeUpdate += beforeUpdateCallbackReceiver.OnUpdate;
 
             // If the device has state callbacks, make a note of it.
-            if (device is IInputStateCallbackReceiver stateCallbackReceiver)
+            if (device is IInputStateCallbackReceiver)
             {
                 InstallBeforeUpdateHookIfNecessary();
                 device.m_DeviceFlags |= InputDevice.DeviceFlags.HasStateCallbacks;
@@ -1025,7 +1076,7 @@ namespace UnityEngine.Experimental.Input
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
-            int deviceId = InputDevice.kInvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
+            string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
             Profiler.BeginSample("InputSystem.AddDevice");
             // Look for matching layout.
@@ -1038,7 +1089,7 @@ namespace UnityEngine.Experimental.Input
                     throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
 
                 // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.kInvalidDeviceId)
+                if (deviceId != InputDevice.InvalidDeviceId)
                 {
                     var command = DisableDeviceCommand.Create();
                     m_Runtime.DeviceCommand(deviceId, ref command);
@@ -1048,7 +1099,7 @@ namespace UnityEngine.Experimental.Input
                 return null;
             }
 
-            var device = AddDevice(layout, deviceId, description, deviceFlags);
+            var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
             device.m_Description = description;
             Profiler.EndSample();
             return device;
@@ -1070,26 +1121,24 @@ namespace UnityEngine.Experimental.Input
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.id;
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
-            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
             m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
             {
-                var oldDeviceIndices = new int[m_DevicesCount];
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    oldDeviceIndices[i] = m_Devices[i].m_DeviceIndex;
-                    m_Devices[i].m_DeviceIndex = i;
-                }
-
                 // Remove from state buffers.
-                ReallocateStateBuffers(oldDeviceIndices);
+                ReallocateStateBuffers();
             }
             else
             {
                 // No more devices. Kill state buffers.
                 m_StateBuffers.FreeAll();
             }
+
+            // Update device indices. Do this after reallocating state buffers as that call requires
+            // the old indices to still be in place.
+            for (var i = deviceIndex; i < m_DevicesCount; ++i)
+                --m_Devices[i].m_DeviceIndex; // Indices have shifted down by one.
+            device.m_DeviceIndex = InputDevice.kInvalidDeviceIndex;
 
             // Update list of available devices.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
@@ -1105,7 +1154,7 @@ namespace UnityEngine.Experimental.Input
             }
 
             // Unbake offset into global state buffers.
-            device.BakeOffsetIntoStateBlockRecursive((uint)(-device.m_StateBlock.byteOffset));
+            device.BakeOffsetIntoStateBlockRecursive((uint)-device.m_StateBlock.byteOffset);
 
             // Force enabled actions to remove controls from the device.
             // We've already set the device index to be invalid so we any attempts
@@ -1143,7 +1192,7 @@ namespace UnityEngine.Experimental.Input
         public InputDevice TryGetDevice(string nameOrLayout)
         {
             if (string.IsNullOrEmpty(nameOrLayout))
-                throw new ArgumentException("nameOrLayout");
+                throw new ArgumentException("Name is null or empty.", nameof(nameOrLayout));
 
             if (m_DevicesCount == 0)
                 return null;
@@ -1165,7 +1214,7 @@ namespace UnityEngine.Experimental.Input
         {
             var device = TryGetDevice(nameOrLayout);
             if (device == null)
-                throw new Exception($"Cannot find device with name or layout '{nameOrLayout}'");
+                throw new ArgumentException($"Cannot find device with name or layout '{nameOrLayout}'", nameof(nameOrLayout));
 
             return device;
         }
@@ -1206,6 +1255,7 @@ namespace UnityEngine.Experimental.Input
             return numFound;
         }
 
+        ////TODO: this should reset the device to its default state
         public void EnableOrDisableDevice(InputDevice device, bool enable)
         {
             if (device == null)
@@ -1322,7 +1372,7 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
-        public void QueueEvent(InputEventPtr ptr)
+        public unsafe void QueueEvent(InputEventPtr ptr)
         {
             m_Runtime.QueueEvent(ptr.data);
         }
@@ -1332,12 +1382,12 @@ namespace UnityEngine.Experimental.Input
         {
             // Don't bother keeping the data on the managed side. Just stuff the raw data directly
             // into the native buffers. This also means this method is thread-safe.
-            m_Runtime.QueueEvent((IntPtr)UnsafeUtility.AddressOf(ref inputEvent));
+            m_Runtime.QueueEvent((InputEvent*)UnsafeUtility.AddressOf(ref inputEvent));
         }
 
         public void Update()
         {
-            Update(InputUpdateType.Dynamic);
+            Update(defaultUpdateType);
         }
 
         public void Update(InputUpdateType updateType)
@@ -1370,27 +1420,7 @@ namespace UnityEngine.Experimental.Input
             m_StateBuffers.FreeAll();
 
             // Uninstall globals.
-            if (ReferenceEquals(InputControlLayout.s_Layouts.baseLayoutTable, m_Layouts.baseLayoutTable))
-                InputControlLayout.s_Layouts = new InputControlLayout.Collection();
-            if (ReferenceEquals(InputProcessor.s_Processors.table, m_Processors.table))
-                InputProcessor.s_Processors = new TypeTable();
-            if (ReferenceEquals(InputInteraction.s_Interactions.table, m_Interactions.table))
-                InputInteraction.s_Interactions = new TypeTable();
-            if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
-                InputBindingComposite.s_Composites = new TypeTable();
-
-            // Detach from runtime.
-            if (m_Runtime != null)
-            {
-                m_Runtime.onUpdate = null;
-                m_Runtime.onDeviceDiscovered = null;
-                m_Runtime.onBeforeUpdate = null;
-                m_Runtime.onFocusChanged = null;
-                m_Runtime.onShouldRunUpdate = null;
-
-                if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
-                    InputRuntime.s_Instance = null;
-            }
+            UninstallGlobals();
 
             // Destroy settings if they are temporary.
             if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
@@ -1424,9 +1454,9 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("DiscreteButton", typeof(DiscreteButtonControl));
             RegisterControlLayout("Key", typeof(KeyControl));
             RegisterControlLayout("Analog", typeof(AxisControl));
-            RegisterControlLayout("Digital", typeof(IntegerControl));
             RegisterControlLayout("Integer", typeof(IntegerControl));
-            RegisterControlLayout("PointerPhase", typeof(PointerPhaseControl));
+            RegisterControlLayout("Digital", typeof(IntegerControl));
+            RegisterControlLayout("Double", typeof(DoubleControl));
             RegisterControlLayout("Vector2", typeof(Vector2Control));
             RegisterControlLayout("Vector3", typeof(Vector3Control));
             RegisterControlLayout("Quaternion", typeof(QuaternionControl));
@@ -1435,6 +1465,8 @@ namespace UnityEngine.Experimental.Input
             RegisterControlLayout("DpadAxis", typeof(DpadControl.DpadAxisControl));
             RegisterControlLayout("AnyKey", typeof(AnyKeyControl));
             RegisterControlLayout("Touch", typeof(TouchControl));
+            RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
+            RegisterControlLayout("TouchPress", typeof(TouchPressControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
@@ -1469,7 +1501,6 @@ namespace UnityEngine.Experimental.Input
             processors.AddTypeRegistration("ScaleVector3", typeof(ScaleVector3Processor));
             processors.AddTypeRegistration("StickDeadzone", typeof(StickDeadzoneProcessor));
             processors.AddTypeRegistration("AxisDeadzone", typeof(AxisDeadzoneProcessor));
-            //processors.AddTypeRegistration("Curve", typeof(CurveProcessor));
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
@@ -1498,14 +1529,14 @@ namespace UnityEngine.Experimental.Input
                 m_Runtime.onUpdate = null;
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
-                m_Runtime.onFocusChanged = null;
+                m_Runtime.onPlayerFocusChanged = null;
                 m_Runtime.onShouldRunUpdate = null;
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
-            m_Runtime.onFocusChanged = OnFocusChanged;
+            m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
 
@@ -1546,6 +1577,31 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        internal void UninstallGlobals()
+        {
+            if (ReferenceEquals(InputControlLayout.s_Layouts.baseLayoutTable, m_Layouts.baseLayoutTable))
+                InputControlLayout.s_Layouts = new InputControlLayout.Collection();
+            if (ReferenceEquals(InputProcessor.s_Processors.table, m_Processors.table))
+                InputProcessor.s_Processors = new TypeTable();
+            if (ReferenceEquals(InputInteraction.s_Interactions.table, m_Interactions.table))
+                InputInteraction.s_Interactions = new TypeTable();
+            if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
+                InputBindingComposite.s_Composites = new TypeTable();
+
+            // Detach from runtime.
+            if (m_Runtime != null)
+            {
+                m_Runtime.onUpdate = null;
+                m_Runtime.onDeviceDiscovered = null;
+                m_Runtime.onBeforeUpdate = null;
+                m_Runtime.onPlayerFocusChanged = null;
+                m_Runtime.onShouldRunUpdate = null;
+
+                if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
+                    InputRuntime.s_Instance = null;
+            }
+        }
+
         [Serializable]
         internal struct AvailableDevice
         {
@@ -1557,7 +1613,6 @@ namespace UnityEngine.Experimental.Input
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
-        internal int m_DeviceSetupVersion;////TODO
         private float m_PollingFrequency;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -1572,6 +1627,7 @@ namespace UnityEngine.Experimental.Input
         internal int m_AvailableDeviceCount;
         internal AvailableDevice[] m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
+        ////REVIEW: should these be weak-referenced?
         internal int m_DisconnectedDevicesCount;
         internal InputDevice[] m_DisconnectedDevices;
 
@@ -1582,6 +1638,7 @@ namespace UnityEngine.Experimental.Input
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
         // registrations what will lead to all kinds of misbehavior.
         private InlinedArray<DeviceChangeListener> m_DeviceChangeListeners;
+        private InlinedArray<DeviceStateChangeListener> m_DeviceStateChangeListeners;
         private InlinedArray<InputDeviceFindControlLayoutDelegate> m_DeviceFindLayoutCallbacks;
         internal InlinedArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
         private InlinedArray<LayoutChangeListener> m_LayoutChangeListeners;
@@ -1606,26 +1663,6 @@ namespace UnityEngine.Experimental.Input
         internal IInputDiagnostics m_Diagnostics;
         #endif
 
-        private static void AddTypeRegistration(Dictionary<InternedString, Type> table, string name, Type type)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            var internedName = new InternedString(name);
-            table[internedName] = type;
-        }
-
-        private static Type LookupTypeRegisteration(Dictionary<InternedString, Type> table, string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name cannot be null or empty", nameof(name));
-
-            var internedName = new InternedString(name);
-            return table.TryGetValue(internedName, out var type) ? type : null;
-        }
-
         // Maps a single control to an action interested in the control. If
         // multiple actions are interested in the same control, we will end up
         // processing the control repeatedly but we assume this is the exception
@@ -1634,12 +1671,6 @@ namespace UnityEngine.Experimental.Input
         //
         // Split into two structures to keep data needed only when there is an
         // actual value change out of the data we need for doing the scanning.
-        internal struct StateChangeMonitorMemoryRegion
-        {
-            public uint offsetRelativeToDevice;
-            public uint sizeInBits; // Size of memory region to compare.
-            public uint bitOffset;
-        }
         internal struct StateChangeMonitorListener
         {
             public InputControl control;
@@ -1648,7 +1679,7 @@ namespace UnityEngine.Experimental.Input
         }
         internal struct StateChangeMonitorsForDevice
         {
-            public StateChangeMonitorMemoryRegion[] memoryRegions;
+            public MemoryHelpers.BitRegion[] memoryRegions;
             public StateChangeMonitorListener[] listeners;
             public DynamicBitfield signalled;
 
@@ -1666,14 +1697,11 @@ namespace UnityEngine.Experimental.Input
                     new StateChangeMonitorListener {monitor = monitor, monitorIndex = monitorIndex, control = control});
 
                 // Record memory region.
+                ref var controlStateBlock = ref control.m_StateBlock;
                 var memoryRegionCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
-                    new StateChangeMonitorMemoryRegion
-                    {
-                        offsetRelativeToDevice = control.stateBlock.byteOffset - control.device.stateBlock.byteOffset,
-                        sizeInBits = control.stateBlock.sizeInBits,
-                        bitOffset = control.stateBlock.bitOffset
-                    });
+                    new MemoryHelpers.BitRegion(controlStateBlock.byteOffset - control.device.stateBlock.byteOffset,
+                        controlStateBlock.bitOffset, controlStateBlock.sizeInBits));
 
                 signalled.SetLength(signalled.length + 1);
             }
@@ -1690,8 +1718,8 @@ namespace UnityEngine.Experimental.Input
                 for (var i = 0; i < signalled.length; ++i)
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
-                        listeners[i] = new StateChangeMonitorListener();
-                        memoryRegions[i] = new StateChangeMonitorMemoryRegion();
+                        listeners[i] = default;
+                        memoryRegions[i] = default;
                         signalled.ClearBit(i);
                         break;
                     }
@@ -1755,14 +1783,14 @@ namespace UnityEngine.Experimental.Input
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.kInvalidDeviceId)
+            if (device.id != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
                 // but let's make sure.
                 var existingDeviceWithId = TryGetDeviceById(device.id);
                 if (existingDeviceWithId != null)
-                    throw new Exception(
+                    throw new InvalidOperationException(
                         $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
             }
             else
@@ -1774,16 +1802,16 @@ namespace UnityEngine.Experimental.Input
         // (Re)allocates state buffers and assigns each device that's been added
         // a segment of the buffer. Preserves the current state of devices.
         // NOTE: Installs the buffers globally.
-        private unsafe void ReallocateStateBuffers(int[] oldDeviceIndices = null)
+        private unsafe void ReallocateStateBuffers()
         {
             var oldBuffers = m_StateBuffers;
 
             // Allocate new buffers.
             var newBuffers = new InputStateBuffers();
-            var newStateBlockOffsets = newBuffers.AllocateAll(m_UpdateMask, m_Devices, m_DevicesCount);
+            newBuffers.AllocateAll(m_Devices, m_DevicesCount);
 
             // Migrate state.
-            newBuffers.MigrateAll(m_Devices, m_DevicesCount, newStateBlockOffsets, oldBuffers, oldDeviceIndices);
+            newBuffers.MigrateAll(m_Devices, m_DevicesCount, oldBuffers);
 
             // Install the new buffers.
             oldBuffers.FreeAll();
@@ -1791,14 +1819,9 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
             InputStateBuffers.s_NoiseMaskBuffer = newBuffers.noiseMaskBuffer;
 
-            // Make sure that even if we didn't have an update yet, we already have buffers active. This is
-            // especially important if only dynamic updates are enabled. If we don't switch to the dynamic buffers
-            // here, the first fixed update will run without any buffers active.
-            if (m_Settings.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
-                InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Manual);
-            else
-                InputStateBuffers.SwitchTo(m_StateBuffers,
-                    InputUpdate.s_LastUpdateType != 0 ? InputUpdate.s_LastUpdateType : InputUpdateType.Dynamic);
+            // Switch to buffers.
+            InputStateBuffers.SwitchTo(m_StateBuffers,
+                InputUpdate.s_LastUpdateType != InputUpdateType.None ? InputUpdate.s_LastUpdateType : defaultUpdateType);
 
             ////TODO: need to update state change monitors
         }
@@ -1832,31 +1855,23 @@ namespace UnityEngine.Experimental.Input
                 if (!control.hasDefaultValue)
                     continue;
 
-                if (control.m_DefaultValue.isArray)
-                    throw new NotImplementedException("default value arrays");
-
-                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue.primitiveValue);
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue);
             }
 
             // Copy default state to all front and back buffers.
             var stateBlock = device.m_StateBlock;
             var deviceIndex = device.m_DeviceIndex;
-            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
+            if (m_StateBuffers.m_PlayerStateBuffers.valid)
             {
-                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
-                stateBlock.CopyToFrom(m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
-            }
-            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
-            {
-                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
-                stateBlock.CopyToFrom(m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
 
             #if UNITY_EDITOR
-            if (m_StateBuffers.m_EditorUpdateBuffers.valid)
+            if (m_StateBuffers.m_EditorStateBuffers.valid)
             {
-                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
-                stateBlock.CopyToFrom(m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                stateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
             #endif
         }
@@ -1865,7 +1880,7 @@ namespace UnityEngine.Experimental.Input
         {
             Debug.Assert(device != null);
             Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
             Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
 
             var controls = device.allControls;
@@ -1886,13 +1901,10 @@ namespace UnityEngine.Experimental.Input
                 if (control.noisy)
                     continue;
 
-                if (control.m_DefaultValue.isArray)
-                    throw new NotImplementedException("default value arrays");
-
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.kInvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.kInvalidOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
@@ -1908,8 +1920,13 @@ namespace UnityEngine.Experimental.Input
             // had before a domain reload.
             RestoreDevicesAfterDomainReloadIfNecessary();
 
-            // Parse description.
-            var description = InputDeviceDescription.FromJson(deviceDescriptor);
+            // See if we have a disconnected device we can revive.
+            // NOTE: We do this all the way up here as the first thing before we even parse the JSON descriptor so
+            //       if we do have a device we can revive, we can do so without allocating any GC memory.
+            var device = TryMatchDisconnectedDevice(deviceDescriptor);
+
+            // Parse description, if need be.
+            var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
 
             // Add it.
             var markAsRemoved = false;
@@ -1919,7 +1936,7 @@ namespace UnityEngine.Experimental.Input
                 // we should support.
                 if (m_Settings.supportedDevices.Count > 0)
                 {
-                    var layout = TryFindMatchingControlLayout(ref description, deviceId);
+                    var layout = device != null ? device.m_Layout : TryFindMatchingControlLayout(ref description, deviceId);
                     if (!IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                     {
                         // Not supported. Ignore device. Still will get added to m_AvailableDevices
@@ -1928,18 +1945,6 @@ namespace UnityEngine.Experimental.Input
                         // and create the device.
                         markAsRemoved = true;
                         return;
-                    }
-                }
-
-                // See if we have a disconnected device we can revive.
-                InputDevice device = null;
-                for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
-                {
-                    if (m_DisconnectedDevices[i].description == description)
-                    {
-                        device = m_DisconnectedDevices[i];
-                        ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
-                        break;
                     }
                 }
 
@@ -1986,6 +1991,38 @@ namespace UnityEngine.Experimental.Input
             }
         }
 
+        private InputDevice TryMatchDisconnectedDevice(string deviceDescriptor)
+        {
+            for (var i = 0; i < m_DisconnectedDevicesCount; ++i)
+            {
+                var device = m_DisconnectedDevices[i];
+                var description = device.description;
+
+                // We don't parse the full description but rather go property by property in order to not
+                // allocate GC memory if we can avoid it.
+
+                if (!string.IsNullOrEmpty(description.interfaceName) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.product) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.manufacturer) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
+                    continue;
+                if (!string.IsNullOrEmpty(description.deviceClass) &&
+                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
+                    continue;
+
+                // We ignore capabilities here.
+
+                ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
+                return device;
+            }
+
+            return null;
+        }
+
         private void InstallBeforeUpdateHookIfNecessary()
         {
             if (m_NativeBeforeUpdateHooked || m_Runtime == null)
@@ -2003,103 +2040,41 @@ namespace UnityEngine.Experimental.Input
             #endif
         }
 
-        private unsafe void OnBeforeUpdate(InputUpdateType updateType)
+        private void OnBeforeUpdate(InputUpdateType updateType)
         {
-            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
+            RestoreDevicesAfterDomainReloadIfNecessary();
+
             if ((updateType & m_UpdateMask) == 0)
                 return;
 
-            RestoreDevicesAfterDomainReloadIfNecessary();
+            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
-                var stateBuffers = m_StateBuffers.GetDoubleBuffersFor(updateType);
-                var isDynamicOrFixedUpdate =
-                    updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Fixed;
+                ////TODO: have to handle updatecount here, too
+                InputUpdate.s_LastUpdateType = updateType;
 
-                ////REVIEW: should we rather allocate a temp buffer on a per-device basis? the current code makes one
-                ////        temp allocation equal to the combined state of all devices in the system; even with touch in the
-                ////        mix, that should amount to less than 3k in most cases
-
-                // For the sake of action state monitors, we need to be able to detect when
-                // an OnCarryStateForward() method writes new values into a state buffer. To do
-                // so, we create a temporary buffer, copy state blocks into that buffer, and then
-                // run the normal action change logic on the temporary and the current state buffer.
-                using (var tempBuffer = new NativeArray<byte>((int)m_StateBuffers.sizePerBuffer, Allocator.Temp))
+                for (var i = 0; i < m_DevicesCount; ++i)
                 {
-                    var tempBufferPtr = (byte*)tempBuffer.GetUnsafeReadOnlyPtr();
-                    var currentTimeExternal = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+                    var device = m_Devices[i];
+                    if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) == 0)
+                        continue;
 
-                    for (var i = 0; i < m_DevicesCount; ++i)
-                    {
-                        var device = m_Devices[i];
-                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) != InputDevice.DeviceFlags.HasStateCallbacks)
-                            continue;
+                    // NOTE: We do *not* perform a buffer flip here as we do not want to change what is the
+                    //       current and what is the previous state when we carry state forward. Rather,
+                    //       OnBeforeUpdate, if it modifies state, it modifies the current state directly.
+                    //       Also, for the same reasons, we do not modify the dynamic/fixed update counts
+                    //       on the device. If an event comes in in the upcoming update, it should lead to
+                    //       a buffer flip.
 
-                        // Depending on update ordering, we are writing events into *upcoming* updates inside of
-                        // OnUpdate(). E.g. we may receive an event in fixed update and write it concurrently into
-                        // the fixed and dynamic update buffer for the device.
-                        //
-                        // This means that we have to be extra careful here not to overwrite state which has already
-                        // been updated with events. To check for this, we simply determine whether the device's update
-                        // count for the current update type already corresponds to the count of the upcoming update.
-                        //
-                        // NOTE: This is only relevant for non-editor updates.
-                        if (isDynamicOrFixedUpdate)
-                        {
-                            if (updateType == InputUpdateType.Dynamic)
-                            {
-                                if (device.m_CurrentDynamicUpdateCount == InputUpdate.s_DynamicUpdateCount + 1)
-                                    continue; // Device already received state for upcoming dynamic update.
-                            }
-                            else if (updateType == InputUpdateType.Fixed)
-                            {
-                                if (device.m_CurrentFixedUpdateCount == InputUpdate.s_FixedUpdateCount + 1)
-                                    continue; // Device already received state for upcoming fixed update.
-                            }
-                        }
-
-                        var deviceStateOffset = device.m_StateBlock.byteOffset;
-                        var deviceStateSize = device.m_StateBlock.alignedSizeInBytes;
-
-                        // Grab current front buffer.
-                        var frontBuffer = stateBuffers.GetFrontBuffer(device.m_DeviceIndex);
-
-                        // Copy to temporary buffer.
-                        var statePtr = (byte*)frontBuffer + deviceStateOffset;
-                        var tempStatePtr = tempBufferPtr + deviceStateOffset;
-                        UnsafeUtility.MemCpy(tempStatePtr, statePtr, deviceStateSize);
-
-                        // NOTE: We do *not* perform a buffer flip here as we do not want to change what is the
-                        //       current and what is the previous state when we carry state forward. Rather,
-                        //       OnCarryStateForward, if it modifies state, it modifies the current state directly.
-                        //       Also, for the same reasons, we do not modify the dynamic/fixed update counts
-                        //       on the device. If an event comes in in the upcoming update, it should lead to
-                        //       a buffer flip.
-
-                        // Show to device.
-                        if (((IInputStateCallbackReceiver)device).OnCarryStateForward(frontBuffer))
-                        {
-                            ////REVIEW: should this make the device current? (and update m_LastUpdateTimeInternal)
-
-                            // Let listeners know the device's state has changed.
-                            for (var n = 0; n < m_DeviceChangeListeners.length; ++n)
-                                m_DeviceChangeListeners[n](device, InputDeviceChange.StateChanged);
-
-                            // Process action state change monitors.
-                            if (ProcessStateChangeMonitors(i, statePtr, tempStatePtr, deviceStateSize, 0))
-                            {
-                                FireStateChangeNotifications(i, currentTimeExternal, null);
-                            }
-                        }
-                    }
+                    ((IInputStateCallbackReceiver)device).OnNextUpdate();
                 }
             }
 
-            ////REVIEW: should we activate the buffers for the given update here?
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, updateType, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
         }
 
         /// <summary>
@@ -2115,23 +2090,21 @@ namespace UnityEngine.Experimental.Input
                 // so we always preserve this if set.
                 newUpdateMask |= InputUpdateType.BeforeRender;
             }
+            if (m_Settings.updateMode == InputSettings.s_OldUnsupportedFixedAndDynamicUpdateSetting)
+                m_Settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
             switch (m_Settings.updateMode)
             {
-                case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
-                    newUpdateMask |= InputUpdateType.Fixed;
+                case InputSettings.UpdateMode.ProcessEventsInDynamicUpdate:
                     newUpdateMask |= InputUpdateType.Dynamic;
                     break;
-                case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                    newUpdateMask |= InputUpdateType.Dynamic;
-                    break;
-                case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
+                case InputSettings.UpdateMode.ProcessEventsInFixedUpdate:
                     newUpdateMask |= InputUpdateType.Fixed;
                     break;
                 case InputSettings.UpdateMode.ProcessEventsManually:
                     newUpdateMask |= InputUpdateType.Manual;
                     break;
                 default:
-                    throw new NotImplementedException("Input update mode: " + m_Settings.updateMode);
+                    throw new NotSupportedException("Invalid input update mode: " + m_Settings.updateMode);
             }
 
             #if UNITY_EDITOR
@@ -2156,8 +2129,9 @@ namespace UnityEngine.Experimental.Input
                 var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
                 if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                 {
-                    AddDevice(m_AvailableDevices[i].description, false, id,
-                        m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    AddDevice(m_AvailableDevices[i].description, false,
+                        deviceId: id,
+                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
                 }
             }
 
@@ -2195,6 +2169,11 @@ namespace UnityEngine.Experimental.Input
                 }
             }
 
+            // Cache some values.
+            Touchscreen.s_TapTime = settings.defaultTapTime;
+            Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
+            Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
+
             // Let listeners know.
             for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
                 m_SettingsChangedListeners[i]();
@@ -2214,12 +2193,19 @@ namespace UnityEngine.Experimental.Input
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
         {
+            // We perform a "null" update after domain reloads and on startup to get our devices
+            // in place before the runtime calls MonoBehaviour callbacks. See InputSystem.RunInitialUpdate().
+            if (updateType == InputUpdateType.None)
+                return true;
+
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
+            // Ignore editor updates when the game is playing and has focus. All input goes to player.
             if (gameIsPlayingAndHasFocus)
                 mask &= ~InputUpdateType.Editor;
-            else
-                mask &= ~(InputUpdateType.Dynamic | InputUpdateType.Fixed);
+            // If the player isn't running, the only thing we run is editor updates.
+            else if (updateType != InputUpdateType.Editor)
+                return false;
 #endif
             return (updateType & mask) != 0;
         }
@@ -2240,18 +2226,22 @@ namespace UnityEngine.Experimental.Input
         /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
         /// which buffers we activate in the update and write the event data into.
         /// </remarks>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
-            ////FIXME: this shouldn't happen; looks like are sometimes getting before-update calls from native when we shouldn't
-            if ((updateType & m_UpdateMask) == 0)
-                return;
-
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
+            // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
+
+            if ((updateType & m_UpdateMask) == 0)
+            {
+                Profiler.EndSample();
+                return;
+            }
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -2267,6 +2257,7 @@ namespace UnityEngine.Experimental.Input
             // Update metrics.
             m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
             m_Metrics.totalEventBytes += (int)eventBuffer.sizeInBytes - (int)InputUpdate.s_LastUpdateRetainedEventBytes;
+            ++m_Metrics.totalUpdateCount;
 
             InputUpdate.s_LastUpdateRetainedEventCount = 0;
             InputUpdate.s_LastUpdateRetainedEventBytes = 0;
@@ -2278,13 +2269,9 @@ namespace UnityEngine.Experimental.Input
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
             var isBeforeRenderUpdate = false;
-            if (updateType == InputUpdateType.Dynamic)
+            if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
             {
-                ++InputUpdate.s_DynamicUpdateCount;
-            }
-            else if (updateType == InputUpdateType.Fixed)
-            {
-                ++InputUpdate.s_FixedUpdateCount;
+                ++InputUpdate.s_UpdateStepCount;
             }
             else if (updateType == InputUpdateType.BeforeRender)
             {
@@ -2299,10 +2286,8 @@ namespace UnityEngine.Experimental.Input
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            #if UNITY_2019_2_OR_NEWER
             var timesliceEvents = false;
             timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
-            #endif
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -2315,7 +2300,7 @@ namespace UnityEngine.Experimental.Input
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
-                InvokeAfterUpdateCallback(updateType);
+                InvokeAfterUpdateCallback();
                 eventBuffer.Reset();
                 return;
             }
@@ -2329,10 +2314,8 @@ namespace UnityEngine.Experimental.Input
             // for later processing. We do this by compacting the event buffer and moving events down such
             // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
             // of the buffer.
-            #if UNITY_2019_2_OR_NEWER
             var currentEventWritePtr = currentEventReadPtr;
             var numEventsRetainedInBuffer = 0;
-            #endif
 
             var totalEventLag = 0.0;
 
@@ -2341,7 +2324,6 @@ namespace UnityEngine.Experimental.Input
             {
                 InputDevice device = null;
 
-                #if UNITY_2019_2_OR_NEWER
                 Debug.Assert(!currentEventReadPtr->handled);
 
                 // In before render updates, we only take state events and only those for devices
@@ -2362,33 +2344,9 @@ namespace UnityEngine.Experimental.Input
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     }
                 }
-                #else
-                // Bump firstEvent up to the next unhandled event (in before-render updates
-                // the event needs to be *both* unhandled *and* for a device with before
-                // render updates enabled).
-                while (remainingEventCount > 0)
-                {
-                    if (isBeforeRenderUpdate)
-                    {
-                        if (!currentEventReadPtr->handled)
-                        {
-                            device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                            if (device != null && device.updateBeforeRender)
-                                break;
-                        }
-                    }
-                    else if (!currentEventReadPtr->handled)
-                        break;
-
-                    if (remainingEventCount > 1)
-                        currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                    --remainingEventCount;
-                }
-                #endif
                 if (remainingEventCount == 0)
                     break;
 
-                #if UNITY_2019_2_OR_NEWER
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
                 {
@@ -2396,45 +2354,42 @@ namespace UnityEngine.Experimental.Input
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     continue;
                 }
-                #endif
 
-                if (currentEventReadPtr->time <= currentTime)
-                    totalEventLag += currentTime - currentEventReadPtr->time;
+                if (currentEventReadPtr->internalTime <= currentTime)
+                    totalEventLag += currentTime - currentEventReadPtr->internalTime;
 
                 // Give listeners a shot at the event.
                 var listenerCount = m_EventListeners.length;
                 if (listenerCount > 0)
                 {
+                    if (device == null)
+                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
+
                     for (var i = 0; i < listenerCount; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr));
+                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
 
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
                     {
-                        #if UNITY_2019_2_OR_NEWER
                         eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                             ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        #endif
                         continue;
                     }
                 }
 
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
-                if (!isBeforeRenderUpdate)
+                if (device == null)
                     device = TryGetDeviceById(currentEventReadPtr->deviceId);
                 if (device == null)
                 {
                     #if UNITY_EDITOR
+                    ////TODO: see if this is a device we haven't created and if so, just ignore
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 
-                    #if UNITY_2019_2_OR_NEWER
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                    #else
-                    currentEventReadPtr->handled = true;
-                    #endif
 
                     // No device found matching event. Ignore it.
                     continue;
@@ -2448,61 +2403,19 @@ namespace UnityEngine.Experimental.Input
                     case StateEvent.Type:
                     case DeltaStateEvent.Type:
 
+                        var eventPtr = new InputEventPtr(currentEventReadPtr);
+
                         // Ignore state changes if device is disabled.
                         if (!device.enabled)
                         {
                             #if UNITY_EDITOR
-                            m_Diagnostics?.OnEventForDisabledDevice(new InputEventPtr(currentEventReadPtr), device);
+                            m_Diagnostics?.OnEventForDisabledDevice(eventPtr, device);
                             #endif
                             break;
                         }
 
-                        var deviceHasStateCallbacks = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                        var deviceIsStateCallbackReceiver = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
                             InputDevice.DeviceFlags.HasStateCallbacks;
-                        IInputStateCallbackReceiver stateCallbacks = null;
-                        var deviceIndex = device.m_DeviceIndex;
-                        var stateBlockOfDevice = device.m_StateBlock;
-                        var stateBlockSizeOfDevice = stateBlockOfDevice.alignedSizeInBytes;
-                        var offsetInDeviceStateToCopyTo = 0u;
-                        uint sizeOfStateToCopy;
-                        uint receivedStateSize;
-                        byte* ptrToReceivedState;
-                        FourCC receivedStateFormat;
-                        var needToCopyFromBackBuffer = false;
-
-                        // Grab state data from event and decide where to copy to and how much to copy.
-                        if (currentEventType == StateEvent.Type)
-                        {
-                            var stateEventPtr = (StateEvent*)currentEventReadPtr;
-                            receivedStateFormat = stateEventPtr->stateFormat;
-                            receivedStateSize = stateEventPtr->stateSizeInBytes;
-                            ptrToReceivedState = (byte*)stateEventPtr->state;
-
-                            // Ignore extra state at end of event.
-                            sizeOfStateToCopy = receivedStateSize;
-                            if (sizeOfStateToCopy > stateBlockSizeOfDevice)
-                                sizeOfStateToCopy = stateBlockSizeOfDevice;
-                        }
-                        else
-                        {
-                            Debug.Assert(currentEventType == DeltaStateEvent.Type);
-
-                            var deltaEventPtr = (DeltaStateEvent*)currentEventReadPtr;
-                            receivedStateFormat = deltaEventPtr->stateFormat;
-                            receivedStateSize = deltaEventPtr->deltaStateSizeInBytes;
-                            ptrToReceivedState = (byte*)deltaEventPtr->deltaState;
-                            offsetInDeviceStateToCopyTo = deltaEventPtr->stateOffset;
-
-                            // Ignore extra state at end of event.
-                            sizeOfStateToCopy = receivedStateSize;
-                            if (offsetInDeviceStateToCopyTo + sizeOfStateToCopy > stateBlockSizeOfDevice)
-                            {
-                                if (offsetInDeviceStateToCopyTo >= stateBlockSizeOfDevice)
-                                    break; // Entire delta state is out of range.
-
-                                sizeOfStateToCopy = stateBlockSizeOfDevice - offsetInDeviceStateToCopyTo;
-                            }
-                        }
 
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is. We don't allow devices to go back in time.
@@ -2512,11 +2425,8 @@ namespace UnityEngine.Experimental.Input
                         //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
                         //       that are generated in the backend and would require considerable work to ensure monotonically
                         //       increasing timestamps across all such streams.
-                        //
-                        //       This exception isn't elegant. But then, the entire IInputStateCallbackReceiver thing
-                        //       is anything but elegant...
                         if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
-                            !(deviceHasStateCallbacks && stateBlockOfDevice.format != receivedStateFormat))
+                            !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
                         {
                             #if UNITY_EDITOR
                             m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
@@ -2524,193 +2434,38 @@ namespace UnityEngine.Experimental.Input
                             break;
                         }
 
-                        // If the state format doesn't match, see if the device knows what to do.
-                        // If not, ignore the event.
-                        if (stateBlockOfDevice.format != receivedStateFormat)
+                        // Update the state of the device from the event. If the device is an IInputStateCallbackReceiver,
+                        // let the device handle the event. If not, we do it ourselves.
+                        var haveChangedStateOtherThanNoise = true;
+                        if (deviceIsStateCallbackReceiver)
                         {
-                            var canIncorporateUnrecognizedState = false;
-                            if (deviceHasStateCallbacks)
-                            {
-                                if (stateCallbacks == null)
-                                    stateCallbacks = (IInputStateCallbackReceiver)device;
-                                canIncorporateUnrecognizedState =
-                                    stateCallbacks.OnReceiveStateWithDifferentFormat(ptrToReceivedState, receivedStateFormat,
-                                        receivedStateSize, ref offsetInDeviceStateToCopyTo);
-                            }
-
-                            if (!canIncorporateUnrecognizedState)
+                            // NOTE: We leave it to the device to make sure the event has the right format. This allows the
+                            //       device to handle multiple different incoming formats.
+                            ((IInputStateCallbackReceiver)device).OnStateEvent(eventPtr);
+                        }
+                        else
+                        {
+                            // If the state format doesn't match, ignore the event.
+                            if (device.stateBlock.format != eventPtr.stateFormat)
                             {
                                 #if UNITY_EDITOR
-                                m_Diagnostics?.OnEventFormatMismatch(new InputEventPtr(currentEventReadPtr), device);
+                                m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
                                 #endif
                                 break;
                             }
+
+                            haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
                         }
 
-                        // If the device has state callbacks, give it a shot at running custom logic on
-                        // the new state before we integrate it into the system.
-                        if (deviceHasStateCallbacks)
-                        {
-                            if (stateCallbacks == null)
-                                stateCallbacks = (IInputStateCallbackReceiver)device;
+                        // Update timestamp on device.
+                        // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
+                        //       Only events should.
+                        if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime)
+                            device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
-                            ////FIXME: for delta state events, this may lead to invalid memory accesses on newState; in fact the entire logic is screwed up here for delta events
-                            ////FIXME: this will read state from the current update, then combine it with the new state, and then write into all states
-
-                            var currentState = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
-                            var newState = ptrToReceivedState - stateBlockOfDevice.byteOffset;  // Account for device offset in buffers.
-
-                            stateCallbacks.OnBeforeWriteNewState(currentState, newState);
-                        }
-
-                        var deviceBuffer = InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
-
-                        // Before we update state, let change monitors compare the old and the new state.
-                        // We do this instead of first updating the front buffer and then comparing to the
-                        // back buffer as that would require a buffer flip for each state change in order
-                        // for the monitors to work reliably. By comparing the *event* data to the current
-                        // state, we can have multiple state events in the same frame yet still get reliable
-                        // change notifications.
-                        var haveSignalledMonitors =
-                            gameIsPlayingAndHasFocus &&
-                            ProcessStateChangeMonitors(deviceIndex, ptrToReceivedState,
-                                (byte*)deviceBuffer + stateBlockOfDevice.byteOffset,
-                                sizeOfStateToCopy, offsetInDeviceStateToCopyTo);
-
-                        var deviceStateOffset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-
-                        // If noise filtering on .current is turned on and the device may have noise,
-                        // determine if the event carries signal or not.
-                        var makeDeviceCurrent = true;
-                        if (device.noisy && m_Settings.filterNoiseOnCurrent)
-                        {
-                            // Compare the current state of the device to the newly received state but overlay
-                            // the comparison by the noise mask.
-
-                            var offset = device.m_StateBlock.byteOffset + offsetInDeviceStateToCopyTo;
-                            var currentState = (byte*)InputStateBuffers.GetFrontBufferForDevice(deviceIndex) + offset;
-                            var noiseMask = (byte*)InputStateBuffers.s_NoiseMaskBuffer + offset;
-
-                            makeDeviceCurrent =
-                                !MemoryHelpers.MemCmpBitRegion(currentState, ptrToReceivedState,
-                                    0, receivedStateSize * 8, mask: noiseMask);
-                        }
-
-                        // Buffer flip.
-                        if (FlipBuffersForDeviceIfNecessary(device, updateType))
-                        {
-                            // In case of a delta state event we need to carry forward all state we're
-                            // not updating. Instead of optimizing the copy here, we're just bringing the
-                            // entire state forward.
-                            //
-                            // Also, if we received a mismatching state format that the device chose to
-                            // incorporate using OnReceiveStateWithDifferentFormat, we're potentially performing
-                            // a partial state update, so bring the current state forward like for delta
-                            // state events.
-                            if (currentEventType == DeltaStateEvent.Type || receivedStateFormat != stateBlockOfDevice.format)
-                                needToCopyFromBackBuffer = true;
-                        }
-
-                        // Now write the state.
-                        #if UNITY_EDITOR
-                        if (!gameIsPlayingAndHasFocus)
-                        {
-                            var frontBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
-                            Debug.Assert(frontBuffer != null);
-
-                            if (needToCopyFromBackBuffer)
-                            {
-                                var backBuffer = m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex);
-                                Debug.Assert(backBuffer != null);
-
-                                UnsafeUtility.MemCpy(
-                                    (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
-                                    (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
-                                    stateBlockSizeOfDevice);
-                            }
-
-                            UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
-                        }
-                        else
-                        #endif
-                        if (updateType == InputUpdateType.Manual)
-                        {
-                            var frontBuffer = m_StateBuffers.m_ManualUpdateBuffers.GetFrontBuffer(deviceIndex);
-                            Debug.Assert(frontBuffer != null);
-
-                            if (needToCopyFromBackBuffer)
-                            {
-                                var backBuffer = m_StateBuffers.m_ManualUpdateBuffers.GetBackBuffer(deviceIndex);
-                                Debug.Assert(backBuffer != null);
-
-                                UnsafeUtility.MemCpy(
-                                    (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
-                                    (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
-                                    stateBlockSizeOfDevice);
-                            }
-
-                            UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
-                        }
-                        else
-                        {
-                            // For dynamic and fixed updates, we have to write into the front buffer
-                            // of both updates as a state change event comes in only once and we have
-                            // to reflect the most current state in both update types.
-                            //
-                            // If one or the other update is disabled, however, we will perform a single
-                            // memcpy here.
-                            if (m_StateBuffers.m_DynamicUpdateBuffers.valid)
-                            {
-                                var frontBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(frontBuffer != null);
-
-                                if (needToCopyFromBackBuffer)
-                                {
-                                    var backBuffer = m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex);
-                                    Debug.Assert(backBuffer != null);
-
-                                    UnsafeUtility.MemCpy(
-                                        (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
-                                        (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
-                                        stateBlockSizeOfDevice);
-                                }
-
-                                UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
-                            }
-                            if (m_StateBuffers.m_FixedUpdateBuffers.valid)
-                            {
-                                var frontBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
-                                Debug.Assert(frontBuffer != null);
-
-                                if (needToCopyFromBackBuffer)
-                                {
-                                    var backBuffer = m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex);
-                                    Debug.Assert(backBuffer != null);
-
-                                    UnsafeUtility.MemCpy(
-                                        (byte*)frontBuffer + (int)stateBlockOfDevice.byteOffset,
-                                        (byte*)backBuffer + (int)stateBlockOfDevice.byteOffset,
-                                        stateBlockSizeOfDevice);
-                                }
-
-                                UnsafeUtility.MemCpy((byte*)frontBuffer + (int)deviceStateOffset, ptrToReceivedState, sizeOfStateToCopy);
-                            }
-                        }
-
-                        if (device.m_LastUpdateTimeInternal <= currentEventTimeInternal)
-                            device.m_LastUpdateTimeInternal = currentEventTimeInternal;
-                        if (makeDeviceCurrent)
+                        // Make device current. Again, only do this when receiving events.
+                        if (haveChangedStateOtherThanNoise)
                             device.MakeCurrent();
-
-                        // Notify listeners.
-                        for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                            m_DeviceChangeListeners[i](device, InputDeviceChange.StateChanged);
-
-                        // Now that we've committed the new state to memory, if any of the change
-                        // monitors fired, let the associated actions know.
-                        ////FIXME: this needs to happen with player buffers active
-                        if (haveSignalledMonitors)
-                            FireStateChangeNotifications(deviceIndex, currentEventTimeInternal, currentEventReadPtr);
 
                         break;
 
@@ -2769,23 +2524,13 @@ namespace UnityEngine.Experimental.Input
                         break;
                 }
 
-                #if UNITY_2019_2_OR_NEWER
                 eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                #else
-                // Mark as processed.
-                currentEventReadPtr->handled = true;
-                if (remainingEventCount > 1)
-                    currentEventReadPtr = InputEvent.GetNextInMemoryChecked(currentEventReadPtr, ref eventBuffer);
-                --remainingEventCount;
-                #endif
             }
 
             m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
             m_Metrics.totalEventLagTime += totalEventLag;
 
-            ////REVIEW: This was moved to 2019.2 while the timeslice code was wrong; should probably be reenabled now
-            #if UNITY_2019_2_OR_NEWER
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
             InputUpdate.s_LastUpdateRetainedEventCount = (uint)numEventsRetainedInBuffer;
@@ -2808,10 +2553,6 @@ namespace UnityEngine.Experimental.Input
             {
                 eventBuffer.Reset();
             }
-            #else
-            if (updateType != InputUpdateType.BeforeRender)
-                eventBuffer.Reset();
-            #endif
 
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();
@@ -2822,60 +2563,21 @@ namespace UnityEngine.Experimental.Input
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
-            InvokeAfterUpdateCallback(updateType);
+            ////       same goes for events that someone may queue from a change monitor callback
+            InvokeAfterUpdateCallback();
             ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }
 
-        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
+        private void InvokeAfterUpdateCallback()
         {
             for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i](updateType);
-        }
-
-        /// <summary>
-        /// Switch the current set of state buffers (<see cref="InputStateBuffers"/>) to the
-        /// ones that are tracked by input actions.
-        /// </summary>
-        /// <remarks>
-        /// If both fixed and dynamic updates are enabled, we use the buffers dictated by <see cref="InputSettings.actionUpdateMode"/>.
-        /// Otherwise we use fixed, dynamic, or manual update buffers depending on <see cref="InputSettings.updateMode"/>.
-        /// </remarks>
-        private void SwitchToBuffersForActions()
-        {
-            InputUpdateType updateType;
-            switch (m_Settings.updateMode)
-            {
-                case InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate:
-                    if (m_Settings.actionUpdateMode == InputSettings.ActionUpdateMode.UpdateActionsInFixedUpdate)
-                        updateType = InputUpdateType.Fixed;
-                    else
-                        updateType = InputUpdateType.Dynamic;
-                    break;
-
-                case InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly:
-                    updateType = InputUpdateType.Dynamic;
-                    break;
-
-                case InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly:
-                    updateType = InputUpdateType.Fixed;
-                    break;
-
-                case InputSettings.UpdateMode.ProcessEventsManually:
-                    updateType = InputUpdateType.Manual;
-                    break;
-
-                default:
-                    throw new NotSupportedException(
-                        $"Unrecognized update mode '{m_Settings.updateMode}'; don't know which buffers to use for actions");
-            }
-
-            InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
+                m_AfterUpdateListeners[i]();
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
-        //       'newStateOffset' must give the offset into the full state and 'newStateSize' must
+        //       'newStateOffsetInBytes' must give the offset into the full state and 'newStateSizeInBytes' must
         //       give the size of memory slice to be updated.
-        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, void* newState, void* oldState, uint newStateSize, uint newStateOffset)
+        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, void* newStateFromEvent, void* oldStateOfDevice, uint newStateSizeInBytes, uint newStateOffsetInBytes)
         {
             if (m_StateChangeMonitors == null)
                 return false;
@@ -2894,14 +2596,10 @@ namespace UnityEngine.Experimental.Input
             var signals = m_StateChangeMonitors[deviceIndex].signalled;
             var haveChangedSignalsBitfield = false;
 
-            // Bake offsets into state pointers so that we don't have to adjust for
-            // them repeatedly.
-            if (newStateOffset != 0)
-            {
-                newState = (byte*)newState - newStateOffset;
-                oldState = (byte*)oldState + newStateOffset;
-            }
-
+            // For every memory region that overlaps what we got in the event, compare memory contents
+            // between the old device state and what's in the event. If the contents different, the
+            // respective state monitor signals.
+            var newEventMemoryRegion = new MemoryHelpers.BitRegion(newStateOffsetInBytes, 0, newStateSizeInBytes * 8);
             for (var i = 0; i < numMonitors; ++i)
             {
                 var memoryRegion = memoryRegions[i];
@@ -2924,51 +2622,9 @@ namespace UnityEngine.Experimental.Input
                     continue;
                 }
 
-                var offset = (int)memoryRegion.offsetRelativeToDevice;
-                var sizeInBits = memoryRegion.sizeInBits;
-                var bitOffset = memoryRegion.bitOffset;
-
-                // If we've updated only part of the state, see if the monitored region and the
-                // updated region overlap. Ignore monitor if they don't.
-                if (newStateOffset != 0 &&
-                    !MemoryHelpers.MemoryOverlapsBitRegion((uint)offset, bitOffset, sizeInBits, newStateOffset, (uint)newStateSize))
+                var overlap = newEventMemoryRegion.Overlap(memoryRegion);
+                if (overlap.isEmpty || MemoryHelpers.Compare(oldStateOfDevice, (byte*)newStateFromEvent - newStateOffsetInBytes, overlap))
                     continue;
-
-                // See if we are comparing bits or bytes.
-                if (sizeInBits % 8 != 0 || bitOffset != 0)
-                {
-                    // Not-so-simple path: compare bits.
-
-                    // Check if bit offset is out of range of state we have.
-                    if (MemoryHelpers.ComputeFollowingByteOffset((uint)offset + newStateOffset, bitOffset + sizeInBits) > newStateSize)
-                        continue;
-
-                    if (sizeInBits > 1)
-                    {
-                        // Multi-bit value.
-                        if (MemoryHelpers.MemCmpBitRegion((byte*)newState + offset,
-                            (byte*)oldState + offset, bitOffset, sizeInBits))
-                            continue;
-                    }
-                    else
-                    {
-                        // Single-bit value.
-                        if (MemoryHelpers.ReadSingleBit((byte*)newState + offset, bitOffset) ==
-                            MemoryHelpers.ReadSingleBit((byte*)oldState + offset, bitOffset))
-                            continue;
-                    }
-                }
-                else
-                {
-                    // Simple path: compare whole bytes.
-
-                    var sizeInBytes = sizeInBits / 8;
-                    if (offset - newStateOffset + sizeInBytes > newStateSize)
-                        continue;
-
-                    if (UnsafeUtility.MemCmp((byte*)newState + offset, (byte*)oldState + offset, sizeInBytes) == 0)
-                        continue;
-                }
 
                 signals.SetBit(i);
                 haveChangedSignalsBitfield = true;
@@ -3024,12 +2680,10 @@ namespace UnityEngine.Experimental.Input
             if (timeoutCount == 0)
                 return;
 
-            SwitchToBuffersForActions();
-
             // Go through the list and both trigger expired timers and remove any irrelevant
             // ones by compacting the array.
             // NOTE: We do not actually release any memory we may have allocated.
-            var currentTime = m_Runtime.currentTime;
+            var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
             var remainingTimeoutCount = 0;
             for (var i = 0; i < timeoutCount; ++i)
             {
@@ -3061,6 +2715,173 @@ namespace UnityEngine.Experimental.Input
             m_StateChangeMonitorTimeouts.SetLength(remainingTimeoutCount);
         }
 
+        internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)
+        {
+            Debug.Assert(eventPtr != null, "Received NULL event ptr");
+
+            var stateBlockOfDevice = device.m_StateBlock;
+            var stateBlockSizeOfDevice = stateBlockOfDevice.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
+            var offsetInDeviceStateToCopyTo = 0u;
+            uint sizeOfStateToCopy;
+            uint receivedStateSize;
+            byte* ptrToReceivedState;
+            FourCC receivedStateFormat;
+
+            // Grab state data from event and decide where to copy to and how much to copy.
+            if (eventPtr->type == StateEvent.Type)
+            {
+                var stateEventPtr = (StateEvent*)eventPtr;
+                receivedStateFormat = stateEventPtr->stateFormat;
+                receivedStateSize = stateEventPtr->stateSizeInBytes;
+                ptrToReceivedState = (byte*)stateEventPtr->state;
+
+                // Ignore extra state at end of event.
+                sizeOfStateToCopy = receivedStateSize;
+                if (sizeOfStateToCopy > stateBlockSizeOfDevice)
+                    sizeOfStateToCopy = stateBlockSizeOfDevice;
+            }
+            else
+            {
+                Debug.Assert(eventPtr->type == DeltaStateEvent.Type, "Given event must either be a StateEvent or a DeltaStateEvent");
+
+                var deltaEventPtr = (DeltaStateEvent*)eventPtr;
+                receivedStateFormat = deltaEventPtr->stateFormat;
+                receivedStateSize = deltaEventPtr->deltaStateSizeInBytes;
+                ptrToReceivedState = (byte*)deltaEventPtr->deltaState;
+                offsetInDeviceStateToCopyTo = deltaEventPtr->stateOffset;
+
+                // Ignore extra state at end of event.
+                sizeOfStateToCopy = receivedStateSize;
+                if (offsetInDeviceStateToCopyTo + sizeOfStateToCopy > stateBlockSizeOfDevice)
+                {
+                    if (offsetInDeviceStateToCopyTo >= stateBlockSizeOfDevice)
+                        return false; // Entire delta state is out of range.
+
+                    sizeOfStateToCopy = stateBlockSizeOfDevice - offsetInDeviceStateToCopyTo;
+                }
+            }
+
+            Debug.Assert(device.m_StateBlock.format == receivedStateFormat, "Received state format does not match format of device");
+
+            // Write state.
+            return UpdateState(device, updateType, ptrToReceivedState, offsetInDeviceStateToCopyTo,
+                sizeOfStateToCopy, eventPtr->internalTime, eventPtr);
+        }
+
+        /// <summary>
+        /// This method is the workhorse for updating input state in the system. It runs all the logic of incorporating
+        /// new state into devices and triggering whatever change monitors are attached to the state memory that gets
+        /// touched.
+        /// </summary>
+        /// <remarks>
+        /// This method can be invoked from outside the event processing loop and the given data does not have to come
+        /// from an event.
+        ///
+        /// This method does NOT respect <see cref="IInputStateCallbackReceiver"/>. This means that the device will
+        /// NOT get a shot at intervening in the state write.
+        /// </remarks>
+        /// <param name="device">Device to update state on. <paramref name="stateOffsetInDevice"/> is relative to device's
+        /// starting offset in memory.</param>
+        /// <param name="eventPtr">Pointer to state event from which the state change was initiated. Null if the state
+        /// change is not coming from an event.</param>
+        internal unsafe bool UpdateState(InputDevice device, InputUpdateType updateType,
+            void* statePtr, uint stateOffsetInDevice, uint stateSize, double internalTime, InputEventPtr eventPtr = default)
+        {
+            var deviceIndex = device.m_DeviceIndex;
+            ref var stateBlockOfDevice = ref device.m_StateBlock;
+
+            ////TODO: limit stateSize and StateOffset by the device's state memory
+
+            var deviceBuffer = (byte*)InputStateBuffers.GetFrontBufferForDevice(deviceIndex);
+
+            // Before we update state, let change monitors compare the old and the new state.
+            // We do this instead of first updating the front buffer and then comparing to the
+            // back buffer as that would require a buffer flip for each state change in order
+            // for the monitors to work reliably. By comparing the *event* data to the current
+            // state, we can have multiple state events in the same frame yet still get reliable
+            // change notifications.
+            var haveSignalledMonitors =
+                ProcessStateChangeMonitors(deviceIndex, statePtr,
+                    deviceBuffer + stateBlockOfDevice.byteOffset,
+                    stateSize, stateOffsetInDevice);
+
+            var deviceStateOffset = device.m_StateBlock.byteOffset + stateOffsetInDevice;
+            var deviceStatePtr = deviceBuffer + deviceStateOffset;
+
+            ////REVIEW: Should we do this only for events but not for InputState.Change()?
+            // If noise filtering on .current is turned on and the device may have noise,
+            // determine if the event carries signal or not.
+            var makeDeviceCurrent = true;
+            if (device.noisy && m_Settings.filterNoiseOnCurrent)
+            {
+                // Compare the current state of the device to the newly received state but overlay
+                // the comparison by the noise mask.
+
+                var noiseMask = (byte*)InputStateBuffers.s_NoiseMaskBuffer + deviceStateOffset;
+
+                makeDeviceCurrent =
+                    !MemoryHelpers.MemCmpBitRegion(deviceStatePtr, statePtr,
+                        0, stateSize * 8, mask: noiseMask);
+            }
+
+            // Buffer flip.
+            var flipped = FlipBuffersForDeviceIfNecessary(device, updateType);
+
+            // Now write the state.
+            #if UNITY_EDITOR
+            if (updateType == InputUpdateType.Editor)
+            {
+                WriteStateChange(m_StateBuffers.m_EditorStateBuffers, deviceIndex, ref stateBlockOfDevice, stateOffsetInDevice,
+                    statePtr, stateSize, flipped);
+            }
+            else
+            #endif
+            {
+                WriteStateChange(m_StateBuffers.m_PlayerStateBuffers, deviceIndex, ref stateBlockOfDevice,
+                    stateOffsetInDevice, statePtr, stateSize, flipped);
+            }
+
+            // Notify listeners.
+            for (var i = 0; i < m_DeviceStateChangeListeners.length; ++i)
+                m_DeviceStateChangeListeners[i](device);
+
+            // Now that we've committed the new state to memory, if any of the change
+            // monitors fired, let the associated actions know.
+            if (haveSignalledMonitors)
+                FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
+
+            return makeDeviceCurrent;
+        }
+
+        private static unsafe void WriteStateChange(InputStateBuffers.DoubleBuffers buffers, int deviceIndex,
+            ref InputStateBlock deviceStateBlock, uint stateOffsetInDevice, void* statePtr, uint stateSizeInBytes, bool flippedBuffers)
+        {
+            var frontBuffer = buffers.GetFrontBuffer(deviceIndex);
+            Debug.Assert(frontBuffer != null);
+
+            // If we're updating less than the full state, we need to preserve the parts we are not updating.
+            // Instead of trying to optimize here and only copy what we really need, we just go and copy the
+            // entire state of the device over.
+            //
+            // NOTE: This copying must only happen once, right after a buffer flip. Otherwise we may copy old,
+            //       stale input state from the back buffer over state that has already been updated with newer
+            //       data.
+            var deviceStateSize = deviceStateBlock.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
+            if (flippedBuffers && deviceStateSize != stateSizeInBytes)
+            {
+                var backBuffer = buffers.GetBackBuffer(deviceIndex);
+                Debug.Assert(backBuffer != null);
+
+                UnsafeUtility.MemCpy(
+                    (byte*)frontBuffer + deviceStateBlock.byteOffset,
+                    (byte*)backBuffer + deviceStateBlock.byteOffset,
+                    deviceStateSize);
+            }
+
+            UnsafeUtility.MemCpy((byte*)frontBuffer + deviceStateBlock.byteOffset + stateOffsetInDevice, statePtr,
+                stateSizeInBytes);
+        }
+
         // Flip front and back buffer for device, if necessary. May flip buffers for more than just
         // the given update type.
         // Returns true if there was a buffer flip.
@@ -3075,6 +2896,7 @@ namespace UnityEngine.Experimental.Input
             }
 
 #if UNITY_EDITOR
+            ////REVIEW: should this use the editor update ticks as quasi-frame-boundaries?
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
@@ -3083,61 +2905,20 @@ namespace UnityEngine.Experimental.Input
                 // The editor doesn't really have a concept of frame-to-frame operation the
                 // same way the player does. So we simply flip buffers on a device whenever
                 // a new state event for it comes in.
-                m_StateBuffers.m_EditorUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
+                m_StateBuffers.m_EditorStateBuffers.SwapBuffers(device.m_DeviceIndex);
                 return true;
             }
 #endif
 
-            var flipped = false;
-
-            // If it is *NOT* a fixed update, we need to flip for the *next* coming fixed
-            // update if we haven't already.
-            if (updateType != InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != InputUpdate.s_FixedUpdateCount + 1)
+            // Flip buffers if we haven't already for this frame.
+            if (device.m_CurrentUpdateStepCount != InputUpdate.s_UpdateStepCount)
             {
-                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = InputUpdate.s_FixedUpdateCount + 1;
-                flipped = true;
+                m_StateBuffers.m_PlayerStateBuffers.SwapBuffers(device.m_DeviceIndex);
+                device.m_CurrentUpdateStepCount = InputUpdate.s_UpdateStepCount;
+                return true;
             }
 
-            // If it is *NOT* a dynamic update, we need to flip for the *next* coming
-            // dynamic update if we haven't already.
-            if (updateType != InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != InputUpdate.s_DynamicUpdateCount + 1)
-            {
-                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = InputUpdate.s_DynamicUpdateCount + 1;
-                flipped = true;
-            }
-
-            // If it *is* a fixed update and we haven't flipped for the current update
-            // yet, do it.
-            if (updateType == InputUpdateType.Fixed &&
-                device.m_CurrentFixedUpdateCount != InputUpdate.s_FixedUpdateCount)
-            {
-                m_StateBuffers.m_FixedUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentFixedUpdateCount = InputUpdate.s_FixedUpdateCount;
-                flipped = true;
-            }
-
-            // If it *is* a dynamic update and we haven't flipped for the current update
-            // yet, do it.
-            if (updateType == InputUpdateType.Dynamic &&
-                device.m_CurrentDynamicUpdateCount != InputUpdate.s_DynamicUpdateCount)
-            {
-                m_StateBuffers.m_DynamicUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                device.m_CurrentDynamicUpdateCount = InputUpdate.s_DynamicUpdateCount;
-                flipped = true;
-            }
-
-            // In manual mode, we always flip. There are no frame boundaries.
-            if (updateType == InputUpdateType.Manual)
-            {
-                m_StateBuffers.m_ManualUpdateBuffers.SwapBuffers(device.m_DeviceIndex);
-                flipped = true;
-            }
-
-            return flipped;
+            return false;
         }
 
         // Domain reload survival logic. Also used for pushing and popping input system
@@ -3167,13 +2948,9 @@ namespace UnityEngine.Experimental.Input
 
             public void Restore(InputDevice device)
             {
-                if (usages.LengthSafe() > 0)
-                {
-                    var index = ArrayHelpers.Append(ref device.m_UsagesForEachControl, usages.Select(x => new InternedString(x)));
-                    device.m_UsagesReadOnly = new ReadOnlyArray<InternedString>(device.m_UsagesForEachControl, index, usages.Length);
-                    device.UpdateUsageArraysOnControls();
-                }
-
+                var usageCount = usages.LengthSafe();
+                for (var i = 0; i < usageCount; ++i)
+                    device.AddDeviceUsage(new InternedString(usages[i]));
                 device.m_ParticipantId = participantId;
             }
         }
@@ -3190,7 +2967,6 @@ namespace UnityEngine.Experimental.Input
         internal struct SerializedState
         {
             public int layoutRegistrationVersion;
-            public int deviceSetupVersion;
             public float pollingFrequency;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
@@ -3235,7 +3011,6 @@ namespace UnityEngine.Experimental.Input
             return new SerializedState
             {
                 layoutRegistrationVersion = m_LayoutRegistrationVersion,
-                deviceSetupVersion = m_DeviceSetupVersion,
                 pollingFrequency = m_PollingFrequency,
                 devices = deviceArray,
                 availableDevices = m_AvailableDevices?.Take(m_AvailableDeviceCount).ToArray(),
@@ -3256,7 +3031,6 @@ namespace UnityEngine.Experimental.Input
         {
             m_StateBuffers = state.buffers;
             m_LayoutRegistrationVersion = state.layoutRegistrationVersion + 1;
-            m_DeviceSetupVersion = state.deviceSetupVersion + 1;
             updateMask = state.updateMask;
             m_Metrics = state.metrics;
             m_PollingFrequency = state.pollingFrequency;
@@ -3296,87 +3070,94 @@ namespace UnityEngine.Experimental.Input
             Debug.Assert(m_SavedDeviceStates != null);
             Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
 
-            var deviceCount = m_SavedDeviceStates.Length;
-            for (var i = 0; i < deviceCount; ++i)
+            using (InputDeviceBuilder.Ref())
             {
-                var deviceState = m_SavedDeviceStates[i];
-
-                InputDevice device;
-                try
+                var deviceCount = m_SavedDeviceStates.Length;
+                for (var i = 0; i < deviceCount; ++i)
                 {
-                    // If the device has a description, we have it go through the normal matching
-                    // process so that it comes out as whatever corresponds to the current layout
-                    // registration state (which may be different from before the domain reload).
-                    // Only if it's a device added with AddDevice(string) directly do we just try
-                    // to create a device with the same layout.
-                    if (!deviceState.description.empty)
-                    {
-                        device = AddDevice(deviceState.description, throwIfNoLayoutFound: true,
-                            deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
-                    }
-                    else
-                    {
-                        // See if we still have the layout that the device used. Might have
-                        // come from a type that was removed in the meantime. If so, just
-                        // don't re-add the device.
-                        var layout = new InternedString(deviceState.layout);
-                        if (!m_Layouts.HasLayout(layout))
-                        {
-                            Debug.Log(
-                                $"Removing input device '{deviceState.name}' with layout '{deviceState.layout}' which has been removed");
-                            continue;
-                        }
+                    var deviceState = m_SavedDeviceStates[i];
 
-                        device = AddDevice(layout, deviceState.deviceId,
-                            deviceFlags: deviceState.flags,
-                            variants: new InternedString(deviceState.variants));
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
-                    Debug.LogException(exception);
-                    continue;
-                }
-
-                deviceState.Restore(device);
-            }
-
-            // See if we can make sense of an available device now that we couldn't make sense of
-            // before. This can be the case if there's new layout information that wasn't available
-            // before.
-            m_AvailableDevices = m_SavedAvailableDevices;
-            m_AvailableDeviceCount = m_SavedAvailableDevices.Length;
-            for (var i = 0; i < m_AvailableDeviceCount; ++i)
-            {
-                var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
-                if (device != null)
-                    continue;
-
-                if (m_AvailableDevices[i].isRemoved)
-                    continue;
-
-                var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
-                    m_AvailableDevices[i].deviceId);
-                if (!layout.IsEmpty())
-                {
+                    InputDevice device;
                     try
                     {
-                        AddDevice(layout, m_AvailableDevices[i].deviceId,
-                            deviceDescription: m_AvailableDevices[i].description,
-                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                        // If the device has a description, we have it go through the normal matching
+                        // process so that it comes out as whatever corresponds to the current layout
+                        // registration state (which may be different from before the domain reload).
+                        // Only if it's a device added with AddDevice(string) directly do we just try
+                        // to create a device with the same layout.
+                        if (!deviceState.description.empty)
+                        {
+                            device = AddDevice(deviceState.description,
+                                deviceName: deviceState.name,
+                                throwIfNoLayoutFound: true,
+                                deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
+                        }
+                        else
+                        {
+                            // See if we still have the layout that the device used. Might have
+                            // come from a type that was removed in the meantime. If so, just
+                            // don't re-add the device.
+                            var layout = new InternedString(deviceState.layout);
+                            if (!m_Layouts.HasLayout(layout))
+                            {
+                                Debug.Log(
+                                    $"Removing input device '{deviceState.name}' with layout '{deviceState.layout}' which has been removed");
+                                continue;
+                            }
+
+                            device = AddDevice(layout,
+                                deviceId: deviceState.deviceId,
+                                deviceName: deviceState.name,
+                                deviceFlags: deviceState.flags,
+                                variants: new InternedString(deviceState.variants));
+                        }
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
-                        // Just ignore. Simply means we still can't really turn the device into something useful.
+                        Debug.LogError(
+                            $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
+                        Debug.LogException(exception);
+                        continue;
+                    }
+
+                    deviceState.Restore(device);
+                }
+
+                // See if we can make sense of an available device now that we couldn't make sense of
+                // before. This can be the case if there's new layout information that wasn't available
+                // before.
+                m_AvailableDevices = m_SavedAvailableDevices;
+                m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
+                for (var i = 0; i < m_AvailableDeviceCount; ++i)
+                {
+                    var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
+                    if (device != null)
+                        continue;
+
+                    if (m_AvailableDevices[i].isRemoved)
+                        continue;
+
+                    var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
+                        m_AvailableDevices[i].deviceId);
+                    if (!layout.IsEmpty())
+                    {
+                        try
+                        {
+                            AddDevice(layout, m_AvailableDevices[i].deviceId,
+                                deviceDescription: m_AvailableDevices[i].description,
+                                deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                        }
+                        catch (Exception)
+                        {
+                            // Just ignore. Simply means we still can't really turn the device into something useful.
+                        }
                     }
                 }
-            }
 
-            // Done. Discard saved arrays.
-            m_SavedDeviceStates = null;
-            m_SavedAvailableDevices = null;
+                // Done. Discard saved arrays.
+                m_SavedDeviceStates = null;
+                m_SavedAvailableDevices = null;
+            }
 
             Profiler.EndSample();
         }

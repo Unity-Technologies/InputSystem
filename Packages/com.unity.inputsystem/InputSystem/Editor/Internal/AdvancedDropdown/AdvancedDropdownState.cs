@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     [Serializable]
     internal class AdvancedDropdownState

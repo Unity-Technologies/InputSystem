@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.Controls;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class DualShockISX : GamepadISX
 {
@@ -14,24 +14,19 @@ public class DualShockISX : GamepadISX
     // Start is called before the first frame update
     void Start()
     {
-        //m_discreteButtonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<discreteButton>");
-        //m_discreteButtonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        //m_discreteButtonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        //m_discreteButtonAction.Enable();
-
-        m_buttonAction = new InputAction(name: "DualShockButtonAction", binding: "*DualShock*/<button>");
+        m_buttonAction = new InputAction(name: "DualShockButtonAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
-        m_buttonAction.cancelled += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isPS: true);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "DualShockDpadAction", binding: "*DualShock*/<dpad>");
+        m_dPadAction = new InputAction(name: "DualShockDpadAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
-        m_dPadAction.cancelled += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
-        m_stickMoveAction = new InputAction(name: "DualShockStickMoveAction", binding: "*DualShock*/<stick>");
+        m_stickMoveAction = new InputAction(name: "DualShockStickMoveAction", InputActionType.PassThrough,
+            binding: "*DualShock*/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
-        m_stickMoveAction.cancelled += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }
 
@@ -44,18 +39,18 @@ public class DualShockISX : GamepadISX
 
     private void OnDisable()
     {
-        m_buttonAction.Disable();
-        m_dPadAction.Disable();
-        m_stickMoveAction.Disable();
+        m_buttonAction?.Disable();
+        m_dPadAction?.Disable();
+        m_stickMoveAction?.Disable();
     }
 
-    protected override void StickMove(StickControl control)
+    private void Update()
     {
-        base.StickMove(control);
-
-        if (control.name == "leftStick")
-            m_leftStickText.text = control.ReadValue().ToString("F2");
-        else if (control.name == "rightStick")
-            m_rightStickText.text = control.ReadValue().ToString("F2");
+        Gamepad m_dualShock = Gamepad.current;
+        if (m_dualShock != null)
+        {
+            m_leftStickText.text = m_dualShock.leftStick.ReadValue().ToString("F2");
+            m_rightStickText.text = m_dualShock.rightStick.ReadValue().ToString("F2");
+        }
     }
 }

@@ -3,20 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Editor.Lists;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Editor.Lists;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
 ////        selected by the path property
 
-namespace UnityEngine.Experimental.Input.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// UI for editing properties of an <see cref="InputBinding"/>. Right-most pane in action editor when
     /// binding is selected in middle pane.
     /// </summary>
-    internal class InputBindingPropertiesView : PropertiesViewBase
+    internal class InputBindingPropertiesView : PropertiesViewBase, IDisposable
     {
         public static FourCC k_GroupsChanged => new FourCC("GRPS");
         public static FourCC k_PathChanged => new FourCC("PATH");
@@ -36,7 +36,7 @@ namespace UnityEngine.Experimental.Input.Editor
             m_BindingProperty = bindingProperty;
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.kSeparator).ToList();
+            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.Separator).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
             m_ControlSchemes = controlSchemes;
 
@@ -53,6 +53,11 @@ namespace UnityEngine.Experimental.Input.Editor
                 if (controlPathsToMatch != null)
                     m_ControlPathEditor.SetControlPathsToMatch(controlPathsToMatch);
             }
+        }
+
+        public void Dispose()
+        {
+            m_ControlPathEditor?.Dispose();
         }
 
         protected override void DrawGeneralProperties()
@@ -239,6 +244,9 @@ namespace UnityEngine.Experimental.Input.Editor
 
         private void OnBindingGroupsChanged()
         {
+            ////FIXME: changing the binding group of a GLOBAL binding when a control scheme is selected does not cause the binding to disappear from the control scheme immediately
+            ////       (same goes for the other way round)
+
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
 
@@ -279,7 +287,6 @@ namespace UnityEngine.Experimental.Input.Editor
         private GUIContent[] m_CompositeTypeOptions;
         private string[] m_CompositeTypes;
 
-        private readonly bool m_IsPartOfComposite;
         private int m_SelectedCompositePart;
         private GUIContent[] m_CompositePartOptions;
         private string[] m_CompositeParts;
@@ -291,7 +298,7 @@ namespace UnityEngine.Experimental.Input.Editor
         private readonly InputControlPickerState m_ControlPickerState;
         private readonly InputControlPathEditor m_ControlPathEditor;
 
-        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Type",
+        private static readonly GUIContent s_CompositeTypeLabel = EditorGUIUtility.TrTextContent("Composite Type",
             "Type of composite. Allows changing the composite type retroactively. Doing so will modify the bindings that are part of the composite.");
         private static readonly GUIContent s_UseInControlSchemesLAbel = EditorGUIUtility.TrTextContent("Use in control scheme",
             "In which control schemes the binding is active. A binding can be used by arbitrary many control schemes. If a binding is not "

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace UnityEngine.Experimental.Input.Utilities
+namespace UnityEngine.InputSystem.Utilities
 {
     internal static class StringHelpers
     {
@@ -331,6 +331,10 @@ namespace UnityEngine.Experimental.Input.Utilities
             var lengthOfSecond = secondList.Length;
             while (indexInFirst < lengthOfFirst)
             {
+                // Skip empty elements.
+                if (firstList[indexInFirst] == separator)
+                    ++indexInFirst;
+
                 // Find end of current element.
                 var endIndexInFirst = indexInFirst + 1;
                 while (endIndexInFirst < lengthOfFirst && firstList[endIndexInFirst] != separator)
@@ -342,6 +346,10 @@ namespace UnityEngine.Experimental.Input.Utilities
                 var indexInSecond = 0;
                 while (indexInSecond < lengthOfSecond)
                 {
+                    // Skip empty elements.
+                    if (secondList[indexInSecond] == separator)
+                        ++indexInSecond;
+
                     // Find end of current element.
                     var endIndexInSecond = indexInSecond + 1;
                     while (endIndexInSecond < lengthOfSecond && secondList[endIndexInSecond] != separator)
@@ -474,6 +482,15 @@ namespace UnityEngine.Experimental.Input.Utilities
         {
             // This is crude and far from how Unicode defines printable but it should serve as a good enough approximation.
             return !char.IsControl(ch) && !char.IsWhiteSpace(ch);
+        }
+
+        public static string WithAllWhitespaceStripped(this string str)
+        {
+            var buffer = new StringBuilder();
+            foreach (var ch in str)
+                if (!char.IsWhiteSpace(ch))
+                    buffer.Append(ch);
+            return buffer.ToString();
         }
     }
 }

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+////REVIEW: some of the stuff here is really low-level; should we move it into a separate static class inside of .LowLevel?
+
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Various extension methods for <see cref="InputControl"/>. Mostly low-level routines.
@@ -91,14 +93,6 @@ namespace UnityEngine.Experimental.Input
             control.ReadValueFromStateIntoBuffer(control.currentStatePtr, buffer, bufferSize);
         }
 
-        public static unsafe void ReadDefaultValue(this InputControl control, void* buffer, int bufferSize)
-        {
-            if (control == null)
-                throw new ArgumentNullException(nameof(control));
-
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Read the control's default value and return it as an object.
         /// </summary>
@@ -130,6 +124,7 @@ namespace UnityEngine.Experimental.Input
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -158,6 +153,7 @@ namespace UnityEngine.Experimental.Input
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
         {
@@ -386,6 +382,46 @@ namespace UnityEngine.Experimental.Input
             return control.CompareState(control.currentStatePtr, statePtr, control.noiseMaskPtr);
         }
 
+        /// <summary>
+        /// Compare the control's stored state in <paramref name="firstStatePtr"/> to <paramref name="secondStatePtr"/>.
+        /// </summary>
+        /// <param name="firstStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/>.</param>
+        /// <param name="secondStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/></param>
+        /// <param name="maskPtr">Optional mask. If supplied, it will be used to mask the comparison between
+        /// <paramref name="firstStatePtr"/> and <paramref name="secondStatePtr"/> such that any bit not set in the
+        /// mask will be ignored even if different between the two states. This can be used, for example, to ignore
+        /// noise in the state (<see cref="InputControl.noiseMaskPtr"/>).</param>
+        /// <returns>True if the state is equivalent in both memory buffers.</returns>
+        /// <remarks>
+        /// Unlike <see cref="InputControl.CompareValue"/>, this method only compares raw memory state. If used on a stick, for example,
+        /// it may mean that this method returns false for two stick values that would compare equal using <see cref="CompareValue"/>
+        /// (e.g. if both stick values fall below the deadzone).
+        /// </remarks>
+        /// <seealso cref="InputControl.CompareValue"/>
+        public static unsafe bool CompareState(this InputControl control, void* firstStatePtr, void* secondStatePtr, void* maskPtr = null)
+        {
+            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
+            ////        e.g. from HID input reports; or should we just leave that to maskPtr?
+
+            var firstPtr = (byte*)firstStatePtr + (int)control.m_StateBlock.byteOffset;
+            var secondPtr = (byte*)secondStatePtr + (int)control.m_StateBlock.byteOffset;
+            var mask = maskPtr != null ? (byte*)maskPtr + (int)control.m_StateBlock.byteOffset : null;
+
+            if (control.m_StateBlock.sizeInBits == 1)
+            {
+                // If we have a mask and the bit is set in the mask, the control is to be ignored
+                // and thus we consider it at default value.
+                if (mask != null && MemoryHelpers.ReadSingleBit(mask, control.m_StateBlock.bitOffset))
+                    return true;
+
+                return MemoryHelpers.ReadSingleBit(secondPtr, control.m_StateBlock.bitOffset) ==
+                    MemoryHelpers.ReadSingleBit(firstPtr, control.m_StateBlock.bitOffset);
+            }
+
+            return MemoryHelpers.MemCmpBitRegion(firstPtr, secondPtr,
+                control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits, mask);
+        }
+
         public static unsafe bool CompareState(this InputControl control, void* statePtr, void* maskPtr = null)
         {
             if (control == null)
@@ -475,9 +511,43 @@ namespace UnityEngine.Experimental.Input
             return (byte*)statePtr - (int)stateOffset;
         }
 
+        /// <summary>
+        /// Queue a value change on the given <paramref name="control"/> which will be processed and take effect
+        /// in the next input update.
+        /// </summary>
+        /// <param name="control">Control to change the value of.</param>
+        /// <param name="value">New value for the control.</param>
+        /// <param name="time">Optional time at which the value change should take effect. If set, this will become
+        /// the <see cref="InputEvent.time"/> of the queued event. If the time is in the future, the event will not
+        /// be processed until it falls within the time of an input update slice (except if <see cref="InputSettings.timesliceEvents"/>
+        /// is false, in which case the event will invariably be consumed in the next update).</param>
+        /// <typeparam name="TValue">Type of value.</typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
+        public static void QueueValueChange<TValue>(this InputControl<TValue> control, TValue value, double time = -1)
+            where TValue : struct
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            ////TODO: if it's not a bit-addressing control, send a delta state change only
+            using (StateEvent.From(control.device, out var eventPtr))
+            {
+                if (time >= 0)
+                    eventPtr.time = time;
+                control.WriteValueIntoEvent(value, eventPtr);
+                InputSystem.QueueEvent(eventPtr);
+            }
+        }
+
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
+            if (parent == null)
+                throw new ArgumentNullException(nameof(parent));
+            if (controls == null)
+                throw new ArgumentNullException(nameof(controls));
+            if (predicate == null)
+                throw new ArgumentNullException(nameof(predicate));
             if (parent is TControl parentAsTControl && predicate(parentAsTControl))
                 controls.Add(parentAsTControl);
 

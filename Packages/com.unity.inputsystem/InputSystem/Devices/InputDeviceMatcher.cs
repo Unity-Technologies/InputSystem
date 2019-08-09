@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Layouts
+namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
     /// Specification that can be matched against an <see cref="InputDeviceDescription"/>.
@@ -35,29 +35,29 @@ namespace UnityEngine.Experimental.Input.Layouts
             }
         }
 
-        public InputDeviceMatcher WithInterface(string pattern)
+        public InputDeviceMatcher WithInterface(string pattern, bool supportRegex = true)
         {
-            return With(kInterfaceKey, pattern);
+            return With(kInterfaceKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithDeviceClass(string pattern)
+        public InputDeviceMatcher WithDeviceClass(string pattern, bool supportRegex = true)
         {
-            return With(kDeviceClassKey, pattern);
+            return With(kDeviceClassKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithManufacturer(string pattern)
+        public InputDeviceMatcher WithManufacturer(string pattern, bool supportRegex = true)
         {
-            return With(kManufacturerKey, pattern);
+            return With(kManufacturerKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithProduct(string pattern)
+        public InputDeviceMatcher WithProduct(string pattern, bool supportRegex = true)
         {
-            return With(kProductKey, pattern);
+            return With(kProductKey, pattern, supportRegex);
         }
 
-        public InputDeviceMatcher WithVersion(string pattern)
+        public InputDeviceMatcher WithVersion(string pattern, bool supportRegex = true)
         {
-            return With(kVersionKey, pattern);
+            return With(kVersionKey, pattern, supportRegex);
         }
 
         public InputDeviceMatcher WithCapability<TValue>(string path, TValue value)
@@ -65,12 +65,13 @@ namespace UnityEngine.Experimental.Input.Layouts
             return With(new InternedString(path), value);
         }
 
-        public InputDeviceMatcher With(InternedString key, object value)
+        public InputDeviceMatcher With(InternedString key, object value, bool supportRegex = true)
         {
             // If it's a string, check whether it's a regex.
-            if (value is string str)
+            if (supportRegex && value is string str)
             {
-                var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch));
+                var mayBeRegex = !str.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch)) &&
+                    !double.TryParse(str, out var _);              // Avoid '.' in floats forcing the value to be a regex.
                 if (mayBeRegex)
                     value = new Regex(str, RegexOptions.IgnoreCase);
             }
@@ -143,7 +144,7 @@ namespace UnityEngine.Experimental.Input.Layouts
 
                     var graph = new JsonParser(deviceDescription.capabilities);
                     if (!graph.NavigateToProperty(key.ToString()) ||
-                        !graph.CurrentPropertyHasValueEqualTo(pattern))
+                        !graph.CurrentPropertyHasValueEqualTo(new JsonParser.JsonValue { type = JsonParser.JsonValueType.Any, anyValue = pattern}))
                         return 0;
                 }
             }
@@ -203,15 +204,15 @@ namespace UnityEngine.Experimental.Input.Layouts
         {
             var matcher = new InputDeviceMatcher();
             if (!string.IsNullOrEmpty(deviceDescription.interfaceName))
-                matcher = matcher.WithInterface(deviceDescription.interfaceName);
+                matcher = matcher.WithInterface(deviceDescription.interfaceName, false);
             if (!string.IsNullOrEmpty(deviceDescription.deviceClass))
-                matcher = matcher.WithDeviceClass(deviceDescription.deviceClass);
+                matcher = matcher.WithDeviceClass(deviceDescription.deviceClass, false);
             if (!string.IsNullOrEmpty(deviceDescription.manufacturer))
-                matcher = matcher.WithManufacturer(deviceDescription.manufacturer);
+                matcher = matcher.WithManufacturer(deviceDescription.manufacturer, false);
             if (!string.IsNullOrEmpty(deviceDescription.product))
-                matcher = matcher.WithProduct(deviceDescription.product);
+                matcher = matcher.WithProduct(deviceDescription.product, false);
             if (!string.IsNullOrEmpty(deviceDescription.version))
-                matcher = matcher.WithVersion(deviceDescription.version);
+                matcher = matcher.WithVersion(deviceDescription.version, false);
             // We don't include capabilities in this conversion.
             return matcher;
         }
@@ -233,8 +234,12 @@ namespace UnityEngine.Experimental.Input.Layouts
             return result;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public bool Equals(InputDeviceMatcher other)
         {
+            if (other == null)
+                return false;
+
             if (m_Patterns == other.m_Patterns)
                 return true;
 

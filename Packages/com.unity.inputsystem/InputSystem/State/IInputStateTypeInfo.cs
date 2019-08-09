@@ -1,10 +1,12 @@
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input
+namespace UnityEngine.InputSystem.LowLevel
 {
-    // Allows to generically query information from a state struct.
+    /// <summary>
+    /// Interface implemented by all input device state structs which reports the data format identifier of the state.
+    /// </summary>
     public interface IInputStateTypeInfo
     {
-        FourCC GetFormat();
+        FourCC format { get; }
     }
 }

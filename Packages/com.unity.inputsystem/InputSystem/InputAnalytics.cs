@@ -1,12 +1,14 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using UnityEngine.Experimental.Input.Layouts;
+using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input
+////FIXME: apparently shutdown events are not coming through in the analytics backend
+
+namespace UnityEngine.InputSystem
 {
     internal static class InputAnalytics
     {
@@ -31,8 +33,6 @@ namespace UnityEngine.Experimental.Input
             for (var i = 0; i < devices.Count; ++i)
             {
                 var device = devices[i];
-                if (IsIgnoredDevice(device.description))
-                    continue;
 
                 deviceList.Add(
                     StartupEventData.DeviceInfo.FromDescription(device.description, device.native, device.layout));
@@ -64,10 +64,6 @@ namespace UnityEngine.Experimental.Input
             manager.m_Runtime.SendAnalyticsEvent(kEventStartup, data);
         }
 
-        public static void OnFirstUserInteraction(InputManager manager, double time, InputControl control)
-        {
-        }
-
         public static void OnShutdown(InputManager manager)
         {
             var metrics = manager.metrics;
@@ -77,20 +73,12 @@ namespace UnityEngine.Experimental.Input
                 max_state_size_in_bytes = metrics.maxStateSizeInBytes,
                 total_event_bytes = metrics.totalEventBytes,
                 total_event_count = metrics.totalEventCount,
-                total_frame_count = metrics.totalFrameCount,
+                total_frame_count = metrics.totalUpdateCount,
                 total_event_processing_time = (float)metrics.totalEventProcessingTime,
             };
 
             manager.m_Runtime.RegisterAnalyticsEvent(kEventShutdown, 10, 100);
             manager.m_Runtime.SendAnalyticsEvent(kEventShutdown, data);
-        }
-
-        private static bool IsIgnoredDevice(InputDeviceDescription description)
-        {
-            #if UNITY_STANDALONE_WIN
-            #endif
-
-            return false;
         }
 
         /// <summary>

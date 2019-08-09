@@ -1,14 +1,17 @@
 #if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine.Experimental.Input.Editor;
+using UnityEngine.InputSystem.Editor;
 #endif
 
-namespace UnityEngine.Experimental.Input.Interactions
+namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
     /// Performs the action if the control is pressed and held for at least the
     /// set duration (which defaults to <see cref="InputSettings.defaultHoldTime"/>).
     /// </summary>
+    /// <remarks>
+    /// The action is started when the control is pressed. If the control is released before the
+    /// set <see cref="duration"/>, the action is canceled.
+    /// </remarks>
     public class HoldInteraction : IInputInteraction
     {
         /// <summary>
@@ -16,6 +19,9 @@ namespace UnityEngine.Experimental.Input.Interactions
         /// </summary>
         /// <remarks>
         /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultHoldTime"/> is used.
+        ///
+        /// Duration is expressed in real time and measured against the timestamps of input events
+        /// (<see cref="LowLevel.InputEvent.time"/>) not against game time (<see cref="Time.time"/>).
         /// </remarks>
         public float duration;
 
@@ -24,32 +30,22 @@ namespace UnityEngine.Experimental.Input.Interactions
         /// be considered pressed.
         /// </summary>
         /// <remarks>
-        /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultButtonPressPoint"/> is used.
+        /// If this is less than or equal to 0 (the default), <see cref="InputSettings.defaultButtonPressPoint"/> is used instead.
         /// </remarks>
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         public float pressPoint;
-
-        /// <summary>
-        /// If enabled, then while the hold is in <see cref="InputActionPhase.Started"/> phase, <see cref="InputAction.started"/>
-        /// will be triggered every time a bound control changes value.
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        public bool startContinuously;
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime;
         private float pressPointOrDefault => pressPoint > 0.0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
 
         private double m_TimePressed;
 
+        /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
             {
-                if (context.continuous)
-                    context.PerformedAndStayPerformed();
-                else
-                    context.PerformedAndGoBackToWaiting();
+                context.Performed();
                 return;
             }
 
@@ -76,24 +72,18 @@ namespace UnityEngine.Experimental.Input.Interactions
                     {
                         // Control is no longer actuated and we haven't performed a hold yet,
                         // so cancel.
-                        context.Cancelled();
+                        context.Canceled();
                     }
                     break;
 
                 case InputActionPhase.Performed:
-                    if (context.ControlIsActuated(pressPointOrDefault))
-                    {
-                        if (context.continuous)
-                            context.PerformedAndStayPerformed();
-                    }
-                    else
-                    {
-                        context.Cancelled();
-                    }
+                    if (!context.ControlIsActuated(pressPointOrDefault))
+                        context.Canceled();
                     break;
             }
         }
 
+        /// <inheritdoc />
         public void Reset()
         {
             m_TimePressed = 0;
@@ -120,14 +110,10 @@ namespace UnityEngine.Experimental.Input.Interactions
 
         public override void OnGUI()
         {
-            //target.startContinuously = GUILayout.Toggle(target.startContinuously, m_ContinuousStartsLabel);
-
             m_PressPointSetting.OnGUI();
             m_DurationSetting.OnGUI();
         }
 
-        private GUIContent m_ContinuousStartsLabel = new GUIContent("Start Continuously",
-            "If enabled, the Hold will triggered 'started' repeatedly for as long as ");
         private CustomOrDefaultSetting m_PressPointSetting;
         private CustomOrDefaultSetting m_DurationSetting;
     }

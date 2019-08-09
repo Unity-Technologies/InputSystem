@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
-namespace UnityEngine.Experimental.Input.Editor.Lists
+////TODO: show description of interaction or processor when selected
+
+namespace UnityEngine.InputSystem.Editor.Lists
 {
     /// <summary>
     /// Inspector-like functionality for editing parameter lists as used in <see cref="InputControlLayout"/>.
@@ -30,6 +32,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
         public Action onChange { get; set; }
 
         public bool hasUIToShow => (m_Parameters != null && m_Parameters.Length > 0) || m_ParameterEditor != null;
+        public bool visible { get; set; }
+        public string name { get; set; }
 
         /// <summary>
         /// Get the current parameter values according to the editor state.
@@ -86,6 +90,8 @@ namespace UnityEngine.Experimental.Input.Editor.Lists
                 Clear();
                 return;
             }
+
+            visible = true;
 
             // Try to instantiate object so that we can determine defaults.
             object instance = null;

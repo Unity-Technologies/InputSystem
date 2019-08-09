@@ -2,8 +2,8 @@ using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Input;
-using UnityEngine.Experimental.Input.LowLevel;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 using Property = NUnit.Framework.PropertyAttribute;
@@ -12,7 +12,8 @@ public partial class DemoGameTests : DemoGameTestFixture
 {
     [Test]
     [Category("Demo")]
-    public void Demo_StartsWithMainMenuActiveAndStartGameButtonSelected()
+    [Ignore("TODO")]
+    public void TODO_Demo_StartsWithMainMenuActiveAndStartGameButtonSelected()
     {
         Assert.That(game.state, Is.EqualTo(DemoGame.State.InMainMenu));
         Assert.That(game.mainMenuCamera.gameObject.activeSelf, Is.True);
@@ -321,37 +322,6 @@ public partial class DemoGameTests : DemoGameTestFixture
         yield return new WaitForSeconds(kTimeToCompleteBurst + 0.1f);
 
         Assert.That(projectiles, Has.Length.EqualTo(kShotsPerSecond));
-    }
-
-    [Test]
-    [Category("Demo")]
-    [Property("Device", "Gamepad")]
-    [Ignore("TODO")]
-    public unsafe void TODO_Demo_RumblesDeviceWhenFiringShot()
-    {
-        float? highFreqMotor = null;
-        float? lowFreqMotor = null;
-
-        input.runtime.SetDeviceCommandCallback(gamepad,
-            (id, command) =>
-            {
-                unsafe
-                {
-                    if (command->type == DualMotorRumbleCommand.Type)
-                    {
-                        Assert.That(highFreqMotor, Is.Null);
-                        Assert.That(lowFreqMotor, Is.Null);
-
-                        var rumbleCommand = (DualMotorRumbleCommand*)command;
-
-                        highFreqMotor = rumbleCommand->highFrequencyMotorSpeed;
-                        lowFreqMotor = rumbleCommand->lowFrequencyMotorSpeed;
-                    }
-                }
-                return InputDeviceCommand.kGenericFailure;
-            });
-
-        Assert.Fail();
     }
 
     [Test]

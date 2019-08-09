@@ -1,24 +1,25 @@
 #if UNITY_EDITOR || UNITY_XBOXONE
 using System.Runtime.InteropServices;
-using UnityEngine.Experimental.Input.Controls;
-using UnityEngine.Experimental.Input.Layouts;
-using UnityEngine.Experimental.Input.LowLevel;
-using UnityEngine.Experimental.Input.Plugins.XInput.LowLevel;
-using UnityEngine.Experimental.Input.Utilities;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.XInput.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 
 ////TODO: player ID
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
+namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout must match with GamepadInputStateXBOX in native.
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    public struct XboxOneGamepadState : IInputStateTypeInfo
+    internal struct XboxOneGamepadState : IInputStateTypeInfo
     {
         public static FourCC kFormat
         {
             get { return new FourCC('X', '1', 'G', 'P'); }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Values mandated by device")]
         public enum Button
         {
             Menu = 2,
@@ -91,9 +92,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return kFormat;
+            get { return kFormat; }
         }
 
         public XboxOneGamepadState WithButton(Button button)
@@ -108,11 +109,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     /// </summary>
     // IMPORTANT: Struct must match the GamepadOutputReport in native
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
+    internal struct XboxOneGamepadRumbleCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('X', '1', 'G', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 16;
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
 
@@ -121,9 +122,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)] public float leftTriggerMotor;
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 12)] public float rightTriggerMotor;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public void SetMotorSpeeds(float leftMotorLevel, float rightMotorLevel, float leftTriggerMotorLevel, float rightTriggerMotorLevel)
@@ -147,11 +148,11 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     /// Retrieve the slot index, default color and user ID of the controller.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryXboxControllerInfo : IInputDeviceCommandInfo
+    internal struct QueryXboxControllerInfo : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('I', 'N', 'F', 'O'); } }
 
-        public const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
+        internal const int kSize = InputDeviceCommand.kBaseCommandSize + 12;
 
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
@@ -162,9 +163,9 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + 8)]
         public int userId;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public QueryXboxControllerInfo WithGamepadId(ulong id)
@@ -185,9 +186,12 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput.LowLevel
     }
 }
 
-namespace UnityEngine.Experimental.Input.Plugins.XInput
+namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XboxOneGamepadState), displayName = "Xbox One Controller (on XB1)")]
+    /// <summary>
+    /// An Xbox One Gamepad.
+    /// </summary>
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;
@@ -208,14 +212,14 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             current = this;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            paddle1 = builder.GetControl<ButtonControl>(this, "paddle1");
-            paddle2 = builder.GetControl<ButtonControl>(this, "paddle2");
-            paddle3 = builder.GetControl<ButtonControl>(this, "paddle3");
-            paddle4 = builder.GetControl<ButtonControl>(this, "paddle4");
+            paddle1 = GetChildControl<ButtonControl>("paddle1");
+            paddle2 = GetChildControl<ButtonControl>("paddle2");
+            paddle3 = GetChildControl<ButtonControl>("paddle3");
+            paddle4 = GetChildControl<ButtonControl>("paddle4");
         }
 
         public ulong gamepadId
@@ -321,17 +325,17 @@ namespace UnityEngine.Experimental.Input.Plugins.XInput
             ExecuteCommand(ref command);
         }
 
-        public void SetMotorSpeeds(float leftMotor, float rightMotor, float leftTriggerMotor, float rightTriggerMotor)
+        public void SetMotorSpeeds(float lowFrequency, float highFrequency, float leftTrigger, float rightTrigger)
         {
             var command = XboxOneGamepadRumbleCommand.Create();
-            command.SetMotorSpeeds(leftMotor, rightMotor, leftTriggerMotor, rightTriggerMotor);
+            command.SetMotorSpeeds(lowFrequency, highFrequency, leftTrigger, rightTrigger);
 
             ExecuteCommand(ref command);
 
-            m_LeftMotor = leftMotor;
-            m_RightMotor = rightMotor;
-            m_LeftTriggerMotor = leftTriggerMotor;
-            m_RightTriggerMotor = rightTriggerMotor;
+            m_LeftMotor = lowFrequency;
+            m_RightMotor = highFrequency;
+            m_LeftTriggerMotor = leftTrigger;
+            m_RightTriggerMotor = rightTrigger;
         }
 
         private float? m_LeftMotor;
