@@ -1099,7 +1099,16 @@ namespace UnityEngine.InputSystem.Editor
                             AddNewActionMap();
                         }
                     }
+
+                    buttonRect.x -= buttonRect.width + EditorGUIUtility.standardVerticalSpacing;
                 }
+            }
+
+            // Draw action properties button.
+            if (drawActionPropertiesButton && rootItem is ActionTreeItem item)
+            {
+                if (GUI.Button(buttonRect, s_ActionPropertiesIcon, GUIStyle.none))
+                    onDoubleClick?.Invoke(item);
             }
         }
 
@@ -1251,6 +1260,7 @@ namespace UnityEngine.InputSystem.Editor
         public bool drawHeader { get; set; }
         public bool drawPlusButton { get; set; }
         public bool drawMinusButton { get; set; }
+        public bool drawActionPropertiesButton { get; set; }
         public float foldoutOffset { get; set; }
 
         public Action<SerializedProperty> onHandleAddNewAction { get; set; }
@@ -1309,6 +1319,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_PlusActionIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
         private static readonly GUIContent s_PlusActionMapIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action Map");
         private static readonly GUIContent s_DeleteSectionIcon = EditorGUIUtility.TrIconContent("Toolbar Minus", "Delete Selection");
+        private static readonly GUIContent s_ActionPropertiesIcon = EditorGUIUtility.TrIconContent("Settings", "Action Properties");
 
         private static readonly GUIContent s_CutLabel = EditorGUIUtility.TrTextContent("Cut");
         private static readonly GUIContent s_CopyLabel = EditorGUIUtility.TrTextContent("Copy");
