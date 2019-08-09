@@ -23,7 +23,10 @@ however, it has to be formatted properly to pass verification tests.
 - Actions embedded into MonoBehaviour components can now have their properties edited in the inspector. Previously there was no way to get to the properties in this workflow. There is a gear icon now on the action that will open the action properties.
 
 ### Changed
+
 ### Added
+
+- Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
 
 ## [0.9.1-preview] - 2019-8-8
 
