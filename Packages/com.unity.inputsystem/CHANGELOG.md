@@ -10,10 +10,13 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.3-preview] - 2099-1-1
 
 ### Fixed
-### Actions
+
+#### Actions
+
+- When selecting a device to add to a control scheme, can now select devices with specific usages, too (e.g. "LeftHand" XRController).
+
 ### Changed
 ### Added
-
 
 ## [0.9.2-preview] - 2019-8-9
 
