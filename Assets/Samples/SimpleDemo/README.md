@@ -8,7 +8,7 @@ This starts off at the lowest level by demonstrating how to wire up input by pol
 
 The key APIs demonstrated here are `Gamepad.current` and `InputControl.ReadValue`.
 
-```
+```CSharp
 public void SimpleController_UsingState : MonoBehaviour
 {
     //...
@@ -35,13 +35,10 @@ In this scene, the actions are embedded directly into the character controller c
 
 The key APIs demonstrated here are `InputAction` and its `Enable`/`Disable` methods and its `ReadValue` method.
 
-```
+```CSharp
 public class SimpleController_UsingActions : MonoBehaviour
 {
     public InputAction moveAction;
-    //...
-
-    private Vector2 m_Move;
     //...
 
     public void OnEnable()
@@ -66,7 +63,7 @@ public class SimpleController_UsingActions : MonoBehaviour
 
 The sample also demonstrates how to use a `Tap` and a `SlowTap` interaction on the fire action to implement a charged shooting mechanism. Note that in this case, we run the firing logic right from within the action using the action's `started`, `performed`, and `canceled` callbacks.
 
-```
+```CSharp
         fireAction.performed +=
             ctx =>
         {
@@ -99,7 +96,7 @@ The sample also demonstrates how to use a `Tap` and a `SlowTap` interaction on t
 
 As more and more actions are added, it can become quite tedious to manually set up and `Enable` and `Disable` all the actions. We could use an `InputActionMap` in the component like so
 
-```
+```CSharp
 public class SimpleController : MonoBehaviour
 {
     public InputActionMap actions;
@@ -124,7 +121,7 @@ When you select the asset, note that `Generate C# Class` is ticked in the import
 
 Regarding the `SimpleController_UsingActionAsset` script, there are some notable differences.
 
-```
+```CSharp
 public class SimpleController_UsingActionAsset
 {
     // This replaces the InputAction instances we had before with
@@ -176,7 +173,7 @@ The first thing you'll probably notice is that now there are two script componen
 
 For getting callbacks, we have chosen `Invoke Unity Events` as the `Behavior`. If you expand the `Events` foldout in the inspector, you can see that `OnFire`, `OnMove`, and `OnLook` are added to the respective events. Each callback method here looks like the `started`, `performed`, and `canceled` callbacks we've already seen on `fireAction` before.
 
-```
+```CSharp
 public class SimpleController_UsingPlayerInput : MonoBehaviour
 {
     private Vector2 m_Move;
