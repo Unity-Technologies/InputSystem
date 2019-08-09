@@ -76,8 +76,8 @@ namespace UnityEngine.InputSystem
 
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 
@@ -932,7 +932,7 @@ namespace UnityEngine.InputSystem
                         // We have a callback. Give it a shot to generate a path. If it doesn't,
                         // fall back to our default logic.
                         var newPath = m_OnGeneratePath(selectedControl);
-                        if (!string.IsNullOrEmpty(path))
+                        if (!string.IsNullOrEmpty(newPath))
                             path = newPath;
                         else if ((m_Flags & Flags.DontGeneralizePathOfSelectedControl) == 0)
                             path = GeneratePathForControl(selectedControl);

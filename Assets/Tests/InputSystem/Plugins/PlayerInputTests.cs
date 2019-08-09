@@ -308,6 +308,27 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_AssigningSameActionsToDifferentPlayers_DuplicatesOverrides()
+    {
+        var go1 = new GameObject();
+        var playerInput1 = go1.AddComponent<PlayerInput>();
+
+        var go2 = new GameObject();
+        var playerInput2 = go2.AddComponent<PlayerInput>();
+
+        var actions = InputActionAsset.FromJson(kActions);
+        actions.actionMaps[0].actions[0].ApplyBindingOverride(0, "<Gamepad>/buttonNorth");
+
+        playerInput1.actions = actions;
+        playerInput2.actions = actions;
+
+        Assert.That(playerInput1.actions, Is.Not.SameAs(playerInput2.actions));
+        Assert.That(playerInput1.actions.actionMaps[0].actions[0].bindings[0].overridePath, Is.SameAs("<Gamepad>/buttonNorth"));
+        Assert.That(playerInput2.actions.actionMaps[0].actions[0].bindings[0].overridePath, Is.SameAs("<Gamepad>/buttonNorth"));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_DuplicatingActions_AssignsNewInstanceToUI()
     {
         var go1 = new GameObject();
