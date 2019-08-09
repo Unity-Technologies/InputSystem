@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 - It is now possible to use an empty binding path with a non empty override path.
 - It is now possible to use set an empty override path to disable a binding.
 - It is not possible to query the effectively used path of a binding using `effectivePath`.
+- Actions embedded into MonoBehaviour components can now have their properties edited in the inspector. Previously there was no way to get to the properties in this workflow. There is a gear icon now on the action that will open the action properties.
 
 ### Changed
 ### Added
