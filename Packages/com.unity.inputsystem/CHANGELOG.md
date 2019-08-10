@@ -14,6 +14,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 ### Added
 
+- Two new composite bindings have been added.
+  * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
+  * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
 
 ## [0.9.2-preview] - 2019-8-9
 
