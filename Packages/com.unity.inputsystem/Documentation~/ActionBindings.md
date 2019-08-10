@@ -137,7 +137,7 @@ The Button With One Modifier composite does not have parameters.
 
 ### Button With Two Modifiers
 
-A composite that requires two other buttons to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+SHIFT+1" but is not restricted to keyboard controls, but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
+A composite that requires two other buttons to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+SHIFT+1" but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
 
 ```CSharp
 myAction.AddCompositeBinding("ButtonWithTwoMOdifiers")
