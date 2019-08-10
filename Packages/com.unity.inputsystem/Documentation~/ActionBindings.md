@@ -216,7 +216,7 @@ public class CustomComposite : InputBindingComposite<float>
         // aliases.
         //
         // NOTE: Registering from the static constructor using InitializeOnLoad and
-        //       RuntimeInitializeOnLoad is only one way. You can register the
+        //       RuntimeInitializeOnLoadMethod is only one way. You can register the
         //       composite from wherever it works best for you. Note, however, that
         //       the registration has to take place before the composite is first used
         //       in a binding. Also, for the composite to show in the editor, it has
@@ -224,7 +224,7 @@ public class CustomComposite : InputBindingComposite<float>
         InputSystem.RegisterBindingComposite<CustomComposite>();
     }
 
-    [RuntimeInitializeOnLoad]
+    [RuntimeInitializeOnLoadMethod]
     static void Init() {} // Trigger static constructor.
 }
 ```
