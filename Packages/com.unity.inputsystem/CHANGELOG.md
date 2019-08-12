@@ -16,7 +16,14 @@ however, it has to be formatted properly to pass verification tests.
 - When selecting a device to add to a control scheme, can now select devices with specific usages, too (e.g. "LeftHand" XRController).
 
 ### Changed
+
+- When adding a composite, only ones compatible with the value type of the current action are shown. This will, for example, no longer display a `2D Vector` composite as an option on a floating-point button action.
+
 ### Added
+
+- Two new composite bindings have been added.
+  * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
+  * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
 
 ## [0.9.2-preview] - 2019-8-9
 

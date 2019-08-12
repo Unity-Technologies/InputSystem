@@ -5058,6 +5058,125 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateButtonWithOneModifierComposite()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.1f;
+
+        // Using gamepad so we can use the triggers and make sure
+        // that the composite preserves the full button value instead
+        // of just going 0 and 1.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Gamepad>/leftTrigger")
+            .With("Modifier", "<Gamepad>/dpad/up")
+            .With("Button", "<Gamepad>/rightTrigger");
+
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftTrigger, 0.5f);
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.rightTrigger, 0.75f);
+            Assert.That(trace,
+                Started(action, value: 0.75f, control: gamepad.rightTrigger)
+                    .AndThen(Performed(action, value: 0.75f, control: gamepad.rightTrigger)));
+
+            trace.Clear();
+
+            Set(gamepad.leftTrigger, 0);
+            Assert.That(trace,
+                Canceled(action, value: 0f, control: gamepad.leftTrigger));
+
+            trace.Clear();
+
+            Press(gamepad.dpad.up);
+            Assert.That(trace,
+                Started(action, value: 0.75f, control: gamepad.dpad.up)
+                    .AndThen(Performed(action, value: 0.75f, control: gamepad.dpad.up)));
+
+            trace.Clear();
+
+            Set(gamepad.rightTrigger, 0);
+            Assert.That(trace,
+                Canceled(action, value: 0f, control: gamepad.rightTrigger));
+
+            trace.Clear();
+
+            Release(gamepad.dpad.up);
+            Set(gamepad.rightTrigger, 0.456f);
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateButtonWithTwoModifiersComposite()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.1f;
+
+        // Using gamepad so we can use the triggers and make sure
+        // that the composite preserves the full button value instead
+        // of just going 0 and 1.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddCompositeBinding("ButtonWithTwoModifiers")
+            .With("Modifier1", "<Gamepad>/leftTrigger")
+            .With("Modifier1", "<Gamepad>/dpad/up")
+            .With("Modifier2", "<Gamepad>/rightTrigger")
+            .With("Modifier2", "<Gamepad>/dpad/down")
+            .With("Button", "<Gamepad>/leftStick/up");
+
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftTrigger, 0.345f);
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.rightTrigger, 0.456f);
+            Assert.That(trace, Is.Empty);
+
+            Set(gamepad.leftStick, new Vector2(0, 0.75f));
+            Assert.That(trace,
+                Started(action,
+                    value: 0.75f,
+                    control: gamepad.leftStick.up)
+                    .AndThen(Performed(action,
+                    value: 0.75f,
+                    control: gamepad.leftStick.up)));
+
+            trace.Clear();
+
+            Press(gamepad.dpad.up);
+            Set(gamepad.leftTrigger, 0);
+
+            // Bit counter-intuitive but the composite yields a value every time
+            // one of the constituents change.
+            Assert.That(trace,
+                Performed(action,
+                    value: 0.75f,
+                    control: gamepad.dpad.up)
+                    .AndThen(Performed(action,
+                    value: 0.75f,
+                    control: gamepad.leftTrigger)));
+
+            trace.Clear();
+
+            Set(gamepad.rightTrigger, 0);
+
+            Assert.That(trace,
+                Canceled(action, value: 0f, control: gamepad.rightTrigger));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanSerializeAndDeserializeActionMapsWithCompositeBindings()
     {
         var map = new InputActionMap(name: "test");
