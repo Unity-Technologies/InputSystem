@@ -119,6 +119,8 @@ In addition, you can set the following parameters on a 2D vector composite:
 
 A composite that requires another button to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+1" but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
 
+The result is a `float`.
+
 ```CSharp
 myAction.AddCompositeBinding("ButtonWithOneModifier")
     .With("Button", "<Keyboard>/1")
@@ -139,8 +141,10 @@ The Button With One Modifier composite does not have parameters.
 
 A composite that requires two other buttons to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+SHIFT+1" but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
 
+The result is a `float`.
+
 ```CSharp
-myAction.AddCompositeBinding("ButtonWithTwoMOdifiers")
+myAction.AddCompositeBinding("ButtonWithTwoModifiers")
     .With("Button", "<Keyboard>/1")
     .With("Modifier1", "<Keyboard>/leftCtrl")
     .With("Modifier1", "<Keyboard>/rightCtrl")
