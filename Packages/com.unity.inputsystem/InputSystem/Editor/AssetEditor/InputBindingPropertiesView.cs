@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor.Lists;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: when we start with a blank tree view state, we should initialize the control picker to select the control currently
