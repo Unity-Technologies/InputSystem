@@ -12,6 +12,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 ### Actions
 ### Changed
+
+-Removed `timesliceEvents` setting - and made this tied to the update mode instead. We now always time slice when using fixed updates, and not when using dynamic updates.
+
 ### Added
 
 

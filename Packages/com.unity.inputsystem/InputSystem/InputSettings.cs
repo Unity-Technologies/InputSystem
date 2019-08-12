@@ -61,26 +61,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// If enabled, any given input event will only be processed for any given fixed or dynamic
-        /// update if it has been generated before or within the time slice allotted to the update.
-        /// </summary>
-        /// <remarks>
-        /// Normally, the input system will directly consume any input that's available regardless of when
-        /// it was produced.
-        /// </remarks>
-        public bool timesliceEvents
-        {
-            get => m_TimesliceEvents;
-            set
-            {
-                if (m_TimesliceEvents == value)
-                    return;
-                m_TimesliceEvents = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
         /// If true, sensors that deliver rotation values on handheld devices will automatically adjust
         /// rotations when the screen orientation changes.
         /// </summary>
