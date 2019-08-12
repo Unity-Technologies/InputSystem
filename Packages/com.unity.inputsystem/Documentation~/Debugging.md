@@ -1,14 +1,11 @@
 # Debugging
 
 * [Input Debugger](#input-debugger)
-  * [Debugging Remotely](#debugging-remotely)
   * [Debugging Devices](#debugging-devices)
   * [Debugging Actions](#debugging-actions)
   * [Debugging Users/PlayerInput](#debugging-usersplayerinput)
-* [Input Visualizers](#input-visualizers)
-  * [Visualizing Controls](#visualizing-controls)
-  * [Visualizing Actions](#visualizing-actions)
-* [Event Diagnostics](#event-diagnostics)
+  * [Debugging Layouts](#debugging-layouts)
+  * [Debugging Remotely](#debugging-remotely)
 
 When something isn't working as expected, the best first stop is usually the "Input Debugger" in the Unity editor. This is a Unity editor window that is designed to provide access to the activity of the input system in both the editor and in connected players.
 
