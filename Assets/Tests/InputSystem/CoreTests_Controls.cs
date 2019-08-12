@@ -571,7 +571,7 @@ partial class CoreTests
     }
 
     [Test]
-    [Category("Cotrols")]
+    [Category("Controls")]
     public void Controls_CanQueueValueChange_InFuture()
     {
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
