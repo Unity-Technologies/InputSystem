@@ -704,7 +704,7 @@ namespace UnityEngine.InputSystem.UI
 
         int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
-            Debug.Assert(context.action.type == InputActionType.PassThrough, $"XR actions should be pass-through actions, so the UI can properly distinguish multiple tracked devices. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
             var touchId = 0;
             if (context.control.parent is TouchControl)
                 touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
