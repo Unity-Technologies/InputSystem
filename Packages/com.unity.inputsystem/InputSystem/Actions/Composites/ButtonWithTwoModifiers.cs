@@ -4,7 +4,7 @@ namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
     /// A button with two additional modifiers. The button only triggers when
-    /// the both modifiers are pressed.
+    /// both modifiers are pressed.
     /// </summary>
     /// <remarks>
     /// This composite can be used to require two other buttons to be held while
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Composites
     /// var action = new InputAction(type: InputActionType.Button);
     /// action.AddCompositeBinding("ButtonWithTwoModifiers")
     ///     .With("Modifier1", "&lt;Keyboard&gt;/leftCtrl")
-    ///     .With("Modifier1", "&lt;Keyboard&gt;/rightControl")
+    ///     .With("Modifier1", "&lt;Keyboard&gt;/rightCtrl")
     ///     .With("Modifier2", "&lt;Keyboard&gt;/leftShift")
     ///     .With("Modifier2", "&lt;Keyboard&gt;/rightShift")
     ///     .With("Button", "&lt;Keyboard&gt;/1")
