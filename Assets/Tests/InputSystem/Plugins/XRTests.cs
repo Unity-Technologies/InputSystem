@@ -500,7 +500,7 @@ internal class XRTests : InputTestFixture
 #else
                 deviceRole = DeviceRole.Generic,
 #endif
-                
+
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()

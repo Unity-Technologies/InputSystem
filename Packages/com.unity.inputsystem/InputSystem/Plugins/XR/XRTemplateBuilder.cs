@@ -100,10 +100,9 @@ namespace UnityEngine.InputSystem.XR
                 else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
                     matchedLayout = "XRHMD";
 #endif
-
             }
 
-                string layoutName = null;
+            string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
                 layoutName = string.Format("{0}::{1}", SanitizeName(description.interfaceName),
