@@ -5060,6 +5060,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateButtonWithOneModifierComposite()
     {
+        InputSystem.settings.defaultButtonPressPoint = 0.1f;
+
         // Using gamepad so we can use the triggers and make sure
         // that the composite preserves the full button value instead
         // of just going 0 and 1.
@@ -5115,6 +5117,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateButtonWithTwoModifiersComposite()
     {
+        InputSystem.settings.defaultButtonPressPoint = 0.1f;
+
         // Using gamepad so we can use the triggers and make sure
         // that the composite preserves the full button value instead
         // of just going 0 and 1.
