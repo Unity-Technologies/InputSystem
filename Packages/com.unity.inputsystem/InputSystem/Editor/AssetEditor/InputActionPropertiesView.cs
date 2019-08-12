@@ -47,10 +47,6 @@ namespace UnityEngine.InputSystem.Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                // When changing the action type, clear out the expected control type.
-                if ((InputActionType)m_SelectedActionType != (InputActionType)m_ActionTypeProperty.intValue)
-                    m_SelectedControlType = 0;
-
                 if ((InputActionType)m_SelectedActionType == InputActionType.Button)
                     m_ExpectedControlTypeProperty.stringValue = "Button";
                 else if (m_SelectedControlType == 0)

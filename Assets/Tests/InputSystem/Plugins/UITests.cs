@@ -959,7 +959,7 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Is.Empty);
 
@@ -970,7 +970,7 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Is.Empty);
 
@@ -984,13 +984,13 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
             Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-            Assert.That((leftChildReceiver.events[1].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[1].data as PointerEventData).pointerId, Is.EqualTo(0));
             Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
-            Assert.That((leftChildReceiver.events[2].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[2].data as PointerEventData).pointerId, Is.EqualTo(0));
             Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
-            Assert.That((leftChildReceiver.events[3].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[3].data as PointerEventData).pointerId, Is.EqualTo(0));
 
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Is.Empty);
@@ -1004,13 +1004,13 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Is.Empty);
 
@@ -1022,11 +1022,11 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
             rightChildReceiver.Reset();
 
             trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent2);
@@ -1036,11 +1036,11 @@ internal class UITests : InputTestFixture
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
-            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             leftChildReceiver.Reset();
             Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(2));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
             rightChildReceiver.Reset();
         }
     }

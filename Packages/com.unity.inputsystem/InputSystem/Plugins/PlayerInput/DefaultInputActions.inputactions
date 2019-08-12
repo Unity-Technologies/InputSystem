@@ -252,7 +252,7 @@
                     "name": "Point",
                     "type": "PassThrough",
                     "id": "32b35790-4ed0-4e9a-aa41-69ac6d629449",
-                    "expectedControlType": "",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": ""
                 },
@@ -260,7 +260,7 @@
                     "name": "Click",
                     "type": "PassThrough",
                     "id": "3c7022bf-7922-4f7c-a998-c437916075ad",
-                    "expectedControlType": "",
+                    "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
                 },
