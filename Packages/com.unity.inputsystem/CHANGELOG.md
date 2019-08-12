@@ -14,6 +14,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 ### Added
 
+- `InputSystemUIInputModule` can now track multiple pointing devices separately, to allow multi-touch input - required to allow control of multiple On-Scree controls at the same time with different fingers.
+
 
 ## [0.9.2-preview] - 2019-8-9
 
