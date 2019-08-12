@@ -332,7 +332,7 @@ This registers the device type with the system and we will see it in the control
 
 We could just call `InputSystem.AddDevice<MyDevice>()` somewhere but in a real-world setup, you will likely have to correlate the InputDevices you create with their identities in the third-party API. It may be tempting to do something like this
 
-```
+```CSharp
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 {
     //...
