@@ -120,13 +120,13 @@ The devices assigned .
 
 ### UI Input
 
-The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component can work together with a [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) to drive the [UI system](UISupport.md).
+The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component can work together with a [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) to drive the [UI system](UISupport.md).
 
-To set this up, assign a reference to a [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component in the [`UI Input Module`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_uiInputModule) field of the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component. The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) and [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) components should be configured to work with the same [`InputActionAsset`](Actions.md) for this to work.
+To set this up, assign a reference to a [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) component in the [`UI Input Module`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_uiInputModule) field of the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component. The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) and [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) components should be configured to work with the same [`InputActionAsset`](Actions.md) for this to work.
 
-Now, when the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component configures the actions for a specific player, it will assign the same action configuration to the [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html). So the same device used to control the player will now be set up to control the UI.
+Now, when the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component configures the actions for a specific player, it will assign the same action configuration to the [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component). So the same device used to control the player will now be set up to control the UI.
 
-If you use [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, controlled by separate players.
+If you use [`MultiplayerEventSystem`](UISupport.md#multiplayereventsystem-component) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, controlled by separate players.
 
 ## `PlayerInputManager` Component
 
@@ -166,7 +166,7 @@ If you enable the [`Split-Screen`](../api/UnityEngine.InputSystem.PlayerInputMan
 |[`Set Fixed Number`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_fixedNumberOfSplitScreens)|If this value is larger then zero, then the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) will always split the screen into a fixed number of rectangles, regardless of the actual number of players.|
 |[`Screen Rectangle`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_splitScreenArea)|The normalized screen rectangle available for allocating player split-screens into.|
 
-By default, any UI elements can be interacted with by any player in the game. However, in split-screen setups, it is possible to have screen-space UIs that are restricted to just one specific camera. See the (UI Input)[#ui-input] section above on how to set this up using the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html), [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) and [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) components.
+By default, any UI elements can be interacted with by any player in the game. However, in split-screen setups, it is possible to have screen-space UIs that are restricted to just one specific camera. See the (UI Input)[#ui-input] section above on how to set this up using the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html), [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) and [`MultiplayerEventSystem`](UISupport.md#multiplayereventsystem-component) components.
 
 ### `PlayerInputManager` Notifications
 

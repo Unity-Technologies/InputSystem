@@ -1,45 +1,31 @@
 using System.Collections;
-using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine;
 using UnityEngine.InputSystem.Interactions;
 
-// Use action set asset instead of lose InputActions directly on component.
-public class SimpleController_UsingActions_InAsset : MonoBehaviour
+// Using simple actions with callbacks.
+public class SimpleController_UsingActions : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
     public float burstSpeed;
-    public float jumpForce = 2.0f;
     public GameObject projectile;
 
-    private SimpleControls controls;
+    public InputAction moveAction;
+    public InputAction lookAction;
+    public InputAction fireAction;
 
-    private Vector2 m_Move;
-    private Vector2 m_Look;
-    private bool isGrounded;
     private bool m_Charging;
+
     private Vector2 m_Rotation;
-    private Rigidbody m_Rigidbody;
-
-    private void Start()
-    {
-        m_Rigidbody = GetComponent<Rigidbody>();
-    }
-
-    void OnCollisionStay()
-    {
-        isGrounded = true;
-    }
 
     public void Awake()
     {
-        controls = new SimpleControls();
-        controls.gameplay.move.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
-        controls.gameplay.look.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
-        controls.gameplay.move.canceled += ctx => m_Move = Vector2.zero;
-        controls.gameplay.look.canceled += ctx => m_Look = Vector2.zero;
+        // We could use `fireAction.triggered` in Update() but that makes it more difficult to
+        // implement the charging mechanism. So instead we use the `started`, `performed`, and
+        // `canceled` callbacks to run the firing logic right from within the action.
 
-        controls.gameplay.fire.performed +=
+        fireAction.performed +=
             ctx =>
         {
             if (ctx.interaction is SlowTapInteraction)
@@ -52,36 +38,31 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
             }
             m_Charging = false;
         };
-        controls.gameplay.fire.started +=
+        fireAction.started +=
             ctx =>
         {
             if (ctx.interaction is SlowTapInteraction)
                 m_Charging = true;
         };
-        controls.gameplay.fire.canceled +=
+        fireAction.canceled +=
             ctx =>
         {
             m_Charging = false;
-        };
-        controls.gameplay.jump.performed += ctx =>
-        {
-            var jump = new Vector3(0.0f, jumpForce, 0.0f);
-            if (isGrounded)
-            {
-                m_Rigidbody.AddForce(jump * jumpForce, ForceMode.Impulse);
-                isGrounded = false;
-            }
         };
     }
 
     public void OnEnable()
     {
-        controls.Enable();
+        moveAction.Enable();
+        lookAction.Enable();
+        fireAction.Enable();
     }
 
     public void OnDisable()
     {
-        controls.Disable();
+        moveAction.Disable();
+        lookAction.Disable();
+        fireAction.Disable();
     }
 
     public void OnGUI()
@@ -92,28 +73,34 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
 
     public void Update()
     {
-        Move(m_Move);
-        Look(m_Look);
+        var look = lookAction.ReadValue<Vector2>();
+        var move = moveAction.ReadValue<Vector2>();
+
+        // Update orientation first, then move. Otherwise move orientation will lag
+        // behind by one frame.
+        Look(look);
+        Move(move);
     }
 
     private void Move(Vector2 direction)
     {
+        if (direction.sqrMagnitude < 0.01)
+            return;
         var scaledMoveSpeed = moveSpeed * Time.deltaTime;
-        var move = transform.TransformDirection(direction.x, 0, direction.y);
-        transform.localPosition += move * scaledMoveSpeed;
+        // For simplicity's sake, we just keep movement in a single plane here. Rotate
+        // direction according to world Y rotation of player.
+        var move = Quaternion.Euler(0, transform.eulerAngles.y, 0) * new Vector3(direction.x, 0, direction.y);
+        transform.position += move * scaledMoveSpeed;
     }
 
     private void Look(Vector2 rotate)
     {
-        const float kClampAngle = 80.0f;
-
-        m_Rotation.y += rotate.x * rotateSpeed * Time.deltaTime;
-        m_Rotation.x -= rotate.y * rotateSpeed * Time.deltaTime;
-
-        m_Rotation.x = Mathf.Clamp(m_Rotation.x, -kClampAngle, kClampAngle);
-
-        var localRotation = Quaternion.Euler(m_Rotation.x, m_Rotation.y, 0.0f);
-        transform.rotation = localRotation;
+        if (rotate.sqrMagnitude < 0.01)
+            return;
+        var scaledRotateSpeed = rotateSpeed * Time.deltaTime;
+        m_Rotation.y += rotate.x * scaledRotateSpeed;
+        m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRotateSpeed, -89, 89);
+        transform.localEulerAngles = m_Rotation;
     }
 
     private IEnumerator BurstFire(int burstAmount)
@@ -131,7 +118,7 @@ public class SimpleController_UsingActions_InAsset : MonoBehaviour
         var newProjectile = Instantiate(projectile);
         newProjectile.transform.position = transform.position + transform.forward * 0.6f;
         newProjectile.transform.rotation = transform.rotation;
-        const int size = 1;
+        var size = 1;
         newProjectile.transform.localScale *= size;
         newProjectile.GetComponent<Rigidbody>().mass = Mathf.Pow(size, 3);
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);

@@ -17,6 +17,8 @@ promotion_test_{{ platform.name }}_{{ editor.version }}:
   variables:
     UPMCI_PROMOTION: 1
   commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
   artifacts:
@@ -57,6 +59,8 @@ promote:
   variables:
     UPMCI_PROMOTION: 1
   commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/

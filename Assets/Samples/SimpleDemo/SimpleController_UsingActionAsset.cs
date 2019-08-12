@@ -1,34 +1,24 @@
 using System.Collections;
-using UnityEngine.InputSystem;
 using UnityEngine;
 using UnityEngine.InputSystem.Interactions;
 
-// Using simple actions with callbacks.
-public class SimpleController_UsingActions : MonoBehaviour
+// Use action set asset instead of lose InputActions directly on component.
+public class SimpleController_UsingActionAsset : MonoBehaviour
 {
     public float moveSpeed;
     public float rotateSpeed;
     public float burstSpeed;
     public GameObject projectile;
 
-    public InputAction moveAction;
-    public InputAction lookAction;
-    public InputAction fireAction;
-
-    private Vector2 m_Move;
-    private Vector2 m_Look;
+    private SimpleControls m_Controls;
     private bool m_Charging;
-
     private Vector2 m_Rotation;
 
     public void Awake()
     {
-        moveAction.performed += ctx => m_Move = ctx.ReadValue<Vector2>();
-        lookAction.performed += ctx => m_Look = ctx.ReadValue<Vector2>();
-        moveAction.canceled += ctx => m_Move = Vector2.zero;
-        lookAction.canceled += ctx => m_Look = Vector2.zero;
+        m_Controls = new SimpleControls();
 
-        fireAction.performed +=
+        m_Controls.gameplay.fire.performed +=
             ctx =>
         {
             if (ctx.interaction is SlowTapInteraction)
@@ -41,13 +31,13 @@ public class SimpleController_UsingActions : MonoBehaviour
             }
             m_Charging = false;
         };
-        fireAction.started +=
+        m_Controls.gameplay.fire.started +=
             ctx =>
         {
             if (ctx.interaction is SlowTapInteraction)
                 m_Charging = true;
         };
-        fireAction.canceled +=
+        m_Controls.gameplay.fire.canceled +=
             ctx =>
         {
             m_Charging = false;
@@ -56,16 +46,12 @@ public class SimpleController_UsingActions : MonoBehaviour
 
     public void OnEnable()
     {
-        moveAction.Enable();
-        lookAction.Enable();
-        fireAction.Enable();
+        m_Controls.Enable();
     }
 
     public void OnDisable()
     {
-        moveAction.Disable();
-        lookAction.Disable();
-        fireAction.Disable();
+        m_Controls.Disable();
     }
 
     public void OnGUI()
@@ -76,19 +62,30 @@ public class SimpleController_UsingActions : MonoBehaviour
 
     public void Update()
     {
-        Move(m_Move);
-        Look(m_Look);
+        var look = m_Controls.gameplay.look.ReadValue<Vector2>();
+        var move = m_Controls.gameplay.move.ReadValue<Vector2>();
+
+        // Update orientation first, then move. Otherwise move orientation will lag
+        // behind by one frame.
+        Look(look);
+        Move(move);
     }
 
     private void Move(Vector2 direction)
     {
+        if (direction.sqrMagnitude < 0.01)
+            return;
         var scaledMoveSpeed = moveSpeed * Time.deltaTime;
-        var move = transform.TransformDirection(direction.x, 0, direction.y);
-        transform.localPosition += move * scaledMoveSpeed;
+        // For simplicity's sake, we just keep movement in a single plane here. Rotate
+        // direction according to world Y rotation of player.
+        var move = Quaternion.Euler(0, transform.eulerAngles.y, 0) * new Vector3(direction.x, 0, direction.y);
+        transform.position += move * scaledMoveSpeed;
     }
 
     private void Look(Vector2 rotate)
     {
+        if (rotate.sqrMagnitude < 0.01)
+            return;
         var scaledRotateSpeed = rotateSpeed * Time.deltaTime;
         m_Rotation.y += rotate.x * scaledRotateSpeed;
         m_Rotation.x = Mathf.Clamp(m_Rotation.x - rotate.y * scaledRotateSpeed, -89, 89);
@@ -110,7 +107,7 @@ public class SimpleController_UsingActions : MonoBehaviour
         var newProjectile = Instantiate(projectile);
         newProjectile.transform.position = transform.position + transform.forward * 0.6f;
         newProjectile.transform.rotation = transform.rotation;
-        var size = 1;
+        const int size = 1;
         newProjectile.transform.localScale *= size;
         newProjectile.GetComponent<Rigidbody>().mass = Mathf.Pow(size, 3);
         newProjectile.GetComponent<Rigidbody>().AddForce(transform.forward * 20f, ForceMode.Impulse);
