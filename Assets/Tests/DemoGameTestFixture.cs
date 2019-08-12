@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.DualShock;
-using UnityEngine.InputSystem.Steam;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.SceneManagement;
