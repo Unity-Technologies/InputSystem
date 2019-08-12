@@ -261,10 +261,6 @@ namespace UnityEngine.InputSystem
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
 
-        [Tooltip("Whether events should be distributed across updates according to their timestamps. This is most relevant when fixed "
-            + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
-            + "those events that have timestamps within or before that time span.")]
-        [SerializeField] private bool m_TimesliceEvents = true;
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
 
