@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- `NullReferenceException` when the input debugger is open with actions being enabled.
 - When selecting a device to add to a control scheme, can now select devices with specific usages, too (e.g. "LeftHand" XRController).
 
 ### Changed
