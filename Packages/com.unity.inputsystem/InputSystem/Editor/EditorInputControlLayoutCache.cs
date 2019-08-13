@@ -114,7 +114,7 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(typeof(InputControl).IsAssignableFrom(type),
                 "Layout's associated type should be derived from InputControl");
 
-            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(type, typeof(InputControl<>), 0);
+            return layout.GetValueType();
         }
 
         public static IEnumerable<InputDeviceMatcher> GetDeviceMatchers(string layoutName)

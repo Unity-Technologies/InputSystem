@@ -1709,6 +1709,22 @@ namespace UnityEngine.InputSystem.Layouts
                 return result;
             }
 
+            // Return true if the given control layout has a value type whose values
+            // can be assigned to variables of type valueType.
+            public bool ValueTypeIsAssignableFrom(InternedString layoutName, Type valueType)
+            {
+                var controlType = GetControlTypeForLayout(layoutName);
+                if (controlType == null)
+                    return false;
+
+                var valueTypOfControl =
+                    TypeHelpers.GetGenericTypeArgumentFromHierarchy(controlType, typeof(InputControl<>), 0);
+                if (valueTypOfControl == null)
+                    return false;
+
+                return valueType.IsAssignableFrom(valueTypOfControl);
+            }
+
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)
             {
                 var layout = childLayout;
