@@ -271,17 +271,22 @@ As an example, let's recreate the following axis configuration:
 5. In the "Actions" column click "+" to add a new action.
 6. Double-click the action to give it a name.
 7. Add bindings to the action by clicking "+" on the acttion and using the Path popup button in the right column to select controls.
-8. Enable "Generate C# Wrapper Class" in the inspector for the asset and hit "Apply". Your inspector should now look something like this:
+8. Click "Save Asset". Your input action editor should now look like this:
 
    ![MyControls.inputactions](./Images/FireActionInputAsset.png)
-9. Add an instance of the generated C# wrapper class to your component.
+
+9. Enable "Generate C# Wrapper Class" in the inspector for the asset and hit "Apply". Your inspector should now look something like this:
+
+   ![MyControls.inputactions](./Images/FireActionInputAssetInspector.png)
+   
+10. Add an instance of the generated C# wrapper class to your component.
    ```
    public class MyComponent : MonoBehaviour
    {
        MyControls controls;
    ```
 
-10. Create the instance and hook up a response to the fire action.
+12. Create the instance and hook up a response to the fire action.
 
    ```
        public void Awake()
@@ -290,7 +295,7 @@ As an example, let's recreate the following axis configuration:
            controls.gameplay.fire.performed += ctx => Fire();
        }
    ```
-11. Enable and disable the action as appropriate.
+13. Enable and disable the action as appropriate.
    ```
        public void OnEnable()
        {
