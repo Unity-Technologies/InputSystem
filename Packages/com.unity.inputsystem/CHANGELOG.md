@@ -11,6 +11,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed `InputUser.onUnpairedDeviceUser` ignoring input on controls that do not support `EvaluateMagnitude`.
+  * This led to situations, for example, where `PlayerInput` would not initialize a control scheme switch from a `<Mouse>/delta` binding as the delta X and Y axes do not have min&max limits and thus return -1 from `EvaluateMagnitude`.
+
 #### Actions
 
 - `NullReferenceException` when the input debugger is open with actions being enabled.

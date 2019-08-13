@@ -338,14 +338,16 @@ namespace UnityEngine.InputSystem.Users
         /// To enable detection of the use of unpaired devices, set <see cref="listenForUnpairedDeviceActivity"/> to true.
         /// It is disabled by default.
         ///
-        /// The control passed to the callback is the first control that activity was detected on. The device can be accessed
-        /// through <see cref="InputControl.device"/>. If multiple controls on a device have been actuated, this will simply
-        /// be the first control in <see cref="InputDevice.allControls"/> that is actuated. The system does not spend time
-        /// trying to find the control that has been actuated the strongest. If desired, this can be done manually in the callback.
+        /// The callback is invoked for each non-leaf, non-synthetic, non-noisy control that has been actuated on the device.
+        /// It being restricted to non-leaf controls means that if, say, the stick on a gamepad is actuated in both X and Y
+        /// direction, you will see two calls: one with stick/x and one with stick/y.
+        ///
+        /// The reason that the callback is invoked for each individual control is that pairing often relies on checking
+        /// for specific kinds of interactions. For example, a pairing callback may listen exclusively for button presses.
         ///
         /// Note that whether the use of unpaired devices leads to them getting paired is under the control of the application.
-        /// If the device should be paired, invoke <see cref="PerformPairingWithDevice"/> from the callback. This can also be used
-        /// to further filter the activity, e.g. to only join users when pressing a button.
+        /// If the device should be paired, invoke <see cref="PerformPairingWithDevice"/> from the callback. If you do so,
+        /// no further callbacks will get triggered for other controls that may have been actuated in the same event.
         ///
         /// <example>
         /// <code>
@@ -1659,8 +1661,12 @@ namespace UnityEngine.InputSystem.Users
 
                 // Ending up here is costly. We now do per-control work that may involve
                 // walking all over the place in the InputControl machinery.
+                //
+                // NOTE: We already know the control has moved away from its default state
+                //       so in case it does not support magnitudes, we assume that the
+                //       control has changed value, too.
                 var magnitude = control.EvaluateMagnitude();
-                if (magnitude > 0)
+                if (magnitude > 0 || magnitude == -1)
                 {
                     // Yes, something was actuated on the device.
                     var deviceHasBeenPaired = false;
