@@ -162,9 +162,300 @@ Notifications through `InputSystem.onDeviceChange` are always delivered for a ho
 
 Devices can be manually added and removed through the API.
 
+TODO
+
 ### Modifying Existing Devices
+
+TODO
 
 -setting usage
 -setting variant
 
 ### Creating Custom Devices
+
+>NOTE: Here we will deal only with devices that have fixed layouts, i.e. with the case where we know exactly the specific model or models that we are dealing with. This is different from an interface such as HID where devices can describe themselves through the interface and may thus take a wide variety of forms. In this case, no fixed device layout will likely suffice. This more complicated case requires what in the input system is called a [Layout Builder](Layouts.md#layout-builders) which can build device layouts on the fly from information obtained at runtime.
+
+The need to create a custom device generally arises in one of two ways:
+
+1. You have an existing API that generates input and that you want to reflect into the input system.
+2. You have a HID that is either ignored entirely by the input system or gets an auto-generated layout that does not work well enough for your needs.
+
+In case 2), see [Overriding the HID Fallback](HID.md#overriding-the-hid-fallback) for details.
+
+Here we will deal with case 1) where we want to create a new input device entirely from scratch and feed it input that we receive from a third-party API.
+
+#### Step 1: The State Struct
+
+The first step is to create a C# `struct` that represents the form in which input is received and stored and also describes the `InputControl` instances that should be created for the device in order to retrieve said state.
+
+```CSharp
+// A "state struct" describes the memory format used a device. Each device can
+// receive and store memory in its custom format. InputControls are then connected
+// the individual pieces of memory and read out values from them.
+//
+// In case it is important that the memory format matches 1:1 at the binary level
+// to an external representation, it is generally advisable to use
+// LayoutLind.Explicit.
+[StructLayout(LayoutKind.Explicit, Size = 32)]
+public struct MyDeviceState : IInputStateTypeInfo
+{
+    // Every state format is tagged with a FourCC code that is used for type
+    // checking. The characters can be anything. Choose something that allows
+    // you do easily recognize memory belonging to your own device.
+    public FourCC format => return new FourCC('M', 'Y', 'D', 'V');
+
+    // InputControlAttributes on fields tell the input system to create controls
+    // for the public fields found in the struct.
+
+    // Assume a 16bit field of buttons. Create one button that is tied to
+    // bit #3 (zero-based). Note that buttons do not need to be stored as bits.
+    // They can also be stored as floats or shorts, for example. The
+    // `InputControlAttribute.format` property determines which format the
+    // data is stored in. If omitted, it is generally inferred from the value
+    // type of the field.
+    [InputControl(name = "button", layout = "Button", bit = 3)]
+    public ushort buttons;
+
+    // Create a floating-point axis. The name, if not supplied, is taken from
+    // the field.
+    [InputControl(layout = "Axis")]
+    public short axis;
+}
+```
+
+The `InputControlAttribute` annotations are used by the input system's layout mechanism to add controls to the layout of your device. For details, see the [documentation of the layout system](Layouts.md).
+
+With the state struct in place, we now have a way to send input data to the input system and to store it there. The next thing we need is an `InputDevice` that uses our custom state struct and represents our custom device.
+
+#### Step 2: The Device Class
+
+Next, we need a class derived from one of the `InputDevice` base classes. We can either base our device directly on `InputDevice` or we can go and pick one of the more specific types of devices like `Gamepad`, for example.
+
+Let's assume that our device isn't really like any of the existing device classes and thus derive directly from `InputDevice`.
+
+```CSharp
+// InputControlLayoutAttribute attribute is only necessary if you want
+// to override default behavior that occurs when registering your device
+// as a layout.
+// The most common use of InputControlLayoutAttribute is to direct the system
+// to a custom "state struct" through the `stateType` property. See below for details.
+[InputControlLayout(displayName = "My Device", stateType = typeof(MyDeviceState))]
+public class MyDevice : InputDevice
+{
+    // In the state struct, we added two controls that we now want to
+    // surface on the device. This is for convenience only. The controls will
+    // get added to the device either way. Exposing them as properties will
+    // simply make it easier to get to the controls in code.
+
+    public ButtonControl button { get; private set; }
+    public AxisControl axis { get; private set; }
+
+    // This method is called by the input system after the device has been
+    // constructed but before it is added to the system. Here you can do
+    // any last minute setup.
+    protected override void FinishSetup()
+    {
+        base.FinishSetup();
+
+        // NOTE: The controls are *created* by the input system automatically.
+        //       This is why don't do `new` here but rather just look
+        //       the controls up.
+        button = GetChildControl<ButtonControl>("button");
+        axis = GetChildControl<AxisControl>("axis");
+    }
+}
+```
+
+#### Step 3: The Update Method
+
+By now, we have a device in place along with its associated state format, but if we now create the device like so
+
+```CSharp
+InputSystem.AddDevice<MyDevice>();
+```
+
+While this creates a fully set up device with our two controls on it, the device will simply sit there and not do anything. It will not receive input as right now, we don't yet have code that actually generates input. So, let's take care of that next.
+
+Queuing input is easy. We can do that from pretty much anywhere (even from a thread) using `InputSystem.QueueStateEvent` or `InputSystem.QueueDeltaStateEvent`. For this demonstration, we will make use of `IInputUpdateCallbackReceiver` which, when implemented by any `InputDevice`, will add an `Update()` method that automatically gets called during `InputSystem.onBeforeUpdate` and thus can feed input events into the current input update.
+
+>NOTE: To reemphasize, you don't need to do it this way. If you already have a place where input for your device becomes available, you can simply queue input events from there instead of using `IInputUpdateCallbackReceiver`.
+
+```CSharp
+public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
+{
+    //...
+
+    public void Update()
+    {
+        // In practice, this is where we would be reading out data from an external
+        // API. Instead, here we just make up some (empty) input.
+        var state = new MyDeviceState();
+        InputSystem.QueueStateEvent(this, state);
+    }
+}
+```
+
+#### Step 4: Registration and Creation
+
+Now we have a functioning device but there is not yet a place where the device will actually get added to the system. Also, because we are not yet registering our new type of device, we won't see it in the editor when, for example, creating bindings in the [action editor](ActionAssets.md#editing-action-assets).
+
+One way to register out type of device with the system is to do some from within code that runs automatically as part of Unity starting up. To do so, we can modify the definition of `MyDevice` like so.
+
+```CSharp
+// Add the InitializeOnLoad attribute to automatically run the static
+// constructor of the class after each C# domain load.
+#if UNITY_EDITOR
+[InitializeOnLoad]
+#endif
+public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
+{
+    //...
+
+    static MyDevice()
+    {
+        // RegisterLayout() adds a "control layout" to the system.
+        // These can be layouts for individual controls (like sticks)
+        // or layouts for entire devices (which are themselves
+        // control) like in our case.
+        InputSystem.RegisterLayout<MyDevice>();
+    }
+
+    // We still need a way to also trigger execution of the static constructor
+    // in the player. This can be achieved by adding the RuntimeInitializeOnLoadMethod
+    // to an empty method.
+    [RuntimeInitializeOnLoadMethod]
+    private static void InitializeInPlayer() {}
+}
+```
+
+This registers the device type with the system and we will see it in the control picker, for example. However, we still need a way to actually add an instance of the device when it is connected.
+
+We could just call `InputSystem.AddDevice<MyDevice>()` somewhere but in a real-world setup, you will likely have to correlate the InputDevices you create with their identities in the third-party API. It may be tempting to do something like this
+
+```CSharp
+public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
+{
+    //...
+
+    // This will NOT work correctly!
+    public ThirdPartyAPI.DeviceId externalId { get; set; }
+}
+```
+
+and then set that on the device after calling `AddDevice<MyDevice>` but this will not work as expected. At least not in the editor.
+
+The reason for this is rather technical in nature. The input system requires that devices can be created solely from their `InputDeviceDescription` in combination with the chosen layout (and layout variant). In addition to that, a fixed set of mutable per-device properties are supported such as device usages (i.e. `InputSystem.SetDeviceUsage` and related methods). This is what allows the system to easily re-create devices after domain reloads in the editor as well as to create replicas of remote devices when connecting to a player.
+
+To comply with this requirement is actually rather simple. We simply cast that information provided by the third-party API into an `InputDeviceDescription` and then use what's referred to as an `InputDeviceMatcher` to match the description to our custom `MyDevice` layout.
+
+Let's assume that the third-party API has two callbacks like this:
+
+```CSharp
+public static ThirdPartyAPI
+{
+    // Let's assume that the argument is a string that contains the
+    // name of the device and no two devices will have the
+    // same name in the external API.
+    public static Action<string> deviceAdded;
+    public static Action<string> deviceRemoved;
+}
+```
+
+Now we can hook into those callbacks and create and destroy devices in response.
+
+```CSharp
+// For this demonstration, we use a MonoBehaviour with [ExecuteInEditMode]
+// on it to run our setup code. Of course, you can do this many other ways.
+[ExecuteInEditMode]
+public class MyDeviceSupport : MonoBehaviour
+{
+    protected void OnEnable()
+    {
+        ThirdPartyAPI.deviceAdded += OnDeviceAdded;
+        ThirdPartyAPI.deviceRemoved += OnDeviceRemoved;
+    }
+
+    protected void OnDisable()
+    {
+        ThirdPartyAPI.deviceAdded -= OnDeviceAdded;
+        ThirdPartyAPI.deviceRemoved -= OnDeviceRemoved;
+    }
+
+    private void OnDeviceAdded(string name)
+    {
+        // Feed a description of the device into the system. In response, the
+        // system will match it to the layouts it has and create a device.
+        InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = "ThirdPartyAPI",
+                product = name
+            });
+    }
+
+    private void OnDeviceRemoved(string name)
+    {
+        var device = InputSystem.devices.FirstOrDefault(
+            x => x.description == new InputDeviceDescription
+            {
+                interfaceName = "ThirdPartyAPI",
+                product = name,
+            });
+
+        if (device != null)
+            InputSystem.RemoveDevice(device);
+    }
+
+    // Let's also move the registration of MyDevice here from
+    // the static constructor where we had it previously. Also,
+    // we change the registration to also supply a matcher.
+    protected void Awake()
+    {
+        // Add a match that catches any input device that reports its
+        // interface as being "ThirdPartyAPI".
+        InputSystem.RegisterLayout<MyDevice>(
+            matches: new InputDeviceMatcher()
+                .WithInterface("ThirdPartyAPI"));
+    }
+}
+```
+
+#### Step 5: `current` and `all` (Optional)
+
+It can be very convenient to quickly access the last used device of a given type or to quickly list all devices of a specific type. We can do this by simply adding support for a `current` and for an `all` getter to the API of `MyDevice`.
+
+```CSharp
+public class MyDevice : InputDevice, IInputCallbackReceiver
+{
+    //...
+
+    public static MyDevice current { get; private set; }
+
+    public static IReadOnlyList<MyDevice> all => s_AllMyDevices;
+    private static List<MyDevice> s_AllMyDevices = new List<MyDevice>();
+
+    public override void MakeCurrent()
+    {
+        base.MakeCurrent();
+        current = this;
+    }
+
+    protected override void OnAdded()
+    {
+        base.OnAdded();
+        s_AllMyDevices.Add(this);
+    }
+
+    protected override void OnRemoved()
+    {
+        base.OnRemoved();
+        s_AllMyDevices.Remove(this);
+    }
+}
+```
+
+#### Step 6: Device Commands (Optional)
+
+A final, but optional, step is to add support for device commands. A "device command" is that opposite of input, i.e. it is data traveling __to__ the input device &ndash; and which may optionally also return data as part of the operation (much like a function call). This can be used to communicate with the backend of the device to query configuration or initiate effects such as haptics.
+
+    ////TODO: ATM we're missing an overridable method to make this work

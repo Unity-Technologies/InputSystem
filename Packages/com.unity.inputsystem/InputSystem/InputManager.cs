@@ -1520,6 +1520,8 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
+            composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
