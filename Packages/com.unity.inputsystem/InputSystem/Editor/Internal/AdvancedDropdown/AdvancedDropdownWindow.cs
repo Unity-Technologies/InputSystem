@@ -447,7 +447,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Select the element the mouse cursor is over.
                 // Only do it on mouse move - keyboard controls are allowed to overwrite this until the next time the mouse moves.
-                if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag)
+                if ((Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDrag) && child.enabled)
                 {
                     if (!selected && r.Contains(Event.current.mousePosition))
                     {
@@ -455,7 +455,7 @@ namespace UnityEngine.InputSystem.Editor
                         Event.current.Use();
                     }
                 }
-                if (Event.current.type == EventType.MouseUp && r.Contains(Event.current.mousePosition))
+                if (Event.current.type == EventType.MouseUp && r.Contains(Event.current.mousePosition) && child.enabled)
                 {
                     m_State.SetSelectedIndex(item, i);
                     var selectedChild = m_State.GetSelectedChild(item);
