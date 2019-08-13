@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.DualShock
     [InputControlLayout(displayName = "PS4 Controller")]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
+        [InputControl]
         public ButtonControl touchpadButton { get; private set; }
 
         [InputControl(name = "start", displayName = "Options")]

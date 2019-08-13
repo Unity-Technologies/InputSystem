@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- `XInputController` and `XboxOneGamepad` no longer have two extraneous, non-functional "menu" and "view" buttons.
+
 #### Actions
 
 - `NullReferenceException` when the input debugger is open with actions being enabled.
