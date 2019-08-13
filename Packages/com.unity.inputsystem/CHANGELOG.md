@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
+- `InputSystemUIInputModule` can now track multiple pointing devices separately, to allow multi-touch input - required to allow control of multiple On-Scree controls at the same time with different fingers.
 - Two new composite bindings have been added.
   * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
   * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
