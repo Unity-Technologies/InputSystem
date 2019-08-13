@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- Removed `timesliceEvents` setting - and made this tied to the update mode instead. We now always time slice when using fixed updates, and not when using dynamic updates.
 - When adding a composite, only ones compatible with the value type of the current action are shown. This will, for example, no longer display a `2D Vector` composite as an option on a floating-point button action.
 
 ### Added
