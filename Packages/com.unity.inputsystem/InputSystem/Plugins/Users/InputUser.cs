@@ -1615,8 +1615,13 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
-        internal static void OnDeviceStateChange(InputDevice device)
+        private static unsafe void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
+            // Ignore any state change that was triggered internally. This immediately filters out
+            // things such as Pointers resetting deltas, for example.
+            if (!eventPtr.valid)
+                return;
+
             Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
                 "This should only be called while listening for unpaired device activity");
             if (s_ListenForUnpairedDeviceActivity == 0)
@@ -1630,6 +1635,10 @@ namespace UnityEngine.InputSystem.Users
             }
 
             Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
+
+            // Ignore any state change not triggered from a state event.
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                return;
 
             ////TODO: allow filtering (e.g. by device requirements on user actions)
 
@@ -1649,9 +1658,13 @@ namespace UnityEngine.InputSystem.Users
                 if (control.noisy || control.synthetic)
                     continue;
 
-                ////REVIEW: is this safe?
                 // Ignore non-leaf controls.
                 if (control.children.Count > 0)
+                    continue;
+
+                // Ignore controls that aren't part of the event.
+                var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
+                if (statePtr == null)
                     continue;
 
                 // Check for default state. Cheaper check than magnitude evaluation
@@ -1845,7 +1858,7 @@ namespace UnityEngine.InputSystem.Users
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
         private static InlinedArray<Action<InputControl>> s_OnUnpairedDeviceUsed;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
-        private static Action<InputDevice> s_OnDeviceStateChangeDelegate;
+        private static Action<InputDevice, InputEventPtr> s_OnDeviceStateChangeDelegate;
         private static bool s_OnDeviceChangeHooked;
         private static bool s_OnDeviceStateChangeHooked;
         private static int s_ListenForUnpairedDeviceActivity;

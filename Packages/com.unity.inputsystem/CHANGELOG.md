@@ -22,6 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - When adding a composite, only ones compatible with the value type of the current action are shown. This will, for example, no longer display a `2D Vector` composite as an option on a floating-point button action.
+- The `InputState.onChange` callback now receives a second argument which is the event (if any) that triggered the state change on the device.
 
 ### Added
 

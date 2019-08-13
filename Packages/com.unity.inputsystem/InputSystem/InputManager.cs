@@ -39,7 +39,7 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using DeviceStateChangeListener = Action<InputDevice>;
+    using DeviceStateChangeListener = Action<InputDevice, InputEventPtr>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using EventListener = Action<InputEventPtr, InputDevice>;
     using UpdateListener = Action;
@@ -2845,7 +2845,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceStateChangeListeners.length; ++i)
-                m_DeviceStateChangeListeners[i](device);
+                m_DeviceStateChangeListeners[i](device, eventPtr);
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.

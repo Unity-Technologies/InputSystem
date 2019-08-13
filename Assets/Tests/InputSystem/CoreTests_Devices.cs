@@ -921,13 +921,15 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
@@ -935,6 +937,9 @@ partial class CoreTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedEventPtr.valid, Is.True);
+        Assert.That(receivedEventPtr.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.IsA<StateEvent>(), Is.True);
     }
 
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
@@ -967,19 +972,22 @@ partial class CoreTests
         var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedEventPtr.valid, Is.False);
     }
 
     [Test]

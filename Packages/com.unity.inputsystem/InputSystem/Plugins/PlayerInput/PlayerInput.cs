@@ -1225,7 +1225,7 @@ namespace UnityEngine.InputSystem
 
             // Go through all control schemes and see if there is one usable with the device.
             // If so, switch to it.
-            var controlScheme = InputControlScheme.FindControlSchemeForDevice<ReadOnlyArray<InputControlScheme>>(control.device, player.m_Actions.controlSchemes);
+            var controlScheme = InputControlScheme.FindControlSchemeForDevice(control.device, player.m_Actions.controlSchemes);
             if (controlScheme != null)
             {
                 // First remove the currently paired devices, then pair the device that was used,
