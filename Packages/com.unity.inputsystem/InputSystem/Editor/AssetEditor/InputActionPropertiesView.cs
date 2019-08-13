@@ -60,6 +60,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_ActionTypeProperty.intValue = (int)(InputActionType)m_SelectedActionType;
                 m_ActionTypeProperty.serializedObject.ApplyModifiedProperties();
+                UpdateProcessors(m_ExpectedControlTypeProperty.stringValue);
 
                 onChange(k_PropertiesChanged);
             }
