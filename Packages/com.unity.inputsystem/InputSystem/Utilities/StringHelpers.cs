@@ -236,33 +236,39 @@ namespace UnityEngine.InputSystem.Utilities
         {
             // Optimize for there not being any values or only a single one
             // that needs no concatenation.
-            var firstValue = default(TValue);
+            var firstValue = default(string);
             var valueCount = 0;
             StringBuilder result = null;
 
             foreach (var value in values)
             {
+                if (value == null)
+                    continue;
+                var str = value.ToString();
+                if (string.IsNullOrEmpty(str))
+                    continue;
+
                 ++valueCount;
                 if (valueCount == 1)
                 {
-                    firstValue = value;
+                    firstValue = str;
                     continue;
                 }
 
                 if (valueCount == 2)
                 {
                     result = new StringBuilder();
-                    result.Append(firstValue.ToString());
+                    result.Append(firstValue);
                 }
 
                 result.Append(separator);
-                result.Append(value.ToString());
+                result.Append(str);
             }
 
             if (valueCount == 0)
                 return null;
             if (valueCount == 1)
-                return firstValue.ToString();
+                return firstValue;
 
             return result.ToString();
         }
