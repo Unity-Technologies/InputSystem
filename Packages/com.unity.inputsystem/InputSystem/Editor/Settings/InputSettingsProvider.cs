@@ -77,11 +77,6 @@ namespace UnityEngine.InputSystem.Editor
 
             using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
-                EditorGUILayout.HelpBox(
-                    "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                    + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                    MessageType.Warning);
-
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
