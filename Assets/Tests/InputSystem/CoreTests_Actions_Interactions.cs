@@ -143,8 +143,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformHoldInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         const int timeOffset = 123;
         runtime.currentTimeOffsetToRealtimeSinceStartup = timeOffset;
         runtime.currentTime = 10 + timeOffset;
@@ -256,8 +254,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformTapInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -315,8 +311,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         runtime.advanceTimeEachDynamicUpdate = 0;

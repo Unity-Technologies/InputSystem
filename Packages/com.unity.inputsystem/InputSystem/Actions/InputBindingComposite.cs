@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// A binding that synthesizes a value from from several component bindings.
     /// </summary>
+    ////TODO: clarify whether this can have state or not
     public abstract class InputBindingComposite
     {
         public abstract Type valueType { get; }
@@ -32,6 +33,18 @@ namespace UnityEngine.InputSystem
         }
 
         internal static TypeTable s_Composites;
+
+        internal static Type GetValueType(string composite)
+        {
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentNullException(nameof(composite));
+
+            var compositeType = s_Composites.LookupTypeRegistration(composite);
+            if (compositeType == null)
+                return null;
+
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(compositeType, typeof(InputBindingComposite<>), 0);
+        }
 
         /// <summary>
         /// Return the name of the control layout that is expected for the given part (e.g. "Up") on the given

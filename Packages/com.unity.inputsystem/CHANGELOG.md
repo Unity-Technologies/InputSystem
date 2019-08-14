@@ -13,10 +13,22 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed available processor list not updated right away when changing the action type in the Input Action editor window.
 
-### Actions
+#### Actions
+
+- `NullReferenceException` when the input debugger is open with actions being enabled.
+- When selecting a device to add to a control scheme, can now select devices with specific usages, too (e.g. "LeftHand" XRController).
+
 ### Changed
+
+- Removed `timesliceEvents` setting - and made this tied to the update mode instead. We now always time slice when using fixed updates, and not when using dynamic updates.
+- When adding a composite, only ones compatible with the value type of the current action are shown. This will, for example, no longer display a `2D Vector` composite as an option on a floating-point button action.
+
 ### Added
 
+- `InputSystemUIInputModule` can now track multiple pointing devices separately, to allow multi-touch input - required to allow control of multiple On-Scree controls at the same time with different fingers.
+- Two new composite bindings have been added.
+  * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
+  * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
 
 ## [0.9.2-preview] - 2019-8-9
 

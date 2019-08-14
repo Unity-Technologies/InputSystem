@@ -154,6 +154,15 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
+                if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                {
+                    var valueType = InputBindingComposite.GetValueType(composite);
+                    if (valueType != null &&
+                        !InputControlLayout.s_Layouts.ValueTypeIsAssignableFrom(
+                            new InternedString(m_ExpectedControlLayout), valueType))
+                        continue;
+                }
+
                 if (InputBindingComposite.s_Composites.LookupTypeRegistration(composite) == compositeType)
                     selectedCompositeIndex = currentIndex;
                 var name = ObjectNames.NicifyVariableName(composite);
