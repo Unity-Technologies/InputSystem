@@ -2202,7 +2202,7 @@ partial class CoreTests
         // First finger goes down.
         BeginTouch(4, new Vector2(0.123f, 0.456f), time: 0);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2214,7 +2214,7 @@ partial class CoreTests
         // First finger moves.
         MoveTouch(4, new Vector2(0.234f, 0.345f), time: 0.1);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.EqualTo(0.111).Within(0.000001));
@@ -2226,7 +2226,7 @@ partial class CoreTests
         // Second finger goes down. No effect.
         BeginTouch(5, new Vector2(0.111f, 0.222f), time: 0.2);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2239,7 +2239,7 @@ partial class CoreTests
         // end yet.
         EndTouch(4, new Vector2(0.345f, 0.456f), time: 0.3);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.EqualTo(0.111).Within(0.000001));
@@ -2251,7 +2251,7 @@ partial class CoreTests
         // Second finger moves. No effect on primary touch.
         MoveTouch(5, new Vector2(0.456f, 0.567f), time: 0.4);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2263,7 +2263,7 @@ partial class CoreTests
         // Second finger goes up. Primary touch now ends.
         EndTouch(5, new Vector2(0.777f, 0.888f), time: 0.4);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));

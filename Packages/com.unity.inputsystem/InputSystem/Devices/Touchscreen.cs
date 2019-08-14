@@ -213,7 +213,6 @@ namespace UnityEngine.InputSystem.LowLevel
         // NOTE: Some controls from Pointer don't make sense for touch and we "park"
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
-        [InputControl(name = "pointerId", useStateFrom = "primaryTouch/touchId")]
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
         [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]

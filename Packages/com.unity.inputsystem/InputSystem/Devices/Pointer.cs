@@ -37,9 +37,6 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
-        [InputControl(layout = "Digital")]
-        public uint pointerId;
-
         /// <summary>
         /// Position of the pointer in screen space.
         /// </summary>
@@ -68,9 +65,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
-
-        [InputControl(layout = "Digital")]
-        public ushort displayIndex;
 
         public FourCC format
         {
@@ -143,9 +137,6 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public AxisControl twist { get; private set; }
 
-        public IntegerControl pointerId { get; private set; }
-        public IntegerControl displayIndex { get; private set; }
-
         /// <summary>
         /// Whether the pointer is pressed down.
         /// </summary>
@@ -184,8 +175,6 @@ namespace UnityEngine.InputSystem
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
             twist = GetChildControl<AxisControl>("twist");
-            pointerId = GetChildControl<IntegerControl>("pointerId");
-            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             press = GetChildControl<ButtonControl>("press");
 
             base.FinishSetup();
