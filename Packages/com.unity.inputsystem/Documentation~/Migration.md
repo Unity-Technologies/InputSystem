@@ -1,5 +1,3 @@
-[//]: # (//TODO: the screenshots are outdated and need updating)
-
 # Migrate From Old Input System
 
 This guide provides a listing of the APIs in `UnityEngine.Input` (and related APIs in `UnityEngine`) and their corresponding APIs in the new input system. Not all APIs have a corresponding version in the new API yet.
@@ -278,7 +276,7 @@ As an example, let's recreate the following axis configuration:
 9. Enable "Generate C# Wrapper Class" in the inspector for the asset and hit "Apply". Your inspector should now look something like this:
 
    ![MyControls.inputactions](./Images/FireActionInputAssetInspector.png)
-   
+
 10. Add an instance of the generated C# wrapper class to your component.
    ```
    public class MyComponent : MonoBehaviour
