@@ -1396,6 +1396,7 @@ partial class CoreTests
 
     class BaseClassWithControl : InputDevice
     {
+        [InputControl]
         public AxisControl controlFromBase { get; set; }
     }
 
