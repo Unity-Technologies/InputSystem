@@ -505,7 +505,9 @@ namespace UnityEngine.InputSystem
             // We need to unsubtract those offsets here.
             stateOffset += device.m_StateBlock.byteOffset;
 
-            if (control.m_StateBlock.byteOffset - stateOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            // Return null if state is out of range.
+            var controlOffset = (int)control.m_StateBlock.byteOffset - stateOffset;
+            if (controlOffset < 0 || controlOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return null;
 
             return (byte*)statePtr - (int)stateOffset;
