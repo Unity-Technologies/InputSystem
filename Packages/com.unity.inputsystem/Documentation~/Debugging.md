@@ -30,7 +30,7 @@ The debugger shows a tree breakdown of the state of the input system.
 
 You can double-click on any [input device](Devices.md) in the `Devices` list in the debugger window to open a window showing information about the device, including real-time state information for its controls.
 
-IMAGE
+![Device in Input Debugger](Images/DeviceInDebugger.png)
 
 The top of the device window shows some general information about the specific device (such as name, manufacturer, serial number, etc).
 
