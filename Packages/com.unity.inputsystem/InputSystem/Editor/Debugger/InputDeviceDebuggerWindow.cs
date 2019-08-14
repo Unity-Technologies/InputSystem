@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void OnDeviceStateChange(InputDevice device)
+        private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
             ////REVIEW: Ideally we would defer the refresh until we repaint. That way, we would not refresh on every single
             ////        state change but rather only once for a repaint. However, for some reason, if we move the refresh

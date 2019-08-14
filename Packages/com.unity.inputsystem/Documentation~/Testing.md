@@ -173,4 +173,4 @@ Alternatively, arbitrary input events can be fed into the system and arbitrary i
     }
 ```
 
->NOTE: For reference, the tests for the input system itself can be found [here](https://github.com/Unity-Technologies/InputSystem/tree/stable/Packages/com.unity.inputsystem/Tests/InputSystem).
+>NOTE: For reference, the tests for the input system itself can be found [here](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
