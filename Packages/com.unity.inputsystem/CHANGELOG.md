@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed available processor list not updated right away when changing the action type in the Input Action editor window.
+
 #### Actions
 
 - `NullReferenceException` when the input debugger is open with actions being enabled.
