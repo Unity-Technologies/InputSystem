@@ -80,7 +80,7 @@ To add devices to the list, click the plus icon and choose a device from the pic
 
 In the editor, it can be undesirable to restrict input devices to those supported by the game. For example, one might want to use a tablet in the editor even if the game being developed only supports gamepads.
 
-To force the editor, to add all locally available devices even if they are not in the list of `Supported Devices`, open the [Input Debugger](Debugger.md) (`Window >> Analysis >> Input Debugger`), click `Options`, and select `Add Devices Not Listed in 'Supported Devices'`.
+To force the editor, to add all locally available devices even if they are not in the list of `Supported Devices`, open the [Input Debugger](Debugging.md) (`Window >> Analysis >> Input Debugger`), click `Options`, and select `Add Devices Not Listed in 'Supported Devices'`.
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 

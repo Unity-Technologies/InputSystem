@@ -12,7 +12,6 @@
     * [Creating Actions in Code](#creating-actions-in-code)
 * [Using Actions](#using-actions)
     * [Responding to Actions](#responding-to-actions)
-    * [Continuous Actions](#continuous-actions)
     * [Pass-Through Actions](#pass-through-actions)
     * [Debugging Actions](#debugging-actions)
     * [Extending Actions](#extending-actions)
