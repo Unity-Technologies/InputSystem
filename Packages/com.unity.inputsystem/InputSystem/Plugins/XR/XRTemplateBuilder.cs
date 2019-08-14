@@ -4,7 +4,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
+#endif
 
 namespace UnityEngine.InputSystem.XR
 {

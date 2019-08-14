@@ -473,8 +473,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
-#if UNITY_2019_3_OR_NEWER
-#else
+#if !UNITY_2019_3_OR_NEWER
                 deviceRole = role,
 #endif
                 inputFeatures = new List<XRFeatureDescriptor>()
@@ -498,8 +497,7 @@ internal class XRTests : InputTestFixture
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
-#if UNITY_2019_3_OR_NEWER
-#else
+#if !UNITY_2019_3_OR_NEWER
                 deviceRole = DeviceRole.Generic,
 #endif
 
@@ -536,8 +534,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if UNITY_2019_3_OR_NEWER
-#else
+#if !UNITY_2019_3_OR_NEWER
                     deviceRole = DeviceRole.Generic,
 #endif
                     inputFeatures = new List<XRFeatureDescriptor>()
@@ -614,8 +611,7 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-#if UNITY_2019_3_OR_NEWER
-#else
+#if !UNITY_2019_3_OR_NEWER
                     deviceRole = DeviceRole.Generic,
 #endif
                     inputFeatures = new List<XRFeatureDescriptor>()

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
+#endif
 using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
@@ -75,11 +77,13 @@ namespace UnityEngine.InputSystem.XR
         public string deviceName;
         public string manufacturer;
         public string serialNumber;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 #if UNITY_2019_3_OR_NEWER
         public InputDeviceCharacteristics characteristics;
-#else
-        public DeviceRole deviceRole;
-#endif
+#else //UNITY_2019_3_OR_NEWER
+        public InputDeviceRole deviceRole;
+#endif //UNITY_2019_3_OR_NEWER
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
