@@ -20,7 +20,7 @@ There are three distinct ways in which the input system processes input.
 |----|-----------|
 |[`Fixed Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are processed in intervals of fixed length. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
 |[`Dynamic Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are processed in irregular intervals governed by the current framerate.|
-|[`Manual Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are not processed automatically by instead are flushed out whenever the user calls [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
+|[`Manual Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are not processed automatically but instead are flushed out whenever the user calls [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
 
 >NOTE: There are two additional types of updates performed by the system in the form of [`InputUpdateType.BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (late update for XR tracking devices) and [`InputUpdateType.Editor`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (for EditorWindows) but these do not fundamentally alter how input is consumed in an application.
 
@@ -80,7 +80,7 @@ To add devices to the list, click the plus icon and choose a device from the pic
 
 In the editor, it can be undesirable to restrict input devices to those supported by the game. For example, one might want to use a tablet in the editor even if the game being developed only supports gamepads.
 
-To force the editor, to add all locally available devices even if they are not in the list of `Supported Devices`, open the input debugger (`Window >> Input Debugger`), click `Options`, and select `Add Devices Not Listed in 'Supported Devices'`.
+To force the editor, to add all locally available devices even if they are not in the list of `Supported Devices`, open the [Input Debugger](Debugging.md) (`Window >> Analysis >> Input Debugger`), click `Options`, and select `Add Devices Not Listed in 'Supported Devices'`.
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 

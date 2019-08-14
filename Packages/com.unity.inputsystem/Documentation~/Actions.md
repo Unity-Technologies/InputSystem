@@ -12,7 +12,6 @@
     * [Creating Actions in Code](#creating-actions-in-code)
 * [Using Actions](#using-actions)
     * [Responding to Actions](#responding-to-actions)
-    * [Continuous Actions](#continuous-actions)
     * [Pass-Through Actions](#pass-through-actions)
     * [Debugging Actions](#debugging-actions)
     * [Extending Actions](#extending-actions)
@@ -105,7 +104,7 @@ The editors work similar to the [action asset editor](ActionAssets.md).
 * To add or remote actions or bindings, click the plus or minus icon in the header.
 * To edit binding entries, double-click them.<br>
   ![InputBinding Inspector](Images/InputBindingInspector.png)
-* To edit action entries, double-click them.<br>
+* To edit action entries, double-click them in an InputActionMap, or click the 'gear' icon on individual action properties.<br>
   ![InputAction Inspector](Images/InputActionInspector.png)
 * Entries can also be right-clicked to bring up a context menu and can be dragged around (hold alt to duplicate).
 
@@ -338,20 +337,6 @@ trace.Dispose();
 ```
 
 Once recorded, a trace can be safely read from multiple threads as long as it is not concurrently being written to and as long as the action setup (i.e. the configuration data accessed by the trace) is not concurrently being changed on the main thread.
-
-### Continuous Actions
-
-By default, actions will trigger only in response to input events. This means that, for example, an action bound to the left stick of a gamepad will only trigger when the left stick is actually moved. This behavior can be undesirable when an input is meant to register for as long as a control is actuated -- regardless of whether it changes value in a particular frame or not.
-
-This is what "continuous" mode is for. It can be enabled in the UI by selecting the action in the [action editor](ActionAssets.md) and ticking the "Continuous" checkbox.
-
-    ////TODO: Update screenshot
-
-![Continuous Action](Images/ContinuousAction.png)
-
-When continuous mode is enabled, an action that goes into `Performed` phase will stay in the phase until it is `Cancelled`. Also, while in the `Performed` phase, an action in continuous mode will be `Performed` in a frame even if there is no input. The value returned by `ReadValue` will be the value of the control that was last used with the action.
-
->NOTE: Not all interactions support continuous mode. See [here](Interactions.md#predefined-interactions) for details.
 
 ### Pass-Through Actions
 
