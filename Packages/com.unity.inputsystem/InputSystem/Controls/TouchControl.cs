@@ -13,27 +13,40 @@ namespace UnityEngine.InputSystem.Controls
     [InputControlLayout(stateType = typeof(TouchState))]
     public class TouchControl : InputControl<TouchState>
     {
+        [InputControl]
         public TouchPressControl press { get; private set; }
 
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
         /// </summary>
+        [InputControl]
         public IntegerControl touchId { get; private set; }
 
         /// <summary>
         /// Absolute position on the touch surface.
         /// </summary>
+        [InputControl]
         public Vector2Control position { get; private set; }
 
+        [InputControl]
         public Vector2Control delta { get; private set; }
+        [InputControl]
         public AxisControl pressure { get; private set; }
+        [InputControl]
         public Vector2Control radius { get; private set; }
+        [InputControl]
         public TouchPhaseControl phase { get; private set; }
+        [InputControl]
         public IntegerControl displayIndex { get; private set; }
+        [InputControl]
         public ButtonControl indirectTouch { get; private set; }
+        [InputControl]
         public ButtonControl tap { get; private set; }
+        [InputControl]
         public IntegerControl tapCount { get; private set; }
+        [InputControl]
         public DoubleControl startTime { get; private set; }
+        [InputControl]
         public Vector2Control startPosition { get; private set; }
 
         public bool isInProgress

@@ -8,7 +8,7 @@ The [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUI
 
 If you have a [`StandaloneInputModule`](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component on a game object, and the Input System is installed, Unity will show a button in the inspector offering to automatically replace it with a [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) for you. The [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) is preconfigured to use default input actions to drive the UI, but you can override that configuration to suit your needs.
 
-[//]: # (TODO: add a screenshot)
+![InputSystemUIInputModule](Images/InputSystemUIInputModule.png)
 
 You can use the following properties to configure [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html):
 
@@ -38,7 +38,7 @@ The following properties let you map actions from the chosen [`Actions Asset`](.
 
 The Input System can also handle multiple separate UI instances on the screen with separate controls. This is useful for having multiple local players sharing a single screen with different controllers, so that every player can control their own UI instance. To allow this, you need to replace the [`EventSystem`](https://docs.unity3d.com/Manual/script-EventSystem.html) component from Unity with the Input System's [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component.
 
-[//]: # (TODO: add a screenshot)
+![MultiplayerEventSystem](Images/MultiplayerEventSystem.png)
 
 Unlike the [`EventSystem`](https://docs.unity3d.com/Manual/script-EventSystem.html) component, it is allowed to have multiple [`MultiplayerEventSystems`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) active in the scene at the same time. That way, you can have multiple players, each with their own [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) and [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html)components. That way each player can have their own set of actions driving their own UI instance. If you are using the [`PlayerInput`](Components.md#playerinput-component) component, you can also set up [`PlayerInput`](Components.md#playerinput-component) to automatically configure the player's [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) to use the player's actions. [See here to learn how.](Components.md#ui-input)
 

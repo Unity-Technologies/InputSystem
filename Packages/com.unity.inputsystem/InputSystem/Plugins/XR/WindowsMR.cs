@@ -9,17 +9,25 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class WMRHMD : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
         [InputControl(aliases = new[] { "HeadPosition" })]
         public Vector3Control devicePosition { get; private set; }
         [InputControl(aliases = new[] { "HeadRotation" })]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
 
@@ -46,7 +54,9 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class HololensHand : XRController
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
         [InputControl(aliases = new[] { "gripPosition" })]
         public Vector3Control devicePosition { get; private set; }
@@ -54,7 +64,9 @@ namespace UnityEngine.InputSystem.XR
         public QuaternionControl deviceRotation { get; private set; }
         [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl airTap { get; private set; }
+        [InputControl]
         public AxisControl sourceLossRisk { get; private set; }
+        [InputControl]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
 
         protected override void FinishSetup()
@@ -94,7 +106,9 @@ namespace UnityEngine.InputSystem.XR
         public ButtonControl touchpadClicked { get; private set; }
         [InputControl(aliases = new[] { "joystickorpadtouched", "touchpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
         [InputControl(aliases = new[] { "gripPosition" })]
         public Vector3Control devicePosition { get; private set; }
@@ -105,9 +119,13 @@ namespace UnityEngine.InputSystem.XR
         [InputControl(aliases = new[] { "gripAngularVelocity" })]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
+        [InputControl]
         public AxisControl batteryLevel { get; private set; }
+        [InputControl]
         public AxisControl sourceLossRisk { get; private set; }
+        [InputControl]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
+        [InputControl]
         public Vector3Control pointerPosition { get; private set; }
         [InputControl(aliases = new[] { "PointerOrientation" })]
         public QuaternionControl pointerRotation { get; private set; }

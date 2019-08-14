@@ -2,7 +2,7 @@
 
 This is a short guide on how to install and activate the new input system in your Unity project.
 
->NOTE: The new input system requires Unity 2018.3+ and the new .NET 4 runtime. It does not work in projects using the old .NET 3.5 runtime.
+>NOTE: The new input system requires Unity 2019.1+ and the .NET 4 runtime. It does not work in projects using the old .NET 3.5 runtime.
 
 ## Installing the Package
 

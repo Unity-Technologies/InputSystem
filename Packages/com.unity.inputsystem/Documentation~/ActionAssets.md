@@ -83,7 +83,7 @@ One of the most convenient ways to work with `.inputactions` assets in script is
 To enable this, tick the `Generate C# Class` in the importer properties in the inspector of the `.inputactions` asset when selected in Unity and hit "Apply".
 
     ////TODO: Update screenshot
-![MyPlayerControls Importer Settings](Images/MyPlayerControlsImporterSettings.png)
+![MyPlayerControls Importer Settings](Images/FireActionInputAssetInspector.png)
 
 This will generate a C# script that makes working with the asset a lot simpler. TODO
 

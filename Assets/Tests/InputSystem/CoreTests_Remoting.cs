@@ -255,6 +255,12 @@ partial class CoreTests
             otherEnd.Receive(messageId, data);
         }
 
+        public bool TrySend(Guid messageId, byte[] data)
+        {
+            Send(messageId, data);
+            return true;
+        }
+
         private Dictionary<Guid, MessageEvent> m_MessageListeners = new Dictionary<Guid, MessageEvent>();
         private ConnectEvent m_ConnectionListeners = new ConnectEvent();
         private ConnectEvent m_DisconnectionListeners = new ConnectEvent();

@@ -4,11 +4,8 @@ The input system has built-in support for writing automated tests involving inpu
 
 ## Setting Up Test Assemblies
 
->NOTE: At the moment, the tests from the input system itself will be injected into user projects when following the steps here. We're working on fixing that.
+Using test support requires setting up a test assembly for your tests. To do so, create a new assembly definition ("Create >> Assembly Definition") and add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described [here](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)) as well as `UnityEngine.Input.dll` and `UnityEngine.Input.TestFramework.dll` for the input system.
 
-Using test support requires setting up a test assembly for your tests. To do so, create a new assembly definition ("Create >> Assembly Definition") and tick the "Test Assemblies" checkbox. Also add a reference to `UnityEngine.Input.dll` and `UnityEngine.Input.TestFramework.dll`.
-
-    ////TODO: Needs updated screenshot
 ![Test Assembly Setup](Images/TestAssemblySetup.png)
 
 ## Setting Up Test Fixtures
@@ -173,4 +170,4 @@ Alternatively, arbitrary input events can be fed into the system and arbitrary i
     }
 ```
 
->NOTE: For reference, the tests for the input system itself can be found [here](https://github.com/Unity-Technologies/InputSystem/tree/stable/Packages/com.unity.inputsystem/Tests/InputSystem).
+>NOTE: For reference, the tests for the input system itself can be found [here](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
