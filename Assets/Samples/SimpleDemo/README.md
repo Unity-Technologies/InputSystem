@@ -113,7 +113,7 @@ public class SimpleController : MonoBehaviour
 }
 ```
 
-but then we would have to look up all the actions manually in the action map. A simple approach is to put all our actions in a separate asset and generate a C# wrapper class that automatically performs the lookup for us.
+but then we would have to look up all the actions manually in the action map. A simpler approach is to put all our actions in a separate asset and generate a C# wrapper class that automatically performs the lookup for us.
 
 To create such an `.inputactions` asset, right-click in the Project Browser and click `Create >> Input Actions`. To edit the actions, double-click the `.inputactions` asset and a separate window will come up. The asset we use in this example is [SimpleControls.inputactions](SimpleControls.inputactions).
 
@@ -153,6 +153,8 @@ public class SimpleController_UsingActionAsset
         // Same here, we can just look the actions up by name.
         var look = m_Controls.gameplay.look.ReadValue<Vector2>();
         var move = m_Controls.gameplay.move.ReadValue<Vector2>();
+
+        //...
     }
 }
 ```

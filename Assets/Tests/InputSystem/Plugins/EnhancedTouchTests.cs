@@ -111,8 +111,7 @@ internal class EnhancedTouchTests : InputTestFixture
     public void EnhancedTouch_SupportsInputUpdateIn(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
     {
         InputSystem.settings.updateMode = updateMode;
-        InputSystem.settings.timesliceEvents = false;
-
+        runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         InputSystem.Update(updateType);
 
@@ -129,10 +128,9 @@ internal class EnhancedTouchTests : InputTestFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate)]
     public void EnhancedTouch_SupportsEditorUpdates(InputSettings.UpdateMode updateMode)
     {
-        InputSystem.settings.timesliceEvents = false;
         InputEditorUserSettings.lockInputToGameView = false;
         InputSystem.settings.updateMode = updateMode;
-
+        runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         // Run one player update with data.
         BeginTouch(1, new Vector2(0.123f, 0.234f));
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
@@ -332,8 +330,6 @@ internal class EnhancedTouchTests : InputTestFixture
     [Category("EnhancedTouch")]
     public void EnhancedTouch_CanGetStartPositionAndTimeOfTouch()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         runtime.currentTime = 0.111;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
@@ -356,8 +352,6 @@ internal class EnhancedTouchTests : InputTestFixture
     [Category("EnhancedTouch")]
     public void EnhancedTouch_CanAccessHistoryOfTouch()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Noise. This one shouldn't show up in the history.
         BeginTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         EndTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);

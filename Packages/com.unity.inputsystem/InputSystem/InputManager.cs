@@ -1520,6 +1520,8 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
+            composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2286,8 +2288,7 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = false;
-            timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
+            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)

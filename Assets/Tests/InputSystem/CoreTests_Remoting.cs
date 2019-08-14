@@ -33,8 +33,6 @@ partial class CoreTests
     [Category("Remote")]
     public void Remote_EventsAreSentToRemotes()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var remote = new FakeRemote())
@@ -307,7 +305,6 @@ partial class CoreTests
             runtime = new InputTestRuntime();
             manager = new InputManager();
             manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.m_Settings.timesliceEvents = false;
             manager.InstallRuntime(runtime);
             manager.InitializeData();
             manager.ApplySettings();

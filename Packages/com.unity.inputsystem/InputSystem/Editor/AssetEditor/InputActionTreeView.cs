@@ -886,9 +886,21 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             // Add one entry for each registered type of composite binding.
+            var expectedControlLayout = new InternedString(actionItem?.expectedControlLayout);
             foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
+                // If the action is expected a specific control layout, check
+                // whether the value type use by the composite matches that of
+                // the layout.
+                if (!expectedControlLayout.IsEmpty())
+                {
+                    var valueType = InputBindingComposite.GetValueType(compositeName);
+                    if (valueType != null &&
+                        !InputControlLayout.s_Layouts.ValueTypeIsAssignableFrom(expectedControlLayout, valueType))
+                        continue;
+                }
+
                 var niceName = ObjectNames.NicifyVariableName(compositeName);
                 menu.AddItem(new GUIContent($"Add {niceName} Composite"), false,
                     () =>
