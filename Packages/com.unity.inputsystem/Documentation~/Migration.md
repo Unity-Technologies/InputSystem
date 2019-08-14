@@ -65,8 +65,6 @@ No corresponding API yet.
 
 Use [`InputSystem.settings.compensateForScreenOrientation`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_compensateForScreenOrientation).
 
-You will need to put a Compensate Direction processor or a Compensate Rotation processor to your actions for this to have any effect.
-
 ### [`UnityEngine.Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)
 
 Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_Vector2_).

@@ -183,8 +183,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenDisabled_CancelAllStartedInteractions()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action1 = new InputAction("action1", InputActionType.Button, binding: "<Gamepad>/buttonSouth", interactions: "Hold");
@@ -828,8 +826,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1172,8 +1168,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_DriveInteractionsFromControlWithGreatestActuation()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // We go through several permutations of the same behavior all in one test. Makes the
@@ -1502,8 +1496,6 @@ partial class CoreTests
     [Ignore("TODO")]
     public void TODO_Actions_WithMultipleActuationsFromSameState_()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var mouse = InputSystem.AddDevice<Mouse>();
         var action = new InputAction(binding: "<Mouse>/*button");
         action.Enable();
@@ -1669,8 +1661,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanRecordActions()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftStick");
         action.AddBinding("<Gamepad>/rightStick");
@@ -2588,8 +2578,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanAddInteractionsToActions()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.RegisterProcessor<ConstantVector2TestProcessor>();
@@ -2980,7 +2968,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformHoldOnTrigger()
     {
-        InputSystem.settings.timesliceEvents = false;
         InputSystem.settings.defaultButtonPressPoint = 0.1f;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -3025,8 +3012,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanDistinguishTapAndSlowTapOnSameAction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Bindings can have more than one interaction. Depending on the interaction happening on the bound
         // controls one of the interactions may initiate a phase shift and which interaction initiated the
         // shift is visible on the callback.
@@ -3399,8 +3384,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanQueryStartAndPerformTime()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice("Gamepad");
 
         var action = new InputAction(binding: "/gamepad/leftTrigger", interactions: "slowTap");
@@ -5946,8 +5929,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanUseTouchWithActions()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         var primaryTouchAction = new InputAction("PrimaryTouch" , binding: "<Touchscreen>/primaryTouch/position");
@@ -6018,8 +5999,6 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanDrivePointerInputFromTouchPenAndMouse()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Give us known parameters for tap detection.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;

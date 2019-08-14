@@ -574,6 +574,7 @@ partial class CoreTests
     [Category("Controls")]
     public void Controls_CanQueueValueChange_InFuture()
     {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         gamepad.leftTrigger.QueueValueChange(0.123f, 0.5);
@@ -581,7 +582,7 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        runtime.currentTime = 1;
+        runtime.currentTimeForFixedUpdate = 1;
         InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }

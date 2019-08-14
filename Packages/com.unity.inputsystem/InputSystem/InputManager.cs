@@ -2288,8 +2288,7 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = false;
-            timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
+            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)

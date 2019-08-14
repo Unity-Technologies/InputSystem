@@ -8,15 +8,9 @@ Processors can be installed on [controls](
 
 ## Predefined Processors
 
-|Processor|Description|
-|---------|-----------|
-|`invert`||
-|`scale`||
-|`normalize`||
-|`axisDeadzone`||
-|[`stickDeadzone`](#stickdeadzone)||
+### Stick Deadzone
 
-### `stickDeadzone`
+### Axis Deadzone
 
 ## Writing Custom Processors
 
