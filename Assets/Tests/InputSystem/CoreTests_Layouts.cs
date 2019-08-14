@@ -1059,6 +1059,24 @@ partial class CoreTests
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
     }
 
+    class DeviceWithControlProperties : InputDevice
+    {
+        public ButtonControl propertyWithoutAttribute { get; set; }
+        [InputControl]
+        public ButtonControl propertyWithAttribute { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutType_OnlyAddsPropertiesWithExplicitAttribute()
+    {
+        var device = InputSystem.AddDevice<DeviceWithControlProperties>();
+
+        Assert.That(device.TryGetChildControl("propertyWithoutAttribute"), Is.Null);
+        Assert.That(device.TryGetChildControl("propertyWithAttribute"), Is.Not.Null);
+        Assert.That(device.TryGetChildControl("propertyWithAttribute"), Is.TypeOf<ButtonControl>());
+    }
+
     // We consider layouts built by layout builders as being auto-generated. We want them to
     // be overridable by layouts built specifically for a device so we boost the score of
     // of type and JSON layouts such that they will override auto-generated layouts even if
@@ -1378,6 +1396,7 @@ partial class CoreTests
 
     class BaseClassWithControl : InputDevice
     {
+        [InputControl]
         public AxisControl controlFromBase { get; set; }
     }
 

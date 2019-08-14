@@ -759,6 +759,13 @@ namespace UnityEngine.InputSystem.Layouts
                 {
                     if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
                         continue;
+
+                    // On properties, we require explicit [InputControl] attributes to
+                    // pick them up. Doing it otherwise has proven to lead too easily to
+                    // situations where you inadvertently add new controls to a layout
+                    // just because you added an InputControl-type property to a class.
+                    if (member is PropertyInfo)
+                        continue;
                 }
 
                 AddControlItemsFromMember(member, attributes, controlItems, layoutName);

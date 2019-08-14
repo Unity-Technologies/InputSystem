@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- `XInputController` and `XboxOneGamepad` no longer have two extraneous, non-functional "menu" and "view" buttons.
 - Fixed `InputUser.onUnpairedDeviceUser` ignoring input on controls that do not support `EvaluateMagnitude`.
   * This led to situations, for example, where `PlayerInput` would not initialize a control scheme switch from a `<Mouse>/delta` binding as the delta X and Y axes do not have min&max limits and thus return -1 from `EvaluateMagnitude`.
 - Fixed available processor list not updated right away when changing the action type in the Input Action editor window.

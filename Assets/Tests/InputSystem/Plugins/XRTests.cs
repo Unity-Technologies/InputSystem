@@ -358,7 +358,9 @@ internal class XRTests : InputTestFixture
     [InputControlLayout(updateBeforeRender = true)]
     private class TestHMD : InputDevice
     {
+        [InputControl]
         public QuaternionControl quaternion { get; private set; }
+        [InputControl]
         public Vector3Control vector3 { get; private set; }
         protected override void FinishSetup()
         {

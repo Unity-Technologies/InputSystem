@@ -19,10 +19,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
     internal struct GyroscopeState : IInputStateTypeInfo
@@ -32,10 +29,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
     internal struct GravityState : IInputStateTypeInfo
@@ -45,10 +39,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
     internal struct AttitudeState : IInputStateTypeInfo
@@ -58,10 +49,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
     internal struct LinearAccelerationState : IInputStateTypeInfo
@@ -71,10 +59,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 }
 
@@ -315,6 +300,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
+        [InputControl]
         public Vector3Control magneticField { get; private set; }
 
         public static MagneticFieldSensor current { get; private set; }
@@ -348,6 +334,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Light level in SI lux units.
         /// </summary>
+        [InputControl]
         public AxisControl lightLevel { get; private set; }
 
         public static LightSensor current { get; private set; }
@@ -381,6 +368,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Atmospheric pressure in hPa (millibar).
         /// </summary>
+        [InputControl]
         public AxisControl atmosphericPressure { get; private set; }
 
         public static PressureSensor current { get; private set; }
@@ -417,6 +405,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Proximity sensor distance measured in centimeters.
         /// </summary>
+        [InputControl]
         public AxisControl distance { get; private set; }
 
         public static ProximitySensor current { get; private set; }
@@ -450,6 +439,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Relative ambient air humidity in percent.
         /// </summary>
+        [InputControl]
         public AxisControl relativeHumidity { get; private set; }
 
         public static HumiditySensor current { get; private set; }
@@ -483,6 +473,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Temperature in degree Celsius.
         /// </summary>
+        [InputControl]
         public AxisControl ambientTemperature { get; private set; }
 
         public static AmbientTemperatureSensor current { get; private set; }
@@ -516,6 +507,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The number of steps taken by the user since the last reboot while activated.
         /// </summary>
+        [InputControl]
         public IntegerControl stepCounter { get; private set; }
 
         public static StepCounter current { get; private set; }
