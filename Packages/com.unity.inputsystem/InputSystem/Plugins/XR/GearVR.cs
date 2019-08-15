@@ -9,27 +9,49 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class OculusStandaloneHMDBase : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control leftEyeAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control leftEyeAngularAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control rightEyeAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control rightEyeAngularAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control centerEyeAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control centerEyeAngularAcceleration { get; private set; }
 
         protected override void FinishSetup()
@@ -73,7 +95,9 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
     {
+        [InputControl]
         public ButtonControl back { get; private set; }
+        [InputControl]
         public Vector2Control touchpad { get; private set; }
 
         protected override void FinishSetup()
@@ -98,18 +122,31 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
+        [InputControl]
         public Vector2Control touchpad { get; private set; }
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [InputControl]
         public ButtonControl back { get; private set; }
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
+        [InputControl]
         public ButtonControl touchpadClicked { get; private set; }
+        [InputControl]
         public ButtonControl touchpadTouched { get; private set; }
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
         protected override void FinishSetup()

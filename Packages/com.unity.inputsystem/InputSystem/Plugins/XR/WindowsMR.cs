@@ -9,15 +9,25 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class WMRHMD : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
 
@@ -46,24 +56,35 @@ namespace UnityEngine.InputSystem.XR
     {
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control joystick { get; private set; }
+        [InputControl]
         public AxisControl trigger { get; private set; }
         [InputControl(aliases = new[] { "Secondary2DAxis" })]
         public Vector2Control touchpad { get; private set; }
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
         [InputControl(aliases = new[] { "Primary" })]
         public ButtonControl menu { get; private set; }
+        [InputControl]
         public ButtonControl joystickClicked { get; private set; }
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
         [InputControl(aliases = new[] { "joystickorpadpressed" })]
         public ButtonControl touchpadClicked { get; private set; }
         [InputControl(aliases = new[] { "joystickorpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup()

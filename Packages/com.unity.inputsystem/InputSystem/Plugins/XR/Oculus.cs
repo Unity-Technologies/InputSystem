@@ -9,15 +9,25 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class OculusHMD : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
 
@@ -47,17 +57,23 @@ namespace UnityEngine.InputSystem.XR
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
         public Vector2Control thumbstick { get; private set; }
 
+        [InputControl]
         public AxisControl trigger { get; private set; }
 
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [InputControl]
         public AxisControl indexNearTouched { get; private set; }
+        [InputControl]
         public AxisControl thumbNearTouched { get; private set; }
 
         [InputControl(aliases = new[] { "A", "X", "Alternate" })]
         public ButtonControl primaryButton { get; private set; }
         [InputControl(aliases = new[] { "B", "Y", "Primary" })]
         public ButtonControl secondaryButton { get; private set; }
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [InputControl]
         public ButtonControl start { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl thumbstickClicked { get; private set; }
@@ -69,15 +85,24 @@ namespace UnityEngine.InputSystem.XR
         public ButtonControl indexTouched { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl thumbstickTouched { get; private set; }
+        [InputControl]
         public ButtonControl thumbrestTouched { get; private set; }
 
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
         protected override void FinishSetup()
@@ -115,9 +140,13 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class OculusTrackingReference : InputDevice
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
 
         protected override void FinishSetup()
@@ -137,8 +166,11 @@ namespace UnityEngine.InputSystem.XR
 
     public class OculusRemote : InputDevice
     {
+        [InputControl]
         public ButtonControl back { get; private set; }
+        [InputControl]
         public ButtonControl start { get; private set; }
+        [InputControl]
         public Vector2Control touchpad { get; private set; }
 
         protected override void FinishSetup()

@@ -35,7 +35,12 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Callback that is triggered when the state of an input device changes.
         /// </summary>
-        public static event Action<InputDevice> onChange
+        /// <remarks>
+        /// The first parameter is the device whose state was changed the second parameter is the event
+        /// that triggered the change in state. Note that the latter may be <c>null</c> in case the
+        /// change was performed directly through <see cref="Change"/> rather than through an event.
+        /// </remarks>
+        public static event Action<InputDevice, InputEventPtr> onChange
         {
             add => InputSystem.s_Manager.onDeviceStateChange += value;
             remove => InputSystem.s_Manager.onDeviceStateChange -= value;

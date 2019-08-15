@@ -16,9 +16,13 @@ namespace UnityEngine.InputSystem.Controls
         // Also, it allows putting processors on the individual components which may be necessary
         // to properly convert the source data.
 
+        [InputControl]
         public AxisControl x { get; private set; }
+        [InputControl]
         public AxisControl y { get; private set; }
+        [InputControl]
         public AxisControl z { get; private set; }
+        [InputControl]
         public AxisControl w { get; private set; }
 
         public QuaternionControl()
