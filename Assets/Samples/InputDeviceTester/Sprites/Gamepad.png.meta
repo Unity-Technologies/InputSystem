@@ -1,12 +1,21 @@
 fileFormatVersion: 2
-guid: 0f50a4711a560924bb75c8f211de868b
+guid: e97a8ef01555d4941bdbc5eb5b056469
 TextureImporter:
-  fileIDToRecycleName:
-    21300000: Pen
-    21300002: Pen_Button_1
-    21300004: Pen_Button_2
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Gamepad_Dpad
+  - first:
+      213: 21300002
+    second: Gamepad_Stick
+  - first:
+      213: 21300004
+    second: Gamepad_Button
+  - first:
+      213: 21300006
+    second: Square
   externalObjects: {}
-  serializedVersion: 6
+  serializedVersion: 10
   mipmaps:
     mipMapMode: 0
     enableMipMap: 0
@@ -45,7 +54,7 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
@@ -61,7 +70,7 @@ TextureImporter:
   compressionQualitySet: 0
   textureFormatSet: 0
   platformSettings:
-  - serializedVersion: 2
+  - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -72,7 +81,8 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
-  - serializedVersion: 2
+    forceMaximumCompressionQuality_BC6H_BC7: 1
+  - serializedVersion: 3
     buildTarget: Standalone
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -83,7 +93,8 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
-  - serializedVersion: 2
+    forceMaximumCompressionQuality_BC6H_BC7: 1
+  - serializedVersion: 3
     buildTarget: Windows Store Apps
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -94,37 +105,81 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 1
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Pen
+      name: Gamepad_Dpad
       rect:
         serializedVersion: 2
-        x: 0
-        y: 124
-        width: 107
-        height: 1114
+        x: 5
+        y: 209
+        width: 322
+        height: 321
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 13bdd14adf18a904d891270af96eb156
+      spriteID: c44eb1a07d82859489221e6c1a8ac5c9
+      internalID: 21300000
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Pen_Button_1
+      name: Gamepad_Stick
       rect:
         serializedVersion: 2
-        x: 7
-        y: 45
+        x: 5
+        y: 5
+        width: 192
+        height: 192
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db406eec9e3e32340851a4e220ac7e79
+      internalID: 21300002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Gamepad_Button
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 37
+        width: 72
+        height: 43
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62a62d2b9afd99e4b9b9914769f350b0
+      internalID: 21300004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Square
+      rect:
+        serializedVersion: 2
+        x: 241
+        y: 116
         width: 42
-        height: 71
+        height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -132,27 +187,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 40074d0d9e901b348beaf8c8211222a4
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Pen_Button_2
-      rect:
-        serializedVersion: 2
-        x: 58
-        y: 2
-        width: 43
-        height: 122
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: 156885c1f58eac747973e8cadb80f27a
+      spriteID: 05a6db8ae08df90458497f544ecb5992
+      internalID: 21300006
       vertices: []
       indices: 
       edges: []
@@ -160,12 +196,16 @@ TextureImporter:
     outline: []
     physicsShape: []
     bones: []
-    spriteID: eedc1e77625bbbf429aa5bffb1d90010
+    spriteID: e72fc6e9a4821894fb29fb767bd70ae5
+    internalID: 0
     vertices: []
     indices: 
     edges: []
     weights: []
+    secondaryTextures: []
   spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
