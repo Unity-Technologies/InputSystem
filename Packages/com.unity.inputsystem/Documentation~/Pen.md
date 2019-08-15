@@ -8,7 +8,10 @@ Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) dev
 
 The last used or last added pen can be queried with [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current).
 
->NOTE: Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
+>NOTES:
+>* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
+>* Some devices support tracking multiple pens independently. This is not currently supported by the input system in Unity.
+
 
 ## Controls
 
@@ -28,26 +31,18 @@ Additional to the [controls inherited from `Pointer`](Pointers.md#controls), Pen
 
 The current pressure is available through the [`Pen.pressure`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_pressure) control. Pen pressure is normalized (0=no pressure, 1=maximum pressure). However, note that pressure may go __beyond__ 1 in case the system is applying a custom pressure curve where reaching a pressure value of 1 does not require pressing the pen down all the way to the maximum supported by hardware.
 
-If a pen does not support pressure, the `pressure` control will always return 1.
+If a pen does not support pressure, the [`pressure`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_pressure) control will always return 1.
 
-If supported, the `Pen.tilt` control represents the tilt angle of the pen, i.e. the angle with which the pen is titled towards the tablet/screen surface. The X and Y axis correspond to respective screen axes. A value of 1 on either axis means that the pen is fully parallel to the tablet/screen surface on the respective axis whereas a value of 0 means that the pen is perpendicular to the tablet/screen surface on the respective axis. If not support, `Pen.tilt` will always be `(0,0)`.
+If supported, the [`Pen.tilt`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_tilt) control represents the tilt angle of the pen, i.e. the angle with which the pen is titled towards the tablet/screen surface. The X and Y axis correspond to respective screen axes. A value of 1 on either axis means that the pen is fully parallel to the tablet/screen surface on the respective axis whereas a value of 0 means that the pen is perpendicular to the tablet/screen surface on the respective axis. If not support, `Pen.tilt` will always be `(0,0)`.
 
-A small number of pens (such as the Wacom Art Pen) also support twist, i.e. detecting the pen rotating about its own axis. If support, `Pen.twist` represents the current rotation with 0 meaning the pen is facing up on Y and values close to 1 meaning the pen is fully rotated clock-wise about its own axis.
+A small number of pens (such as the Wacom Art Pen) also support twist, i.e. detecting the pen rotating about its own axis. If support, [`Pen.twist`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_twist) represents the current rotation with 0 meaning the pen is facing up on Y and values close to 1 meaning the pen is fully rotated clock-wise about its own axis.
 
 ## In-Range Detection
 
-A pen may not need to touch the tablet/screen surface in order to be able to control the cursor. The `inRange` control can be used to determine whether the pen is currently in detection range. If the button is on, the pen registers with the tablet/screen.
+A pen may not need to touch the tablet/screen surface in order to be able to control the cursor. The [`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange) control can be used to determine whether the pen is currently in detection range. If the button is on, the pen registers with the tablet/screen.
 
-For devices that do not support this feature, `inRange` is always on.
+For devices that do not support this feature, [`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange) is always on.
 
 ## Barrel Buttons
 
-## Pen vs Touch
-
-    ////WIP
-
-An application may wish to surface pen input as touch input rather than as pen input.
-
-## Multi-Pen Usage
-
-    We do not currently support pen IDs. We are working on it.
+Pen devices often have one or multiple buttons on the side of the pen. These are represented by the [`firstBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_firstBarrelButton), [`secondBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_secondBarrelButton), [`thirdBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_thirdBarrelButton) and [`forthBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_forthBarrelButton) where applicable.
