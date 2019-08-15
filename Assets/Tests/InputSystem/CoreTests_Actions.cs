@@ -5935,7 +5935,7 @@ partial class CoreTests
         var touch0Action = new InputAction("Touch0", binding: "<Touchscreen>/touch0/position");
         var touch1Action = new InputAction("Touch1", binding: "<Touchscreen>/touch1/position");
         var positionAction = new InputAction("Position", binding: "<Touchscreen>/position");
-        var tapAction = new InputAction("Tap", binding: "<Touchscreen>/tap");
+        var tapAction = new InputAction("Tap", binding: "<Touchscreen>/primaryTouch/tap");
 
         Assert.That(primaryTouchAction.controls, Is.EquivalentTo(new[] { touchscreen.primaryTouch.position }));
         Assert.That(touch0Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[0].position }));
