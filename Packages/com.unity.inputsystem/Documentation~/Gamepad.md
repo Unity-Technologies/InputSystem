@@ -1,5 +1,3 @@
-    ////WIP
-
 # Gamepad Support
 
 A gamepad is narrowly defined as a device with two thumbsticks, a dpad, and four face buttons. Additionally, they will usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle section of the gamepad.
