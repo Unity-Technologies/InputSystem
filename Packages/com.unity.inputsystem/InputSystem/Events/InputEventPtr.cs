@@ -121,6 +121,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public InputEvent* data => m_EventPtr;
 
+        // The stateFormat, stateSizeInBytes, and stateOffset properties are very
+        // useful for debugging.
+
         internal FourCC stateFormat
         {
             get
@@ -142,6 +145,16 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (IsA<DeltaStateEvent>())
                     return DeltaStateEvent.From(this)->deltaStateSizeInBytes;
                 throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
+            }
+        }
+
+        internal uint stateOffset
+        {
+            get
+            {
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->stateOffset;
+                throw new InvalidOperationException("Event must be a DeltaStateEvent but is " + this);
             }
         }
 

@@ -103,9 +103,6 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
-            if (!item.enabled)
-                return;
-
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
             m_OnPickCallback(path);
         }
@@ -163,12 +160,13 @@ namespace UnityEngine.InputSystem.Editor
             parent.AddChild(deviceItem);
 
             // Add common usage variants.
-            if (m_Mode != InputControlPicker.Mode.PickDevice && layout.commonUsages.Count > 0)
+            if (layout.commonUsages.Count > 0)
             {
                 foreach (var usage in layout.commonUsages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
-                    AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
+                    if (m_Mode == InputControlPicker.Mode.PickControl)
+                        AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);
                 }
                 deviceItem.AddSeparator();

@@ -9,15 +9,25 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class DaydreamHMD : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
         protected override void FinishSetup()
@@ -43,21 +53,36 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class DaydreamController : XRController
     {
+        [InputControl]
         public Vector2Control touchpad { get; private set; }
+        [InputControl]
         public ButtonControl volumeUp { get; private set; }
+        [InputControl]
         public ButtonControl recentered { get; private set; }
+        [InputControl]
         public ButtonControl volumeDown { get; private set; }
+        [InputControl]
         public ButtonControl recentering { get; private set; }
+        [InputControl]
         public ButtonControl app { get; private set; }
+        [InputControl]
         public ButtonControl home { get; private set; }
+        [InputControl]
         public ButtonControl touchpadClicked { get; private set; }
+        [InputControl]
         public ButtonControl touchpadTouched { get; private set; }
 
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
 
         protected override void FinishSetup()

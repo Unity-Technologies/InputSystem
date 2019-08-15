@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.Controls;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -601,7 +602,6 @@ namespace UnityEngine.InputSystem.UI
             base.Awake();
 
             m_RollingPointerId = 0;
-            mouseState = new MouseModel(m_RollingPointerId++);
             joystickState.Reset();
         }
 
@@ -702,40 +702,74 @@ namespace UnityEngine.InputSystem.UI
             return trackedDeviceStates.Count - 1;
         }
 
+        int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
+        {
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
+            var touchId = 0;
+            if (context.control.parent is TouchControl)
+                touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
+
+            for (var i = 0; i < mouseStates.Count; i++)
+            {
+                if (mouseStates[i].device == context.control.device && mouseStates[i].touchId == touchId)
+                    return i;
+            }
+            mouseStates.Add(new MouseModel(m_RollingPointerId++, context.control.device, touchId));
+            return mouseStates.Count - 1;
+        }
+
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
             if (action == m_PointAction?.action)
             {
-                mouseState.position = context.ReadValue<Vector2>();
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+                state.position = context.ReadValue<Vector2>();
+                mouseStates[index] = state;
             }
             else if (action == m_ScrollWheelAction?.action)
             {
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
-                mouseState.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                mouseStates[index] = state;
             }
             else if (action == m_LeftClickAction?.action)
             {
-                var buttonState = mouseState.leftButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.leftButton = buttonState;
+                state.leftButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_RightClickAction?.action)
             {
-                var buttonState = mouseState.rightButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.rightButton = buttonState;
+                state.rightButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_MiddleClickAction?.action)
             {
-                var buttonState = mouseState.middleButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.middleButton = buttonState;
+                state.middleButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_MoveAction?.action)
             {
@@ -783,14 +817,21 @@ namespace UnityEngine.InputSystem.UI
             if (!eventSystem.isFocused)
             {
                 joystickState.OnFrameFinished();
-                mouseState.OnFrameFinished();
+                foreach (var mouseState in mouseStates)
+                    mouseState.OnFrameFinished();
                 foreach (var trackedDeviceState in trackedDeviceStates)
                     trackedDeviceState.OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref joystickState);
-                ProcessMouse(ref mouseState);
+
+                for (var i = 0; i < mouseStates.Count; i++)
+                {
+                    var state = mouseStates[i];
+                    ProcessMouse(ref state);
+                    mouseStates[i] = state;
+                }
 
                 for (var i = 0; i < trackedDeviceStates.Count; i++)
                 {
@@ -1035,8 +1076,8 @@ namespace UnityEngine.InputSystem.UI
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
-        [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
         [NonSerialized] private List<TrackedDeviceModel> trackedDeviceStates = new List<TrackedDeviceModel>();
+        [NonSerialized] private List<MouseModel> mouseStates = new List<MouseModel>();
     }
 }

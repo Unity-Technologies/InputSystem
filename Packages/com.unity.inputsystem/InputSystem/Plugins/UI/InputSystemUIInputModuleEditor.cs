@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
             // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
-            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\u2215")) ?? new string[0]).ToArray();
+            m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\uFF0F")) ?? new string[0]).ToArray();
         }
 
         public static void ReassignActions(InputSystemUIInputModule module, InputActionAsset action)

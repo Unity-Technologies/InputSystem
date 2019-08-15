@@ -90,6 +90,8 @@ If controls from both the `positive` and the `negative` side are actuated, then 
 
 A composite representing a 4-way button setup akin to the d-pad on gamepads with each button representing a cardinal direction. The result is a `Vector2`.
 
+This composite is most useful for representing controls such as WASD.
+
 ```CSharp
 myAction.AddCompositeBinding("2DVector") // Or "Dpad"
     .With("Up", "<Keyboard>/w")
@@ -113,6 +115,53 @@ In addition, you can set the following parameters on a 2D vector composite:
 |---------|-----------|
 |`normalize`|Whether the resulting vector should be normalized or not. If this is disabled, then, for example, pressing both `up` and `right` will yield a vector `(1,1)` which has a length greater than one. This can be undesirable in situations where the vector's magnitude matterse. E.g. when scaling running speed by the length of the input vector.<br><br>This is true by default.|
 
+### Button With One Modifier
+
+A composite that requires another button to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+1" but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
+
+The result is a `float`.
+
+```CSharp
+myAction.AddCompositeBinding("ButtonWithOneModifier")
+    .With("Button", "<Keyboard>/1")
+    .With("Modifier", "<Keyboard>/leftCtrl")
+    .With("Modifier", "<Keyboard>/rightCtrl");
+```
+
+The Button With One Modifier composite has two part bindings.
+
+|Part|Type|Description|
+|----|----|-----------|
+|`modifier`|`Button`|Modifier that has to be held for `button` to come through. If any of the buttons bound to the `modifier` part is pressed, the composite will assume the value of the `button` binding. If none of the buttons bound to the `modifier` part is pressed, the composite has a zero value.|
+|`button`|`Button`|The button whose value the composite will assume while `modifier` is pressed.|
+
+The Button With One Modifier composite does not have parameters.
+
+### Button With Two Modifiers
+
+A composite that requires two other buttons to be held when pressing the button that triggers the action. This is useful, for example, to represent keyboard shortcuts such as "CTRL+SHIFT+1" but is not restricted to keyboard controls, i.e. the buttons can be on any device and may be toggle buttons or full-range buttons like the gamepad triggers.
+
+The result is a `float`.
+
+```CSharp
+myAction.AddCompositeBinding("ButtonWithTwoModifiers")
+    .With("Button", "<Keyboard>/1")
+    .With("Modifier1", "<Keyboard>/leftCtrl")
+    .With("Modifier1", "<Keyboard>/rightCtrl")
+    .With("Modifier2", "<Keyboard>/leftShift")
+    .With("Modifier2", "<Keyboard>/rightShift");
+```
+
+The Button With Two Modifiers composite has three part bindings.
+
+|Part|Type|Description|
+|----|----|-----------|
+|`modifier1`|`Button`|First modifier that has to be held for `button` to come through. If none of the buttons bound to the `modifier1` part is pressed, the composite has a zero value.|
+|`modifier2`|`Button`|Second modifier that has to be held for `button` to come through. If none of the buttons bound to the `modifier2` part is pressed, the composite has a zero value.|
+|`button`|`Button`|The button whose value the composite will assume while both `modifier1` and `modifier2` are pressed.|
+
+The Button With Two Modifiers composite does not have parameters.
+
 ### Writing Custom Composites
 
 New types of composites can be defined and registered with the API. They are treated the same as predefined types &mdash; which are internally defined and registered the same way.
@@ -124,6 +173,9 @@ To define a new type of composite, create a class based on `InputBindingComposit
 // values of type TValue.
 // NOTE: It is possible to define a composite that returns different kinds of values
 //       but doing so requires deriving directly from InputBindingComposite.
+#if UNITY_EDITOR
+[InitializeOnLoad] // Automatically register in editor.
+#endif
 public class CustomComposite : InputBindingComposite<float>
 {
     // Each part binding is represented as a field of type int and annotated with
@@ -160,16 +212,25 @@ public class CustomComposite : InputBindingComposite<float>
     {
         // Compute normalized [0..1] magnitude value for current actuation level.
     }
+
+    static CustomComposite()
+    {
+        // Can give custom name or use default (type name with "Composite" clipped off).
+        // Same composite can be registered multiple times with different names to introduce
+        // aliases.
+        //
+        // NOTE: Registering from the static constructor using InitializeOnLoad and
+        //       RuntimeInitializeOnLoadMethod is only one way. You can register the
+        //       composite from wherever it works best for you. Note, however, that
+        //       the registration has to take place before the composite is first used
+        //       in a binding. Also, for the composite to show in the editor, it has
+        //       to be registered from code that runs in edit mode.
+        InputSystem.RegisterBindingComposite<CustomComposite>();
+    }
+
+    [RuntimeInitializeOnLoadMethod]
+    static void Init() {} // Trigger static constructor.
 }
-```
-
-To register the composite, call `InputSystem.RegisterBindingComposite<TComposite>()`. This is best done during from `InitializeOnLoad`/`RuntimeInitializeOnLoad` code.
-
-```CSharp
-// Can give custom name or use default (type name with "Composite" clipped off).
-// Same composite can be registered multiple times with different names to introduce
-// aliases.
-InputSystem.RegisterBindingComposite<CustomComposite>();
 ```
 
 The composite should now show up in the editor UI when adding a binding and it can now be used in scripts.
@@ -218,7 +279,7 @@ This behavior can be overridden by restricting `InputActionAssets` or individual
 
 ## Disambiguation
 
-TODO
+## Initial State Check
 
 ## Runtime Rebinding
 

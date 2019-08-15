@@ -10,7 +10,6 @@
   * [Use In Editor UI](UseInEditor.md)
   * [Debugging Input](Debugging.md)
   * [Testing Input](Testing.md)
-  * [Future](Future.md)
   * [Contributing](Contributing.md)
 
 * Reference

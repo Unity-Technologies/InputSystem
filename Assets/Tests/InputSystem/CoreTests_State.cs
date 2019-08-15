@@ -511,8 +511,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitorFired = false;
@@ -601,7 +599,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputSystem.settings.timesliceEvents = false;
         InputEditorUserSettings.lockInputToGameView = false;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1086,8 +1083,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanRecordHistory()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
@@ -1368,8 +1363,6 @@ partial class CoreTests
     [Category("State")]
     public unsafe void State_CanCopyRecordedHistory_FromOneHistoryToAnother()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history1 = new InputStateHistory<float>(gamepad.leftTrigger))
         using (var history2 = new InputStateHistory<float>())

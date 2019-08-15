@@ -250,7 +250,7 @@
                 },
                 {
                     "name": "Point",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "32b35790-4ed0-4e9a-aa41-69ac6d629449",
                     "expectedControlType": "Vector2",
                     "processors": "",
@@ -258,7 +258,7 @@
                 },
                 {
                     "name": "Click",
-                    "type": "Button",
+                    "type": "PassThrough",
                     "id": "3c7022bf-7922-4f7c-a998-c437916075ad",
                     "expectedControlType": "Button",
                     "processors": "",
@@ -470,6 +470,17 @@
                 },
                 {
                     "name": "",
+                    "id": "5693e57a-238a-46ed-b5ae-e64e6e574302",
+                    "path": "<Touchscreen>/touch*/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "4faf7dc9-b979-4210-aa8c-e808e1ef89f5",
                     "path": "<Mouse>/leftButton",
                     "interactions": "",
@@ -492,8 +503,8 @@
                 },
                 {
                     "name": "",
-                    "id": "b1e785de-9ca0-4c45-a616-c2e6e101f82d",
-                    "path": "<Touchscreen>/press",
+                    "id": "47c2a644-3ebc-4dae-a106-589b7ca75b59",
+                    "path": "<Touchscreen>/touch*/press",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

@@ -9,23 +9,41 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class ViveHMD : XRHMD
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control leftEyeVelocity { get; private set; }
+        [InputControl]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control rightEyeVelocity { get; private set; }
+        [InputControl]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
+        [InputControl]
         public Vector3Control centerEyeVelocity { get; private set; }
+        [InputControl]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -59,8 +77,11 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class ViveWand : XRControllerWithRumble
     {
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [InputControl]
         public ButtonControl primary { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
@@ -68,14 +89,22 @@ namespace UnityEngine.InputSystem.XR
         public ButtonControl trackpadTouched { get; private set; }
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -116,22 +145,29 @@ namespace UnityEngine.InputSystem.XR
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
 
+        [InputControl]
         public AxisControl grip { get; private set; }
 
         [InputControl(aliases = new[] { "A",  "GripButton" })]
         public ButtonControl gripPressed { get; private set; }
 
-
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
-
 
         protected override void FinishSetup()
         {
@@ -160,9 +196,13 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout]
     public class ViveLighthouse : InputDevice
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
 
         protected override void FinishSetup()
@@ -181,11 +221,17 @@ namespace UnityEngine.InputSystem.XR
     /// </summary>
     public class ViveTracker : InputDevice
     {
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -204,12 +250,15 @@ namespace UnityEngine.InputSystem.XR
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class HandedViveTracker : ViveTracker
     {
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [InputControl]
         public ButtonControl primary { get; private set; }
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
-
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
         protected override void FinishSetup()

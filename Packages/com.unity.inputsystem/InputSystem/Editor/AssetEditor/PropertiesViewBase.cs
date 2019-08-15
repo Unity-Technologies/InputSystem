@@ -22,10 +22,15 @@ namespace UnityEngine.InputSystem.Editor
             m_ProcessorsProperty = bindingOrAction.FindPropertyRelative("m_Processors");
 
             m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, null);
-            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
+            UpdateProcessors(expectedControlLayout);
 
             m_OnChange = onChange;
             m_GeneralFoldoutLabel = EditorGUIUtility.TrTextContent(label);
+        }
+
+        protected void UpdateProcessors(string expectedControlLayout)
+        {
+            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
         }
 
         public void OnGUI()
@@ -112,7 +117,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly Action<FourCC> m_OnChange;
 
         private readonly InteractionsListView m_InteractionsList;
-        private readonly ProcessorsListView m_ProcessorsList;
+        private ProcessorsListView m_ProcessorsList;
 
         private readonly SerializedProperty m_InteractionsProperty;
         private readonly SerializedProperty m_ProcessorsProperty;

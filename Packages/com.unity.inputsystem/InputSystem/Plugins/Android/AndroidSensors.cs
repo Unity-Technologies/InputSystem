@@ -105,25 +105,19 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         public AndroidSensorState WithData(params float[] data)
         {
             if (data == null)
-                throw new System.ArgumentNullException(nameof(data));
+                throw new ArgumentNullException(nameof(data));
 
-            fixed(float* dataPtr = this.data)
-            {
-                for (var i = 0; i < data.Length && i < 16; i++)
-                    dataPtr[i] = data[i];
+            for (var i = 0; i < data.Length && i < 16; i++)
+                this.data[i] = data[i];
 
-                // Fill the rest with zeroes
-                for (var i = data.Length; i < 16; i++)
-                    dataPtr[i] = 0.0f;
-            }
+            // Fill the rest with zeroes
+            for (var i = data.Length; i < 16; i++)
+                this.data[i] = 0.0f;
 
             return this;
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
     internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor

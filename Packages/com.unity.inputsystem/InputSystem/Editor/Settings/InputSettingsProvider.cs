@@ -77,11 +77,6 @@ namespace UnityEngine.InputSystem.Editor
 
             using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
-                EditorGUILayout.HelpBox(
-                    "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                    + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                    MessageType.Warning);
-
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
@@ -91,7 +86,6 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode);
-                EditorGUILayout.PropertyField(m_TimesliceEvents);
 
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
@@ -217,7 +211,6 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
-            m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
@@ -313,7 +306,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
-        [NonSerialized] private SerializedProperty m_TimesliceEvents;
         [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;

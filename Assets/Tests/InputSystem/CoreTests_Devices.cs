@@ -921,13 +921,15 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
@@ -935,6 +937,9 @@ partial class CoreTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedEventPtr.valid, Is.True);
+        Assert.That(receivedEventPtr.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.IsA<StateEvent>(), Is.True);
     }
 
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
@@ -967,19 +972,22 @@ partial class CoreTests
         var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedEventPtr.valid, Is.False);
     }
 
     [Test]
@@ -1308,8 +1316,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Devices added directly via AddDevice() don't end up on the list of
         // available devices. Devices reported by the runtime do.
         runtime.ReportNewInputDevice(@"
@@ -1821,8 +1827,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var pointer = InputSystem.AddDevice<Pointer>();
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
@@ -2201,8 +2205,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanUseTouchscreenAsPointer()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var device = InputSystem.AddDevice<Touchscreen>();
 
         // First finger goes down.
@@ -2416,8 +2418,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetStartTimeOfTouches()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
@@ -2444,8 +2444,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -2539,8 +2537,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps_AndKeepTrackOfTapCounts()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -2666,8 +2662,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
         // Here's an example, in what order OS sends us touches
         // NewInput: Touch Moved 2227.000000 x 1214.000000, id = 5, time = 24.478610

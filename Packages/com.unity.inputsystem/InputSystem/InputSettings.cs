@@ -61,26 +61,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// If enabled, any given input event will only be processed for any given fixed or dynamic
-        /// update if it has been generated before or within the time slice allotted to the update.
-        /// </summary>
-        /// <remarks>
-        /// Normally, the input system will directly consume any input that's available regardless of when
-        /// it was produced.
-        /// </remarks>
-        public bool timesliceEvents
-        {
-            get => m_TimesliceEvents;
-            set
-            {
-                if (m_TimesliceEvents == value)
-                    return;
-                m_TimesliceEvents = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
         /// If true, sensors that deliver rotation values on handheld devices will automatically adjust
         /// rotations when the screen orientation changes.
         /// </summary>
@@ -281,10 +261,6 @@ namespace UnityEngine.InputSystem
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
 
-        [Tooltip("Whether events should be distributed across updates according to their timestamps. This is most relevant when fixed "
-            + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
-            + "those events that have timestamps within or before that time span.")]
-        [SerializeField] private bool m_TimesliceEvents = true;
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
 
