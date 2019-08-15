@@ -15,8 +15,6 @@ Each of these types implements a common set of controls. For a more detailed des
 |[`press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the pointer or it's primary button is pressed down.|
 |[`pressure`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_pressure)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|Normalized pressure with which the pointer is currently pressed while in contact with the pointer surface (Only relevant for pressure sensitive devices, such as tablets and some touch screens).|
 |[`radius`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_radius)|[`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html)|The size of the area where the finger touches the surface. Only relevant for touch input.|
-|[`tilt`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_tilt)|[`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html)|Tilt of the pointer relative to the surface. Only relevant for pens.|
-|[`twist`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_twist)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|Rotation of the pointer around its own axis. Only relevant for pens, and then only supported on few devices.|
 
 ## Window Space
 

@@ -26,6 +26,8 @@ Additional to the [controls inherited from `Pointer`](Pointers.md#controls), Pen
 |[`thirdBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_thirdBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the third button on the barrel of the pen is pressed.|
 |[`forthBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_forthBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the forth button on the barrel of the pen is pressed.|
 |[`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the pen is currently in detection range of the tablet.|
+|[`tilt`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_tilt)|[`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html)|Tilt of the pen relative to the surface.|
+|[`twist`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_twist)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|Rotation of the pen around its own axis. Only supported on few devices.|
 
 ## Pressure, Tilt, Twist
 

@@ -219,9 +219,6 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
-        // Touch does not support twist and tilt. These will always be at default value.
-        [InputControl(name = "twist", offset = InputStateBlock.AutomaticOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.AutomaticOffset)]
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
