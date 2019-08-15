@@ -1,33 +1,32 @@
-    ////WIP
-
->NOTE: Pen/tablet support is currently implemented on Windows, iOS, and Android. Support on UWP and Mac is planned for 2019.2.
-
 # Pen/Tablet/Stylus Support
 
 Pen support comprises both tablets on desktops (such as the various tablets produced by Wacom) as well as styluses support on mobile devices such as the stylus on the Samsung Note, the Apple Pencil on iOS, or the Surface Pen on the Micrsoft Surface line of notebooks.
 
 Pens generally offer pressure-sensitivity, in-range detection (i.e. being able to control the cursor while not yet touching the tablet/screen surface), and often the ability to flip the pen for eraser-like behavior.
 
+Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) device layout which is implemented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) class. Pens are based on the [`Pointer`](Pointers.md) layout.
+
+The last used or last added pen can be queried with [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current).
+
+>NOTE: Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
+
 ## Controls
+
+Additional to the [controls inherited from `Pointer`](Pointers.md#controls), Pen devices implement the following controls:
 
 |Control|Type|Description|
 |-------|----|-----------|
-|position|Vector2||
-|delta|Vector2||
-|pressure|Vector2||
-|tilt|Vector2||
-|twist|Axis||
-|tip|Button||
-|eraser|Button||
-|firstBarrelButton|Button||
-|secondBarrelButton||
-|inRange|Button|Whether the pen is currently in detection range.|
+|[`tip`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_tip)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the tip of the pen touches the surface. Same as the inherited [`Pointer.press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press).|
+|[`eraser`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_eraser)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the eraser/back end of the pen touches the surface.|
+|[`firstBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_firstBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the first button on the barrel of the pen is pressed.|
+|[`secondBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_secondBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the second button on the barrel of the pen is pressed.|
+|[`thirdBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_thirdBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the third button on the barrel of the pen is pressed.|
+|[`forthBarrelButton`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_forthBarrelButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the forth button on the barrel of the pen is pressed.|
+|[`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|Whether the pen is currently in detection range of the tablet.|
 
 ## Pressure, Tilt, Twist
 
-    ////TODO: explain 2D pressure (inherited from Pointer)
-
-The current pressure is available through the `Pen.pressure` control. Pen pressure is normalized (0=no pressure, 1=maximum pressure). However, note that pressure may go __beyond__ 1 in case the system is applying a custom pressure curve where reaching a pressure value of 1 does not require pressing the pen down all the way to the maximum supported by hardware.
+The current pressure is available through the [`Pen.pressure`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_pressure) control. Pen pressure is normalized (0=no pressure, 1=maximum pressure). However, note that pressure may go __beyond__ 1 in case the system is applying a custom pressure curve where reaching a pressure value of 1 does not require pressing the pen down all the way to the maximum supported by hardware.
 
 If a pen does not support pressure, the `pressure` control will always return 1.
 

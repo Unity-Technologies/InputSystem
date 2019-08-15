@@ -5941,7 +5941,7 @@ partial class CoreTests
         Assert.That(touch0Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[0].position }));
         Assert.That(touch1Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[1].position }));
         Assert.That(positionAction.controls, Is.EquivalentTo(new[] { touchscreen.position }));
-        Assert.That(tapAction.controls, Is.EquivalentTo(new[] { touchscreen.tap }));
+        Assert.That(tapAction.controls, Is.EquivalentTo(new[] { touchscreen.primaryTouch.tap }));
 
         primaryTouchAction.Enable();
         touch0Action.Enable();
@@ -6099,9 +6099,9 @@ partial class CoreTests
                 Started(pressAction, touchscreen.press, 1, 0.5)
                     .AndThen(Performed(pressAction, touchscreen.press, 1, 0.5))
                     .AndThen(Canceled(pressAction, touchscreen.press, 0, 0.5))
-                    .AndThen(Started(primaryAction, touchscreen.tap, 1, 0.5))
-                    .AndThen(Performed(primaryAction, touchscreen.tap, 1, 0.5))
-                    .AndThen(Canceled(primaryAction, touchscreen.tap, 0, 0.5)));
+                    .AndThen(Started(primaryAction, touchscreen.primaryTouch.tap, 1, 0.5))
+                    .AndThen(Performed(primaryAction, touchscreen.primaryTouch.tap, 1, 0.5))
+                    .AndThen(Canceled(primaryAction, touchscreen.primaryTouch.tap, 0, 0.5)));
 
             trace.Clear();
 

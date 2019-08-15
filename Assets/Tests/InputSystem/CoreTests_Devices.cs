@@ -2273,15 +2273,6 @@ partial class CoreTests
         Assert.That(device.press.wasReleasedThisFrame, Is.True);
     }
 
-    [Test]
-    [Category("Devices")]
-    public void Devices_TouchscreenTapButtonIsSynthetic()
-    {
-        var touchscreen = InputSystem.AddDevice<Touchscreen>();
-
-        Assert.That(touchscreen.tap.synthetic, Is.True);
-    }
-
     // Touchscreen is somewhat special in that treats its available TouchState slots like a pool
     // from which it dynamically assigns entries to track individual touches.
     [Test]
@@ -2446,18 +2437,15 @@ partial class CoreTests
         // in turn is wired to the tap
         using (var allTouchTaps = new InputStateHistory<float>("<Touchscreen>/touch*/tap"))
         using (var primaryTouchTap = new InputStateHistory<float>(touchscreen.primaryTouch.tap))
-        using (var screenTap = new InputStateHistory<float>(touchscreen.tap))
         {
             allTouchTaps.StartRecording();
             primaryTouchTap.StartRecording();
-            screenTap.StartRecording();
 
             BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
             BeginTouch(5, new Vector2(0.234f, 0.345f), time: 0.2);
 
             Assert.That(allTouchTaps, Is.Empty);
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             EndTouch(4, new Vector2(1, 2), time: 0.3);
             EndTouch(5, new Vector2(2, 3), time: 0.3);
@@ -2482,7 +2470,6 @@ partial class CoreTests
             // released within defaultTapTime, the fact we had to switch from one touch
             // to another on primaryTouch means we don't trigger a tap.
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             allTouchTaps.Clear();
 
@@ -2493,7 +2480,6 @@ partial class CoreTests
 
             Assert.That(allTouchTaps, Is.Empty);
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             // Run a single finger tap.
             BeginTouch(4, new Vector2(1, 2), time: 0.6);
@@ -2514,14 +2500,6 @@ partial class CoreTests
             Assert.That(primaryTouchTap[1].ReadValue(), Is.EqualTo(0));
             Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8));
             Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8));
-
-            Assert.That(screenTap, Has.Count.EqualTo(2));
-            Assert.That(screenTap[0].control, Is.SameAs(touchscreen.tap));
-            Assert.That(screenTap[1].control, Is.SameAs(touchscreen.tap));
-            Assert.That(screenTap[0].ReadValue(), Is.EqualTo(1));
-            Assert.That(screenTap[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(screenTap[0].time, Is.EqualTo(0.8));
-            Assert.That(screenTap[1].time, Is.EqualTo(0.8));
         }
     }
 
@@ -2541,21 +2519,18 @@ partial class CoreTests
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(1));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(1));
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.EqualTo(1));
 
         BeginTouch(1, new Vector2(0.123f, 0.234f), time: 2);
         EndTouch(1, new Vector2(0.123f, 0.234f), time: 2);
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(2));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(2));
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.EqualTo(2));
 
         runtime.currentTime = 10;
         InputSystem.Update();
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.Zero);
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.Zero);
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.Zero);
     }
 
     [Test]
