@@ -6,6 +6,9 @@
 * [Mouse](Mouse.md)
 * [Pen](Pen.md)
 
+
+## Controls
+
 Each of these types implements a common set of controls. For a more detailed descriptions of these controls, refer to their [scripting reference](../api/UnityEngine.InputSystem.Pointer.html).
 
 |Control|Type|Description|
