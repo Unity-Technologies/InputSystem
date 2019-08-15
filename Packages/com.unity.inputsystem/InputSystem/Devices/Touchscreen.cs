@@ -74,8 +74,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(32)]
         public byte phaseId;
 
-        [InputControl(name = "tapCount", layout = "Integer")][FieldOffset(33)]
+        [InputControl(name = "tapCount", layout = "Integer")]
+        [FieldOffset(33)]
         public byte tapCount;
+
+        [FieldOffset(34)]
+        byte displayIndex;
 
         [InputControl(name = "indirectTouch", layout = "Button", bit = 0)]
         [InputControl(name = "tap", layout = "Button", bit = 5)]

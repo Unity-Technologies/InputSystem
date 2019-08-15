@@ -37,6 +37,8 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
+        uint pointerId;
+
         /// <summary>
         /// Position of the pointer in screen space.
         /// </summary>
@@ -65,6 +67,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
+
+        ushort displayIndex;
 
         public FourCC format
         {
