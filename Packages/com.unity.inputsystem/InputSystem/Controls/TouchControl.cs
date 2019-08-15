@@ -36,12 +36,7 @@ namespace UnityEngine.InputSystem.Controls
         public Vector2Control radius { get; private set; }
         [InputControl]
         public TouchPhaseControl phase { get; private set; }
-<<<<<<< HEAD
-=======
         [InputControl]
-        public IntegerControl displayIndex { get; private set; }
-        [InputControl]
->>>>>>> develop
         public ButtonControl indirectTouch { get; private set; }
         [InputControl]
         public ButtonControl tap { get; private set; }
