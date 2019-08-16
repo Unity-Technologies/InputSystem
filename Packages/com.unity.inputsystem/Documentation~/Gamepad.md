@@ -1,6 +1,6 @@
 # Gamepad Support
 
-A gamepad is narrowly defined as a device with two thumbsticks, a dpad, and four face buttons. Additionally, they will usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle section of the gamepad.
+A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a device with two thumbsticks, a dpad, and four face buttons. Additionally, they will usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle section of the gamepad.
 
 A gamepad may have additional controls (such as a gyro) which are exposed from the device but each gamepad is guaranteed to at least have the above-mentioned minimum set of controls.
 
@@ -12,25 +12,25 @@ The following controls are present on every gamepad:
 
 |Control|Type|Description|
 |-------|----|-----------|
-|`leftStick`|Stick|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
-|`rightStick`|Stick|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
-|`dpad`|Dpad||
-|`buttonNorth`|Button|The topmost of the four face buttons (usually located on the right side of the gamepad).|
-|`buttonSouth`|Button||
-|`buttonWest`|Button||
-|`buttonEast`|Button||
-|`leftShoulder`|Button||
-|`rightShoulder`|Button||
-|`leftTrigger`|Button||
-|`rightTrigger`|Button||
-|`startButton`|Button||
-|`selectButton`|Button||
-|`leftStickPress`|Button||
-|`rightStickPress`|Button||
+|[`leftStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
+|[`rightStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in dpad-like fashion.|
+|[`dpad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_dpad)|Dpad||
+|[`buttonNorth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonNorth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The upper one of the four actions buttons (usually located on the right side of the gamepad). Labelled "Y" on Xbox controllers and "Triangle" on PlayStation controllers.|
+|[`buttonSouth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonSouth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The lower one of the four actions buttons (usually located on the right side of the gamepad). Labelled "A" on Xbox controllers and "Cross" on PlayStation controllers.|
+|[`buttonWest`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonWest)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left one of the four actions buttons (usually located on the right side of the gamepad). Labelled "X" on Xbox controllers and "Square" on PlayStation controllers.|
+|[`buttonEast`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonEast)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right one of the four actions buttons (usually located on the right side of the gamepad). Labelled "B" on Xbox controllers and "Circle" on PlayStation controllers.|
+|[`leftShoulder`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftShoulder)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left shoulder button.|
+|[`rightShoulder`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightShoulder)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right shoulder button.|
+|[`leftTrigger`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftTrigger)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|he left trigger button.|
+|[`rightTrigger`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightTrigger)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right trigger button.|
+|[`startButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_startButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The start button.|
+|[`selectButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_selectButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The select button.|
+|[`leftStickPress`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickPress)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the left stick.|
+|[`rightStickPress`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickPress)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the right stick.|
 
 >NOTE: Be aware that buttons are also full floating-point axes. This means that, for example, the left and right triggers can function both as buttons as well as full floating-point axes.
 
-Gamepad buttons can also be accessed using the indexer property on `Gamepad` and the `GamepadButton` enumeration:
+Gamepad buttons can also be accessed using the indexer property on [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_Item_UnityEngine_InputSystem_LowLevel_GamepadButton_) and the [`GamepadButton`](api/UnityEngine.InputSystem.LowLevel.GamepadButton.html) enumeration:
 
 ```CSharp
 Gamepad.current[GamepadButton.LeftShoulder];
@@ -51,7 +51,7 @@ Gamepad.current["Triangle"]
 
 On many platforms, gamepads are polled explicitly by Unity, rather than delivered as events. For example, in the Windows editor and standalone player, XInput gamepads are polled asynchronously in the background.
 
-The frequency of the polling can be controlled manually. The default polling frequency is 60 Hz. Use `InputSystem.pollingFrequency` to get or set the frequency.
+The frequency of the polling can be controlled manually. The default polling frequency is 60 Hz. Use [`InputSystem.pollingFrequency`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_pollingFrequency) to get or set the frequency.
 
 ```CSharp
 // Poll gamepads at 120 Hz.
@@ -62,9 +62,7 @@ Increased frequency should lead to an increased number of events on the respecti
 
 ## Rumble
 
-    ////TODO: provide list of what platforms/devices we support rumble on
-
-Gamepads implement the `IDualMotorRumble` interface to control left and right motor speed. Note, however, that not all gamepads support rumble at this point (it is not supported on WebGL, for example).
+The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implement the `IDualMotorRumble` interface to allow you to control the left and right motor speeds.
 
 ```CSharp
 // Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
@@ -72,9 +70,40 @@ Gamepads implement the `IDualMotorRumble` interface to control left and right mo
 Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 ```
 
-## PS4
+>NOTE: Only the following combinations of devices/OSes currently support rumble:
+>* PS4, Xbox and Switch controllers when connected to their respective consoles.
+>* PS4 controllers when connected to mac or windows computers.
+>* Xbox controllers on windows.
+[//]: # (TODO: are we missing any supported configs?)
+
+## PlayStation controllers
+
+PlayStation controllers are well supported on different devices. They are implemented as different derived types of the [`DualShockGamepad`](../api/UnityEngine.InputSystem.DualShockGamepad.html) base class (which itself derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)):
+
+* [`DualShock3GamepadHID`](../api/UnityEngine.InputSystem.DualShock3GamepadHID.html): A DualShock 3 controller connected to a desktop computer using the HID interface. Currently only supported on macOS, and does not support [rumble](#rumble).
+
+* [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface (supported on macOS, Windows, UWP, and Linux).
+
+* [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) A DualShock controller connected to a PlayStation 4 console. Only available when building for PS4, will not compile on other platforms.
+
+Some of these implement additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
+
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller. Supported on [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock4GamepadHID.html) and [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html).
+
+* [`acceleration`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Lets you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
+
+* [`touches`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_touches): Lets you get input from the touch screen on the gamepad. ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
+
+
+>NOTES:
+>* We support PlayStation controllers on WebGL in some browser/OS configs, but they will always be represented as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) devices, and we do not support Rumble or any other DualShock specific functionality.
+>* We do not support the "DualShock 4 USB Wireless Adaptor" to connect a PlayStation controller to a desktop machine. Use USB or Bluetooth to connect  it.
+
 
 ## Xbox
+
+* XboxGamepadMacOS
+* XboxOneGampadMacOSWireless
 
     ////REVIEW: do we support trigger motors on UWP ATM?
 
