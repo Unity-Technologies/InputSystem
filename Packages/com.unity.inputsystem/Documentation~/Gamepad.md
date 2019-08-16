@@ -47,9 +47,7 @@ Gamepad.current["Triangle"]
 
 ## Polling
 
-    ////TODO: provide list of the platforms/devices where we poll
-
-On many platforms, gamepads are polled explicitly by Unity, rather than delivered as events. For example, in the Windows editor and standalone player, XInput gamepads are polled asynchronously in the background.
+On Windows (XInput controllers only), UWP and Switch, gamepads are polled explicitly by Unity, rather than delivered as events.
 
 The frequency of the polling can be controlled manually. The default polling frequency is 60 Hz. Use [`InputSystem.pollingFrequency`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_pollingFrequency) to get or set the frequency.
 
@@ -102,7 +100,7 @@ Some of these implement additional, DualShock-specific functionality on top the 
 
 ## Xbox
 
-Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported Xbox controller (Xbox one or Xbox 360) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
+Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported XInput controller (which includes all Xbox one or Xbox 360 compatible controllers) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
 
 On other platforms we use specific derived classes to represent Xbox controllers:
 
