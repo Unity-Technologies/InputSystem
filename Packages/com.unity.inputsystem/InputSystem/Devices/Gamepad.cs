@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The right shoulder button on a gamepad.
         /// </summary>
         RightShoulder,
-        
+
         /// <summary>
         /// The left trigger button on a gamepad.
         /// </summary>
@@ -207,7 +207,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// The right trigger button on a gamepad.
         /// </summary>
-        RightTrigger,        
+        RightTrigger,
 
         /// <summary>
         /// The start button.

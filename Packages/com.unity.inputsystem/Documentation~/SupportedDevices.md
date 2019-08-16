@@ -36,9 +36,10 @@ The following devices are supported in a way that does not require recognition o
     (2) WebGL support varies wildly between browsers, devices, and OSes.
     (3) XInput controllers on Mac currently require the installation of the
         Xbox Controller Driver for macOS which can be found at
-        https://github.com/360Controller/360Controller. However, the latest
-        generation of Xbox One controllers are natively supported on Macs as HID devices
-        when connected via Bluetooth.
+        https://github.com/360Controller/360Controller. Only USB connections are
+        supported, no wireless dongles. However, the latest generation of Xbox One
+        controllers natively supported Bluetooth, and are natively supported on Macs
+        as HID devices without any additional driver when connected via Bluetooth.
     (4) This includes any XInput-compatible device.
     (5) We do not support the gyro/accelerometer on PS4 controllers on platforms
         other than the PS4 at the moment. Also, on such platforms, we only support

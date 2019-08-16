@@ -90,7 +90,7 @@ Some of these implement additional, DualShock-specific functionality on top the 
 
 * [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller. Supported on [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock4GamepadHID.html) and [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html).
 
-* [`acceleration`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Lets you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
+* [`acceleration`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Controls which let you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
 
 * [`touches`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_touches): Lets you get input from the touch screen on the gamepad. ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
 
@@ -102,14 +102,17 @@ Some of these implement additional, DualShock-specific functionality on top the 
 
 ## Xbox
 
-* XboxGamepadMacOS
-* XboxOneGampadMacOSWireless
+Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported Xbox controller (Xbox one or Xbox 360) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
 
-    ////REVIEW: do we support trigger motors on UWP ATM?
+On other platforms we use specific derived classes to represent Xbox controllers:
 
-    ////TODO: document gamepadId and xboxUserId
+* [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
 
-Xbox gamepads have extended rumble functionality in the form of two additional motors that are located in the triggers. `XboxOneGamepad` implements `IXboxOneRumble` that features an extended `SetMotorSpeeds` method giving access to all four motors.
+* [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth (only the latest generation of Xbox One controllers supports Bluetooth). No additional driver is needed for this case.
+
+* [`XboxOneGamepad`](../api/UnityEngine.InputSystem.XInput.XboxOneGamepad.html): A gamepad on an Xbox one console. We support additional, Xbox specific functionality for this case:
+>*  The `gamepadId` and `xboxUserId` properties can be used to identify the gamepad and user.
+>* Xbox gamepads have extended rumble functionality in the form of two additional motors that are located in the triggers. [`XboxOneGamepad`](../api/UnityEngine.InputSystem.XInput.XboxOneGamepad.html) implements [`IXboxOneRumble`](../api/UnityEngine.InputSystem.XInput.IXboxOneRumble.html) that features an extended `SetMotorSpeeds` method giving access to all four motors:
 
 ```CSharp
 // Rumble the low-frequency (left) motor at 1/4 speed, the high-frequency (right)
@@ -118,4 +121,13 @@ Xbox gamepads have extended rumble functionality in the form of two additional m
 XboxOneGamepad.current.SetMotorSpeeds(0.25f, 0.75, 0f, 1f);
 ```
 
+>NOTES:
+>* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). Only USB connections are supported, no wireless dongles. However, the latest generation of Xbox One controllers natively supported Bluetooth, and are natively supported on Macs as HID devices without any additional driver when connected via Bluetooth.
+>* We support Xbox controllers on WebGL in some browser/OS configs, but they will always be represented as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) devices, and we do not support Rumble or any other Xbox specific functionality.
+
+
 ## Switch
+
+We support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements the basic gamepad functionality.
+
+On the Switch console itself, we have extended support for Switch Pro as well as Joy-Con controllers using the [`NPad`](../api/UnityEngine.InputSystem.Switch.NPad.html) class. Refer to the [`NPad` scripting API documentation](../api/UnityEngine.InputSystem.Switch.NPad.html)  for more information.
