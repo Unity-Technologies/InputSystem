@@ -56,16 +56,11 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
-        float twist;
-        Vector2 tilt;
-
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
         [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
-
-        ushort displayIndex;
 
         public FourCC format
         {

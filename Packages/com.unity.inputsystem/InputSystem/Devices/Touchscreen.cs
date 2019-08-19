@@ -78,6 +78,8 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(33)]
         public byte tapCount;
 
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(34)]
         byte displayIndex;
 

@@ -58,9 +58,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(32)]
         public ushort buttons;
 
-        [InputControl(layout = "Digital")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(34)]
-        public ushort displayIndex;
+        ushort displayIndex;
 
         public PenState WithButton(PenButton button, bool state = true)
         {

@@ -49,9 +49,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
         public ushort buttons;
 
-        [InputControl(layout = "Integer")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(26)]
-        public ushort displayIndex;
+        ushort displayIndex;
 
         [InputControl(layout = "Integer")]
         [FieldOffset(28)]
