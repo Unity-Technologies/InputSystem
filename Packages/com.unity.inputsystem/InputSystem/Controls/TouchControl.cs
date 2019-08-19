@@ -37,8 +37,6 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl]
         public TouchPhaseControl phase { get; private set; }
         [InputControl]
-        public IntegerControl displayIndex { get; private set; }
-        [InputControl]
         public ButtonControl indirectTouch { get; private set; }
         [InputControl]
         public ButtonControl tap { get; private set; }
@@ -78,7 +76,6 @@ namespace UnityEngine.InputSystem.Controls
             pressure = GetChildControl<AxisControl>("pressure");
             radius = GetChildControl<Vector2Control>("radius");
             phase = GetChildControl<TouchPhaseControl>("phase");
-            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             indirectTouch = GetChildControl<ButtonControl>("indirectTouch");
             tap = GetChildControl<ButtonControl>("tap");
             tapCount = GetChildControl<IntegerControl>("tapCount");

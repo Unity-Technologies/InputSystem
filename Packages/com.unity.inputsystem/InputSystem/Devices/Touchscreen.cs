@@ -78,9 +78,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(33)]
         public byte tapCount;
 
-        [InputControl(layout = "Digital")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(34)]
-        public byte displayIndex;
+        byte displayIndex;
 
         [InputControl(name = "indirectTouch", layout = "Button", bit = 0)]
         [InputControl(name = "tap", layout = "Button", bit = 5)]
@@ -207,24 +208,19 @@ namespace UnityEngine.InputSystem.LowLevel
         /// state of the primary touch even if the touch moves from one finger to another in <see cref="touchData"/>.
         /// </remarks>
         [InputControl(name = "primaryTouch", layout = "Touch", synthetic = true)]
+        [InputControl(name = "primaryTouch/tap", usage = "PrimaryAction")]
+
         // Add controls compatible with what Pointer expects and redirect their
         // state to the state of touch0 so that this essentially becomes our
         // pointer control.
         // NOTE: Some controls from Pointer don't make sense for touch and we "park"
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
-        [InputControl(name = "pointerId", useStateFrom = "primaryTouch/touchId")]
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
         [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
-        [InputControl(name = "displayIndex", useStateFrom = "primaryTouch/displayIndex")]
-        [InputControl(name = "tap", useStateFrom = "primaryTouch/tap", layout = "Button", synthetic = true, usage = "PrimaryAction")]
-        [InputControl(name = "tapCount", useStateFrom = "primaryTouch/tapCount", layout = "Integer", synthetic = true)]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
-        // Touch does not support twist and tilt. These will always be at default value.
-        [InputControl(name = "twist", offset = InputStateBlock.AutomaticOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.AutomaticOffset)]
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
@@ -315,15 +311,6 @@ namespace UnityEngine.InputSystem
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
-        /// Button that triggers when the screen is tapped.
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        public ButtonControl tap { get; private set; }
-
-        public IntegerControl tapCount { get; private set; }
-
-        /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
         /// </summary>
         /// <remarks>
@@ -369,8 +356,6 @@ namespace UnityEngine.InputSystem
         {
             base.FinishSetup();
 
-            tap = GetChildControl<ButtonControl>("tap");
-            tapCount = GetChildControl<IntegerControl>("tapCount");
             primaryTouch = GetChildControl<TouchControl>("primaryTouch");
 
             // Find out how many touch controls we have.

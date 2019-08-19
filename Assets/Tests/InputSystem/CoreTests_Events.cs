@@ -929,7 +929,6 @@ partial class CoreTests
             if (eventPtr.IsA<StateEvent>())
             {
                 Assert.That(mouse.position.GetStatePtrFromStateEvent(eventPtr) != null);
-                Assert.That(mouse.tilt.GetStatePtrFromStateEvent(eventPtr) == null);
             }
             else if (eventPtr.IsA<DeltaStateEvent>())
             {

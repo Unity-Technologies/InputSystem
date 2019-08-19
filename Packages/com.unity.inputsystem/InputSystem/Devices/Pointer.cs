@@ -37,8 +37,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', 'T', 'R');
 
-        [InputControl(layout = "Digital")]
-        public uint pointerId;
+        uint pointerId;
 
         /// <summary>
         /// Position of the pointer in screen space.
@@ -57,20 +56,11 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Analog", usage = "Pressure")]
         public float pressure;
 
-        [InputControl(layout = "Axis", usage = "Twist")]
-        public float twist;
-
-        [InputControl(layout = "Vector2", usage = "Tilt")]
-        public Vector2 tilt;
-
         [InputControl(layout = "Vector2", usage = "Radius")]
         public Vector2 radius;
 
         [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
-
-        [InputControl(layout = "Digital")]
-        public ushort displayIndex;
 
         public FourCC format
         {
@@ -114,7 +104,6 @@ namespace UnityEngine.InputSystem
 
         public Vector2Control delta { get; private set; }
 
-        public Vector2Control tilt { get; private set; }
         public Vector2Control radius { get; private set; }
 
         /// <summary>
@@ -128,23 +117,6 @@ namespace UnityEngine.InputSystem
         /// that calibration on the system can put the maximum pressure point below the physically supported maximum value.
         /// </remarks>
         public AxisControl pressure { get; private set; }
-
-        /// <summary>
-        /// Rotation of the pointer around its own axis. 0 means the pointer is facing away from the user (12 'o clock position)
-        /// and ~1 means the pointer has been rotated clockwise almost one full rotation.
-        /// </summary>
-        /// <remarks>
-        /// Twist is generally only supported by pens and even among pens, twist support is rare. An example product that
-        /// supports twist is the Wacom Art Pen.
-        ///
-        /// The axis of rotation is the vector facing away from the pointer surface when the pointer is facing straight up
-        /// (i.e. the surface normal of the pointer surface). When the pointer is tilted, the rotation axis is tilted along
-        /// with it.
-        /// </remarks>
-        public AxisControl twist { get; private set; }
-
-        public IntegerControl pointerId { get; private set; }
-        public IntegerControl displayIndex { get; private set; }
 
         /// <summary>
         /// Whether the pointer is pressed down.
@@ -180,12 +152,8 @@ namespace UnityEngine.InputSystem
         {
             position = GetChildControl<Vector2Control>("position");
             delta = GetChildControl<Vector2Control>("delta");
-            tilt = GetChildControl<Vector2Control>("tilt");
             radius = GetChildControl<Vector2Control>("radius");
             pressure = GetChildControl<AxisControl>("pressure");
-            twist = GetChildControl<AxisControl>("twist");
-            pointerId = GetChildControl<IntegerControl>("pointerId");
-            displayIndex = GetChildControl<IntegerControl>("displayIndex");
             press = GetChildControl<ButtonControl>("press");
 
             base.FinishSetup();
