@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA || PACKAGE_DOCS_GENERATION
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
