@@ -22,7 +22,6 @@
     * [Gamepad](Gamepad.md)
     * [Joystick](Joystick.md)
     * [Sensors](Sensors.md)
-    * [Haptics](Haptics.md)
     * [HID](HID.md)
   * [Architecture](Architecture.md)
     * [Actions](Actions.md)

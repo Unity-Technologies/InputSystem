@@ -25,12 +25,12 @@ The following controls are present on every gamepad:
 |[`rightTrigger`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightTrigger)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right trigger button.|
 |[`startButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_startButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The start button.|
 |[`selectButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_selectButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The select button.|
-|[`leftStickPress`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickPress)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the left stick.|
-|[`rightStickPress`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickPress)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the right stick.|
+|[`leftStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the left stick.|
+|[`rightStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the right stick.|
 
 >NOTE: Be aware that buttons are also full floating-point axes. This means that, for example, the left and right triggers can function both as buttons as well as full floating-point axes.
 
-Gamepad buttons can also be accessed using the indexer property on [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_Item_UnityEngine_InputSystem_LowLevel_GamepadButton_) and the [`GamepadButton`](api/UnityEngine.InputSystem.LowLevel.GamepadButton.html) enumeration:
+Gamepad buttons can also be accessed using the indexer property on [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_Item_UnityEngine_InputSystem_LowLevel_GamepadButton_) and the [`GamepadButton`](../api/UnityEngine.InputSystem.LowLevel.GamepadButton.html) enumeration:
 
 ```CSharp
 Gamepad.current[GamepadButton.LeftShoulder];
@@ -60,7 +60,7 @@ Increased frequency should lead to an increased number of events on the respecti
 
 ## Rumble
 
-The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implement the `IDualMotorRumble` interface to allow you to control the left and right motor speeds.
+The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implement the [`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) interface to allow you to control the left and right motor speeds.
 
 ```CSharp
 // Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
@@ -74,23 +74,42 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >* Xbox controllers on windows.
 [//]: # (TODO: are we missing any supported configs?)
 
+### Pausing, Resuming, and Stopping Haptics
+
+[`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) is based on [`IHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html), which is the base interface for any haptics support on any device, and allows you to pause, resume and reset haptic feedback, using the [`PauseHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_PauseHaptics), [`ResumeHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResumeHaptics) and [`ResetHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResetHaptics) methods respectively.
+
+In can be desirable to globally pause or stop haptics for all devices in certain situation. For example, if the player enters the in-game menu, it can make sense to pauses haptics while the player is in the menu and then resume haptics effects once the player resumes the game. You can use the corresponding methods on [`InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html) for that (which work the same way as the per-device methods, but affect all devices):
+
+```CSharp
+// Pause haptics globally.
+InputSystem.PauseHaptics();
+
+// Resume haptics globally.
+InputSystem.ResumeHaptics();
+
+// Stop haptics globally.
+InputSystem.ResetHaptics();
+```
+
+The difference between [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) and [`ResetHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetHaptics) is that the latter will reset haptics playback state on each device to its initial state whereas [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) will preserve playback state in memory and only stop playback on the hardware.
+
 ## PlayStation controllers
 
-PlayStation controllers are well supported on different devices. They are implemented as different derived types of the [`DualShockGamepad`](../api/UnityEngine.InputSystem.DualShockGamepad.html) base class (which itself derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)):
+PlayStation controllers are well supported on different devices. They are implemented as different derived types of the [`DualShockGamepad`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html) base class (which itself derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)):
 
-* [`DualShock3GamepadHID`](../api/UnityEngine.InputSystem.DualShock3GamepadHID.html): A DualShock 3 controller connected to a desktop computer using the HID interface. Currently only supported on macOS, and does not support [rumble](#rumble).
+* [`DualShock3GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock3GamepadHID.html): A DualShock 3 controller connected to a desktop computer using the HID interface. Currently only supported on macOS, and does not support [rumble](#rumble).
 
-* [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface (supported on macOS, Windows, UWP, and Linux).
+* [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface (supported on macOS, Windows, UWP, and Linux).
 
-* [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) A DualShock controller connected to a PlayStation 4 console. Only available when building for PS4, will not compile on other platforms.
+* [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) A DualShock controller connected to a PlayStation 4 console. Only available when building for PS4, will not compile on other platforms.
 
 Some of these implement additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
 
-* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller. Supported on [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock4GamepadHID.html) and [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html).
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller. Supported on [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) and [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html).
 
-* [`acceleration`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Controls which let you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
+* [`acceleration`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Controls which let you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) only)
 
-* [`touches`](api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_touches): Lets you get input from the touch screen on the gamepad. ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.DualShockGamepadPS4.html) only)
+* [`touches`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_touches): Lets you get input from the touch screen on the gamepad. ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) only)
 
 
 >NOTES:
@@ -100,7 +119,7 @@ Some of these implement additional, DualShock-specific functionality on top the 
 
 ## Xbox
 
-Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported XInput controller (which includes all Xbox one or Xbox 360 compatible controllers) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
+Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported XInput controller (which includes all Xbox one or Xbox 360 compatible controllers) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
 
 On other platforms we use specific derived classes to represent Xbox controllers:
 

@@ -16,14 +16,14 @@ A given key can be retrieved from [`Keyboard`](../api/UnityEngine.InputSystem.Ke
 
 Look at the [scripting API reference for the `Keyboard` class](../api/UnityEngine.InputSystem.Keyboard.html) to look up all the properties for the individual key controls.
 
-Two special controls worth pointing out here are the [`anyKey`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_anyKey) and the [`imeSelected`](api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_imeSelected) controls, both of which don't directly map to individual keys.
+Two special controls worth pointing out here are the [`anyKey`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_anyKey) and the [`imeSelected`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_imeSelected) controls, both of which don't directly map to individual keys.
  [`anyKey`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_anyKey) is a [synthetic](Controls.md#synthetic-controls) button control which will report whether any key on the keyboard is pressed.
 
 [`imeSelected`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_imeSelected) will report whether [IME](#ime) text processing is enabled or not.
 
 ## Text Input
 
-It is recommended to not manually translate text input from key presses by trying to trying to string together the characters corresponding to the keys. Instead, to listen to text input, hook into [`Keyboard.onTextInput`](api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onTextInput). This will deliver character-by-character input as reported by the platform (including input from on-screen keyboards).
+It is recommended to not manually translate text input from key presses by trying to trying to string together the characters corresponding to the keys. Instead, to listen to text input, hook into [`Keyboard.onTextInput`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onTextInput). This will deliver character-by-character input as reported by the platform (including input from on-screen keyboards).
 
 Note that the text input API does not allocate GC memory as it does not deliver fully composed strings.
 
@@ -33,7 +33,7 @@ The name of the current keyboard layout can be queried with [`Keyboard.keyboardL
 
 There is no support for setting keyboard layouts from the application.
 
-To monitor for when the keyboard layout changes, hook into [`InputSystem.onDeviceChange`](../api/api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) and check for [`InputDeviceChange.ConfigurationChanged`](../api/UnityEngine.InputSystem.InputDeviceChange.html) on a [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) device.
+To monitor for when the keyboard layout changes, hook into [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) and check for [`InputDeviceChange.ConfigurationChanged`](../api/UnityEngine.InputSystem.InputDeviceChange.html) on a [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) device.
 
 ## IME
 
@@ -45,4 +45,4 @@ Some writing systems (for instance several east asian scripts) are too complex t
 
 * [`SetIMECursorPosition()`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_Vector2_). IMEs may open system windows which let users interactively edit the text they want to input. These are expected to open up next to the UI used for text editing. You can use the [`SetIMECursorPosition()`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_SetIMECursorPosition_Vector2_) method to tell the OS where that  is.
 
-* [`onIMECompositionChange`](api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange) is an event you can subscribe to to receive any updates to the IME composition string. The composition string is the text input the user is currently editing using an IME. It is expected that any UI dealing with text input displays this text (with some visual indication of it being actively edited, usually an underline) at the current text input cursor position.
+* [`onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange) is an event you can subscribe to to receive any updates to the IME composition string. The composition string is the text input the user is currently editing using an IME. It is expected that any UI dealing with text input displays this text (with some visual indication of it being actively edited, usually an underline) at the current text input cursor position.
