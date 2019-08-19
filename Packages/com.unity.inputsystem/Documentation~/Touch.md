@@ -3,7 +3,6 @@
 * [`Touchscreen` Device](#touchscreen-device)
 * [`Touch` Class](#touch-class)
     * [Using Touch with Actions](#using-touch-with-actionsactionsmd)
-* [Gesture Support](#gesture-support)
 
 Touch support is divided into low-level support in the form of [`Touchscreen`](#touchscreen-device) and into high-level support in the form of the [`Touch`](#touch-class) class.
 
@@ -11,7 +10,7 @@ Touch input is supported on Android, iOS, UWP and Windows.
 
 ## `Touchscreen` Device
 
-At the lowest level, a touch screen is represented by a [`Touchscreen`](api/UnityEngine.InputSystem.Touchscreen.html) device which captures the raw state of the touchscreen. Touch screens are based on the [`Pointer`](Pointers.md) layout.
+At the lowest level, a touch screen is represented by a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device which captures the raw state of the touchscreen. Touch screens are based on the [`Pointer`](Pointers.md) layout.
 
 The last used or last added touch screen can be queried with [`Touchscreen.current`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_current).
 

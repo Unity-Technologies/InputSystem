@@ -58,9 +58,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(32)]
         public ushort buttons;
 
-        [InputControl(layout = "Digital")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(34)]
-        public ushort displayIndex;
+        ushort displayIndex;
 
         public PenState WithButton(PenButton button, bool state = true)
         {
@@ -220,6 +221,22 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PenButton.InRange"/>
         public ButtonControl inRange { get; private set; }
 
+        public Vector2Control tilt { get; private set; }
+
+        /// <summary>
+        /// Rotation of the pointer around its own axis. 0 means the pointer is facing away from the user (12 'o clock position)
+        /// and ~1 means the pointer has been rotated clockwise almost one full rotation.
+        /// </summary>
+        /// <remarks>
+        /// Twist is generally only supported by pens and even among pens, twist support is rare. An example product that
+        /// supports twist is the Wacom Art Pen.
+        ///
+        /// The axis of rotation is the vector facing away from the pointer surface when the pointer is facing straight up
+        /// (i.e. the surface normal of the pointer surface). When the pointer is tilted, the rotation axis is tilted along
+        /// with it.
+        /// </remarks>
+        public AxisControl twist { get; private set; }
+
         /// <summary>
         /// The pen that was active or connected last or <c>null</c> if there is no pen.
         /// </summary>
@@ -266,6 +283,8 @@ namespace UnityEngine.InputSystem
             thirdBarrelButton = GetChildControl<ButtonControl>("barrel3");
             fourthBarrelButton = GetChildControl<ButtonControl>("barrel4");
             inRange = GetChildControl<ButtonControl>("inRange");
+            tilt = GetChildControl<Vector2Control>("tilt");
+            twist = GetChildControl<AxisControl>("twist");
             base.FinishSetup();
         }
     }
