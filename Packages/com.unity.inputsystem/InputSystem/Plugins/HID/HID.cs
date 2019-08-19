@@ -135,6 +135,7 @@ namespace UnityEngine.InputSystem.HID
                 */
             }
 
+            ////REVIEW: these layout names are impossible to bind to; come up with a better way
             ////TODO: match HID layouts by vendor and product ID
             ////REVIEW: this probably works fine for most products out there but I'm not sure it works reliably for all cases
             // Come up with a unique template name. HIDs are required to have product and vendor IDs.
