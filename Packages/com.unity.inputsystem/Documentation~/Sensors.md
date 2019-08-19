@@ -2,7 +2,7 @@
 
 Sensors are [`InputDevices`](Devices.md) measuring environmental characteristics of the device playing the content. Sensors are currently supported on iOS and Android (with Android supporting a wider range of sensors then iOS).
 
-Unlike other devices, sensors start out being disabled. To enable a sensor, call [`InputSystem.EnableDevice()`]((../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_)).
+Unlike other devices, sensors start out being disabled. To enable a sensor, call [`InputSystem.EnableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_)).
 
 ```
 InputSystem.EnableDevice(Gyroscope.current);
