@@ -327,9 +327,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -343,9 +343,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -446,9 +446,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -462,9 +462,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -1611,9 +1611,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: c316c3bb-0f4f-4a4c-b199-64a5466289f7
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -1916,9 +1916,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -2302,9 +2302,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -2318,9 +2318,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -2806,9 +2806,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -2822,9 +2822,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -3007,9 +3007,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector2Action:
     m_Name: Vector 2
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 2128fbc9-d931-4b28-9d98-74a9a7aa5a14
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -3519,9 +3519,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -3586,9 +3586,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 59304066-fb97-49a7-91db-f33210288f70
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -3880,9 +3880,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -3896,9 +3896,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -4121,9 +4121,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0453e509-faf0-4d67-991d-fdd42e7322a0
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -4374,9 +4374,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -4554,9 +4554,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0453e509-faf0-4d67-991d-fdd42e7322a0
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -4699,9 +4699,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector2Action:
     m_Name: Vector 2
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -5303,9 +5303,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector2Action:
     m_Name: Vector 2
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 7787fea2-8311-4d79-ba37-148dee7144ee
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -5597,9 +5597,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: e77c23c2-6e77-486e-951f-09b17ff8b0b7
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -5931,9 +5931,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -6152,9 +6152,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -6296,9 +6296,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -6312,9 +6312,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -6581,7 +6581,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Oculus with Touch Controllers
+  m_Text: WMR and Spatial Controllers
 --- !u!222 &821363209
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6868,9 +6868,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -7226,9 +7226,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -7242,9 +7242,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -7682,9 +7682,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: bf4df07f-4c26-48ea-a5e8-2e3cc2d10a7f
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -8170,9 +8170,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: dd146cb8-7341-4dd1-a138-bf226db771ff
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -8237,9 +8237,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0fff43bc-9c56-40ef-b734-fb8f5850113b
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -8253,9 +8253,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 27d94ef3-d595-424a-ae6b-de674eb0123b
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -8312,9 +8312,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quaternionAction:
     m_Name: Quaternion
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -8725,9 +8725,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quaternionAction:
     m_Name: Quaternion
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 26393da8-e950-4743-b4d2-ee8d5001451c
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -9602,9 +9602,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -9618,9 +9618,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -9871,9 +9871,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 4548c545-ce75-4d3b-86c8-09f64ee5b4fa
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -9887,9 +9887,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: c0b2012f-02aa-4218-8bb1-db006a0b7139
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -10648,9 +10648,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 1a3e5234-a028-4a41-82fc-6cd6b3ba64bc
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -10715,9 +10715,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IntegerAction:
     m_Name: Integer
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -11086,9 +11086,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -11102,9 +11102,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -11753,9 +11753,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   IntegerAction:
     m_Name: Integer
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -12124,9 +12124,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -12446,9 +12446,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quaternionAction:
     m_Name: Quaternion
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -12586,9 +12586,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0453e509-faf0-4d67-991d-fdd42e7322a0
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -13176,9 +13176,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quaternionAction:
     m_Name: Quaternion
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 26393da8-e950-4743-b4d2-ee8d5001451c
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -13752,9 +13752,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: e77c23c2-6e77-486e-951f-09b17ff8b0b7
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -13892,9 +13892,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 40e88b97-1eef-4abf-98c0-43889cecc538
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -14663,9 +14663,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0453e509-faf0-4d67-991d-fdd42e7322a0
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -14730,9 +14730,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonPressAction:
     m_Name: Button Press
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 6698544a-e671-42c2-83f6-34fbb720041c
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -14746,9 +14746,9 @@ MonoBehaviour:
       m_Flags: 0
   buttonTouchAction:
     m_Name: Button Touch
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: ecdf1d74-6928-46b0-8fe4-93d6c2f77db5
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings: []
@@ -15099,9 +15099,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: bf4df07f-4c26-48ea-a5e8-2e3cc2d10a7f
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -15619,9 +15619,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   axisAction:
     m_Name: Axis
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0453e509-faf0-4d67-991d-fdd42e7322a0
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -16330,9 +16330,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: e77c23c2-6e77-486e-951f-09b17ff8b0b7
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -16669,9 +16669,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector2Action:
     m_Name: Vector 2
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -16890,9 +16890,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vector3Action:
     m_Name: Vector 3
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 0b41ff64-0dba-4a5b-8af4-cc71dcf61b19
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
@@ -17509,9 +17509,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   quaternionAction:
     m_Name: Quaternion
-    m_ExpectedControlLayout: 
+    m_Type: 0
+    m_ExpectedControlType: 
     m_Id: 26393da8-e950-4743-b4d2-ee8d5001451c
-    m_Flags: 0
     m_Processors: 
     m_Interactions: 
     m_SingletonActionBindings:
