@@ -60,7 +60,7 @@ Increased frequency should lead to an increased number of events on the respecti
 
 ## Rumble
 
-The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implement the [`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) interface to allow you to control the left and right motor speeds.
+The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implements the [`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) interface to allow you to control the left and right motor speeds. In most common gamepads, the left motor emits a low-frequency rumble, and the right motor emits a high frequency rumble.
 
 ```CSharp
 // Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
@@ -70,7 +70,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 
 >NOTE: Only the following combinations of devices/OSes currently support rumble:
 >* PS4, Xbox and Switch controllers when connected to their respective consoles.
->* PS4 controllers when connected to mac or windows computers.
+>* PS4 controllers when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on windows.
 [//]: # (TODO: are we missing any supported configs?)
 
@@ -119,7 +119,7 @@ Some of these implement additional, DualShock-specific functionality on top the 
 
 ## Xbox
 
-Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported XInput controller (which includes all Xbox one or Xbox 360 compatible controllers) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
+Xbox controllers are well supported on different devices. They are implemented using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, (which  derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html)). On Windows/UWP, any type of supported XInput controller (which includes all Xbox One or Xbox 360 compatible controllers) will be connected to using the XInput API and is represented directly as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (wheel, gamepad, etc).
 
 On other platforms we use specific derived classes to represent Xbox controllers:
 
