@@ -354,6 +354,41 @@ partial class CoreTests
         }
     }
 
+    // Value actions perform an initial state check when enabled. These state checks are performed
+    // from InputSystem.onBeforeUpdate. However, if we enable an action as part of event processing,
+    // we will react to the state of a control right away and should then not ALSO perform an
+    // initial state check in the next update.
+    //
+    // This is relevant mainly for InputUser.onUnpairedDeviceUsed which will trigger from
+    // InputSystem.onEvent and by means of PlayerInput frequently lead to actions being disabled
+    // and enabled as part of event processing (e.g. when switching control schemes in single player).
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+
+        InputSystem.onEvent +=
+            (eventPtr, device) => { action.Enable(); };
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
+
+            Assert.That(trace,
+                Started(action, control: gamepad.leftStick)
+                    .AndThen(Performed(action, control: gamepad.leftStick)));
+
+            trace.Clear();
+
+            // This one should not trigger anything on the action.
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanBeDisabledInCallback()

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
@@ -396,7 +397,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_JoinActionDelegateHooked;
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
-        [NonSerialized] private Action<InputControl> m_UnpairedDeviceUsedDelegate;
+        [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
@@ -436,7 +437,7 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-        private void OnUnpairedDeviceUsed(InputControl control)
+        private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             if (!m_AllowJoining)
                 return;

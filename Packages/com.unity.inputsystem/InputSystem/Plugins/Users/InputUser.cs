@@ -349,6 +349,16 @@ namespace UnityEngine.InputSystem.Users
         /// If the device should be paired, invoke <see cref="PerformPairingWithDevice"/> from the callback. If you do so,
         /// no further callbacks will get triggered for other controls that may have been actuated in the same event.
         ///
+        /// Be aware that the callback is fired <em>before</em> input is actually incorporated into the device (it is
+        /// indirectly triggered from <see cref="InputSystem.onEvent"/>). This means at the time the callback is run,
+        /// the state of the given device does not yet have the input that triggered the callback. For this reason, the
+        /// callback receives a second argument that references the event from which the use of an unpaired device was
+        /// detected.
+        ///
+        /// What this sequence allows is to make changes to the system before the input is processed. For example, an
+        /// action that is enabled as part of the callback will subsequently respond to the input that triggered the
+        /// callback.
+        ///
         /// <example>
         /// <code>
         /// // Activate support for listening to device activity.
@@ -379,7 +389,7 @@ namespace UnityEngine.InputSystem.Users
         /// the user can, for example, switch from keyboard&amp;mouse to gamepad seamlessly by simply picking up the gamepad
         /// and starting to play.
         /// </remarks>
-        public static event Action<InputControl> onUnpairedDeviceUsed
+        public static event Action<InputControl, InputEventPtr> onUnpairedDeviceUsed
         {
             add
             {
@@ -387,7 +397,7 @@ namespace UnityEngine.InputSystem.Users
                     throw new ArgumentNullException(nameof(value));
                 s_OnUnpairedDeviceUsed.AppendWithCapacity(value);
                 if (s_ListenForUnpairedDeviceActivity > 0)
-                    HookIntoDeviceStateChange();
+                    HookIntoEvents();
             }
             remove
             {
@@ -426,7 +436,7 @@ namespace UnityEngine.InputSystem.Users
                 if (value < 0)
                     throw new ArgumentOutOfRangeException(nameof(value), "Cannot be negative");
                 if (value > 0 && s_OnUnpairedDeviceUsed.length > 0)
-                    HookIntoDeviceStateChange();
+                    HookIntoEvents();
                 else if (value == 0)
                     UnhookFromDeviceStateChange();
                 s_ListenForUnpairedDeviceActivity = value;
@@ -1615,16 +1625,23 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
-        private static unsafe void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
+        // We hook this into InputSystem.onEvent when listening for activity on unpaired devices.
+        // What this means is that we get to run *before* state reaches the device. This in turn
+        // means that should the device get paired as a result, actions that are enabled as part
+        // of the pairing will immediately get triggered. This would not be the case if we hook
+        // into InputState.onDeviceChange instead which only triggers once state has been altered.
+        //
+        // NOTE: This also means that unpaired device activity will *only* be detected from events,
+        //       NOT from state changes applied directly through InputState.Change.
+        private static unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
         {
-            // Ignore any state change that was triggered internally. This immediately filters out
-            // things such as Pointers resetting deltas, for example.
-            if (!eventPtr.valid)
-                return;
-
             Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
                 "This should only be called while listening for unpaired device activity");
             if (s_ListenForUnpairedDeviceActivity == 0)
+                return;
+
+            // Ignore any state change not triggered from a state event.
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                 return;
 
             // See if it's a device not belonging to any user.
@@ -1636,18 +1653,7 @@ namespace UnityEngine.InputSystem.Users
 
             Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
 
-            // Ignore any state change not triggered from a state event.
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
-                return;
-
             ////TODO: allow filtering (e.g. by device requirements on user actions)
-
-            // Yes, it is so let's find out whether there was actual user activity
-            // on the device. As a first level, we run the noise mask over the state
-            // while concurrently comparing whatever bits make it through to the default
-            // state buffer.
-            if (device.CheckStateIsAtDefaultIgnoringNoise())
-                return; // No activity at all.
 
             // Go through controls and for any one that isn't noisy or synthetic, find out
             // if we have a magnitude greater than zero.
@@ -1669,7 +1675,7 @@ namespace UnityEngine.InputSystem.Users
 
                 // Check for default state. Cheaper check than magnitude evaluation
                 // which may involve several virtual method calls.
-                if (control.CheckStateIsAtDefault())
+                if (control.CheckStateIsAtDefault(statePtr))
                     continue;
 
                 // Ending up here is costly. We now do per-control work that may involve
@@ -1678,7 +1684,7 @@ namespace UnityEngine.InputSystem.Users
                 // NOTE: We already know the control has moved away from its default state
                 //       so in case it does not support magnitudes, we assume that the
                 //       control has changed value, too.
-                var magnitude = control.EvaluateMagnitude();
+                var magnitude = control.EvaluateMagnitude(statePtr);
                 if (magnitude > 0 || magnitude == -1)
                 {
                     // Yes, something was actuated on the device.
@@ -1687,7 +1693,7 @@ namespace UnityEngine.InputSystem.Users
                     {
                         var pairingStateVersionBefore = s_PairingStateVersion;
 
-                        s_OnUnpairedDeviceUsed[n](control);
+                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
 
                         if (pairingStateVersionBefore != s_PairingStateVersion
                             && FindUserPairedToDevice(device) != null)
@@ -1856,11 +1862,11 @@ namespace UnityEngine.InputSystem.Users
         private static InputDevice[] s_AllLostDevices;
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
-        private static InlinedArray<Action<InputControl>> s_OnUnpairedDeviceUsed;
+        private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
-        private static Action<InputDevice, InputEventPtr> s_OnDeviceStateChangeDelegate;
+        private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;
         private static bool s_OnDeviceChangeHooked;
-        private static bool s_OnDeviceStateChangeHooked;
+        private static bool s_OnEventHooked;
         private static int s_ListenForUnpairedDeviceActivity;
 
         private static void HookIntoDeviceChange()
@@ -1881,22 +1887,22 @@ namespace UnityEngine.InputSystem.Users
             s_OnDeviceChangeHooked = false;
         }
 
-        private static void HookIntoDeviceStateChange()
+        private static void HookIntoEvents()
         {
-            if (s_OnDeviceStateChangeHooked)
+            if (s_OnEventHooked)
                 return;
-            if (s_OnDeviceStateChangeDelegate == null)
-                s_OnDeviceStateChangeDelegate = OnDeviceStateChange;
-            InputState.onChange += s_OnDeviceStateChangeDelegate;
-            s_OnDeviceStateChangeHooked = true;
+            if (s_OnEventDelegate == null)
+                s_OnEventDelegate = OnEvent;
+            InputSystem.onEvent += s_OnEventDelegate;
+            s_OnEventHooked = true;
         }
 
         private static void UnhookFromDeviceStateChange()
         {
-            if (!s_OnDeviceStateChangeHooked)
+            if (!s_OnEventHooked)
                 return;
-            InputState.onChange -= s_OnDeviceStateChangeDelegate;
-            s_OnDeviceStateChangeHooked = false;
+            InputSystem.onEvent -= s_OnEventDelegate;
+            s_OnEventHooked = false;
         }
 
         internal static void ResetGlobals()
@@ -1916,11 +1922,11 @@ namespace UnityEngine.InputSystem.Users
             s_AllPairedDevices = null;
             s_OngoingAccountSelections = new InlinedArray<OngoingAccountSelection>();
             s_OnChange = new InlinedArray<Action<InputUser, InputUserChange, InputDevice>>();
-            s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl>>();
+            s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl, InputEventPtr>>();
             s_OnDeviceChangeDelegate = null;
-            s_OnDeviceStateChangeDelegate = null;
+            s_OnEventDelegate = null;
             s_OnDeviceChangeHooked = false;
-            s_OnDeviceStateChangeHooked = false;
+            s_OnEventHooked = false;
             s_ListenForUnpairedDeviceActivity = 0;
         }
     }
