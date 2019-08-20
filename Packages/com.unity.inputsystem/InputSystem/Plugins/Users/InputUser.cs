@@ -459,7 +459,7 @@ namespace UnityEngine.InputSystem.Users
             {
                 actions.devices = pairedDevices;
                 if (s_AllUserData[userIndex].controlScheme != null)
-                    ActivateControlScheme(s_AllUserData[userIndex].controlScheme.Value);
+                    ActivateControlSchemeInternal(userIndex, s_AllUserData[userIndex].controlScheme.Value);
             }
         }
 
@@ -498,34 +498,40 @@ namespace UnityEngine.InputSystem.Users
         public ControlSchemeChangeSyntax ActivateControlScheme(InputControlScheme scheme)
         {
             var userIndex = index; // Throws if user is invalid.
-            var isEmpty = scheme == default;
 
-            if (s_AllUserData[userIndex].controlScheme != scheme || (isEmpty && s_AllUserData[userIndex].controlScheme != null))
+            if (s_AllUserData[userIndex].controlScheme != scheme ||
+                (scheme == default && s_AllUserData[userIndex].controlScheme != null))
             {
-                if (isEmpty)
-                    s_AllUserData[userIndex].controlScheme = null;
-                else
-                    s_AllUserData[userIndex].controlScheme = scheme;
-
-                if (s_AllUserData[userIndex].actions != null)
-                {
-                    if (isEmpty)
-                    {
-                        s_AllUserData[userIndex].actions.bindingMask = null;
-                        s_AllUserData[userIndex].controlSchemeMatch.Dispose();
-                        s_AllUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
-                    }
-                    else
-                    {
-                        s_AllUserData[userIndex].actions.bindingMask = new InputBinding {groups = scheme.bindingGroup};
-                        UpdateControlSchemeMatch(userIndex);
-                    }
-                }
-
+                ActivateControlSchemeInternal(userIndex, scheme);
                 Notify(userIndex, InputUserChange.ControlSchemeChanged, null);
             }
 
             return new ControlSchemeChangeSyntax {m_UserIndex = userIndex};
+        }
+
+        private void ActivateControlSchemeInternal(int userIndex, InputControlScheme scheme)
+        {
+            var isEmpty = scheme == default;
+
+            if (isEmpty)
+                s_AllUserData[userIndex].controlScheme = null;
+            else
+                s_AllUserData[userIndex].controlScheme = scheme;
+
+            if (s_AllUserData[userIndex].actions != null)
+            {
+                if (isEmpty)
+                {
+                    s_AllUserData[userIndex].actions.bindingMask = null;
+                    s_AllUserData[userIndex].controlSchemeMatch.Dispose();
+                    s_AllUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
+                }
+                else
+                {
+                    s_AllUserData[userIndex].actions.bindingMask = new InputBinding {groups = scheme.bindingGroup};
+                    UpdateControlSchemeMatch(userIndex);
+                }
+            }
         }
 
         public void PauseHaptics()

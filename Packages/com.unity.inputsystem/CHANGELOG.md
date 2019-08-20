@@ -10,7 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.4-preview] - 2099-1-1
 
 ### Fixed
-### Actions
+
+#### Actions
+
+- `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
+  * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+
 ### Changed
 ### Added
 
