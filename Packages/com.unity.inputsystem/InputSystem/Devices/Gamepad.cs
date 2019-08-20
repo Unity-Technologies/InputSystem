@@ -200,6 +200,16 @@ namespace UnityEngine.InputSystem.LowLevel
         RightShoulder,
 
         /// <summary>
+        /// The left trigger button on a gamepad.
+        /// </summary>
+        LeftTrigger,
+
+        /// <summary>
+        /// The right trigger button on a gamepad.
+        /// </summary>
+        RightTrigger,
+
+        /// <summary>
         /// The start button.
         /// </summary>
         Start,
@@ -335,6 +345,8 @@ namespace UnityEngine.InputSystem
                     case GamepadButton.Select: return selectButton;
                     case GamepadButton.LeftShoulder: return leftShoulder;
                     case GamepadButton.RightShoulder: return rightShoulder;
+                    case GamepadButton.LeftTrigger: return leftTrigger;
+                    case GamepadButton.RightTrigger: return rightTrigger;
                     case GamepadButton.LeftStick: return leftStickButton;
                     case GamepadButton.RightStick: return rightStickButton;
                     case GamepadButton.DpadUp: return dpad.up;

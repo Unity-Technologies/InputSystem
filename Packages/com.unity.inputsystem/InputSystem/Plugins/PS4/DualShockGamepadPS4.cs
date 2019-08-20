@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_PS4
+#if UNITY_EDITOR || UNITY_PS4 || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;

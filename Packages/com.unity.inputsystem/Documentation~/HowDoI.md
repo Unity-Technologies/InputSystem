@@ -400,6 +400,8 @@ To create an instance of your device, register it as a template and then instant
     InputSystem.AddDevice("MyDevice");
 ```
 
+See the [documentation on HID](HID.md#overriding-the-hid-fallback) for a more detailed description.
+
 [//]: # (TODO: need a way to give devices an opportunity to feed events; ATM you have to make that happen yourself and events will only go in the next update this way)
 
 # ... deal with my gamepad data arriving in a format different from `GamepadState`?

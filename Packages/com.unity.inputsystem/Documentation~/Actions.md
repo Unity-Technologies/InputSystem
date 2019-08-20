@@ -351,7 +351,7 @@ Actions employ
 
 ### Using Actions with Multiple Players
 
-It is possible to use the same action definitions for multiple local players. This setup is useful in a local co-op games, for example. More details about this can be found [here](LocalMultiplayer.md#multiplayer-actions).
+It is possible to use the same action definitions for multiple local players. This setup is useful in a local co-op games, for example. More details about this can be found [here](Components.md#playerinputmanager-component).
 
 ## Terms and Concepts
 

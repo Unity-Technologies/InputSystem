@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || PACKAGE_DOCS_GENERATION
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -443,7 +443,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
 namespace UnityEngine.InputSystem.Switch
 {
-#if UNITY_EDITOR || UNITY_SWITCH
+#if UNITY_EDITOR || UNITY_SWITCH || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// An NPad controller for Switch, which can be a Joy-Con.
     /// </summary>
@@ -761,7 +761,7 @@ namespace UnityEngine.InputSystem.Switch
     }
 #endif
 
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA || PACKAGE_DOCS_GENERATION
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>

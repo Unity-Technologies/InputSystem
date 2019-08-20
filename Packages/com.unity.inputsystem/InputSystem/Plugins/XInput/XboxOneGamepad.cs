@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_XBOXONE
+#if UNITY_EDITOR || UNITY_XBOXONE || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
