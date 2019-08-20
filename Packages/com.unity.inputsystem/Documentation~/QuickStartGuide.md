@@ -59,7 +59,7 @@ A file requester will pop up that asks you where to create the new asset. Choose
 
 ![MyGameActions](Images/MyGameActions.png)
 
-The default set can be freely edited to fit the needs of your project. See the in-depth documentation for the [action editor](ActionAssets.md#editing-action-assets) for instructions on how to use the editor.
+The default set can be freely edited to fit the needs of your project. See the in-depth documentation for the [action editor](ActionAssets.md#editing-input-action-assets) for instructions on how to use the editor.
 
 ## Step 3: Setting Up Action Responses
 

@@ -297,7 +297,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
 #### Step 4: Registration and Creation
 
-Now we have a functioning device but there is not yet a place where the device will actually get added to the system. Also, because we are not yet registering our new type of device, we won't see it in the editor when, for example, creating bindings in the [action editor](ActionAssets.md#editing-action-assets).
+Now we have a functioning device but there is not yet a place where the device will actually get added to the system. Also, because we are not yet registering our new type of device, we won't see it in the editor when, for example, creating bindings in the [action editor](ActionAssets.md#editing-input-action-assets).
 
 One way to register out type of device with the system is to do some from within code that runs automatically as part of Unity starting up. To do so, we can modify the definition of `MyDevice` like so.
 

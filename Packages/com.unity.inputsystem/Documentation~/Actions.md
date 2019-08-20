@@ -8,9 +8,13 @@
     * [Creating Actions in Code](#creating-actions-in-code)
 * [Using Actions](#using-actions)
     * [Responding to Actions](#responding-to-actions)
-    * [Pass-Through Actions](#pass-through-actions)
+    * [Action Types](#action-types)
     * [Debugging Actions](#debugging-actions)
-    * [Extending Actions](#extending-actions)
+    * [Using Actions with Multiple Players](#using-actions-with-multiple-players)
+* [Terms and Concepts](#terms-and-concepts)
+
+Related pages:
+
 * [Assets](ActionAssets.md)
 * [Bindings](ActionBindings.md)
 * [Interactions](Interactions.md)
@@ -58,7 +62,7 @@ There are three key classes for actions in the API:
 
 The key mechanism by which bindings refer to the inputs they collect is `InputBinding`. More details about bindings and how to use them can be found [here](ActionBindings.md).
 
-Each action has a name ([`InputAction.name`](;;'api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_name)) which must be unique within the action map that the action belongs to (if any; see [`InputAction.actionMap`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_actionMap). Also, each action has a unique ID ([`InputAction.id`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_id)) that can be used to reference the action. The ID will remain the same even if the action is renamed.
+Each action has a name ([`InputAction.name`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_name)) which must be unique within the action map that the action belongs to (if any; see [`InputAction.actionMap`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_actionMap). Also, each action has a unique ID ([`InputAction.id`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_id)) that can be used to reference the action. The ID will remain the same even if the action is renamed.
 
 Each action map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_name)) which must be unique within the action asset that the map belongs to (if any; see [`InputActionMap.asset`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_asset)). Also, each action map has a unique ID ([`InputActionMap.id`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_id)) that can be used to reference the map. The ID will remain the same even if the map is renamed.
 
@@ -364,7 +368,7 @@ This is the default action type. This is recommended to use for any inputs which
 
 `Value` type actions continuously monitor all the controls which are bound to the action, and then choose the one which is the most actuated to be the control "driving the action", and report the values from that control in callbacks, triggered whenever the value changes. If a different bound control actuated more, then that control becomes the control driving the action, and values will be reported from that control. This process is called ["Disambiguation"](ActionBindings.md#disambiguation). This is useful if you want to allow different controls to control an action in the game, but only take input from one at the same time.
 
-When the action is initially enabled, it will check the state of all bound controls, and if any of them is actuated, it will trigger a callback with the current value.
+When the action is initially enabled, it will perform an [initial state check](ActionBindings.md#initial-state-check) of all bound controls, and if any of them is actuated, it will trigger a callback with the current value.
 
 #### Button
 
@@ -376,9 +380,9 @@ This is very similar to `Value`, but `Button` type actions can only be bound to 
 
 ### Debugging Actions
 
-You can see currently enabled actions and their bound controls using the [Input Debugger](Debuggger.md#debugging-actions).
+You can see currently enabled actions and their bound controls using the [Input Debugger](Debugging.md#debugging-actions).
 
-You can also use the [`InputActionVisualizer`](Debugger.md#inputactionvisualizer) component from the "Visualizers" sample to get an on-screen visualization of an action's value and interaction state in real-time.
+You can also use the [`InputActionVisualizer`](Debugging.md#inputactionvisualizer) component from the "Visualizers" sample to get an on-screen visualization of an action's value and interaction state in real-time.
 
 ### Using Actions with Multiple Players
 
