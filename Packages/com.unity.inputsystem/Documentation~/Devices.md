@@ -119,7 +119,7 @@ You can use [`InputState.AddChangeMonitor()`](../api/UnityEngine.InputSystem.Low
 
 #### Synthesizing State
 
-It can be desirable to make up new state from existing state. An example of such a use case is the [`press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press) control that [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) inherits from [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html). Unlike for the mouse where this is a real button, for [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) this is a synthetic control that does not correspond to actual data coming in from the device backend. Instead, the button is considered press if any touch is currently ongoing and released otherwise.
+It can be desirable to make up new state from existing state. An example of such a use case is the [`press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press) control that [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) inherits from [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html). Unlike for the mouse where this is a real button, for [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) this is a [synthetic control](Controls.md#synthetic-controls) that does not correspond to actual data coming in from the device backend. Instead, the button is considered press if any touch is currently ongoing and released otherwise.
 
 This can be achieved by using [`InputState.Change`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_Change__1_UnityEngine_InputSystem_InputControl___0_UnityEngine_InputSystem_LowLevel_InputUpdateType_UnityEngine_InputSystem_LowLevel_InputEventPtr_) which allows feeding arbitrary state changes into the system without having to run them through the input event queue. The state changes will be directly and synchronously incorporated. State change [monitors](#monitoring-state-changes), however, will still trigger as expected.
 
@@ -436,6 +436,6 @@ public class MyDevice : InputDevice, IInputCallbackReceiver
     }
 }
 ```
-[//]: #(#### Step 6: Device Commands (Optional))
-[//]: #(A final, but optional, step is to add support for device commands. A "device command" is that opposite of input, i.e. it is data traveling __to__ the input device &ndash; and which may optionally also return data as part of the operation (much like a function call). This can be used to communicate with the backend of the device to query configuration or initiate effects such as haptics.)
-[//]: #(TODO: ATM we're missing an overridable method to make this work)
+[//]: # (#### Step 6: Device Commands (Optional))
+[//]: # (A final, but optional, step is to add support for device commands. A "device command" is that opposite of input, i.e. it is data traveling __to__ the input device &ndash; and which may optionally also return data as part of the operation (much like a function call). This can be used to communicate with the backend of the device to query configuration or initiate effects such as haptics.)
+[//]: # (TODO: ATM we're missing an overridable method to make this work)

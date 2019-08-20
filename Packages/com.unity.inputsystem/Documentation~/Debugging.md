@@ -58,7 +58,7 @@ When there are multiple [`InputUser`](UserManagement.md) instances &ndash; each 
 
 The [`Layouts`](Layouts.md) list in the Debugger window shows a breakdown of all registered [control and device layouts](Layouts.md). This is essentially the database of supported hardware and the knowledge of how to represent a given piece of input hardware. This is mostly handy when you want to [create a new device mapping](HowDoI.md#-create-my-own-custom-devices), and want to see how it gets represented by the input system.
 
-![Layouts in Input Debugger](Images/LayoutsInInputDebugger.png)
+![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 
 ### Debugging Remotely
 
