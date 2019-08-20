@@ -12,7 +12,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 ### Actions
 ### Changed
+
 ### Added
+
+- Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
+  * This information is helpful for us to debug problems related to specific devices.
 
 ## [0.9.3-preview] - 2019-8-15
 
