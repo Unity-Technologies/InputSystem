@@ -11,20 +11,6 @@ using UnityEngine.InputSystem.Processors;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
-//what if we want to join by button but NOT directly process the input? is the previous behavior actually better?
-//problem is that the control scheme switch may still trigger an initial state check on all actions
-//should there be a "sort-of-handled" kind of flag which puts the event on the device but does not trigger actions?
-
-//why is InputSystem.Update() triggering an initial state check on the "fire" button action?
-//should the unpaired device activity check in InputUser be moved to *before* state is incorporated into the device
-//   (the current setup doesn't seem to make it possible to immediately react to the state change via actions)
-
-//TODO:
-// - fix playerinput hotplugging
-// - add message for control scheme switches
-// - add message for device changes
-// - add ability to intercept playerinputmanager player instantiation
-
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
 /// </summary>
