@@ -62,6 +62,8 @@ namespace UnityEngine.InputSystem.XR
         public Vector3Control devicePosition { get; private set; }
         [InputControl(aliases = new[] { "gripOrientation" })]
         public QuaternionControl deviceRotation { get; private set; }
+        [InputControl(aliases = new[] { "gripVelocity" })]
+        public Vector3Control deviceVelocity { get; private set; }
         [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl airTap { get; private set; }
         [InputControl]
@@ -78,6 +80,7 @@ namespace UnityEngine.InputSystem.XR
             isTracked = GetChildControl<ButtonControl>("isTracked");
             devicePosition = GetChildControl<Vector3Control>("devicePosition");
             deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
             sourceLossRisk = GetChildControl<AxisControl>("sourceLossRisk");
             sourceLossMitigationDirection = GetChildControl<Vector3Control>("sourceLossMitigationDirection");
         }
