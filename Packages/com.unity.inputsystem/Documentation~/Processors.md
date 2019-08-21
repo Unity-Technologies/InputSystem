@@ -10,6 +10,7 @@ An input processor takes a value and returns a processed version of it. The rece
     * [Processors on Controls](#processors-on-controls)
 * [Predefined Processors](#predefined-processors)
     * [Axis Deadzone](#axis-deadzone)
+    * [Clamp](#clamp)
     * [Invert](#invert)
     * [Invert Vector 2](#invert-vector-2)
     * [Invert Vector 3](#invert-vector-3)
@@ -28,9 +29,9 @@ Processors can be installed on [bindings](ActionBindings.md), [actions](Actions.
 
 ### Processors on Bindings
 
-When you create bindings for your [actions](Actions.md), you can choose to add processors to the bindings to process the values read from the controls they bind to, before applying them to the action value. For instance you may find that you want the `Vector2` values coming from the controls to be inverted along the Y axis before passing these values to your action driving your game input logic. You can achieve this by adding an [Invert Vector2](#invert-vector2) processor to your binding.
+When you create bindings for your [actions](Actions.md), you can choose to add processors to the bindings to process the values read from the controls they bind to, before applying them to the action value. For instance you may find that you want the `Vector2` values coming from the controls to be inverted along the Y axis before passing these values to your action driving your game input logic. You can achieve this by adding an [Invert Vector2](#invert-vector-2) processor to your binding.
 
-If you are using [Input Action Assets](ActionsAssets.md), you can simply add any processor to your bindings in the input action editor. Once you [created some bindings](ActionAssets.md#editing-bindings), just select the binding you want to add processors to (so that the right pane of the window shows the properties for that binding). Now, click on the "Plus" icon on the "Processors" foldout, which will show a popup of all available processors matching your control type. Choose a processor type to add a processor instance of that type. The processor will now be shown under the processors foldout. If the processor has any parameters you can now edit them here as well:
+If you are using [Input Action Assets](ActionAssets.md), you can simply add any processor to your bindings in the input action editor. Once you [created some bindings](ActionAssets.md#editing-bindings), just select the binding you want to add processors to (so that the right pane of the window shows the properties for that binding). Now, click on the "Plus" icon on the "Processors" foldout, which will show a popup of all available processors matching your control type. Choose a processor type to add a processor instance of that type. The processor will now be shown under the processors foldout. If the processor has any parameters you can now edit them here as well:
 
 ![Binding Processors](Images/BindingProcessors.png)
 
@@ -48,7 +49,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 Processors on actions work very similar to processors on bindings, but they affect all controls bound to an action, not just the ones coming from a specific binding. If there are processors on both the binding and the action, the ones from the binding will be processes first.
 
-You can add and edit processors on actions in the [Input Action Assets](ActionsAssets.md) the [same way](#processors-on-bindings) as you would do for bindings - just add them in the right window pane when you have selected an action to edit.
+You can add and edit processors on actions in the [Input Action Assets](ActionAssets.md) the [same way](#processors-on-bindings) as you would do for bindings - just add them in the right window pane when you have selected an action to edit.
 
 If you create your actions in code, you can add processors like this:
 
@@ -113,6 +114,15 @@ The input system package comes with a set of useful processors you can use.
 |__Parameters__|`float min`<br>`float max`|
 
 An Axis Deadzone Processor scales the values of a control, so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or -1. Many controls don't have an imprecise resting point (ie, they don't always report exactly 0 when the control is in the center). Using a the `min` value on a deadzone processor avoids unintentional input from such controls. Also, some controls don't consistently report they maximum values when moving the axis all the way. Using a the `max` value on a deadzone processor can make sure that you always get the maximum value in such cases.
+
+### Clamp
+
+|__Name__|`Clamp`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float min`<br>`float max`|
+
+Clamps input values to the [`min`..`max`] range.
 
 ### Invert
 
@@ -224,7 +234,7 @@ Now, you need to tell the Input System about your processor. So, somewhere in yo
 InputSystem.RegisterProcessor<MyValueShiftProcessor>();
 ```
 
-Now, your new processor will become available up in the [Input Action Asset Editor window](ActionsAssets.md), and you can also add it in code like this:
+Now, your new processor will become available up in the [Input Action Asset Editor window](ActionAssets.md), and you can also add it in code like this:
 
 ```CSharp
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");

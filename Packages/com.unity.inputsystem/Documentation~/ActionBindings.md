@@ -39,7 +39,7 @@ myAction.AddCompositeBinding("Axis")
 
 Each composite is comprised of one binding with set to true and then one or more bindings immediately following it that have [`InputBinding.isPartOfComposiste`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isPartOfComposite) set to true. This means that several consecutive entries in [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings) or [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings) together form a composite.
 
-Composites can have parameters, just like [interactions](Interactions.md#interaction-parameters) and [processors](Processors.md#processor-parameters).
+Composites can have parameters, just like [interactions](Interactions.md#interaction-parameters) and [processors](Processors.md).
 
 ```CSharp
 myAction.AddCompositeBinding("Axis(wichSideWins=1)");
