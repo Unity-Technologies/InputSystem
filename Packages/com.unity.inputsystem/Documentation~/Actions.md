@@ -302,7 +302,7 @@ Instead of using callbacks, it may sometimes be simpler to simple poll the value
 
 #### `InputActionTrace`
 
-As when using [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) for events, actions can be traced in order to generate a log of all activity that happened on a particular set of actions. To do so, use `InputActionTrace`.
+As when using [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) for events, actions can be traced in order to generate a log of all activity that happened on a particular set of actions. To do so, use [`InputActionTrace`](../api/UnityEngine.InputSystem.Utilities.InputActionTrace.html).
 
 >NOTE: `InputActionTrace` allocates unmanaged memory and needs to be disposed of in order to not create memory leaks.
 
