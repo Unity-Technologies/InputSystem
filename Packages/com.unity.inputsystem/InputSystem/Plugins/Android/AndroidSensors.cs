@@ -1,3 +1,4 @@
+using System.ComponentModel;
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 using System.Runtime.InteropServices;
@@ -120,6 +121,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         public FourCC format => kFormat;
     }
 
+    [DesignTimeVisible(false)]
     internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
@@ -133,6 +135,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         }
     }
 
+    [DesignTimeVisible(false)]
     internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
         public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
