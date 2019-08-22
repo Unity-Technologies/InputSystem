@@ -451,6 +451,40 @@ partial class CoreTests
         Assert.That(action1.bindings[5].name, Is.Empty);
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputAsset_CanReplaceBindingGroupThroughSerialization()
+    {
+        var map = new InputActionMap("map");
+        var action = map.AddAction(name: "action1");
+        action.AddBinding("Foo", groups: "A");
+        action.AddBinding("Bar", groups: "B");
+        action.AddBinding("Flub", groups: "A;B");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var obj = new SerializedObject(asset);
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "A", "C");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(action.bindings[0].groups, Is.EqualTo("C"));
+        Assert.That(action.bindings[1].groups, Is.EqualTo("B"));
+        Assert.That(action.bindings[2].groups, Is.EqualTo("C;B"));
+
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "C", "");
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(action.bindings[0].groups, Is.EqualTo(""));
+        Assert.That(action.bindings[1].groups, Is.EqualTo("B"));
+        Assert.That(action.bindings[2].groups, Is.EqualTo("B"));
+
+        InputActionSerializationHelpers.ReplaceBindingGroup(obj, "B", "", deleteOrphanedBindings: true);
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(map.bindings, Has.Count.EqualTo(1));
+        Assert.That(map.bindings[0].groups, Is.EqualTo(""));
+    }
+
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
     {
         public InputAction action;

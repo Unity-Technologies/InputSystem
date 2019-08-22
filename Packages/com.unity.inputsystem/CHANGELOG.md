@@ -10,7 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.5-preview] - 2099-1-1
 
 ### Fixed
+
 #### Actions
+
+- When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
+- When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
+- Control scheme names can no longer be set to empty strings.
 
 ### Changed
 
@@ -21,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - When switching devices/controls on actions, the system will no longer subsequently force an initial state check on __all__ actions. Instead, every time an action's bindings get re-resolved, the system will simply cancel all on-going actions and then re-enable them the same way it would happen by manually calling `InputAction.Enable`.
+- Removed non-functional `InputControlScheme.baseScheme` API and `basedOn` serialized property. This was never fully implemented.
 
 ### Added
 
