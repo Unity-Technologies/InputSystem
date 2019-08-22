@@ -205,7 +205,7 @@ By itself, an action does not represent an actual response to input. Instead, an
 
 There are several ways in which this can be done.
 
-1. Each action has a [`started`, `performed`, and `cancelled` callback](#started-performed-and-cancelled-callbacks).
+1. Each action has a [`started`, `performed`, and `canceled` callback](#started-performed-and-canceled-callbacks).
 2. Each action map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
 3. There is a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
 4. You also can poll the current state of an action whenever you need it using [`InputAction.ReadValue<>()`](#polling-actions).
@@ -213,7 +213,7 @@ There are several ways in which this can be done.
 
 There are also higher-level, more streamlined ways of picking up input from actions. One is to use [`PlayerInput`](Components.md#notification-behaviors) and another one is to [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the input actions.
 
-#### `started`, `performed`, and `cancelled` Callbacks
+#### `started`, `performed`, and `canceled` Callbacks
 
 Every action has a set of dictinct phases it can go through in response to receiving input.
 
@@ -223,18 +223,18 @@ Every action has a set of dictinct phases it can go through in response to recei
 |`Waiting`|The action is enabled and is actively waiting for input.|
 |`Started`|Input has been received that started an interaction with the action.|
 |`Performed`|An interaction with the action has been completed.|
-|`Cancelled`|An interaction with the action has been cancelled.|
+|`Canceled`|An interaction with the action has been canceled.|
 
 The current phase of an action can be read using [`InputAction.phase`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_phase).
 
-The `Started`, `Performed`, and `Cancelled` phases each have a callback associated with them:
+The `Started`, `Performed`, and `Canceled` phases each have a callback associated with them:
 
 ```CSharp
     var action = new InputAction();
 
     action.started += ctx => /* Action was started */;
     action.performed += ctx => /* Action was performed */;
-    action.cancelled += ctx => /* Action was started */;
+    action.canceled += ctx => /* Action was started */;
 ```
 
 Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) structure holding context information that can be used to query the current state of the action and to read out values from controls that triggered the action ([`InputAction.CallbackContext.ReadValue`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_ReadValue__1)). Note that the contents of the structure are __only valid for the duration of the callback__. In particular, it is not safe to store the received context and later access its properties from outside the callback.
@@ -254,9 +254,9 @@ actionMap.onActionTriggered +=
     context => { ... };
 ```
 
-The argument received is the same `InputAction.CallbackContext` structure that is received through the [`started`, `performed`, and `cancelled` callbacks](#started-performed-and-cancelled-callbacks).
+The argument received is the same `InputAction.CallbackContext` structure that is received through the [`started`, `performed`, and `canceled` callbacks](#started-performed-and-canceled-callbacks).
 
->NOTE: The `InputActionMap.actionTriggered` will be called for all three of the individual callbacks on actions, i.e. you get `started`, `performed`, and `cancelled` all on a single callback.
+>NOTE: The `InputActionMap.actionTriggered` will be called for all three of the individual callbacks on actions, i.e. you get `started`, `performed`, and `canceled` all on a single callback.
 
 #### `InputSystem.onActionChange` Callback
 
@@ -272,7 +272,7 @@ InputSystem.onActionChange +=
         {
             case InputActionChange.ActionStarted:
             case InputActionChange.ActionPerformed:
-            case InputActionChange.ActionCancelled:
+            case InputActionChange.ActionCanceled:
                 Debug.Log($"{((InputAction)obj).name} {change}");
                 break;
         }

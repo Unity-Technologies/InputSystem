@@ -47,7 +47,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 ### Processors on Actions
 
-Processors on actions work very similar to processors on bindings, but they affect all controls bound to an action, not just the ones coming from a specific binding. If there are processors on both the binding and the action, the ones from the binding will be processes first.
+Processors on actions work very similar to processors on bindings, but they affect all controls bound to an action, not just the ones coming from a specific binding. If there are processors on both the binding and the action, the ones from the binding will be processed first.
 
 You can add and edit processors on actions in the [Input Action Assets](ActionAssets.md) the [same way](#processors-on-bindings) as you would do for bindings - just add them in the right window pane when you have selected an action to edit.
 
@@ -99,12 +99,6 @@ If you [create a layout from JSON](Layouts.md#layout-from-json), you can specify
 ## Predefined Processors
 
 The input system package comes with a set of useful processors you can use.
-
-[//]: # (Android Compensate Direction)
-[//]: # (Android Compensate Rotation)
-[//]: # (Auto Window Space)
-[//]: # (Compensate Direction)
-[//]: # (Compensate Rotation)
 
 ### Axis Deadzone
 
@@ -213,7 +207,7 @@ A Stick Deadzone Processor scales the values of a Vector2 control (such as a sti
 
 ## Writing Custom Processors
 
-You can also write a custom processor to use in your project. Simply add a class deriving from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl__0__) method:
+You can also write a custom processor to use in your project. Newly added processors are usable in the UI and data the same way that built-in processors are. Simply add a class deriving from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl__0__) method:
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
