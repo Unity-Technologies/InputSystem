@@ -528,21 +528,6 @@ namespace UnityEngine.InputSystem.Users
             return new ControlSchemeChangeSyntax {m_UserIndex = userIndex};
         }
 
-        public void PauseHaptics()
-        {
-            ////TODO
-        }
-
-        public void ResumeHaptics()
-        {
-            ////TODO
-        }
-
-        public void ResetHaptics()
-        {
-            ////TODO
-        }
-
         /// <summary>
         /// Unpair a single device from the user.
         /// </summary>
