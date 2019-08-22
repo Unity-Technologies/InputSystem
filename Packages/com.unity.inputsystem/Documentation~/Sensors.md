@@ -52,7 +52,7 @@ Gyroscope.current.samplingFrequency = 16;
 
 ## <a name="accelerometer"></a>[`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html)
 
-An accelerometer let's you measure the acceleration of a device, and can be useful to control content by moving a device around. Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity pulling the device down. You can use `GravitySensor` and `LinearAccelerationSensor` to get decoupled values for these.
+An accelerometer lets you measure the acceleration of a device, and can be useful to control content by moving a device around. Note that the accelerometer will report the acceleration measured on a device both due to moving the device around, and due gravity pulling the device down. You can use `GravitySensor` and `LinearAccelerationSensor` to get decoupled values for these.
 
 ## <a name="gyroscope"></a>[`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html)
 
