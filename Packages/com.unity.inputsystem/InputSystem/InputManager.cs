@@ -1654,7 +1654,6 @@ namespace UnityEngine.InputSystem
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
-        private bool m_HaveSentFirstUserInteractionAnalytics;
         #endif
 
         internal IInputRuntime m_Runtime;
@@ -2979,7 +2978,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             public bool haveSentStartupAnalytics;
-            public bool haveSentFirstUserInteractionAnalytics;
             #endif
         }
 
@@ -3023,7 +3021,6 @@ namespace UnityEngine.InputSystem
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
-                haveSentFirstUserInteractionAnalytics = m_HaveSentFirstUserInteractionAnalytics,
                 #endif
             };
         }
@@ -3042,7 +3039,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
-            m_HaveSentFirstUserInteractionAnalytics = state.haveSentFirstUserInteractionAnalytics;
             #endif
 
             ////REVIEW: instead of accessing globals here, we could move this to when we re-create devices

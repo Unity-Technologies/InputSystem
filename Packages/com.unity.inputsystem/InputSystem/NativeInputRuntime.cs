@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (value == null)
                 {
                     #if UNITY_EDITOR
-                    EditorApplication.quitting -= OnShutdown;
+                    EditorApplication.wantsToQuit -= OnWantsToShutdown;
                     #else
                     Application.quitting -= OnShutdown;
                     #endif
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 else if (m_ShutdownMethod == null)
                 {
                     #if UNITY_EDITOR
-                    EditorApplication.quitting += OnShutdown;
+                    EditorApplication.wantsToQuit += OnWantsToShutdown;
                     #else
                     Application.quitting += OnShutdown;
                     #endif
@@ -187,9 +187,28 @@ namespace UnityEngine.InputSystem.LowLevel
         private Action<InputUpdateType> m_OnBeforeUpdate;
         private Func<InputUpdateType, bool> m_OnShouldRunUpdate;
         private float m_PollingFrequency = 60.0f;
+        private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
         {
             m_ShutdownMethod();
+        }
+
+        private bool OnWantsToShutdown()
+        {
+            if (!m_DidCallOnShutdown)
+            {
+                // we should use `EditorApplication.quitting`, but that is too late
+                // to send an analytics event, because Analytics is already shut down
+                // at that point. So we use `EditorApplication.wantsToQuit`, and make sure
+                // to only use the first time. This is currently only used for analytics,
+                // and getting analytics before we actually shut downn in some cases is
+                // better then never.
+
+                OnShutdown();
+                m_DidCallOnShutdown = true;
+            }
+
+            return true;
         }
 
         private Action<bool> m_FocusChangedMethod;
