@@ -15,6 +15,8 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- Binding paths now show the same way in the action editor UI as they do in the control picker.
+  * For example, where before a binding to `<XInputController>/buttonSouth` was shown as `rightShoulder [XInputController]`, the same binding will now show as `A [Xbox Controller]`.
 - When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
 - When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
 - Control scheme names can no longer be set to empty strings.
@@ -26,6 +28,8 @@ however, it has to be formatted properly to pass verification tests.
 - `InputUser.onUnpairedDeviceUsed` now receives a 2nd argument which is the event that triggered the callback.
   * Also, the callback is now triggered __BEFORE__ the given event is processed rather than after the event has already been written to the device. This allows updating the pairing state of the system before input is processed.
   * In practice, this means that, for example, if the user switches from keyboard&mouse to gamepad, the initial input that triggered the switch will get picked up right away.
+- `InputControlPath.ToHumanReadableString` now takes display names from registered `InputControlLayout` instances into account.
+  * This means that the method can now be used to generate strings to display in rebinding UIs.
 
 #### Actions
 

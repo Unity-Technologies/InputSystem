@@ -429,6 +429,11 @@ namespace UnityEngine.InputSystem
         {
             ++m_LayoutRegistrationVersion;
 
+            // Force-clear layout cache. Don't clear reference count so that
+            // the cache gets cleared out properly when released in case someone
+            // is using it ATM.
+            InputControlLayout.s_CacheInstance = default;
+
             // For layouts that aren't overrides, add the name of the base
             // layout to the lookup table.
             if (!isOverride && baseLayouts.length > 0)
@@ -1589,6 +1594,10 @@ namespace UnityEngine.InputSystem
                 InputInteraction.s_Interactions = new TypeTable();
             if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
                 InputBindingComposite.s_Composites = new TypeTable();
+
+            // Clear layout cache.
+            InputControlLayout.s_CacheInstance = default;
+            InputControlLayout.s_CacheInstanceRef = 0;
 
             // Detach from runtime.
             if (m_Runtime != null)
