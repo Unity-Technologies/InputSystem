@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem
         ///
         /// The method uses display names (see <see cref="InputControlAttribute.displayName"/>,
         /// <see cref="InputControlLayoutAttribute.displayName"/>, and <see cref="InputControlLayout.ControlItem.displayName"/>)
-        /// where possible. For example, if a "&lt;XInputController&gt;/buttonSouth" will be returned as
+        /// where possible. For example, "&lt;XInputController&gt;/buttonSouth" will be returned as
         /// "A [Xbox Controller]" as the display name of <see cref="XInput.XInputController"/> is "XBox Controller"
         /// and the display name of its "buttonSouth" control is "A".
         ///
@@ -1059,7 +1059,7 @@ namespace UnityEngine.InputSystem
                 if (!name.isEmpty && !isWildcard)
                 {
                     // If we have a layout from a preceding path component, try to find
-                    // the control by name on the layout. If we find it, use it's display
+                    // the control by name on the layout. If we find it, use its display
                     // name rather than the name referenced in the binding.
                     string nameString = null;
                     if (!string.IsNullOrEmpty(parentLayoutName))
@@ -1076,7 +1076,7 @@ namespace UnityEngine.InputSystem
                                 if (!string.IsNullOrEmpty(control.Value.displayName))
                                     nameString = control.Value.displayName;
 
-                                // If we don't have an explicit <layout> part in the component, take
+                                // If we don't have an explicit <layout> part in the component,
                                 // remember the name of the layout referenced by the control name so
                                 // that path components further down the line can keep looking up their
                                 // display names.

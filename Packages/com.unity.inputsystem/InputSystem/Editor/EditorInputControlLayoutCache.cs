@@ -212,7 +212,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!s_LayoutCacheRef.valid)
             {
                 // In the editor, we keep a permanent reference on the global layout
-                // cache. Means that in th editor, we always have all layouts loaded in full
+                // cache. Means that in the editor, we always have all layouts loaded in full
                 // at all times whereas in the player, we load layouts only while we need
                 // them and then release them again.
                 s_LayoutCacheRef = InputControlLayout.CacheRef();
