@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -640,7 +641,7 @@ namespace UnityEngine.InputSystem
         internal static int s_AllActivePlayersCount;
         internal static PlayerInput[] s_AllActivePlayers;
         internal static Action<InputUser, InputUserChange, InputDevice> s_UserChangeDelegate;
-        internal static Action<InputControl> s_UnpairedDeviceUsedDelegate;
+        internal static Action<InputControl, InputEventPtr> s_UnpairedDeviceUsedDelegate;
         internal static bool s_OnUnpairedDeviceHooked;
 
         // The following information is used when the next PlayerInput component is enabled.
@@ -662,11 +663,11 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
                 if (s_AllActivePlayers[i].m_Actions == m_Actions && s_AllActivePlayers[i] != this)
                 {
-                    InputActionAsset oldActions = m_Actions;
+                    var oldActions = m_Actions;
                     m_Actions = Instantiate(m_Actions);
-                    for (int actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
+                    for (var actionMap = 0; actionMap < oldActions.actionMaps.Count; actionMap++)
                     {
-                        for (int binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
+                        for (var binding = 0; binding < oldActions.actionMaps[actionMap].bindings.Count; binding++)
                             m_Actions.actionMaps[actionMap].ApplyBindingOverride(binding, oldActions.actionMaps[actionMap].bindings[binding]);
                     }
 
@@ -1212,7 +1213,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private static void OnUnpairedDeviceUsed(InputControl control)
+        private static void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             // We only support automatic control scheme switching in single player mode.
             // OnEnable() should automatically unhook us.

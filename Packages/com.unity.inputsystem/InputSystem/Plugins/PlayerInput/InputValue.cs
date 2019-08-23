@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 ////TODO: ToString()
 
@@ -14,6 +15,7 @@ namespace UnityEngine.InputSystem
     /// the receiver from having to know about action callback specifics.
     /// </remarks>
     /// <seealso cref="InputAction"/>
+    [DebuggerDisplay("Value = {Get()}")]
     public class InputValue
     {
         /// <summary>
