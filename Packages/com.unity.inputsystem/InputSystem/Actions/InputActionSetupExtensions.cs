@@ -571,19 +571,6 @@ namespace UnityEngine.InputSystem
                 m_ControlScheme = controlScheme;
             }
 
-            public ControlSchemeSyntax BasedOn(string baseControlScheme)
-            {
-                if (string.IsNullOrEmpty(baseControlScheme))
-                    throw new ArgumentNullException(nameof(baseControlScheme));
-
-                if (m_Asset == null)
-                    m_ControlScheme.m_BaseSchemeName = baseControlScheme;
-                else
-                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
-
-                return this;
-            }
-
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)
             {
                 if (string.IsNullOrEmpty(bindingGroup))

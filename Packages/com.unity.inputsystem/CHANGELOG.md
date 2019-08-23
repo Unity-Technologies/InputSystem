@@ -17,6 +17,11 @@ however, it has to be formatted properly to pass verification tests.
 
 - Binding paths now show the same way in the action editor UI as they do in the control picker.
   * For example, where before a binding to `<XInputController>/buttonSouth` was shown as `rightShoulder [XInputController]`, the same binding will now show as `A [Xbox Controller]`.
+- When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
+- When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
+- Control scheme names can no longer be set to empty strings.
+- `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
+  * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
 
 ### Changed
 
@@ -29,8 +34,12 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - When switching devices/controls on actions, the system will no longer subsequently force an initial state check on __all__ actions. Instead, every time an action's bindings get re-resolved, the system will simply cancel all on-going actions and then re-enable them the same way it would happen by manually calling `InputAction.Enable`.
+- Removed non-functional `InputControlScheme.baseScheme` API and `basedOn` serialized property. This was never fully implemented.
 
 ### Added
+
+- Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
+  * This information is helpful for us to debug problems related to specific devices.
 
 ## [0.9.3-preview] - 2019-8-15
 
