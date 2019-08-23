@@ -2359,25 +2359,6 @@ namespace UnityEngine.InputSystem
                 if (currentEventReadPtr->internalTime <= currentTime)
                     totalEventLag += currentTime - currentEventReadPtr->internalTime;
 
-                // Give listeners a shot at the event.
-                var listenerCount = m_EventListeners.length;
-                if (listenerCount > 0)
-                {
-                    if (device == null)
-                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
-
-                    for (var i = 0; i < listenerCount; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
-
-                    // If a listener marks the event as handled, we don't process it further.
-                    if (currentEventReadPtr->handled)
-                    {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        continue;
-                    }
-                }
-
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
                 if (device == null)
@@ -2394,6 +2375,22 @@ namespace UnityEngine.InputSystem
 
                     // No device found matching event. Ignore it.
                     continue;
+                }
+
+                // Give listeners a shot at the event.
+                var listenerCount = m_EventListeners.length;
+                if (listenerCount > 0)
+                {
+                    for (var i = 0; i < listenerCount; ++i)
+                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+
+                    // If a listener marks the event as handled, we don't process it further.
+                    if (currentEventReadPtr->handled)
+                    {
+                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
+                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                        continue;
+                    }
                 }
 
                 // Process.

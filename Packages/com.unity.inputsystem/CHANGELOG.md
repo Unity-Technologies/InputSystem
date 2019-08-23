@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.5-preview] - 2099-1-1
 
 ### Fixed
+
+- Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
+
 #### Actions
 
 ### Changed
