@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
+  * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+
 ### Changed
 
 - `InputUser.onUnpairedDeviceUsed` now receives a 2nd argument which is the event that triggered the callback.
