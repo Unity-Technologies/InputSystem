@@ -530,6 +530,91 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
     }
 
+    // Test setup where two players both use the keyboard but with two different control
+    // schemes.
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSetUpSplitKeyboardPlay()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // We add a gamepad device and scheme just to add noise and make sure
+        // this isn't throwing the thing off the rails.
+        InputSystem.AddDevice<Gamepad>();
+
+        const string kActions = @"
+        {
+            ""maps"" : [
+                {
+                    ""name"" : ""gameplay"",
+                    ""actions"" : [
+                        { ""name"" : ""fire"", ""type"" : ""button"" }
+                    ],
+                    ""bindings"" : [
+                        { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Keyboard>/leftCtrl"", ""action"" : ""fire"", ""groups"" : ""KeyboardWASD"" },
+                        { ""path"" : ""<Keyboard>/rightCtrl"", ""action"" : ""fire"", ""groups"" : ""KeyboardArrows"" }
+                    ]
+                }
+            ],
+            ""controlSchemes"" : [
+                {
+                    ""name"" : ""Gamepad"",
+                    ""bindingGroup"" : ""Gamepad"",
+                    ""devices"" : [
+                        { ""devicePath"" : ""<Gamepad>"" }
+                    ]
+                },
+                {
+                    ""name"" : ""Keyboard WASD"",
+                    ""bindingGroup"" : ""KeyboardWASD"",
+                    ""devices"" : [
+                        { ""devicePath"" : ""<Keyboard>"" }
+                    ]
+                },
+                {
+                    ""name"" : ""Keyboard Arrows"",
+                    ""bindingGroup"" : ""KeyboardArrows"",
+                    ""devices"" : [
+                        { ""devicePath"" : ""<Keyboard>"" }
+                    ]
+                }
+            ]
+        }";
+
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        prefab.AddComponent<MessageListener>();
+        prefab.AddComponent<PlayerInput>();
+        prefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+        prefab.GetComponent<PlayerInput>().defaultActionMap = "gameplay";
+
+        var player1 = PlayerInput.Instantiate(prefab, controlScheme: "Keyboard WASD", pairWithDevice: keyboard);
+        var player2 = PlayerInput.Instantiate(prefab, controlScheme: "Keyboard Arrows", pairWithDevice: keyboard);
+
+        Assert.That(player1.devices, Is.EquivalentTo(new[] { keyboard }));
+        Assert.That(player2.devices, Is.EquivalentTo(new[] { keyboard }));
+        Assert.That(player1.controlScheme, Is.EqualTo("Keyboard WASD"));
+        Assert.That(player2.controlScheme, Is.EqualTo("Keyboard Arrows"));
+        Assert.That(player1.actions["fire"].controls, Is.EquivalentTo(new[] { keyboard.leftCtrlKey }));
+        Assert.That(player2.actions["fire"].controls, Is.EquivalentTo(new[] { keyboard.rightCtrlKey }));
+
+        Press(keyboard.leftCtrlKey);
+
+        Assert.That(player1.GetComponent<MessageListener>().messages,
+            Is.EquivalentTo(new[] {new Message { name = "OnFire", value = 1f }}));
+        Assert.That(player2.GetComponent<MessageListener>().messages, Is.Empty);
+
+        Release(keyboard.leftCtrlKey);
+        player1.GetComponent<MessageListener>().messages.Clear();
+
+        Press(keyboard.rightCtrlKey);
+
+        Assert.That(player1.GetComponent<MessageListener>().messages, Is.Empty);
+        Assert.That(player2.GetComponent<MessageListener>().messages,
+            Is.EquivalentTo(new[] {new Message { name = "OnFire", value = 1f }}));
+    }
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_WithDevicePluggedInAfterStart()
