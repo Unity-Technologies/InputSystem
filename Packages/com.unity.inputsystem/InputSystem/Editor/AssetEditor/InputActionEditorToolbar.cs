@@ -204,8 +204,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
 
-            // Ask for confirmation.
             var name = m_ControlSchemes[m_SelectedControlSchemeIndex].name;
+            var bindingGroup = m_ControlSchemes[m_SelectedControlSchemeIndex].bindingGroup;
+
+            // Ask for confirmation.
             if (!EditorUtility.DisplayDialog("Delete scheme?", $"Do you want to delete control scheme '{name}'?",
                 "Delete", "Cancel"))
                 return;
@@ -222,8 +224,10 @@ namespace UnityEngine.InputSystem.Editor
 
             onControlSchemesChanged?.Invoke();
             onSelectedSchemeChanged?.Invoke();
+            onControlSchemeDeleted?.Invoke(name, bindingGroup);
         }
 
+        ////REVIEW: this does nothing to bindings; should this ask to duplicate bindings as well?
         private void OnDuplicateControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
@@ -236,7 +240,6 @@ namespace UnityEngine.InputSystem.Editor
                 (s, _) => AddAndSelectControlScheme(s));
         }
 
-        ////REVIEW: renaming a control scheme should probably update the binding group (also on all bindings)
         private void OnEditSelectedControlScheme(object position)
         {
             Debug.Assert(m_SelectedControlSchemeIndex >= 0, "Control scheme must be selected");
@@ -266,6 +269,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             Debug.Assert(index >= 0 && index < m_ControlSchemes.LengthSafe(), "Control scheme index out of range");
 
+            var renamed = false;
+            string oldBindingGroup = null;
+            string newBindingGroup = null;
+
             // If given scheme has no name, preserve the existing one on the control scheme.
             if (string.IsNullOrEmpty(scheme.name))
                 scheme.m_Name = m_ControlSchemes[index].name;
@@ -273,12 +280,19 @@ namespace UnityEngine.InputSystem.Editor
             // If name is changing, make sure it's unique.
             else if (scheme.name != m_ControlSchemes[index].name)
             {
+                renamed = true;
+                oldBindingGroup = m_ControlSchemes[index].bindingGroup;
                 m_ControlSchemes[index].m_Name = ""; // Don't want this to interfere with finding a unique name.
-                m_ControlSchemes[index].m_Name = MakeUniqueControlSchemeName(scheme.name);
+                var newName = MakeUniqueControlSchemeName(scheme.name);
+                m_ControlSchemes[index].SetNameAndBindingGroup(newName);
+                newBindingGroup = m_ControlSchemes[index].bindingGroup;
             }
 
             m_ControlSchemes[index] = scheme;
             onControlSchemesChanged?.Invoke();
+
+            if (renamed)
+                onControlSchemeRenamed?.Invoke(oldBindingGroup, newBindingGroup);
         }
 
         private void SelectControlScheme(int index)
@@ -319,6 +333,8 @@ namespace UnityEngine.InputSystem.Editor
         public Action onSelectedSchemeChanged;
         public Action onSelectedDeviceChanged;
         public Action onControlSchemesChanged;
+        public Action<string, string> onControlSchemeRenamed;
+        public Action<string, string> onControlSchemeDeleted;
         public Action onSave;
 
         [SerializeField] private bool m_IsDirty;
@@ -478,11 +494,20 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 if (GUILayout.Button("Save", GUILayout.ExpandWidth(true)))
                 {
-                    m_ControlScheme = new InputControlScheme(m_ControlScheme.name,
-                        devices: m_DeviceList.Select(a => a.deviceRequirement));
+                    // Don't allow control scheme name to be empty.
+                    if (string.IsNullOrEmpty(m_ControlScheme.name))
+                    {
+                        ////FIXME: On 2019.1 this doesn't display properly in the window; check 2019.3
+                        editorWindow.ShowNotification(new GUIContent("Control scheme must have a name"));
+                    }
+                    else
+                    {
+                        m_ControlScheme = new InputControlScheme(m_ControlScheme.name,
+                            devices: m_DeviceList.Select(a => a.deviceRequirement));
 
-                    editorWindow.Close();
-                    m_OnApply(m_ControlScheme, m_ControlSchemeIndex);
+                        editorWindow.Close();
+                        m_OnApply(m_ControlScheme, m_ControlSchemeIndex);
+                    }
                 }
                 if (Event.current.type == EventType.Repaint)
                     m_ButtonsAndLabelsHeights += GUILayoutUtility.GetLastRect().height;

@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
+- When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
+- Control scheme names can no longer be set to empty strings.
 - `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
   * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
 
@@ -27,6 +30,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - When switching devices/controls on actions, the system will no longer subsequently force an initial state check on __all__ actions. Instead, every time an action's bindings get re-resolved, the system will simply cancel all on-going actions and then re-enable them the same way it would happen by manually calling `InputAction.Enable`.
+- Removed non-functional `InputControlScheme.baseScheme` API and `basedOn` serialized property. This was never fully implemented.
 
 ### Added
 
