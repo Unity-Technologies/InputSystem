@@ -10,6 +10,9 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.5-preview] - 2099-1-1
 
 ### Fixed
+
+- Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+
 #### Actions
 
 ### Changed
