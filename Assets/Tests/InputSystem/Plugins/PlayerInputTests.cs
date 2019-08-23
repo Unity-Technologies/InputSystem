@@ -535,7 +535,7 @@ internal class PlayerInputTests : InputTestFixture
     // schemes.
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanSetUpSlitKeyboardPlay()
+    public void PlayerInput_CanSetUpSplitKeyboardPlay()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
