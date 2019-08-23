@@ -343,6 +343,7 @@ namespace UnityEngine.InputSystem.Layouts
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
 
+                // Does not use FindControl so that we don't force-intern the given path string.
                 if (m_Controls != null)
                 {
                     for (var i = 0; i < m_Controls.Length; ++i)
@@ -1823,6 +1824,49 @@ namespace UnityEngine.InputSystem.Layouts
 
                 // Nothing.
                 throw new LayoutNotFoundException(name);
+            }
+        }
+
+        internal static Cache s_CacheInstance;
+        internal static int s_CacheInstanceRef;
+
+        // Constructing InputControlLayouts is very costly as it tends to involve lots of reflection and
+        // piecing data together. Thus, wherever possible, we want to keep layouts around for as long as
+        // we need them yet at the same time not keep them needlessly around while we don't.
+        //
+        // This property makes a cache of layouts available globally yet implements a resource acquisition
+        // based pattern to make sure we keep the cache alive only within specific execution scopes.
+        internal static ref Cache cache
+        {
+            get
+            {
+                Debug.Assert(s_CacheInstanceRef > 0, "Must hold an instance reference");
+                return ref s_CacheInstance;
+            }
+        }
+
+        internal static CacheRefInstance CacheRef()
+        {
+            ++s_CacheInstanceRef;
+            return new CacheRefInstance {valid = true};
+        }
+
+        internal struct CacheRefInstance : IDisposable
+        {
+            public bool valid; // Make sure we can distinguish default-initialized instances.
+            public void Dispose()
+            {
+                if (!valid)
+                    return;
+
+                --s_CacheInstanceRef;
+                if (s_CacheInstanceRef <= 0)
+                {
+                    s_CacheInstance = default;
+                    s_CacheInstanceRef = 0;
+                }
+
+                valid = false;
             }
         }
     }
