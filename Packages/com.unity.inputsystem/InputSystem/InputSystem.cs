@@ -2565,6 +2565,7 @@ namespace UnityEngine.InputSystem
             Reset(enableRemoting, runtime ?? InputRuntime.s_Instance); // Keep current runtime.
         }
 
+        ////FIXME: this method doesn't restore things like InputDeviceDebuggerWindow.onToolbarGUI
         /// <summary>
         /// Restore the state of the system from the last state pushed with <see cref="SaveAndReset"/>.
         /// </summary>

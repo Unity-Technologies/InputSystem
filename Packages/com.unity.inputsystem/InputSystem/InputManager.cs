@@ -1880,10 +1880,12 @@ namespace UnityEngine.InputSystem
 
         private unsafe void InitializeNoiseMask(InputDevice device)
         {
-            Debug.Assert(device != null);
-            Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
+            Debug.Assert(device != null, "Device must not be null");
+            Debug.Assert(device.added, "Device must have been added");
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Device state block offset is invalid");
+            Debug.Assert(
+                device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer,
+                "Device state block is not contained in state buffer");
 
             var controls = device.allControls;
             var controlCount = controls.Count;
@@ -1904,12 +1906,12 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
+                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
-                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                     (int)stateBlock.sizeInBits, true);

@@ -16,6 +16,8 @@ however, it has to be formatted properly to pass verification tests.
 - Offsets and sizes for elements on Linux joysticks are now computed correctly.
 - Joysticks now have a deadzone processor on the stick itself.
 - Up/down/left/right on sticks are now deadzoned just like X and Y on sticks are.
+- Removed toplevel `X` and `Y` controls on HIDs when there is a `Stick/X` and `Stick/Y` added for the device.
+- HID fallback can now deal with sticks that have X and Y controls of different sizes and sitting in non-contiguous locations in the HID input report.
 
 #### Actions
 

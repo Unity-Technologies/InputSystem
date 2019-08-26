@@ -303,13 +303,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == FormatSBit ? -1.0f : 0.0f);
                 }
-                else if (sizeInBits != 31)
+                else if (sizeInBits <= 31)
                 {
                     var maxValue = (float)(1 << (int)sizeInBits);
                     var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
                     if (format == FormatSBit)
                     {
-                        var unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
+                        var unclampedValue = (rawValue / maxValue) * 2.0f - 1.0f;
                         value = Mathf.Clamp(unclampedValue, -1.0f, 1.0f);
                     }
                     else
@@ -356,13 +356,13 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
-                value = *(Int32*)valuePtr / 2147483647.0f;
+                value = *(int*)valuePtr / 2147483647.0f;
             }
             else if (format == FormatUInt)
             {
                 Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
-                value = *(UInt32*)valuePtr / 4294967295.0f;
+                value = *(uint*)valuePtr / 4294967295.0f;
             }
             else if (format == FormatDouble)
             {
@@ -613,6 +613,42 @@ namespace UnityEngine.InputSystem.LowLevel
                 Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
                 Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
                 *(float*)valuePtr = value.ToSingle();
+            }
+            else if (format == FormatByte)
+            {
+                Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
+                Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
+                *valuePtr = value.ToByte();
+            }
+            else if (format == FormatShort)
+            {
+                Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
+                Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
+                *(short*)valuePtr = value.ToInt16();
+            }
+            else if (format == FormatInt)
+            {
+                Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
+                *(int*)valuePtr = value.ToInt32();
+            }
+            else if (format == FormatSByte)
+            {
+                Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
+                Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
+                *(sbyte*)valuePtr = value.ToSByte();
+            }
+            else if (format == FormatUShort)
+            {
+                Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
+                Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
+                *(ushort*)valuePtr = value.ToUInt16();
+            }
+            else if (format == FormatUInt)
+            {
+                Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
+                *(uint*)valuePtr = value.ToUInt32();
             }
             else
             {

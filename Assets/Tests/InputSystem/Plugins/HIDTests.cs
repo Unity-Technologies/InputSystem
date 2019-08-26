@@ -11,6 +11,7 @@ using UnityEngine.InputSystem.HID;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Utils;
 
@@ -53,15 +54,13 @@ internal class HIDTests : InputTestFixture
         var device = InputSystem.devices[0];
         Assert.That(device, Is.TypeOf<HID>());
         Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
-        Assert.That(device.children, Has.Count.EqualTo(5));
+        Assert.That(device.children, Has.Count.EqualTo(3));
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Stick").And.TypeOf<StickControl>());
 
-        var x = device["x"];
-        var y = device["y"];
+        var x = device["stick/x"];
+        var y = device["stick/y"];
         var button1 = device["button1"];
         var button2 = device["button2"];
 
@@ -324,9 +323,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(hid.hidDescriptor.elements, Is.Not.Null);
         Assert.That(hid.hidDescriptor.elements.Length, Is.EqualTo(4));
 
-        Assert.That(device.children, Has.Count.EqualTo(5));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("x").And.TypeOf<AxisControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("y").And.TypeOf<AxisControl>());
+        Assert.That(device.children, Has.Count.EqualTo(3));
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Stick").And.TypeOf<StickControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
@@ -435,8 +432,8 @@ internal class HIDTests : InputTestFixture
             }.ToJson());
         InputSystem.Update();
 
-        Assert.AreEqual(InputSystem.devices.Count(), 2);
-        Assert.AreNotEqual(InputSystem.devices[0].layout, InputSystem.devices[1].layout);
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.devices[0].layout, Is.Not.EqualTo(InputSystem.devices[1].layout));
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -480,9 +477,9 @@ internal class HIDTests : InputTestFixture
             new HID.HIDDeviceDescriptorBuilder(HID.GenericDesktop.MultiAxisController)
                 .StartReport(HID.HIDReportType.Input)
                 // 16bit [0..65535]
-                .AddElement(HID.GenericDesktop.X, 16).WithLogicalMinMax(0, 65535)
+                .AddElement(HID.GenericDesktop.Rz, 16).WithLogicalMinMax(0, 65535)
                 // 16bit [-32768..32767]
-                .AddElement(HID.GenericDesktop.Y, 16).WithLogicalMinMax(-32768, 32767)
+                .AddElement(HID.GenericDesktop.Vz, 16).WithLogicalMinMax(-32768, 32767)
                 // 8bit [0..255]
                 .AddElement(HID.GenericDesktop.Rx, 8).WithLogicalMinMax(0, 255)
                 // 8bit [-128..127]
@@ -518,8 +515,8 @@ internal class HIDTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
-        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
@@ -538,8 +535,8 @@ internal class HIDTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
-        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
@@ -558,8 +555,8 @@ internal class HIDTests : InputTestFixture
         });
         InputSystem.Update();
 
-        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
-        Assert.That(device["Y"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
         ////FIXME: these accumulate some rather large errors
         Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.004));
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.004));
@@ -980,10 +977,7 @@ internal class HIDTests : InputTestFixture
         [FieldOffset(1)] public ushort x;
         [FieldOffset(3)] public ushort y;
 
-        public FourCC format
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public FourCC format => new FourCC('H', 'I', 'D');
     }
 
     [Test]
@@ -1023,9 +1017,163 @@ internal class HIDTests : InputTestFixture
         InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MaxValue });
         InputSystem.Update();
 
-        Vector2 stickValue = (device["Stick"] as StickControl).ReadValue();
-        Assert.That(stickValue.x, Is.EqualTo(1.0f).Within(0.01f));
-        Assert.That(stickValue.y, Is.EqualTo(1.0f).Within(0.01f));
+        Assert.That(device["stick"].ReadValueAsObject(),
+            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(1, 1)))
+                .Using(new Vector2EqualityComparer(0.01f)));
+    }
+
+    ////FIXME: The G25 racing wheel actually has the X and Y control separated such that other
+    ////       controls (like Rz) are slotted in in-between the two. We can't handle this correctly
+    ////       ATM as parent controls are required to span the entire memory range of child controls.
+    ////       This means that the stick will implicitly cover the memory of controls that do not
+    ////       belong to the stick.
+
+    [StructLayout(LayoutKind.Explicit, Size = 13)]
+    struct G25RacingWheelState : IInputStateTypeInfo
+    {
+        public FourCC format => new FourCC("HID");
+
+        [FieldOffset(0)] private int __padding1; // Work around il2cpp bug.
+        [FieldOffset(4)] public ushort xAxis;
+        [FieldOffset(6)] private short __padding2; // Work around il2cpp bug.
+        [FieldOffset(8)] public byte yAxis;
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_GenericHIDSupportsStickWithAsymmetricXYSetup()
+    {
+        // This is the part of the actual setup from the Logitech G25 Racing Wheel. It has a 14-bit
+        // X control and an 8-bit Y control with a gap in-between the two.
+        // NOTE: Both the X and Y axis are unsigned so HID needs to correctly place the midpoint
+        //       in-between the max and min.
+        var hidDescriptor = new HID.HIDDeviceDescriptor
+        {
+            usage = (int)HID.GenericDesktop.Joystick,
+            usagePage = HID.UsagePage.GenericDesktop,
+            vendorId = 0x1234,
+            productId = 0x5678,
+            inputReportSize = 13,
+            elements = new[]
+            {
+                // 14-bit X axis at offset 34.
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.X,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 0,
+                    reportOffsetInBits = 34,
+                    reportSizeInBits = 14,
+                    logicalMin = 0,
+                    logicalMax = 16383,
+                    physicalMin = 0,
+                    physicalMax = 16383
+                },
+                // 8-bit Y axis at offset 64.
+                new HID.HIDElementDescriptor
+                {
+                    usage = (int)HID.GenericDesktop.Y,
+                    usagePage = HID.UsagePage.GenericDesktop,
+                    reportType = HID.HIDReportType.Input,
+                    reportId = 0,
+                    reportOffsetInBits = 64,
+                    reportSizeInBits = 8,
+                    logicalMin = 0,
+                    logicalMax = 255,
+                    physicalMin = 0,
+                    physicalMax = 255
+                },
+            }
+        };
+
+        var device = InputSystem.AddDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                capabilities = hidDescriptor.ToJson()
+            });
+
+        Assert.That(device, Is.Not.Null);
+
+        Assert.That(device["stick"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["stick"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["stick"].stateBlock.sizeInBits, Is.EqualTo((9 - 4) * 8 - 2));
+
+        Assert.That(device["stick/x"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["stick/left"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["stick/right"].stateBlock.byteOffset, Is.EqualTo(4));
+        Assert.That(device["stick/y"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["stick/up"].stateBlock.byteOffset, Is.EqualTo(8));
+        Assert.That(device["stick/down"].stateBlock.byteOffset, Is.EqualTo(8));
+
+        Assert.That(device["stick/x"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["stick/left"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["stick/right"].stateBlock.bitOffset, Is.EqualTo(2));
+        Assert.That(device["stick/y"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(device["stick/up"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(device["stick/down"].stateBlock.bitOffset, Is.EqualTo(0));
+
+        Assert.That(device["stick/x"].stateBlock.sizeInBits, Is.EqualTo(14));
+        Assert.That(device["stick/left"].stateBlock.sizeInBits, Is.EqualTo(14));
+        Assert.That(device["stick/right"].stateBlock.sizeInBits, Is.EqualTo(14));
+        Assert.That(device["stick/y"].stateBlock.sizeInBits, Is.EqualTo(8));
+        Assert.That(device["stick/up"].stateBlock.sizeInBits, Is.EqualTo(8));
+        Assert.That(device["stick/down"].stateBlock.sizeInBits, Is.EqualTo(8));
+
+        // Test default state.
+        Assert.That(device["stick"].ReadValueAsObject(),
+            Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+        Assert.That(device["stick/x"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/y"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/up"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/down"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/left"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/right"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+
+        // Test lower limit.
+        InputSystem.QueueStateEvent(device, new G25RacingWheelState());
+        InputSystem.Update();
+
+        Assert.That(device["stick"].ReadValueAsObject(),
+            Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
+        Assert.That(device["stick/x"].ReadValueAsObject(),
+            Is.EqualTo(-1).Within(0.00001));
+        Assert.That(device["stick/y"].ReadValueAsObject(),
+            Is.EqualTo(-1).Within(0.00001));
+        Assert.That(device["stick/up"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/down"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/left"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/right"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+
+        // Test upper limit.
+        InputSystem.QueueStateEvent(device, new G25RacingWheelState {xAxis = ((1 << 14) - 1) << 2, yAxis = 0xff});
+        InputSystem.Update();
+
+        Assert.That(device["stick"].ReadValueAsObject(),
+            Is.EqualTo(new Vector2(1, 1).normalized).Using(new Vector2EqualityComparer(0.01f)));
+        Assert.That(device["stick/x"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/y"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/up"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/down"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/left"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/right"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
     }
 
     // It should be possible to reuse parts of the HID layout builder for building custom HID-based layouts
