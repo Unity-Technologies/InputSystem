@@ -320,7 +320,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""rightTrigger"",
-                        ""parameters"" : ""clamp=true,clampMin=0.123,clampMax=0.456""
+                        ""parameters"" : ""clamp=1,clampMin=0.123,clampMax=0.456""
                     }
                 ]
             }
@@ -434,7 +434,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""parameters"" : ""clamp""
+                        ""parameters"" : ""normalize""
                     }
                 ]
             }
@@ -443,7 +443,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = InputDevice.Build<Gamepad>("MyDevice");
 
-        Assert.That(device.leftStick.x.clamp, Is.True);
+        Assert.That(device.leftStick.x.normalize, Is.True);
     }
 
     [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
@@ -1264,7 +1264,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseJson);
         InputSystem.RegisterLayout(derivedJson);
 
-        var device = InputDevice.Build<InputDevice>("Deriver");
+        var device = InputDevice.Build<InputDevice>("Derived");
 
         Assert.That(device["stick"].stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }

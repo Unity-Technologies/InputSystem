@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - `InputUser.onUnpairedDeviceUsed` now receives a 2nd argument which is the event that triggered the callback.
   * Also, the callback is now triggered __BEFORE__ the given event is processed rather than after the event has already been written to the device. This allows updating the pairing state of the system before input is processed.
   * In practice, this means that, for example, if the user switches from keyboard&mouse to gamepad, the initial input that triggered the switch will get picked up right away.
+- `AxisControl.clamp` is now an enum-valued property rather than a bool. Can now perform clamping *before* normalization.
 
 #### Actions
 

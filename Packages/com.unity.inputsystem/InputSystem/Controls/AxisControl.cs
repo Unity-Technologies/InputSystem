@@ -15,11 +15,18 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     public class AxisControl : InputControl<float>
     {
+        public enum Clamp
+        {
+            None = 0,
+            ClampBeforeNormalize = 1,
+            ClampAfterNormalize = 2,
+            ClampToConstantBeforeNormalize = 3,
+        }
+
         // These can be added as processors but they are so common that we
         // build the functionality right into AxisControl to save us an
         // additional object and an additional virtual call.
-        public bool clamp; // If true, force clamping to [min..max]
-        public bool clampToConstant; // If true, set value to clampConstant when incoming value is outside [min..max]
+        public Clamp clamp;
         public float clampMin;
         public float clampMax;
         public float clampConstant;
@@ -37,15 +44,17 @@ namespace UnityEngine.InputSystem.Controls
         {
             if (scale)
                 value *= scaleFactor;
-            if (clampToConstant)
+            if (clamp == Clamp.ClampToConstantBeforeNormalize)
             {
                 if (value < clampMin || value > clampMax)
                     value = clampConstant;
             }
-            else if (clamp)
+            else if (clamp == Clamp.ClampBeforeNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
+            if (clamp == Clamp.ClampAfterNormalize)
+                value = Mathf.Clamp(value, clampMin, clampMax);
             if (invert)
                 value *= -1.0f;
             return value;
