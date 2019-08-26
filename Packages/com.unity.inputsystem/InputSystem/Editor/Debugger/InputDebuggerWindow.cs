@@ -296,6 +296,28 @@ namespace UnityEngine.InputSystem.Editor
                     ToggleLockInputToGameView);
                 menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
+                // Add the inverse of "Copy Device Description" which adds a device with the description from
+                // the clipboard to the system. This is most useful for debugging and makes it very easy to
+                // have a first pass at device descriptions supplied by users.
+                try
+                {
+                    var copyBuffer = EditorGUIUtility.systemCopyBuffer;
+                    if (!string.IsNullOrEmpty(copyBuffer) &&
+                        copyBuffer.StartsWith("{") && !InputDeviceDescription.FromJson(copyBuffer).empty)
+                    {
+                        menu.AddItem(Contents.pasteDeviceDescriptionAsDevice, false, () =>
+                        {
+                            var description = InputDeviceDescription.FromJson(copyBuffer);
+                            InputSystem.AddDevice(description);
+                        });
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Catch and ignore exception if buffer doesn't actually contain an InputDeviceDescription
+                    // in (proper) JSON format.
+                }
+
                 menu.ShowAsContext();
             }
 
@@ -327,6 +349,7 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent optionsContent = new GUIContent("Options");
             public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
             public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
+            public static GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
             public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
             public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
