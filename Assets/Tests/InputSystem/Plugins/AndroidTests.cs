@@ -88,14 +88,14 @@ internal class AndroidTests : InputTestFixture
         Assert.That(controller.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(rightStick.x, -rightStick.y))));
 
         Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(leftStick.x));
+        Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(leftStick.x)));
         Assert.That(controller.leftStick.up.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.leftStick.down.ReadValue(), Is.EqualTo(leftStick.y));
+        Assert.That(controller.leftStick.down.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(leftStick.y)));
 
         Assert.That(controller.rightStick.left.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.rightStick.right.ReadValue(), Is.EqualTo(rightStick.x));
+        Assert.That(controller.rightStick.right.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(rightStick.x)));
         Assert.That(controller.rightStick.up.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.rightStick.down.ReadValue(), Is.EqualTo(rightStick.y));
+        Assert.That(controller.rightStick.down.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(rightStick.y)));
 
         Assert.That(controller.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(controller.rightTrigger.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
@@ -121,14 +121,14 @@ internal class AndroidTests : InputTestFixture
 
         InputSystem.Update();
 
-        Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(leftStick.x));
+        Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(leftStick.x)));
         Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.leftStick.up.ReadValue(), Is.EqualTo(leftStick.y));
+        Assert.That(controller.leftStick.up.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(leftStick.y)));
         Assert.That(controller.leftStick.down.ReadValue(), Is.EqualTo(0.0f));
 
-        Assert.That(controller.rightStick.left.ReadValue(), Is.EqualTo(rightStick.x));
+        Assert.That(controller.rightStick.left.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(rightStick.x)));
         Assert.That(controller.rightStick.right.ReadValue(), Is.EqualTo(0.0f));
-        Assert.That(controller.rightStick.up.ReadValue(), Is.EqualTo(rightStick.y));
+        Assert.That(controller.rightStick.up.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(rightStick.y)));
         Assert.That(controller.rightStick.down.ReadValue(), Is.EqualTo(0.0f));
     }
 

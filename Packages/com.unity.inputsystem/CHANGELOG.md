@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 - Device debugger window will still show when reading from specific controls throws exceptions.
 - Offsets and sizes for elements on Linux joysticks are now computed correctly.
 - Joysticks now have a deadzone processor on the stick itself.
+- Up/down/left/right on sticks are now deadzoned just like X and Y on sticks are.
 
 #### Actions
 
