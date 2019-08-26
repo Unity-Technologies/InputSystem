@@ -1209,6 +1209,43 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanHaveOneControlUseStateOfAnotherControl_EvenWhenStateSetupIsChangedInDerivedLayout()
+    {
+        const string controlJson = @"
+            {
+                ""name"" : ""MyControl"",
+                ""extend"" : ""Vector2"",
+                ""controls"" : [
+                    { ""name"" : ""x"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""y"", ""layout"" : ""Axis"", ""useStateFrom"" : ""x"" }
+                ]
+            }
+        ";
+
+        const string deviceJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Sensor"",
+                ""controls"" : [
+                    { ""name"" : ""ctrl"", ""layout"" : ""MyControl"" },
+                    { ""name"" : ""ctrl/x"", ""format"" : ""BIT"", ""bit"" : 12, ""offset"" : 21, ""sizeInBits"" : 7 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(controlJson);
+        InputSystem.RegisterLayout(deviceJson);
+
+        var device = InputDevice.Build<InputDevice>("MyDevice");
+
+        Assert.That(device["ctrl/y"].stateBlock.format, Is.EqualTo(new FourCC("BIT")));
+        Assert.That(device["ctrl/y"].stateBlock.sizeInBits, Is.EqualTo(7));
+        Assert.That(device["ctrl/y"].stateBlock.byteOffset, Is.EqualTo(21));
+        Assert.That(device["ctrl/y"].stateBlock.bitOffset, Is.EqualTo(12));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanAddChildControlToExistingControl()
     {
         const string json = @"
