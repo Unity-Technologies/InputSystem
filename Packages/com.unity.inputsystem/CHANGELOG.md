@@ -18,6 +18,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
   * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+- NullReferenceExceptions during event processing from `RebindingOperation`.
 
 ### Changed
 
