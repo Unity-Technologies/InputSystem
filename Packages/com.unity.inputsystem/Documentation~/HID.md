@@ -218,4 +218,4 @@ public DualShock4GamepadHID : Gamepad
 }
 ```
 
-Now, any device matching the manufacturer and product name strings or the vendor and product Ids in it's HID descriptor will be picked up by our custom layout, and be represented in the system as a `DualShock4GamepadHID` device instance.
+Now, any device matching the manufacturer and product name strings or the vendor and product Ids in it's HID descriptor will be picked up by our custom layout, and be represented in the system as a `DualShock4GamepadHID` device instance. Also check the documentation about [device matching](Devices.md#matching).

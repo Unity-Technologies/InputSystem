@@ -544,21 +544,6 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
-        public void PauseHaptics()
-        {
-            ////TODO
-        }
-
-        public void ResumeHaptics()
-        {
-            ////TODO
-        }
-
-        public void ResetHaptics()
-        {
-            ////TODO
-        }
-
         /// <summary>
         /// Unpair a single device from the user.
         /// </summary>
