@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Device debugger window will still show when reading from specific controls throws exceptions.
 - Offsets and sizes for elements on Linux joysticks are now computed correctly.
 - Joysticks now have a deadzone processor on the stick itself.
 
