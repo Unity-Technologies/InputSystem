@@ -231,11 +231,11 @@ namespace UnityEngine.InputSystem.Utilities
         public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)
         {
             if (ptr == null)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (bitCount >= sizeof(int) * 8)
-                throw new ArgumentException("Trying to read more than 32 bits as int", "bitCount");
+                throw new ArgumentException("Trying to read more than 32 bits as int", nameof(bitCount));
 
-            //Shift the pointer up on larger bitmasks and retry
+            // Shift the pointer up on larger bitmasks and retry.
             if (bitOffset > 32)
             {
                 var newBitOffset = (int)bitOffset % 32;
@@ -277,9 +277,9 @@ namespace UnityEngine.InputSystem.Utilities
         public static void WriteIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
         {
             if (ptr == null)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (bitCount >= sizeof(int) * 8)
-                throw new ArgumentException("Trying to write more than 32 bits as int", "bitCount");
+                throw new ArgumentException("Trying to write more than 32 bits as int", nameof(bitCount));
 
             // Bits out of byte.
             if (bitOffset + bitCount <= 8)
@@ -317,13 +317,13 @@ namespace UnityEngine.InputSystem.Utilities
         public static void SetBitsInBuffer(void* buffer, int byteOffset, int bitOffset, int sizeInBits, bool value)
         {
             if (buffer == null)
-                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "buffer");
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", nameof(buffer));
             if (sizeInBits < 0)
-                throw new ArgumentException("Negative sizeInBits", "sizeInBits");
+                throw new ArgumentException("Negative sizeInBits", nameof(sizeInBits));
             if (bitOffset < 0)
-                throw new ArgumentException("Negative bitOffset", "bitOffset");
+                throw new ArgumentException("Negative bitOffset", nameof(bitOffset));
             if (byteOffset < 0)
-                throw new ArgumentException("Negative byteOffset", "byteOffset");
+                throw new ArgumentException("Negative byteOffset", nameof(byteOffset));
 
             // If we're offset by more than a byte, adjust our pointers.
             if (bitOffset >= 8)

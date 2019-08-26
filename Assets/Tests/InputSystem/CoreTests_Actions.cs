@@ -2243,7 +2243,7 @@ partial class CoreTests
         map2.AddAction("action3", binding: "<Gamepad>/leftTrigger");
 
         asset.AddControlScheme("scheme1").WithBindingGroup("group1").WithRequiredDevice("<Gamepad>");
-        asset.AddControlScheme("scheme2").BasedOn("scheme1").WithBindingGroup("group2")
+        asset.AddControlScheme("scheme2").WithBindingGroup("group2")
             .WithOptionalDevice("<Keyboard>").WithRequiredDevice("<Mouse>").OrWithRequiredDevice("<Pen>");
 
         var json = asset.ToJson();
@@ -2279,8 +2279,6 @@ partial class CoreTests
         Assert.That(asset.controlSchemes[1].name, Is.EqualTo("scheme2"));
         Assert.That(asset.controlSchemes[0].bindingGroup, Is.EqualTo("group1"));
         Assert.That(asset.controlSchemes[1].bindingGroup, Is.EqualTo("group2"));
-        Assert.That(asset.controlSchemes[0].baseScheme, Is.Null);
-        Assert.That(asset.controlSchemes[1].baseScheme, Is.EqualTo("scheme1"));
         Assert.That(asset.controlSchemes[0].deviceRequirements, Has.Count.EqualTo(1));
         Assert.That(asset.controlSchemes[1].deviceRequirements, Has.Count.EqualTo(3));
         Assert.That(asset.controlSchemes[0].deviceRequirements[0].controlPath, Is.EqualTo("<Gamepad>"));
