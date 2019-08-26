@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Offsets and sizes for elements on Linux joysticks are now computed correctly.
 
 #### Actions
 
