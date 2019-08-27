@@ -18,9 +18,9 @@ namespace UnityEngine.InputSystem.Controls
         public enum Clamp
         {
             None = 0,
-            ClampBeforeNormalize = 1,
-            ClampAfterNormalize = 2,
-            ClampToConstantBeforeNormalize = 3,
+            BeforeNormalize = 1,
+            AfterNormalize = 2,
+            ToConstantBeforeNormalize = 3,
         }
 
         // These can be added as processors but they are so common that we
@@ -44,16 +44,16 @@ namespace UnityEngine.InputSystem.Controls
         {
             if (scale)
                 value *= scaleFactor;
-            if (clamp == Clamp.ClampToConstantBeforeNormalize)
+            if (clamp == Clamp.ToConstantBeforeNormalize)
             {
                 if (value < clampMin || value > clampMax)
                     value = clampConstant;
             }
-            else if (clamp == Clamp.ClampBeforeNormalize)
+            else if (clamp == Clamp.BeforeNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
-            if (clamp == Clamp.ClampAfterNormalize)
+            if (clamp == Clamp.AfterNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (invert)
                 value *= -1.0f;
