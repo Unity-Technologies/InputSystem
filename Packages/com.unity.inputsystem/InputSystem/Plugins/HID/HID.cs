@@ -176,7 +176,13 @@ namespace UnityEngine.InputSystem.HID
 
             // Register layout builder that will turn the HID descriptor into an
             // InputControlLayout instance.
-            var layout = new HIDLayoutBuilder {hidDescriptor = hidDeviceDescriptor, parentLayout = baseLayout, deviceType = baseType ?? typeof(HID)};
+            var layout = new HIDLayoutBuilder
+            {
+                displayName = description.product,
+                hidDescriptor = hidDeviceDescriptor,
+                parentLayout = baseLayout,
+                deviceType = baseType ?? typeof(HID)
+            };
             InputSystem.RegisterLayoutBuilder(() => layout.Build(),
                 layoutName, baseLayout, deviceMatcher);
 
@@ -327,6 +333,7 @@ namespace UnityEngine.InputSystem.HID
         [Serializable]
         private class HIDLayoutBuilder
         {
+            public string displayName;
             public HIDDeviceDescriptor hidDescriptor;
             public string parentLayout;
             public Type deviceType;
@@ -335,6 +342,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 var builder = new InputControlLayout.Builder
                 {
+                    displayName = displayName,
                     type = deviceType,
                     extendsLayout = parentLayout,
                     stateFormat = new FourCC('H', 'I', 'D')

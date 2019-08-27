@@ -679,6 +679,8 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
+                if (!string.IsNullOrEmpty(layout.m_DisplayName))
+                    AddChild(item, "Display Name: " + layout.m_DisplayName, ref id);
                 var baseLayouts = StringHelpers.Join(layout.baseLayouts, ", ");
                 if (!string.IsNullOrEmpty(baseLayouts))
                     AddChild(item, "Extends: " + baseLayouts, ref id);

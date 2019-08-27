@@ -401,6 +401,7 @@ namespace UnityEngine.InputSystem.Layouts
         public class Builder
         {
             public string name { get; set; }
+            public string displayName { get; set; }
             public Type type { get; set; }
             public FourCC stateFormat { get; set; }
             public int stateSizeInBytes { get; set; }
@@ -571,6 +572,12 @@ namespace UnityEngine.InputSystem.Layouts
                 return this;
             }
 
+            public Builder WithDisplayName(string displayName)
+            {
+                this.displayName = name;
+                return this;
+            }
+
             public Builder WithType<T>()
                 where T : InputControl
             {
@@ -616,6 +623,7 @@ namespace UnityEngine.InputSystem.Layouts
                     new InputControlLayout(new InternedString(name),
                         type == null && string.IsNullOrEmpty(extendsLayout) ? typeof(InputDevice) : type)
                 {
+                    m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
                     m_StateSizeInBytes = stateSizeInBytes,
                     m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
