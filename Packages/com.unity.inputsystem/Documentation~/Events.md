@@ -63,13 +63,13 @@ For example, the following code demonstrates how to read a value for `Gamepad.le
 
 ```
 InputSystem.onEvent +=
-    eventPtr =>
+    (eventPtr, device) =>
     {
         // Ignore anything that isn't a state event.
         if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
             return;
 
-        var gamepad = InputSystem.GetDeviceById(eventPtr.deviceId) as Gamepad;
+        var gamepad = device as Gamepad;
         if (gamepad == null)
         {
             // Event isn't for a gamepad or device ID is no longer valid.
