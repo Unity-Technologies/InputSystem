@@ -403,10 +403,10 @@ namespace UnityEngine.InputSystem.HID
                     // Propagate parameters needed on x and y to the four button controls.
                     builder.AddControl(stickName + "/up")
                         .WithParameters(
-                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=0,clampMax=1"));
+                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert=true"));
                     builder.AddControl(stickName + "/down")
                         .WithParameters(
-                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert"));
+                            StringHelpers.Join(",", yElementParameters, "clamp=2,clampMin=0,clampMax=1,invert=false"));
                     builder.AddControl(stickName + "/left")
                         .WithParameters(
                             StringHelpers.Join(",", xElementParameters, "clamp=2,clampMin=-1,clampMax=0,invert"));
@@ -744,7 +744,7 @@ namespace UnityEngine.InputSystem.HID
                 // NOTE: We put the center in the middle between min/max as we can't know where the
                 //       resting point of the axis is (may be on min if it's a trigger, for example).
                 if (logicalMin == 0 && logicalMax == 0)
-                    return null;
+                    return "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5";
                 var min = minFloatValue;
                 var max = maxFloatValue;
                 // Do nothing if result of floating-point conversion is already normalized.

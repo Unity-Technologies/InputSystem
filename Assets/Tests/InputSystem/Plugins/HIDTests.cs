@@ -9,7 +9,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.HID;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
@@ -56,13 +55,13 @@ internal class HIDTests : InputTestFixture
         Assert.That(device, Is.TypeOf<HID>());
         Assert.That(device.description.interfaceName, Is.EqualTo(HID.kHIDInterface));
         Assert.That(device.children, Has.Count.EqualTo(3));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("trigger").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Stick").And.TypeOf<StickControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("stick").And.TypeOf<StickControl>());
 
         var x = device["stick/x"];
         var y = device["stick/y"];
-        var button1 = device["button1"];
+        var button1 = device["trigger"];
         var button2 = device["button2"];
 
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(5 * 8));
@@ -325,8 +324,8 @@ internal class HIDTests : InputTestFixture
         Assert.That(hid.hidDescriptor.elements.Length, Is.EqualTo(4));
 
         Assert.That(device.children, Has.Count.EqualTo(3));
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("Stick").And.TypeOf<StickControl>());
-        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button1").And.TypeOf<ButtonControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("stick").And.TypeOf<StickControl>());
+        Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("trigger").And.TypeOf<ButtonControl>());
         Assert.That(device.children, Has.Exactly(1).With.Property("name").EqualTo("button2").And.TypeOf<ButtonControl>());
     }
 
@@ -517,9 +516,9 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
-        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
-        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
+        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
 
         // Test upper bound.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
@@ -537,9 +536,9 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Rx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
-        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
-        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
+        Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
 
         // Test center.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
@@ -701,13 +700,13 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
-        Assert.That(hid["dpad"], Is.TypeOf<DpadControl>());
+        Assert.That(hid["hat"], Is.TypeOf<DpadControl>());
 
         // Assert that default state is set correctly.
-        Assert.That(hid["dpad/up"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
-        Assert.That(hid["dpad/down"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
-        Assert.That(hid["dpad/left"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
-        Assert.That(hid["dpad/right"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["hat/up"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["hat/down"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["hat/left"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
+        Assert.That(hid["hat/right"].ReadValueAsObject(), Is.EqualTo(0).Within(0.00001));
 
         using (StateEvent.From(hid, out var eventPtr))
         {
@@ -728,63 +727,63 @@ internal class HIDTests : InputTestFixture
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUpRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRight;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRightDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDown;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDownLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeft;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeftUp;
 
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
 
-            Assert.That(hid["dpad"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(Vector2EqualityComparer.Instance));
+            Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(Vector2EqualityComparer.Instance));
         }
     }
 
@@ -842,13 +841,13 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
-        Assert.That(hid["dpad"], Is.TypeOf<DpadControl>());
-        Assert.That(hid["dpad1"], Is.TypeOf<DpadControl>());
+        Assert.That(hid["hat"], Is.TypeOf<DpadControl>());
+        Assert.That(hid["hat1"], Is.TypeOf<DpadControl>());
 
-        Assert.That(hid["dpad"].stateBlock.byteOffset, Is.EqualTo(0));
-        Assert.That(hid["dpad"].stateBlock.bitOffset, Is.EqualTo(0));
-        Assert.That(hid["dpad1"].stateBlock.byteOffset, Is.EqualTo(0));
-        Assert.That(hid["dpad1"].stateBlock.bitOffset, Is.EqualTo(4));
+        Assert.That(hid["hat"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["hat"].stateBlock.bitOffset, Is.EqualTo(0));
+        Assert.That(hid["hat1"].stateBlock.byteOffset, Is.EqualTo(0));
+        Assert.That(hid["hat1"].stateBlock.bitOffset, Is.EqualTo(4));
     }
 
     [Test]
@@ -1013,7 +1012,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(device, Is.TypeOf<Joystick>());
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
 
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MaxValue });
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
@@ -1141,15 +1140,15 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
-            Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
+            Is.EqualTo(new Vector2(-1, 1).normalized).Using(Vector2EqualityComparer.Instance));
         Assert.That(device["stick/x"].ReadValueAsObject(),
             Is.EqualTo(-1).Within(0.00001));
         Assert.That(device["stick/y"].ReadValueAsObject(),
-            Is.EqualTo(-1).Within(0.00001));
-        Assert.That(device["stick/up"].ReadValueAsObject(),
-            Is.EqualTo(0).Within(0.00001));
-        Assert.That(device["stick/down"].ReadValueAsObject(),
             Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/up"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
+        Assert.That(device["stick/down"].ReadValueAsObject(),
+            Is.EqualTo(0).Within(0.00001));
         Assert.That(device["stick/left"].ReadValueAsObject(),
             Is.EqualTo(1).Within(0.00001));
         Assert.That(device["stick/right"].ReadValueAsObject(),
@@ -1160,15 +1159,15 @@ internal class HIDTests : InputTestFixture
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
-            Is.EqualTo(new Vector2(1, 1).normalized).Using(new Vector2EqualityComparer(0.01f)));
+            Is.EqualTo(new Vector2(1, -1).normalized).Using(new Vector2EqualityComparer(0.01f)));
         Assert.That(device["stick/x"].ReadValueAsObject(),
             Is.EqualTo(1).Within(0.00001));
         Assert.That(device["stick/y"].ReadValueAsObject(),
-            Is.EqualTo(1).Within(0.00001));
+            Is.EqualTo(-1).Within(0.00001));
         Assert.That(device["stick/up"].ReadValueAsObject(),
-            Is.EqualTo(1).Within(0.00001));
-        Assert.That(device["stick/down"].ReadValueAsObject(),
             Is.EqualTo(0).Within(0.00001));
+        Assert.That(device["stick/down"].ReadValueAsObject(),
+            Is.EqualTo(1).Within(0.00001));
         Assert.That(device["stick/left"].ReadValueAsObject(),
             Is.EqualTo(0).Within(0.00001));
         Assert.That(device["stick/right"].ReadValueAsObject(),

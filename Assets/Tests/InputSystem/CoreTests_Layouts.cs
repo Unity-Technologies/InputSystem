@@ -330,7 +330,7 @@ partial class CoreTests
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device.rightTrigger.clamp, Is.True);
+        Assert.That(device.rightTrigger.clamp, Is.EqualTo(AxisControl.Clamp.BeforeNormalize));
         Assert.That(device.rightTrigger.clampMin, Is.EqualTo(0.123).Within(0.00001f));
         Assert.That(device.rightTrigger.clampMax, Is.EqualTo(0.456).Within(0.00001f));
     }
