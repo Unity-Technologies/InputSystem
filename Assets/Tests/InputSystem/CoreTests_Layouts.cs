@@ -173,7 +173,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.leftStick.up.clamp, Is.True);
+        Assert.That(gamepad.leftStick.up.clamp, Is.EqualTo(AxisControl.Clamp.AfterNormalize));
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
         Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
     }
