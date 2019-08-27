@@ -543,17 +543,15 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanQueueAndReceiveEventsAgainstNonExistingDevices()
+    public void Events_WillNotReceiveEventsAgainstNonExistingDevices()
     {
         // Device IDs are looked up only *after* the system shows the event to us.
 
         var receivedCalls = 0;
-        var receivedDeviceId = InputDevice.InvalidDeviceId;
         InputSystem.onEvent +=
             (eventPtr, _) =>
         {
             ++receivedCalls;
-            receivedDeviceId = eventPtr.deviceId;
         };
 
         var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
@@ -561,8 +559,7 @@ partial class CoreTests
 
         InputSystem.Update();
 
-        Assert.That(receivedCalls, Is.EqualTo(1));
-        Assert.That(receivedDeviceId, Is.EqualTo(4));
+        Assert.That(receivedCalls, Is.EqualTo(0));
     }
 
     [Test]
@@ -579,7 +576,9 @@ partial class CoreTests
             wasHandled = eventPtr.handled;
         };
 
-        var inputEvent = DeviceConfigurationEvent.Create(4, 1.0);
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        var inputEvent = DeviceConfigurationEvent.Create(device.id, 1.0);
 
         // This should go back to false when we inputEvent goes on the queue.
         // The way the behavior is implemented is a side-effect of how we store
