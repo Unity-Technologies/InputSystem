@@ -1804,6 +1804,7 @@ namespace UnityEngine.InputSystem
             s_Manager.QueueEvent(ref inputEvent);
         }
 
+        ////TODO: rename or move this to a less obvious place
         /// <summary>
         /// Run a single update of input state.
         /// </summary>

@@ -417,6 +417,12 @@ namespace UnityEngine.InputSystem.Layouts
                 internal Builder builder;
                 internal int index;
 
+                public ControlBuilder WithDisplayName(string displayName)
+                {
+                    builder.m_Controls[index].displayName = displayName;
+                    return this;
+                }
+
                 public ControlBuilder WithLayout(string layout)
                 {
                     if (string.IsNullOrEmpty(layout))
@@ -496,6 +502,15 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder WithProcessors(string processors)
+                {
+                    if (string.IsNullOrEmpty(processors))
+                        return this;
+                    var parsed = NameAndParameters.ParseMultiple(processors).ToArray();
+                    builder.m_Controls[index].processors = new ReadOnlyArray<NameAndParameters>(parsed);
+                    return this;
+                }
+
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
                 {
                     builder.m_Controls[index].defaultState = value;
@@ -504,6 +519,8 @@ namespace UnityEngine.InputSystem.Layouts
 
                 public ControlBuilder UsingStateFrom(string path)
                 {
+                    if (string.IsNullOrEmpty(path))
+                        return this;
                     builder.m_Controls[index].useStateFrom = path;
                     return this;
                 }
