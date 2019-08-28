@@ -574,7 +574,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             public Builder WithDisplayName(string displayName)
             {
-                this.displayName = name;
+                this.displayName = displayName;
                 return this;
             }
 
