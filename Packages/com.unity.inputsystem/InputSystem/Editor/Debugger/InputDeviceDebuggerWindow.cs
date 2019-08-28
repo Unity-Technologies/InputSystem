@@ -7,6 +7,8 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: add the ability for the debugger to just generate input on the device according to the controls it finds; good for testing
+
 ////TODO: add commands to event trace (also clickable)
 
 ////TODO: add diff-to-previous-event ability to event window

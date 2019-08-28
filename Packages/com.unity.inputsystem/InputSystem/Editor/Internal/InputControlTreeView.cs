@@ -224,25 +224,34 @@ namespace UnityEngine.InputSystem.Editor
             value = null;
             values = null;
 
-            if (stateBuffer != null)
+            try
             {
-                ////TODO: switch to ReadValueFromState
-                var text = ReadRawValueAsString(control, stateBuffer);
-                if (text != null)
-                    value = new GUIContent(text);
+                if (stateBuffer != null)
+                {
+                    ////TODO: switch to ReadValueFromState
+                    var text = ReadRawValueAsString(control, stateBuffer);
+                    if (text != null)
+                        value = new GUIContent(text);
+                }
+                else if (multipleStateBuffers != null)
+                {
+                    var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
+                    if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
+                        return false;
+                    values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
+                }
+                else
+                {
+                    var valueObject = control.ReadValueAsObject();
+                    if (valueObject != null)
+                        value = new GUIContent(valueObject.ToString());
+                }
             }
-            else if (multipleStateBuffers != null)
+            catch (Exception exception)
             {
-                var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
-                if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
-                    return false;
-                values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
-            }
-            else
-            {
-                var valueObject = control.ReadValueAsObject();
-                if (valueObject != null)
-                    value = new GUIContent(valueObject.ToString());
+                // If we fail to read a value, swallow it so we don't fail completely
+                // showing anything from the device.
+                value = new GUIContent(exception.ToString());
             }
 
             return true;

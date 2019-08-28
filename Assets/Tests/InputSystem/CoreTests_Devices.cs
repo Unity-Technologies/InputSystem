@@ -1825,6 +1825,18 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_JoysticksHaveDeadzonesOnStick()
+    {
+        var joystick = InputSystem.AddDevice<Joystick>();
+
+        InputSystem.QueueStateEvent(joystick, new JoystickState {stick = new Vector2(0.001f, 0.002f)});
+        InputSystem.Update();
+
+        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
         var pointer = InputSystem.AddDevice<Pointer>();

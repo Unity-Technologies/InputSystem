@@ -223,9 +223,9 @@ namespace UnityEngine.InputSystem.LowLevel
             ref InputEvent* currentWritePos, ref int numEventsRetainedInBuffer,
             ref int numRemainingEvents, bool leaveEventInBuffer)
         {
-            Debug.Assert(Contains(currentReadPos));
-            Debug.Assert(Contains(currentWritePos));
-            Debug.Assert(currentReadPos >= currentWritePos);
+            Debug.Assert(Contains(currentReadPos), "Current read position should be contained in buffer");
+            Debug.Assert(Contains(currentWritePos), "Current write position should be contained in buffer");
+            Debug.Assert(currentReadPos >= currentWritePos, "Current write position is beyond read position");
 
             // Get new read position *before* potentially moving the current event so that we don't
             // end up overwriting the data we need to find the next event in memory.
@@ -264,7 +264,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!m_WeOwnTheBuffer)
                 return;
 
-            Debug.Assert(m_Buffer.IsCreated);
+            Debug.Assert(m_Buffer.IsCreated, "Buffer has not been created");
 
             m_Buffer.Dispose();
             m_WeOwnTheBuffer = false;
@@ -322,7 +322,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     return m_CurrentEvent != null;
                 }
 
-                Debug.Assert(m_CurrentEvent != null);
+                Debug.Assert(m_CurrentEvent != null, "Current event must not be null");
 
                 ++m_CurrentIndex;
                 if (m_CurrentIndex == m_EventCount)
