@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
+    [Scripting.Preserve]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";

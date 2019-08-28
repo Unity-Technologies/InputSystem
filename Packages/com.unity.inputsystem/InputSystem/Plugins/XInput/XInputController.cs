@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.XInput
     /// will not be available.
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller")]
+    [Scripting.Preserve]
     public class XInputController : Gamepad
     {
         // Change the display names for the buttons to conform to Xbox conventions.

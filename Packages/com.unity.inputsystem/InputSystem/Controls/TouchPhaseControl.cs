@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     /// <seealso cref="Touchscreen"/>
     [InputControlLayout(hideInUI = true)]
+    [Scripting.Preserve]
     public class TouchPhaseControl : InputControl<TouchPhase>
     {
         public TouchPhaseControl()

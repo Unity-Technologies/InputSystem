@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.Controls
     /// Unlike <see cref="DpadControl">D-Pads</see>, sticks will usually have <see cref="StickDeadzoneProcessor">
     /// deadzone processors</see> applied to them.
     /// </remarks>
+    [Scripting.Preserve]
     public class StickControl : Vector2Control
     {
         ////REVIEW: should X and Y have "Horizontal" and "Vertical" as long display names and "X" and "Y" as short names?
