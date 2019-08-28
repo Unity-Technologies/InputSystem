@@ -15,9 +15,11 @@ namespace UnityEngine.InputSystem.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
+    [Scripting.Preserve]
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
+        [Scripting.Preserve]
         internal class DpadAxisControl : AxisControl
         {
             public int component;

@@ -157,61 +157,73 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 namespace UnityEngine.InputSystem.Android
 {
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Accelerometer", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidAccelerometer : Accelerometer
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "MagneticField", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidMagneticFieldSensor : MagneticFieldSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gyroscope", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidGyroscope : Gyroscope
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Light", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidLightSensor : LightSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Pressure", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidPressureSensor : PressureSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Proximity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidProximity : ProximitySensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "Gravity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidGravitySensor : GravitySensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "LinearAcceleration", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidLinearAccelerationSensor : LinearAccelerationSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RotationVector", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidRotationVector : AttitudeSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "RelativeHumidity", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidRelativeHumidity : HumiditySensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "AmbientTemperature", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidAmbientTemperature : AmbientTemperatureSensor
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidSensorState), variants = "StepCounter", hideInUI = true)]
+    [Scripting.Preserve]
     public class AndroidStepCounter : StepCounter
     {
     }

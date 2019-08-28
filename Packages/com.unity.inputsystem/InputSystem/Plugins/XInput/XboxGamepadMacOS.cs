@@ -204,6 +204,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 namespace UnityEngine.InputSystem.XInput
 {
     [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
+    [Scripting.Preserve]
     /// <summary>
     /// A wired Xbox Gamepad connected to a macOS computer.
     /// </summary>
@@ -217,6 +218,7 @@ namespace UnityEngine.InputSystem.XInput
     }
 
     [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
+    [Scripting.Preserve]
     /// <summary>
     /// A wireless Xbox One Gamepad connected to a macOS computer.
     /// </summary>

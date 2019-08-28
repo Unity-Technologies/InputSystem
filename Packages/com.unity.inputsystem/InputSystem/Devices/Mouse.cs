@@ -112,6 +112,7 @@ namespace UnityEngine.InputSystem
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
+    [UnityEngine.Scripting.Preserve]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>

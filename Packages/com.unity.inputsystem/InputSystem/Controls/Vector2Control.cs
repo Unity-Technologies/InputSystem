@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Controls
     ///     Inputsystem.GetDevice&lt;Mouse&gt;().position.y.value));
     /// </code>
     /// </example>
+    [Scripting.Preserve]
     public class Vector2Control : InputControl<Vector2>
     {
         /// <summary>

@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Controls
     /// A control representing a touch contact.
     /// </summary>
     [InputControlLayout(stateType = typeof(TouchState))]
+    [Scripting.Preserve]
     public class TouchControl : InputControl<TouchState>
     {
         [InputControl]
