@@ -13,6 +13,13 @@ however, it has to be formatted properly to pass verification tests.
 
 - Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Device debugger window will still show when reading from specific controls throws exceptions.
+- Offsets and sizes for elements on Linux joysticks are now computed correctly.
+- Joysticks now have a deadzone processor on the stick itself.
+- Up/down/left/right on sticks are now deadzoned just like X and Y on sticks are.
+- Removed toplevel `X` and `Y` controls on HIDs when there is a `Stick/X` and `Stick/Y` added for the device.
+- HID fallback can now deal with sticks that have X and Y controls of different sizes and sitting in non-contiguous locations in the HID input report.
+- Button 1 on HID joysticks will now correctly come out as the `trigger` control. Previously, the trigger control on the joystick was left pointing to random state.
 
 #### Actions
 
@@ -23,6 +30,7 @@ however, it has to be formatted properly to pass verification tests.
 - Control scheme names can no longer be set to empty strings.
 - `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
   * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+- NullReferenceExceptions during event processing from `RebindingOperation`.
 
 ### Changed
 
@@ -31,6 +39,7 @@ however, it has to be formatted properly to pass verification tests.
   * In practice, this means that, for example, if the user switches from keyboard&mouse to gamepad, the initial input that triggered the switch will get picked up right away.
 - `InputControlPath.ToHumanReadableString` now takes display names from registered `InputControlLayout` instances into account.
   * This means that the method can now be used to generate strings to display in rebinding UIs.
+- `AxisControl.clamp` is now an enum-valued property rather than a bool. Can now perform clamping *before* normalization.
 
 #### Actions
 
@@ -41,6 +50,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
   * This information is helpful for us to debug problems related to specific devices.
+- If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
 
 ## [0.9.3-preview] - 2019-8-15
 

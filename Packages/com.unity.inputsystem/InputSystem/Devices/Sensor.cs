@@ -72,7 +72,7 @@ namespace UnityEngine.InputSystem
     /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s, <see cref="GravitySensor"/>s and others.
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
-    public abstract class Sensor : InputDevice
+    public class Sensor : InputDevice
     {
         public float samplingFrequency
         {

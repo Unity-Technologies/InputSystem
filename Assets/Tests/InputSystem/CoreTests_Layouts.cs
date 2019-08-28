@@ -173,7 +173,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.leftStick.up.clamp, Is.True);
+        Assert.That(gamepad.leftStick.up.clamp, Is.EqualTo(AxisControl.Clamp.AfterNormalize));
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
         Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
     }
@@ -320,7 +320,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""rightTrigger"",
-                        ""parameters"" : ""clamp=true,clampMin=0.123,clampMax=0.456""
+                        ""parameters"" : ""clamp=1,clampMin=0.123,clampMax=0.456""
                     }
                 ]
             }
@@ -330,7 +330,7 @@ partial class CoreTests
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device.rightTrigger.clamp, Is.True);
+        Assert.That(device.rightTrigger.clamp, Is.EqualTo(AxisControl.Clamp.BeforeNormalize));
         Assert.That(device.rightTrigger.clampMin, Is.EqualTo(0.123).Within(0.00001f));
         Assert.That(device.rightTrigger.clampMax, Is.EqualTo(0.456).Within(0.00001f));
     }
@@ -434,7 +434,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""parameters"" : ""clamp""
+                        ""parameters"" : ""normalize""
                     }
                 ]
             }
@@ -443,7 +443,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = InputDevice.Build<Gamepad>("MyDevice");
 
-        Assert.That(device.leftStick.x.clamp, Is.True);
+        Assert.That(device.leftStick.x.normalize, Is.True);
     }
 
     [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
@@ -1209,6 +1209,43 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanHaveOneControlUseStateOfAnotherControl_EvenWhenStateSetupIsChangedInDerivedLayout()
+    {
+        const string controlJson = @"
+            {
+                ""name"" : ""MyControl"",
+                ""extend"" : ""Vector2"",
+                ""controls"" : [
+                    { ""name"" : ""x"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""y"", ""layout"" : ""Axis"", ""useStateFrom"" : ""x"" }
+                ]
+            }
+        ";
+
+        const string deviceJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Sensor"",
+                ""controls"" : [
+                    { ""name"" : ""ctrl"", ""layout"" : ""MyControl"" },
+                    { ""name"" : ""ctrl/x"", ""format"" : ""BIT"", ""bit"" : 12, ""offset"" : 21, ""sizeInBits"" : 7 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(controlJson);
+        InputSystem.RegisterLayout(deviceJson);
+
+        var device = InputDevice.Build<InputDevice>("MyDevice");
+
+        Assert.That(device["ctrl/y"].stateBlock.format, Is.EqualTo(new FourCC("BIT")));
+        Assert.That(device["ctrl/y"].stateBlock.sizeInBits, Is.EqualTo(7));
+        Assert.That(device["ctrl/y"].stateBlock.byteOffset, Is.EqualTo(21));
+        Assert.That(device["ctrl/y"].stateBlock.bitOffset, Is.EqualTo(12));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanAddChildControlToExistingControl()
     {
         const string json = @"
@@ -1264,7 +1301,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseJson);
         InputSystem.RegisterLayout(derivedJson);
 
-        var device = InputDevice.Build<InputDevice>("Deriver");
+        var device = InputDevice.Build<InputDevice>("Derived");
 
         Assert.That(device["stick"].stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }
