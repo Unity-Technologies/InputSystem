@@ -162,6 +162,9 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     }
                     if (GUILayout.Button(m_DeleteButton, EditorStyles.label))
                     {
+                        // Unfocus controls, because otherwise, the editor can get confused and have text from a text field
+                        // on the deleted item leak to a different field.
+                        GUI.FocusControl(null);
                         ArrayHelpers.EraseAt(ref m_ParametersForEachListItem, i);
                         ArrayHelpers.EraseAt(ref m_EditableParametersForEachListItem, i);
                         m_Apply();
