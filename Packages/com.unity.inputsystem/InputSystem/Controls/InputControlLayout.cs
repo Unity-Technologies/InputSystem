@@ -27,6 +27,9 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
 
+////REVIEW: useStateFrom seems like a half-measure; it solves the problem of setting up state blocks but they often also
+////        require a specific set of processors
+
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
@@ -208,7 +211,7 @@ namespace UnityEngine.InputSystem.Layouts
                 var result = new ControlItem();
 
                 result.name = name;
-                Debug.Assert(!name.IsEmpty());
+                Debug.Assert(!name.IsEmpty(), "Name must not be empty");
                 result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
                 result.displayName = string.IsNullOrEmpty(displayName) ? other.displayName : displayName;
@@ -297,6 +300,8 @@ namespace UnityEngine.InputSystem.Layouts
         public InternedString variants => m_Variants;
 
         public FourCC stateFormat => m_StateFormat;
+
+        public int stateSizeInBytes => m_StateSizeInBytes;
 
         public IEnumerable<InternedString> baseLayouts => m_BaseLayouts;
 
@@ -393,13 +398,15 @@ namespace UnityEngine.InputSystem.Layouts
         /// registered with the system.
         /// </summary>
         /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
-        public struct Builder
+        public class Builder
         {
-            public string name;
-            public Type type;
-            public FourCC stateFormat;
-            public string extendsLayout;
-            public bool? updateBeforeRender;
+            public string name { get; set; }
+            public string displayName { get; set; }
+            public Type type { get; set; }
+            public FourCC stateFormat { get; set; }
+            public int stateSizeInBytes { get; set; }
+            public string extendsLayout { get; set; }
+            public bool? updateBeforeRender { get; set; }
 
             private int m_ControlCount;
             private ControlItem[] m_Controls;
@@ -409,21 +416,26 @@ namespace UnityEngine.InputSystem.Layouts
             public struct ControlBuilder
             {
                 internal Builder builder;
-                internal ControlItem[] controls;
                 internal int index;
+
+                public ControlBuilder WithDisplayName(string displayName)
+                {
+                    builder.m_Controls[index].displayName = displayName;
+                    return this;
+                }
 
                 public ControlBuilder WithLayout(string layout)
                 {
                     if (string.IsNullOrEmpty(layout))
                         throw new ArgumentException("Layout name cannot be null or empty", nameof(layout));
 
-                    controls[index].layout = new InternedString(layout);
+                    builder.m_Controls[index].layout = new InternedString(layout);
                     return this;
                 }
 
                 public ControlBuilder WithFormat(FourCC format)
                 {
-                    controls[index].format = format;
+                    builder.m_Controls[index].format = format;
                     return this;
                 }
 
@@ -434,25 +446,25 @@ namespace UnityEngine.InputSystem.Layouts
 
                 public ControlBuilder WithByteOffset(uint offset)
                 {
-                    controls[index].offset = offset;
+                    builder.m_Controls[index].offset = offset;
                     return this;
                 }
 
                 public ControlBuilder WithBitOffset(uint bit)
                 {
-                    controls[index].bit = bit;
+                    builder.m_Controls[index].bit = bit;
                     return this;
                 }
 
                 public ControlBuilder WithSynthetic(bool value)
                 {
-                    controls[index].isSynthetic = value;
+                    builder.m_Controls[index].isSynthetic = value;
                     return this;
                 }
 
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
-                    controls[index].sizeInBits = sizeInBits;
+                    builder.m_Controls[index].sizeInBits = sizeInBits;
                     return this;
                 }
 
@@ -464,10 +476,10 @@ namespace UnityEngine.InputSystem.Layouts
                     for (var i = 0; i < usages.Length; ++i)
                         if (usages[i].IsEmpty())
                             throw new ArgumentException(
-                                $"Empty usage entry at index {i} for control '{controls[index].name}' in layout '{builder.name}'",
+                                $"Empty usage entry at index {i} for control '{builder.m_Controls[index].name}' in layout '{builder.name}'",
                                 nameof(usages));
 
-                    controls[index].usages = new ReadOnlyArray<InternedString>(usages);
+                    builder.m_Controls[index].usages = new ReadOnlyArray<InternedString>(usages);
                     return this;
                 }
 
@@ -484,20 +496,39 @@ namespace UnityEngine.InputSystem.Layouts
 
                 public ControlBuilder WithParameters(string parameters)
                 {
+                    if (string.IsNullOrEmpty(parameters))
+                        return this;
                     var parsed = NamedValue.ParseMultiple(parameters);
-                    controls[index].parameters = new ReadOnlyArray<NamedValue>(parsed);
+                    builder.m_Controls[index].parameters = new ReadOnlyArray<NamedValue>(parsed);
+                    return this;
+                }
+
+                public ControlBuilder WithProcessors(string processors)
+                {
+                    if (string.IsNullOrEmpty(processors))
+                        return this;
+                    var parsed = NameAndParameters.ParseMultiple(processors).ToArray();
+                    builder.m_Controls[index].processors = new ReadOnlyArray<NameAndParameters>(parsed);
                     return this;
                 }
 
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
                 {
-                    controls[index].defaultState = value;
+                    builder.m_Controls[index].defaultState = value;
+                    return this;
+                }
+
+                public ControlBuilder UsingStateFrom(string path)
+                {
+                    if (string.IsNullOrEmpty(path))
+                        return this;
+                    builder.m_Controls[index].useStateFrom = path;
                     return this;
                 }
 
                 public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
                 {
-                    controls[index].arraySize = arraySize;
+                    builder.m_Controls[index].arraySize = arraySize;
                     return this;
                 }
             }
@@ -524,12 +555,13 @@ namespace UnityEngine.InputSystem.Layouts
                     {
                         name = new InternedString(name),
                         isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                        offset = InputStateBlock.InvalidOffset,
+                        bit = InputStateBlock.InvalidOffset
                     });
 
                 return new ControlBuilder
                 {
                     builder = this,
-                    controls = m_Controls,
                     index = index
                 };
             }
@@ -537,6 +569,12 @@ namespace UnityEngine.InputSystem.Layouts
             public Builder WithName(string name)
             {
                 this.name = name;
+                return this;
+            }
+
+            public Builder WithDisplayName(string displayName)
+            {
+                this.displayName = displayName;
                 return this;
             }
 
@@ -556,6 +594,12 @@ namespace UnityEngine.InputSystem.Layouts
             public Builder WithFormat(string format)
             {
                 return WithFormat(new FourCC(format));
+            }
+
+            public Builder WithSizeInBytes(int sizeInBytes)
+            {
+                stateSizeInBytes = sizeInBytes;
+                return this;
             }
 
             public Builder Extend(string baseLayoutName)
@@ -579,7 +623,9 @@ namespace UnityEngine.InputSystem.Layouts
                     new InputControlLayout(new InternedString(name),
                         type == null && string.IsNullOrEmpty(extendsLayout) ? typeof(InputDevice) : type)
                 {
+                    m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
+                    m_StateSizeInBytes = stateSizeInBytes,
                     m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender

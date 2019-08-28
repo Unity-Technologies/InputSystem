@@ -275,18 +275,26 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
+        Assert.That(gamepad.leftStick.up.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
+        Assert.That(gamepad.leftStick.down.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
+        Assert.That(gamepad.leftStick.right.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
+        Assert.That(gamepad.leftStick.left.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(-0.5f, -0.5f)});
         InputSystem.Update();
 
-        Assert.That(gamepad.leftStick.up.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.down.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(gamepad.leftStick.right.ReadValue(), Is.EqualTo(0.0).Within(0.000001));
-        Assert.That(gamepad.leftStick.left.ReadValue(), Is.EqualTo(0.5).Within(0.000001));
+        Assert.That(gamepad.leftStick.up.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
+        Assert.That(gamepad.leftStick.down.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
+        Assert.That(gamepad.leftStick.right.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
+        Assert.That(gamepad.leftStick.left.ReadValue(),
+            Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
     }
 
     [Test]

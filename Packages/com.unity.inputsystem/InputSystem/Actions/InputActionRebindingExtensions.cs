@@ -712,6 +712,9 @@ namespace UnityEngine.InputSystem
 
             private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
+                if (device == null)
+                    return;
+
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                     return;

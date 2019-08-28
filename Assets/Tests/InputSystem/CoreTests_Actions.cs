@@ -4564,6 +4564,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_Vector2Composite_RespectsButtonPressurePoint()
     {
+        // The stick has deadzones on the up/down/left/right buttons to get rid of stick
+        // noise. For this test, simplify things by getting rid of deadzones.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Set up classic WASD control.
@@ -4583,7 +4588,7 @@ partial class CoreTests
 
         // Up.
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4591,7 +4596,7 @@ partial class CoreTests
 
         // Up (slightly above press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4599,7 +4604,7 @@ partial class CoreTests
 
         // Up (slightly below press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4607,7 +4612,7 @@ partial class CoreTests
 
         // Up left.
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4616,7 +4621,7 @@ partial class CoreTests
 
         // Up left (up slightly above press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4625,7 +4630,7 @@ partial class CoreTests
 
         // Up left (up slightly below press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -5161,10 +5166,10 @@ partial class CoreTests
             Set(gamepad.leftStick, new Vector2(0, 0.75f));
             Assert.That(trace,
                 Started(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftStick.up)
                     .AndThen(Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftStick.up)));
 
             trace.Clear();
@@ -5176,10 +5181,10 @@ partial class CoreTests
             // one of the constituents change.
             Assert.That(trace,
                 Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.dpad.up)
                     .AndThen(Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftTrigger)));
 
             trace.Clear();

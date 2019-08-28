@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
-    public abstract class Sensor : InputDevice
+    public class Sensor : InputDevice
     {
         public float samplingFrequency
         {

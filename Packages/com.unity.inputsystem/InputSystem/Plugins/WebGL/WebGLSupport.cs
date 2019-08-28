@@ -88,28 +88,28 @@ namespace UnityEngine.InputSystem.WebGL
                     //Need to handle Up/Down/Left/Right
                     builder.AddControl(stickName + "/up")
                         .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithParameters("clamp=1,clampMin=-1,clampMax=0,invert")
                         .WithByteOffset(offset + 4)
                         .WithSizeInBits(32)
                         .WithFormat(InputStateBlock.FormatFloat);
 
                     builder.AddControl(stickName + "/down")
                         .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=0,clampMax=1")
+                        .WithParameters("clamp=1,clampMin=0,clampMax=1")
                         .WithByteOffset(offset + 4)
                         .WithSizeInBits(32)
                         .WithFormat(InputStateBlock.FormatFloat);
 
                     builder.AddControl(stickName + "/left")
                         .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=-1,clampMax=0,invert")
+                        .WithParameters("clamp=1,clampMin=-1,clampMax=0,invert")
                         .WithByteOffset(offset)
                         .WithSizeInBits(32)
                         .WithFormat(InputStateBlock.FormatFloat);
 
                     builder.AddControl(stickName + "/right")
                         .WithLayout("Button")
-                        .WithParameters("clamp,clampMin=0,clampMax=1")
+                        .WithParameters("clamp=1,clampMin=0,clampMax=1")
                         .WithByteOffset(offset)
                         .WithSizeInBits(32)
                         .WithFormat(InputStateBlock.FormatFloat);

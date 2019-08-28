@@ -184,7 +184,9 @@ public DualShock4GamepadHID : Gamepad
 
 The last step is to register our new type of device with the system and set things up such that when a PS4 controller is connected, it will get picked up by our custom device and not by the default HID fallback.
 
-In essence, all this requires is a call to [`InputSystem.RegisterLayout<T>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout__1_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__) and giving it an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) that matches the description for a PS4 DualShock HID. We can theoretically place this call anywhere but the best point for registering layouts is generally during startup. We can do so by modifying the code for our `DualShock4GamepadHID` device slightly.
+In essence, all this requires is a call to [`InputSystem.RegisterLayout<T>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout__1_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__) and giving it an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) that matches the description for a PS4 DualShock HID. We can theoretically place this call anywhere but the best point for registering layouts is generally during startup. Doing so ensures that our custom layout is visible to the Unity editor and thus can be seen, for example, in the input control picker.
+
+We can do insert our registration into the startup sequence by modifying the code for our `DualShock4GamepadHID` device slightly.
 
 ```CSharp
 [InputControlLayout(stateType = typeof(DualShock4HIDInputReport)]
@@ -218,4 +220,4 @@ public DualShock4GamepadHID : Gamepad
 }
 ```
 
-Now, any device matching the manufacturer and product name strings or the vendor and product Ids in it's HID descriptor will be picked up by our custom layout, and be represented in the system as a `DualShock4GamepadHID` device instance. Also check the documentation about [device matching](Devices.md#matching).
+Now, any device matching the manufacturer and product name strings or the vendor and product IDs in its HID descriptor will be picked up by our custom layout, and be represented in the system as a `DualShock4GamepadHID` device instance. Also check the documentation about [device matching](Devices.md#matching).

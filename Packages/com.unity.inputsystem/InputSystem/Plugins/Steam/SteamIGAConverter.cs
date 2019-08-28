@@ -157,24 +157,27 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 {
                     var entryProperties = (Dictionary<string, object>)entry.Value;
                     var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
-                    builder.Append(string.Format("    public {0} {1} {{ get; protected set; }}\n", isStick ? "StickControl" : "Vector2Control",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append("    [InputControl]\n");
+                    builder.Append(
+                        $"    public {(isStick ? "StickControl" : "Vector2Control")} {CSharpCodeHelpers.MakeIdentifier(entry.Key)} {{ get; protected set; }}\n");
                 }
 
                 // Buttons.
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("    public ButtonControl {0} {{ get; protected set; }}\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append("    [InputControl]\n");
+                    builder.Append(
+                        $"    public ButtonControl {CSharpCodeHelpers.MakeIdentifier(entry.Key)} {{ get; protected set; }}\n");
                 }
 
                 // AnalogTriggers.
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("    public AxisControl {0} {{ get; protected set; }}\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append("    [InputControl]\n");
+                    builder.Append(
+                        $"    public AxisControl {CSharpCodeHelpers.MakeIdentifier(entry.Key)} {{ get; protected set; }}\n");
                 }
             }
 
@@ -193,28 +196,24 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 {
                     var entryProperties = (Dictionary<string, object>)entry.Value;
                     var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
-                    builder.Append(string.Format("        {0} = builder.GetControl<{1}>(\"{2}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        isStick ? "StickControl" : "Vector2Control",
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)} = GetChildControl<{(isStick ? "StickControl" : "Vector2Control")}>(\"{entry.Key}\");\n");
                 }
 
                 // Buttons.
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("        {0} = builder.GetControl<ButtonControl>(\"{1}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)} = GetChildControl<ButtonControl>(\"{entry.Key}\");\n");
                 }
 
                 // AnalogTriggers.
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("        {0} = builder.GetControl<AxisControl>(\"{1}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)} = GetChildControl<AxisControl>(\"{entry.Key}\");\n");
                 }
             }
             builder.Append("    }\n");
@@ -228,35 +227,31 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
 
                 // Set handle.
-                builder.Append(string.Format("        {0}SetHandle = api.GetActionSetHandle(\"{1}\");\n",
-                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key),
-                    setEntry.Key));
+                builder.Append(
+                    $"        {CSharpCodeHelpers.MakeIdentifier(setEntry.Key)}SetHandle = api.GetActionSetHandle(\"{setEntry.Key}\");\n");
 
                 // StickPadGyros.
                 var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
                 foreach (var entry in stickPadGyros)
                 {
-                    builder.Append(string.Format("        {0}Handle = api.GetAnalogActionHandle(\"{1}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle = api.GetAnalogActionHandle(\"{entry.Key}\");\n");
                 }
 
                 // Buttons.
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("        {0}Handle = api.GetDigitalActionHandle(\"{1}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle = api.GetDigitalActionHandle(\"{entry.Key}\");\n");
                 }
 
                 // AnalogTriggers.
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("        {0}Handle = api.GetAnalogActionHandle(\"{1}\");\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key),
-                        entry.Key));
+                    builder.Append(
+                        $"        {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle = api.GetAnalogActionHandle(\"{entry.Key}\");\n");
                 }
             }
             builder.Append("    }\n");
@@ -268,31 +263,31 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 var setEntryProperties = (Dictionary<string, object>)setEntry.Value;
 
                 // Set handle.
-                builder.Append(string.Format("    public SteamHandle<InputActionMap> {0}SetHandle {{ get; private set; }}\n",
-                    CSharpCodeHelpers.MakeIdentifier(setEntry.Key)));
+                builder.Append(
+                    $"    public SteamHandle<InputActionMap> {CSharpCodeHelpers.MakeIdentifier(setEntry.Key)}SetHandle {{ get; private set; }}\n");
 
                 // StickPadGyros.
                 var stickPadGyros = (Dictionary<string, object>)setEntryProperties["StickPadGyro"];
                 foreach (var entry in stickPadGyros)
                 {
-                    builder.Append(string.Format("    public SteamHandle<InputAction> {0}Handle {{ get; private set; }}\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append(
+                        $"    public SteamHandle<InputAction> {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle {{ get; private set; }}\n");
                 }
 
                 // Buttons.
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("    public SteamHandle<InputAction> {0}Handle {{ get; private set; }}\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append(
+                        $"    public SteamHandle<InputAction> {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle {{ get; private set; }}\n");
                 }
 
                 // AnalogTriggers.
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("    public SteamHandle<InputAction> {0}Handle {{ get; private set; }}\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append(
+                        $"    public SteamHandle<InputAction> {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle {{ get; private set; }}\n");
                 }
             }
 
@@ -322,7 +317,7 @@ namespace UnityEngine.InputSystem.Steam.Editor
             builder.Append('\n');
             builder.Append("    protected override unsafe void Update(ISteamControllerAPI api)\n");
             builder.Append("    {\n");
-            builder.Append(string.Format("        {0} state;\n", stateStructName));
+            builder.Append($"        {stateStructName} state;\n");
             var currentButtonBit = 0;
             foreach (var setEntry in actions)
             {
@@ -340,9 +335,9 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 var buttons = (Dictionary<string, object>)setEntryProperties["Button"];
                 foreach (var entry in buttons)
                 {
-                    builder.Append(string.Format("        if (api.GetDigitalActionData(steamControllerHandle, {0}Handle).pressed)\n",
-                        CSharpCodeHelpers.MakeIdentifier(entry.Key)));
-                    builder.Append(string.Format("            state.buttons[{0}] |= {1};\n", currentButtonBit / 8, currentButtonBit % 8));
+                    builder.Append(
+                        $"        if (api.GetDigitalActionData(steamControllerHandle, {CSharpCodeHelpers.MakeIdentifier(entry.Key)}Handle).pressed)\n");
+                    builder.Append($"            state.buttons[{currentButtonBit / 8}] |= {currentButtonBit % 8};\n");
                     ++currentButtonBit;
                 }
 
@@ -372,7 +367,8 @@ namespace UnityEngine.InputSystem.Steam.Editor
             builder.Append("        get {\n");
             ////TODO: handle class names that are shorter than 4 characters
             ////TODO: uppercase characters
-            builder.Append(string.Format("            return new FourCC('{0}', '{1}', '{2}', '{3}');\n", className[0], className[1], className[2], className[3]));
+            builder.Append(
+                $"            return new FourCC('{className[0]}', '{className[1]}', '{className[2]}', '{className[3]}');\n");
             builder.Append("        }\n");
             builder.Append("    }\n");
             builder.Append("\n");
@@ -388,8 +384,8 @@ namespace UnityEngine.InputSystem.Steam.Editor
                 {
                     foreach (var entry in buttons)
                     {
-                        builder.Append(string.Format(
-                            "    [InputControl(name = \"{0}\", layout = \"Button\", bit = {1})]\n", entry.Key, totalButtonCount));
+                        builder.Append(
+                            $"    [InputControl(name = \"{entry.Key}\", layout = \"Button\", bit = {totalButtonCount})]\n");
                         ++totalButtonCount;
                     }
                 }
@@ -412,16 +408,17 @@ namespace UnityEngine.InputSystem.Steam.Editor
                     var entryProperties = (Dictionary<string, object>)entry.Value;
                     var isStick = entryProperties.ContainsKey("input_mode") && (string)entryProperties["input_mode"] == "joystick_move";
 
-                    builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"{1}\")]\n", entry.Key, isStick ? "Stick" : "Vector2"));
-                    builder.Append(string.Format("    public Vector2 {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append(
+                        $"    [InputControl(name = \"{entry.Key}\", layout = \"{(isStick ? "Stick" : "Vector2")}\")]\n");
+                    builder.Append($"    public Vector2 {CSharpCodeHelpers.MakeIdentifier(entry.Key)};\n");
                 }
 
                 // AnalogTriggers.
                 var analogTriggers = (Dictionary<string, object>)setEntryProperties["AnalogTrigger"];
                 foreach (var entry in analogTriggers)
                 {
-                    builder.Append(string.Format("    [InputControl(name = \"{0}\", layout = \"Axis\")]\n", entry.Key));
-                    builder.Append(string.Format("    public float {0};\n", CSharpCodeHelpers.MakeIdentifier(entry.Key)));
+                    builder.Append($"    [InputControl(name = \"{entry.Key}\", layout = \"Axis\")]\n");
+                    builder.Append($"    public float {CSharpCodeHelpers.MakeIdentifier(entry.Key)};\n");
                 }
             }
             builder.Append("}\n");
