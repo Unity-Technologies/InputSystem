@@ -58,7 +58,7 @@ When there are multiple [`InputUser`](UserManagement.md) instances &ndash; each 
 
 The [`Layouts`](Layouts.md) list in the Debugger window shows a breakdown of all registered [control and device layouts](Layouts.md). This is essentially the database of supported hardware and the knowledge of how to represent a given piece of input hardware. This is mostly handy when you want to [create a new device mapping](HowDoI.md#-create-my-own-custom-devices), and want to see how it gets represented by the input system.
 
-![Layouts in Input Debugger](Images/LayoutsInInputDebugger.png)
+![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 
 ### Debugging Remotely
 
@@ -68,4 +68,22 @@ You can connect input debugger to a player running on a device. This makes input
 
 To see remote devices from built players, click the `Remote Devices…` pop-up button in the Debugger window. You will see a list of remote player instance you can connect to (if there are any) - this is the same list as you will see in the Profiler and Console windows, and any connections are share between those windows. If any player(s) are connected, you can enable `Show remote devices` in the same popup button. If players are connected, and `Show remote devices` is enabled, the [`Devices`](#debugging-devices) list in the debugger window will be split into a `Local` section and a `Remote` section. The `Remote` section will show any input device from any connected player, and lets you inspect device state and events in real time, just as if it were a local device.
 
-[//]: # (TODO: Mention ## Input Visualizers once we have decided on a location for our samples to link to)
+## Input Visualizers
+
+The Input System package comes with a "Visualizers" sample, which provides various components which let you monitor the state of various input system elements in real time using on-screen visualizers.
+
+To install the sample, navigate to the Input System package in the package manager window ([see "Installation"](Installation.md)), and click "Import in project" next to the "Visualizers" sample.
+
+The sampler provides two visualizer components:
+
+### `InputControlVisualizer`
+
+Visualizes the current state of a single control in real-time. You can have multiple control visualizers to visualize the state of multiple controls. Check the `GamepadVisualizer`, `MouseVisualizer` or `PenVisualizer` scenes in the sample for examples.
+
+![InputControlVisualizer](Images/InputControlVisualizer.png)
+
+### `InputActionVisualizer`
+
+Visualizes the current state of a single action in real-time. You can have multiple action visualizers to visualize the state of multiple action. Can show the current value of the action, the control currently driving the action, as well as track the state of [interactions](Interactions.md) over time. Check the `SimpleControlsVisualizer` scene in the sample for examples.
+
+![InputActionVisualizer](Images/InputActionVisualizer.png)

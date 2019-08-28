@@ -203,6 +203,8 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.onSelectedDeviceChanged = OnControlSchemeSelectionChanged;
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
+            m_Toolbar.onControlSchemeRenamed = OnControlSchemeRenamed;
+            m_Toolbar.onControlSchemeDeleted = OnControlSchemeDeleted;
             EditorApplication.wantsToQuit += EditorWantsToQuit;
 
             // Initialize after assembly reload.
@@ -286,6 +288,43 @@ namespace UnityEngine.InputSystem.Editor
         private void OnControlSchemesModified()
         {
             TransferControlSchemes(save: true);
+
+            // Control scheme changes may affect the search filter.
+            OnToolbarSearchChanged();
+
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeRenamed(string oldBindingGroup, string newBindingGroup)
+        {
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject,
+                oldBindingGroup, newBindingGroup);
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeDeleted(string name, string bindingGroup)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(name), "Control scheme name should not be empty");
+            Debug.Assert(!string.IsNullOrEmpty(bindingGroup), "Binding group should not be empty");
+
+            var asset = m_ActionAssetManager.m_AssetObjectForEditing;
+
+            var bindingMask = InputBinding.MaskByGroup(bindingGroup);
+            var schemeHasBindings = asset.actionMaps.Any(m => m.bindings.Any(b => bindingMask.Matches(ref b)));
+            if (!schemeHasBindings)
+                return;
+
+            ////REVIEW: offer to do nothing and leave all bindings as is?
+            var deleteBindings =
+                EditorUtility.DisplayDialog("Delete Bindings?",
+                    $"Delete bindings for '{name}' as well? If you select 'No', the bindings will only "
+                    + $"be unassigned from the '{name}' control scheme but otherwise left as is. Note that bindings "
+                    + $"that are assigned to '{name}' but also to other control schemes will be left in place either way.",
+                    "Yes", "No");
+
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject, bindingGroup, "",
+                deleteOrphanedBindings: deleteBindings);
+
             ApplyAndReloadTrees();
         }
 
@@ -441,7 +480,6 @@ namespace UnityEngine.InputSystem.Editor
                 // Grab the action for the binding and see if we have an expected control layout
                 // set on it. Pass that on to the control picking machinery.
                 var isCompositePartBinding = item is PartOfCompositeBindingTreeItem;
-                var isCompositeBinding = item is CompositeBindingTreeItem;
                 var actionItem = (isCompositePartBinding ? item.parent.parent : item.parent) as ActionTreeItem;
                 Debug.Assert(actionItem != null);
 
@@ -451,7 +489,7 @@ namespace UnityEngine.InputSystem.Editor
                 // The toolbar may constrain the set of devices we're currently interested in by either
                 // having one specific device selected from the current scheme or having at least a control
                 // scheme selected.
-                var controlPathsToMatch = (IEnumerable<string>)null;
+                IEnumerable<string> controlPathsToMatch;
                 if (m_Toolbar.selectedDeviceRequirement != null)
                 {
                     // Single device selected from set of devices in control scheme.
@@ -478,7 +516,8 @@ namespace UnityEngine.InputSystem.Editor
                         {
                             if (change == InputBindingPropertiesView.k_PathChanged ||
                                 change == InputBindingPropertiesView.k_CompositePartAssignmentChanged ||
-                                change == InputBindingPropertiesView.k_CompositeTypeChanged)
+                                change == InputBindingPropertiesView.k_CompositeTypeChanged ||
+                                change == InputBindingPropertiesView.k_GroupsChanged)
                             {
                                 ApplyAndReloadTrees();
                             }

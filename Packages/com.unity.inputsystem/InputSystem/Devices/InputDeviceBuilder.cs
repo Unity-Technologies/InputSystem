@@ -43,11 +43,13 @@ namespace UnityEngine.InputSystem.Layouts
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
-    internal struct InputDeviceBuilder
+    internal struct InputDeviceBuilder : IDisposable
     {
         public void Setup(InternedString layout, InternedString variants,
             InputDeviceDescription deviceDescription = default)
         {
+            m_LayoutCacheRef = InputControlLayout.CacheRef();
+
             InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
@@ -67,12 +69,16 @@ namespace UnityEngine.InputSystem.Layouts
             return device;
         }
 
-        internal InputDevice m_Device;
+        public void Dispose()
+        {
+            m_LayoutCacheRef.Dispose();
+        }
 
-        // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construct the same Button layout
-        // 256 times for a keyboard.
-        private InputControlLayout.Cache m_LayoutCache;
+        private InputDevice m_Device;
+
+        // Make sure the global layout cache sticks around for at least as long
+        // as the device builder so that we don't load layouts over and over.
+        private InputControlLayout.CacheRefInstance m_LayoutCacheRef;
 
         // Table mapping (lower-cased) control paths to control layouts that contain
         // overrides for the control at the given path.
@@ -725,7 +731,8 @@ namespace UnityEngine.InputSystem.Layouts
 
         private InputControlLayout FindOrLoadLayout(string name)
         {
-            return m_LayoutCache.FindOrLoadLayout(name);
+            Debug.Assert(InputControlLayout.s_CacheInstanceRef > 0, "Should have acquired layout cache reference");
+            return InputControlLayout.cache.FindOrLoadLayout(name);
         }
 
         private static void ComputeStateLayout(InputControl control)
@@ -896,7 +903,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
-        public static RefInstance Ref()
+        internal static RefInstance Ref()
         {
             Debug.Assert(s_Instance.m_Device == null,
                 "InputDeviceBuilder is already in use! Cannot use the builder recursively");
@@ -911,8 +918,12 @@ namespace UnityEngine.InputSystem.Layouts
             public void Dispose()
             {
                 --s_InstanceRef;
-                if (s_InstanceRef == 0)
+                if (s_InstanceRef <= 0)
+                {
+                    s_Instance.Dispose();
                     s_Instance = default;
+                    s_InstanceRef = 0;
+                }
                 else
                     // Make sure we reset when there is an exception.
                     s_Instance.Reset();
