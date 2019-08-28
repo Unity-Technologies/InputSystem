@@ -555,7 +555,7 @@ And then make sure you put extra StateEvents for your HMD on the queue right in 
 ```C#
 
     InputSystem.onEvent +=
-        eventPtr =>
+        (eventPtr, device) =>
         {
             // Can handle events yourself, for example, and then stop them
             // from further processing by marking them as handled.

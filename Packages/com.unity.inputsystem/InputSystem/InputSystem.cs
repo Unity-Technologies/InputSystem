@@ -1463,17 +1463,13 @@ namespace UnityEngine.InputSystem
         /// may be postponed to a subsequent frame).
         ///
         /// As the input system reads events from the buffer one by one, it will trigger this
-        /// callback for each event before then proceeding to process the event. However, if
-        /// any of the callbacks sets <see cref="InputEvent.handled"/> to true, the event will
-        /// be skipped and ignored.
+        /// callback for each event which originates from a recognized device, before then proceeding
+        /// to process the event. However, if any of the callbacks sets <see cref="InputEvent.handled"/>
+        /// to true, the event will be skipped and ignored.
         ///
         /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
         /// Instead, they are consumed in the order they are produced. This means that they
         /// will also surface on this callback in that order.
-        ///
-        /// Note that the callback will be called for any event picked up from the internal
-        /// event buffer. This may include events for devices that have not been created and thus
-        /// may mean that the <see cref="InputDevice"/> parameter to the callback is null.
         ///
         /// <example>
         /// <code>

@@ -11,6 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
 
 #### Actions
