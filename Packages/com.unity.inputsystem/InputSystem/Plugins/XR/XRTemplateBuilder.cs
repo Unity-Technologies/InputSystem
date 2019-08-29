@@ -4,9 +4,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
-#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -97,9 +95,9 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
 #else
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     matchedLayout = "XRController";
-                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
                     matchedLayout = "XRHMD";
 #endif
             }
