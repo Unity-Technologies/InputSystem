@@ -501,7 +501,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Input device representing the foot steps taken by the user as measured by the device playing the content.
     /// </summary>
-    [InputControlLayout(displayName = "StepCounter")]
+    [InputControlLayout(displayName = "Step Counter")]
     public class StepCounter : Sensor
     {
         /// <summary>
