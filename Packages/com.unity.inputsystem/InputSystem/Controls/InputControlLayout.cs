@@ -399,10 +399,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             var arrayNameLength = 0;
             if (lastDigitIndex < path.Length && lastDigitIndex > 0) // Protect against name being all digits.
-            {
-                arrayIndex = arrayIndexAccumulated;
                 arrayNameLength = lastDigitIndex;
-            }
 
             for (var i = 0; i < m_Controls.Length; ++i)
             {
@@ -413,10 +410,13 @@ namespace UnityEngine.InputSystem.Layouts
                 ////FIXME: what this can't handle is "outerArray4/innerArray5"; not sure we care, though
                 // NOTE: This will *not* match something like "touch4/tap". Which is what we want.
                 //       In case there is a ControlItem
-                if (control.isArray && arrayIndex != -1 && arrayNameLength == control.name.length &&
+                if (control.isArray && arrayNameLength > 0 && arrayNameLength == control.name.length &&
                     string.Compare(control.name.ToString(), 0, path, 0, arrayNameLength,
                         StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    arrayIndex = arrayIndexAccumulated;
                     return control;
+                }
             }
 
             return null;
