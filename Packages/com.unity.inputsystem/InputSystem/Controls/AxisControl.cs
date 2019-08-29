@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Controls
     /// Can optionally be configured to perform normalization.
     /// Stored as either a float, a short, a byte, or a single bit.
     /// </remarks>
+    [UnityEngine.Scripting.Preserve]
     public class AxisControl : InputControl<float>
     {
         public enum Clamp

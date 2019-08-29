@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.PS4
     }
 
     [InputControlLayout(stateType = typeof(MoveControllerStatePS4))]
+    [Scripting.Preserve]
     public class MoveControllerPS4 : InputDevice, IHaptics
     {
         public ButtonControl selectButton { get; private set; }
