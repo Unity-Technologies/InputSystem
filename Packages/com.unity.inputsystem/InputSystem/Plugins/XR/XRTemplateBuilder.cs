@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+using UnityEngine.XR;
+#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -87,10 +90,18 @@ namespace UnityEngine.InputSystem.XR
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
+#if UNITY_2019_3_OR_NEWER
+                const InputDeviceCharacteristics controllerCharacteristics = (InputDeviceCharacteristics)(InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller);
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
+                    matchedLayout = "XRHMD";
+                else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
+                    matchedLayout = "XRController";
+#else
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                     matchedLayout = "XRController";
                 else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
                     matchedLayout = "XRHMD";
+#endif
             }
 
             string layoutName = null;

@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+using UnityEngine.XR;
+#endif
 using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
-    static class XRUtilities
+    public static class XRUtilities
     {
         /// <summary>
         /// A simple Regex pattern that allows InputDeviceMatchers to match to any version of the XRInput interface.
@@ -74,7 +77,13 @@ namespace UnityEngine.InputSystem.XR
         public string deviceName;
         public string manufacturer;
         public string serialNumber;
-        public DeviceRole deviceRole;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_2019_3_OR_NEWER
+        public InputDeviceCharacteristics characteristics;
+#else //UNITY_2019_3_OR_NEWER
+        public InputDeviceRole deviceRole;
+#endif //UNITY_2019_3_OR_NEWER
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
@@ -111,13 +120,18 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<WMRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithProduct("(Windows Mixed Reality HMD)|(Acer AH100)")
-                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
+                    .WithProduct("(Windows Mixed Reality HMD)|(Microsoft HoloLens)|(Acer AH100)|(Samsung Windows Mixed Reality 800ZAA)")
+            );
             InputSystem.RegisterLayout<WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
                     .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
-                    .WithManufacturer("(Microsoft)|(WindowsMR)"));
+            );
+            InputSystem.RegisterLayout<HololensHand>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
+                    .WithProduct(@"(^(Hand -))")
+            );
 
             InputSystem.RegisterLayout<OculusHMD>(
                 matches: new InputDeviceMatcher()
