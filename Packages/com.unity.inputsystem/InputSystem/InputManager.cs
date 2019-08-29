@@ -1326,6 +1326,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Clear();
+
+            // Clear timeouts pending on any control on the device.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].control?.device == device)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
@@ -1345,6 +1350,12 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+
+            // Remove pending timeouts on the monitor.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].monitor == monitor &&
+                    m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
@@ -1370,8 +1381,7 @@ namespace UnityEngine.InputSystem
                     && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
                     && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
                 {
-                    ////TODO: leave state empty and compact array lazily on traversal
-                    m_StateChangeMonitorTimeouts.RemoveAt(i);
+                    m_StateChangeMonitorTimeouts[i] = default;
                     break;
                 }
             }

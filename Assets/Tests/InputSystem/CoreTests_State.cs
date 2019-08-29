@@ -946,6 +946,25 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_RemovingMonitorRemovesTimeouts()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.Fail("Should not reach here");
+            });
+        InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
+        InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
+
+        runtime.currentTime = 4;
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanThrowExceptionFromStateChangeMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
