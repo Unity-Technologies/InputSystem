@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive VR headset.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class ViveHMD : XRHMD
     {
         [InputControl]
@@ -75,6 +76,7 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive Wand controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class ViveWand : XRControllerWithRumble
     {
         [InputControl]
@@ -133,6 +135,7 @@ namespace UnityEngine.InputSystem.XR
     /// A Valve Knuckles VR controller.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class KnucklesController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "B",  "Primary"})]
@@ -194,6 +197,7 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive lighthouse.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class ViveLighthouse : InputDevice
     {
         [InputControl]
@@ -219,6 +223,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// An HTC Vive tracker.
     /// </summary>
+    [Scripting.Preserve]
     public class ViveTracker : InputDevice
     {
         [InputControl]
@@ -248,6 +253,7 @@ namespace UnityEngine.InputSystem.XR
     }
 
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class HandedViveTracker : ViveTracker
     {
         [InputControl]

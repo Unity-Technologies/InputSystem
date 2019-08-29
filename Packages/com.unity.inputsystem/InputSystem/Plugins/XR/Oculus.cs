@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.XR
     /// An Oculus VR headset (such as the Oculus Rift series of devices).
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class OculusHMD : XRHMD
     {
         [InputControl]
@@ -52,6 +53,7 @@ namespace UnityEngine.InputSystem.XR
     /// An Oculus Touch controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class OculusTouchController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
@@ -138,6 +140,7 @@ namespace UnityEngine.InputSystem.XR
     }
 
     [InputControlLayout]
+    [Scripting.Preserve]
     public class OculusTrackingReference : InputDevice
     {
         [InputControl]
@@ -164,6 +167,7 @@ namespace UnityEngine.InputSystem.XR
     /// An Oculus Remote controller.
     /// </summary>
 
+    [Scripting.Preserve]
     public class OculusRemote : InputDevice
     {
         [InputControl]

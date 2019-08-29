@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.XR
     /// A head-mounted display powered by Google Daydream.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class DaydreamHMD : XRHMD
     {
         [InputControl]
@@ -51,6 +52,7 @@ namespace UnityEngine.InputSystem.XR
     /// An XR controller powered by Google Daydream.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class DaydreamController : XRController
     {
         [InputControl]

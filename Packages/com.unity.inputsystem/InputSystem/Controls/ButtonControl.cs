@@ -15,6 +15,7 @@ namespace UnityEngine.InputSystem.Controls
     /// doing so brings many benefits through allowing code to flexibly target buttons
     /// and axes the same way.
     /// </remarks>
+    [UnityEngine.Scripting.Preserve]
     public class ButtonControl : AxisControl
     {
         public float pressPoint;

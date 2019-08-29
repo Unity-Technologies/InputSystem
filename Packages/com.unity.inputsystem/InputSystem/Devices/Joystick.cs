@@ -9,10 +9,10 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('J', 'O', 'Y');
 
-        [InputControl(name = "trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction", "Submit" }, bit = (int)Button.Trigger)]
+        [InputControl(name = "trigger", displayName = "Trigger", layout = "Button", usages = new[] { "PrimaryTrigger", "PrimaryAction", "Submit" }, bit = (int)Button.Trigger)]
         public int buttons;
 
-        [InputControl(layout = "Stick", usage = "Primary2DMotion")]
+        [InputControl(layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone")]
         public Vector2 stick;
 
         public enum Button
@@ -40,6 +40,7 @@ namespace UnityEngine.InputSystem
     /// stick and an optional single hatswitch.
     /// </remarks>
     [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }

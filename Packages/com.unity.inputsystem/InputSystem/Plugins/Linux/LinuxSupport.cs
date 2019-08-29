@@ -78,19 +78,19 @@ namespace UnityEngine.InputSystem.Linux
         Count
     }
 
+    // JSON must match JoystickFeatureDefinition in native.
     [Serializable]
     internal struct SDLFeatureDescriptor
     {
         public JoystickFeatureType featureType;
         public int usageHint;
-        public int size;
+        public int featureSize;
         public int offset;
         public int bit;
         public int min;
         public int max;
     }
 
-    //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
     internal class SDLDeviceDescriptor
     {

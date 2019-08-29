@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem.Steam
     /// E.g. a Unity action map called "gameplay" will be looked up as a Steam action set
     /// using the same name "gameplay".
     /// </remarks>
+    [Scripting.Preserve]
     public abstract class SteamController : InputDevice
     {
         internal const string kSteamInterface = "Steam";

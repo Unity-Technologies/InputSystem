@@ -285,9 +285,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitOffset + bitCount <= 8)
             {
                 var byteValue = (byte)value;
-                byteValue >>= (int)bitOffset;
-                var mask = 0xFF >> (8 - (int)bitCount);
-                *(byte*)ptr |= (byte)(byteValue & mask);
+                byteValue <<= (int)bitOffset;
+                var mask = ~((0xFF >> (8 - (int)bitCount)) << (int)bitOffset);
+                *(byte*)ptr = (byte)((*(byte*)ptr & mask) | byteValue);
                 return;
             }
 
@@ -295,9 +295,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitOffset + bitCount <= 16)
             {
                 var shortValue = (ushort)value;
-                shortValue >>= (int)bitOffset;
-                var mask = 0xFFFF >> (16 - (int)bitCount);
-                *(ushort*)ptr |= (ushort)(shortValue & mask);
+                shortValue <<= (int)bitOffset;
+                var mask = ~((0xFFFF >> (16 - (int)bitCount)) << (int)bitOffset);
+                *(ushort*)ptr = (ushort)((*(ushort*)ptr & mask) | shortValue);
                 return;
             }
 
@@ -305,9 +305,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitOffset + bitCount <= 32)
             {
                 var intValue = (uint)value;
-                intValue >>= (int)bitOffset;
-                var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                *(uint*)ptr |= intValue & mask;
+                intValue <<= (int)bitOffset;
+                var mask = ~((0xFFFFFFFF >> (32 - (int)bitCount)) << (int)bitOffset);
+                *(int*)ptr = (int)((*(int*)ptr & mask) | intValue);
                 return;
             }
 
