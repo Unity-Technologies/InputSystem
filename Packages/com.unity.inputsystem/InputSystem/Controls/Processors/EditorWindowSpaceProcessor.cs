@@ -31,12 +31,15 @@ namespace UnityEngine.InputSystem.Processors
                 (EditorApplication.isPlaying && Application.isFocused))
                 return value;
 
-            var command = QueryEditorWindowCoordinatesCommand.Create(value);
-            // Not all pointer devices implement the editor window position IOCTL,
-            // so we try the global mouse device if available.
-            var device = Mouse.current ?? control.device;
-            if (device.ExecuteCommand(ref command) > 0)
-                return command.inOutCoordinates;
+            if (Mouse.s_PlatformMouseDevice != null)
+            {
+                var command = QueryEditorWindowCoordinatesCommand.Create(value);
+                // Not all pointer devices implement the editor window position IOCTL,
+                // so we try the global mouse device if available.
+                if (Mouse.s_PlatformMouseDevice.ExecuteCommand(ref command) > 0)
+                    return command.inOutCoordinates;
+            }
+
             return value;
         }
     }
