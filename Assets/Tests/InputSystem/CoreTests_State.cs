@@ -863,6 +863,38 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromTimeoutCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var timeoutCount = 0;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, time, eventPtr, monitorIndex) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                ++timeoutCount;
+                InputState.AddChangeMonitorTimeout(control, monitor, time + 1.5);
+            });
+
+        InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
+
+        // Trigger first timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(1));
+
+        // Trigger second timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_StateChangeMonitor_CanBeAddedFromMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

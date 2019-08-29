@@ -2684,8 +2684,7 @@ namespace UnityEngine.InputSystem
 
         private void ProcessStateChangeMonitorTimeouts()
         {
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
-            if (timeoutCount == 0)
+            if (m_StateChangeMonitorTimeouts.length == 0)
                 return;
 
             // Go through the list and both trigger expired timers and remove any irrelevant
@@ -2693,7 +2692,7 @@ namespace UnityEngine.InputSystem
             // NOTE: We do not actually release any memory we may have allocated.
             var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
             var remainingTimeoutCount = 0;
-            for (var i = 0; i < timeoutCount; ++i)
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
             {
                 // If we have reset this entry in RemoveStateChangeMonitorTimeouts(),
                 // skip over it and let compaction get rid of it.
