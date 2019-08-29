@@ -78,6 +78,8 @@ namespace UnityEngine.InputSystem.XR
                 return null;
             }
 
+            Debug.Log(description.capabilities);
+
             // Try to parse the XR descriptor.
             XRDeviceDescriptor deviceDescriptor;
             try
@@ -109,6 +111,7 @@ namespace UnityEngine.InputSystem.XR
                     matchedLayout = "XRHMD";
 #endif
             }
+            Debug.Log($"[TOMB] Matched Layout: {matchedLayout}");
 
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
