@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             get
             {
                 Refresh();
-                return s_Cache.table.Values;
+                return InputControlLayout.cache.table.Values;
             }
         }
 
@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Refresh();
                 foreach (var name in s_ControlLayouts)
-                    yield return s_Cache.FindOrLoadLayout(name.ToString());
+                    yield return InputControlLayout.cache.FindOrLoadLayout(name.ToString());
             }
         }
 
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Refresh();
                 foreach (var name in s_DeviceLayouts)
-                    yield return s_Cache.FindOrLoadLayout(name.ToString());
+                    yield return InputControlLayout.cache.FindOrLoadLayout(name.ToString());
             }
         }
 
@@ -71,22 +71,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Refresh();
                 foreach (var name in s_ProductLayouts)
-                    yield return s_Cache.FindOrLoadLayout(name.ToString());
+                    yield return InputControlLayout.cache.FindOrLoadLayout(name.ToString());
             }
-        }
-
-        /// <summary>
-        /// Event that is triggered whenever the layout setup in the system changes.
-        /// </summary>
-        public static event Action onRefresh
-        {
-            add
-            {
-                if (s_RefreshListeners == null)
-                    s_RefreshListeners = new List<Action>();
-                s_RefreshListeners.Add(value);
-            }
-            remove => s_RefreshListeners?.Remove(value);
         }
 
         public static InputControlLayout TryGetLayout(string layoutName)
@@ -95,7 +81,7 @@ namespace UnityEngine.InputSystem.Editor
                 throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
 
             Refresh();
-            return s_Cache.FindOrLoadLayout(layoutName);
+            return InputControlLayout.cache.FindOrLoadLayout(layoutName);
         }
 
         public static Type GetValueType(string layoutName)
@@ -205,7 +191,7 @@ namespace UnityEngine.InputSystem.Editor
         internal static void Clear()
         {
             s_LayoutRegistrationVersion = 0;
-            s_Cache.table?.Clear();
+            s_LayoutCacheRef.Dispose();
             s_Usages.Clear();
             s_ControlLayouts.Clear();
             s_DeviceLayouts.Clear();
@@ -223,6 +209,15 @@ namespace UnityEngine.InputSystem.Editor
 
             Clear();
 
+            if (!s_LayoutCacheRef.valid)
+            {
+                // In the editor, we keep a permanent reference on the global layout
+                // cache. Means that in the editor, we always have all layouts loaded in full
+                // at all times whereas in the player, we load layouts only while we need
+                // them and then release them again.
+                s_LayoutCacheRef = InputControlLayout.CacheRef();
+            }
+
             var layoutNames = new List<string>();
             manager.ListControlLayouts(layoutNames);
 
@@ -239,7 +234,7 @@ namespace UnityEngine.InputSystem.Editor
             // Load and store all layouts.
             foreach (var layoutName in layoutNames)
             {
-                var layout = s_Cache.FindOrLoadLayout(layoutName);
+                var layout = InputControlLayout.cache.FindOrLoadLayout(layoutName);
                 ScanLayout(layout);
 
                 if (layout.isControlLayout)
@@ -254,7 +249,7 @@ namespace UnityEngine.InputSystem.Editor
             // a layout that has one over to the product list.
             foreach (var name in s_DeviceLayouts)
             {
-                var layout = s_Cache.FindOrLoadLayout(name);
+                var layout = InputControlLayout.cache.FindOrLoadLayout(name);
 
                 if (layout.m_BaseLayouts.length > 1)
                     throw new NotImplementedException();
@@ -268,7 +263,7 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     }
 
-                    var baseLayout = s_Cache.FindOrLoadLayout(baseLayoutName);
+                    var baseLayout = InputControlLayout.cache.FindOrLoadLayout(baseLayoutName);
                     if (baseLayout.m_BaseLayouts.length > 1)
                         throw new NotImplementedException();
                     baseLayoutName = baseLayout.baseLayouts.FirstOrDefault();
@@ -279,15 +274,10 @@ namespace UnityEngine.InputSystem.Editor
             s_DeviceLayouts.ExceptWith(s_ProductLayouts);
 
             s_LayoutRegistrationVersion = manager.m_LayoutRegistrationVersion;
-
-            if (s_RefreshListeners != null)
-                foreach (var listener in s_RefreshListeners)
-                    listener();
         }
 
         private static int s_LayoutRegistrationVersion;
-        private static InputControlLayout.Cache s_Cache;
-        private static List<Action> s_RefreshListeners;
+        private static InputControlLayout.CacheRefInstance s_LayoutCacheRef;
 
         private static readonly HashSet<InternedString> s_ControlLayouts = new HashSet<InternedString>();
         private static readonly HashSet<InternedString> s_DeviceLayouts = new HashSet<InternedString>();

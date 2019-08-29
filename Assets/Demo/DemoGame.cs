@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
@@ -311,7 +312,7 @@ public class DemoGame : MonoBehaviour
     /// switch from one or the other. In that case, while we will stay on the Gamepad control scheme,
     /// we will still unassign the previously used gamepad from the player and assign the newly used one.
     /// </remarks>
-    private void OnUnpairedInputDeviceUsed(InputControl control)
+    private void OnUnpairedInputDeviceUsed(InputControl control, InputEventPtr eventPtr)
     {
         // We should only listen for unpaired device activity when we're either in the lobby
         // or in single-player mode. In a multi-player game, we turn it off and simply ignore whatever

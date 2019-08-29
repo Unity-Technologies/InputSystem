@@ -18,8 +18,20 @@ namespace UnityEngine.InputSystem.XInput
     /// will not be available.
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller")]
+    [Scripting.Preserve]
     public class XInputController : Gamepad
     {
+        // Change the display names for the buttons to conform to Xbox conventions.
+        [InputControl(name = "buttonSouth", displayName = "A")]
+        [InputControl(name = "buttonEast", displayName = "B")]
+        [InputControl(name = "buttonWest", displayName = "X")]
+        [InputControl(name = "buttonNorth", displayName = "Y")]
+        [InputControl(name = "leftShoulder", displayName = "Left Bumper")]
+        [InputControl(name = "rightShoulder", displayName = "Right Bumper")]
+        // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
+        [InputControl(name = "start", displayName = "Menu")]
+        [InputControl(name = "select", displayName = "View")]
+
         public ButtonControl menu { get; private set; }
         public ButtonControl view { get; private set; }
 

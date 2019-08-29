@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 // NOTE: Unfortunately, System.Version doesn't use semantic versioning so we can't include
 //       "-preview" suffixes here.
 
-[assembly: AssemblyVersion("0.9.4")]
+[assembly: AssemblyVersion("0.9.5")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.TestFramework")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]

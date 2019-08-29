@@ -253,10 +253,10 @@ internal class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("public ButtonControl buttonAction"));
         Assert.That(generatedCode, Contains.Substring("public AxisControl axisAction"));
         Assert.That(generatedCode, Contains.Substring("public Vector2Control vector2Action"));
-        Assert.That(generatedCode, Contains.Substring("stickAction = builder.GetControl<StickControl>(\"stickAction\");"));
-        Assert.That(generatedCode, Contains.Substring("buttonAction = builder.GetControl<ButtonControl>(\"buttonAction\");"));
-        Assert.That(generatedCode, Contains.Substring("axisAction = builder.GetControl<AxisControl>(\"axisAction\");"));
-        Assert.That(generatedCode, Contains.Substring("vector2Action = builder.GetControl<Vector2Control>(\"vector2Action\");"));
+        Assert.That(generatedCode, Contains.Substring("stickAction = GetChildControl<StickControl>(\"stickAction\");"));
+        Assert.That(generatedCode, Contains.Substring("buttonAction = GetChildControl<ButtonControl>(\"buttonAction\");"));
+        Assert.That(generatedCode, Contains.Substring("axisAction = GetChildControl<AxisControl>(\"axisAction\");"));
+        Assert.That(generatedCode, Contains.Substring("vector2Action = GetChildControl<Vector2Control>(\"vector2Action\");"));
         Assert.That(generatedCode, Contains.Substring("protected override void ResolveSteamActions(ISteamControllerAPI api)"));
         Assert.That(generatedCode, Contains.Substring("map1SetHandle = api.GetActionSetHandle(\"map1\");"));
         Assert.That(generatedCode, Contains.Substring("map2SetHandle = api.GetActionSetHandle(\"map2\");"));

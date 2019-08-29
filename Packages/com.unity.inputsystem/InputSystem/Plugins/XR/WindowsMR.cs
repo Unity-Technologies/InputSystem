@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR headset.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class WMRHMD : XRHMD
     {
         [InputControl]
@@ -52,6 +53,7 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class WMRSpatialController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis" })]

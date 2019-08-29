@@ -13,13 +13,21 @@ namespace UnityEngine.InputSystem.Controls
     /// Can optionally be configured to perform normalization.
     /// Stored as either a float, a short, a byte, or a single bit.
     /// </remarks>
+    [UnityEngine.Scripting.Preserve]
     public class AxisControl : InputControl<float>
     {
+        public enum Clamp
+        {
+            None = 0,
+            BeforeNormalize = 1,
+            AfterNormalize = 2,
+            ToConstantBeforeNormalize = 3,
+        }
+
         // These can be added as processors but they are so common that we
         // build the functionality right into AxisControl to save us an
         // additional object and an additional virtual call.
-        public bool clamp; // If true, force clamping to [min..max]
-        public bool clampToConstant; // If true, set value to clampConstant when incoming value is outside [min..max]
+        public Clamp clamp;
         public float clampMin;
         public float clampMax;
         public float clampConstant;
@@ -37,15 +45,17 @@ namespace UnityEngine.InputSystem.Controls
         {
             if (scale)
                 value *= scaleFactor;
-            if (clampToConstant)
+            if (clamp == Clamp.ToConstantBeforeNormalize)
             {
                 if (value < clampMin || value > clampMax)
                     value = clampConstant;
             }
-            else if (clamp)
+            else if (clamp == Clamp.BeforeNormalize)
                 value = Mathf.Clamp(value, clampMin, clampMax);
             if (normalize)
                 value = NormalizeProcessor.Normalize(value, normalizeMin, normalizeMax, normalizeZero);
+            if (clamp == Clamp.AfterNormalize)
+                value = Mathf.Clamp(value, clampMin, clampMax);
             if (invert)
                 value *= -1.0f;
             return value;

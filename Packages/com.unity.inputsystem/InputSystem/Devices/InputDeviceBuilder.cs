@@ -43,11 +43,13 @@ namespace UnityEngine.InputSystem.Layouts
     /// Existing controls may be reused while at the same time the hierarchy and even the device instance
     /// itself may change.
     /// </remarks>
-    internal struct InputDeviceBuilder
+    internal struct InputDeviceBuilder : IDisposable
     {
         public void Setup(InternedString layout, InternedString variants,
             InputDeviceDescription deviceDescription = default)
         {
+            m_LayoutCacheRef = InputControlLayout.CacheRef();
+
             InstantiateLayout(layout, variants, new InternedString(), null);
             FinalizeControlHierarchy();
 
@@ -67,12 +69,16 @@ namespace UnityEngine.InputSystem.Layouts
             return device;
         }
 
-        internal InputDevice m_Device;
+        public void Dispose()
+        {
+            m_LayoutCacheRef.Dispose();
+        }
 
-        // We construct layouts lazily as we go but keep them cached while we
-        // set up hierarchies so that we don't re-construct the same Button layout
-        // 256 times for a keyboard.
-        private InputControlLayout.Cache m_LayoutCache;
+        private InputDevice m_Device;
+
+        // Make sure the global layout cache sticks around for at least as long
+        // as the device builder so that we don't load layouts over and over.
+        private InputControlLayout.CacheRefInstance m_LayoutCacheRef;
 
         // Table mapping (lower-cased) control paths to control layouts that contain
         // overrides for the control at the given path.
@@ -98,9 +104,10 @@ namespace UnityEngine.InputSystem.Layouts
             return InstantiateLayout(layoutInstance, variants, name, parent);
         }
 
-        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variants, InternedString name, InputControl parent)
+        private InputControl InstantiateLayout(InputControlLayout layout, InternedString variants, InternedString name,
+            InputControl parent)
         {
-            Debug.Assert(layout.type != null);
+            Debug.Assert(layout.type != null, "Layout has no type set on it");
 
             // No, so create a new control.
             var controlObject = Activator.CreateInstance(layout.type);
@@ -225,7 +232,8 @@ namespace UnityEngine.InputSystem.Layouts
 
         private const uint kSizeForControlUsingStateFromOtherControl = InputStateBlock.InvalidOffset;
 
-        private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent, ref bool haveChildrenUsingStateFromOtherControls)
+        private void AddChildControls(InputControlLayout layout, InternedString variants, InputControl parent,
+            ref bool haveChildrenUsingStateFromOtherControls)
         {
             var controlLayouts = layout.m_Controls;
             if (controlLayouts == null)
@@ -250,7 +258,7 @@ namespace UnityEngine.InputSystem.Layouts
                             $"Control '{controlLayouts[i].name}' in layout '{layout.name}' is modifying the child of another control but is marked as an array");
 
                     haveControlLayoutWithPath = true;
-                    InsertChildControlOverrides(parent, ref controlLayouts[i]);
+                    InsertChildControlOverride(parent, ref controlLayouts[i]);
                     continue;
                 }
 
@@ -305,7 +313,7 @@ namespace UnityEngine.InputSystem.Layouts
                     {
                         var name = controlLayout.name + n;
                         var control = AddChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
-                            ref controlLayout, childIndex, nameOverride: name);
+                            controlLayout, childIndex, nameOverride: name);
                         ++childIndex;
 
                         // Adjust offset, if the control uses explicit offsets.
@@ -316,7 +324,7 @@ namespace UnityEngine.InputSystem.Layouts
                 else
                 {
                     AddChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
-                        ref controlLayout, childIndex);
+                        controlLayout, childIndex);
                     ++childIndex;
                 }
             }
@@ -324,11 +332,12 @@ namespace UnityEngine.InputSystem.Layouts
             parent.m_ChildCount = childCount;
             parent.m_ChildStartIndex = firstChildIndex;
 
-            ////TODO: replace the entire post-creation modification logic here with using m_ChildControlOverrides
-            ////      (note that we have to *merge* into the table; if there's already overrides, only replace properties that haven't been set)
-            ////      (however, this will also require moving the child insertion logic somewhere else)
-
-            // Apply control modifications from control layouts with paths.
+            ////REVIEW: there's probably a better way to do this based on m_ChildControlOverrides
+            // We apply all overrides through m_ChildControlOverrides. However, there may be a control item
+            // that *adds* a child control to another existing control. This will look the same as overriding
+            // properties on a child control just that in this case the child control doesn't exist.
+            //
+            // Go through all the controls and check for ones that need to be added.
             if (haveControlLayoutWithPath)
             {
                 for (var i = 0; i < controlLayouts.Length; ++i)
@@ -342,7 +351,7 @@ namespace UnityEngine.InputSystem.Layouts
                     if (!controlLayout.variants.IsEmpty() && controlLayout.variants != variants)
                         continue;
 
-                    ModifyChildControl(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
+                    AddChildControlIfMissing(layout, variants, parent, ref haveChildrenUsingStateFromOtherControls,
                         ref controlLayout);
                 }
             }
@@ -350,7 +359,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         private InputControl AddChildControl(InputControlLayout layout, InternedString variants, InputControl parent,
             ref bool haveChildrenUsingStateFromOtherControls,
-            ref InputControlLayout.ControlItem controlItem,
+            InputControlLayout.ControlItem controlItem,
             int childIndex, string nameOverride = null)
         {
             var name = nameOverride ?? controlItem.name;
@@ -361,20 +370,17 @@ namespace UnityEngine.InputSystem.Layouts
                 throw new InvalidOperationException($"Layout has not been set on control '{controlItem.name}' in '{layout.name}'");
 
             // See if there is an override for the control.
-            InputControlLayout.ControlItem? controlOverride = null;
             if (m_ChildControlOverrides != null)
             {
                 var path = $"{parent.path}/{name}";
                 var pathLowerCase = path.ToLower();
 
-                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out var match))
-                    controlOverride = match;
+                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out var controlOverride))
+                    controlItem = controlOverride.Merge(controlItem);
             }
 
             // Get name of layout to use for control.
             var layoutName = controlItem.layout;
-            if (controlOverride != null && !controlOverride.Value.layout.IsEmpty())
-                layoutName = controlOverride.Value.layout;
 
             // Create control.
             InputControl control;
@@ -441,7 +447,7 @@ namespace UnityEngine.InputSystem.Layouts
             ////        of successive re-allocations
 
             // Add usages.
-            var usages = controlOverride?.usages ?? controlItem.usages;
+            var usages = controlItem.usages;
             if (usages.Count > 0)
             {
                 var usageCount = usages.Count;
@@ -476,7 +482,7 @@ namespace UnityEngine.InputSystem.Layouts
             return control;
         }
 
-        private void InsertChildControlOverrides(InputControl parent, ref InputControlLayout.ControlItem controlItem)
+        private void InsertChildControlOverride(InputControl parent, ref InputControlLayout.ControlItem controlItem)
         {
             if (m_ChildControlOverrides == null)
                 m_ChildControlOverrides = new Dictionary<string, InputControlLayout.ControlItem>();
@@ -493,87 +499,34 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             // Yes, there's existing overrides so we have to merge.
+            // NOTE: The existing override's properties take precedence here. This is because
+            //       the override has been established from higher up in the layout hierarchy.
             existingOverrides = existingOverrides.Merge(controlItem);
             m_ChildControlOverrides[pathLowerCase] = existingOverrides;
         }
 
-        private void ModifyChildControl(InputControlLayout layout, InternedString variants, InputControl parent,
+        private void AddChildControlIfMissing(InputControlLayout layout, InternedString variants, InputControl parent,
             ref bool haveChildrenUsingStateFromOtherControls,
             ref InputControlLayout.ControlItem controlItem)
         {
             ////TODO: support arrays (we may modify an entire array in bulk)
 
-            // Controls layout themselves as we come back up the hierarchy. However, when we
-            // apply layout modifications reaching *into* the hierarchy, we need to retrigger
-            // layouting on their parents.
-            var haveChangedLayoutOfParent = false;
-
             // Find the child control.
             var child = InputControlPath.TryFindChild(parent, controlItem.name);
-            if (child == null)
-            {
-                // We're adding a child somewhere in the existing hierarchy. This is a tricky
-                // case as we have to potentially shift indices around in the hierarchy to make
-                // room for the new control.
+            if (child != null)
+                return;
 
-                ////TODO: this path does not support recovering existing controls? does it matter?
+            // We're adding a child somewhere in the existing hierarchy. This is a tricky
+            // case as we have to potentially shift indices around in the hierarchy to make
+            // room for the new control.
 
-                child = InsertChildControl(layout, variants, parent,
-                    ref haveChildrenUsingStateFromOtherControls, ref controlItem);
-                haveChangedLayoutOfParent = true;
-            }
-            else
-            {
-                // Apply modifications.
-                if (controlItem.sizeInBits != 0 &&
-                    child.m_StateBlock.sizeInBits != controlItem.sizeInBits)
-                {
-                    child.m_StateBlock.sizeInBits = controlItem.sizeInBits;
-                }
-                if (controlItem.format != 0 && child.m_StateBlock.format != controlItem.format)
-                {
-                    SetFormat(child, controlItem);
-                    haveChangedLayoutOfParent = true;
-                }
-                ////REVIEW: ATM, when you move a child with a fixed offset, we only move the child
-                ////        and don't move the parent or siblings. What this means is that if you move
-                ////        leftStick/x, for example, leftStick stays put. ATM you have to move *all*
-                ////        controls that are part of a chain manually. Not sure what the best behavior
-                ////        is. If we opt to move parents along with children, we have to make sure we
-                ////        are not colliding with any other relocations of children (e.g. if you move
-                ////        both leftStick/x and leftStick/y, leftStick itself should move only once and
-                ////        not at all if there indeed is a leftStick control layout with an offset;
-                ////        so, it'd get quite complicated)
-                if (controlItem.offset != InputStateBlock.InvalidOffset)
-                    child.m_StateBlock.byteOffset = controlItem.offset;
-                if (controlItem.bit != InputStateBlock.InvalidOffset)
-                    child.m_StateBlock.bitOffset = controlItem.bit;
-                if (controlItem.processors.Count > 0)
-                    AddProcessors(child, ref controlItem, layout.name);
-                ////REVIEW: ATM parameters applied using this path add on top instead of just overriding existing parameters
-                if (controlItem.parameters.Count > 0)
-                    NamedValue.ApplyAllToObject(child, controlItem.parameters);
-                if (!string.IsNullOrEmpty(controlItem.displayName))
-                    child.m_DisplayNameFromLayout = controlItem.displayName;
-                if (!controlItem.defaultState.isEmpty)
-                {
-                    child.m_DefaultValue = controlItem.defaultState;
-                    m_Device.hasControlsWithDefaultState = true;
-                }
-                if (!controlItem.minValue.isEmpty)
-                    child.m_MinValue = controlItem.minValue;
-                if (!controlItem.maxValue.isEmpty)
-                    child.m_MaxValue = controlItem.maxValue;
+            ////TODO: this path does not support recovering existing controls? does it matter?
 
-                ////TODO: other modifications
-            }
+            child = InsertChildControl(layout, variants, parent,
+                ref haveChildrenUsingStateFromOtherControls, ref controlItem);
 
             // Apply layout change.
-            ////REVIEW: not sure what's better here; trigger this immediately means we may trigger
-            ////        it a number of times on the same parent but doing it as a final pass would
-            ////        require either collecting the necessary parents or doing another pass through
-            ////        the list of control layouts
-            if (haveChangedLayoutOfParent && !ReferenceEquals(child.parent, parent))
+            if (!ReferenceEquals(child.parent, parent))
                 ComputeStateLayout(child.parent);
         }
 
@@ -587,7 +540,7 @@ namespace UnityEngine.InputSystem.Layouts
             var indexOfSlash = path.LastIndexOf('/');
             if (indexOfSlash == -1)
                 throw new InvalidOperationException("InsertChildControl has to be called with a slash-separated path");
-            Debug.Assert(indexOfSlash != 0);
+            Debug.Assert(indexOfSlash != 0, "Could not find slash in path");
             var immediateParentPath = path.Substring(0, indexOfSlash);
             var immediateParent = InputControlPath.TryFindChild(parent, immediateParentPath);
             if (immediateParent == null)
@@ -616,7 +569,7 @@ namespace UnityEngine.InputSystem.Layouts
             // NOTE: This may *add several* controls depending on the layout of the control we are inserting.
             //       The children will be appended to the child array.
             var control = AddChildControl(layout, variant, immediateParent,
-                ref haveChildrenUsingStateFromOtherControls, ref controlItem, childIndex, controlName);
+                ref haveChildrenUsingStateFromOtherControls, controlItem, childIndex, controlName);
 
             return control;
         }
@@ -725,7 +678,8 @@ namespace UnityEngine.InputSystem.Layouts
 
         private InputControlLayout FindOrLoadLayout(string name)
         {
-            return m_LayoutCache.FindOrLoadLayout(name);
+            Debug.Assert(InputControlLayout.s_CacheInstanceRef > 0, "Should have acquired layout cache reference");
+            return InputControlLayout.cache.FindOrLoadLayout(name);
         }
 
         private static void ComputeStateLayout(InputControl control)
@@ -758,7 +712,7 @@ namespace UnityEngine.InputSystem.Layouts
             var firstUnfixedByteOffset = 0u;
             foreach (var child in children)
             {
-                Debug.Assert(child.m_StateBlock.sizeInBits != 0);
+                Debug.Assert(child.m_StateBlock.sizeInBits != 0, "Size of state block not set on child");
 
                 // Skip children using state from other controls.
                 if (child.m_StateBlock.sizeInBits == kSizeForControlUsingStateFromOtherControl)
@@ -896,7 +850,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
-        public static RefInstance Ref()
+        internal static RefInstance Ref()
         {
             Debug.Assert(s_Instance.m_Device == null,
                 "InputDeviceBuilder is already in use! Cannot use the builder recursively");
@@ -911,8 +865,12 @@ namespace UnityEngine.InputSystem.Layouts
             public void Dispose()
             {
                 --s_InstanceRef;
-                if (s_InstanceRef == 0)
+                if (s_InstanceRef <= 0)
+                {
+                    s_Instance.Dispose();
                     s_Instance = default;
+                    s_InstanceRef = 0;
+                }
                 else
                     // Make sure we reset when there is an exception.
                     s_Instance.Reset();

@@ -7,12 +7,51 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.9.4-preview] - 2019-8-20
+## [0.9.5-preview] - 2019-8-29
 
 ### Fixed
-### Actions
+
+- Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
+- Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Fixed using the input system in il2cpp when managed stripping level is set higher then "Low".
+- Device debugger window will still show when reading from specific controls throws exceptions.
+- Offsets and sizes for elements on Linux joysticks are now computed correctly.
+- Joysticks now have a deadzone processor on the stick itself.
+- Up/down/left/right on sticks are now deadzoned just like X and Y on sticks are.
+- Removed toplevel `X` and `Y` controls on HIDs when there is a `Stick/X` and `Stick/Y` added for the device.
+- HID fallback can now deal with sticks that have X and Y controls of different sizes and sitting in non-contiguous locations in the HID input report.
+- Button 1 on HID joysticks will now correctly come out as the `trigger` control. Previously, the trigger control on the joystick was left pointing to random state.
+
+#### Actions
+
+- Binding paths now show the same way in the action editor UI as they do in the control picker.
+  * For example, where before a binding to `<XInputController>/buttonSouth` was shown as `rightShoulder [XInputController]`, the same binding will now show as `A [Xbox Controller]`.
+- When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
+- When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
+- Control scheme names can no longer be set to empty strings.
+- `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
+  * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+- NullReferenceExceptions during event processing from `RebindingOperation`.
+
 ### Changed
+
+- `InputUser.onUnpairedDeviceUsed` now receives a 2nd argument which is the event that triggered the callback.
+  * Also, the callback is now triggered __BEFORE__ the given event is processed rather than after the event has already been written to the device. This allows updating the pairing state of the system before input is processed.
+  * In practice, this means that, for example, if the user switches from keyboard&mouse to gamepad, the initial input that triggered the switch will get picked up right away.
+- `InputControlPath.ToHumanReadableString` now takes display names from registered `InputControlLayout` instances into account.
+  * This means that the method can now be used to generate strings to display in rebinding UIs.
+- `AxisControl.clamp` is now an enum-valued property rather than a bool. Can now perform clamping *before* normalization.
+
+#### Actions
+
+- When switching devices/controls on actions, the system will no longer subsequently force an initial state check on __all__ actions. Instead, every time an action's bindings get re-resolved, the system will simply cancel all on-going actions and then re-enable them the same way it would happen by manually calling `InputAction.Enable`.
+- Removed non-functional `InputControlScheme.baseScheme` API and `basedOn` serialized property. This was never fully implemented.
+
 ### Added
+
+- Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
+  * This information is helpful for us to debug problems related to specific devices.
+- If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
 
 ## [0.9.3-preview] - 2019-8-15
 

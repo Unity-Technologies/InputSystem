@@ -20,7 +20,7 @@ From the list, select the latest "Input System" package and install it.
 
 By default, Unity's classic input system is active and support for the new input system is inactive. This is to allow existing Unity projects to continue to function as is.
 
-To fully switch from the old input system to the new input system for a project, go into "Edit >> Project Settings... >> Player" and change "Active Input Handling" from "Input Manager" to "Input System (Preview)".
+To fully switch from the old input system to the new input system for a project, go into "Edit >> Project Settings... >> Player" and change "Active Input Handling" from "Input Manager" to "Input System Package" (or "Input System (Preview)" in 2019.2 or older).
 
 ![Switch Active Input Handling](Images/ActiveInputHandling.png)
 

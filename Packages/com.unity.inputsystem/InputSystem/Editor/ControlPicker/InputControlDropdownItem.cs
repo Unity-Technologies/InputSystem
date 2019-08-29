@@ -10,6 +10,7 @@ namespace UnityEngine.InputSystem.Editor
         protected string m_ControlPath;
         protected string m_Device;
         protected string m_Usage;
+        protected bool m_Searchable;
 
         public string controlPath => m_ControlPath;
 
@@ -26,7 +27,23 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public override string searchableName => m_SearchableName ?? string.Empty;
+        public override string searchableName
+        {
+            get
+            {
+                // ToHumanReadableString is expensive, especially given that we build the whole tree
+                // every time the control picker comes up. Build searchable names only on demand
+                // to save some time.
+                if (m_SearchableName == null)
+                {
+                    if (m_Searchable)
+                        m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+                    else
+                        m_SearchableName = string.Empty;
+                }
+                return m_SearchableName;
+            }
+        }
 
         protected InputControlDropdownItem(string name)
             : base(name) {}
@@ -54,7 +71,7 @@ namespace UnityEngine.InputSystem.Editor
             m_Device = "*";
             m_ControlPath = usage;
             id = controlPathWithDevice.GetHashCode();
-            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+            m_Searchable = true;
         }
     }
 
@@ -68,8 +85,7 @@ namespace UnityEngine.InputSystem.Editor
             if (usage != null)
                 name += " (" + usage + ")";
             id = name.GetHashCode();
-            if (searchable)
-                m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+            m_Searchable = searchable;
         }
     }
 
@@ -80,6 +96,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_Device = device;
             m_Usage = usage;
+            m_Searchable = searchable;
 
             if (parent != null)
                 m_ControlPath = $"{parent.controlPath}/{controlName}";
@@ -90,9 +107,6 @@ namespace UnityEngine.InputSystem.Editor
 
             id = controlPathWithDevice.GetHashCode();
             indent = parent?.indent + 1 ?? 0;
-
-            if (searchable)
-                m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 }

@@ -8,20 +8,17 @@ The following devices are supported in a way that does not require recognition o
 
 |Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox|PS4|Switch|WebGL|
 |------|-------|---|-----|---|-------|---|----|---|------|-----|
-|Mouse|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
-|Keyboard|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
-|Pen|Yes|No(1)|No|No(2)|Yes|Yes|No|No|No|No|
-|Touchscreen|Yes|No|No|Yes|Yes|Yes|No|No|No(4)|No|
-|Gyroscope|No|No|No|No|Yes|Yes|No|No(5)|No|No|
-|Accelerometer|No|No|No|No|Yes|Yes|No|No(5)|No|No|
-|Compass|No|No|No|No|Yes|Yes|No|No|No|No|
-|Joystick(3)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|Yes|
+|[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
+|[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
+|[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|
+|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|No|No|No|No|
+|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No (3)|No|No|
+|[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|Yes|
 
-    (1) Tablet support for Mac is planned for 2020.1.
-    (2) Tablet support for UWP is planned for 2019.3.
-    (3) Joysticks are supported as generic HIDs ...
-    (4) Touchscreen support for Switch is planned for 2019.3.
-    (5) The gyro/accelerometer in the PS4 controller is supported but is built
+    (1) Tablet support for Mac is coming in Unity 2020.1.
+    (2) Joysticks are supported as generic HIDs (See "Other Gamepads,
+        Joysticks and Racing Wheels" below).
+    (3) The gyro/accelerometer in the PS4 controller is supported but is built
         directly into the gamepad and not represented as a separate Gyroscope
         device.
 
@@ -29,19 +26,20 @@ The following devices are supported in a way that does not require recognition o
 
 |Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox|PS4|Switch|WebGL|
 |------|-------|---|-----|---|-------|---|----|---|------|-----|
-|Xbox 360(4)|Yes|Yes(3)|Yes|Yes|No|No|Yes|No|No|Sometimes(2)|
-|Xbox One|Yes(1)|Yes(3)|Yes(1)|Yes|Yes(1)|No|Yes|No|No|Sometimes(2)|
-|PS4|Yes(5)|Yes(5)|Yes(5)|Yes(5)|Yes(5)|No|No|Yes|No|Sometimes(2)|
-|Switch|Yes|Yes|Yes|Yes|No|No|No|No|Yes|Sometimes(2)|
+|Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|Yes|No|No|Sometimes (2)|
+|Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|No|Yes|No|No|Sometimes (2)|
+|PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|No|No|Yes|No|Sometimes (2)|
+|Switch|Yes|Yes|Yes|Yes|No|No|No|No|Yes|Sometimes (2)|
 
     (1) The trigger motors on the Xbox One controller are only supported on
         UWP and Xbox at the moment.
     (2) WebGL support varies wildly between browsers, devices, and OSes.
     (3) XInput controllers on Mac currently require the installation of the
-        TattieBogle Xbox 360 controller driver which can be found at
-        https://github.com/360Controller/360Controller. However, the latest
-        generation of Xbox One controllers are natively supported on Macs as HID devices
-        when connected via Bluetooth.
+        Xbox Controller Driver for macOS which can be found at
+        https://github.com/360Controller/360Controller. Only USB connections are
+        supported, no wireless dongles. However, the latest generation of Xbox One
+        controllers natively supported Bluetooth, and are natively supported on Macs
+        as HID devices without any additional driver when connected via Bluetooth.
     (4) This includes any XInput-compatible device.
     (5) We do not support the gyro/accelerometer on PS4 controllers on platforms
         other than the PS4 at the moment. Also, on such platforms, we only support
