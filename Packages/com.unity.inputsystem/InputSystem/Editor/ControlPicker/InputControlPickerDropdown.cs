@@ -313,7 +313,8 @@ namespace UnityEngine.InputSystem.Editor
                 // If the key has a display name that differs from the key name, show it in the UI.
                 var displayName = key.m_DisplayNameFromLayout;
                 var keyDisplayName = key.displayName;
-                if (keyDisplayName.All(x => x.IsPrintable()) && keyDisplayName != key.name)
+                if (keyDisplayName.All(x => x.IsPrintable()) && string.Compare(keyDisplayName, displayName,
+                    StringComparison.InvariantCultureIgnoreCase) != 0)
                     displayName = $"{displayName} (Current Layout: {key.displayName})";
 
                 var item = new ControlDropdownItem(null, key.name, displayName,
