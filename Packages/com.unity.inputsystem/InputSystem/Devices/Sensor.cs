@@ -300,7 +300,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
-        [InputControl(displayName = "Magnetic Field")]
+        [InputControl(displayName = "Magnetic Field", noisy = true)]
         public Vector3Control magneticField { get; private set; }
 
         public static MagneticFieldSensor current { get; private set; }
@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Light level in SI lux units.
         /// </summary>
-        [InputControl(displayName = "Light Level")]
+        [InputControl(displayName = "Light Level", noisy = true)]
         public AxisControl lightLevel { get; private set; }
 
         public static LightSensor current { get; private set; }
@@ -368,7 +368,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Atmospheric pressure in hPa (millibar).
         /// </summary>
-        [InputControl(displayName = "Atmospheric Pressure")]
+        [InputControl(displayName = "Atmospheric Pressure", noisy = true)]
         public AxisControl atmosphericPressure { get; private set; }
 
         public static PressureSensor current { get; private set; }
@@ -405,7 +405,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Proximity sensor distance measured in centimeters.
         /// </summary>
-        [InputControl(displayName = "Distance")]
+        [InputControl(displayName = "Distance", noisy = true)]
         public AxisControl distance { get; private set; }
 
         public static ProximitySensor current { get; private set; }
@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Relative ambient air humidity in percent.
         /// </summary>
-        [InputControl(displayName = "Relative Humidity")]
+        [InputControl(displayName = "Relative Humidity", noisy = true)]
         public AxisControl relativeHumidity { get; private set; }
 
         public static HumiditySensor current { get; private set; }
@@ -473,7 +473,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Temperature in degree Celsius.
         /// </summary>
-        [InputControl(displayName = "Ambient Temperature")]
+        [InputControl(displayName = "Ambient Temperature", noisy = true)]
         public AxisControl ambientTemperature { get; private set; }
 
         public static AmbientTemperatureSensor current { get; private set; }
@@ -507,7 +507,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The number of steps taken by the user since the last reboot while activated.
         /// </summary>
-        [InputControl(displayName = "Step Counter")]
+        [InputControl(displayName = "Step Counter", noisy = true)]
         public IntegerControl stepCounter { get; private set; }
 
         public static StepCounter current { get; private set; }
