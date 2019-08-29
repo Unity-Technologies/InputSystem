@@ -191,6 +191,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputUser.actions"/>
         public InputActionAsset actions
         {
+            ////FIXME: this may return the wrong set of action if called before OnEnable
             get => m_Actions;
             set
             {

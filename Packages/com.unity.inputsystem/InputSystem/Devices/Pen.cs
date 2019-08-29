@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(8)]
         public Vector2 delta;
 
-        [InputControl(layout = "Vector2", usage = "Tilt")]
+        [InputControl(layout = "Vector2", displayName = "Tilt", usage = "Tilt")]
         [FieldOffset(16)]
         public Vector2 tilt;
 
@@ -40,18 +40,18 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(24)]
         public float pressure;
 
-        [InputControl(layout = "Axis", usage = "Twist")]
+        [InputControl(layout = "Axis", displayName = "Twist", usage = "Twist")]
         [FieldOffset(28)]
         public float twist;
 
-        [InputControl(name = "tip", layout = "Button", bit = (int)PenButton.Tip, usage = "PrimaryAction")]
+        [InputControl(name = "tip", displayName = "Tip", layout = "Button", bit = (int)PenButton.Tip, usage = "PrimaryAction")]
         [InputControl(name = "press", useStateFrom = "tip", synthetic = true, usages = new string[0])]
-        [InputControl(name = "eraser", layout = "Button", bit = (int)PenButton.Eraser)]
-        [InputControl(name = "inRange", layout = "Button", bit = (int)PenButton.InRange, synthetic = true)]
-        [InputControl(name = "barrel1", layout = "Button", bit = (int)PenButton.BarrelFirst, alias = "barrelFirst", usage = "SecondaryAction")]
-        [InputControl(name = "barrel2", layout = "Button", bit = (int)PenButton.BarrelSecond, alias = "barrelSecond")]
-        [InputControl(name = "barrel3", layout = "Button", bit = (int)PenButton.BarrelThird, alias = "barrelThird")]
-        [InputControl(name = "barrel4", layout = "Button", bit = (int)PenButton.BarrelFourth, alias = "barrelFourth")]
+        [InputControl(name = "eraser", displayName = "Eraser", layout = "Button", bit = (int)PenButton.Eraser)]
+        [InputControl(name = "inRange", displayName = "In Range?", layout = "Button", bit = (int)PenButton.InRange, synthetic = true)]
+        [InputControl(name = "barrel1", displayName = "Barrel Button #1", layout = "Button", bit = (int)PenButton.BarrelFirst, alias = "barrelFirst", usage = "SecondaryAction")]
+        [InputControl(name = "barrel2", displayName = "Barrel Button #2", layout = "Button", bit = (int)PenButton.BarrelSecond, alias = "barrelSecond")]
+        [InputControl(name = "barrel3", displayName = "Barrel Button #3", layout = "Button", bit = (int)PenButton.BarrelThird, alias = "barrelThird")]
+        [InputControl(name = "barrel4", displayName = "Barrel Button #4", layout = "Button", bit = (int)PenButton.BarrelFourth, alias = "barrelFourth")]
         // "Park" unused controls.
         [InputControl(name = "radius", layout = "Vector2", format = "VEC2", sizeInBits = 64, usage = "Radius", offset = InputStateBlock.AutomaticOffset)]
         [InputControl(name = "pointerId", layout = "Digital", format = "UINT", sizeInBits = 32, offset = InputStateBlock.AutomaticOffset)] ////TODO: this should be used

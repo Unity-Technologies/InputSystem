@@ -49,32 +49,32 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
-        [InputControl(layout = "Integer")]
+        [InputControl(displayName = "Touch ID", layout = "Integer")]
         [FieldOffset(0)]
         public int touchId;
 
-        [InputControl]
+        [InputControl(displayName = "Position")]
         [FieldOffset(4)]
         public Vector2 position;
 
-        [InputControl]
+        [InputControl(displayName = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
-        [InputControl(layout = "Axis")]
+        [InputControl(displayName = "Pressure", layout = "Axis")]
         [FieldOffset(20)]
         public float pressure;
 
-        [InputControl]
+        [InputControl(displayName = "Radius")]
         [FieldOffset(24)]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "TouchPhase")]
-        [InputControl(name = "press", layout = "TouchPress", useStateFrom = "phase")]
+        [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
+        [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
         public byte phaseId;
 
-        [InputControl(name = "tapCount", layout = "Integer")]
+        [InputControl(name = "tapCount", displayName = "Tap Count", layout = "Integer")]
         [FieldOffset(33)]
         public byte tapCount;
 
@@ -83,8 +83,8 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(34)]
         byte displayIndex;
 
-        [InputControl(name = "indirectTouch", layout = "Button", bit = 0)]
-        [InputControl(name = "tap", layout = "Button", bit = 5)]
+        [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0)]
+        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
         [FieldOffset(35)]
         public byte flags;
 
@@ -94,10 +94,10 @@ namespace UnityEngine.InputSystem.LowLevel
         internal int padding;
 
         // NOTE: The following data is NOT sent by native but rather data we add on the managed side to each touch.
-        [InputControl(name = "startTime", layout  = "Double")]
+        [InputControl(displayName = "Start Time", layout  = "Double")]
         [FieldOffset(40)]
         public double startTime; // In *external* time, i.e. currentTimeOffsetToRealtimeSinceStartup baked in.
-        [InputControl]
+        [InputControl(displayName = "Start Position")]
         [FieldOffset(48)]
         public Vector2 startPosition;
 
@@ -207,7 +207,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Having this touch be its own separate state and own separate control allows actions to track the
         /// state of the primary touch even if the touch moves from one finger to another in <see cref="touchData"/>.
         /// </remarks>
-        [InputControl(name = "primaryTouch", layout = "Touch", synthetic = true)]
+        [InputControl(name = "primaryTouch", displayName = "Primary Touch", layout = "Touch", synthetic = true)]
         [InputControl(name = "primaryTouch/tap", usage = "PrimaryAction")]
 
         // Add controls compatible with what Pointer expects and redirect their
@@ -226,7 +226,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal const int kTouchDataOffset = TouchState.kSizeInBytes;
 
-        [InputControl(layout = "Touch", name = "touch", arraySize = MaxTouches)]
+        [InputControl(layout = "Touch", name = "touch", displayName = "Touch", arraySize = MaxTouches)]
         [FieldOffset(kTouchDataOffset)]
         public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 
