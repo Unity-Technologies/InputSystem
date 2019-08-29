@@ -354,6 +354,41 @@ partial class CoreTests
         }
     }
 
+    // Value actions perform an initial state check when enabled. These state checks are performed
+    // from InputSystem.onBeforeUpdate. However, if we enable an action as part of event processing,
+    // we will react to the state of a control right away and should then not ALSO perform an
+    // initial state check in the next update.
+    //
+    // This is relevant mainly for InputUser.onUnpairedDeviceUsed which will trigger from
+    // InputSystem.onEvent and by means of PlayerInput frequently lead to actions being disabled
+    // and enabled as part of event processing (e.g. when switching control schemes in single player).
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+
+        InputSystem.onEvent +=
+            (eventPtr, device) => { action.Enable(); };
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
+
+            Assert.That(trace,
+                Started(action, control: gamepad.leftStick)
+                    .AndThen(Performed(action, control: gamepad.leftStick)));
+
+            trace.Clear();
+
+            // This one should not trigger anything on the action.
+            InputSystem.Update();
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanBeDisabledInCallback()
@@ -2208,7 +2243,7 @@ partial class CoreTests
         map2.AddAction("action3", binding: "<Gamepad>/leftTrigger");
 
         asset.AddControlScheme("scheme1").WithBindingGroup("group1").WithRequiredDevice("<Gamepad>");
-        asset.AddControlScheme("scheme2").BasedOn("scheme1").WithBindingGroup("group2")
+        asset.AddControlScheme("scheme2").WithBindingGroup("group2")
             .WithOptionalDevice("<Keyboard>").WithRequiredDevice("<Mouse>").OrWithRequiredDevice("<Pen>");
 
         var json = asset.ToJson();
@@ -2244,8 +2279,6 @@ partial class CoreTests
         Assert.That(asset.controlSchemes[1].name, Is.EqualTo("scheme2"));
         Assert.That(asset.controlSchemes[0].bindingGroup, Is.EqualTo("group1"));
         Assert.That(asset.controlSchemes[1].bindingGroup, Is.EqualTo("group2"));
-        Assert.That(asset.controlSchemes[0].baseScheme, Is.Null);
-        Assert.That(asset.controlSchemes[1].baseScheme, Is.EqualTo("scheme1"));
         Assert.That(asset.controlSchemes[0].deviceRequirements, Has.Count.EqualTo(1));
         Assert.That(asset.controlSchemes[1].deviceRequirements, Has.Count.EqualTo(3));
         Assert.That(asset.controlSchemes[0].deviceRequirements[0].controlPath, Is.EqualTo("<Gamepad>"));
@@ -4531,6 +4564,11 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_Vector2Composite_RespectsButtonPressurePoint()
     {
+        // The stick has deadzones on the up/down/left/right buttons to get rid of stick
+        // noise. For this test, simplify things by getting rid of deadzones.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Set up classic WASD control.
@@ -4550,7 +4588,7 @@ partial class CoreTests
 
         // Up.
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4558,7 +4596,7 @@ partial class CoreTests
 
         // Up (slightly above press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4566,7 +4604,7 @@ partial class CoreTests
 
         // Up (slightly below press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4574,7 +4612,7 @@ partial class CoreTests
 
         // Up left.
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4583,7 +4621,7 @@ partial class CoreTests
 
         // Up left (up slightly above press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -4592,7 +4630,7 @@ partial class CoreTests
 
         // Up left (up slightly below press point)
         value = null;
-        InputSystem.QueueStateEvent(gamepad, new GamepadState() { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
         InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
@@ -5128,10 +5166,10 @@ partial class CoreTests
             Set(gamepad.leftStick, new Vector2(0, 0.75f));
             Assert.That(trace,
                 Started(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftStick.up)
                     .AndThen(Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftStick.up)));
 
             trace.Clear();
@@ -5143,10 +5181,10 @@ partial class CoreTests
             // one of the constituents change.
             Assert.That(trace,
                 Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.dpad.up)
                     .AndThen(Performed(action,
-                    value: 0.75f,
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
                     control: gamepad.leftTrigger)));
 
             trace.Clear();
@@ -5935,13 +5973,13 @@ partial class CoreTests
         var touch0Action = new InputAction("Touch0", binding: "<Touchscreen>/touch0/position");
         var touch1Action = new InputAction("Touch1", binding: "<Touchscreen>/touch1/position");
         var positionAction = new InputAction("Position", binding: "<Touchscreen>/position");
-        var tapAction = new InputAction("Tap", binding: "<Touchscreen>/tap");
+        var tapAction = new InputAction("Tap", binding: "<Touchscreen>/primaryTouch/tap");
 
         Assert.That(primaryTouchAction.controls, Is.EquivalentTo(new[] { touchscreen.primaryTouch.position }));
         Assert.That(touch0Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[0].position }));
         Assert.That(touch1Action.controls, Is.EquivalentTo(new[] { touchscreen.touches[1].position }));
         Assert.That(positionAction.controls, Is.EquivalentTo(new[] { touchscreen.position }));
-        Assert.That(tapAction.controls, Is.EquivalentTo(new[] { touchscreen.tap }));
+        Assert.That(tapAction.controls, Is.EquivalentTo(new[] { touchscreen.primaryTouch.tap }));
 
         primaryTouchAction.Enable();
         touch0Action.Enable();
@@ -6099,9 +6137,9 @@ partial class CoreTests
                 Started(pressAction, touchscreen.press, 1, 0.5)
                     .AndThen(Performed(pressAction, touchscreen.press, 1, 0.5))
                     .AndThen(Canceled(pressAction, touchscreen.press, 0, 0.5))
-                    .AndThen(Started(primaryAction, touchscreen.tap, 1, 0.5))
-                    .AndThen(Performed(primaryAction, touchscreen.tap, 1, 0.5))
-                    .AndThen(Canceled(primaryAction, touchscreen.tap, 0, 0.5)));
+                    .AndThen(Started(primaryAction, touchscreen.primaryTouch.tap, 1, 0.5))
+                    .AndThen(Performed(primaryAction, touchscreen.primaryTouch.tap, 1, 0.5))
+                    .AndThen(Canceled(primaryAction, touchscreen.primaryTouch.tap, 0, 0.5)));
 
             trace.Clear();
 

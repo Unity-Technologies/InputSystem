@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
         public static FourCC k_GroupsChanged => new FourCC("GRPS");
         public static FourCC k_PathChanged => new FourCC("PATH");
         public static FourCC k_CompositeTypeChanged => new FourCC("COMP");
-        public static FourCC k_CompositePartAssignmentChanged = new FourCC("PART");
+        public static FourCC k_CompositePartAssignmentChanged => new FourCC("PART");
 
         public InputBindingPropertiesView(
             SerializedProperty bindingProperty,
@@ -36,7 +36,8 @@ namespace UnityEngine.InputSystem.Editor
             m_BindingProperty = bindingProperty;
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.Separator).ToList();
+            m_BindingGroups = m_GroupsProperty.stringValue
+                .Split(new[] {InputBinding.Separator}, StringSplitOptions.RemoveEmptyEntries).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
             m_ControlSchemes = controlSchemes;
 
@@ -253,9 +254,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnBindingGroupsChanged()
         {
-            ////FIXME: changing the binding group of a GLOBAL binding when a control scheme is selected does not cause the binding to disappear from the control scheme immediately
-            ////       (same goes for the other way round)
-
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
 

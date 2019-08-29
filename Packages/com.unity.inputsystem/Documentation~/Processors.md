@@ -1,17 +1,235 @@
 # Processors
 
-An input processor takes a value and returns a processed version of it. The received value and result value must be of the same type.
+An input processor takes a value and returns a processed version of it. The received value and result value must be of the same type. For example, you can use a [Clamp](#clamp) processor to clamp values from a control to a certain range.
 
 >NOTE: To convert received input values into different types, see [composite bindings](ActionBindings.md#composite-bindings).
 
-Processors can be installed on [controls](
+* [Using Processors](#using-processors)
+    * [Processors on Bindings](#processors-on-bindings)
+    * [Processors on Actions](#processors-on-actions)
+    * [Processors on Controls](#processors-on-controls)
+* [Predefined Processors](#predefined-processors)
+    * [Axis Deadzone](#axis-deadzone)
+    * [Clamp](#clamp)
+    * [Invert](#invert)
+    * [Invert Vector 2](#invert-vector-2)
+    * [Invert Vector 3](#invert-vector-3)
+    * [Normalize](#normalize)
+    * [Normalize Vector 2](#normalize-vector-2)
+    * [Normalize Vector 3](#normalize-vector-3)
+    * [Scale](#scale)
+    * [Scale Vector 2](#scale-vector-2)
+    * [Scale Vector 3](#scale-vector-3)
+    * [Stick Deadzone](#stick-deadzone)
+* [Writing Custom Processors](#writing-custom-processors)
+
+## Using Processors
+
+Processors can be installed on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md).
+
+### Processors on Bindings
+
+When you create bindings for your [actions](Actions.md), you can choose to add processors to the bindings to process the values read from the controls they bind to, before applying them to the action value. For instance you may find that you want the `Vector2` values coming from the controls to be inverted along the Y axis before passing these values to your action driving your game input logic. You can achieve this by adding an [Invert Vector2](#invert-vector-2) processor to your binding.
+
+If you are using [Input Action Assets](ActionAssets.md), you can simply add any processor to your bindings in the input action editor. Once you [created some bindings](ActionAssets.md#editing-bindings), just select the binding you want to add processors to (so that the right pane of the window shows the properties for that binding). Now, click on the "Plus" icon on the "Processors" foldout, which will show a popup of all available processors matching your control type. Choose a processor type to add a processor instance of that type. The processor will now be shown under the processors foldout. If the processor has any parameters you can now edit them here as well:
+
+![Binding Processors](Images/BindingProcessors.png)
+
+You can click the "Minus" button next to a processor to remove it. You can click the "up" and "down" arrows to change the order of processors (which affect in which order values are being processed).
+
+If you create your bindings in code, you can add processors like this:
+
+```CSharp
+var action = new InputAction();
+action.AddBinding("<Gamepad>/leftStick")
+    .WithProcessor("invertVector2(invertX=false)");
+```
+
+### Processors on Actions
+
+Processors on actions work very similar to processors on bindings, but they affect all controls bound to an action, not just the ones coming from a specific binding. If there are processors on both the binding and the action, the ones from the binding will be processed first.
+
+You can add and edit processors on actions in the [Input Action Assets](ActionAssets.md) the [same way](#processors-on-bindings) as you would do for bindings - just add them in the right window pane when you have selected an action to edit.
+
+If you create your actions in code, you can add processors like this:
+
+```CSharp
+var action = new InputAction(processors: "invertVector2(invertX=false)");
+```
+
+### Processors on Controls
+
+You can also have any number processors directly on an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), which then process the values read from the control. Whenever you call [`ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) on a control, any processor of the control will process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) on a control to bypass the processors.
+
+Processors get added to a control during device creation, if they are specified in the control's [layout](Layouts.md) (You cannot add processors to existing controls after they have been created). So adding processors to controls is something you'd only be doing when you are [creating custom devices](Devices.md#creating-custom-devices). The devices supported by the input system out of the box already have processors added on controls, where it is useful - for instance sticks on gamepads will always have a [Stick Deadzone](#stick-deadzone) Processor.
+
+If you are using a layout generated by the input system from a [state struct](Devices.md#step-1-the-state-struct) using [`InputControlAttributes`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), you can specify the processors to use using the [`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors) property of the attribute like this:
+
+```CSharp
+public struct MyDeviceState : IInputStateTypeInfo
+{
+    public FourCC format => return new FourCC('M', 'Y', 'D', 'V');
+
+    // Add an axis deadzone to the control to ignore values
+    // smaller then 0.2, as our control does not have a stable
+    // resting position.
+    [InputControl(layout = "Axis", processors = "AxisDeadzone(min=0.2)")]
+    public short axis;
+}
+```
+
+If you [create a layout from JSON](Layouts.md#layout-from-json), you can specify processors on your controls like this:
+
+```
+{
+    "name" : "MyDevice",
+    "extend" : "Gamepad", // Or some other thing
+    "controls" : [
+        {
+            "name" : "axis",
+            "layout" : "Axis",
+            "offset" : 4,
+            "format" : "FLT",
+            "processors" : "AxisDeadzone(min=0.2)"
+        }
+    ]
+}
+```
 
 ## Predefined Processors
 
-### Stick Deadzone
+The input system package comes with a set of useful processors you can use.
 
 ### Axis Deadzone
 
+|__Name__|`AxisDeadzone`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float min`<br>`float max`|
+
+An Axis Deadzone Processor scales the values of a control, so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or -1. Many controls don't have an imprecise resting point (ie, they don't always report exactly 0 when the control is in the center). Using a the `min` value on a deadzone processor avoids unintentional input from such controls. Also, some controls don't consistently report they maximum values when moving the axis all the way. Using a the `max` value on a deadzone processor can make sure that you always get the maximum value in such cases.
+
+### Clamp
+
+|__Name__|`Clamp`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float min`<br>`float max`|
+
+Clamps input values to the [`min`..`max`] range.
+
+### Invert
+
+|__Name__|`Invert`|
+|---|---|
+|__Operand Type__|`float`|
+
+Inverts (ie, multiply by -1) the values from a control.
+
+### Invert Vector 2
+
+|__Name__|`InvertVector2`|
+|---|---|
+|__Operand Type__|`Vector2`|
+|__Parameters__|`bool invertX`<br>`bool invertY`|
+
+Inverts (ie, multiply by -1) the values from a control. Will invert the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
+
+### Invert Vector 3
+
+|__Name__|`InvertVector3`|
+|---|---|
+|__Operand Type__|`Vector3`|
+|__Parameters__|`bool invertX`<br>`bool invertY`<br>`bool invertZ`|
+
+Inverts (ie, multiply by -1) the values from a control. Will invert the x axis of the vector if `invertX` is true, the y axis if `invertY` is true, and the z axis if `invertZ` is true.
+
+### Normalize
+
+|__Name__|`Normalize`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float min`<br>`float max`<br>`float zero`|
+
+Normalizes input values in the range [`min`..`max`] to unsigned normalized form [0..1] if `min` is >= `zero` and to signed normalized form [-1..1] if `min` < `zero`.
+
+### Normalize Vector 2
+
+|__Name__|`NormalizeVector2`|
+|---|---|
+|__Operand Type__|`Vector2`|
+
+Normalizes input vectors to be of unit length (1). This is the same as calling `Vector2.normalized`.
+
+### Normalize Vector 3
+
+|__Name__|`NormalizeVector3`|
+|---|---|
+|__Operand Type__|`Vector3`|
+
+Normalizes input vectors to be of unit length (1). This is the same as calling `Vector3.normalized`.
+
+### Scale
+
+|__Name__|`Scale`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float factor`|
+
+Multiply all input values by `factor`.
+
+### Scale Vector 2
+
+|__Name__|`ScaleVector2`|
+|---|---|
+|__Operand Type__|`Vector2`|
+|__Parameters__|`float x`<br>`float y`|
+
+Multiply all input values by `x` along the x axis and by `y` along the y axis.
+
+### Scale Vector 3
+
+|__Name__|`ScaleVector3`|
+|---|---|
+|__Operand Type__|`Vector3`|
+|__Parameters__|`float x`<br>`float y`<br>`float x`|
+
+Multiply all input values by `x` along the x axis, by `y` along the y axis and by `z` along the z axis.
+
+### Stick Deadzone
+
+|__Name__|`StickDeadzone`|
+|---|---|
+|__Operand Type__|`Vector2`|
+|__Parameters__|`float min`<br>`float max`|
+
+A Stick Deadzone Processor scales the values of a Vector2 control (such as a stick), so that input vector with a magnitude smaller than `min` results in (0,0), and any input vector with a magnitude larger than `max` is normalized to length 1. Many controls don't have an imprecise resting point (ie, they don't always report exactly 0 when the control is in the center). Using a the `min` value on a deadzone processor avoids unintentional input from such controls. Also, some controls don't consistently report they maximum values when moving the axis all the way. Using a the `max` value on a deadzone processor can make sure that you always get the maximum value in such cases.
+
 ## Writing Custom Processors
 
-### Processor Parameters
+You can also write a custom processor to use in your project. Newly added processors are usable in the UI and data the same way that built-in processors are. Simply add a class deriving from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl__0__) method:
+
+```CSharp
+public class MyValueShiftProcessor : InputProcessor<float>
+{
+    [Tooltip("Number to add to incoming values.")]
+    public float valueShift = 0;
+
+    public override float Process(float value, InputControl<float> control)
+    {
+        return value + valueShift;
+    }
+}
+```
+
+Now, you need to tell the Input System about your processor. So, somewhere in your initialization code, you should call:
+
+```CSharp
+InputSystem.RegisterProcessor<MyValueShiftProcessor>();
+```
+
+Now, your new processor will become available up in the [Input Action Asset Editor window](ActionAssets.md), and you can also add it in code like this:
+
+```CSharp
+var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
+```

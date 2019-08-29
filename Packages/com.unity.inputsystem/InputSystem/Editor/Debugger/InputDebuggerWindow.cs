@@ -296,6 +296,28 @@ namespace UnityEngine.InputSystem.Editor
                     ToggleLockInputToGameView);
                 menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
+                // Add the inverse of "Copy Device Description" which adds a device with the description from
+                // the clipboard to the system. This is most useful for debugging and makes it very easy to
+                // have a first pass at device descriptions supplied by users.
+                try
+                {
+                    var copyBuffer = EditorGUIUtility.systemCopyBuffer;
+                    if (!string.IsNullOrEmpty(copyBuffer) &&
+                        copyBuffer.StartsWith("{") && !InputDeviceDescription.FromJson(copyBuffer).empty)
+                    {
+                        menu.AddItem(Contents.pasteDeviceDescriptionAsDevice, false, () =>
+                        {
+                            var description = InputDeviceDescription.FromJson(copyBuffer);
+                            InputSystem.AddDevice(description);
+                        });
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Catch and ignore exception if buffer doesn't actually contain an InputDeviceDescription
+                    // in (proper) JSON format.
+                }
+
                 menu.ShowAsContext();
             }
 
@@ -327,9 +349,11 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent optionsContent = new GUIContent("Options");
             public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
             public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
+            public static GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
             public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
             public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
+            public static GUIContent copyDeviceDescription = new GUIContent("Copy Device Description");
             public static GUIContent removeDevice = new GUIContent("Remove Device");
             public static GUIContent enableDevice = new GUIContent("Enable Device");
             public static GUIContent disableDevice = new GUIContent("Disable Device");
@@ -369,11 +393,21 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     var menu = new GenericMenu();
                     menu.AddItem(Contents.openDebugView, false, () => InputDeviceDebuggerWindow.CreateOrShowExisting(deviceItem.device));
+                    menu.AddItem(Contents.copyDeviceDescription, false,
+                        () => EditorGUIUtility.systemCopyBuffer = deviceItem.device.description.ToJson());
                     menu.AddItem(Contents.removeDevice, false, () => InputSystem.RemoveDevice(deviceItem.device));
                     if (deviceItem.device.enabled)
                         menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
                     else
                         menu.AddItem(Contents.enableDevice, false, () => InputSystem.EnableDevice(deviceItem.device));
+                    menu.ShowAsContext();
+                }
+
+                if (item is UnsupportedDeviceItem unsupportedDeviceItem)
+                {
+                    var menu = new GenericMenu();
+                    menu.AddItem(Contents.copyDeviceDescription, false,
+                        () => EditorGUIUtility.systemCopyBuffer = unsupportedDeviceItem.description.ToJson());
                     menu.ShowAsContext();
                 }
             }
@@ -464,8 +498,18 @@ namespace UnityEngine.InputSystem.Editor
                     var parent = haveRemotes ? localDevicesNode : devicesItem;
                     var unsupportedDevicesNode = AddChild(parent, $"Unsupported ({m_UnsupportedDevices.Count})", ref id);
                     foreach (var device in m_UnsupportedDevices)
-                        AddChild(unsupportedDevicesNode, device.ToString(), ref id);
-                    unsupportedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    {
+                        var item = new UnsupportedDeviceItem
+                        {
+                            id = id++,
+                            depth = unsupportedDevicesNode.depth + 1,
+                            displayName = device.ToString(),
+                            description = device
+                        };
+                        unsupportedDevicesNode.AddChild(item);
+                    }
+                    unsupportedDevicesNode.children.Sort((a, b) =>
+                        string.Compare(a.displayName, b.displayName, StringComparison.InvariantCulture));
                 }
 
                 var disconnectedDevices = InputSystem.disconnectedDevices;
@@ -475,7 +519,8 @@ namespace UnityEngine.InputSystem.Editor
                     var disconnectedDevicesNode = AddChild(parent, $"Disconnected ({disconnectedDevices.Count})", ref id);
                     foreach (var device in disconnectedDevices)
                         AddChild(disconnectedDevicesNode, device.ToString(), ref id);
-                    disconnectedDevicesNode.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                    disconnectedDevicesNode.children.Sort((a, b) =>
+                        string.Compare(a.displayName, b.displayName, StringComparison.InvariantCulture));
                 }
 
                 // Layouts.
@@ -634,6 +679,8 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
+                if (!string.IsNullOrEmpty(layout.m_DisplayName))
+                    AddChild(item, "Display Name: " + layout.m_DisplayName, ref id);
                 var baseLayouts = StringHelpers.Join(layout.baseLayouts, ", ");
                 if (!string.IsNullOrEmpty(baseLayouts))
                     AddChild(item, "Extends: " + baseLayouts, ref id);
@@ -851,6 +898,11 @@ namespace UnityEngine.InputSystem.Editor
             private class DeviceItem : TreeViewItem
             {
                 public InputDevice device;
+            }
+
+            private class UnsupportedDeviceItem : TreeViewItem
+            {
+                public InputDeviceDescription description;
             }
 
             private class ConfigurationItem : TreeViewItem

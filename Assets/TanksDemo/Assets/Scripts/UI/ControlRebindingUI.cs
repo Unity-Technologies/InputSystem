@@ -89,6 +89,7 @@ public class ControlRebindingUI : MonoBehaviour
     {
         m_Button.enabled = false;
         m_Text.text = "Press button/stick for " + name;
+        m_RebindOperation?.Dispose();
         m_RebindOperation = m_Action.PerformInteractiveRebinding()
             .WithControlsExcluding("<Mouse>/position")
             .WithControlsExcluding("<Mouse>/delta")

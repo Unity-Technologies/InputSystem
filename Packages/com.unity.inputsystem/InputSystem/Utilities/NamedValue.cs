@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Utilities
         public static NamedValue[] ParseMultiple(string parameterString)
         {
             if (parameterString == null)
-                throw new System.ArgumentNullException(nameof(parameterString));
+                throw new ArgumentNullException(nameof(parameterString));
 
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))

@@ -266,7 +266,7 @@
                 },
                 {
                     "name": "ScrollWheel",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "0489e84a-4833-4c40-bfae-cea84b696689",
                     "expectedControlType": "Vector2",
                     "processors": "",
@@ -274,7 +274,7 @@
                 },
                 {
                     "name": "MiddleClick",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "dad70c86-b58c-4b17-88ad-f5e53adf419e",
                     "expectedControlType": "",
                     "processors": "",
@@ -282,7 +282,7 @@
                 },
                 {
                     "name": "RightClick",
-                    "type": "Value",
+                    "type": "PassThrough",
                     "id": "44b200b1-1557-4083-816c-b22cbdf77ddf",
                     "expectedControlType": "",
                     "processors": "",

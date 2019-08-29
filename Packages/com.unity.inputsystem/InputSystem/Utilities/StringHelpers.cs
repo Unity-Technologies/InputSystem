@@ -232,6 +232,11 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        public static string Join<TValue>(string separator, params TValue[] values)
+        {
+            return Join(values, separator);
+        }
+
         public static string Join<TValue>(IEnumerable<TValue> values, string separator)
         {
             // Optimize for there not being any values or only a single one

@@ -38,14 +38,14 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "leftStick", variants = kVariantGamepad)]
         [InputControl(name = "leftStick/y", variants = kVariantGamepad, parameters = "invert")]
-        [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp,clampMin=-1.0,clampMax=0.0")]
-        [InputControl(name = "leftStick/down", variants = kVariantGamepad, parameters = "invert=false,clamp,clampMin=0,clampMax=1.0")]
+        [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "leftStick/down", variants = kVariantGamepad, parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
         ////FIXME: state for this control is not contiguous
         [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variants = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
-        [InputControl(name = "rightStick/up", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert,clamp,clampMin=-1.0,clampMax=0.0")]
-        [InputControl(name = "rightStick/down", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert=false,clamp,clampMin=0,clampMax=1.0")]
+        [InputControl(name = "rightStick/up", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "rightStick/down", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
         public fixed float axis[MaxAxes];
 
         public FourCC format
@@ -170,11 +170,13 @@ namespace UnityEngine.InputSystem.Android
     ///  While we can do custom mapping for Samsung, we can never now when will they try to update the driver for Dualshock or some other gamepad
     /// </summary>
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantGamepad)]
+    [Scripting.Preserve]
     public class AndroidGamepad : Gamepad
     {
     }
 
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantJoystick)]
+    [Scripting.Preserve]
     public class AndroidJoystick : Joystick
     {
     }

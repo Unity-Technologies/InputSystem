@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.XR
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
     /// </summary>
     [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD")]
+    [Scripting.Preserve]
     public class XRHMD : InputDevice
     {
     }
@@ -17,6 +18,7 @@ namespace UnityEngine.InputSystem.XR
     /// The base type for all XR handed controllers.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class XRController : InputDevice
     {
         /// <summary>
@@ -58,6 +60,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
+    [Scripting.Preserve]
     public class XRControllerWithRumble : XRController
     {
         public void SendImpulse(float amplitude, float duration)

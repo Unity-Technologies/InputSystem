@@ -429,6 +429,11 @@ namespace UnityEngine.InputSystem
         {
             ++m_LayoutRegistrationVersion;
 
+            // Force-clear layout cache. Don't clear reference count so that
+            // the cache gets cleared out properly when released in case someone
+            // is using it ATM.
+            InputControlLayout.s_CacheInstance = default;
+
             // For layouts that aren't overrides, add the name of the base
             // layout to the lookup table.
             if (!isOverride && baseLayouts.length > 0)
@@ -1590,6 +1595,10 @@ namespace UnityEngine.InputSystem
             if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
                 InputBindingComposite.s_Composites = new TypeTable();
 
+            // Clear layout cache.
+            InputControlLayout.s_CacheInstance = default;
+            InputControlLayout.s_CacheInstanceRef = 0;
+
             // Detach from runtime.
             if (m_Runtime != null)
             {
@@ -1654,7 +1663,6 @@ namespace UnityEngine.InputSystem
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
-        private bool m_HaveSentFirstUserInteractionAnalytics;
         #endif
 
         internal IInputRuntime m_Runtime;
@@ -1880,10 +1888,12 @@ namespace UnityEngine.InputSystem
 
         private unsafe void InitializeNoiseMask(InputDevice device)
         {
-            Debug.Assert(device != null);
-            Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
+            Debug.Assert(device != null, "Device must not be null");
+            Debug.Assert(device.added, "Device must have been added");
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Device state block offset is invalid");
+            Debug.Assert(
+                device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer,
+                "Device state block is not contained in state buffer");
 
             var controls = device.allControls;
             var controlCount = controls.Count;
@@ -1904,12 +1914,12 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
+                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
-                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                     (int)stateBlock.sizeInBits, true);
@@ -2359,25 +2369,6 @@ namespace UnityEngine.InputSystem
                 if (currentEventReadPtr->internalTime <= currentTime)
                     totalEventLag += currentTime - currentEventReadPtr->internalTime;
 
-                // Give listeners a shot at the event.
-                var listenerCount = m_EventListeners.length;
-                if (listenerCount > 0)
-                {
-                    if (device == null)
-                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
-
-                    for (var i = 0; i < listenerCount; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
-
-                    // If a listener marks the event as handled, we don't process it further.
-                    if (currentEventReadPtr->handled)
-                    {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        continue;
-                    }
-                }
-
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
                 if (device == null)
@@ -2394,6 +2385,22 @@ namespace UnityEngine.InputSystem
 
                     // No device found matching event. Ignore it.
                     continue;
+                }
+
+                // Give listeners a shot at the event.
+                var listenerCount = m_EventListeners.length;
+                if (listenerCount > 0)
+                {
+                    for (var i = 0; i < listenerCount; ++i)
+                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+
+                    // If a listener marks the event as handled, we don't process it further.
+                    if (currentEventReadPtr->handled)
+                    {
+                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
+                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                        continue;
+                    }
                 }
 
                 // Process.
@@ -2979,7 +2986,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             public bool haveSentStartupAnalytics;
-            public bool haveSentFirstUserInteractionAnalytics;
             #endif
         }
 
@@ -3023,7 +3029,6 @@ namespace UnityEngine.InputSystem
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
-                haveSentFirstUserInteractionAnalytics = m_HaveSentFirstUserInteractionAnalytics,
                 #endif
             };
         }
@@ -3042,7 +3047,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
-            m_HaveSentFirstUserInteractionAnalytics = state.haveSentFirstUserInteractionAnalytics;
             #endif
 
             ////REVIEW: instead of accessing globals here, we could move this to when we re-create devices
