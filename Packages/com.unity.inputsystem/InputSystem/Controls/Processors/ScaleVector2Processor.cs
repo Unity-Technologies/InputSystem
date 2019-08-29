@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Processors
     /// </code>
     /// </example>
     /// </remarks>
+    [Scripting.Preserve]
     public class ScaleVector2Processor : InputProcessor<Vector2>
     {
         [Tooltip("Scale factor to multiple the incoming Vector2's X component by.")]

@@ -19,6 +19,7 @@ namespace UnityEngine.InputSystem.Processors
     /// </remarks>
     /// <seealso cref="Pointer.position"/>
     [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)

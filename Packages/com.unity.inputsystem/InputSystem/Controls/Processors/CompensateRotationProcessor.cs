@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.Processors
 {
     [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class CompensateRotationProcessor : InputProcessor<Quaternion>
     {
         public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
