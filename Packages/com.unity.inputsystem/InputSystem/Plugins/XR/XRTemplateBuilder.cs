@@ -97,9 +97,9 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
 #else
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     matchedLayout = "XRController";
-                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
                     matchedLayout = "XRHMD";
 #endif
             }

@@ -55,21 +55,6 @@ namespace UnityEngine.InputSystem.XR
         public uint customSize;
     }
 
-    // Sync to UnityXRInputDeviceRole in IUnityXRInput.h
-    /// <summary>
-    /// The generalized role that the device plays.  This can help in grouping devices by type (HMD, vs. hardware tracker vs. handed controller).
-    /// </summary>
-    public enum DeviceRole
-    {
-        Unknown = 0,
-        Generic,
-        LeftHanded,
-        RightHanded,
-        GameController,
-        TrackingReference,
-        HardwareTracker,
-    }
-
     //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
     class XRDeviceDescriptor

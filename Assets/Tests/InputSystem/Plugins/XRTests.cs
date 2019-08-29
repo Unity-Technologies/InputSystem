@@ -11,18 +11,20 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
+using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
+
 internal class XRTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
-    [TestCase(DeviceRole.Generic, "XRHMD", typeof(XRHMD))]
-    [TestCase(DeviceRole.LeftHanded, "XRController", typeof(XRController))]
-    [TestCase(DeviceRole.RightHanded, "XRController", typeof(XRController))]
-    [TestCase(DeviceRole.HardwareTracker, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.TrackingReference, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.GameController, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.Unknown, null, typeof(InputDevice))]
-    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(DeviceRole role, string baseLayoutName, Type expectedType)
+    [TestCase(InputDeviceRole.Generic, "XRHMD", typeof(XRHMD))]
+    [TestCase(InputDeviceRole.LeftHanded, "XRController", typeof(XRController))]
+    [TestCase(InputDeviceRole.RightHanded, "XRController", typeof(XRController))]
+    [TestCase(InputDeviceRole.HardwareTracker, null, typeof(InputDevice))]
+    [TestCase(InputDeviceRole.TrackingReference, null, typeof(InputDevice))]
+    [TestCase(InputDeviceRole.GameController, null, typeof(InputDevice))]
+    [TestCase(InputDeviceRole.Unknown, null, typeof(InputDevice))]
+    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(InputDeviceRole role, string baseLayoutName, Type expectedType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
@@ -44,7 +46,7 @@ internal class XRTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.LeftHanded);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -68,7 +70,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -85,7 +87,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         deviceDescription.manufacturer = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -135,7 +137,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRDevicesWithNoOrInvalidCapabilities_DoNotCreateLayouts()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         deviceDescription.capabilities = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -186,7 +188,7 @@ internal class XRTests : InputTestFixture
     [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         deviceDescription.product = name;
         deviceDescription.manufacturer = manufacturer;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
@@ -464,7 +466,7 @@ internal class XRTests : InputTestFixture
         }
     }
 
-    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
+    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {
         return new InputDeviceDescription
         {
@@ -474,7 +476,7 @@ internal class XRTests : InputTestFixture
             capabilities = new XRDeviceDescriptor
             {
 #if !UNITY_2019_3_OR_NEWER
-                deviceRole = role,
+                InputDeviceRole = role,
 #endif
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
