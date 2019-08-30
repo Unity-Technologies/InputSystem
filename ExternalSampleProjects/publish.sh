@@ -5,12 +5,13 @@ do
 	ln -s ../../Packages ${Sample}Packages
 	cp ExternalSampleProjects/ExternalSamplesUtility.cs ${Sample}Assets/ExternalSamplesUtility/Editor/
 	${Editor} -batchmode -projectPath $Sample -executeMethod ExternalSamplesUtility.${Method} -logFile upm-ci~/${Sample}Editor.log
-	echo Editor returned $?
-	if [ $? -eq 0 ]; then
-		rm ${Sample}Assets/ExternalSamplesUtility/Editor/ExternalSamplesUtility.cs
-		rm ${Sample}Packages
-		exit 1;
-	fi
+	status=$?
+	echo Editor returned $status
 	rm ${Sample}Assets/ExternalSamplesUtility/Editor/ExternalSamplesUtility.cs
 	rm ${Sample}Packages
+	if [ $? -eq $status ]; then
+		echo Ok
+	else
+		exit 1;
+	fi
 done
