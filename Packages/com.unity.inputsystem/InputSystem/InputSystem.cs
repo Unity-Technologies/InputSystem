@@ -1453,11 +1453,11 @@ namespace UnityEngine.InputSystem
         #region Events
 
         /// <summary>
-        /// Called during <see cref="InputSystem.Update"/> for each event that is processed.
+        /// Called during <see cref="RunOneFrame"/> for each event that is processed.
         /// </summary>
         /// <remarks>
         /// Every time the input system updates (see <see cref="InputSettings.updateMode"/>
-        /// or <see cref="InputSystem.Update"/> for details about when and how this happens),
+        /// or <see cref="RunOneFrame"/> for details about when and how this happens),
         /// it flushes all events from the internal event buffer that are due in the current
         /// update (<see cref="InputSettings.timesliceEvents"/> for details about when events
         /// may be postponed to a subsequent frame).
@@ -1503,7 +1503,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="QueueEvent(InputEventPtr)"/>
         /// <seealso cref="InputEvent"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="RunOneFrame"/>
         /// <seealso cref="InputSettings.updateMode"/>
         public static event Action<InputEventPtr, InputDevice> onEvent
         {
@@ -1530,10 +1530,15 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The event will be copied in full to the internal event buffer meaning that
         /// you can release memory for the event after it has been queued. The internal event
-        /// buffer is flushed on the next input system update (see <see cref="Update()"/>).
+        /// buffer is flushed on the next input system update (see <see cref="RunOneFrame"/>).
         /// Note that if timeslicing is in effect (see <see cref="InputSettings.timesliceEvents"/>),
         /// then the event may not get processed until its <see cref="InputEvent.time"/> timestamp
         /// is within the update window of the input system.
+        ///
+        /// As part of queuing, the event will receive its own unique ID (see <see cref="InputEvent.eventId"/>).
+        /// Note that this ID will be written into the memory buffer referenced by <see cref="eventPtr"/>
+        /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
+        /// was queued.
         ///
         /// <example>
         /// <code>
@@ -1547,7 +1552,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        /// <seealso cref="Update"/>
+        /// <seealso cref="RunOneFrame"/>
         public static void QueueEvent(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
@@ -1822,12 +1827,12 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputUpdateType"/>
         /// <seealso cref="InputSettings.updateMode"/>
-        public static void Update()
+        public static void RunOneFrame()
         {
             s_Manager.Update();
         }
 
-        internal static void Update(InputUpdateType updateType)
+        internal static void RunOneFrame(InputUpdateType updateType)
         {
             if (updateType != InputUpdateType.None && (s_Manager.updateMask & updateType) == 0)
                 throw new InvalidOperationException(
@@ -1849,7 +1854,7 @@ namespace UnityEngine.InputSystem
         /// be fed right into the upcoming update.
         /// </remarks>
         /// <seealso cref="onAfterUpdate"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="RunOneFrame"/>
         public static event Action onBeforeUpdate
         {
             add
@@ -1868,7 +1873,7 @@ namespace UnityEngine.InputSystem
         /// Event that is fired after the input system has completed an update and processed all pending events.
         /// </summary>
         /// <seealso cref="onBeforeUpdate"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="RunOneFrame"/>
         public static event Action onAfterUpdate
         {
             add
@@ -2371,7 +2376,7 @@ namespace UnityEngine.InputSystem
             //       and InputManager.OnUpdate() will both early out when comparing this to their update
             //       mask but will still restore devices. This means we're not actually processing input,
             //       but we will force the runtime to push its devices.
-            Update(InputUpdateType.None);
+            RunOneFrame(InputUpdateType.None);
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION

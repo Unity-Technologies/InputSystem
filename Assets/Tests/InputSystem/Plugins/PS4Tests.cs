@@ -45,7 +45,7 @@ public class PS4Tests : InputTestFixture
                     position = new Vector2(0.453f, 0.564f)
                 },
             });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.squareButton.isPressed);
         Assert.That(gamepad.triangleButton.isPressed);
@@ -168,7 +168,7 @@ public class PS4Tests : InputTestFixture
             capabilities = new PS4InputDeviceDescriptor { slotId = 3, isAimController = false, defaultColorId = 0, userId = 1234 }.ToJson()
         }.ToJson(), 4);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var gamepad1 = (DualShockGamepadPS4)InputSystem.devices[0];
         var gamepad2 = (DualShockGamepadPS4)InputSystem.devices[1];
@@ -202,7 +202,7 @@ public class PS4Tests : InputTestFixture
                 userId = 1234
             }.ToJson()
         }.ToJson(), 1);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var device = InputSystem.devices[0];
 
@@ -236,7 +236,7 @@ public class PS4Tests : InputTestFixture
                 gyro = new Vector3(0.444f, 0.555f, 0.666f),
             });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(move.squareButton.isPressed);
         Assert.That(move.triangleButton.isPressed);

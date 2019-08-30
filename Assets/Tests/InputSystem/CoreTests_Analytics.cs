@@ -62,7 +62,7 @@ partial class CoreTests
         }.ToJson());
         InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedName, Is.EqualTo(InputAnalytics.kEventStartup));
         Assert.That(receivedData, Is.TypeOf<InputAnalytics.StartupEventData>());
@@ -102,8 +102,8 @@ partial class CoreTests
         runtime.onSendAnalyticsEvent =
             (name, data) => ++ numReceivedCalls;
 
-        InputSystem.Update();
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
+        InputSystem.RunOneFrame();
 
         Assert.That(numReceivedCalls, Is.EqualTo(1));
     }
@@ -131,7 +131,7 @@ partial class CoreTests
                 receivedData = data;
             };
 
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
             var startupData = (InputAnalytics.StartupEventData)receivedData;
 
             Assert.That(startupData.new_enabled, Is.True);
@@ -157,10 +157,10 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var registeredNames = new List<string>();
         string receivedName = null;

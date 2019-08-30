@@ -27,7 +27,7 @@ internal class DualShockTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad, state);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();

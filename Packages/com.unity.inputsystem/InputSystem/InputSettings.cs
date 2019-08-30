@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem
         ///
         /// In the editor,
         /// </remarks>
-        /// <seealso cref="InputSystem.Update()"/>
+        /// <seealso cref="InputSystem.RunOneFrame"/>
         /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode
         {
@@ -297,7 +297,7 @@ namespace UnityEngine.InputSystem
         /// automatically in response to whether devices are present requiring this type of update (<see
         /// cref="InputDevice.updateBeforeRender"/>). This update does not consume extra state.
         /// </remarks>
-        /// <seealso cref="InputSystem.Update()"/>
+        /// <seealso cref="InputSystem.RunOneFrame"/>
         /// <seealso cref="InputUpdateType"/>
         /// <seealso cref="MonoBehaviour.FixedUpdate"/>
         /// <seealso cref="MonoBehaviour.Update"/>
@@ -326,13 +326,13 @@ namespace UnityEngine.InputSystem
             ProcessEventsInFixedUpdate,
 
             /// <summary>
-            /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update()"/> must be called
+            /// Do not run updates automatically. In this mode, <see cref="InputSystem.RunOneFrame"/> must be called
             /// manually to update input.
             /// </summary>
             /// <remarks>
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
-            /// Note that failing to call <see cref="InputSystem.Update()"/> may result in a lot of events
+            /// Note that failing to call <see cref="InputSystem.RunOneFrame"/> may result in a lot of events
             /// accumulating or some input getting lost.
             /// </remarks>
             ProcessEventsManually,

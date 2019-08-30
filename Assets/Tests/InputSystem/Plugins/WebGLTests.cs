@@ -25,7 +25,7 @@ internal class WebGLTests : InputTestFixture
             }.ToJson()
         });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var gamepad = InputSystem.GetDevice<WebGLGamepad>();
         Assert.That(gamepad, Is.Not.Null);
@@ -38,7 +38,7 @@ internal class WebGLTests : InputTestFixture
             leftStick = new Vector2(0.345f, 0.456f),
             rightStick = new Vector2(0.567f, 0.678f),
         });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.leftStick.ReadUnprocessedValue(), Is.EqualTo(new Vector2(0.345f, -0.456f))); // Y inverted on WebGL.
         Assert.That(gamepad.rightStick.ReadUnprocessedValue(), Is.EqualTo(new Vector2(0.567f, -0.678f))); // Y inverted on WebGL.
@@ -86,14 +86,14 @@ internal class WebGLTests : InputTestFixture
             }.ToJson()
         });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var joystick = InputSystem.GetDevice<WebGLJoystick>();
         Assert.That(joystick , Is.Not.Null);
 
         // Test the sticks and triggers.
         InputSystem.QueueStateEvent(joystick , new TestJoystickState {x = 0.1f, y = 0.2f, z = 0.3f});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That((joystick.TryGetChildControl("stick") as StickControl).ReadUnprocessedValue(), Is.EqualTo(new Vector2(0.1f, -0.2f))); // Y inverted on WebGL.
         Assert.That((joystick.TryGetChildControl("Axis 1") as AxisControl).ReadUnprocessedValue(), Is.EqualTo(0.3).Within(0.0001));
@@ -122,7 +122,7 @@ internal class WebGLTests : InputTestFixture
             }.ToJson()
         });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var joystick = InputSystem.GetDevice<WebGLJoystick>();
         Assert.That(joystick , Is.Not.Null);

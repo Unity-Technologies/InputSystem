@@ -187,7 +187,7 @@ internal class UserTests : InputTestFixture
 
         runtime.ReportNewInputDevice<Gamepad>(gamepadId);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         var gamepad = InputSystem.GetDevice<Gamepad>();
 
         Assert.That(InputUser.all, Has.Count.Zero);
@@ -222,7 +222,7 @@ internal class UserTests : InputTestFixture
         returnUserAccountId = "TestId";
 
         InputSystem.QueueConfigChangeEvent(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(user.platformUserAccountHandle, Is.EqualTo(new InputUserAccountHandle("Test", 1)));
         Assert.That(user.platformUserAccountId, Is.EqualTo("TestId"));
@@ -261,7 +261,7 @@ internal class UserTests : InputTestFixture
         returnUserAccountSelectionCanceled = true;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(user.platformUserAccountHandle, Is.EqualTo(new InputUserAccountHandle("Test", 1)));
         Assert.That(user.platformUserAccountId, Is.EqualTo("TestId"));
@@ -301,7 +301,7 @@ internal class UserTests : InputTestFixture
         returnUserAccountSelectionCanceled = false;
 
         InputSystem.QueueConfigChangeEvent(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(user.platformUserAccountHandle, Is.EqualTo(new InputUserAccountHandle("Test", 2)));
         Assert.That(user.platformUserAccountId, Is.EqualTo("OtherId"));
@@ -328,7 +328,7 @@ internal class UserTests : InputTestFixture
 
         // Create a gamepad that does not respond to either QueryPairedUserAccountCommand or InitiateUserAccountPairingCommand.
         runtime.ReportNewInputDevice<Gamepad>();
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         var gamepad = InputSystem.GetDevice<Gamepad>();
 
         var user = InputUser.PerformPairingWithDevice(gamepad);
@@ -354,7 +354,7 @@ internal class UserTests : InputTestFixture
         // Report a gamepad paired to a user at the platform level.
         runtime.ReportNewInputDevice<Gamepad>(userHandle: 1, userName: "TestUser",
             userId: "TestId");
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         var gamepad = InputSystem.GetDevice<Gamepad>();
 
         var user = InputUser.PerformPairingWithDevice(gamepad);
@@ -371,7 +371,7 @@ internal class UserTests : InputTestFixture
         // Change the user account on the device.
         runtime.AssociateInputDeviceWithUser(gamepad, userHandle: 2, userName: "OtherUser", userId: "OtherId");
         InputSystem.QueueConfigChangeEvent(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(user.platformUserAccountHandle, Is.EqualTo(new InputUserAccountHandle("Test", 2)));
         Assert.That(user.platformUserAccountName, Is.EqualTo("OtherUser"));
@@ -387,7 +387,7 @@ internal class UserTests : InputTestFixture
         // the system won't claim the account has changed.
 
         InputSystem.QueueConfigChangeEvent(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(user.platformUserAccountHandle, Is.EqualTo(new InputUserAccountHandle("Test", 2)));
         Assert.That(user.platformUserAccountName, Is.EqualTo("OtherUser"));
@@ -805,13 +805,13 @@ internal class UserTests : InputTestFixture
 
         // First send some noise on the gyro.
         InputSystem.QueueDeltaStateEvent((QuaternionControl)gamepad["gyro"], new Quaternion(1, 2, 3, 4));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Is.Empty);
 
         // Now send some real interaction.
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Is.EquivalentTo(new[] { gamepad.aButton }));
 
@@ -821,7 +821,7 @@ internal class UserTests : InputTestFixture
         var user = InputUser.PerformPairingWithDevice(gamepad);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.B));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Is.Empty);
 
@@ -832,7 +832,7 @@ internal class UserTests : InputTestFixture
         --InputUser.listenForUnpairedDeviceActivity;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Is.Empty);
 
@@ -846,7 +846,7 @@ internal class UserTests : InputTestFixture
         ++InputUser.listenForUnpairedDeviceActivity;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Has.Count.EqualTo(2));
         Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick.x));
@@ -872,7 +872,7 @@ internal class UserTests : InputTestFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)}.WithButton(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedControls, Has.Count.EqualTo(1));
         Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick.x).Or.SameAs(gamepad.buttonSouth));

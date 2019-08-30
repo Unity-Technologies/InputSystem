@@ -167,7 +167,7 @@ internal partial class CoreTests
             Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonNorth }));
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
@@ -212,7 +212,7 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Escape));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(action.controls, Is.EquivalentTo(new[] { keyboard.spaceKey }));
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
@@ -274,7 +274,7 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.U));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].path, Is.EqualTo("dpad"));
@@ -318,7 +318,7 @@ internal partial class CoreTests
                 {
                     rightStick = new Vector2(InputSystem.settings.defaultDeadzoneMin - 0.0001f, InputSystem.settings.defaultDeadzoneMin - 0.0001f)
                 });
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
 
@@ -327,7 +327,7 @@ internal partial class CoreTests
                 {
                     rightStick = Vector2.one
                 });
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
@@ -349,7 +349,7 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings, Has.Count.EqualTo(1));
@@ -446,7 +446,7 @@ internal partial class CoreTests
             // win. Note that if we set expectedControlType to "Button", leftStick/x will get ignored
             // and leftStick/left will get picked.
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick.x, gamepad.leftStick.right}));
@@ -455,7 +455,7 @@ internal partial class CoreTests
 
             // Reset.
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
             rebind.RemoveCandidate(gamepad.leftStick.x);
             rebind.RemoveCandidate(gamepad.leftStick.right);
 
@@ -463,7 +463,7 @@ internal partial class CoreTests
             rebind.WithExpectedControlLayout("Button");
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftStick/right"));
@@ -494,13 +494,13 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.5f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
@@ -548,7 +548,7 @@ internal partial class CoreTests
         {
             // Gamepad leftStick should get ignored.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.canceled, Is.False);
@@ -557,7 +557,7 @@ internal partial class CoreTests
 
             // Gamepad leftTrigger should bind.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(rebind.canceled, Is.False);
@@ -577,19 +577,19 @@ internal partial class CoreTests
 
         // Put buttonNorth in pressed state.
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         using (var rebind = action.PerformInteractiveRebinding().Start())
         {
             // Reset buttonNorth to unpressed state.
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
 
             // Now press it again.
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonNorth"));
@@ -647,7 +647,7 @@ internal partial class CoreTests
                 derived["controlFromBase/x"].WriteValueFromObjectIntoEvent(eventPtr, 0.5f);
 
                 InputSystem.QueueEvent(eventPtr);
-                InputSystem.Update();
+                InputSystem.RunOneFrame();
             }
 
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<BaseLayout>/controlFromBase"));
@@ -668,7 +668,7 @@ internal partial class CoreTests
         using (var rebind = action.PerformInteractiveRebinding().Start())
         {
             InputSystem.QueueStateEvent(rightHand, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>{RightHand}/buttonSouth"));
@@ -695,7 +695,7 @@ internal partial class CoreTests
             Assert.That(rebind.bindingMask, Is.EqualTo(new InputBinding { groups = "Gamepad"}));
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].path, Is.EqualTo("<Keyboard>/space"));
@@ -721,7 +721,7 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("/Gamepad/buttonNorth"));
@@ -747,21 +747,21 @@ internal partial class CoreTests
         {
             // Actuate leftStick above deadzone.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.3f, 0.3f)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick}));
 
             // Advance time by half a second.
             runtime.currentTime += 0.5f;
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick}));
 
             // Actuate rightStick even further than leftStick.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = new Vector2(0.7f, 0.7f)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Has.Count.EqualTo(2));
@@ -769,7 +769,7 @@ internal partial class CoreTests
 
             // Advance time by a full second.
             runtime.currentTime += 1;
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/rightStick"));
@@ -792,13 +792,13 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.6f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
@@ -824,13 +824,13 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.candidates, Is.Empty);
 
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
             InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             // The keyboard's synthetic AnyKey control and the mouse's button will get picked, too,
             // but will end up with the lowest scores.
@@ -856,13 +856,13 @@ internal partial class CoreTests
                        .Start())
         {
             InputSystem.QueueStateEvent(mouse, new MouseState {position = new Vector2(123, 345)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
             InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(123, 345)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Pointer>/delta"));
@@ -912,7 +912,7 @@ internal partial class CoreTests
                     rightStick = new Vector2(0.6f, 0.6f),
                     rightTrigger = 0.5f,
                 });
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/rightStick"));
@@ -961,7 +961,7 @@ internal partial class CoreTests
                 .Start();
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(1, 0)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(receivedOnApplyBindingCall, Is.True);
@@ -1010,7 +1010,7 @@ internal partial class CoreTests
         using (var rebind = action.PerformInteractiveRebinding().Start())
         {
             InputSystem.QueueStateEvent(rightHandVertical, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>{RightHand}{Vertical}/buttonSouth"));

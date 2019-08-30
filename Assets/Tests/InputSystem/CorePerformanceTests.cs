@@ -29,7 +29,7 @@ internal class CorePerformanceTests : InputTestFixture
             gamepads[i] = InputSystem.AddDevice<Gamepad>();
 
         // Perform initial update to get any first-update-only stuff out of the way.
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var bestTime = float.MaxValue;
         for (var n = 0; n < 20; ++n)
@@ -39,7 +39,7 @@ internal class CorePerformanceTests : InputTestFixture
             for (var i = 0; i < kNumGamepads; ++i)
                 InputSystem.QueueStateEvent(gamepads[i], new GamepadState());
 
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var endTime = Time.realtimeSinceStartup;
             var totalTime = endTime - startTime;

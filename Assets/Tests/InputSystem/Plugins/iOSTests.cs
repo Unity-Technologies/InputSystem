@@ -32,7 +32,7 @@ internal class iOSTests : InputTestFixture
                 .WithAxis(iOSAxis.RightStickX, 0.654f)
                 .WithAxis(iOSAxis.RightStickY, 0.321f));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();

@@ -34,7 +34,7 @@ internal class OnScreenTests : InputTestFixture
             position = new Vector2(stick.movementRange, stick.movementRange)
         });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(stick.control.ReadValueAsObject(),
             Is.EqualTo(stickControl.ProcessValue(new Vector2(stick.movementRange / 2f, stick.movementRange / 2f)))
@@ -58,11 +58,11 @@ internal class OnScreenTests : InputTestFixture
         Assert.That(keyboard.aKey.isPressed, Is.False);
 
         button.OnPointerDown(null);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(keyboard.aKey.isPressed, Is.True);
 
         button.OnPointerUp(null);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(keyboard.aKey.isPressed, Is.False);
     }
 
@@ -78,7 +78,7 @@ internal class OnScreenTests : InputTestFixture
 
         Assert.That(existingKeyboard.aKey.isPressed, Is.False);
         button.OnPointerDown(null);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(existingKeyboard.aKey.isPressed, Is.False);
     }
 

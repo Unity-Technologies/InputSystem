@@ -28,24 +28,24 @@ partial class CoreTests
 
         Assert.That(InputState.currentUpdateType, Is.EqualTo(default(InputUpdateType)));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
 
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Manual));
 
         #if UNITY_EDITOR
         runtime.onShouldRunUpdate = _ => true;
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
         Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
         #endif
     }
@@ -56,10 +56,10 @@ partial class CoreTests
     {
         Assert.That(InputState.updateCount, Is.Zero);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputState.updateCount, Is.EqualTo(1));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputState.updateCount, Is.EqualTo(2));
     }
 
@@ -68,7 +68,7 @@ partial class CoreTests
     [Ignore("TODO")]
     public void TODO_State_CanGetUpdateCount_ForEditorUpdates()
     {
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
         Assert.That(InputState.updateCount, Is.EqualTo(1));
     }
 
@@ -172,12 +172,12 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, oldState);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25f).Within(0.000001));
 
         InputSystem.QueueStateEvent(gamepad, newState);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75f).Within(0.00001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25f).Within(0.00001));
@@ -198,9 +198,9 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, state);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.25f).Within(0.000001));
     }
@@ -370,7 +370,7 @@ partial class CoreTests
 
         var newState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, newState);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.True);
     }
@@ -386,20 +386,20 @@ partial class CoreTests
 
         var firstState = new GamepadState {buttons = 1 << (int)GamepadButton.B};
         InputSystem.QueueStateEvent(gamepad, firstState);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.True);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         // Input update with no changes should make both properties go back to false.
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.False);
 
         var secondState = new GamepadState {buttons = 0};
         InputSystem.QueueStateEvent(gamepad, secondState);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
         Assert.That(gamepad.buttonEast.wasReleasedThisFrame, Is.True);
@@ -419,7 +419,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.QueueStateEvent(gamepad, secondState);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonEast.isPressed, Is.False);
         Assert.That(gamepad.buttonEast.wasPressedThisFrame, Is.False);
@@ -453,7 +453,7 @@ partial class CoreTests
         var state = new GamepadState {leftStick = new Vector2(0.5f, 0.0f)};
 
         InputSystem.QueueStateEvent(gamepad, state);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.buttonSouth.ReadValue(), Is.EqualTo(0.5f));
     }
@@ -473,7 +473,7 @@ partial class CoreTests
             receivedUpdate = true;
         };
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedUpdate, Is.True);
 
@@ -490,7 +490,7 @@ partial class CoreTests
         ";
         InputSystem.RegisterLayout(kBeforeRenderDevice);
         InputSystem.AddDevice("BeforeRenderGamepad");
-        InputSystem.Update(InputUpdateType.BeforeRender);
+        InputSystem.RunOneFrame(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
 
@@ -498,7 +498,7 @@ partial class CoreTests
         receivedUpdate = false;
 
         // Editor.
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
 
         Assert.That(receivedUpdate, Is.True);
 #endif
@@ -530,7 +530,7 @@ partial class CoreTests
 
         // Left stick only.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.5);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
@@ -544,14 +544,14 @@ partial class CoreTests
 
         // Left stick again but with no value change.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)}, 0.6);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.False);
 
         // Left and right stick.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {rightStick = new Vector2(0.75f, 0.75f), leftStick = new Vector2(0.75f, 0.75f)}, 0.7);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
@@ -566,13 +566,13 @@ partial class CoreTests
         // Right stick only.
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {rightStick = new Vector2(0.5f, 0.5f), leftStick = new Vector2(0.75f, 0.75f)}, 0.8);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.False);
 
         // Component control of left stick.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.75f, 0.5f)}, 0.9);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.True);
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
@@ -589,7 +589,7 @@ partial class CoreTests
         receivedEventPtr = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.0f, 0.0f)}, 1.0);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired, Is.False);
     }
@@ -609,7 +609,7 @@ partial class CoreTests
 
         runtime.PlayerFocusLost();
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), queueEventOnly: true);
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
 
         Assert.That(monitorFired, Is.True);
     }
@@ -675,7 +675,7 @@ partial class CoreTests
         InputState.AddChangeMonitor(device["data"], Callback);
 
         InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(receivedControl, Is.SameAs(device["dpad"]));
@@ -684,7 +684,7 @@ partial class CoreTests
         receivedControl = null;
 
         InputSystem.QueueStateEvent(device, new StateWithMultiBitControl().WithDpad(3).WithData(1234));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(receivedControl, Is.SameAs(device["data"]));
@@ -711,7 +711,7 @@ partial class CoreTests
         InputState.AddChangeMonitor(gamepad.rightStick, monitor, kRightStick);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kLeftStick));
@@ -720,7 +720,7 @@ partial class CoreTests
         receivedMonitorIndex = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = Vector2.one, leftStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
@@ -731,12 +731,12 @@ partial class CoreTests
         receivedMonitorIndex = null;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(!monitorFired);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
@@ -779,7 +779,7 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 1234);
         runtime.currentTime += 2;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(timeoutFired);
         Assert.That(!monitorFired);
@@ -796,7 +796,7 @@ partial class CoreTests
         InputState.AddChangeMonitorTimeout(gamepad.leftStick, monitor, runtime.currentTime + 1,
             timerIndex: 4321);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
         Assert.That(!timeoutFired);
@@ -804,7 +804,7 @@ partial class CoreTests
         monitorFired = false;
 
         runtime.currentTime += 2;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(!monitorFired);
         Assert.That(timeoutFired);
@@ -817,7 +817,7 @@ partial class CoreTests
             timerIndex: 1423);
         InputState.RemoveChangeMonitorTimeout(monitor, timerIndex: 1423);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(!timeoutFired);
     }
@@ -850,13 +850,13 @@ partial class CoreTests
 
         // Trigger monitor callback.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(monitorFired);
 
         // Expire timer.
         runtime.currentTime += 2;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(timeoutFired);
     }
@@ -1011,7 +1011,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(device1, new GamepadState());
         InputSystem.QueueStateEvent(device1, new GamepadState());
         InputSystem.QueueStateEvent(device2, new KeyboardState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         var device3 = InputSystem.AddDevice<Mouse>();
         InputSystem.RemoveDevice(device3);
@@ -1063,7 +1063,7 @@ partial class CoreTests
     {
         InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-        Assert.That(() => InputSystem.Update(InputUpdateType.Dynamic),
+        Assert.That(() => InputSystem.RunOneFrame(InputUpdateType.Dynamic),
             Throws.InvalidOperationException.With.Message.Contains("not enabled").And.Message
                 .Contains("Dynamic").And.Message.Contains("ProcessEventsInFixedUpdate"));
     }
@@ -1097,9 +1097,9 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.123f }, 0.111);
             InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.234f }, 0.222);
             InputSystem.QueueStateEvent(gamepad2, new GamepadState { rightTrigger = 0.345f }, 0.333);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
             InputSystem.QueueStateEvent(gamepad1, new GamepadState { leftTrigger = 0.456f }, 0.444);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Set(gamepad1.leftStick, new Vector2(0.987f, 0.876f)); // Noise.
 
@@ -1497,7 +1497,7 @@ partial class CoreTests
 
             runtime.PlayerFocusLost();
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
-            InputSystem.Update(InputUpdateType.Editor);
+            InputSystem.RunOneFrame(InputUpdateType.Editor);
 
             Assert.That(history, Is.Empty);
         }
@@ -1517,7 +1517,7 @@ partial class CoreTests
 
             runtime.PlayerFocusLost();
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
-            InputSystem.Update(InputUpdateType.Editor);
+            InputSystem.RunOneFrame(InputUpdateType.Editor);
 
             Assert.That(history, Has.Count.EqualTo(1));
             Assert.That(history[0].ReadValue(), Is.EqualTo(0.123).Within(0.00001));

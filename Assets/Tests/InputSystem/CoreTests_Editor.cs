@@ -66,7 +66,7 @@ partial class CoreTests
             manufacturer = "Manufacturer",
             interfaceName = "Test"
         }.ToJson());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         InputSystem.SaveAndReset();
 
@@ -112,7 +112,7 @@ partial class CoreTests
                 interfaceName = HID.kHIDInterface,
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<HID>());
 
@@ -203,7 +203,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice("Gamepad");
         InputSystem.QueueStateEvent(device, new GamepadState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedOnEvent, Is.Zero);
         Assert.That(receivedOnDeviceChange, Is.Zero);
@@ -236,12 +236,12 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.25f});
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.RunOneFrame(InputUpdateType.Dynamic);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
 
-        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.RunOneFrame(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.75).Within(0.000001));
         Assert.That(gamepad.leftTrigger.ReadValueFromPreviousFrame(), Is.EqualTo(0.25).Within(0.000001));

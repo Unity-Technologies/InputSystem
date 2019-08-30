@@ -113,7 +113,7 @@ internal class EnhancedTouchTests : InputTestFixture
         InputSystem.settings.updateMode = updateMode;
         runtime.currentTimeForFixedUpdate += Time.fixedDeltaTime;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
-        InputSystem.Update(updateType);
+        InputSystem.RunOneFrame(updateType);
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].screenPosition,
@@ -137,20 +137,20 @@ internal class EnhancedTouchTests : InputTestFixture
 
         // And make sure we're not seeing the data in the editor.
         runtime.PlayerFocusLost();
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
 
         Assert.That(Touch.activeTouches, Is.Empty);
 
         // Feed some data into editor state.
         BeginTouch(2, new Vector2(0.234f, 0.345f), queueEventOnly: true);
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.RunOneFrame(InputUpdateType.Editor);
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(2));
 
         // Switch back to player.
         runtime.PlayerFocusGained();
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -170,7 +170,7 @@ internal class EnhancedTouchTests : InputTestFixture
         BeginTouch(3, new Vector3(0.456f, 0.567f), queueEventOnly: true);
         EndTouch(3, new Vector3(0.567f, 0.678f), queueEventOnly: true);
         BeginTouch(3, new Vector2(0.678f, 0.789f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(4));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -190,7 +190,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeTouches[3].screenPosition,
             Is.EqualTo(new Vector2(0.678f, 0.789f)).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -206,7 +206,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeTouches[2].screenPosition,
             Is.EqualTo(new Vector2(0.678f, 0.789f)).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -225,7 +225,7 @@ internal class EnhancedTouchTests : InputTestFixture
         EndTouch(3, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         EndTouch(2, new Vector2(0.222f, 0.333f), queueEventOnly: true);
         EndTouch(1, new Vector2(0.333f, 0.444f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -241,7 +241,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeTouches[2].screenPosition,
             Is.EqualTo(new Vector2(0.111f, 0.222f)).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Is.Empty);
     }
@@ -253,7 +253,7 @@ internal class EnhancedTouchTests : InputTestFixture
         BeginTouch(1, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         BeginTouch(2, new Vector2(0.222f, 0.333f), queueEventOnly: true);
         MoveTouch(2, new Vector2(0.333f, 0.444f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches[0].delta,
             Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
@@ -263,7 +263,7 @@ internal class EnhancedTouchTests : InputTestFixture
         MoveTouch(1, new Vector2(0.444f, 0.555f), queueEventOnly: true); // Generates delta to (0.111,0.111)!
         MoveTouch(1, new Vector2(0.555f, 0.666f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.666f, 0.777f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches[0].delta,
             Is.EqualTo(new Vector2(0.555f, 0.555f)).Using(Vector2EqualityComparer.Instance));
@@ -272,14 +272,14 @@ internal class EnhancedTouchTests : InputTestFixture
 
         MoveTouch(1, new Vector2(0.777f, 0.888f), queueEventOnly: true);
         EndTouch(1, new Vector2(0.888f, 0.999f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches[0].delta,
             Is.EqualTo(new Vector2(0.222f, 0.222f)).Using(Vector2EqualityComparer.Instance));
         Assert.That(Touch.activeTouches[1].delta,
             Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches[0].delta,
             Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
@@ -296,7 +296,7 @@ internal class EnhancedTouchTests : InputTestFixture
         MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         MoveTouch(1, new Vector2(0.345f, 0.456f), queueEventOnly: true);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeFingers[0].touchHistory[0].delta,
             Is.EqualTo(new Vector2(0.111f, 0.111f)).Using(Vector2EqualityComparer.Instance));
@@ -338,7 +338,7 @@ internal class EnhancedTouchTests : InputTestFixture
         BeginTouch(2, new Vector2(0.456f, 0.567f), queueEventOnly: true);
         runtime.currentTime = 0.333;
         EndTouch(2, new Vector2(0.567f, 0.678f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches[0].startScreenPosition,
             Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
@@ -355,7 +355,7 @@ internal class EnhancedTouchTests : InputTestFixture
         // Noise. This one shouldn't show up in the history.
         BeginTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);
         EndTouch(2, new Vector2(0.111f, 0.222f), queueEventOnly: true);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         runtime.currentTime = 0.876;
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
@@ -366,7 +366,7 @@ internal class EnhancedTouchTests : InputTestFixture
         BeginTouch(4, new Vector2(0.777f, 0.777f), queueEventOnly: true);
         EndTouch(4, new Vector2(0.888f, 0.888f), queueEventOnly: true);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(3));
 
@@ -524,7 +524,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(Touch.activeFingers[0].currentTouch.touchId, Is.EqualTo(1));
         Assert.That(Touch.activeFingers[0].lastTouch, Is.EqualTo(Touch.activeFingers[0].currentTouch));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeFingers, Has.Count.EqualTo(1));
         Assert.That(Touch.activeFingers[0].currentTouch.touchId, Is.EqualTo(2));
@@ -537,7 +537,7 @@ internal class EnhancedTouchTests : InputTestFixture
         BeginTouch(1, new Vector2(0.123f, 0.234f));
         EndTouch(1, new Vector2(0.234f, 0.345f));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.fingers[0].currentTouch.valid, Is.False);
         Assert.That(Touch.fingers[0].lastTouch.valid, Is.True);
@@ -555,7 +555,7 @@ internal class EnhancedTouchTests : InputTestFixture
         MoveTouch(1, new Vector2(0.345f, 0.456f));     // Finger #0, touch #1
         BeginTouch(2, new Vector2(0.456f, 0.567f));    // Finger #1, touch #4
         MoveTouch(2, new Vector2(0.567f, 0.678f));     // Finger #1, touch #3
-        InputSystem.Update(); // Noise.
+        InputSystem.RunOneFrame(); // Noise.
         MoveTouch(1, new Vector2(0.789f, 0.890f));     // Finger #0, touch #0
         EndTouch(2, new Vector2(0.111f, 0.222f));      // Finger #1, touch #2
         BeginTouch(3, new Vector2(0.222f, 0.333f));    // Finger #1, touch #1
@@ -758,7 +758,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Press(pointer1.press, queueEventOnly: true);
         Press(pointer2.press, queueEventOnly: true);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(2));
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(1));
@@ -850,7 +850,7 @@ internal class EnhancedTouchTests : InputTestFixture
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.delta.ReadValue(),
             Is.EqualTo(new Vector2(111, 111)).Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.press.ReadValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(TouchSimulation.instance.simulatedTouchscreen.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));

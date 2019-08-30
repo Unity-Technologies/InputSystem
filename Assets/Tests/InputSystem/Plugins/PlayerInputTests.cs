@@ -848,7 +848,7 @@ internal class PlayerInputTests : InputTestFixture
     {
         // Pretend we have a native gamepad to get the test closer to the real thing.
         var deviceId = runtime.ReportNewInputDevice<Gamepad>();
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         var gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
 
         var go = new GameObject();
@@ -874,7 +874,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
 
         runtime.ReportInputDeviceRemoved(gamepad);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(playerInput.devices, Is.Empty);
         Assert.That(playerInput.hasMissingRequiredDevices, Is.True);
@@ -884,7 +884,7 @@ internal class PlayerInputTests : InputTestFixture
         listener.messages.Clear();
 
         deviceId = runtime.ReportNewInputDevice<Gamepad>();
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.SameAs(gamepad),
             "Expected InputSystem to recover previous device instance");
         gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
@@ -1025,7 +1025,7 @@ internal class PlayerInputTests : InputTestFixture
         {
             ((ButtonControl)device["button"]).WriteValueIntoEvent(1f, eventPtr);
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
         }
 
         Assert.That(listener.messages, Is.Empty);

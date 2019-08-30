@@ -39,7 +39,7 @@ partial class CoreTests
         {
             runtime.PlayerFocusLost();
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
-            InputSystem.Update(InputUpdateType.Editor);
+            InputSystem.RunOneFrame(InputUpdateType.Editor);
 
             Assert.That(trace, Is.Empty);
         }
@@ -66,12 +66,12 @@ partial class CoreTests
             runtime.PlayerFocusLost();
             runtime.currentTime = 10;
 
-            InputSystem.Update(InputUpdateType.Editor);
+            InputSystem.RunOneFrame(InputUpdateType.Editor);
 
             Assert.That(trace, Is.Empty);
 
             runtime.PlayerFocusGained();
-            InputSystem.Update(InputUpdateType.Dynamic);
+            InputSystem.RunOneFrame(InputUpdateType.Dynamic);
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -248,7 +248,7 @@ partial class CoreTests
             trace.Clear();
 
             runtime.currentTime = 1;
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
 
@@ -275,7 +275,7 @@ partial class CoreTests
             trace.SubscribeToAll();
 
             action.Enable();
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(trace, Is.Empty);
         }
@@ -316,7 +316,7 @@ partial class CoreTests
             Assert.That(trace2, Is.Empty);
 
             InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.345f, 0.456f));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions1 = trace1.ToArray();
             var actions2 = trace2.ToArray();
@@ -383,7 +383,7 @@ partial class CoreTests
             trace.Clear();
 
             // This one should not trigger anything on the action.
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(trace, Is.Empty);
         }
@@ -446,23 +446,23 @@ partial class CoreTests
         enableAction.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(receivedCalls, Is.EqualTo(1));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.East));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(action.enabled, Is.False);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(receivedCalls, Is.EqualTo(1));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.West));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(action.enabled, Is.True);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         Assert.That(receivedCalls, Is.EqualTo(2));
     }
 
@@ -567,7 +567,7 @@ partial class CoreTests
 
         Assert.That(action.triggered, Is.True);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(action.triggered, Is.False);
 
@@ -586,7 +586,7 @@ partial class CoreTests
 
         action.Enable();
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(action.triggered, Is.False);
 
@@ -637,7 +637,7 @@ partial class CoreTests
         Set(gamepad.leftTrigger, 0.234f, queueEventOnly: true);
         Set(gamepad.leftStick, new Vector2(0.234f, 0.345f), queueEventOnly: true);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
         Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
@@ -650,7 +650,7 @@ partial class CoreTests
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
                 .Using(Vector2EqualityComparer.Instance));
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(buttonAction.ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
         Assert.That(triggerAction.ReadValue<float>(), Is.EqualTo(0.234).Within(0.00001));
@@ -696,7 +696,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
     }
@@ -738,7 +738,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedValueData, Has.Length.EqualTo(sizeof(Vector2)));
         Assert.That(BitConverter.ToSingle(receivedValueData, 0),
@@ -749,7 +749,7 @@ partial class CoreTests
         receivedValueData = null;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedValueData, Has.Length.EqualTo(sizeof(Vector2)));
         Assert.That(BitConverter.ToSingle(receivedValueData, 0),
@@ -779,7 +779,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedCall, Is.True);
     }
@@ -1574,7 +1574,7 @@ partial class CoreTests
             rightTrigger = 0.5f
         };
         InputSystem.QueueStateEvent(gamepad, state);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedControl,
@@ -1719,7 +1719,7 @@ partial class CoreTests
             state.rightStick = new Vector2(0.345f, 0.456f);
             InputSystem.QueueStateEvent(gamepad, state, 0.2345);
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W), 0.0987);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(trace.count, Is.EqualTo(3));
 
@@ -1778,7 +1778,7 @@ partial class CoreTests
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one }.WithButton(GamepadButton.South));
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3 * 2));
@@ -1942,7 +1942,7 @@ partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, firstState);
         InputSystem.QueueStateEvent(gamepad, secondState);
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
     }
@@ -2522,7 +2522,7 @@ partial class CoreTests
 
             trace.Clear();
 
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -2590,7 +2590,7 @@ partial class CoreTests
 
             trace.Clear();
 
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -2716,7 +2716,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedVector, Is.Not.Null);
         Assert.That(receivedVector.Value.x, Is.EqualTo(0.1234).Within(0.00001));
@@ -2745,7 +2745,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f), leftTrigger = 0.5f });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedValues, Has.Count.EqualTo(2));
         Assert.That(receivedValues, Has.Exactly(1).EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.5f, 0.5f)) * new Vector2(2, 3)));
@@ -2907,7 +2907,7 @@ partial class CoreTests
         action.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(TestInteraction.s_GotInvoked, Is.True);
     }
@@ -2941,7 +2941,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, Vector2.one);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
@@ -3067,7 +3067,7 @@ partial class CoreTests
             // Perform tap.
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A), 0.0);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 0.05);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             // Only tap was started and performed.
             var actions = trace.ToArray();
@@ -3085,7 +3085,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A), 2.0);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(),
                 2.0 + InputSystem.settings.defaultSlowTapTime + 0.0001);
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             // First tap was started, then canceled, then slow tap was started, and then performed.
             actions = trace.ToArray();
@@ -3301,7 +3301,7 @@ partial class CoreTests
         using (var trace = new InputActionTrace(action))
         {
             InputSystem.QueueStateEvent(gamepad1, new GamepadState {leftTrigger = 0.5f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -3314,7 +3314,7 @@ partial class CoreTests
         // Also make sure that this device creation path gets it right.
         runtime.ReportNewInputDevice(
             new InputDeviceDescription {product = "Test", deviceClass = "Gamepad"}.ToJson());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
         var gamepad2 = (Gamepad)InputSystem.devices.First(x => x.description.product == "Test");
 
         Assert.That(action.controls, Has.Count.EqualTo(2));
@@ -3394,7 +3394,7 @@ partial class CoreTests
         action3.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = Vector2.one, rightStick = Vector2.one});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(action1Performed, Is.EqualTo(1));
         Assert.That(action2Performed, Is.EqualTo(1));
@@ -3437,7 +3437,7 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f}, startTime);
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.0f}, endTime);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(receivedStartTime, Is.EqualTo(startTime).Within(0.000001));
         Assert.That(receivedTime, Is.EqualTo(endTime).Within(0.000001));
@@ -3539,7 +3539,7 @@ partial class CoreTests
         action.performed += ctx => wasPerformed = true;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 1 });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(wasPerformed);
         wasPerformed = false;
@@ -3548,7 +3548,7 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0 });
         // There must be no exceptions here from trying to call any callbacks on the destroyed asset.
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(wasPerformed, Is.False);
     }
@@ -4100,12 +4100,12 @@ partial class CoreTests
         using (var trace = new InputActionTrace(action))
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             Assert.That(trace, Is.Empty);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -4230,7 +4230,7 @@ partial class CoreTests
         action.performed += ctx => wasPerformed = true;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 1});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(wasPerformed);
     }
@@ -4248,7 +4248,7 @@ partial class CoreTests
         action.performed += ctx => wasPerformed = true;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(wasPerformed, Is.False);
     }
@@ -4347,7 +4347,7 @@ partial class CoreTests
 
             // Negative.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -4362,7 +4362,7 @@ partial class CoreTests
 
             // Positive.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {rightTrigger = 0.456f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -4377,7 +4377,7 @@ partial class CoreTests
 
             // Neither.
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -4414,7 +4414,7 @@ partial class CoreTests
             // Neither wins.
             // Start with one side actuated, then actuate both.
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -4426,7 +4426,7 @@ partial class CoreTests
             trace.Clear();
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.345f, rightTrigger = 0.543f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -4439,7 +4439,7 @@ partial class CoreTests
             action.bindingMask = InputBinding.MaskByGroup("positive");
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.123f, rightTrigger = 0.234f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             // We get a started and performed when switching to the right trigger and then another performed
             // when we right trigger changes value.
@@ -4458,7 +4458,7 @@ partial class CoreTests
             action.bindingMask = InputBinding.MaskByGroup("negative");
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.567f, rightTrigger = 0.765f});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(4));
@@ -4494,7 +4494,7 @@ partial class CoreTests
         // Up.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.up));
@@ -4502,7 +4502,7 @@ partial class CoreTests
         // Up left.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
@@ -4511,7 +4511,7 @@ partial class CoreTests
         // Left.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.left));
@@ -4519,7 +4519,7 @@ partial class CoreTests
         // Down left.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.left + Vector2.down).normalized.x).Within(0.00001));
@@ -4528,7 +4528,7 @@ partial class CoreTests
         // Down.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.down));
@@ -4536,7 +4536,7 @@ partial class CoreTests
         // Down right.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.S, Key.D));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
@@ -4545,7 +4545,7 @@ partial class CoreTests
         // Right.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.right));
@@ -4553,7 +4553,7 @@ partial class CoreTests
         // Up right.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.D, Key.W));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.right + Vector2.up).normalized.x).Within(0.00001));
@@ -4589,7 +4589,7 @@ partial class CoreTests
         // Up.
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.up));
@@ -4597,7 +4597,7 @@ partial class CoreTests
         // Up (slightly above press point)
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.up));
@@ -4605,7 +4605,7 @@ partial class CoreTests
         // Up (slightly below press point)
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.zero));
@@ -4613,7 +4613,7 @@ partial class CoreTests
         // Up left.
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up + Vector2.left });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
@@ -4622,7 +4622,7 @@ partial class CoreTests
         // Up left (up slightly above press point)
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 1.01f + Vector2.left });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value.x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
@@ -4631,7 +4631,7 @@ partial class CoreTests
         // Up left (up slightly below press point)
         value = null;
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.up * pressPoint * 0.99f + Vector2.left });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.left));
@@ -4733,7 +4733,7 @@ partial class CoreTests
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performedCount, Is.EqualTo(1));
         LogAssert.NoUnexpectedReceived();
@@ -4766,7 +4766,7 @@ partial class CoreTests
 
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W, Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(Vector2.up + Vector2.left).Using(Vector2EqualityComparer.Instance));
@@ -4803,7 +4803,7 @@ partial class CoreTests
             trace.SubscribeTo(action);
 
             InputSystem.QueueStateEvent(keyboard1, new KeyboardState(Key.RightArrow));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -4816,7 +4816,7 @@ partial class CoreTests
 
             // Going to keyboard #2 should make it take over.
             InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.RightArrow));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             ////REVIEW: should this even result in a change?
 
@@ -4828,7 +4828,7 @@ partial class CoreTests
             trace.Clear();
 
             InputSystem.QueueStateEvent(keyboard2, new KeyboardState(Key.LeftArrow));
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -4867,14 +4867,14 @@ partial class CoreTests
         // Up arrow.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.UpArrow));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.EqualTo(new Vector2(0, 1)).Using(Vector2EqualityComparer.Instance));
 
         // Down arrow + 'a'.
         value = null;
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.DownArrow, Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(value, Is.EqualTo(new Vector2(-1, -1).normalized).Using(Vector2EqualityComparer.Instance));
     }
@@ -4916,7 +4916,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
@@ -4924,7 +4924,7 @@ partial class CoreTests
         performedControl = null;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
@@ -4932,7 +4932,7 @@ partial class CoreTests
         performedControl = null;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(canceledControl, Is.Null);
         Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
@@ -4940,7 +4940,7 @@ partial class CoreTests
         performedControl = null;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.RightArrow));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(canceledControl, Is.EqualTo(keyboard.wKey));
         Assert.That(performedControl, Is.EqualTo(keyboard.rightArrowKey));
@@ -4948,7 +4948,7 @@ partial class CoreTests
         performedControl = null;
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(canceledControl, Is.EqualTo(keyboard.rightArrowKey));
         Assert.That(performedControl, Is.Null);
@@ -4979,29 +4979,29 @@ partial class CoreTests
         // Interaction should be processed only once.
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performedControl, Is.EqualTo(keyboard.wKey));
         performedControl = null;
 
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performedControl, Is.EqualTo(keyboard.aKey));
         performedControl = null;
 
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
         InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.S));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performedControl, Is.EqualTo(keyboard.sKey));
 
@@ -5741,7 +5741,7 @@ partial class CoreTests
             trace.SubscribeTo(action);
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.123f, 0.234f)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -5756,7 +5756,7 @@ partial class CoreTests
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
             InputSystem.QueueStateEvent(mouse, new MouseState {delta = new Vector2(0.234f, 0.345f)});
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(3));
@@ -5775,7 +5775,7 @@ partial class CoreTests
             ////REVIEW: This behavior is somewhat unfortunate. It means that an action bound to <mouse>/delta will constantly
             ////        restart every frame when there is mouse deltas. Also, the accumulation of deltas is really bad for actions.
             // Update should reset mouse delta to zero which should cancel the action.
-            InputSystem.Update();
+            InputSystem.RunOneFrame();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -5813,7 +5813,7 @@ partial class CoreTests
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         LogAssert.NoUnexpectedReceived();
     }
@@ -6113,8 +6113,8 @@ partial class CoreTests
             BeginTouch(1, new Vector2(1, 2), time: 0.3, queueEventOnly: true); // Spare us one extra delta reset.
             MoveTouch(1, new Vector2(10, 20), time: 0.4, queueEventOnly: true);  // Same here.
             EndTouch(1, new Vector2(10, 20), time: 0.5, queueEventOnly: true); // Also releases press.
-            InputSystem.Update();
-            InputSystem.Update(); // Reset delta.
+            InputSystem.RunOneFrame();
+            InputSystem.RunOneFrame(); // Reset delta.
 
             Assert.That(trace,
                 Performed(positionAction, touchscreen.position, new Vector2(1, 2), time: 0.3)
