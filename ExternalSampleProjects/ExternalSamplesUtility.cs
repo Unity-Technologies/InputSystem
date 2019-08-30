@@ -91,6 +91,8 @@ public class ExternalSamplesUtility
         var packagePath = $"{PlayerSettings.productName}-{InputSystem.version}.unitypackage";
         AssetDatabase.ExportPackage(GetAssetsToPublish(), packagePath, ExportPackageOptions.Recurse);
         UnityEngine.Debug.Log($"Created package at {packagePath}");
+		UnityEngine.Debug.Log("Done!");
+        EditorApplication.Exit(0);
     }
 	
     public static void Publish()
