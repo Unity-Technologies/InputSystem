@@ -309,13 +309,23 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// A control is considered "noisy" if it produces different values without necessarily requiring user
-        /// interaction. Sensors are a good example.
+        /// interaction. A good example are sensors (see <see cref="Sensor"/>). For example, the PS4 controller
+        /// which has a gyroscope sensor built into the device ((<see cref="PS4.DualShockGamepadPS4.acceleration"/>).
+        /// Whereas sticks and buttons on the device require user interaction to produce non-default values, the
+        /// gyro will produce varying values even if the device just sits there without user interaction.
         ///
         /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
         /// control has been built from.
         ///
         /// Note that for devices (<see cref="InputDevice"/>) this property is true if any control on the device
         /// is marked as noisy.
+        ///
+        /// The primary effect of being noise is on <see cref="InputDevice.MakeCurrent"/> and
+        /// on interactive rebinding (see <see cref="InputActionRebindingExtensions.RebindingOperation"/>).
+        ///
+        /// If noise filtering on <c>.current</c> is enabled (see <see cref="InputSettings.filterNoiseOnCurrent"/>),
+        /// when seeing input for a potentially noisy device (i.e. any device with any control
+        /// marked as noisy), the system will perform a check
         /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
         /// <seealso cref="InputControlAttribute.noisy"/>
@@ -347,6 +357,15 @@ namespace UnityEngine.InputSystem
         ///
         /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
         /// control has been built from.
+        ///
+        /// The primary effect of being synthetic is in interactive rebinding (see
+        /// <see cref="InputActionRebindingExtensions.RebindingOperation"/>) where non-synthetic
+        /// controls will be favored over synthetic ones. This means, for example, that if both
+        /// <c>"&lt;Gamepad&gt;/leftStick/x"</c> and <c>"&lt;Gamepad&gt;/leftStick/left"</c> are
+        /// suitable picks, <c>"&lt;Gamepad&gt;/leftStick/x"</c> will be favored as it represents
+        /// input from an actual physical control whereas <c>"&lt;Gamepad&gt;/leftStick/left"</c>
+        /// represents input from a made-up control. If, however, the "left" button is the only
+        /// viable pick, it will be accepted.
         /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.isSynthetic"/>
         /// <seealso cref="InputControlAttribute.synthetic"/>

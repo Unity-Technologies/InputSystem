@@ -18,11 +18,11 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Information about a memory region storing state.
+    /// Information about a memory region storing input state.
     /// </summary>
     /// <remarks>
-    /// Input state is kept in raw memory blocks. All state is centrally managed by InputManager; controls
-    /// cannot keep their own independent state.
+    /// Input state is kept in raw memory blocks. All state is centrally managed by the input system;
+    /// controls cannot keep their own independent state.
     ///
     /// Each state block is tagged with a format code indicating the storage format used for the
     /// memory block. This can either be one out of a set of primitive formats (such as "INT") or a custom
@@ -36,6 +36,7 @@ namespace UnityEngine.InputSystem.LowLevel
     ///
     /// Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits.
     /// </remarks>
+    /// <seealso cref="InputControl.stateBlock"/>
     public unsafe struct InputStateBlock
     {
         public const uint InvalidOffset = 0xffffffff;

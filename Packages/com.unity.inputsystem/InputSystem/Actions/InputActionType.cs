@@ -9,16 +9,81 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// While all actions essentially function the same way, there are differences in how an action
-    /// can react to changes in values on the controls it is bound to. The most straightforward type
-    /// of behavior is <see cref="PassThrough"/> which does not expect any kind of value change pattern
-    /// but simply triggers the action on every value change.
+    /// will react to changes in values on the controls it is bound to.
     ///
-    /// In addition, there is <see cref="Button"/> which TODO
+    /// The most straightforward type of behavior is <see cref="PassThrough"/> which does not expect
+    /// any kind of value change pattern but simply triggers the action on every single value change.
+    /// A pass-through action will not use <see cref="InputAction.started"/> or
+    /// <see cref="InputAction.canceled"/> except on bindings that have an interaction added to them.
+    /// Pass-through actions are most useful for sourcing input from arbitrary many controls and
+    /// simply piping all input through without much processing on the side of the action.
+    ///
+    /// <example>
+    /// <code>
+    /// // An action that triggers every time any button on the gamepad is
+    /// // pressed or released.
+    /// var action = new InputAction(
+    ///     type: InputActionType.PassThrough,
+    ///     binding: "&lt;Gamepad&gt;/&lt;Button&gt;");
+    ///
+    /// action.performed +=
+    ///     ctx =>
+    ///     {
+    ///         var button = (ButtonControl)ctx.control;
+    ///         if (button.wasPressedThisFrame)
+    ///             Debug.Log($"Button {ctx.control} was pressed");
+    ///         else if (button.wasReleasedThisFrame)
+    ///             Debug.Log($"Button {ctx.control} was released");
+    ///         // NOTE: We may get calls here in which neither the if nor the else
+    ///         //       clause are true here. A button like the gamepad left and right
+    ///         //       triggers, for example, do not just have a binary on/off state
+    ///         //       but rather a [0..1] value range.
+    ///     };
+    ///
+    /// action.Enable();
+    /// </code>
+    /// </example>
+    ///
+    /// Note that pass-through actions do not perform any kind of disambiguation of input
+    /// which makes them great for just forwarding input from any connected controls but
+    /// makes them a poor choice when only one input should be generated from however
+    /// many connected controls there are. For more details, see <a
+    /// href="../manual/ActionBindings.md#disambiguation">here</a>.
+    ///
+    /// The other two behavior types are <see cref="Button"/> and <see cref="Value"/>.
+    ///
+    /// A <see cref="Value"/> action starts
+    ///
+    /// <example>
+    /// <code>
+    /// </code>
+    /// </example>
+    ///
+    /// A <see cref="Button"/> action, on the other hand,
+    ///
+    /// There is one final difference between <see cref="Value"/> compared to <see cref="Button"/>
+    /// and <see cref="PassThrough"/> actions. A <see cref="Value"/> action will perform an
+    /// initial state check on the first input system update after the action was enabled. What
+    /// this means in practice is that when a value action is bound to, say, the left stick on a
+    /// gamepad and the stick is already moved out of its resting position, then the action will
+    /// immediately trigger instead of first requiring the stick to be moved slightly.
+    ///
+    /// <see cref="Button"/> and <see cref="PassThrough"/> actions, on the other hand, perform
+    /// no such initial state check. For buttons, for example, this means that if a button is
+    /// already pressed when an action is enabled, it first has to be released and then
+    /// pressed again for the action to be triggered.
+    ///
+    /// For more details about initial state checks, see <a
+    /// href="../manual/ActionBindings.md#initial-state-check">here</a>.
     /// </remarks>
+    /// <seealso cref="InputAction.type"/>
     public enum InputActionType
     {
         /// <summary>
-        /// An action that reads a value from its connected sources.
+        /// An action that reads a single value from its connected sources. If multiple bindings
+        /// actuate at the same time, performs disambiguation (see <see
+        /// cref="../manual/ActionBindings.md#disambiguation"/>) to detect the highest value contributor
+        /// at any one time.
         /// </summary>
         /// <remarks>
         /// A value action starts (<see cref="InputActionPhase.Started"/>) and then performs (<see cref="InputActionPhase.Performed"/>)

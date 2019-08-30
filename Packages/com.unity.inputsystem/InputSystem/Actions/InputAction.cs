@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem
     /// When input is received on controls bound to an action, the action will trigger callbacks
     /// in response. These callbacks are <see cref="started"/>, <see cref="performed"/>, and
     /// <see cref="canceled"/>. The callbacks are triggered as part of input system updates
-    /// (see <see cref="InputSystem.Update"/>), i.e. they happen before the respective
+    /// (see <see cref="InputSystem.RunOneFrame"/>), i.e. they happen before the respective
     /// <see cref="MonoBehaviour.Update"/> or <see cref="MonoBehaviour.FixedUpdate"/> methods
     /// get executed (depending on which <see cref="InputSettings.updateMode"/> the system is
     /// set to).
@@ -129,13 +129,17 @@ namespace UnityEngine.InputSystem
     /// value multiple times in the same frame. In practice, this means that, for example,
     /// no button press will get missed.
     ///
+    /// Actions can be grouped into maps (see <see cref="InputActionMap"/>) which can in turn
+    /// be grouped into assets (see <see cref="InputActionAsset"/>).
+    ///
     /// Please note that actions are a player-only feature. They are not supported in
     /// edit mode.
+    ///
+    /// For more in-depth reading on actions, see the <a href="../manual/Actions.html">manual</a>.
     /// </remarks>
     /// <seealso cref="InputActionMap"/>
     /// <seealso cref="InputActionAsset"/>
     /// <seealso cref="InputBinding"/>
-    /// <seealso cref="InputSystem.ListEnabledActions()"/>
     [Serializable]
     public sealed class InputAction : ICloneable, IDisposable
     {
@@ -147,11 +151,14 @@ namespace UnityEngine.InputSystem
         /// Can be null for anonymous actions created in code.
         ///
         /// If the action is part of an <see cref="InputActionMap"/>, it will have a name and the name
-        /// will be unique in the set. The name is just the name of the action alone, not a "mapName/actionName"
+        /// will be unique in the map. The name is just the name of the action alone, not a "mapName/actionName"
         /// combination.
         ///
-        /// The name should not contain slashes or dots but can contain spaces and punctuation.
+        /// The name should not contain slashes or dots but can contain spaces and other punctuation.
+        ///
+        /// An action can be renamed after creation using <see cref="InputActionSetupExtensions.Rename"/>..
         /// </remarks>
+        /// <seealso cref="InputActionMap.GetAction(string)"/>
         public string name => m_Name;
 
         /// <summary>
@@ -160,12 +167,15 @@ namespace UnityEngine.InputSystem
         /// <value>General behavior type of the action.</value>
         /// <remarks>
         /// Determines how the action gets triggered in response to control value changes.
+        ///
+        /// For details about how the action type affects an action, see <see cref="InputActionType"/>.
         /// </remarks>
         public InputActionType type => m_Type;
 
         /// <summary>
         /// A stable, unique identifier for the action.
         /// </summary>
+        /// <value>Unique ID of the action.</value>
         /// <remarks>
         /// This can be used instead of the name to refer to the action. Doing so allows referring to the
         /// action such that renaming the action does not break references.
@@ -205,21 +215,138 @@ namespace UnityEngine.InputSystem
             set => m_ExpectedControlType = value;
         }
 
+        /// <summary>
+        /// Processors applied to every binding on the action.
+        /// </summary>
+        /// <value>Processors added to all bindings on the action.</value>
+        /// <remarks>
+        /// This property is equivalent to appending the same string to the
+        /// <see cref="InputBinding.processors"/> field of every binding that targets
+        /// the action. It is thus simply a means of avoiding the need configure the
+        /// same processor the same way on every binding in case it uniformly applies
+        /// to all of them.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction(processors: "scaleVector2(x=2, y=2)");
+        ///
+        /// // Both of the following bindings will implicitly have a
+        /// // ScaleVector2Processor applied to them.
+        /// action.AddBinding("&lt;Gamepad&gt;/leftStick");
+        /// action.AddBinding("&lt;Joystick&gt;/stick");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.processors"/>
+        /// <seealso cref="InputProcessor"/>
+        /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
         public string processors => m_Processors;
 
+        /// <summary>
+        /// Interactions applied to every binding on the action.
+        /// </summary>
+        /// <value>Interactions added to all bindings on the action.</value>
+        /// <remarks>
+        /// This property is equivalent to appending the same string to the
+        /// <see cref="InputBinding.interactions"/> field of every binding that targets
+        /// the action. It is thus simply a means of avoiding the need configure the
+        /// same interaction the same way on every binding in case it uniformly applies
+        /// to all of them.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction(interactions: "press");
+        ///
+        /// // Both of the following bindings will implicitly have a
+        /// // Press interaction applied to them.
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// action.AddBinding("&lt;Joystick&gt;/trigger");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.interactions"/>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="InputSystem.RegisterInteraction{T}"/>
         public string interactions => m_Interactions;
 
         /// <summary>
         /// The map the action belongs to.
         /// </summary>
+        /// <value><see cref="InputActionMap"/> that the action belongs to or null.</value>
         /// <remarks>
         /// If the action is a loose action created in code, this will be <c>null</c>.
+        ///
+        /// <example>
+        /// <code>
+        /// var action1 = new InputAction(); // action1.actionMap will be null
+        ///
+        /// var actionMap = new InputActionMap();
+        /// var action2 = actionMap.AddAction("action"); // action2.actionMap will point to actionMap
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputActionSetupExtensions.AddAction"/>
         public InputActionMap actionMap => isSingletonAction ? null : m_ActionMap;
 
+        /// <summary>
+        /// An optional mask that determines which bindings of the action to enable and
+        /// which to ignore.
+        /// </summary>
+        /// <value>Mask that determines which bindings on the action to enable.</value>
+        /// <remarks>
+        /// Binding masks can be applied at three different levels: for an entire asset through
+        /// <see cref="InputActionAsset.bindingMask"/>, for a specific map through <see
+        /// cref="InputActionMap.bindingMask"/>, and for single actions through this property.
+        /// By default, none of the masks will be set.
+        ///
+        /// When an action is enabled, all the binding masks that apply to it are taken into
+        /// account. Specifically, this means that any given binding on the action will be
+        /// enabled only if it matches the mask applied to the asset, the mask applied
+        /// to the map that contains the action, and the mask applied to the action itself.
+        /// All the masks are individually optional.
+        ///
+        /// Masks are matched against bindings using <see cref="InputBinding.Matches"/>.
+        ///
+        /// Note that if you modify the masks applicable to an action while the action is
+        /// enabled, the action's <see cref="controls"/> will get updated immediately to
+        /// respect the mask. To avoid repeated binding resolution, it is most efficient
+        /// to apply binding masks before enabling actions.
+        ///
+        /// Binding masks are non-destructive. All the bindings on the action are left
+        /// in pace. Setting a mask will not affect the value of the <see cref="bindings"/>
+        /// property.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create a free-standing action with two bindings, one in the
+        /// // "Keyboard" group and one in the "Gamepad" group.
+        /// var action = new InputAction();
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        /// action.AddBinding("&lt;Keyboard&gt;/space", groups: "Keyboard");
+        ///
+        /// // By default, all bindings will be enabled. This means if both
+        /// // a keyboard and gamepad (or several of them) is present, the action
+        /// // will respond to input from all of them.
+        /// action.Enable();
+        ///
+        /// // With a binding mask we can restrict the action to just specific
+        /// // bindings. For example, to only enable the gamepad binding:
+        /// action.bindingMask = InputBinding.MaskByGroup("Gamepad");
+        ///
+        /// // Note that we can mask by more than just by group. Masking by path
+        /// // or by action as well as a combination of these is also possible.
+        /// // We could, for example, mask for just a specific binding path:
+        /// action.bindingMask = new InputBinding()
+        /// {
+        ///     // Select the keyboard binding based on its specific path.
+        ///     path = "&lt;Keyboard&gt;/space"
+        /// };
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.MaskByGroup"/>
         public InputBinding? bindingMask
         {
-            ////REVIEW: if no mask is set on the action but one is set on the map, should we return that one?
             get => m_BindingMask;
             set
             {
@@ -243,6 +370,8 @@ namespace UnityEngine.InputSystem
 
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devices set on action set)
+
+        //DOC-------------------------------------------------------------------------------
 
         /// <summary>
         /// The list of bindings associated with the action.
@@ -336,7 +465,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (i.e. until the next
-        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
+        /// <see cref="InputSystem.RunOneFrame"/> runs) as long as the action was triggered at least once.
         ///
         /// <example>
         /// <code>

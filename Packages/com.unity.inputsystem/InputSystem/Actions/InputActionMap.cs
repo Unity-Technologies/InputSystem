@@ -13,10 +13,42 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A mapping of <see cref="InputBinding">input bindings</see> to <see cref="InputAction">
-    /// input actions</see>.
+    /// A mechanism for collecting a series of input actions (see <see cref="InputAction"/>)
+    /// and treating them as a group.
     /// </summary>
     /// <remarks>
+    /// Each action map is a named collection of bindings and actions. Both are stored
+    /// as a flat list. The bindings are available through the <see cref="bindings"/>
+    /// property and the actions are available through the <see cref="actions"/> property.
+    ///
+    /// The actions in a map are owned by the map. No action can appear in two maps
+    /// at the same time. To find the action map an action belongs to, use the
+    /// <see cref="InputAction.actionMap"/> property. Note that actions can also stand
+    /// on their own and thus do not necessarily need to belong to a map (in which case
+    /// the <see cref="InputAction.actionMap"/> property is <c>null</c>).
+    ///
+    /// Within a map, all actions have to have names and each action name must
+    /// be unique. The <see cref="InputBinding.action"/> property of bindings in a map
+    /// are resolved within the <see cref="actions"/> in the map. Looking up actions
+    /// by name can be done through <see cref="GetAction(string)"/>.
+    ///
+    /// The <see cref="name"/> of the map itself can be empty, except if the map is part of
+    /// an <see cref="InputActionAsset"/> in which case it is required to have a name
+    /// which also must be unique within the asset.
+    ///
+    /// Action maps are most useful for grouping actions that contextually
+    /// belong together. For example, one common usage is to separate the actions
+    /// that can be performed in the UI or in the main menu from those that can
+    /// be performed during gameplay. However, even within gameplay, multiple action
+    /// maps can be employed. For example, one could have different action maps for
+    /// driving and for walking plus one more map for the actions shared between
+    /// the two modes.
+    ///
+    /// ...creation...
+    ///
+    /// ...enabling...
+    ///
+    ///
     /// Also stores data for actions. All actions have to have an associated
     /// action map. "Lose" actions constructed without a map will internally
     /// create their own map to hold their data.

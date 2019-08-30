@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem
     ///     }
     /// }
     ///
-    /// // A "state struct" describes the memory format used a device. Each device can
+    /// // A "state struct" describes the memory format used by a device. Each device can
     /// // receive and store memory in its custom format. InputControls are then connected
     /// // the individual pieces of memory and read out values from them.
     /// [StructLayout(LayoutKind.Explicit, Size = 32)]
@@ -424,6 +424,23 @@ namespace UnityEngine.InputSystem
         /// Make this the current device of its type.
         /// </summary>
         /// <remarks>
+        /// This method is called automatically by the input system when a device is
+        /// added or when input is received on it. Many types of devices have <c>.current</c>
+        /// getters that allow querying the last used device of a specific type directly (for
+        /// example, see <see cref="Gamepad.current"/>).
+        ///
+        /// There is one special case, however, related to noise. A device that has noisy controls
+        /// (i.e. controls for which <see cref="InputControl.noisy"/> is true) may receive input events
+        /// that contain no meaningful user interaction but are simply just noise from the device. A
+        /// good example of this is the PS4 gamepad which has a built-in gyro and may thus constantly
+        /// feed events into the input system even if not being actually in use. If, for example, an
+        /// Xbox gamepad and PS4 gamepad are both connected to a PC and the user is playing with the
+        /// Xbox gamepad, the PS4 gamepad would still constantly make itself <see cref="Gamepad.current"/>
+        /// by simply flooding the system with events.
+        ///
+        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/>
+        ///
+        ///
         /// Use this to set static properties that give fast access to the latest device used of a given
         /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
         ///
@@ -433,6 +450,12 @@ namespace UnityEngine.InputSystem
         /// A device will be made current by the system initially when it is created and subsequently whenever
         /// it receives an event.
         /// </remarks>
+        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
+        /// <seealso cref="Pointer.current"/>
+        /// <seealso cref="Gamepad.current"/>
+        /// <seealso cref="Mouse.current"/>
+        /// <seealso cref="Pen.current"/>
+        ///
         public virtual void MakeCurrent()
         {
         }

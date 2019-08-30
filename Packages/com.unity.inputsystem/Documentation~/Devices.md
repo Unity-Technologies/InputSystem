@@ -172,7 +172,7 @@ Here we will deal with case 1) where we want to create a new input device entire
 The first step is to create a C# `struct` that represents the form in which input is received and stored and also describes the `InputControl` instances that should be created for the device in order to retrieve said state.
 
 ```CSharp
-// A "state struct" describes the memory format used a device. Each device can
+// A "state struct" describes the memory format used by a device. Each device can
 // receive and store memory in its custom format. InputControls are then connected
 // the individual pieces of memory and read out values from them.
 //

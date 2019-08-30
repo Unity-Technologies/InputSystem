@@ -36,21 +36,82 @@ namespace UnityEngine.InputSystem
     /// A joystick with an arbitrary number of buttons and axes.
     /// </summary>
     /// <remarks>
-    /// By default comes with just a trigger, a potentially twistable
-    /// stick and an optional single hatswitch.
+    /// Joysticks are somewhat hard to classify as there is little commonality other
+    /// than that there is one main stick 2D control and at least one button. From the
+    /// input system perspective, everything that is not a <see cref="Gamepad"/> and
+    /// that has at least one <see cref="stick"/> and one <see cref="trigger"/> control
+    /// is considered a candidate for being a joystick.
+    ///
+    /// Optionally, a joystick may also have the ability to <see cref="twist"/>, i.e.
+    /// for the stick to rotate around its own axis, and at least one <see cref="hatswitch"/>.
+    ///
+    /// Note that devices based on Joystick may have many more controls. Joystick
+    /// itself only defines a minimum required to separate joysticks as a concept
+    /// from other types of devices.
     /// </remarks>
     [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
     public class Joystick : InputDevice
     {
+        /// <summary>
+        /// The primary trigger button of the joystick.
+        /// </summary>
+        /// <value>Control representing the primary trigger button.</value>
+        /// <remarks>
+        /// This is the <see cref="ButtonControl"/> type control on the joystick
+        /// that has the <see cref="CommonUsages.PrimaryTrigger"/> usage.
+        /// </remarks>
         public ButtonControl trigger { get; private set; }
+
+        /// <summary>
+        /// The 2D axis of the stick itself.
+        /// </summary>
+        /// <value>Control representing the main joystick axis.</value>
+        /// <remarks>
+        /// This is the <see cref="StickControl"/> type control on the joystick
+        /// that has the <see cref="CommonUsages.Primary2DMotion"/> usage.
+        /// </remarks>
         public StickControl stick { get; private set; }
 
-        // Optional features. These may be null.
+        /// <summary>
+        /// An optional control representing the rotation of the stick around its
+        /// own axis (i.e. side-to-side circular motion). If not supported, will be
+        /// <c>null</c>.
+        /// </summary>
+        /// <value>Control representing the twist motion of the joystick.</value>
+        /// <remarks>
+        /// This is the <see cref="AxisControl"/> type control on the joystick
+        /// that has the <see cref="CommonUsages.Twist"/> usage.
+        /// </remarks>
         public AxisControl twist { get; private set; }
 
+        /// <summary>
+        /// An optional control representing a four-way "hat switch" on the
+        /// joystick. If not supported, will be <c>null</c>.
+        /// </summary>
+        /// <value>Control representing a hatswitch on the joystick.</value>
+        /// <remarks>
+        /// Hat switches are usually thumb-operated four-way switches that operate
+        /// much like the "d-pad" on a gamepad (see <see cref="Gamepad.dpad"/>).
+        /// If present, this is the <see cref="Vector2Control"/> type control on the
+        /// joystick that has the <see cref="CommonUsages.Hatswitch"/> usage.
+        /// </remarks>
+        public Vector2Control hatswitch { get; private set; }
+
+        /// <summary>
+        /// The joystick that was added or used last. Null if there is none.
+        /// </summary>
+        /// <value>Joystick that was added or used last.</value>
+        /// <remarks>
+        /// See <see cref="InputDevice.MakeCurrent"/> for details about when a device
+        /// is made current.
+        /// </remarks>
         public static Joystick current { get; private set; }
 
+        /// <summary>
+        /// Called when the joystick has been created but before it is added
+        /// to the system.
+        /// </summary>
         protected override void FinishSetup()
         {
             // Mandatory controls.
@@ -59,24 +120,33 @@ namespace UnityEngine.InputSystem
 
             // Optional controls.
             twist = TryGetChildControl<AxisControl>("{Twist}");
+            hatswitch = TryGetChildControl<Vector2Control>("{Hatswitch}");
 
             base.FinishSetup();
         }
 
+        /// <summary>
+        /// Make the joystick the <see cref="current"/> one.
+        /// </summary>
+        /// <remarks>
+        /// This is called automatically by the input system when a device
+        /// receives input or is added to the system. See <see cref="InputDevice.MakeCurrent"/>
+        /// for details.
+        /// </remarks>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <summary>
+        /// Called when the joystick is removed from the system.
+        /// </summary>
         protected override void OnRemoved()
         {
             base.OnRemoved();
             if (current == this)
                 current = null;
         }
-
-        private ButtonControl[] m_Buttons;
-        private AxisControl[] m_Axes;
     }
 }

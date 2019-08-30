@@ -4,10 +4,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
-
-////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
-
 ////REVIEW: Is there a better way than having all the sensor classes?
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -69,12 +65,44 @@ namespace UnityEngine.InputSystem
     /// Base class representing any sensor kind of input device.
     /// </summary>
     /// <remarks>
-    /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s, <see cref="GravitySensor"/>s and others.
+    /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s,
+    /// <see cref="GravitySensor"/>s and others.
+    ///
+    /// Unlike other devices, sensor devices usually start out in a disabled state in order to reduce energy
+    /// consumption (i.e. preserve battery life) when the sensors are not in fact used. To enable a specific sensor,
+    /// call <see cref="InputSystem.EnableDevice"/> on the device instance.
+    ///
+    /// <example>
+    /// <code>
+    /// // Enable the gyroscope.
+    /// InputSystem.EnableDevice(Gyroscope.current);
+    /// </code>
+    /// </example>
+    ///
+    /// Sensors are usually sampled automatically by the platform at regular intervals. For example, if a sensor
+    /// is sampled at 50Hz, the platform will queue an event with an update at a rate of roughly 50 events per
+    /// second. The default sampling rate for a sensor is usually platform-specific. A custom sampling frequency
+    /// can be set through <see cref="samplingFrequency"/> but be aware that there may be limitations for how fast
+    /// a given sensor can be sampled.
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
     public class Sensor : InputDevice
     {
+        /// <summary>
+        /// The frequency (in Hertz) at which the underlying sensor will be refreshed and at which update
+        /// events for it will be queued.
+        /// </summary>
+        /// <value>Times per second at which the sensor is refreshed.</value>
+        /// <remarks>
+        /// Note that when setting sampling frequencies, there may be limits on the range of frequencies
+        /// supported by the underlying hardware/platform.
+        ///
+        /// To support querying sampling frequencies, a sensor device must implement <see cref="QuerySamplingFrequencyCommand"/>.
+        /// To support setting frequencies, it must implemenet <see cref="SetSamplingFrequencyCommand"/>.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">Thrown when reading the property and the underlying
+        /// sensor does not support querying of sampling frequencies.</exception>
         public float samplingFrequency
         {
             get
@@ -86,6 +114,7 @@ namespace UnityEngine.InputSystem
             }
             set
             {
+                ////REVIEW: should this throw NotSupportedException, too?
                 var command = SetSamplingFrequencyCommand.Create(value);
                 ExecuteCommand(ref command);
             }

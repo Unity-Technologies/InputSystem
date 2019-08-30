@@ -6,15 +6,18 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: show remote device IDs in the debugger
+
+////TODO: remote timestamps need to be translated to local timestamps; doesn't make sense for remote events getting
+////      processed on the local timeline as is when the originating timeline may be quite different
+
 ////TODO: support actions
 
 ////TODO: support input users
 
 ////TODO: text input events
 
-////TODO: remove remoting of layout information
-
-////REVIEW: it seems that the various XXXMsg struct should be public; AWTM doesn't seem like working with the message interface is practical
+////REVIEW: it seems that the various XXXMsg struct should be public; ATM doesn't seem like working with the message interface is practical
 
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player

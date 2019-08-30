@@ -7,14 +7,30 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
-    /// Specification that can be matched against an <see cref="InputDeviceDescription"/>.
+    /// Specification that can be matched against an <see cref="InputDeviceDescription"/>. This is
+    /// used to find which <see cref="InputControlLayout"/> to create for a device when it is discovered.
     /// </summary>
     /// <remarks>
-    /// InputDeviceMatchers are used to match descriptions of input devices to
-    /// specific control layouts.
-    ///
     /// Each matcher is basically a set of key/value pairs where each value may either be
-    /// a regular expression or a plain value object.
+    /// a regular expression or a plain value object. The central method for testing a given matcher
+    /// against an <see cref="InputDeviceDescription"/> is <see cref="MatchPercentage"/>.
+    ///
+    /// Various helper methods such as <see cref="WithInterface"/> or <see cref="WithCapability{TValue}"/>
+    /// assist with creating matchers.
+    ///
+    /// <example>
+    /// <code>
+    /// ... create matcher
+    /// </code>
+    /// </example>
+    ///
+    /// ...
+    ///
+    /// <example>
+    /// <code>
+    /// ... register matcher for layout
+    /// </code>
+    /// </example>
     /// </remarks>
     public struct InputDeviceMatcher : IEquatable<InputDeviceMatcher>
     {

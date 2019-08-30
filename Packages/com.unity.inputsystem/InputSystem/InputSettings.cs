@@ -87,6 +87,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// when there is only noise in the input.
+        /// </summary>
+        /// <remarks>
+        /// When toggled on, this property adds extra processing every time input is
+        /// received on a device that is considered noisy. These devices are those that
+        /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
+        /// A good example is the PS4 controller (<see cref="PS4.DualShockGamepadPS4"/>)
+        /// which has a gyroscope sensor built into the device. Whereas sticks and buttons
+        /// on the device require user interaction to produce non-default values, the
+        /// gyro will produce varying values even if the device just sits there without
+        /// user interaction.
+        /// </remarks>
         public bool filterNoiseOnCurrent
         {
             get => m_FilterNoiseOnCurrent;

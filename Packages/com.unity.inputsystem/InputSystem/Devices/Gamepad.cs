@@ -10,8 +10,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we add a gyro as a standard feature of gamepads?
 
-////REVIEW: is the Lefty layout variant actually useful?
-
 ////TODO: allow to be used for mouse simulation
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -19,6 +17,14 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// Default state layout for gamepads.
     /// </summary>
+    /// <remarks>
+    /// Be aware that unlike some other devices like <see cref="Mouse"/> or <see cref="Touchscreen"/>,
+    /// gamepad devices tend to have wildly varying state formats, i.e. forms in which they internally
+    /// store their input data. In practice, even on the same platform gamepads will often store
+    /// their data in different formats. This means that <see cref="GamepadState"/> will often *not*
+    /// be the format in which a particular gamepad (such as <see cref="XInput.XInputController"/>,
+    /// for example) stores its data.
+    /// </remarks>
     /// <seealso cref="Gamepad"/>
     // NOTE: Must match GamepadInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 28)]
@@ -50,16 +56,14 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Left stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
+        [InputControl(layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Left Stick", shortDisplayName = "LS")]
         [FieldOffset(4)]
         public Vector2 leftStick;
 
         /// <summary>
         /// Right stick position.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
-        [InputControl(variants = "Lefty", layout = "Stick", usage = "Primary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
+        [InputControl(layout = "Stick", usage = "Secondary2DMotion", processors = "stickDeadzone", displayName = "Right Stick", shortDisplayName = "RS")]
         [FieldOffset(12)]
         public Vector2 rightStick;
 
@@ -68,23 +72,18 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Position of the left trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
+        [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Left Trigger", shortDisplayName = "LT")]
         [FieldOffset(20)]
         public float leftTrigger;
 
         /// <summary>
         /// Position of the right trigger.
         /// </summary>
-        [InputControl(variants = "Default", layout = "Button", format = "FLT", usage = "PrimaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
-        [InputControl(variants = "Lefty", layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
+        [InputControl(layout = "Button", format = "FLT", usage = "SecondaryTrigger", displayName = "Right Trigger", shortDisplayName = "RT")]
         [FieldOffset(24)]
         public float rightTrigger;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         public GamepadState(params GamepadButton[] buttons)
             : this()
@@ -283,18 +282,91 @@ namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// An Xbox-style gamepad with two sticks, a D-Pad, four face buttons, two triggers,
-    /// two shoulder buttons, and two menu buttons.
+    /// two shoulder buttons, and two menu buttons that usually sit in the midsection of the gamepad.
     /// </summary>
+    /// <remarks>
+    /// The Gamepad layout provides a standardized layouts for gamepads. Generally, if a specific
+    /// device is represented as a Gamepad, the controls, such as the face buttons, are guaranteed
+    /// to be mapped correctly and consistently. If, based on the set of supported devices available
+    /// to the input system, this cannot be guaranteed, a given device is usually represted as a
+    /// generic <see cref="Joystick"/> or as just a plain <see cref="HID.HID"/> instead.
+    ///
+    /// <example>
+    /// <code>
+    /// // Show all gamepads in the system.
+    /// Debug.Log(string.Join("\n", Gamepad.all));
+    ///
+    /// // Check whether the X button on the current gamepad is pressed.
+    /// if (Gamepad.current.xButton.wasPressedThisFrame)
+    ///     Debug.Log("Pressed");
+    ///
+    /// // Rumble the left motor on the current gamepad slightly.
+    /// Gamepad.current.SetMotorSpeeds(0.2f, 0.
+    /// </code>
+    /// </example>
+    /// </remarks>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
+        /// <summary>
+        /// The left face button of the gamepad.
+        /// </summary>
+        /// <value>Control representing the X/Square face button.</value>
+        /// <remarks>
+        /// On an Xbox controller, this is the X button and on the PS4 controller, this is the
+        /// square button.
+        /// </remarks>
+        /// <seealso cref="xButton"/>
+        /// <seealso cref="squareButton"/>
         public ButtonControl buttonWest { get; private set; }
+
+        /// <summary>
+        /// The top face button of the gamepad.
+        /// </summary>
+        /// <value>Control representing the Y/Triangle face button.</value>
+        /// <remarks>
+        /// On an Xbox controller, this is the Y button and on the PS4 controller, this is the
+        /// triangle button.
+        /// </remarks>
+        /// <seealso cref="yButton"/>
+        /// <seealso cref="triangleButton"/>
         public ButtonControl buttonNorth { get; private set; }
+
+        /// <summary>
+        /// The bottom face button of the gamepad.
+        /// </summary>
+        /// <value>Control representing the A/Cross face button.</value>
+        /// <remarks>
+        /// On an Xbox controller, this is the A button and on the PS4 controller, this is the
+        /// cross button.
+        /// </remarks>
+        /// <seealso cref="aButton"/>
+        /// <seealso cref="crossButton"/>
         public ButtonControl buttonSouth { get; private set; }
+
+        /// <summary>
+        /// The right face button of the gamepad.
+        /// </summary>
+        /// <value>Control representing the B/Circle face button.</value>
+        /// <remarks>
+        /// On an Xbox controller, this is the B button and on the PS4 controller, this is the
+        /// circle button.
+        /// </remarks>
+        /// <seealso cref="bButton"/>
+        /// <seealso cref="circleButton"/>
         public ButtonControl buttonEast { get; private set; }
 
+        /// <summary>
+        /// The button that gets triggered when <see cref="leftStick"/> is pressed down.
+        /// </summary>
+        /// <value>Control representing a click with the left stick.</value>
         public ButtonControl leftStickButton { get; private set; }
+
+        /// <summary>
+        /// The button that gets triggered when <see cref="rightStick"/> is pressed down.
+        /// </summary>
+        /// <value>Control representing a click with the right stick.</value>
         public ButtonControl rightStickButton { get; private set; }
 
         public ButtonControl startButton { get; private set; }
@@ -312,24 +384,52 @@ namespace UnityEngine.InputSystem
         public ButtonControl rightTrigger { get; private set; }
 
         /// <summary>
-        /// Same as <see cref="buttonSouth"/>.
+        /// Same as <see cref="buttonSouth"/>. Xbox-style alias.
         /// </summary>
+        /// <value>Same as <see cref="buttonSouth"/>.</value>
         public ButtonControl aButton => buttonSouth;
 
         /// <summary>
-        /// Same as <see cref="buttonEast"/>.
+        /// Same as <see cref="buttonEast"/>. Xbox-style alias.
         /// </summary>
+        /// <value>Same as <see cref="buttonEast"/>.</value>
         public ButtonControl bButton => buttonEast;
 
         /// <summary>
-        /// Same as <see cref="buttonWest"/>
+        /// Same as <see cref="buttonWest"/> Xbox-style alias.
         /// </summary>
+        /// <value>Same as <see cref="buttonWest"/>.</value>
         public ButtonControl xButton => buttonWest;
 
         /// <summary>
-        /// Same as <see cref="buttonNorth"/>.
+        /// Same as <see cref="buttonNorth"/>. Xbox-style alias.
         /// </summary>
+        /// <value>Same as <see cref="buttonNorth"/>.</value>
         public ButtonControl yButton => buttonNorth;
+
+        /// <summary>
+        /// Same as <see cref="buttonNorth"/>. PS4-style alias.
+        /// </summary>
+        /// <value>Same as <see cref="buttonNorth"/>.</value>
+        public ButtonControl triangleButton => buttonNorth;
+
+        /// <summary>
+        /// Same as <see cref="buttonWest"/>. PS4-style alias.
+        /// </summary>
+        /// <value>Same as <see cref="buttonWest"/>.</value>
+        public ButtonControl squareButton => buttonWest;
+
+        /// <summary>
+        /// Same as <see cref="buttonEast"/>. PS4-style alias.
+        /// </summary>
+        /// <value>Same as <see cref="buttonEast"/>.</value>
+        public ButtonControl circleButton => buttonEast;
+
+        /// <summary>
+        /// Same as <see cref="buttonSouth"/>. PS4-style alias.
+        /// </summary>
+        /// <value>Same as <see cref="buttonSouth"/>.</value>
+        public ButtonControl crossButton => buttonSouth;
 
         ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
@@ -368,6 +468,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// A list of gamepads currently connected to the system.
         /// </summary>
+        /// <value>All currently connected gamepads.</value>
         /// <remarks>
         /// Does not cause GC allocation.
         ///
@@ -377,6 +478,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             ////REVIEW: what's actually faster/better... storing these in properties or doing the lookup on the fly?
@@ -411,11 +513,17 @@ namespace UnityEngine.InputSystem
             current = this;
         }
 
+        /// <summary>
+        /// Called when the gamepad is added to the system.
+        /// </summary>
         protected override void OnAdded()
         {
             ArrayHelpers.AppendWithCapacity(ref s_Gamepads, ref s_GamepadCount, this);
         }
 
+        /// <summary>
+        /// Called when the gamepad is removed from the system.
+        /// </summary>
         protected override void OnRemoved()
         {
             if (current == this)
@@ -448,6 +556,7 @@ namespace UnityEngine.InputSystem
             m_Rumble.ResetHaptics(this);
         }
 
+        /// <inheritdoc />
         public virtual void SetMotorSpeeds(float lowFrequency, float highFrequency)
         {
             m_Rumble.SetMotorSpeeds(this, lowFrequency, highFrequency);

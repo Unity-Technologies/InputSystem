@@ -144,6 +144,7 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
+    /// #if UNITY_EDITOR
     /// public class MyCustomInteractionEditor : InputParameterEditor&lt;MyCustomInteraction&gt;
     /// {
     ///     protected override void OnEnable()
@@ -156,6 +157,7 @@ namespace UnityEngine.InputSystem
     ///         // Use standard Unity UI calls do create your own parameter editor UI.
     ///     }
     /// }
+    /// #endif
     /// </code>
     /// </example>
     /// </remarks>

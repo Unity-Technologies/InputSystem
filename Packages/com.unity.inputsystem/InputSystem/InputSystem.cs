@@ -182,7 +182,7 @@ namespace UnityEngine.InputSystem
         ///     }
         /// }
         ///
-        /// // A "state struct" describes the memory format used a device. Each device can
+        /// // A "state struct" describes the memory format used by a device. Each device can
         /// // receive and store memory in its custom format. InputControls are then connected
         /// // the individual pieces of memory and read out values from them.
         /// [StructLayout(LayoutKind.Explicit, Size = 32)]

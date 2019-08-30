@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem
     }
 
     /// <summary>
-    /// A pen/stylus input device.
+    /// Represents a pen/stylus input device.
     /// </summary>
     /// <remarks>
     /// Unlike mice but like touch, pens are absolute pointing devices moving across a fixed
