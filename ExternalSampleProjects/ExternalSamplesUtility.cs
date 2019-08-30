@@ -10,7 +10,7 @@ using UnityEngine.InputSystem;
 
 public class ExternalSamplesUtility
 {
-	static string token => System.Environment.GetEnvironmentVariable("GITHUB_AUTH")
+	static string token => System.Environment.GetEnvironmentVariable("GITHUB_AUTH");
 
 	struct ReleaseResponse
 	{
