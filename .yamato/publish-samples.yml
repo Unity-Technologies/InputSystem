@@ -12,4 +12,4 @@ test_sample_projects:
   artifacts:
     UTR_Output.zip:
       paths:
-        - "upm-ci~/test-results/**/*"
+        - "upm-ci~/**/*"
