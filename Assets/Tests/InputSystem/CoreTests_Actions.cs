@@ -1990,6 +1990,25 @@ partial class CoreTests
         Assert.That(action.name, Is.EqualTo("newName"));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_RenamingActionUpdatesBindings()
+    {
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action2.AddBinding("<Gamepad>/buttonNorth");
+        action1.AddBinding("<Keyboard>/space");
+
+        action1.Rename("newName");
+
+        Assert.That(action1.bindings, Has.Count.EqualTo(2));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        Assert.That(action1.bindings[1].path, Is.EqualTo("<Keyboard>/space"));
+    }
+
     ////TODO: add test to ensure that if adding an action after controls have been resolved, does the right thing
 
     [Test]

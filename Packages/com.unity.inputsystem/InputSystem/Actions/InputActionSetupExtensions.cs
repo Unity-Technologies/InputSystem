@@ -269,7 +269,6 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: update binding mask if necessary
-        ////REVIEW: should we allow renaming singleton actions to empty/null names?
         /// <summary>
         /// Rename an existing action.
         /// </summary>
@@ -280,6 +279,9 @@ namespace UnityEngine.InputSystem
         /// null or empty.</exception>
         /// <exception cref="InvalidOperationException"><see cref="InputAction.actionMap"/> of <paramref name="action"/>
         /// already contains an action called <paramref name="newName"/>.</exception>
+        /// <remarks>
+        /// Renaming an action will also update the bindings that refer to the action.
+        /// </remarks>
         public static void Rename(this InputAction action, string newName)
         {
             if (action == null)
@@ -296,7 +298,15 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"Cannot rename '{action}' to '{newName}' in map '{actionMap}' as the map already contains an action with that name");
 
+            var oldName = action.m_Name;
             action.m_Name = newName;
+
+            // Update bindings.
+            var bindings = actionMap.m_Bindings;
+            var bindingCount = bindings.LengthSafe();
+            for (var i = 0; i < bindingCount; ++i)
+                if (string.Compare(bindings[i].action, oldName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    bindings[i].action = newName;
         }
 
         /// <summary>
