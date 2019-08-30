@@ -9,10 +9,6 @@ test_sample_projects:
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=Publish sh ExternalSampleProjects/publish.sh 
-  triggers:
-    branches:
-      only:
-        - "/.*/"
   artifacts:
     UTR_Output.zip:
       paths:
