@@ -2788,6 +2788,60 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.Zero);
     }
 
+    public enum BindingType
+    {
+        Composite,
+        Normal
+    }
+    [Test]
+    [Category("Actions")]
+    [TestCase(BindingType.Composite)]
+    [TestCase(BindingType.Normal)]
+    public void Actions_ActionListenerWillNotThrowWhenDeviceIsRemoved(BindingType bindingType)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        float triggerValue = 0.0f;
+        bool canceled = false;
+        bool performed = false;
+        var action = new InputAction();
+        if (bindingType == BindingType.Composite)
+        {
+            action.AddCompositeBinding("Axis")
+                .With("Negative", "<Gamepad>/rightTrigger")
+                .With("Positive", "<Gamepad>/leftTrigger");
+        }
+        else
+            action.AddBinding("<Gamepad>/leftTrigger");
+
+        action.canceled += ctx =>
+        {
+            canceled = true;
+            triggerValue = ctx.ReadValue<float>();
+        };
+
+        action.started += ctx =>
+        {
+            performed = true;
+            triggerValue = ctx.ReadValue<float>();
+        };
+        action.Enable();
+
+        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f});
+        InputSystem.Update();
+
+        Assert.That(triggerValue, Is.EqualTo(1.0f));
+        Assert.That(performed, Is.True);
+        Assert.That(canceled, Is.False);
+        performed = false;
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(triggerValue, Is.EqualTo(0.0f));
+        Assert.That(performed, Is.False);
+        Assert.That(canceled, Is.True);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_ControlsUpdateWhenDeviceIsRemoved_WhileActionIsDisabled()

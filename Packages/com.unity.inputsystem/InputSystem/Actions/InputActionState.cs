@@ -1928,7 +1928,9 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException(
                         $"Cannot read value of type '{TypeHelpers.GetNiceTypeName(typeof(TValue))}' from control '{control.path}' bound to action '{GetActionOrNull(bindingIndex)}' (control is a '{control.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(control.valueType)}')");
 
-                value = controlOfType.ReadValue();
+                // Avoid reading from controls of devices which are being destroyed.
+                if (control.device.m_DeviceIndex != InputDevice.kInvalidDeviceIndex)
+                    value = controlOfType.ReadValue();
             }
 
             // Run value through processors, if any.
@@ -2007,9 +2009,11 @@ namespace UnityEngine.InputSystem
                     var thisControlIndex = controlStartIndex + i;
                     var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
 
+                    // Avoid reading from controls of devices which are being destroyed.
+                    if (controls[thisControlIndex].device.m_DeviceIndex == InputDevice.kInvalidDeviceIndex)
+                        buttonValue = false;
                     ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
-
-                    if (isFirstValue)
+                    else if (isFirstValue)
                     {
                         result = value;
                         isFirstValue = false;

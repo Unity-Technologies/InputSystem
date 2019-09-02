@@ -11,6 +11,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 #### Actions
+
+- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
+
 ### Changed
 ### Added
 
