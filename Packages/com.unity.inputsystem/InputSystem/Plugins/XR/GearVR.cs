@@ -10,48 +10,70 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class OculusStandaloneHMDBase : XRHMD
     {
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAngularAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyeAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyeAngularAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyeAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyeAngularAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyeAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyeAngularAcceleration { get; private set; }
 
@@ -98,8 +120,10 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class OculusStandaloneHMDExtended : OculusStandaloneHMDBase
     {
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl back { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector2Control touchpad { get; private set; }
 
@@ -127,30 +151,43 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class GearVRTrackedController : XRController
     {
+        [Scripting.Preserve]
         [InputControl]
         public Vector2Control touchpad { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl back { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl triggerPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl touchpadClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl touchpadTouched { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAngularAcceleration { get; private set; }
 

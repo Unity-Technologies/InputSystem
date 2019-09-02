@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -377,6 +378,7 @@ internal class SteamTests : InputTestFixture
     }
 
     [InputControlLayout(stateType = typeof(TestControllerState))]
+    [Preserve]
     class TestController : SteamController
     {
         public ButtonControl fire { get; private set; }
