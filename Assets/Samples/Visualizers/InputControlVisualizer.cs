@@ -281,7 +281,7 @@ namespace UnityEngine.InputSystem.Samples
             for (var i = 0; i < s_EnabledInstances.Count; ++i)
             {
                 var component = s_EnabledInstances[i];
-                if (component.m_Control.device != device || component.m_Visualizer == null)
+                if (component.m_Control?.device != device || component.m_Visualizer == null)
                     continue;
 
                 component.OnEventImpl(eventPtr);

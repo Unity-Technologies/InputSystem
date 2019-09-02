@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Exceptions in scenes of `Visualizers` sample if respective device was not present on system (e.g. in `PenVisualizer` if no pen was present in system).
+
 #### Actions
 
 - Setting timeouts from `IInputInteraction.Process` not working as expected when processing happened in response to previous timeout expiring (#714).
