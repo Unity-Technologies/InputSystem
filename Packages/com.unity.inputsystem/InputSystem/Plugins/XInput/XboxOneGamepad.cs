@@ -14,10 +14,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     internal struct XboxOneGamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('X', '1', 'G', 'P'); }
-        }
+        public static FourCC kFormat => new FourCC('X', '1', 'G', 'P');
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Values mandated by device")]
         public enum Button
@@ -57,10 +54,10 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [InputControl(name = "dpad/right", bit = (uint)Button.DPadRight)]
         [InputControl(name = "dpad/down", bit = (uint)Button.DPadDown)]
         [InputControl(name = "dpad/left", bit = (uint)Button.DPadLeft)]
-        [InputControl(name = "paddle1", layout = "Button", bit = (uint)Button.Paddle1)]
-        [InputControl(name = "paddle2", layout = "Button", bit = (uint)Button.Paddle2)]
-        [InputControl(name = "paddle3", layout = "Button", bit = (uint)Button.Paddle3)]
-        [InputControl(name = "paddle4", layout = "Button", bit = (uint)Button.Paddle4)]
+        [InputControl(name = "paddle1", displayName = "Paddle 1", layout = "Button", bit = (uint)Button.Paddle1)]
+        [InputControl(name = "paddle2", displayName = "Paddle 2", layout = "Button", bit = (uint)Button.Paddle2)]
+        [InputControl(name = "paddle3", displayName = "Paddle 3", layout = "Button", bit = (uint)Button.Paddle3)]
+        [InputControl(name = "paddle4", displayName = "Paddle 4", layout = "Button", bit = (uint)Button.Paddle4)]
         [FieldOffset(0)]
         public uint buttons;
 
@@ -192,6 +189,7 @@ namespace UnityEngine.InputSystem.XInput
     /// <summary>
     /// An Xbox One Gamepad.
     /// </summary>
+    [Scripting.Preserve]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;

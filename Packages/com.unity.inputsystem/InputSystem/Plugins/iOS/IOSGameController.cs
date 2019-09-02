@@ -106,6 +106,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 namespace UnityEngine.InputSystem.iOS
 {
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
+    [Scripting.Preserve]
     public class iOSGameController : Gamepad
     {
     }
