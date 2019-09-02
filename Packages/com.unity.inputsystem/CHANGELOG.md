@@ -14,6 +14,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 ### Added
 
+#### Actions
+
+- Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
+- Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
+
 ## [0.9.5-preview] - 2019-8-29
 
 ### Fixed
