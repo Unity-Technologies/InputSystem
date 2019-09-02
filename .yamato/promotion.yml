@@ -1,17 +1,9 @@
-test_editors:
-  - version: 2019.1
-test_platforms:
-  - name: win
-    type: Unity::VM
-    image: package-ci/win10:stable
-    flavor: b1.large
----
 promote:
   name: Promote to Production
   agent:
-    type: Unity::VM
-    image: package-ci/win10:stable
-    flavor: b1.large
+    type: Unity::VM::osx
+    image: buildfarm/mac:stable
+    flavor: m1.mac
   variables:
     UPMCI_PROMOTION: 1
   commands:
@@ -19,7 +11,9 @@ promote:
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/
+    - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=Publish sh ExternalSampleProjects/publish.sh     
   triggers:
     tags:
       only:
@@ -27,4 +21,4 @@ promote:
   artifacts:
     artifacts:
       paths:
-        - "upm-ci~/packages/*.tgz"
+        - "upm-ci~/**/*"

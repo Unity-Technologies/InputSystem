@@ -1,5 +1,5 @@
 test_sample_projects:
-  name : Test Sample Projects
+  name : Publish Sample Projects
   agent:
     type: Unity::VM::osx
     image: buildfarm/mac:stable
