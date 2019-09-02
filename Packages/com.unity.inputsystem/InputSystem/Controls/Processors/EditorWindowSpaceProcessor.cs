@@ -32,11 +32,15 @@ namespace UnityEngine.InputSystem.Processors
                 (EditorApplication.isPlaying && Application.isFocused))
                 return value;
 
-            var command = QueryEditorWindowCoordinatesCommand.Create(value);
-            ////TODO: don't issue this on the device itself but rather on the system mouse; this way
-            ////      it's not necessary for all pointer devices to implement the IOCTL separately
-            if (control.device.ExecuteCommand(ref command) > 0)
-                return command.inOutCoordinates;
+            if (Mouse.s_PlatformMouseDevice != null)
+            {
+                var command = QueryEditorWindowCoordinatesCommand.Create(value);
+                // Not all pointer devices implement the editor window position IOCTL,
+                // so we try the global mouse device if available.
+                if (Mouse.s_PlatformMouseDevice.ExecuteCommand(ref command) > 0)
+                    return command.inOutCoordinates;
+            }
+
             return value;
         }
     }

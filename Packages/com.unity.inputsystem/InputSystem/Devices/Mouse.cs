@@ -159,6 +159,16 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        internal static Mouse s_PlatformMouseDevice;
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            if (native && s_PlatformMouseDevice == null)
+                s_PlatformMouseDevice = this;
+        }
+
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
         /// Move the operating system's mouse cursor.

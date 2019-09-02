@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Fixed pointer coordinates in editor windows for non-mouse pointing devices.
 - Fixed using the input system in il2cpp when managed stripping level is set higher then "Low".
 - Device debugger window will still show when reading from specific controls throws exceptions.
 - Offsets and sizes for elements on Linux joysticks are now computed correctly.
