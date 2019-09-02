@@ -42,8 +42,9 @@ namespace UnityEngine.InputSystem
                     if (m_Asset == null)
                         return null;
 
-                    var map = m_Asset.GetActionMap(new Guid(m_ActionMapId));
-                    m_Action = map.GetAction(new Guid(m_ActionId));
+                    var map = m_Asset.FindActionMap(new Guid(m_ActionMapId));
+                    if (map != null)
+                        m_Action = map.FindAction(new Guid(m_ActionId));
                 }
 
                 return m_Action;
@@ -72,8 +73,12 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(actionName))
                 throw new ArgumentNullException(nameof(actionName));
 
-            var actionMap = asset.GetActionMap(mapName);
-            var action = actionMap.GetAction(actionName);
+            var actionMap = asset.FindActionMap(mapName);
+            if (actionMap == null)
+                throw new InvalidOperationException($"No action map '{mapName}' in '{asset}'");
+            var action = actionMap.FindAction(actionName);
+            if (action == null)
+                throw new InvalidOperationException($"No action '{actionName}' in map '{mapName}' of asset '{asset}'");
 
             SetInternal(asset, action);
         }

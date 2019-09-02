@@ -444,7 +444,7 @@ namespace UnityEngine.InputSystem
             // Enable default action map, if set.
             if (m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
             {
-                var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
+                var actionMap = m_Actions.FindActionMap(m_DefaultActionMap);
                 if (actionMap != null)
                 {
                     actionMap.Enable();
@@ -480,7 +480,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Must have map.
-            var actionMap = m_Actions.TryGetActionMap(mapNameOrId);
+            var actionMap = m_Actions.FindActionMap(mapNameOrId);
             if (actionMap == null)
             {
                 Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);

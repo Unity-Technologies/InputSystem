@@ -511,7 +511,7 @@ namespace UnityEngine.InputSystem
                 {
                     name = device.name,
                     layout = device.layout,
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     description = device.description
                 };
 
@@ -566,7 +566,7 @@ namespace UnityEngine.InputSystem
                 var record = new RemoteInputDevice
                 {
                     remoteId = data.deviceId,
-                    localId = device.id,
+                    localId = device.deviceId,
                     description = data.description,
                     layoutName = data.layout
                 };
@@ -648,7 +648,7 @@ namespace UnityEngine.InputSystem
             {
                 var data = new Data
                 {
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     usages = device.usages.Select(x => x.ToString()).ToArray()
                 };
 
@@ -682,7 +682,7 @@ namespace UnityEngine.InputSystem
                 return new Message
                 {
                     type = MessageType.RemoveDevice,
-                    data = BitConverter.GetBytes(device.id)
+                    data = BitConverter.GetBytes(device.deviceId)
                 };
             }
 

@@ -1974,7 +1974,7 @@ partial class CoreTests
 
         Assert.That(action1.name, Is.EqualTo("newName"));
         Assert.That(map["newName"], Is.SameAs(action1));
-        Assert.That(map.TryGetAction("action1"), Is.Null);
+        Assert.That(map.FindAction("action1"), Is.Null);
 
         Assert.That(() => action1.Rename("action2"), Throws.InvalidOperationException);
     }
@@ -2056,13 +2056,13 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
-        Assert.That(map.TryGetAction("action3"), Is.Null);
+        Assert.That(map.FindAction("action1"), Is.SameAs(action1));
+        Assert.That(map.FindAction("action2"), Is.SameAs(action2));
+        Assert.That(map.FindAction("action3"), Is.Null);
 
         // Lookup is case-insensitive.
-        Assert.That(map.TryGetAction("Action1"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction("Action2"), Is.SameAs(action2));
+        Assert.That(map.FindAction("Action1"), Is.SameAs(action1));
+        Assert.That(map.FindAction("Action2"), Is.SameAs(action2));
     }
 
     [Test]
@@ -2074,9 +2074,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction(action1.id), Is.SameAs(action1));
-        Assert.That(map.TryGetAction(action2.id), Is.SameAs(action2));
-        Assert.That(map.TryGetAction(Guid.NewGuid()), Is.Null);
+        Assert.That(map.FindAction(action1.id), Is.SameAs(action1));
+        Assert.That(map.FindAction(action2.id), Is.SameAs(action2));
+        Assert.That(map.FindAction(Guid.NewGuid()), Is.Null);
     }
 
     [Test]
@@ -2088,9 +2088,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction(action1.id.ToString()), Is.SameAs(action1));
-        Assert.That(map.TryGetAction(action2.id.ToString()), Is.SameAs(action2));
-        Assert.That(map.TryGetAction(Guid.NewGuid().ToString()), Is.Null);
+        Assert.That(map.FindAction(action1.id.ToString()), Is.SameAs(action1));
+        Assert.That(map.FindAction(action2.id.ToString()), Is.SameAs(action2));
+        Assert.That(map.FindAction(Guid.NewGuid().ToString()), Is.Null);
     }
 
     // We used to require string GUIDs to be using a "{...}" format when looking up actions. We no
@@ -2104,9 +2104,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
-        Assert.That(map.TryGetAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
+        Assert.That(map.FindAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
+        Assert.That(map.FindAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
+        Assert.That(map.FindAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -3603,8 +3603,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap("test"), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap("other"), Is.Null);
+        Assert.That(asset.FindActionMap("test"), Is.SameAs(map));
+        Assert.That(asset.FindActionMap("other"), Is.Null);
     }
 
     [Test]
@@ -3615,8 +3615,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap(map.id.ToString()), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap(Guid.NewGuid().ToString()), Is.Null);
+        Assert.That(asset.FindActionMap(map.id.ToString()), Is.SameAs(map));
+        Assert.That(asset.FindActionMap(Guid.NewGuid().ToString()), Is.Null);
     }
 
     // Legacy format where we use "{...}" notation to indicate we have a GUID string. No longer necessary but
@@ -3629,8 +3629,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
+        Assert.That(asset.FindActionMap($"{{{map.id}}}"), Is.SameAs(map));
+        Assert.That(asset.FindActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -5587,7 +5587,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCloneAction()
     {
-        var action = new InputAction(name: "action");
+        var action = new InputAction(name: "action", type: InputActionType.PassThrough, interactions: "foo",
+            processors: "bar", expectedControlType: "ctrltype");
+
         action.AddBinding("/gamepad/leftStick").WithInteraction("tap").WithGroup("group");
         action.AddBinding("/gamepad/rightStick");
 
@@ -5596,6 +5598,9 @@ partial class CoreTests
         Assert.That(clone, Is.Not.SameAs(action));
         Assert.That(clone.name, Is.EqualTo(action.name));
         Assert.That(clone.id, Is.Not.EqualTo(action.id));
+        Assert.That(clone.interactions, Is.EqualTo("foo"));
+        Assert.That(clone.processors, Is.EqualTo("bar"));
+        Assert.That(clone.expectedControlType, Is.EqualTo("ctrltype"));
         Assert.That(clone.bindings, Has.Count.EqualTo(action.bindings.Count));
         Assert.That(clone.bindings[0].path, Is.EqualTo(action.bindings[0].path));
         Assert.That(clone.bindings[0].interactions, Is.EqualTo(action.bindings[0].interactions));

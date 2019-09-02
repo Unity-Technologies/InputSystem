@@ -16,6 +16,10 @@ namespace UnityEngine.InputSystem.Utilities
     /// The purpose of this struct is to allow exposing internal arrays directly such that no
     /// boxing and no going through interfaces is required but at the same time not allowing
     /// the internal arrays to be modified.
+    ///
+    /// It differs from <c>ReadOnlySpan&lt;T&gt;</c> in that it can be stored on the heap and differs
+    /// from <c>ReadOnlyCollection&lt;T&gt;</c> in that it supports slices directly without needing
+    /// an intermediate object representing the slice.
     /// </remarks>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {

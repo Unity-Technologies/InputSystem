@@ -61,6 +61,8 @@ namespace UnityEngine.InputSystem.Layouts
     ///
     /// InputControlLayout objects are considered temporaries. Except in the
     /// editor, they are not kept around beyond device creation.
+    ///
+    /// See the <a href="../manual/Layouts.html">manual</a> for more details on control layouts.
     /// </remarks>
     public class InputControlLayout
     {

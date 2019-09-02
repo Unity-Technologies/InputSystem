@@ -125,14 +125,17 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type (<see cref="Type.Name"/>) will be used.</param>
-        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         ///
         /// The type can be annotated with <see cref="InputControlLayoutAttribute"/> for additional options
-        /// but the attribute is not necessary for a type to be usable as a control layout.
+        /// but the attribute is not necessary for a type to be usable as a control layout. Note that if the type
+        /// does have <see cref="InputControlLayoutAttribute"/> and has set <see cref="InputControlLayoutAttribute.stateType"/>,
+        /// the system will <em>not</em> reflect on properties and fields in the type but do that on the given
+        /// state type instead.
         ///
         /// <example>
         /// <code>
@@ -212,14 +215,18 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// Note that if <paramref name="matches"/> is supplied and there are devices that could not
-        /// have been recognized yet, the matcher will be immediately matched against these devices
-        /// and any match will result in an input device being created (except if the layout happens
-        /// to be suppressed via <see cref="InputSettings.supportedDevices"/>).
+        /// Note that if <paramref name="matches"/> is supplied, it will immediately be matched
+        /// against the descriptions (<see cref="InputDeviceDescription"/>) of all available devices.
+        /// If it matches any description where no layout matched before, a new device will immediately
+        /// be created (except if suppressed by <see cref="InputSettings.supportedDevices"/>). If it
+        /// matches a description better (see <see cref="InputDeviceMatcher.MatchPercentage"/>) than
+        /// the currently used layout, the existing device will be a removed and a new device with
+        /// the newly registered layout will be created.
         ///
         /// See <see cref="Controls.StickControl"/> or <see cref="Gamepad"/> for examples of layouts.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
+        /// <seealso cref="InputControlLayout"/>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
             if (type == null)
@@ -239,11 +246,11 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <typeparam name="T">Type to derive a control layout from.</typeparam>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
-        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// This method is equivalent to calling <see cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/> with
-        /// <c>typeof(T)</c>.
+        /// <c>typeof(T)</c>. See that method for details of the layout registration process.
         /// </remarks>
         /// <seealso cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/>
         public static void RegisterLayout<T>(string name = null, InputDeviceMatcher? matches = null)
@@ -252,6 +259,8 @@ namespace UnityEngine.InputSystem
             RegisterLayout(typeof(T), name, matches);
         }
 
+        //DOC---------------------------------------------------------------------------------------
+
         /// <summary>
         /// Register a layout in JSON format.
         /// </summary>
@@ -259,7 +268,8 @@ namespace UnityEngine.InputSystem
         /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
         /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
         /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
-        /// <param name="matches"></param>
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
+        /// be instantiated for newly discovered devices that match the description.</param>
         /// <exception cref="ArgumentNullException"><paramref name="json"/> is null or empty.</exception>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
         /// or the "name" JSON property.</exception>
@@ -1011,7 +1021,7 @@ namespace UnityEngine.InputSystem
         /// Device IDs are not reused in a given session of the application (or Unity editor).
         /// </remarks>
         /// <seealso cref="InputEvent.deviceId"/>
-        /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="InputDevice.deviceId"/>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
         public static InputDevice GetDeviceById(int deviceId)
         {
@@ -1042,7 +1052,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Re-enable the given device.
+        /// (Re-)enable the given device.
         /// </summary>
         /// <param name="device">Device to enable. If already enabled, the method will do nothing.</param>
         /// <remarks>
@@ -1656,7 +1666,7 @@ namespace UnityEngine.InputSystem
             eventBuffer.stateEvent =
                 new StateEvent
             {
-                baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
+                baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.deviceId, time),
                 stateFormat = state.format
             };
 
@@ -1722,7 +1732,7 @@ namespace UnityEngine.InputSystem
             eventBuffer.stateEvent =
                 new DeltaStateEvent
             {
-                baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.id, time),
+                baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.deviceId, time),
                 stateFormat = device.stateBlock.format,
                 stateOffset = control.m_StateBlock.byteOffset - device.m_StateBlock.byteOffset
             };
@@ -1759,7 +1769,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.InvalidDeviceId)
+            if (device.deviceId == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1767,7 +1777,7 @@ namespace UnityEngine.InputSystem
             else
                 time += InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-            var inputEvent = DeviceConfigurationEvent.Create(device.id, time);
+            var inputEvent = DeviceConfigurationEvent.Create(device.deviceId, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
 
@@ -1793,7 +1803,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.InvalidDeviceId)
+            if (device.deviceId == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1801,7 +1811,7 @@ namespace UnityEngine.InputSystem
             else
                 time += InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-            var inputEvent = TextEvent.Create(device.id, character, time);
+            var inputEvent = TextEvent.Create(device.deviceId, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
 
@@ -2041,7 +2051,7 @@ namespace UnityEngine.InputSystem
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (type == null)
-                throw new System.ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(type));
 
             if (string.IsNullOrEmpty(name))
             {

@@ -310,7 +310,7 @@ internal partial class CoreTests
 
         using (var rebind =
                    action.PerformInteractiveRebinding()
-                       .WithExpectedControlLayout("Stick")
+                       .WithExpectedControlType("Stick")
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad,
@@ -460,7 +460,7 @@ internal partial class CoreTests
             rebind.RemoveCandidate(gamepad.leftStick.right);
 
             // Switch to looking only for buttons. leftStick/x will no longer be a suitable pick.
-            rebind.WithExpectedControlLayout("Button");
+            rebind.WithExpectedControlType("Button");
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
             InputSystem.RunOneFrame();
@@ -742,7 +742,7 @@ internal partial class CoreTests
         using (var rebind =
                    action.PerformInteractiveRebinding()
                        .OnMatchWaitForAnother(1) // Wait one second for a better match.
-                       .WithExpectedControlLayout("Stick")
+                       .WithExpectedControlType("Stick")
                        .Start())
         {
             // Actuate leftStick above deadzone.
@@ -978,7 +978,7 @@ internal partial class CoreTests
             InputControl[] candidates = null;
 
             rebind
-                .WithExpectedControlLayout("Button")
+                .WithExpectedControlType("Button")
                 .OnPotentialMatch(ctx => candidates = ctx.candidates.ToArray())
                 .OnApplyBinding((operation, s) => {});
 

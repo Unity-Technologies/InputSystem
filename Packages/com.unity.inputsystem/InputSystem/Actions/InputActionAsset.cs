@@ -65,8 +65,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// List of action maps defined in the asset.
         /// </summary>
+        /// <value>Action maps contained in the asset.</value>
         /// <seealso cref="AddActionMap"/>
         /// <seealso cref="RemoveActionMap(InputActionMap)"/>
+        /// <seealso cref="FindActionMap"/>
         public ReadOnlyArray<InputActionMap> actionMaps => new ReadOnlyArray<InputActionMap>(m_ActionMaps);
 
         /// <summary>
@@ -76,7 +78,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
 
-        /// <inheritdoc />
         public InputBinding? bindingMask
         {
             get => m_BindingMask;
@@ -91,7 +92,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        /// <inheritdoc />
         public ReadOnlyArray<InputDevice>? devices
         {
             get => m_Devices;
@@ -116,6 +116,25 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Look up an action by name or ID.
+        /// </summary>
+        /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
+        /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
+        /// a map with that name and the second part is used to find an action with that name inside the map. In the
+        /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
+        /// is returned. Note that name comparisons are case-insensitive.
+        ///
+        /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
+        /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
+        /// <remarks>
+        /// This method is equivalent to <see cref="FindAction(string)"/> except that it throws
+        /// <see cref="KeyNotFoundException"/> if no action with the given name or ID
+        /// could be found.
+        /// </remarks>
+        /// <exception cref="KeyNotFoundException">No action was found matching <paramref name="actionNameOrId"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c> or empty.</exception>
+        /// <seealso cref="FindAction(string)"/>
         public InputAction this[string actionNameOrId]
         {
             get
@@ -154,7 +173,72 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Replace the contents of the asset with the data in the given JSON string.
         /// </summary>
-        /// <param name="json"></param>
+        /// <param name="json">JSON contents of an <c>.inputactions</c> asset.</param>
+        /// <remarks>
+        /// <c>.inputactions</c> assets are stored in JSON format. This method allows reading
+        /// the JSON source text of such an asset into an existing <c>InputActionMap</c> instance.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        /// asset.LoadFromJson(@"
+        /// {
+        ///     ""maps"" : [
+        ///         {
+        ///             ""name"" : ""gameplay"",
+        ///             ""actions"" : [
+        ///                 { ""name"" : ""fire"", ""type"" : ""button"" },
+        ///                 { ""name"" : ""look"", ""type"" : ""value"" },
+        ///                 { ""name"" : ""move"", ""type"" : ""value"" }
+        ///             ],
+        ///             ""bindings"" : [
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/leftTrigger"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/leftStick"", ""action"" : ""move"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/rightStick"", ""action"" : ""look"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""dpad"", ""action"" : ""move"", ""groups"" : ""Gamepad"", ""isComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/a"", ""name"" : ""left"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/d"", ""name"" : ""right"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/w"", ""name"" : ""up"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/s"", ""name"" : ""down"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Mouse&gt;/delta"", ""action"" : ""look"", ""groups"" : ""Keyboard&amp;Mouse"" },
+        ///                 { ""path"" : ""&lt;Mouse&gt;/leftButton"", ""action"" : ""fire"", ""groups"" : ""Keyboard&amp;Mouse"" }
+        ///             ]
+        ///         },
+        ///         {
+        ///             ""name"" : ""ui"",
+        ///             ""actions"" : [
+        ///                 { ""name"" : ""navigate"" }
+        ///             ],
+        ///             ""bindings"" : [
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" }
+        ///             ]
+        ///         }
+        ///     ],
+        ///     ""controlSchemes"" : [
+        ///         {
+        ///             ""name"" : ""Gamepad"",
+        ///             ""bindingGroup"" : ""Gamepad"",
+        ///             ""devices"" : [
+        ///                 { ""devicePath"" : ""&lt;Gamepad&gt;"" }
+        ///             ]
+        ///         },
+        ///         {
+        ///             ""name"" : ""Keyboard&amp;Mouse"",
+        ///             ""bindingGroup"" : ""Keyboard&amp;Mouse"",
+        ///             ""devices"" : [
+        ///                 { ""devicePath"" : ""&lt;Keyboard&gt;"" },
+        ///                 { ""devicePath"" : ""&lt;Mouse&gt;"" }
+        ///             ]
+        ///         }
+        ///     ]
+        /// }");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="json"/> is <c>null</c> or empty.</exception>
+        /// <seealso cref="FromJson"/>
+        /// <seealso cref="ToJson"/>
         public void LoadFromJson(string json)
         {
             if (string.IsNullOrEmpty(json))
@@ -164,6 +248,75 @@ namespace UnityEngine.InputSystem
             parsedJson.ToAsset(this);
         }
 
+        /// <summary>
+        /// Replace the contents of the asset with the data in the given JSON string.
+        /// </summary>
+        /// <param name="json">JSON contents of an <c>.inputactions</c> asset.</param>
+        /// <returns>The InputActionAsset instance created from the given JSON string.</returns>
+        /// <remarks>
+        /// <c>.inputactions</c> assets are stored in JSON format. This method allows turning
+        /// the JSON source text of such an asset into a new <c>InputActionMap</c> instance.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = InputActionAsset.FromJson(@"
+        /// {
+        ///     ""maps"" : [
+        ///         {
+        ///             ""name"" : ""gameplay"",
+        ///             ""actions"" : [
+        ///                 { ""name"" : ""fire"", ""type"" : ""button"" },
+        ///                 { ""name"" : ""look"", ""type"" : ""value"" },
+        ///                 { ""name"" : ""move"", ""type"" : ""value"" }
+        ///             ],
+        ///             ""bindings"" : [
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/leftTrigger"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/leftStick"", ""action"" : ""move"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/rightStick"", ""action"" : ""look"", ""groups"" : ""Gamepad"" },
+        ///                 { ""path"" : ""dpad"", ""action"" : ""move"", ""groups"" : ""Gamepad"", ""isComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/a"", ""name"" : ""left"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/d"", ""name"" : ""right"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/w"", ""name"" : ""up"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Keyboard&gt;/s"", ""name"" : ""down"", ""action"" : ""move"", ""groups"" : ""Keyboard&amp;Mouse"", ""isPartOfComposite"" : true },
+        ///                 { ""path"" : ""&lt;Mouse&gt;/delta"", ""action"" : ""look"", ""groups"" : ""Keyboard&amp;Mouse"" },
+        ///                 { ""path"" : ""&lt;Mouse&gt;/leftButton"", ""action"" : ""fire"", ""groups"" : ""Keyboard&amp;Mouse"" }
+        ///             ]
+        ///         },
+        ///         {
+        ///             ""name"" : ""ui"",
+        ///             ""actions"" : [
+        ///                 { ""name"" : ""navigate"" }
+        ///             ],
+        ///             ""bindings"" : [
+        ///                 { ""path"" : ""&lt;Gamepad&gt;/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" }
+        ///             ]
+        ///         }
+        ///     ],
+        ///     ""controlSchemes"" : [
+        ///         {
+        ///             ""name"" : ""Gamepad"",
+        ///             ""bindingGroup"" : ""Gamepad"",
+        ///             ""devices"" : [
+        ///                 { ""devicePath"" : ""&lt;Gamepad&gt;"" }
+        ///             ]
+        ///         },
+        ///         {
+        ///             ""name"" : ""Keyboard&amp;Mouse"",
+        ///             ""bindingGroup"" : ""Keyboard&amp;Mouse"",
+        ///             ""devices"" : [
+        ///                 { ""devicePath"" : ""&lt;Keyboard&gt;"" },
+        ///                 { ""devicePath"" : ""&lt;Mouse&gt;"" }
+        ///             ]
+        ///         }
+        ///     ]
+        /// }");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="json"/> is <c>null</c> or empty.</exception>
+        /// <seealso cref="LoadFromJson"/>
+        /// <seealso cref="ToJson"/>
         public static InputActionAsset FromJson(string json)
         {
             if (string.IsNullOrEmpty(json))
@@ -175,8 +328,8 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Find an <see cref="InputAction">action</see> by its name in of of the <see cref="InputActionMap">
-        /// action maps</see> in the asset.
+        /// Find an <see cref="InputAction"/> by its name in one of the <see cref="InputActionMap"/>s
+        /// in the asset.
         /// </summary>
         /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
         /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
@@ -185,11 +338,14 @@ namespace UnityEngine.InputSystem
         /// is returned. Note that name comparisons are case-insensitive.
         ///
         /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
-        /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is null or empty.</exception>
+        /// <param name="throwIfNotFound">If <c>true</c>, instead of returning <c>null</c> when the action
+        /// cannot be found, throw <c>ArgumentException</c>.</param>
+        /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="throwIfNotFound"/> is true and the
+        /// action could not be found. -Or- If <paramref name="actionNameOrId"/> contains a slash but is missing
+        /// either the action or the map name.</exception>
         /// <remarks>
-        /// Does not allocate.
-        /// </remarks>
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
@@ -214,58 +370,63 @@ namespace UnityEngine.InputSystem
         /// asset.FindAction("map2/action2") // Returns action2.
         /// asset.FindAction("map3/action3") // Returns action3.
         ///
-        /// Search by unique action ID.
+        /// // Search by unique action ID.
         /// asset.FindAction(action1.id.ToString()) // Returns action1.
         /// asset.FindAction(action2.id.ToString()) // Returns action2.
         /// asset.FindAction(action3.id.ToString()) // Returns action3.
         /// </code>
         /// </example>
-        public InputAction FindAction(string actionNameOrId)
+        /// </remarks>
+        public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
-            if (string.IsNullOrEmpty(actionNameOrId))
+            if (actionNameOrId == null)
                 throw new ArgumentNullException(nameof(actionNameOrId));
 
-            if (m_ActionMaps == null)
-                return null;
-
-            // Check if we have a "map/action" path.
-            var indexOfSlash = actionNameOrId.IndexOf('/');
-            if (indexOfSlash == -1)
+            if (m_ActionMaps != null)
             {
-                // No slash so it's just a simple action name.
-                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                // Check if we have a "map/action" path.
+                var indexOfSlash = actionNameOrId.IndexOf('/');
+                if (indexOfSlash == -1)
                 {
-                    var action = m_ActionMaps[i].TryGetAction(actionNameOrId);
-                    if (action != null)
-                        return action;
-                }
-            }
-            else
-            {
-                // Have a path. First search for the map, then for the action.
-                var mapName = new Substring(actionNameOrId, 0, indexOfSlash);
-                var actionName = new Substring(actionNameOrId, indexOfSlash + 1);
-
-                if (mapName.isEmpty || actionName.isEmpty)
-                    throw new ArgumentException("Malformed action path: " + actionNameOrId, nameof(actionNameOrId));
-
-                for (var i = 0; i < m_ActionMaps.Length; ++i)
-                {
-                    var map = m_ActionMaps[i];
-                    if (Substring.Compare(map.name, mapName, StringComparison.InvariantCultureIgnoreCase) != 0)
-                        continue;
-
-                    var actions = map.m_Actions;
-                    for (var n = 0; n < actions.Length; ++n)
+                    // No slash so it's just a simple action name.
+                    for (var i = 0; i < m_ActionMaps.Length; ++i)
                     {
-                        var action = actions[n];
-                        if (Substring.Compare(action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                        var action = m_ActionMaps[i].FindAction(actionNameOrId);
+                        if (action != null)
                             return action;
                     }
+                }
+                else
+                {
+                    // Have a path. First search for the map, then for the action.
+                    var mapName = new Substring(actionNameOrId, 0, indexOfSlash);
+                    var actionName = new Substring(actionNameOrId, indexOfSlash + 1);
 
-                    break;
+                    if (mapName.isEmpty || actionName.isEmpty)
+                        throw new ArgumentException("Malformed action path: " + actionNameOrId, nameof(actionNameOrId));
+
+                    for (var i = 0; i < m_ActionMaps.Length; ++i)
+                    {
+                        var map = m_ActionMaps[i];
+                        if (Substring.Compare(map.name, mapName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                            continue;
+
+                        var actions = map.m_Actions;
+                        for (var n = 0; n < actions.Length; ++n)
+                        {
+                            var action = actions[n];
+                            if (Substring.Compare(action.name, actionName,
+                                StringComparison.InvariantCultureIgnoreCase) == 0)
+                                return action;
+                        }
+
+                        break;
+                    }
                 }
             }
+
+            if (throwIfNotFound)
+                throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'");
 
             return null;
         }
@@ -287,7 +448,7 @@ namespace UnityEngine.InputSystem
                 throw new InvalidOperationException(
                     $"Cannot add map '{map}' to asset '{this}' as it has already been added to asset '{map.asset}'");
             ////REVIEW: some of the rules here seem stupid; just replace?
-            if (TryGetActionMap(map.name) != null)
+            if (FindActionMap(map.name) != null)
                 throw new InvalidOperationException(
                     $"An action map called '{map.name}' already exists in the asset");
 
@@ -295,10 +456,22 @@ namespace UnityEngine.InputSystem
             map.m_Asset = this;
         }
 
+        /// <summary>
+        /// Remove the given action map from the asset.
+        /// </summary>
+        /// <param name="map">An action map. If the given map is not part of the asset, the method
+        /// does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
+        /// cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(string)"/>
+        /// <seealso cref="actionMaps"/>
         public void RemoveActionMap(InputActionMap map)
         {
             if (map == null)
                 throw new ArgumentNullException(nameof(map));
+            if (map.enabled)
+                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
 
             // Ignore if not part of this asset.
             if (map.m_Asset != this)
@@ -308,20 +481,43 @@ namespace UnityEngine.InputSystem
             map.m_Asset = null;
         }
 
+        /// <summary>
+        /// Remove the action map with the given name or ID from the asset.
+        /// </summary>
+        /// <param name="nameOrId">The name or ID (see <see cref="InputActionMap.id"/>) of a map in the
+        /// asset. Note that lookup is case-insensitive. If no map with the given name or ID is found,
+        /// the method does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">The map referenced by <paramref name="nameOrId"/> is currently enabled
+        /// (see <see cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(string)"/>
+        /// <seealso cref="actionMaps"/>
         public void RemoveActionMap(string nameOrId)
         {
-            if (string.IsNullOrEmpty(nameOrId))
+            if (nameOrId == null)
                 throw new ArgumentNullException(nameof(nameOrId));
-
-            var map = TryGetActionMap(nameOrId);
+            var map = FindActionMap(nameOrId);
             if (map != null)
                 RemoveActionMap(map);
         }
 
-        public InputActionMap TryGetActionMap(string nameOrId)
+        /// <summary>
+        /// Find an <see cref="InputActionMap"/> in the asset by its name or ID.
+        /// </summary>
+        /// <param name="nameOrId">Name or ID (see <see cref="InputActionMap.id"/>) of the action map
+        /// to look for. Matching is case-insensitive.</param>
+        /// <param name="throwIfNotFound">If true, instead of returning <c>null</c>, throw <c>ArgumentException</c>.</param>
+        /// <returns>The <see cref="InputActionMap"/> with a name or ID matching <paramref name="nameOrId"/> or
+        /// <c>null</c> if no matching map could be found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">If <paramref name="throwIfNotFound"/> is <c>true</c>, thrown if
+        /// the action map cannot be found.</exception>
+        /// <seealso cref="actionMaps"/>
+        /// <seealso cref="FindActionMap(System.Guid)"/>
+        public InputActionMap FindActionMap(string nameOrId, bool throwIfNotFound = false)
         {
-            if (string.IsNullOrEmpty(nameOrId))
-                throw new ArgumentException("Name cannot be null or empty", nameof(nameOrId));
+            if (nameOrId == null)
+                throw new ArgumentNullException(nameof(nameOrId));
 
             if (m_ActionMaps == null)
                 return null;
@@ -345,10 +541,22 @@ namespace UnityEngine.InputSystem
                     return map;
             }
 
+            if (throwIfNotFound)
+                throw new ArgumentException($"Cannot find action map '{nameOrId}' in '{this}'");
+
             return null;
         }
 
-        public InputActionMap TryGetActionMap(Guid id)
+        /// <summary>
+        /// Find an <see cref="InputActionMap"/> in the asset by its ID.
+        /// </summary>
+        /// <param name="id">ID (see <see cref="InputActionMap.id"/>) of the action map
+        /// to look for.</param>
+        /// <returns>The <see cref="InputActionMap"/> with ID matching <paramref name="id"/> or
+        /// <c>null</c> if no map in the asset has the given ID.</returns>
+        /// <seealso cref="actionMaps"/>
+        /// <seealso cref="FindActionMap"/>
+        public InputActionMap FindActionMap(Guid id)
         {
             if (m_ActionMaps == null)
                 return null;
@@ -363,23 +571,7 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
-        public InputActionMap GetActionMap(string name)
-        {
-            var map = TryGetActionMap(name);
-            if (map == null)
-                throw new KeyNotFoundException($"Could not find an action map called '{name}' in asset '{this}'");
-            return map;
-        }
-
-        public InputActionMap GetActionMap(Guid id)
-        {
-            var map = TryGetActionMap(id);
-            if (map == null)
-                throw new KeyNotFoundException($"Could not find an action map with ID '{id}' in asset '{this}'");
-            return map;
-        }
-
-        public InputAction TryGetAction(Guid guid)
+        public InputAction FindAction(Guid guid)
         {
             if (m_ActionMaps == null)
                 return null;
@@ -387,7 +579,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < m_ActionMaps.Length; ++i)
             {
                 var map = m_ActionMaps[i];
-                var action = map.TryGetAction(guid);
+                var action = map.FindAction(guid);
                 if (action != null)
                     return action;
             }

@@ -37,20 +37,35 @@ namespace UnityEngine.InputSystem
     /// bindings that are part of <see cref="InputActionMap.bindings"/> will resolve action names to
     /// actions in the same <see cref="InputActionMap"/>.
     ///
-    ///
-    /// A binding can also be used as a override specification. In that scenario, <see cref="path"/>,
-    /// <see cref="action"/>, and <see cref="groups"/> become search criteria that can be used to
-    /// find existing bindings, and <see cref="overridePath"/> becomes the path to override existing
-    /// binding paths with.
-    ///
-    /// Finally, a binding can be used as a form of specifying a mask that matching bindings must
-    /// comply to. For example, a binding that has only <see cref="groups"/> set to "Gamepad" and all
-    /// other fields set to default can be used to mask for bindings in the "Gamepad" group.
+    /// A binding can also be used as a form of search mask. In this use, <see cref="path"/>,
+    /// <see cref="action"/>, and <see cref="groups"/> become search criteria that are matched
+    /// against other bindings. See <see cref="Matches(InputBinding)"/> for details. This use
     /// </remarks>
     [Serializable]
     public struct InputBinding : IEquatable<InputBinding>
     {
+        /// <summary>
+        /// Character that is used to separate elements in places such as <see cref="groups"/>,
+        /// <see cref="interactions"/>, and <see cref="processors"/>.
+        /// </summary>
+        /// Some strings on bindings represent lists of elements. An example is <see cref="groups"/>
+        /// which may associate a binding with several binding groups, each one delimited by the
+        /// separator.
+        ///
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // A binding that belongs to the "Keyboard&amp;Mouse" and "Gamepad" group.
+        /// new InputBinding
+        /// {
+        ///     path = "*/{PrimaryAction},
+        ///     groups = "Keyboard&amp;Mouse;Gamepad"
+        /// };
+        /// </code>
+        /// </example>
+        /// </remarks>
         public const char Separator = ';';
+
         internal const string kSeparatorString = ";";
 
         /// <summary>
@@ -85,13 +100,23 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Control path being bound to.
         /// </summary>
+        /// <value>Path of control(s) to source input from.</value>
         /// <remarks>
+        /// Bindings reference <see cref="InputControl"/>s using a regular expression-like
+        /// language. See <see cref="InputControlPath"/> for details.
+        ///
         /// If the binding is a composite (<see cref="isComposite"/>), the path is the composite
-        /// string instead.
+        /// string instead. For example, for a <see cref="Composites.Vector2Composite"/>, the
+        /// path could be something like <c>"Vector2(normalize=false)"</c>.
+        ///
+        /// The path of a binding may be non-destructively override at runtime using <see cref="overridePath"/>
+        /// which unlike this property is not serialized. <see cref="effectivePath"/> represents the
+        /// final, effective path.
         /// </remarks>
         /// <example>
         /// <code>
-        /// "/*/{PrimaryAction}"
+        /// // A binding that references the left mouse button.
+        /// new InputBinding { path = "&lt;Mouse&gt;/leftButton" }
         /// </code>
         /// </example>
         public string path
@@ -104,8 +129,29 @@ namespace UnityEngine.InputSystem
         /// If the binding is overridden, this is the overriding path.
         /// Otherwise it is null.
         /// </summary>
+        /// <value>Path to override the <see cref="path"/> property with.</value>
         /// <remarks>
-        /// Not serialized as overrides are considered temporary, runtime-only state.
+        /// Unlike the <see cref="path"/> property, the value of the override path is not serialized.
+        /// If set, it will take precedence and determine the result of <see cref="effectivePath"/>.
+        ///
+        /// This property can be set to an empty string to disable the binding. During resolution,
+        /// bindings with an empty <see cref="effectivePath"/> will get skipped.
+        ///
+        /// To set the override on an existing binding, use the methods supplied by <see cref="InputActionRebindingExtensions"/>
+        /// such as <see cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,string,string,string)"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the binding to &lt;Gamepad&gt;/buttonSouth on
+        /// // myAction with a binding to &lt;Gamepad&gt;/buttonNorth.
+        /// myAction.ApplyBindingOverride(
+        ///     new InputBinding
+        ///     {
+        ///         path = "&lt;Gamepad&gt;/buttonSouth",
+        ///         overridePath = "&lt;Gamepad&gt;/buttonNorth"
+        ///     });
+        /// </code>
+        /// </example>
         /// </remarks>
         public string overridePath
         {
@@ -183,7 +229,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This is null if the binding does not trigger an action.
         ///
-        /// For InputBindings that are used as filters, this can be a "mapName/actionName" combination
+        /// For InputBindings that are used as masks, this can be a "mapName/actionName" combination
         /// or "mapName/*" to match all actions in the given map.
         /// </remarks>
         /// <seealso cref="InputAction.name"/>
@@ -192,19 +238,6 @@ namespace UnityEngine.InputSystem
         {
             get => m_Action;
             set => m_Action = value;
-        }
-
-        ////TODO: make public when chained bindings are implemented fully
-        internal bool chainWithPrevious
-        {
-            get => (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine;
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.ThisAndPreviousCombine;
-                else
-                    m_Flags &= ~Flags.ThisAndPreviousCombine;
-            }
         }
 
         public bool isComposite
@@ -411,45 +444,8 @@ namespace UnityEngine.InputSystem
         internal enum Flags
         {
             None = 0,
-
-            /// <summary>
-            /// This and the next binding in the list combine such that both need to be
-            /// triggered to trigger the associated action.
-            /// </summary>
-            /// <remarks>
-            /// The order in which the bindings trigger does not matter.
-            ///
-            /// An arbitrarily long sequence of bindings can be arranged as having to trigger
-            /// together.
-            ///
-            /// If this is set, <see cref="ThisAndPreviousCombine"/> has to be set on the
-            /// subsequent binding.
-            /// </remarks>
-            ThisAndNextCombine = 1 << 5,
-            ThisAndNextAreExclusive = 1 << 6,
-
-            // This binding and the previous one in the list are a combo. This one
-            // can only trigger after the previous one already has.
-            ThisAndPreviousCombine = 1 << 0,
-            ThisAndPreviousAreExclusive = 1 << 1,
-
-            /// <summary>
-            /// Whether this binding starts a composite binding group.
-            /// </summary>
-            /// <remarks>
-            /// This flag implies <see cref="PushBindingLevel"/>. The composite is comprised
-            /// of all bindings at the same grouping level. The name of each binding in the
-            /// composite is used to determine which role the resolved controls play in the
-            /// composite.
-            /// </remarks>
             Composite = 1 << 2,
-            PartOfComposite = 1 << 3,////REVIEW: remove and replace with PushBindingLevel and PopBindingLevel?
-
-            /// <summary>
-            ///
-            /// </summary>
-            PushBindingLevel = 1 << 3,
-            PopBindingLevel = 1 << 4,
+            PartOfComposite = 1 << 3,
         }
     }
 }

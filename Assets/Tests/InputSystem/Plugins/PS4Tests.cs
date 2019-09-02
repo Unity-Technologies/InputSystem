@@ -107,7 +107,7 @@ public class PS4Tests : InputTestFixture
         DualShockPS4OuputCommand? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(gamepad.id,
+            runtime.SetDeviceCommandCallback(gamepad.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockPS4OuputCommand.Type)
@@ -274,7 +274,7 @@ public class PS4Tests : InputTestFixture
         MoveControllerPS4OuputCommand? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(move.id,
+            runtime.SetDeviceCommandCallback(move.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == MoveControllerPS4OuputCommand.Type)

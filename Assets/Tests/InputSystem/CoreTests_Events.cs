@@ -387,7 +387,7 @@ partial class CoreTests
 
             var stateEventPtr = StateEvent.From(eventPtr);
 
-            Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.id));
+            Assert.That(stateEventPtr->baseEvent.deviceId, Is.EqualTo(mouse.deviceId));
             Assert.That(stateEventPtr->baseEvent.time, Is.EqualTo(runtime.currentTime));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes, Is.EqualTo(buffer.Length));
             Assert.That(stateEventPtr->baseEvent.sizeInBytes,
@@ -481,7 +481,7 @@ partial class CoreTests
         {
             ++receivedCalls;
             Assert.That(inputEvent.IsA<StateEvent>(), Is.True);
-            Assert.That(inputEvent.deviceId, Is.EqualTo(device.id));
+            Assert.That(inputEvent.deviceId, Is.EqualTo(device.deviceId));
         };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
@@ -578,7 +578,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice<Gamepad>();
 
-        var inputEvent = DeviceConfigurationEvent.Create(device.id, 1.0);
+        var inputEvent = DeviceConfigurationEvent.Create(device.deviceId, 1.0);
 
         // This should go back to false when we inputEvent goes on the queue.
         // The way the behavior is implemented is a side-effect of how we store
@@ -668,7 +668,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         var noise = InputSystem.AddDevice<Gamepad>();
 
-        using (var trace = new InputEventTrace {deviceId = device.id})
+        using (var trace = new InputEventTrace {deviceId = device.deviceId})
         {
             trace.Enable();
             Assert.That(trace.enabled, Is.True);
@@ -689,14 +689,14 @@ partial class CoreTests
             Assert.That(events, Has.Count.EqualTo(2));
 
             Assert.That(events[0].type, Is.EqualTo((FourCC)StateEvent.Type));
-            Assert.That(events[0].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[0].deviceId, Is.EqualTo(device.deviceId));
             Assert.That(events[0].time, Is.EqualTo(0.5).Within(0.000001));
             Assert.That(events[0].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref firstState),
                 StateEvent.From(events[0])->state, UnsafeUtility.SizeOf<GamepadState>()), Is.Zero);
 
             Assert.That(events[1].type, Is.EqualTo((FourCC)StateEvent.Type));
-            Assert.That(events[1].deviceId, Is.EqualTo(device.id));
+            Assert.That(events[1].deviceId, Is.EqualTo(device.deviceId));
             Assert.That(events[1].time, Is.EqualTo(1.5).Within(0.000001));
             Assert.That(events[1].sizeInBytes, Is.EqualTo(StateEvent.GetEventSizeWithPayload<GamepadState>()));
             Assert.That(UnsafeUtility.MemCmp(UnsafeUtility.AddressOf(ref secondState),
@@ -710,7 +710,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
         using (var trace =
-                   new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.id})
+                   new InputEventTrace(StateEvent.GetEventSizeWithPayload<GamepadState>() * 2) {deviceId = device.deviceId})
         {
             trace.Enable();
 
@@ -1024,8 +1024,8 @@ partial class CoreTests
                 Assert.That(events[1].id, Is.EqualTo(222));
                 Assert.That(events[0].handled, Is.False);
                 Assert.That(events[1].handled, Is.True);
-                Assert.That(events[0].deviceId, Is.EqualTo(gamepad.id));
-                Assert.That(events[1].deviceId, Is.EqualTo(gamepad.id));
+                Assert.That(events[0].deviceId, Is.EqualTo(gamepad.deviceId));
+                Assert.That(events[1].deviceId, Is.EqualTo(gamepad.deviceId));
                 Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[0]), Is.EqualTo(Vector2.one));
                 Assert.That(InputControlExtensions.ReadUnprocessedValueFromEvent(gamepad.leftStick, events[1]), Is.EqualTo(Vector2.zero));
             }
@@ -1042,8 +1042,8 @@ partial class CoreTests
         {
             using (var buffer = new InputEventBuffer())
             {
-                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 123).ToEventPtr());
-                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.id, 234).ToEventPtr());
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.deviceId, 123).ToEventPtr());
+                buffer.AppendEvent(DeviceConfigurationEvent.Create(gamepad.deviceId, 234).ToEventPtr());
 
                 var events = buffer.ToArray();
                 Assert.That(events, Has.Length.EqualTo(2));
@@ -1054,7 +1054,7 @@ partial class CoreTests
 
                 Assert.That(buffer.eventCount, Is.Zero);
 
-                buffer.AppendEvent(DeviceRemoveEvent.Create(gamepad.id, 432).ToEventPtr());
+                buffer.AppendEvent(DeviceRemoveEvent.Create(gamepad.deviceId, 432).ToEventPtr());
 
                 events = buffer.ToArray();
 

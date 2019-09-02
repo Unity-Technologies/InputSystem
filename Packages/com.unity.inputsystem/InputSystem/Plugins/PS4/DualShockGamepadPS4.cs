@@ -237,10 +237,7 @@ namespace UnityEngine.InputSystem.PS4.LowLevel
     {
         public static FourCC kFormat => new FourCC('P', '4', 'T', 'C');
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         [FieldOffset(0)] public int touchId;
         [FieldOffset(4)] public Vector2 position;
@@ -277,7 +274,6 @@ namespace UnityEngine.InputSystem.PS4
         /// <summary>
         /// The ID of the touch contact as reported by the underlying system.
         /// </summary>
-        /// </remarks>
         [InputControl(alias = "touchId", offset = 0)]
         public IntegerControl touchId { get; private set; }
         [InputControl(usage = "Position", offset = 4)]

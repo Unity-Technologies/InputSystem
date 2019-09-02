@@ -322,8 +322,8 @@ partial class CoreTests
 
         // Maps and actions aren't UnityEngine.Objects so the modifications will not
         // be in-place. Look up the actions after each apply.
-        var action1 = asset.actionMaps[0].TryGetAction("action1");
-        var action2 = asset.actionMaps[0].TryGetAction("action2");
+        var action1 = asset.actionMaps[0].FindAction("action1");
+        var action2 = asset.actionMaps[0].FindAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(2));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -337,8 +337,8 @@ partial class CoreTests
             action1.bindings[1].id);
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        action1 = asset.actionMaps[0].TryGetAction("action1");
-        action2 = asset.actionMaps[0].TryGetAction("action2");
+        action1 = asset.actionMaps[0].FindAction("action1");
+        action2 = asset.actionMaps[0].FindAction("action2");
 
         Assert.That(action1.bindings, Has.Count.EqualTo(1));
         Assert.That(action1.bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
@@ -361,7 +361,7 @@ partial class CoreTests
         InputActionSerializationHelpers.AddCompositeBinding(action1Property, mapProperty, "Axis", typeof(AxisComposite));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        var action1 = asset.actionMaps[0].TryGetAction("action1");
+        var action1 = asset.actionMaps[0].FindAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(3));
         Assert.That(action1.bindings[0].path, Is.EqualTo("Axis"));
         Assert.That(action1.bindings, Has.Exactly(1).Matches((InputBinding x) =>
@@ -410,7 +410,7 @@ partial class CoreTests
             NameAndParameters.Parse("Dpad(normalize=false)"));
         obj.ApplyModifiedPropertiesWithoutUndo();
 
-        var action1 = asset.actionMaps[0].GetAction("action1");
+        var action1 = asset.actionMaps[0].FindAction("action1");
         Assert.That(action1.bindings, Has.Count.EqualTo(6)); // Composite + 4 parts + noise added above.
         Assert.That(action1.bindings[0].path, Is.EqualTo("Dpad(normalize=false)"));
         Assert.That(action1.bindings, Has.None.Matches((InputBinding x) =>

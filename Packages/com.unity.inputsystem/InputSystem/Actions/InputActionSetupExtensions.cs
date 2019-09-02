@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem
             if (map.enabled)
                 throw new InvalidOperationException(
                     $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
-            if (map.TryGetAction(name) != null)
+            if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
@@ -68,11 +68,25 @@ namespace UnityEngine.InputSystem
             return action;
         }
 
-        ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
-        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
+        /// <summary>
+        /// Add a new binding to the given action.
+        /// </summary>
+        /// <param name="action">Action to add the binding to. If the action is part of an <see cref="InputActionMap"/>,
+        /// the newly added binding will be visible on <see cref="InputActionMap.bindings"/>.</param>
+        /// <param name="path">Mandatory binding path string. See <see cref="InputBinding.path"/> for details.</param>
+        /// <param name="interactions">Optional list of interactions to apply to the binding. See <see
+        /// cref="InputBinding.interactions"/> for details.</param>
+        /// <param name="processors">Optional list of processors to apply to the binding. See <see
+        /// cref="InputBinding.processors"/> for details.</param>
+        /// <param name="groups">Optional list of binding groups that should be assigned to the binding. See
+        /// <see cref="InputBinding.groups"/> for details.</param>
+        /// <returns>Fluent-style syntax to further configure the binding.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null,
+            string processors = null, string groups = null)
         {
-            if (path == null)
-                throw new ArgumentException("Binding path cannot be null", nameof(path));
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
 
             return AddBinding(action, new InputBinding
             {
@@ -87,10 +101,8 @@ namespace UnityEngine.InputSystem
         /// Add a binding that references the given <paramref name="control"/> and triggers
         /// the given <seealso cref="action"/>.
         /// </summary>
-        /// <param name="action">Action to trigger. Also determines where to add the binding. If the action is not part
-        /// of an <see cref="InputActionMap">action map</see>, the binding is added directly to <paramref name="action"/>.
-        /// If it is part of a map, the binding is added to the action map (<see cref="InputAction.actionMap"/>).</param>
-        /// <param name="control">Control to binding to. The full <see cref="InputControl.path"/> of the control will
+        /// <param name="action">Action to trigger.</param>
+        /// <param name="control">Control to bind to. The full <see cref="InputControl.path"/> of the control will
         /// be used in the resulting <see cref="InputBinding">binding</see>.</param>
         /// <returns>Syntax to configure the binding further.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is null or <paramref name="control"/> is null.</exception>
@@ -99,7 +111,6 @@ namespace UnityEngine.InputSystem
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-
             return AddBinding(action, control.path);
         }
 
@@ -294,7 +305,7 @@ namespace UnityEngine.InputSystem
 
             // Make sure name isn't already taken in map.
             var actionMap = action.actionMap;
-            if (actionMap?.TryGetAction(newName) != null)
+            if (actionMap?.FindAction(newName) != null)
                 throw new InvalidOperationException(
                     $"Cannot rename '{action}' to '{newName}' in map '{actionMap}' as the map already contains an action with that name");
 

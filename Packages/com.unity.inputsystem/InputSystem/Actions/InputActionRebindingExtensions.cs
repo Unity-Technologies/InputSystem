@@ -313,9 +313,22 @@ namespace UnityEngine.InputSystem
         /// information registered in the system which means that layouts may have to be loaded. These will be
         /// cached for as long as the rebind operation is not disposed of.
         ///
+        /// To reset the configuration of a rebind operation without releasing its memory, call <see cref="Reset"/>.
+        ///
         /// A rebind operation may take several frames to complete. TODO
         ///
         /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
+        ///
+        /// <example>
+        /// <code>
+        /// var rebind = new RebindingOperation()
+        ///     .WithAction(myAction)
+        ///     .WithBindingGroup("Gamepad")
+        ///     .WithCancelingThrough("&lt;Keyboard&gt;/escape");
+        ///
+        /// rebind.Start();
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public sealed class RebindingOperation : IDisposable
@@ -356,6 +369,15 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
 
+            /// <summary>
+            /// The control currently deemed the best candidate.
+            /// </summary>
+            /// <value>Primary candidate control at this point.</value>
+            /// <remarks>
+            /// If there are no candidates yet, this returns <c>null</c>. If there are candidates,
+            /// it returns the first element of <see cref="candidates"/> which is always the control
+            /// with the highest matching score.
+            /// </remarks>
             public InputControl selectedControl
             {
                 get
@@ -367,6 +389,14 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            /// <summary>
+            /// Whether the rebind is currently in progress.
+            /// </summary>
+            /// <value>Whether rebind is in progress.</value>
+            /// <remarks>
+            /// This is true after calling <see cref="Start"/> and set to false when
+            /// <see cref="OnComplete"/> or <see cref="OnCancel"/> is called.
+            /// </remarks>
             public bool started => (m_Flags & Flags.Started) != 0;
 
             public bool completed => (m_Flags & Flags.Completed) != 0;
@@ -377,6 +407,25 @@ namespace UnityEngine.InputSystem
 
             public float timeout => m_Timeout;
 
+            /// <summary>
+            /// Perform rebinding on the bindings of the given action.
+            /// </summary>
+            /// <param name="action">Action to perform rebinding on. Must be disabled.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Note that by default, a rebind does not have a binding mask or any other setting
+            /// that constrains which binding the rebind is applied to. This means that if the action
+            /// has multiple bindings, all of them will have overrides applied to them.
+            ///
+            /// To target specific bindings, either set a binding index with <see cref="WithTargetBinding"/>,
+            /// or set a binding mask with <see cref="WithBindingMask"/> or <see cref="WithBindingGroup"/>.
+            ///
+            /// If the action has an associated <see cref="InputAction.expectedControlType"/> set,
+            /// it will automatically be passed to <see cref="WithExpectedControlType(string)"/>.
+            /// </remarks>
+            /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+            /// <exception cref="InvalidOperationException"><paramref name="action"/> is currently enabled.</exception>
+            /// <seealso cref="PerformInteractiveRebinding"/>
             public RebindingOperation WithAction(InputAction action)
             {
                 ThrowIfRebindInProgress();
@@ -392,7 +441,7 @@ namespace UnityEngine.InputSystem
                 // NOTE: We do *NOT* translate this to a control type and constrain by that as a whole chain
                 //       of derived layouts may share the same control type.
                 if (!string.IsNullOrEmpty(action.expectedControlType))
-                    WithExpectedControlLayout(action.expectedControlType);
+                    WithExpectedControlType(action.expectedControlType);
 
                 return this;
             }
@@ -411,7 +460,7 @@ namespace UnityEngine.InputSystem
                 return WithCancelingThrough(control.path);
             }
 
-            public RebindingOperation WithExpectedControlLayout(string layoutName)
+            public RebindingOperation WithExpectedControlType(string layoutName)
             {
                 m_ExpectedLayout = new InternedString(layoutName);
                 return this;
@@ -452,7 +501,7 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Disable the default behavior of automatically generalizing the path of a selected control.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>The same RebindingOperation instance.</returns>
             /// <remarks>
             /// At runtime, every <see cref="InputControl"/> has a unique path in the system (<see cref="InputControl.path"/>).
             /// However, when performing rebinds, we are not generally interested in the specific runtime path of the
@@ -470,16 +519,6 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            public RebindingOperation WithRebindApplyingAsOverride()
-            {
-                return this;
-            }
-
-            public RebindingOperation WithRebindOverwritingCurrentPath()
-            {
-                return this;
-            }
-
             public RebindingOperation WithRebindAddingNewBinding(string group = null)
             {
                 m_Flags |= Flags.AddNewBinding;
@@ -487,6 +526,32 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Require actuation of controls to exceed a certain level.
+            /// </summary>
+            /// <param name="magnitude">Minimum magnitude threshold that has to be reached on a control
+            /// for it to be considered a candidate. See <see cref="InputControl.EvaluateMagnitude()"/> for
+            /// details about magnitude evaluations.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <exception cref="ArgumentException"><paramref name="magnitude"/> is negative.</exception>
+            /// <remarks>
+            /// Rebind operations use a default threshold of 0.2. This means that the actuation level
+            /// of any control as returned by <see cref="InputControl.EvaluateMagnitude()"/> must be equal
+            /// or greater than 0.2 for it to be considered a potential candidate. This helps filter out
+            /// controls that are actuated incidentally as part of actuating other controls.
+            ///
+            /// For example, if the player wants to bind an action to the X axis of the gamepad's right
+            /// stick, the player will almost unavoidably also actuate the Y axis to a certain degree.
+            /// However, if actuation of the Y axis stays under 2.0, it will automatically get filtered out.
+            ///
+            /// Note that the magnitude threshold is not the only mechanism that helps trying to find
+            /// the most actuated control. In fact, all controls will eventually be sorted by magnitude
+            /// of actuation so even if both X and Y of a stick make it into the candidate list, if X
+            /// is actuated more strongly than Y, it will be favored.
+            ///
+            /// Note that you can also use this method to <em>lower</em> the default threshold of 0.2
+            /// in case you want more controls to make it through the matching process.
+            /// </remarks>
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
                 if (magnitude < 0)
@@ -496,18 +561,46 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            public RebindingOperation WithoutMagnitudeThreshold()
-            {
-                m_MagnitudeThreshold = -1;
-                return this;
-            }
-
+            /// <summary>
+            /// Do not ignore input from noisy controls.
+            /// </summary>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// By default, noisy controls are ignored for rebinds. This means that, for example, a gyro
+            /// inside a gamepad will not be considered as a potential candidate control as it is hard
+            /// to tell valid user interaction on the control apart from random jittering that occurs
+            /// on noisy controls.
+            ///
+            /// By calling this method, this behavior can be disabled. This is usually only useful when
+            /// implementing custom candidate selection through <see cref="OnPotentialMatch"/>.
+            /// </remarks>
+            /// <seealso cref="InputControl.noisy"/>
             public RebindingOperation WithoutIgnoringNoisyControls()
             {
                 m_Flags |= Flags.DontIgnoreNoisyControls;
                 return this;
             }
 
+            /// <summary>
+            /// Restrict candidate controls using a control path (see <see cref="InputControlPath"/>).
+            /// </summary>
+            /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+            /// <remarks>
+            /// This method is most useful to, for example, restrict controls to specific types of devices.
+            /// If, say, you want to let the player only bind to gamepads, you can do so using
+            ///
+            /// <example>
+            /// <code>
+            /// rebind.WithControlsHavingToMatchPath("&lt;Gamepad&gt;");
+            /// </code>
+            /// </example>
+            ///
+            /// This method can be called repeatedly to add multiple paths. The effect is that candidates
+            /// are accepted if <em>any</em> of the given paths matches. To reset the list, call <see
+            /// cref="Reset"/>.
+            /// </remarks>
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
                 if (string.IsNullOrEmpty(path))
@@ -519,12 +612,31 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
-            public RebindingOperation WithoutControlsHavingToMatchPath()
-            {
-                m_IncludePathCount = 0;
-                return this;
-            }
-
+            /// <summary>
+            /// Prevent specific controls from being considered as candidate controls.
+            /// </summary>
+            /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+            /// <remarks>
+            /// Some controls can be undesirable to include in the candidate selection process even
+            /// though they constitute valid, non-noise user input. For example, in a desktop application,
+            /// the mouse will usually be used to navigate the UI including a rebinding UI that makes
+            /// use of RebindingOperation. It can thus be advisable to exclude specific pointer controls
+            /// like so:
+            ///
+            /// <example>
+            /// <code>
+            /// rebind
+            ///     .WithControlsExcluding("&lt;Pointer&gt;/position") // Don't bind to mouse position
+            ///     .WithControlsExcluding("&lt;Pointer&gt;/delta") // Don't bind to mouse movement deltas
+            ///     .WithControlsExcluding("&lt;Pointer&gt;/{PrimaryAction}") // don't bind to controls such as leftButton and taps.
+            /// </code>
+            /// </example>
+            ///
+            /// This method can be called repeatedly to add multiple exclusions. To reset the list,
+            /// call <see cref="Reset"/>.
+            /// </remarks>
             public RebindingOperation WithControlsExcluding(string path)
             {
                 if (string.IsNullOrEmpty(path))
@@ -560,6 +672,12 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>
+            /// Set function to call when generating the final binding path for a control
+            /// that has been selected.
+            /// </summary>
+            /// <param name="callback">Delegate to call </param>
+            /// <returns></returns>
             public RebindingOperation OnGeneratePath(Func<InputControl, string> callback)
             {
                 m_OnGeneratePath = callback;
@@ -684,9 +802,22 @@ namespace UnityEngine.InputSystem
                 Dispose();
             }
 
-            public void ResetConfiguration()
+            public void Reset()
             {
-                throw new NotImplementedException();
+                m_ActionToRebind = default;
+                m_CancelAction = default;
+                m_BindingMask = default;
+                m_ControlType = default;
+                m_ExpectedLayout = default;
+                m_IncludePathCount = default;
+                m_ExcludePathCount = default;
+                m_TargetBindingIndex = -1;
+                m_BindingGroupForNewBinding = default;
+                m_CancelBinding = default;
+                m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
+                m_Timeout = default;
+                m_WaitSecondsAfterMatch = default;
+                m_Flags = default;
             }
 
             private void HookOnEvent()
@@ -712,9 +843,6 @@ namespace UnityEngine.InputSystem
 
             private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
-                if (device == null)
-                    return;
-
                 // Ignore if not a state event.
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                     return;
@@ -986,7 +1114,7 @@ namespace UnityEngine.InputSystem
                 m_Flags |= Flags.Completed;
                 m_OnComplete?.Invoke(this);
 
-                Reset();
+                ResetAfterMatchCompleted();
             }
 
             private void OnCancel()
@@ -995,10 +1123,10 @@ namespace UnityEngine.InputSystem
 
                 m_OnCancel?.Invoke(this);
 
-                Reset();
+                ResetAfterMatchCompleted();
             }
 
-            private void Reset()
+            private void ResetAfterMatchCompleted()
             {
                 m_Flags &= ~Flags.Started;
                 m_Candidates.Clear();
@@ -1063,6 +1191,7 @@ namespace UnityEngine.InputSystem
             private Action<RebindingOperation, string> m_OnApplyBinding;
             private Action<InputEventPtr, InputDevice> m_OnEventDelegate;
             private Action m_OnAfterUpdateDelegate;
+            ////TODO: use global cache
             private InputControlLayout.Cache m_LayoutCache;
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
@@ -1075,7 +1204,6 @@ namespace UnityEngine.InputSystem
                 Canceled = 1 << 2,
                 OnEventHooked = 1 << 3,
                 OnAfterUpdateHooked = 1 << 4,
-                OverwritePath = 1 << 5,
                 DontIgnoreNoisyControls = 1 << 6,
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,

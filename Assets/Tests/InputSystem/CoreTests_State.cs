@@ -535,7 +535,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -556,7 +556,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -578,7 +578,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         // Remove state monitor and change leftStick again.
         InputState.RemoveChangeMonitor(gamepad.leftStick, monitor);

@@ -172,10 +172,10 @@ namespace InputSamples.Controls
     ""controlSchemes"": []
 }");
             // gameplay
-            m_gameplay = asset.GetActionMap("gameplay");
-            m_gameplay_movement = m_gameplay.GetAction("movement");
-            m_gameplay_button1Action = m_gameplay.GetAction("button1Action");
-            m_gameplay_button2Action = m_gameplay.GetAction("button2Action");
+            m_gameplay = asset.FindActionMap("gameplay");
+            m_gameplay_movement = m_gameplay.FindAction("movement");
+            m_gameplay_button1Action = m_gameplay.FindAction("button1Action");
+            m_gameplay_button2Action = m_gameplay.FindAction("button2Action");
         }
 
         ~GamepadControls()

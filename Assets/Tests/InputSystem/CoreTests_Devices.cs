@@ -646,11 +646,11 @@ partial class CoreTests
 
         InputSystem.RunOneFrame();
 
-        var keyboardId = ((Keyboard)InputSystem.devices[0]).id;
-        var gamepadId = ((Gamepad)InputSystem.devices[1]).id;
+        var keyboardId = ((Keyboard)InputSystem.devices[0]).deviceId;
+        var gamepadId = ((Gamepad)InputSystem.devices[1]).deviceId;
 
         // Add manually added device.
-        var mouseId = InputSystem.AddDevice<Mouse>().id;
+        var mouseId = InputSystem.AddDevice<Mouse>().deviceId;
 
         // We don't mandate that the system reuses the same device instances it had created before.
         // Makes our checks here a little contrived. Can't use just IsEquivalentTo() as the device
@@ -658,11 +658,11 @@ partial class CoreTests
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Keyboard>());
-        Assert.That(InputSystem.devices[0].id, Is.EqualTo(keyboardId));
+        Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(keyboardId));
         Assert.That(InputSystem.devices[1], Is.TypeOf<Gamepad>());
-        Assert.That(InputSystem.devices[1].id, Is.EqualTo(gamepadId));
+        Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(gamepadId));
         Assert.That(InputSystem.devices[2], Is.TypeOf<Mouse>());
-        Assert.That(InputSystem.devices[2].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[2].deviceId, Is.EqualTo(mouseId));
 
         bool? receivedSettingsChange = null;
         var receivedDeviceChanges = new List<InputDeviceChange>();
@@ -690,13 +690,13 @@ partial class CoreTests
         // is explicitly listed as supported.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
-        Assert.That(InputSystem.devices[0].id, Is.EqualTo(gamepadId));
+        Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(gamepadId));
         Assert.That(InputSystem.devices[1], Is.TypeOf<Mouse>());
-        Assert.That(InputSystem.devices[1].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(mouseId));
         Assert.That(receivedSettingsChange, Is.True);
         Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Gamepad" }));
         Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Removed}));
-        Assert.That(receivedDevices[0].id, Is.EqualTo(keyboardId));
+        Assert.That(receivedDevices[0].deviceId, Is.EqualTo(keyboardId));
 
         receivedSettingsChange = null;
         receivedDevices.Clear();
@@ -708,14 +708,14 @@ partial class CoreTests
         // Keyboard should have been re-added. Gamepad should have been removed.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
-        Assert.That(InputSystem.devices[0].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(mouseId));
         Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
-        Assert.That(InputSystem.devices[1].id, Is.EqualTo(keyboardId));
+        Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(keyboardId));
         Assert.That(receivedSettingsChange, Is.True);
         Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Keyboard", "Mouse" }));
         Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Added, InputDeviceChange.Removed}));
-        Assert.That(receivedDevices[0].id, Is.EqualTo(keyboardId));
-        Assert.That(receivedDevices[1].id, Is.EqualTo(gamepadId));
+        Assert.That(receivedDevices[0].deviceId, Is.EqualTo(keyboardId));
+        Assert.That(receivedDevices[1].deviceId, Is.EqualTo(gamepadId));
 
         receivedSettingsChange = null;
         receivedDevices.Clear();
@@ -734,16 +734,16 @@ partial class CoreTests
         // Keyboard should have been re-added. Gamepad should have been removed.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
-        Assert.That(InputSystem.devices[0].id, Is.EqualTo(mouseId));
+        Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(mouseId));
         Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
-        Assert.That(InputSystem.devices[1].id, Is.EqualTo(keyboardId));
+        Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(keyboardId));
         Assert.That(InputSystem.devices[2], Is.TypeOf<Gamepad>());
-        Assert.That(InputSystem.devices[2].id, Is.EqualTo(gamepadId));
+        Assert.That(InputSystem.devices[2].deviceId, Is.EqualTo(gamepadId));
 
         Assert.That(receivedSettingsChange, Is.True);
         Assert.That(InputSystem.settings.supportedDevices, Is.Empty);
         Assert.That(receivedDeviceChanges, Is.EquivalentTo(new[] {InputDeviceChange.Added}));
-        Assert.That(receivedDevices[0].id, Is.EqualTo(gamepadId));
+        Assert.That(receivedDevices[0].deviceId, Is.EqualTo(gamepadId));
     }
 
     [Test]
@@ -779,7 +779,7 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(InputSystem.GetDeviceById(device.id), Is.SameAs(device));
+        Assert.That(InputSystem.GetDeviceById(device.deviceId), Is.SameAs(device));
     }
 
     [Test]
@@ -853,7 +853,7 @@ partial class CoreTests
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad1.id, Is.Not.EqualTo(gamepad2.id));
+        Assert.That(gamepad1.deviceId, Is.Not.EqualTo(gamepad2.deviceId));
     }
 
     [Test]
@@ -938,7 +938,7 @@ partial class CoreTests
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
         Assert.That(receivedEventPtr.valid, Is.True);
-        Assert.That(receivedEventPtr.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.deviceId, Is.EqualTo(gamepad.deviceId));
         Assert.That(receivedEventPtr.IsA<StateEvent>(), Is.True);
     }
 
@@ -1217,7 +1217,7 @@ partial class CoreTests
                 gamepad1WasRemoved = true;
         };
 
-        var inputEvent = DeviceRemoveEvent.Create(gamepad1.id, runtime.currentTime);
+        var inputEvent = DeviceRemoveEvent.Create(gamepad1.deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
 
@@ -1253,7 +1253,7 @@ partial class CoreTests
             receivedChanges.Add(new KeyValuePair<InputDevice, InputDeviceChange>(device, change));
         };
 
-        var inputEvent = DeviceRemoveEvent.Create(originalGamepad.id, runtime.currentTime);
+        var inputEvent = DeviceRemoveEvent.Create(originalGamepad.deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
 
@@ -1285,7 +1285,7 @@ partial class CoreTests
         Assert.That(receivedChanges[1].Value, Is.EqualTo(InputDeviceChange.Reconnected));
 
         Assert.That(originalGamepad.added, Is.True);
-        Assert.That(originalGamepad.id, Is.EqualTo(newDeviceId));
+        Assert.That(originalGamepad.deviceId, Is.EqualTo(newDeviceId));
         Assert.That(InputSystem.disconnectedDevices, Has.Count.Zero);
     }
 
@@ -1303,7 +1303,7 @@ partial class CoreTests
 
         var gamepad = (Gamepad)InputSystem.devices[0];
 
-        var inputEvent = DeviceRemoveEvent.Create(gamepad.id, runtime.currentTime);
+        var inputEvent = DeviceRemoveEvent.Create(gamepad.deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
 
@@ -1327,7 +1327,7 @@ partial class CoreTests
         InputSystem.RunOneFrame();
         var device = InputSystem.devices[0];
 
-        var inputEvent = DeviceRemoveEvent.Create(device.id, runtime.currentTime);
+        var inputEvent = DeviceRemoveEvent.Create(device.deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
 
@@ -1410,7 +1410,7 @@ partial class CoreTests
         bool? disabled = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(device.id,
+            runtime.SetDeviceCommandCallback(device.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DisableDeviceCommand.Type)
@@ -1593,7 +1593,7 @@ partial class CoreTests
 
         runtime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Mouse" }.ToJson(), deviceId);
         InputSystem.RunOneFrame();
-        var device = InputSystem.devices.First(x => x.id == deviceId);
+        var device = InputSystem.devices.First(x => x.deviceId == deviceId);
 
         var isEnabled = device.enabled;
 
@@ -1664,7 +1664,7 @@ partial class CoreTests
         gamepad.SetMotorSpeeds(0.1234f, 0.5678f);
 
         DualMotorRumbleCommand? receivedCommand = null;
-        runtime.SetDeviceCommandCallback(gamepad.id,
+        runtime.SetDeviceCommandCallback(gamepad.deviceId,
             (deviceId, command) =>
             {
                 if (command->type == DualMotorRumbleCommand.Type)
@@ -1706,7 +1706,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         DualMotorRumbleCommand? receivedCommand = null;
-        runtime.SetDeviceCommandCallback(gamepad.id,
+        runtime.SetDeviceCommandCallback(gamepad.deviceId,
             (deviceId, command) =>
             {
                 if (command->type == DualMotorRumbleCommand.Type)
@@ -1979,7 +1979,7 @@ partial class CoreTests
         const int highBits = 0x12;
         const int lowBits = 0x21;
 
-        var inputEvent = TextEvent.Create(keyboard.id, 0x10000 + (highBits << 10 | lowBits));
+        var inputEvent = TextEvent.Create(keyboard.deviceId, 0x10000 + (highBits << 10 | lowBits));
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
 
@@ -1997,7 +1997,7 @@ partial class CoreTests
         var currentLayoutName = "default";
         unsafe
         {
-            runtime.SetDeviceCommandCallback(keyboard.id,
+            runtime.SetDeviceCommandCallback(keyboard.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryKeyNameCommand.Type)
@@ -2045,7 +2045,7 @@ partial class CoreTests
         var currentLayoutName = "default";
         unsafe
         {
-            runtime.SetDeviceCommandCallback(keyboard.id,
+            runtime.SetDeviceCommandCallback(keyboard.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == QueryKeyboardLayoutCommand.Type)
@@ -2109,7 +2109,7 @@ partial class CoreTests
         WarpMousePositionCommand? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(mouse.id,
+            runtime.SetDeviceCommandCallback(mouse.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == WarpMousePositionCommand.Type)
@@ -2900,7 +2900,7 @@ partial class CoreTests
         bool? receivedQueryFrequencyCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(sensor.id,
+            runtime.SetDeviceCommandCallback(sensor.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == QuerySamplingFrequencyCommand.Type)
@@ -2929,7 +2929,7 @@ partial class CoreTests
         bool? receivedSetFrequencyCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(sensor.id,
+            runtime.SetDeviceCommandCallback(sensor.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == SetSamplingFrequencyCommand.Type)
@@ -3554,7 +3554,7 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var keyboardDeviceReset = false;
-        runtime.SetDeviceCommandCallback(keyboard.id,
+        runtime.SetDeviceCommandCallback(keyboard.deviceId,
             (id, commandPtr) =>
             {
                 if (commandPtr->type == RequestResetCommand.Type)
@@ -3571,7 +3571,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var gamepadDeviceReset = false;
-        runtime.SetDeviceCommandCallback(gamepad.id,
+        runtime.SetDeviceCommandCallback(gamepad.deviceId,
             (id, commandPtr) =>
             {
                 if (commandPtr->type == RequestResetCommand.Type)
@@ -3587,7 +3587,7 @@ partial class CoreTests
 
         var pointer = InputSystem.AddDevice<Pointer>();
         var pointerDeviceReset = false;
-        runtime.SetDeviceCommandCallback(pointer.id,
+        runtime.SetDeviceCommandCallback(pointer.deviceId,
             (id, commandPtr) =>
             {
                 if (commandPtr->type == RequestResetCommand.Type)
@@ -3623,7 +3623,7 @@ partial class CoreTests
             Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
         };
 
-        var inputEvent = IMECompositionEvent.Create(keyboard.id, imeCompositionCharacters,
+        var inputEvent = IMECompositionEvent.Create(keyboard.deviceId, imeCompositionCharacters,
             InputRuntime.s_Instance.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.RunOneFrame();
@@ -3638,7 +3638,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         bool? receivedIMEEnabledValue = null;
-        runtime.SetDeviceCommandCallback(keyboard.id,
+        runtime.SetDeviceCommandCallback(keyboard.deviceId,
             (id, commandPtr) =>
             {
                 if (commandPtr->type == EnableIMECompositionCommand.Type)
@@ -3670,7 +3670,7 @@ partial class CoreTests
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        runtime.SetDeviceCommandCallback(keyboard.id,
+        runtime.SetDeviceCommandCallback(keyboard.deviceId,
             (id, commandPtr) =>
             {
                 if (commandPtr->type == SetIMECursorPositionCommand.Type)

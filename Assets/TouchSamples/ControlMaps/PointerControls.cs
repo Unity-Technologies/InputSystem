@@ -453,7 +453,6 @@ namespace InputSamples.Controls
     ""controlSchemes"": [
         {
             ""name"": ""Mouse"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Mouse"",
             ""devices"": [
                 {
@@ -465,7 +464,6 @@ namespace InputSamples.Controls
         },
         {
             ""name"": ""Pen"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Pen"",
             ""devices"": [
                 {
@@ -477,7 +475,6 @@ namespace InputSamples.Controls
         },
         {
             ""name"": ""Touch"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Touch"",
             ""devices"": [
                 {
@@ -490,8 +487,8 @@ namespace InputSamples.Controls
     ]
 }");
             // pointer
-            m_pointer = asset.GetActionMap("pointer");
-            m_pointer_point = m_pointer.GetAction("point");
+            m_pointer = asset.FindActionMap("pointer");
+            m_pointer_point = m_pointer.FindAction("point");
         }
 
         ~PointerControls()

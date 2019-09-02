@@ -40,8 +40,8 @@ namespace UnityEngine.InputSystem
     /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
     ///
     /// <example>
-    /// Add a "synthetic" gamepad that isn't actually backed by hardware:
     /// <code>
+    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
     /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     /// </code>
     /// </example>
@@ -53,7 +53,6 @@ namespace UnityEngine.InputSystem
     /// as a new "layout".
     ///
     /// <example>
-    /// Creating a custom type of input device.
     /// <code>
     /// // InputControlLayoutAttribute attribute is only necessary if you want
     /// // to override default behavior that occurs when registering your device
@@ -144,7 +143,7 @@ namespace UnityEngine.InputSystem
     public class InputDevice : InputControl
     {
         /// <summary>
-        /// Value of an invalid <see cref="id"/>.
+        /// Value of an invalid <see cref="deviceId"/>.
         /// </summary>
         /// <remarks>
         /// The input system will not assigned this ID to any device.
@@ -160,10 +159,17 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The description of a device is unchanging over its lifetime and does not
         /// comprise data about a device's configuration (which is considered mutable).
+        ///
+        /// In most cases, the description for a device is supplied by the Unity runtime.
+        /// This it the case for all <see cref="native"/> input devices. However, it is
+        /// also possible to inject new devices in the form of device descriptions into
+        /// the system using <see cref="InputSystem.AddDevice(InputDeviceDescription)"/>.
+        ///
+        /// The description of a device is what is matched by an <see cref="InputDeviceMatcher"/>
+        /// to find the <see cref="InputControl.layout"/> to use for a device.
         /// </remarks>
         public InputDeviceDescription description => m_Description;
 
-        ////REVIEW: this might be useful even at the control level
         /// <summary>
         /// Whether the device is currently enabled (i.e. sends and receives events).
         /// </summary>
@@ -234,15 +240,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the device has been added to the system.
         /// </summary>
+        /// <value>If true, the device is currently among the devices in <see cref="InputSystem.devices"/>.</value>
         /// <remarks>
-        /// Input devices can be constructed manually through <see cref="InputDeviceBuilder"/>. Also,
-        /// they can be removed through <see cref="InputSystem.RemoveDevice"/>. This property reflects
-        /// whether the device is currently added to the system.
-        ///
-        /// Note that devices in <see cref="InputSystem.disconnectedDevices"/> will all have this
-        /// property return false.
+        /// Devices may be removed at any time. Either when their hardware is unplugged or when they
+        /// are manually removed through <see cref="InputSystem.RemoveDevice"/> or by being excluded
+        /// through <see cref="InputSettings.supportedDevices"/>. When a device is removed, its instance,
+        /// however, will not disappear. This property can be used to check whether the device is part
+        /// of the current set of active devices.
         /// </remarks>
-        /// <seealso cref="InputSystem.AddDevice(InputDevice)"/>
         /// <seealso cref="InputSystem.devices"/>
         public bool added => m_DeviceIndex != kInvalidDeviceIndex;
 
@@ -250,6 +255,7 @@ namespace UnityEngine.InputSystem
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
         /// </summary>
+        /// <value>Whether the device mirrors a device from a remotely connected input system.</value>
         /// <seealso cref="InputSystem.remoting"/>
         /// <seealso cref="InputRemoting"/>
         public bool remote => (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote;
@@ -257,6 +263,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the device comes from the <see cref="IInputRuntime">runtime</see>
         /// </summary>
+        /// <value>Whether the device has been discovered by the Unity runtime.</value>
         /// <remarks>
         /// Devices can be discovered when <see cref="IInputRuntime.onDeviceDiscovered">reported</see>
         /// by the runtime or they can be added manually through the various <see cref="InputSystem.AddDevice(InputDevice)">
@@ -296,7 +303,7 @@ namespace UnityEngine.InputSystem
         /// IDs are assigned by the input runtime.
         /// </remarks>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
-        public int id => m_Id;
+        public int deviceId => m_DeviceId;
 
         /// <summary>
         /// Timestamp of last state event used to update the device.
@@ -347,7 +354,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputDevice()
         {
-            m_Id = InvalidDeviceId;
+            m_DeviceId = InvalidDeviceId;
             m_ParticipantId = kLocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
@@ -360,6 +367,7 @@ namespace UnityEngine.InputSystem
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
             if (m_DeviceIndex == kInvalidDeviceIndex)
@@ -376,6 +384,7 @@ namespace UnityEngine.InputSystem
             return array;
         }
 
+        /// <inheritdoc/>
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
             if (statePtr == null)
@@ -389,6 +398,7 @@ namespace UnityEngine.InputSystem
             UnsafeUtility.MemCpy(bufferPtr, adjustedStatePtr, m_StateBlock.alignedSizeInBytes);
         }
 
+        /// <inheritdoc/>
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
             if (firstStatePtr == null)
@@ -499,7 +509,7 @@ namespace UnityEngine.InputSystem
                     return result.Value;
             }
 
-            return InputRuntime.s_Instance.DeviceCommand(id, ref command);
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
         }
 
         [Flags]
@@ -515,7 +525,7 @@ namespace UnityEngine.InputSystem
         }
 
         internal DeviceFlags m_DeviceFlags;
-        internal int m_Id;
+        internal int m_DeviceId;
         internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;

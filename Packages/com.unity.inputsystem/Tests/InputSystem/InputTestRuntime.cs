@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
 
         public void SetDeviceCommandCallback(InputDevice device, DeviceCommandCallback callback)
         {
-            SetDeviceCommandCallback(device.id, callback);
+            SetDeviceCommandCallback(device.deviceId, callback);
         }
 
         public void SetDeviceCommandCallback(int deviceId, DeviceCommandCallback callback)
@@ -253,7 +253,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            ReportInputDeviceRemoved(device.id);
+            ReportInputDeviceRemoved(device.deviceId);
         }
 
         public void AssociateInputDeviceWithUser(int deviceId, ulong userHandle, string userName = null, string userId = null)
@@ -297,7 +297,7 @@ namespace UnityEngine.InputSystem
 
         public void AssociateInputDeviceWithUser(InputDevice device, ulong userHandle, string userName = null, string userId = null)
         {
-            AssociateInputDeviceWithUser(device.id, userHandle, userName, userId);
+            AssociateInputDeviceWithUser(device.deviceId, userHandle, userName, userId);
         }
 
         public struct PairedUser

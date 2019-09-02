@@ -193,14 +193,31 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        ////REVIEW: should this operate by binding path or by action name?
+        /// <summary>
+        /// Look up an action by name or ID.
+        /// </summary>
+        /// <param name="actionNameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
+        /// of the action. Note that matching of names is case-insensitive.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="KeyNotFoundException">No action with the name or ID of <paramref name="actionNameOrId"/>
+        /// was found in the action map.</exception>
+        /// <remarks>
+        /// This method is equivalent to <see cref="FindAction(string)"/> except it throws <c>KeyNotFoundException</c>
+        /// if no action with the given name or ID can be found.
+        /// </remarks>
+        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(Guid)"/>
+        /// <see cref="actions"/>
         public InputAction this[string actionNameOrId]
         {
             get
             {
-                if (string.IsNullOrEmpty(actionNameOrId))
+                if (actionNameOrId == null)
                     throw new ArgumentNullException(nameof(actionNameOrId));
-                return GetAction(actionNameOrId);
+                var action = FindAction(actionNameOrId);
+                if (action == null)
+                    throw new KeyNotFoundException($"Cannot find action '{actionNameOrId}'");
+                return action;
             }
         }
 
@@ -217,17 +234,34 @@ namespace UnityEngine.InputSystem
             remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
         }
 
+        /// <summary>
+        /// Construct an action map with the given name.
+        /// </summary>
+        /// <param name="name">Name to give to the action map. By default <c>null</c>, i.e. does
+        /// not assign a name to the map.</param>
         public InputActionMap(string name = null)
         {
             m_Name = name;
         }
 
+        /// <summary>
+        /// Release internal state held on to by the action map.
+        /// </summary>
+        /// <remarks>
+        /// Once actions in a map are enabled, the map will allocate a block of state internally that
+        /// it will hold on to until disposed of. All actions in the map will share the same internal
+        /// state. Also, if the map is part of an <see cref="InputActionAsset"/> all maps and actions
+        /// in the same asset will share the same internal state.
+        ///
+        /// Note that the internal state holds on to GC heap memory as well as memory from the
+        /// unmanaged, C++ heap.
+        /// </remarks>
         public void Dispose()
         {
             m_State?.Dispose();
         }
 
-        internal int TryGetActionIndex(string nameOrId)
+        internal int FindActionIndex(string nameOrId)
         {
             ////REVIEW: have transient lookup table? worth optimizing this?
             ////   Ideally, this should at least be an InternedString comparison but due to serialization,
@@ -256,7 +290,7 @@ namespace UnityEngine.InputSystem
             return InputActionState.kInvalidIndex;
         }
 
-        private int TryGetActionIndex(Guid id)
+        private int FindActionIndex(Guid id)
         {
             if (m_Actions == null)
                 return InputActionState.kInvalidIndex;
@@ -268,36 +302,38 @@ namespace UnityEngine.InputSystem
             return InputActionState.kInvalidIndex;
         }
 
-        public InputAction TryGetAction(string nameOrId)
+        /// <summary>
+        /// Find an action in the map by name or ID.
+        /// </summary>
+        /// <param name="nameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
+        /// of the action. Note that matching of names is case-insensitive.</param>
+        /// <returns>The action with the given name or ID or <c>null</c> if no matching action
+        /// was found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <seealso cref="FindAction(Guid)"/>
+        public InputAction FindAction(string nameOrId)
         {
-            var index = TryGetActionIndex(nameOrId);
+            if (nameOrId == null)
+                throw new ArgumentNullException(nameof(nameOrId));
+            var index = FindActionIndex(nameOrId);
             if (index == -1)
                 return null;
             return m_Actions[index];
         }
 
-        public InputAction TryGetAction(Guid id)
+        /// <summary>
+        /// Find an action by ID.
+        /// </summary>
+        /// <param name="id">ID (as in <see cref="InputAction.id"/>) of the action.</param>
+        /// <returns>The action with the given ID or null if no action in the map has
+        /// the given ID.</returns>
+        /// <seealso cref="FindAction(string)"/>
+        public InputAction FindAction(Guid id)
         {
-            var index = TryGetActionIndex(id);
+            var index = FindActionIndex(id);
             if (index == -1)
                 return null;
             return m_Actions[index];
-        }
-
-        public InputAction GetAction(string nameOrId)
-        {
-            var action = TryGetAction(nameOrId);
-            if (action == null)
-                throw new KeyNotFoundException($"Could not find action '{nameOrId}' in map '{name}'");
-            return action;
-        }
-
-        public InputAction GetAction(Guid id)
-        {
-            var action = TryGetAction(id);
-            if (action == null)
-                throw new KeyNotFoundException($"Could not find action with ID '{id}' in map '{name}'");
-            return action;
         }
 
         public bool IsUsableWithDevice(InputDevice device)
@@ -610,7 +646,7 @@ namespace UnityEngine.InputSystem
                 var bindingCount = m_Bindings.Length;
                 for (var i = 0; i < bindingCount; ++i)
                 {
-                    var action = TryGetAction(m_Bindings[i].action);
+                    var action = FindAction(m_Bindings[i].action);
                     if (action != null)
                         ++action.m_BindingsCount;
                 }
@@ -628,7 +664,7 @@ namespace UnityEngine.InputSystem
                 var currentControlIndex = 0;
                 for (var currentBindingIndex = 0; currentBindingIndex < m_Bindings.Length;)
                 {
-                    var currentAction = TryGetAction(m_Bindings[currentBindingIndex].action);
+                    var currentAction = FindAction(m_Bindings[currentBindingIndex].action);
                     if (currentAction == null || currentAction.m_BindingsStartIndex != -1)
                     {
                         // Skip bindings not targeting an action or bindings we have already processed
@@ -652,7 +688,7 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < bindingCountForCurrentAction; ++i)
                     {
                         // See if we've come across a binding that doesn't belong to our currently looked at action.
-                        if (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
+                        if (FindAction(m_Bindings[sourceBindingToCopy].action) != currentAction)
                         {
                             // Yes, we have. Means the bindings for our actions are scattered in m_Bindings and
                             // we need to collect them.
@@ -675,7 +711,7 @@ namespace UnityEngine.InputSystem
                                 ++sourceBindingToCopy;
                                 Debug.Assert(sourceBindingToCopy < m_Bindings.Length);
                             }
-                            while (TryGetAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
+                            while (FindAction(m_Bindings[sourceBindingToCopy].action) != currentAction);
                         }
                         else if (currentBindingIndex == sourceBindingToCopy)
                             ++currentBindingIndex;

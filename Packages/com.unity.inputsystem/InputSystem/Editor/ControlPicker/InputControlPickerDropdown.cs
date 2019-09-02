@@ -401,8 +401,9 @@ namespace UnityEngine.InputSystem.Editor
             if (m_RebindingOperation == null)
                 m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
 
+            m_RebindingOperation.Reset();
             m_RebindingOperation
-                .WithExpectedControlLayout(m_ExpectedControlLayout)
+                .WithExpectedControlType(m_ExpectedControlLayout)
                 // Require minimum actuation of 0.15f. This is after deadzoning has been applied.
                 .WithMagnitudeHavingToBeGreaterThan(0.15f)
                 ////REVIEW: should we exclude only the system's active pointing device?
@@ -412,7 +413,7 @@ namespace UnityEngine.InputSystem.Editor
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Pointer>/delta")
                 .WithControlsExcluding("<Pointer>/press")
-                .WithControlsExcluding("<Mouse>/leftButton")
+                .WithControlsExcluding("<Pointer>/{PrimaryAction}")
                 .WithControlsExcluding("<Mouse>/scroll")
                 .OnPotentialMatch(
                     operation =>
@@ -435,7 +436,6 @@ namespace UnityEngine.InputSystem.Editor
                     });
 
             // If we have control paths to match, pass them on.
-            m_RebindingOperation.WithoutControlsHavingToMatchPath();
             if (m_ControlPathsToMatch.LengthSafe() > 0)
                 m_ControlPathsToMatch.Select(x => m_RebindingOperation.WithControlsHavingToMatchPath(x));
 

@@ -386,7 +386,7 @@ internal class PlayerInputTests : InputTestFixture
 
         var moveAction = playerInput.actions.FindAction("move");
         var navigateAction = playerInput.actions.FindAction("navigate");
-        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
+        var gameplayActions = playerInput.actions.FindActionMap("gameplay");
         Set(gamepad.leftTrigger, 0.234f);
 
         Assert.That(playerInput.active, Is.True);
@@ -422,8 +422,8 @@ internal class PlayerInputTests : InputTestFixture
 
         var moveAction = playerInput.actions.FindAction("move");
         var navigateAction = playerInput.actions.FindAction("navigate");
-        var gameplayActions = playerInput.actions.GetActionMap("gameplay");
-        var otherActions = playerInput.actions.GetActionMap("other");
+        var gameplayActions = playerInput.actions.FindActionMap("gameplay");
+        var otherActions = playerInput.actions.FindActionMap("other");
 
         Set(gamepad.leftTrigger, 0.234f);
 
@@ -681,8 +681,8 @@ internal class PlayerInputTests : InputTestFixture
 
         Set(gamepad.leftTrigger, 0.234f);
 
-        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
-        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
     }
 
@@ -700,8 +700,8 @@ internal class PlayerInputTests : InputTestFixture
 
         Set(gamepad.leftTrigger, 0.234f);
 
-        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.True);
-        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.False);
+        Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.True);
+        Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.False);
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 0.234f)}));
 
         listener.messages.Clear();
@@ -710,8 +710,8 @@ internal class PlayerInputTests : InputTestFixture
 
         Set(gamepad.leftTrigger, 0.345f);
 
-        Assert.That(playerInput.actions.GetActionMap("gameplay").enabled, Is.False);
-        Assert.That(playerInput.actions.GetActionMap("other").enabled, Is.True);
+        Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.False);
+        Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(
             new[]
             {

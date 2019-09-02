@@ -197,7 +197,7 @@ internal class DualShockTests : InputTestFixture
         DualShockHIDOutputReport? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(gamepad.id,
+            runtime.SetDeviceCommandCallback(gamepad.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == DualShockHIDOutputReport.Type)

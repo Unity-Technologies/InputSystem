@@ -307,6 +307,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the control is considered noisy.
         /// </summary>
+        /// <value>True if the control produces noisy input.</value>
         /// <remarks>
         /// A control is considered "noisy" if it produces different values without necessarily requiring user
         /// interaction. A good example are sensors (see <see cref="Sensor"/>). For example, the PS4 controller
@@ -350,6 +351,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the control is considered synthetic.
         /// </summary>
+        /// <value>True if the control does not represent an actual physical control on the device.</value>
         /// <remarks>
         /// A control is considered "synthetic" if it does not correspond to an actual, physical control on the
         /// device. An example for this is <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
@@ -413,12 +415,13 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Returns the underlying value type of this control.
         /// </summary>
+        /// <value>Type of values produced by the control.</value>
         /// <remarks>
         /// This is the type of values that are returned when reading the current value of a control
         /// or when reading a value of a control from an event.
         /// </remarks>
         /// <seealso cref="valueSizeInBytes"/>
-        /// <seealso cref="ReadValueIntoBuffer"/>
+        /// <seealso cref="ReadValueFromStateAsObject"/>
         public abstract Type valueType { get; }
 
         /// <summary>
@@ -572,6 +575,34 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="CompareState"/>
         public abstract unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr);
 
+        /// <summary>
+        /// Try to find a child control matching the given path.
+        /// </summary>
+        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+        /// <returns>The first direct or indirect child control that matches the given <paramref name="path"/>
+        /// or null if no control was found to match.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// Note that if the given path matches multiple child controls, only the first control
+        /// encountered in the search will be returned.
+        ///
+        /// <example>
+        /// <code>
+        /// // Returns the leftStick control of the current gamepad.
+        /// Gamepad.current.TryGetChildControl("leftStick");
+        ///
+        /// // Returns the X axis control of the leftStick on the current gamepad.
+        /// Gamepad.current.TryGetChildControl("leftStick/x");
+        ///
+        /// // Returns the first control ending with "stick" in its name. Note that it
+        /// // undetermined whether this is leftStick or rightStick (or even another stick
+        /// // added by the given gamepad).
+        /// Gamepad.current.TryGetChildControl("*stick");
+        /// </code>
+        /// </example>
+        ///
+        /// This method is equivalent to calling <see cref="InputControlPath.TryFindChild"/>.
+        /// </remarks>
         public InputControl TryGetChildControl(string path)
         {
             if (string.IsNullOrEmpty(path))
@@ -852,10 +883,6 @@ namespace UnityEngine.InputSystem
         internal virtual void AddProcessor(object first)
         {
         }
-
-        internal virtual void ClearProcessors()
-        {
-        }
     }
 
     /// <summary>
@@ -1054,16 +1081,6 @@ namespace UnityEngine.InputSystem
         internal InlinedArray<InputProcessor<TValue>> m_ProcessorStack;
 
         // Only layouts are allowed to modify the processor stack.
-        internal void AddProcessor(InputProcessor<TValue> processor)
-        {
-            m_ProcessorStack.Append(processor);
-        }
-
-        internal void RemoveProcessor(InputProcessor<TValue> processor)
-        {
-            m_ProcessorStack.Remove(processor);
-        }
-
         internal TProcessor TryGetProcessor<TProcessor>()
             where TProcessor : InputProcessor<TValue>
         {
@@ -1085,11 +1102,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException(
                     $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'", nameof(processor));
             m_ProcessorStack.Append(processorOfType);
-        }
-
-        internal override void ClearProcessors()
-        {
-            m_ProcessorStack = new InlinedArray<InputProcessor<TValue>>();
         }
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();

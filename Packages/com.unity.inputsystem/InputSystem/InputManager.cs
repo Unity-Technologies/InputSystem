@@ -584,7 +584,7 @@ namespace UnityEngine.InputSystem
                     if (deviceDescription.empty || !(deviceMatcher.MatchPercentage(deviceDescription) > 0))
                         continue;
 
-                    var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.id);
+                    var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.deviceId);
                     if (layoutName != device.m_Layout)
                     {
                         device.m_Description = deviceDescription;
@@ -613,7 +613,7 @@ namespace UnityEngine.InputSystem
 
             // Preserve device properties that should not be changed by the re-creation
             // of a device.
-            newDevice.m_Id = oldDevice.m_Id;
+            newDevice.m_DeviceId = oldDevice.m_DeviceId;
             newDevice.m_Description = oldDevice.m_Description;
             if (oldDevice.native)
                 newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
@@ -982,7 +982,7 @@ namespace UnityEngine.InputSystem
                 deviceDescription: deviceDescription,
                 layoutVariants: variants);
 
-            device.m_Id = deviceId;
+            device.m_DeviceId = deviceId;
             device.m_Description = deviceDescription;
             device.m_DeviceFlags |= deviceFlags;
             if (!string.IsNullOrEmpty(deviceName))
@@ -1020,7 +1020,7 @@ namespace UnityEngine.InputSystem
             ////        that may end up tapping a bunch of memory locations in the heap to find the right
             ////        device; could be improved by sorting m_Devices by ID and picking a good starting
             ////        point based on the ID we have instead of searching from [0] always).
-            m_DevicesById[device.id] = device;
+            m_DevicesById[device.deviceId] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
@@ -1038,7 +1038,7 @@ namespace UnityEngine.InputSystem
             // is no longer marked as removed.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
-                if (m_AvailableDevices[i].deviceId == device.id)
+                if (m_AvailableDevices[i].deviceId == device.deviceId)
                     m_AvailableDevices[i].isRemoved = false;
             }
 
@@ -1124,7 +1124,7 @@ namespace UnityEngine.InputSystem
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
-            var deviceId = device.id;
+            var deviceId = device.deviceId;
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
             m_DevicesById.Remove(deviceId);
 
@@ -1793,19 +1793,19 @@ namespace UnityEngine.InputSystem
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.InvalidDeviceId)
+            if (device.deviceId != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
                 // but let's make sure.
-                var existingDeviceWithId = TryGetDeviceById(device.id);
+                var existingDeviceWithId = TryGetDeviceById(device.deviceId);
                 if (existingDeviceWithId != null)
                     throw new InvalidOperationException(
-                        $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
+                        $"Duplicate device ID {device.deviceId} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
             }
             else
             {
-                device.m_Id = m_Runtime.AllocateDeviceId();
+                device.m_DeviceId = m_Runtime.AllocateDeviceId();
             }
         }
 
@@ -1965,7 +1965,7 @@ namespace UnityEngine.InputSystem
                     // It's a device we pulled from the disconnected list. Update the device with the
                     // new ID, re-add it and notify that we've reconnected.
 
-                    device.m_Id = deviceId;
+                    device.m_DeviceId = deviceId;
                     AddDevice(device);
 
                     for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2162,7 +2162,7 @@ namespace UnityEngine.InputSystem
                     var isInAvailableDevices = false;
                     for (var n = 0; n < m_AvailableDeviceCount; ++n)
                     {
-                        if (m_AvailableDevices[n].deviceId == device.id)
+                        if (m_AvailableDevices[n].deviceId == device.deviceId)
                         {
                             isInAvailableDevices = true;
                             break;
@@ -3006,7 +3006,7 @@ namespace UnityEngine.InputSystem
                     name = device.name,
                     layout = device.layout,
                     variants = device.variants,
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     participantId = device.m_ParticipantId,
                     usages = usages,
                     description = device.m_Description,

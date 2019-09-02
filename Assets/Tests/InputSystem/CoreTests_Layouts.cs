@@ -955,7 +955,7 @@ partial class CoreTests
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
-        var oldDeviceId = oldDevice.id;
+        var oldDeviceId = oldDevice.deviceId;
         var oldDeviceDescription = oldDevice.description;
 
         const string newJson = @"
@@ -970,7 +970,7 @@ partial class CoreTests
 
         var newDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
-        Assert.That(newDevice.id, Is.EqualTo(oldDeviceId));
+        Assert.That(newDevice.deviceId, Is.EqualTo(oldDeviceId));
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
     }
 

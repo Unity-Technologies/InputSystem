@@ -200,7 +200,7 @@ namespace UnityEngine.InputSystem.HID
                 throw new ArgumentException(
                     $"Device '{device}' is not a HID (interface is '{deviceDescription.interfaceName}')", nameof(device));
 
-            return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
+            return ReadHIDDeviceDescriptor(device.deviceId, ref deviceDescription, runtime);
         }
 
         public static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(int deviceId, ref InputDeviceDescription deviceDescription, IInputRuntime runtime)

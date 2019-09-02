@@ -144,7 +144,7 @@ internal class SwitchTests : InputTestFixture
         NPadStatusReport? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NPadStatusReport.Type)
@@ -197,7 +197,7 @@ internal class SwitchTests : InputTestFixture
         NpadDeviceIOCTLSetOrientation? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLSetOrientation.Type)
@@ -232,7 +232,7 @@ internal class SwitchTests : InputTestFixture
         NpadDeviceIOCTLStartSixAxisSensor? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLStartSixAxisSensor.Type)
@@ -260,7 +260,7 @@ internal class SwitchTests : InputTestFixture
         NpadDeviceIOCTLStopSixAxisSensor? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NpadDeviceIOCTLStopSixAxisSensor.Type)
@@ -288,7 +288,7 @@ internal class SwitchTests : InputTestFixture
         NPadDeviceIOCTLOutputCommand? receivedCommand = null;
         unsafe
         {
-            runtime.SetDeviceCommandCallback(controller.id,
+            runtime.SetDeviceCommandCallback(controller.deviceId,
                 (id, commandPtr) =>
                 {
                     if (commandPtr->type == NPadDeviceIOCTLOutputCommand.Type)

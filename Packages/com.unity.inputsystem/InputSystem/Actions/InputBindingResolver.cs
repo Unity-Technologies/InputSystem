@@ -210,7 +210,7 @@ namespace UnityEngine.InputSystem
                             if (!string.IsNullOrEmpty(actionName))
                             {
                                 ////REVIEW: should we fail here if we don't manage to find the action
-                                actionIndexInMap = map.TryGetActionIndex(actionName);
+                                actionIndexInMap = map.FindActionIndex(actionName);
                             }
                             else if (map.m_SingletonAction != null)
                             {

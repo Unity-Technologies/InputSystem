@@ -371,25 +371,42 @@ namespace UnityEngine.InputSystem
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devices set on action set)
 
-        //DOC-------------------------------------------------------------------------------
-
         /// <summary>
         /// The list of bindings associated with the action.
         /// </summary>
+        /// <value>List of bindings for the action.</value>
         /// <remarks>
-        /// This will include only bindings that directly trigger the action. If the action is part of a
-        /// <see cref="InputActionMap">set</see> that triggers the action through a combination of bindings,
-        /// for example, only the bindings that ultimately trigger the action are included in the list.
+        /// This list contains all bindings from <see cref="InputActionMap.bindings"/> of the action's
+        /// <see cref="actionMap"/> that reference the action through their <see cref="InputBinding.action"/>
+        /// property.
         ///
-        /// May allocate memory on first hit.
+        /// Note that on the first call, the list may have to be extracted from the action map first which
+        /// may require allocating GC memory. However, once initialized, no further GC allocation hits should occur.
+        /// If the binding setup on the map is changed, re-initialization may be required.
         /// </remarks>
+        /// <seealso cref="InputActionMap.bindings"/>
         public ReadOnlyArray<InputBinding> bindings => GetOrCreateActionMap().GetBindingsForSingleAction(this);
 
         /// <summary>
-        /// The set of controls to which the action's bindings resolve.
+        /// The set of controls to which the action's <see cref="bindings"/> resolve.
         /// </summary>
+        /// <value>Controls resolved from the action's <see cref="bindings"/>.</value>
         /// <remarks>
-        /// May allocate memory each time the control setup changes on the action.
+        /// This property can be queried whether the action is enabled or not and will return the
+        /// set of controls that match the action's bindings according to the current setup of
+        /// binding masks (<see cref="bindingMask"/>) and device restrictions (<see
+        /// cref="InputActionMap.devices"/>).
+        ///
+        /// Note that internally, controls are not stored on a per-action basis. This means
+        /// that on the first read of this property, the list of controls for just the action
+        /// may have to be extracted which in turn may allocate GC memory. After the first read,
+        /// no further GC allocations should occur except if the set of controls is changed (e.g.
+        /// by changing the binding mask or by adding/removing devices to/from the system).
+        ///
+        /// If the property is queried when the action has not been enabled yet, the system
+        /// will first resolve controls on the action (and for all actions in the map and/or
+        /// the asset). See <a href="../manual/ActionBindings.html#binding-resolution">Binding Resolution</a>
+        /// in the manual for details.
         /// </remarks>
         public ReadOnlyArray<InputControl> controls
         {
@@ -400,6 +417,8 @@ namespace UnityEngine.InputSystem
                 return map.GetControlsForSingleAction(this);
             }
         }
+
+        //DOC-------------------------------------------------------------------------------
 
         /// <summary>
         /// The current phase of the action.
@@ -520,21 +539,93 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal bool wantsInitialStateCheck => type == InputActionType.Value;
 
+        /// <summary>
+        /// Construct an unnamed, free-standing action that is not part of any map or asset
+        /// and has no bindings. Bindings can be added with <see
+        /// cref="InputActionSetupExtensions.AddBinding(InputAction,string,string,string,string)"/>.
+        /// The action type defaults to <see cref="InputActionType.Value"/>.
+        /// </summary>
+        /// <remarks>
+        /// The action will not have an associated <see cref="InputActionMap"/> and <see cref="actionMap"/>
+        /// will thus be <c>null</c>. Use <see cref="InputActionSetupExtensions.AddAction"/> instead if
+        /// you want to add a new action to an action map.
+        ///
+        /// The action will remain disabled after construction and thus not listen/react to input yet.
+        /// Use <see cref="Enable"/> to enable the action.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create an action with two bindings.
+        /// var action = new InputAction();
+        /// action.AddBinding("&lt;Gamepad&gt;/leftStick");
+        /// action.AddBinding("&lt;Mouse&gt;/delta");
+        ///
+        /// action.performed += ctx => Debug.Log("Value: " + ctx.ReadValue&lt;Vector2&gt;());
+        ///
+        /// action.Enable();
+        /// </code>
+        /// </example>
+        /// </remarks>
         public InputAction()
         {
         }
 
-        // Construct a disabled action targeting the given sources.
-        // NOTE: This constructor is *not* used for actions added to sets. These are constructed
-        //       by sets themselves.
-        public InputAction(string name = null, InputActionType type = default, string binding = null, string interactions = null, string processors = null, string expectedControlType = null)
+        /// <summary>
+        /// Construct a free-standing action that is not part of an <see cref="InputActionMap"/>.
+        /// </summary>
+        /// <param name="name">Name of the action. If null or empty, the action will be unnamed.</param>
+        /// <param name="type">Type of action to create. Defaults to <see cref="InputActionType.Value"/>, i.e.
+        /// an action that provides continuous values.</param>
+        /// <param name="binding">If not null or empty, a binding with the given path will be added to the action
+        /// right away. The format of the string is the as for <see cref="InputBinding.path"/>.</param>
+        /// <param name="interactions">If <paramref name="binding"/> is not null or empty, this parameter represents
+        /// the interaction to apply to the newly created binding (i.e. <see cref="InputBinding.interactions"/>). If
+        /// <paramref name="binding"/> is not supplied, this parameter represents the interactions to apply to the action
+        /// (i.e. the value of <see cref="interactions"/>).</param>
+        /// <param name="processors">If <paramref name="binding"/> is not null or empty, this parameter represents
+        /// the processors to apply to the newly created binding (i.e. <see cref="InputBinding.processors"/>). If
+        /// <paramref name="binding"/> is not supplied, this parameter represents the processors to apply to the
+        /// action (i.e. the value of <see cref="processors"/>).</param>
+        /// <param name="expectedControlType">The optional expected control type for the action (i.e. <see
+        /// cref="expectedControlType"/>).</param>
+        /// <remarks>
+        /// The action will not have an associated <see cref="InputActionMap"/> and <see cref="actionMap"/>
+        /// will thus be <c>null</c>. Use <see cref="InputActionSetupExtensions.AddAction"/> instead if
+        /// you want to add a new action to an action map.
+        ///
+        /// The action will remain disabled after construction and thus not listen/react to input yet.
+        /// Use <see cref="Enable"/> to enable the action.
+        ///
+        /// Additional bindings can be added with <see
+        /// cref="InputActionSetupExtensions.AddBinding(InputAction,string,string,string,string)"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create a button action responding to the gamepad A button.
+        /// var action = new InputAction(type: InputActionType.Button, binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// action.performed += ctx => Debug.Log("Pressed");
+        /// action.Enable();
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public InputAction(string name = null, InputActionType type = default, string binding = null,
+                           string interactions = null, string processors = null, string expectedControlType = null)
         {
             m_Name = name;
             m_Type = type;
 
             if (!string.IsNullOrEmpty(binding))
             {
-                m_SingletonActionBindings = new[] {new InputBinding {path = binding, interactions = interactions, processors = processors, action = m_Name}};
+                m_SingletonActionBindings = new[]
+                {
+                    new InputBinding
+                    {
+                        path = binding,
+                        interactions = interactions,
+                        processors = processors,
+                        action = m_Name
+                    }
+                };
                 m_BindingsStartIndex = 0;
                 m_BindingsCount = 1;
             }
@@ -547,11 +638,28 @@ namespace UnityEngine.InputSystem
             m_ExpectedControlType = expectedControlType;
         }
 
+        /// <summary>
+        /// Release internal state held on to by the action.
+        /// </summary>
+        /// <remarks>
+        /// Once enabled, actions will allocate a block of state internally that they will hold on to
+        /// until disposed of. For free-standing actions, that state is private to just the action.
+        /// For actions that are part of <see cref="InputActionMap"/>s, the state is shared by all
+        /// actions in the map and, if the map itself is part of an <see cref="InputActionAsset"/>,
+        /// also by all the maps that are part of the asset.
+        ///
+        /// Note that the internal state holds on to GC heap memory as well as memory from the
+        /// unmanaged, C++ heap.
+        /// </remarks>
         public void Dispose()
         {
             m_ActionMap?.m_State?.Dispose();
         }
 
+        /// <summary>
+        /// Return a string version of the action. Mainly useful for debugging.
+        /// </summary>
+        /// <returns>A string version of the action.</returns>
         public override string ToString()
         {
             string str;
@@ -580,6 +688,70 @@ namespace UnityEngine.InputSystem
             return str;
         }
 
+        /// <summary>
+        /// Enable the action such that it actively listens for input and runs callbacks
+        /// in response.
+        /// </summary>
+        /// <remarks>
+        /// If the action is already enabled, this method does nothing.
+        ///
+        /// By default, actions start out disabled, i.e. with <see cref="enabled"/> being false.
+        /// When enabled, two things happen.
+        ///
+        /// First, if it hasn't already happened, an action will resolve all of its bindings
+        /// to <see cref="InputControl"/>s. This also happens if, since the action was last enabled,
+        /// the setup of devices in the system has changed such that it may impact the action.
+        ///
+        /// Second, for all the <see cref="controls"/> bound to an action, change monitors (see
+        /// <see cref="IInputStateChangeMonitor"/>) will be added to the system. If any of the
+        /// controls changes state in the future, the action will get notified and respond.
+        ///
+        /// <see cref="InputActionType.Value"/> type actions will also perform an initial state
+        /// check in the input system update following the call to Enable. This means that if
+        /// any of the bound controls are already actuated and produce a non-<c>default</c> value,
+        /// the action will immediately trigger in response.
+        ///
+        /// Note that this method only enables a single action. This is also allowed for action
+        /// that are part of an <see cref="InputActionMap"/>. To enable all actions in a map,
+        /// call <see cref="InputActionMap.Enable"/>.
+        ///
+        /// The <see cref="InputActionMap"/> associated with an action (if any), will immediately
+        /// toggle to being enabled (see <see cref="InputActionMap.enabled"/>) as soon as the first
+        /// action in the map is enabled and for as long as any action in the map is still enabled.
+        ///
+        /// The first time an action is enabled, it will allocate a block of state internally that it
+        /// will hold on to until disposed of. For free-standing actions, that state is private to
+        /// just the action. For actions that are part of <see cref="InputActionMap"/>s, the state
+        /// is shared by all actions in the map and, if the map itself is part of an <see
+        /// cref="InputActionAsset"/>, also by all the maps that are part of the asset.
+        ///
+        /// To dispose of the state, call <see cref="Dispose"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// var action = new InputAction(type: InputActionType.Value, binding: "&lt;Gamepad&gt;/leftTrigger");
+        /// action.performed = ctx => Debug.Log("Action triggered!");
+        ///
+        /// // Perform some fake input on the gamepad. Note that the action
+        /// // will *NOT* get triggered as it is not enabled.
+        /// // NOTE: We use RunOneFrame() here only for demonstration purposes. In most cases,
+        /// //       it's not a good method to call directly as it basically injects artificial
+        /// //       input frames into the player loop. Usually a recipe for breakage.
+        /// InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
+        /// InputSystem.RunOneFrame();
+        ///
+        /// action.Enable();
+        ///
+        /// // Now, with the left trigger already being down and the action enabled, it will
+        /// // trigger in the next frame.
+        /// InputSystem.RunOneFrame();
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="Disable"/>
+        /// <seealso cref="enabled"/>
         public void Enable()
         {
             if (enabled)
@@ -596,6 +768,19 @@ namespace UnityEngine.InputSystem
             map.m_State.EnableSingleAction(this);
         }
 
+        /// <summary>
+        /// Disable the action such that is stop listening/responding to input.
+        /// </summary>
+        /// <remarks>
+        /// If the action is already disabled, this method does nothing.
+        ///
+        /// If the action is currently in progress, i.e. if <see cref="phase"/> is
+        /// <see cref="InputActionPhase.Started"/>, the action will be canceled as
+        /// part of being disabled. This means that you will see a call on <see cref="canceled"/>
+        /// from within the call to <c>Disable()</c>.
+        /// </remarks>
+        /// <seealso cref="enabled"/>
+        /// <seealso cref="Enable"/>
         public void Disable()
         {
             if (!enabled)
@@ -604,13 +789,28 @@ namespace UnityEngine.InputSystem
             m_ActionMap.m_State.DisableSingleAction(this);
         }
 
-        // If you clone an action from a set, you get a singleton action in return.
+        ////REVIEW: is *not* cloning IDs here really the right thing to do?
+        /// <summary>
+        /// Return an identical instance of the action.
+        /// </summary>
+        /// <returns>An identical clone of the action</returns>
+        /// <remarks>
+        /// Note that if you clone an action that is part of an <see cref="InputActionMap"/>,
+        /// you will not get a new action that is part of the same map. Instead, you will
+        /// get a free-standing action not associated with any action map.
+        ///
+        /// Also, note that the <see cref="id"/> of the action is not cloned. Instead, the
+        /// clone will receive a new unique ID.
+        /// </remarks>
         public InputAction Clone()
         {
-            var clone = new InputAction(name: m_Name)
+            var clone = new InputAction(name: m_Name, type: m_Type)
             {
                 m_SingletonActionBindings = bindings.ToArray(),
-                m_BindingsCount = m_BindingsCount
+                m_BindingsCount = m_BindingsCount,
+                m_ExpectedControlType = m_ExpectedControlType,
+                m_Interactions = m_Interactions,
+                m_Processors = m_Processors,
             };
             return clone;
         }

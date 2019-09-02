@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// will receive the same ID over an application lifecycle regardless of whether the devices
         /// existed at the same time or not.
         /// </remarks>
-        /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="InputDevice.deviceId"/>
         /// <seealso cref="InputSystem.GetDeviceById"/>
         /// <seealso cref="InputDevice.InvalidDeviceId"/>
         public int deviceId
