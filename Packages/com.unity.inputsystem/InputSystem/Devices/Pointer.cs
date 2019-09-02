@@ -43,29 +43,26 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Position of the pointer in screen space.
         /// </summary>
 #if UNITY_EDITOR
-        [InputControl(layout = "Vector2", usage = "Point", processors = "AutoWindowSpace", displayName = "Position")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point", processors = "AutoWindowSpace")]
 #else
-        [InputControl(layout = "Vector2", usage = "Point", displayName = "Position")]
+        [InputControl(layout = "Vector2", displayName = "Position", usage = "Point")]
 #endif
         public Vector2 position;
 
         ////REVIEW: if we have Secondary2DMotion on this, seems like this should be normalized
-        [InputControl(layout = "Vector2", usage = "Secondary2DMotion")]
+        [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", usage = "Pressure")]
+        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure")]
         public float pressure;
 
-        [InputControl(layout = "Vector2", usage = "Radius")]
+        [InputControl(layout = "Vector2", displayName = "Radius", usage = "Radius")]
         public Vector2 radius;
 
-        [InputControl(name = "press", layout = "Button", format = "BIT", bit = 0)]
+        [InputControl(name = "press", displayName = "Press", layout = "Button", format = "BIT", bit = 0)]
         public ushort buttons;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 }
 

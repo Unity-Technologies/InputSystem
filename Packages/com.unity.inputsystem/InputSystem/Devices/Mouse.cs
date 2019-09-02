@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 delta;
 
         ////REVIEW: have half-axis buttons on the scroll axes? (up, down, left, right)
-        [InputControl]
+        [InputControl(displayName = "Scroll")]
         [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
         [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
@@ -54,7 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(26)]
         ushort displayIndex;
 
-        [InputControl(layout = "Integer")]
+        [InputControl(layout = "Integer", displayName = "Click Count")]
         [FieldOffset(28)]
         public ushort clickCount;
 
