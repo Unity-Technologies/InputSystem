@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.processors"/>
     /// <seealso cref="InputControlLayout.ControlItem.processors"/>
     /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
+    [Scripting.Preserve]
     public abstract class InputProcessor
     {
         /// <summary>
@@ -114,6 +115,7 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     /// <seealso cref="InputSystem.RegisterProcessor"/>
+    [Scripting.Preserve]
     public abstract class InputProcessor<TValue> : InputProcessor
         where TValue : struct
     {

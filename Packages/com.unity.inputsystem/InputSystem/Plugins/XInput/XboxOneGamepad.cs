@@ -189,6 +189,7 @@ namespace UnityEngine.InputSystem.XInput
     /// <summary>
     /// An Xbox One Gamepad.
     /// </summary>
+    [Scripting.Preserve]
     public class XboxOneGamepad : XInputController, IXboxOneRumble
     {
         private ulong m_GamepadId = 0;

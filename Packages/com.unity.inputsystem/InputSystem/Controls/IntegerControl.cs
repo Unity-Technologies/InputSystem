@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.Controls
     /// <summary>
     /// A generic input control reading integer values.
     /// </summary>
+    [Scripting.Preserve]
     public class IntegerControl : InputControl<int>
     {
         public IntegerControl()

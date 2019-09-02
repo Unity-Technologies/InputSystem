@@ -112,6 +112,7 @@ namespace UnityEngine.InputSystem
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
+    [UnityEngine.Scripting.Preserve]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
@@ -156,6 +157,16 @@ namespace UnityEngine.InputSystem
             base.OnRemoved();
             if (current == this)
                 current = null;
+        }
+
+        internal static Mouse s_PlatformMouseDevice;
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            if (native && s_PlatformMouseDevice == null)
+                s_PlatformMouseDevice = this;
         }
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)

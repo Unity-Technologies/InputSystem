@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Controls
     /// returns 1.0; otherwise it returns 0.0.
     /// </summary>
     [InputControlLayout(hideInUI = true)]
+    [UnityEngine.Scripting.Preserve]
     public class AnyKeyControl : ButtonControl
     {
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame

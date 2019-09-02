@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>
+    [Scripting.Preserve]
     public class SlowTapInteraction : IInputInteraction
     {
         /// <summary>

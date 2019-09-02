@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.Composites
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
     /// </remarks>
+    [Scripting.Preserve]
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>

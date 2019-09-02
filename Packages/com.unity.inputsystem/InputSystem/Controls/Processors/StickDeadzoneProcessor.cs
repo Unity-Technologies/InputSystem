@@ -8,6 +8,7 @@ namespace UnityEngine.InputSystem.Processors
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
+    [Scripting.Preserve]
     public class StickDeadzoneProcessor : InputProcessor<Vector2>
     {
         /// <summary>
