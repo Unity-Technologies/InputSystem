@@ -884,13 +884,13 @@ partial class CoreTests
 
         // Trigger first timeout.
         runtime.currentTime += 2;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(timeoutCount, Is.EqualTo(1));
 
         // Trigger second timeout.
         runtime.currentTime += 2;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(timeoutCount, Is.EqualTo(2));
     }
@@ -962,7 +962,7 @@ partial class CoreTests
         InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
 
         runtime.currentTime = 4;
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
     }
 
     [Test]
