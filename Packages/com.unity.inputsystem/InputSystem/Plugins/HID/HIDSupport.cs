@@ -28,28 +28,26 @@ namespace UnityEngine.InputSystem.HID
     /// </remarks>
     public static class HIDSupport
     {
-        public static event ShouldCreateHIDCallback shouldCreateHID
+        public struct HIDPageUsage
         {
-            add => s_ShouldCreateHID.Append(value);
-            remove => s_ShouldCreateHID.Remove(value);
-        }
+            public HID.UsagePage page;
+            public int usage;
 
-        internal static InlinedArray<ShouldCreateHIDCallback> s_ShouldCreateHID;
-
-        private static bool? DefaultShouldCreateHIDCallback(HID.HIDDeviceDescriptor descriptor)
-        {
-            if (descriptor.usagePage == HID.UsagePage.GenericDesktop)
+            public HIDPageUsage(HID.UsagePage page, int usage)
             {
-                switch (descriptor.usage)
-                {
-                    case (int)HID.GenericDesktop.Joystick:
-                    case (int)HID.GenericDesktop.Gamepad:
-                    case (int)HID.GenericDesktop.MultiAxisController:
-                        return true;
-                }
+                this.page = page;
+                this.usage = usage;
             }
-            return null;
+
+            public HIDPageUsage(HID.GenericDesktop usage)
+            {
+                this.page = HID.UsagePage.GenericDesktop;
+                this.usage = (int)usage;
+            }
         }
+
+
+        public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages { get; set; }
 
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
@@ -61,7 +59,12 @@ namespace UnityEngine.InputSystem.HID
 #endif
         static void Initialize()
         {
-            s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
+            supportedHIDUsages = new ReadOnlyArray<HIDPageUsage>(new[]
+            {
+                new HIDPageUsage(HID.GenericDesktop.Joystick),
+                new HIDPageUsage(HID.GenericDesktop.Gamepad),
+                new HIDPageUsage(HID.GenericDesktop.MultiAxisController),
+            });
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
