@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.XR;
@@ -356,6 +357,7 @@ internal class XRTests : InputTestFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
+    [Preserve]
     private class TestHMD : InputDevice
     {
         [InputControl]

@@ -191,6 +191,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputUser.actions"/>
         public InputActionAsset actions
         {
+            ////FIXME: this may return the wrong set of action if called before OnEnable
             get => m_Actions;
             set
             {
@@ -234,6 +235,45 @@ namespace UnityEngine.InputSystem
         {
             get => m_DefaultControlScheme;
             set => m_DefaultControlScheme = value;
+        }
+
+        /// <summary>
+        /// If true, do not automatically switch control schemes even when there is only a single player.
+        /// By default, this property is false.
+        /// </summary>
+        /// <value>If true, do not switch control schemes when other devices are used.</value>
+        /// <remarks>
+        /// By default, when there is only a single PlayerInput enabled, we assume that the game is in
+        /// single-player mode and that the player should be able to freely switch between the control schemes
+        /// supported by the game. For example, if the player is currently using mouse and keyboard, but is
+        /// then switching to a gamepad, PlayerInput should automatically switch to the control scheme for
+        /// gamepads, if present.
+        ///
+        /// When there is more than one PlayerInput, this behavior is automatically turned off as we wouldn't
+        /// know which player is switching if a currently unpaired device is used.
+        ///
+        /// By setting this property to true, auto-switching of control schemes is forcibly turned off and
+        /// will thus not be performed even if there is only a single PlayerInput in the game.
+        ///
+        /// This property is most useful for games that do not have an explicit lobby but rather allow joining
+        /// throughout the game. Classic beat 'em up games where a second player may join the brawl at any time
+        /// are a good example.
+        ///
+        /// Note that you can still switch control schemes manually using <see
+        /// cref="SwitchControlScheme(string,InputDevice[])"/>.
+        /// </remarks>
+        /// <seealso cref="controlScheme"/>
+        public bool neverAutoSwitchControlSchemes
+        {
+            get => m_NeverAutoSwitchControlSchemes;
+            set
+            {
+                if (m_NeverAutoSwitchControlSchemes == value)
+                    return;
+                m_NeverAutoSwitchControlSchemes = value;
+                if (enabled && s_OnUnpairedDeviceHooked)
+                    StopListeningForUnpairedDeviceActivity();
+            }
         }
 
         /// <summary>
@@ -463,6 +503,38 @@ namespace UnityEngine.InputSystem
             m_InputActive = false;
         }
 
+        public bool SwitchControlScheme(params InputDevice[] devices)
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (actions == null)
+                throw new InvalidOperationException(
+                    "Must set actions on PlayerInput in order to be able to switch control schemes");
+
+            var scheme = InputControlScheme.FindControlSchemeForDevices(devices, actions.controlSchemes);
+            if (scheme == null)
+                return false;
+
+            SwitchControlScheme(scheme.Value.name, devices);
+            return true;
+        }
+
+        public void SwitchControlScheme(string controlScheme, params InputDevice[] devices)
+        {
+            if (string.IsNullOrEmpty(controlScheme))
+                throw new ArgumentNullException(nameof(controlScheme));
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+
+            ////REVIEW: probably would be good for InputUser to have a method that allows to perform
+            ////        all this in a single call; would also simplify the steps necessary internally
+            user.UnpairDevices();
+            for (var i = 0; i < devices.Length; ++i)
+                InputUser.PerformPairingWithDevice(devices[i], user: user);
+
+            user.ActivateControlScheme(controlScheme);
+        }
+
         public void SwitchCurrentActionMap(string mapNameOrId)
         {
             // Must be enabled.
@@ -603,7 +675,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ActionEvent[] m_ActionEvents;
-        [SerializeField] internal bool m_AutoSwitchControlScheme;
+        [SerializeField] internal bool m_NeverAutoSwitchControlSchemes;
         [SerializeField] internal string m_DefaultControlScheme;////REVIEW: should we have IDs for these so we can rename safely?
         [SerializeField] internal string m_DefaultActionMap;
         [SerializeField] internal int m_SplitScreenIndex = -1;
@@ -1092,23 +1164,29 @@ namespace UnityEngine.InputSystem
 
             // In single player, set up for automatic control scheme switching.
             // Otherwise make sure it's disabled.
-            if (isSinglePlayer && !s_OnUnpairedDeviceHooked)
-            {
-                if (s_UnpairedDeviceUsedDelegate == null)
-                    s_UnpairedDeviceUsedDelegate = OnUnpairedDeviceUsed;
-                InputUser.onUnpairedDeviceUsed += s_UnpairedDeviceUsedDelegate;
-                ++InputUser.listenForUnpairedDeviceActivity;
-                s_OnUnpairedDeviceHooked = true;
-            }
+            if (isSinglePlayer && !s_OnUnpairedDeviceHooked && !neverAutoSwitchControlSchemes)
+                StartListeningForUnpairedDeviceActivity();
             else if (s_OnUnpairedDeviceHooked)
-            {
-                InputUser.onUnpairedDeviceUsed -= s_UnpairedDeviceUsedDelegate;
-                --InputUser.listenForUnpairedDeviceActivity;
-                s_OnUnpairedDeviceHooked = false;
-            }
+                StopListeningForUnpairedDeviceActivity();
 
             // Trigger join event.
             PlayerInputManager.instance?.NotifyPlayerJoined(this);
+        }
+
+        private void StartListeningForUnpairedDeviceActivity()
+        {
+            if (s_UnpairedDeviceUsedDelegate == null)
+                s_UnpairedDeviceUsedDelegate = OnUnpairedDeviceUsed;
+            InputUser.onUnpairedDeviceUsed += s_UnpairedDeviceUsedDelegate;
+            ++InputUser.listenForUnpairedDeviceActivity;
+            s_OnUnpairedDeviceHooked = true;
+        }
+
+        private void StopListeningForUnpairedDeviceActivity()
+        {
+            InputUser.onUnpairedDeviceUsed -= s_UnpairedDeviceUsedDelegate;
+            --InputUser.listenForUnpairedDeviceActivity;
+            s_OnUnpairedDeviceHooked = false;
         }
 
         private void OnDisable()
@@ -1213,11 +1291,11 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private static void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
+        private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             // We only support automatic control scheme switching in single player mode.
             // OnEnable() should automatically unhook us.
-            if (!isSinglePlayer)
+            if (!isSinglePlayer || neverAutoSwitchControlSchemes)
                 return;
 
             var player = all[0];
@@ -1237,7 +1315,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        [Serializable]
         public class ActionEvent : UnityEvent<InputAction.CallbackContext>
         {
             public string actionId => m_ActionId;

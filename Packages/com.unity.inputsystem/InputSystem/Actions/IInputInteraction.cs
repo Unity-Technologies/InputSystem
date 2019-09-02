@@ -165,6 +165,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.interactions"/>
     /// <seealso cref="InputAction.interactions"/>
     /// <seealso cref="Editor.InputParameterEditor"/>
+    [Scripting.Preserve]
     public interface IInputInteraction
     {
         /// <summary>
@@ -265,6 +266,7 @@ namespace UnityEngine.InputSystem
     /// it has is not compatible with the value type expected by the action.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces", Justification = "This interface is used to mark implementing classes to advertise the value it expects. This seems more elegant then the suggestion to use an attribute.")]
+    [Scripting.Preserve]
     public interface IInputInteraction<TValue> : IInputInteraction
         where TValue : struct
     {

@@ -7,6 +7,7 @@ using System.Linq;
 using System.CodeDom.Compiler;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine.Scripting;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -1923,6 +1924,7 @@ partial class CoreTests
         Assert.That(InputProcessor.GetValueTypeFromType(typeof(ScaleProcessor)), Is.SameAs(typeof(float)));
     }
 
+    [Preserve]
     private class TestInteractionWithValueType : IInputInteraction<float>
     {
         public void Process(ref InputInteractionContext context)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -530,6 +531,107 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
     }
 
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_WithDevicePluggedInAfterStart()
+    {
+        var go = new GameObject();
+        go.SetActive(false);
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        Assert.That(playerInput.devices, Is.Empty);
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+
+        // Just plugging in the device shouldn't result in a switch.
+        Assert.That(playerInput.devices, Is.Empty);
+
+        // But moving the stick should.
+        Set(gamepad1.leftStick, new Vector2(0.234f, 0.345f));
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+                {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))}));
+
+        listener.messages.Clear();
+
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        // We need to reach *higher* actuation than gamepad1's left stick. This is a bit of an
+        // artificial thing. In reality, the player would let go of the stick on the first gamepad
+        // and then pick up the second gamepad and actuate the stick there. However, even if the
+        // situation arises where both are actuated, we still do the "right" thing and stick to the
+        // one that is actuated more strongly.
+        Set(gamepad2.leftStick, new Vector2(0.345f, 0.456f));
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
+        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
+        Assert.That(listener.messages,
+            Is.EquivalentTo(new[]
+                // This looks counter-intuitive but what happens is that when switching from gamepad1 to gamepad2,
+                // the system will first cancel ongoing actions. So it'll cancel "Move" which, given how PlayerInput
+                // sends messages, will simply come out as another "Move". And it's still bound to gamepad2's leftStick
+                // at that point, so the value we record is (0.234,0.345).
+            {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))),
+             new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_AutoSwitchingControlSchemesInSinglePlayer_CanBeDisabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = true;
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSwitchControlSchemesManually()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = true;
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        var result = playerInput.SwitchControlScheme(gamepad);
+        Assert.That(result, Is.True);
+
+        Assert.That(playerInput.controlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+    }
+
     // Test setup where two players both use the keyboard but with two different control
     // schemes.
     [Test]
@@ -613,58 +715,6 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(player1.GetComponent<MessageListener>().messages, Is.Empty);
         Assert.That(player2.GetComponent<MessageListener>().messages,
             Is.EquivalentTo(new[] {new Message { name = "OnFire", value = 1f }}));
-    }
-
-    [Test]
-    [Category("PlayerInput")]
-    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_WithDevicePluggedInAfterStart()
-    {
-        var go = new GameObject();
-        go.SetActive(false);
-        var listener = go.AddComponent<MessageListener>();
-        var playerInput = go.AddComponent<PlayerInput>();
-        playerInput.defaultActionMap = "gameplay";
-        playerInput.actions = InputActionAsset.FromJson(kActions);
-        go.SetActive(true);
-
-        Assert.That(playerInput.devices, Is.Empty);
-
-        var gamepad1 = InputSystem.AddDevice<Gamepad>();
-
-        // Just plugging in the device shouldn't result in a switch.
-        Assert.That(playerInput.devices, Is.Empty);
-
-        // But moving the stick should.
-        Set(gamepad1.leftStick, new Vector2(0.234f, 0.345f));
-
-        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad1 }));
-        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
-        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
-        Assert.That(listener.messages,
-            Is.EquivalentTo(new[]
-                {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))}));
-
-        listener.messages.Clear();
-
-        var gamepad2 = InputSystem.AddDevice<Gamepad>();
-        // We need to reach *higher* actuation than gamepad1's left stick. This is a bit of an
-        // artificial thing. In reality, the player would let go of the stick on the first gamepad
-        // and then pick up the second gamepad and actuate the stick there. However, even if the
-        // situation arises where both are actuated, we still do the "right" thing and stick to the
-        // one that is actuated more strongly.
-        Set(gamepad2.leftStick, new Vector2(0.345f, 0.456f));
-
-        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad2 }));
-        Assert.That(playerInput.user.controlScheme, Is.Not.Null);
-        Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
-        Assert.That(listener.messages,
-            Is.EquivalentTo(new[]
-                // This looks counter-intuitive but what happens is that when switching from gamepad1 to gamepad2,
-                // the system will first cancel ongoing actions. So it'll cancel "Move" which, given how PlayerInput
-                // sends messages, will simply come out as another "Move". And it's still bound to gamepad2's leftStick
-                // at that point, so the value we record is (0.234,0.345).
-            {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))),
-             new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))}));
     }
 
     [Test]
@@ -1553,6 +1603,9 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerInputEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1585,6 +1638,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerInputCSharpEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1616,6 +1671,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerManagerEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1640,6 +1697,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerManagerCSharpEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();

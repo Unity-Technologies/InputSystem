@@ -140,7 +140,9 @@ namespace UnityEngine.InputSystem.LowLevel
             InputSystem.s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
 
-        public static IInputStateChangeMonitor AddChangeMonitor(InputControl control, NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1, NotifyTimerExpiredAction timerExpiredCallback = null)
+        public static IInputStateChangeMonitor AddChangeMonitor(InputControl control,
+            NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1,
+            NotifyTimerExpiredAction timerExpiredCallback = null)
         {
             if (valueChangeCallback == null)
                 throw new ArgumentNullException(nameof(valueChangeCallback));

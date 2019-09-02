@@ -284,7 +284,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var name = control.isArray ? control.name + i : control.name;
                 var displayName = !string.IsNullOrEmpty(control.displayName)
-                    ? (control.isArray ? control.displayName + i : control.displayName)
+                    ? (control.isArray ? $"{control.displayName} #{i}" : control.displayName)
                     : name;
 
                 var child = new ControlDropdownItem(parentControl, name, displayName,
@@ -311,10 +311,11 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var key in keyboard.children.OfType<KeyControl>())
             {
                 // If the key has a display name that differs from the key name, show it in the UI.
-                var displayName = key.name;
+                var displayName = key.m_DisplayNameFromLayout;
                 var keyDisplayName = key.displayName;
-                if (keyDisplayName.All(x => x.IsPrintable()) && keyDisplayName != key.name)
-                    displayName = $"{key.name} (Current Layout: {key.displayName})";
+                if (keyDisplayName.All(x => x.IsPrintable()) && string.Compare(keyDisplayName, displayName,
+                    StringComparison.InvariantCultureIgnoreCase) != 0)
+                    displayName = $"{displayName} (Current Layout: {key.displayName})";
 
                 var item = new ControlDropdownItem(null, key.name, displayName,
                     keyboard.layout, "", searchable);
