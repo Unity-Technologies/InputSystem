@@ -12,6 +12,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 #### Actions
 ### Changed
+
+- Replaced `HIDSupport.shouldCreateHID` event with a new `HIDSupport.supportedHIDUsages` property, which takes an array of supported usages.
+
 ### Added
 
 ## [0.9.5-preview] - 2019-8-29
