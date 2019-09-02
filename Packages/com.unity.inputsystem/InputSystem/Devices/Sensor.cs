@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('A', 'C', 'C', 'L');
 
-        [InputControl(processors = "CompensateDirection", noisy = true)]
+        [InputControl(displayName = "Acceleration", processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC format => kFormat;
@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('G', 'Y', 'R', 'O');
 
-        [InputControl(processors = "CompensateDirection", noisy = true)]
+        [InputControl(displayName = "Angular Velocity", processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
 
         public FourCC format => kFormat;
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('G', 'R', 'V', ' ');
 
-        [InputControl(processors = "CompensateDirection", noisy = true)]
+        [InputControl(displayName = "Gravity", processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
 
         public FourCC format => kFormat;
@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('A', 'T', 'T', 'D');
 
-        [InputControl(processors = "CompensateRotation", noisy = true)]
+        [InputControl(displayName = "Attitude", processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
 
         public FourCC format => kFormat;
@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('L', 'A', 'A', 'C');
 
-        [InputControl(processors = "CompensateDirection", noisy = true)]
+        [InputControl(displayName = "Acceleration", processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
 
         public FourCC format => kFormat;
@@ -72,6 +72,7 @@ namespace UnityEngine.InputSystem
     /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s, <see cref="GravitySensor"/>s and others.
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class Sensor : InputDevice
     {
         public float samplingFrequency
@@ -125,6 +126,7 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(AccelerometerState))]
+    [Scripting.Preserve]
     public class Accelerometer : Sensor
     {
         public Vector3Control acceleration { get; private set; }
@@ -158,6 +160,7 @@ namespace UnityEngine.InputSystem
     /// A gyroscope let's you measure the angular velocity of a device, and can be useful to control content by rotating a device.
     /// </remarks>
     [InputControlLayout(stateType = typeof(GyroscopeState))]
+    [Scripting.Preserve]
     public class Gyroscope : Sensor
     {
         public Vector3Control angularVelocity { get; private set; }
@@ -192,6 +195,7 @@ namespace UnityEngine.InputSystem
     /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of linear acceleration (see <see cref="LinearAccelerationSensor"/>).
     /// </remarks>
     [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
+    [Scripting.Preserve]
     public class GravitySensor : Sensor
     {
         public Vector3Control gravity { get; private set; }
@@ -227,6 +231,7 @@ namespace UnityEngine.InputSystem
     /// An attitude sensor let's you determine the orientation of a device, and can be useful to control content by rotating a device.
     /// </remarks>
     [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
+    [Scripting.Preserve]
     public class AttitudeSensor : Sensor
     {
         public QuaternionControl attitude { get; private set; }
@@ -262,6 +267,7 @@ namespace UnityEngine.InputSystem
     /// This is usually derived from a hardware <see cref="Accelerometer"/>, by subtracting the effect of gravity (see <see cref="GravitySensor"/>).
     /// </remarks>
     [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
+    [Scripting.Preserve]
     public class LinearAccelerationSensor : Sensor
     {
         public Vector3Control acceleration { get; private set; }
@@ -292,6 +298,7 @@ namespace UnityEngine.InputSystem
     /// Input device representing the magnetic field affecting the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Magnetic Field")]
+    [Scripting.Preserve]
     public class MagneticFieldSensor : Sensor
     {
         /// <summary>
@@ -300,7 +307,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
-        [InputControl]
+        [InputControl(displayName = "Magnetic Field", noisy = true)]
         public Vector3Control magneticField { get; private set; }
 
         public static MagneticFieldSensor current { get; private set; }
@@ -329,12 +336,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient light measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Light")]
+    [Scripting.Preserve]
     public class LightSensor : Sensor
     {
         /// <summary>
         /// Light level in SI lux units.
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Light Level", noisy = true)]
         public AxisControl lightLevel { get; private set; }
 
         public static LightSensor current { get; private set; }
@@ -363,12 +371,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the atmospheric pressure measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Pressure")]
+    [Scripting.Preserve]
     public class PressureSensor : Sensor
     {
         /// <summary>
         /// Atmospheric pressure in hPa (millibar).
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Atmospheric Pressure", noisy = true)]
         public AxisControl atmosphericPressure { get; private set; }
 
         public static PressureSensor current { get; private set; }
@@ -400,12 +409,13 @@ namespace UnityEngine.InputSystem
     /// The proximity sensor is usually used by phones to determine if the user is holding the phone to their ear or not.
     /// </remarks>
     [InputControlLayout(displayName = "Proximity")]
+    [Scripting.Preserve]
     public class ProximitySensor : Sensor
     {
         /// <summary>
         /// Proximity sensor distance measured in centimeters.
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Distance", noisy = true)]
         public AxisControl distance { get; private set; }
 
         public static ProximitySensor current { get; private set; }
@@ -434,12 +444,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient air humidity measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Humidity")]
+    [Scripting.Preserve]
     public class HumiditySensor : Sensor
     {
         /// <summary>
         /// Relative ambient air humidity in percent.
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Relative Humidity", noisy = true)]
         public AxisControl relativeHumidity { get; private set; }
 
         public static HumiditySensor current { get; private set; }
@@ -468,12 +479,13 @@ namespace UnityEngine.InputSystem
     /// Input device representing the ambient air temperature measured by the device playing the content.
     /// </summary>
     [InputControlLayout(displayName = "Ambient Temperature")]
+    [Scripting.Preserve]
     public class AmbientTemperatureSensor : Sensor
     {
         /// <summary>
         /// Temperature in degree Celsius.
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Ambient Temperature", noisy = true)]
         public AxisControl ambientTemperature { get; private set; }
 
         public static AmbientTemperatureSensor current { get; private set; }
@@ -501,13 +513,14 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Input device representing the foot steps taken by the user as measured by the device playing the content.
     /// </summary>
-    [InputControlLayout(displayName = "StepCounter")]
+    [InputControlLayout(displayName = "Step Counter")]
+    [Scripting.Preserve]
     public class StepCounter : Sensor
     {
         /// <summary>
         /// The number of steps taken by the user since the last reboot while activated.
         /// </summary>
-        [InputControl]
+        [InputControl(displayName = "Step Counter", noisy = true)]
         public IntegerControl stepCounter { get; private set; }
 
         public static StepCounter current { get; private set; }

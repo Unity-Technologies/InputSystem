@@ -7,26 +7,37 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR headset.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class WMRHMD : XRHMD
     {
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
@@ -52,38 +63,55 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class WMRSpatialController : XRControllerWithRumble
     {
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control joystick { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Secondary2DAxis" })]
         public Vector2Control touchpad { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl grip { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary" })]
         public ButtonControl menu { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl joystickClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl triggerPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "joystickorpadpressed" })]
         public ButtonControl touchpadClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "joystickorpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 

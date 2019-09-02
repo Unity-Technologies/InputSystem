@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -651,6 +652,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }

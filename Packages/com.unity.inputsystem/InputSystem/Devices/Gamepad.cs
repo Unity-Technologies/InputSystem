@@ -286,6 +286,7 @@ namespace UnityEngine.InputSystem
     /// two shoulder buttons, and two menu buttons.
     /// </summary>
     [InputControlLayout(stateType = typeof(GamepadState), isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class Gamepad : InputDevice, IDualMotorRumble
     {
         public ButtonControl buttonWest { get; private set; }

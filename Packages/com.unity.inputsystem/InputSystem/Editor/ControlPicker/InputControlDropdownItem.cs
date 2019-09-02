@@ -49,12 +49,21 @@ namespace UnityEngine.InputSystem.Editor
             : base(name) {}
     }
 
+    // NOTE: Optional control items, unlike normal control items, are displayed with their internal control
+    //       names rather that their display names. The reason is that we're looking at controls that have
+    //       the same internal name in one or more derived layouts but each of those derived layouts may
+    //       give the control a different display name.
+    //
+    //       Also, if we generate a control path for an optional binding, InputControlPath.ToHumanReadableName()
+    //       not find the referenced control on the referenced device layout and will thus not be able to
+    //       find a display name for it either. So, in the binding UI, these paths will also show with their
+    //       internal control names rather than display names.
     internal sealed class OptionalControlDropdownItem : InputControlDropdownItem
     {
-        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalLayout, string deviceControlId, string commonUsage)
-            : base(optionalLayout.name)
+        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalControl, string deviceControlId, string commonUsage)
+            : base(optionalControl.name)
         {
-            m_ControlPath = optionalLayout.name;
+            m_ControlPath = optionalControl.name;
             m_Device = deviceControlId;
             m_Usage = commonUsage;
             // Not searchable.

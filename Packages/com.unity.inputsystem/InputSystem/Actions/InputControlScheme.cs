@@ -80,9 +80,55 @@ namespace UnityEngine.InputSystem
                 : name;
         }
 
+        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TList>(TDevices devices, TList schemes)
+            where TDevices : IReadOnlyList<InputDevice>
+            where TList : IEnumerable<InputControlScheme>
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
+            MatchResult? bestResult = null;
+            InputControlScheme? bestScheme = null;
+
+            foreach (var scheme in schemes)
+            {
+                var matchResult = scheme.PickDevicesFrom(devices);
+
+                // Ignore if scheme doesn't fit devices.
+                if (!matchResult.isSuccessfulMatch)
+                {
+                    matchResult.Dispose();
+                    continue;
+                }
+
+                // Ignore if it does fit but we already have a fit covering more of the devices we have.
+                if (bestResult != null && bestResult.Value.devices.Count > matchResult.devices.Count)
+                {
+                    matchResult.Dispose();
+                    continue;
+                }
+
+                bestResult = matchResult;
+                bestScheme = scheme;
+            }
+
+            if (bestResult != null)
+            {
+                bestResult.Value.Dispose();
+                return bestScheme;
+            }
+
+            return null;
+        }
+
         public static InputControlScheme? FindControlSchemeForDevice<TList>(InputDevice device, TList schemes)
             where TList : IEnumerable<InputControlScheme>
         {
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
             foreach (var scheme in schemes)
                 if (scheme.SupportsDevice(device))
                     return scheme;

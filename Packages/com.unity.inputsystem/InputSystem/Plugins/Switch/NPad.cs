@@ -449,6 +449,7 @@ namespace UnityEngine.InputSystem.Switch
     /// </summary>
     /// <seealso cref="NPadInputState"/>
     [InputControlLayout(stateType = typeof(NPadInputState), displayName = "Switch Controller (on Switch)")]
+    [Scripting.Preserve]
     public class NPad : Gamepad, INPadRumble
     {
         public ButtonControl leftSL { get; private set; }
@@ -766,6 +767,7 @@ namespace UnityEngine.InputSystem.Switch
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
+    [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
     {
     }
