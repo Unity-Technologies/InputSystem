@@ -1151,6 +1151,7 @@ namespace UnityEngine.InputSystem.HID
             Keypad = 0x07,
             MultiAxisController = 0x08,
             TabletPCControls = 0x09,
+            AssistiveControl = 0x0A,
             X = 0x30,
             Y = 0x31,
             Z = 0x32,
