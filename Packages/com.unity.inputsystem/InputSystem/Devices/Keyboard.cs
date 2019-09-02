@@ -412,6 +412,7 @@ namespace UnityEngine.InputSystem
     /// property. Note that keyboard layout names are platform-dependent.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
+    [UnityEngine.Scripting.Preserve]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
         /// <summary>

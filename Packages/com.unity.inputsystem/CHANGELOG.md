@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.9.5-preview] - 2099-1-1
+## [0.9.6-preview] - 2099-1-1
+
+### Fixed
+#### Actions
+### Changed
+### Added
+
+## [0.9.5-preview] - 2019-8-29
 
 ### Fixed
 
 - Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
 - Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Fixed pointer coordinates in editor windows for non-mouse pointing devices.
+- Fixed using the input system in il2cpp when managed stripping level is set higher then "Low".
 - Device debugger window will still show when reading from specific controls throws exceptions.
 - Offsets and sizes for elements on Linux joysticks are now computed correctly.
 - Joysticks now have a deadzone processor on the stick itself.

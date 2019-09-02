@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -1602,6 +1603,9 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerInputEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1634,6 +1638,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerInputCSharpEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1665,6 +1671,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerManagerEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();
@@ -1689,6 +1697,8 @@ internal class PlayerInputTests : InputTestFixture
         }
     }
 
+    // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
+    [Preserve]
     private class PlayerManagerCSharpEventListener : MonoBehaviour, IListener
     {
         public List<Message> messages { get; } = new List<Message>();

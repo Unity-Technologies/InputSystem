@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -624,6 +625,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWith2Bytes))]
+    [Preserve]
     class DeviceWith2ByteState : InputDevice
     {
     }
@@ -840,6 +842,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
+    [Preserve]
     private class CustomDevice : InputDevice
     {
         public AxisControl axis { get; private set; }
@@ -852,6 +855,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(CustomDeviceState))]
+    [Preserve]
     private class CustomDeviceWithUpdate : CustomDevice, IInputUpdateCallbackReceiver
     {
         public int onUpdateCallCount;

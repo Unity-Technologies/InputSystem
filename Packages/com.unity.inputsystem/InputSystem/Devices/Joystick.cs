@@ -40,6 +40,7 @@ namespace UnityEngine.InputSystem
     /// stick and an optional single hatswitch.
     /// </remarks>
     [InputControlLayout(stateType = typeof(JoystickState), isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class Joystick : InputDevice
     {
         public ButtonControl trigger { get; private set; }
