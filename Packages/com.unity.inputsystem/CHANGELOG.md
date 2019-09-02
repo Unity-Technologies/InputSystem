@@ -14,6 +14,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 ### Added
 
+#### Actions
+
+- Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
+- Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
+
 ## [0.9.5-preview] - 2019-8-29
 
 ### Fixed
@@ -60,11 +65,6 @@ however, it has to be formatted properly to pass verification tests.
 - Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
   * This information is helpful for us to debug problems related to specific devices.
 - If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
-
-#### Actions
-
-- Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
-- Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
 
 ## [0.9.3-preview] - 2019-8-15
 
