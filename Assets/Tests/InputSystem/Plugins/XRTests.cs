@@ -41,7 +41,7 @@ internal class XRTests : InputTestFixture
         Assert.That(createdDevice, Is.TypeOf(expectedType));
 
         var generatedLayout = InputSystem.LoadLayout(
-            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
+            $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
@@ -83,7 +83,7 @@ internal class XRTests : InputTestFixture
         var createdDevice = InputSystem.devices[0];
 
         var expectedLayoutName =
-            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}";
+            $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}";
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
 
@@ -100,7 +100,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.product}";
+        var expectedLayoutName = $"{XRUtilities.InterfaceCurrent}::{deviceDescription.product}";
         Assert.AreEqual(expectedLayoutName, createdDevice.layout);
     }
 
@@ -475,7 +475,7 @@ internal class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            interfaceName = XRUtilities.InterfaceCurrent,
             product = "Device",
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
@@ -499,7 +499,7 @@ internal class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            interfaceName = XRUtilities.InterfaceCurrent,
             product = "XR_This.Layout/Should have 1 Valid::Name",
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
@@ -536,7 +536,7 @@ internal class XRTests : InputTestFixture
         {
             return new InputDeviceDescription
             {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                interfaceName = XRUtilities.InterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
@@ -613,7 +613,7 @@ internal class XRTests : InputTestFixture
         {
             return new InputDeviceDescription()
             {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                interfaceName = XRUtilities.InterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor

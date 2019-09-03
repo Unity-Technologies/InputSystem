@@ -3,18 +3,39 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.XR
 {
+    [Scripting.Preserve]
     [InputControlLayout]
     public class MagicLeapLightwear : XRHMD
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl confidence { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl fixationPointConfidence { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl eyeLeftCenterConfidence { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl eyeRightCenterConfidence { get; private set; }
 
         //Need Discrete State for CalibrationStatus
@@ -38,18 +59,37 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    [Scripting.Preserve]
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class MagicLeapHand : XRController
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control center { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl rotation { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl handConfidence { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control normalizeCenter { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control wristCenter { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control wristUlnar { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control wristRadial { get; private set; }
 
         //Need Bone control and Hand Control
@@ -71,26 +111,54 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
-
+    [Scripting.Preserve]
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class MagicLeapController : XRController
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control position { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl rotation { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl touchpad1Pressed { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector2Control touchpad1Position { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl touchpad1Force { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl touchpad2Pressed { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector2Control touchpad2Position { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl touchpad2Force { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl triggerButton { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl bumper { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl menu { get; private set; }
 
         //Need Discrete State for DOF and Type and CalibrationAccuracy

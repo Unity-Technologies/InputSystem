@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.XR
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
+            if (description.interfaceName != XRUtilities.InterfaceCurrent && description.interfaceName != XRUtilities.InterfaceV1)
             {
                 return null;
             }
@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.XR
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if (interfaceName == XRUtilities.kXRInterfaceV1)
+                if (interfaceName == XRUtilities.InterfaceV1)
                 {
 #if UNITY_ANDROID
                     if (nextOffset < 4)
