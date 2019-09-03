@@ -10,6 +10,9 @@ using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.XR;
+
+using Usages = UnityEngine.InputSystem.CommonUsages;
 
 using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
@@ -20,10 +23,10 @@ internal class XRTests : InputTestFixture
     [TestCase(InputDeviceRole.Generic, "XRHMD", typeof(XRHMD))]
     [TestCase(InputDeviceRole.LeftHanded, "XRController", typeof(XRController))]
     [TestCase(InputDeviceRole.RightHanded, "XRController", typeof(XRController))]
-    [TestCase(InputDeviceRole.HardwareTracker, null, typeof(InputDevice))]
-    [TestCase(InputDeviceRole.TrackingReference, null, typeof(InputDevice))]
-    [TestCase(InputDeviceRole.GameController, null, typeof(InputDevice))]
-    [TestCase(InputDeviceRole.Unknown, null, typeof(InputDevice))]
+    [TestCase(InputDeviceRole.HardwareTracker, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.TrackingReference, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.GameController, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.Unknown, null, typeof(UnityEngine.InputSystem.InputDevice))]
     public void Devices_XRDeviceRoleDeterminesTypeOfDevice(InputDeviceRole role, string baseLayoutName, Type expectedType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
@@ -53,15 +56,15 @@ internal class XRTests : InputTestFixture
 
         var controller = InputSystem.devices[0];
 
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.RightHand));
+        Assert.That(controller.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
+        Assert.That(controller.usages, Has.Exactly(0).EqualTo(Usages.RightHand));
         Assert.That(XRController.rightHand, Is.Null);
         Assert.That(XRController.leftHand, Is.EqualTo(controller));
 
-        InputSystem.SetDeviceUsage(controller, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(controller, Usages.RightHand);
 
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+        Assert.That(controller.usages, Has.Exactly(0).EqualTo(Usages.LeftHand));
+        Assert.That(controller.usages, Has.Exactly(1).EqualTo(Usages.RightHand));
         Assert.That(XRController.rightHand, Is.EqualTo(controller));
         Assert.That(XRController.leftHand, Is.Null);
     }
@@ -364,7 +367,7 @@ internal class XRTests : InputTestFixture
     }
 
     [InputControlLayout(updateBeforeRender = true)]
-    private class TestHMD : InputDevice
+    private class TestHMD : UnityEngine.InputSystem.InputDevice
     {
         [InputControl]
         public QuaternionControl quaternion { get; private set; }
@@ -476,7 +479,7 @@ internal class XRTests : InputTestFixture
             capabilities = new XRDeviceDescriptor
             {
 #if !UNITY_2019_3_OR_NEWER
-                InputDeviceRole = role,
+                deviceRole = role,
 #endif
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
@@ -500,7 +503,7 @@ internal class XRTests : InputTestFixture
             capabilities = new XRDeviceDescriptor
             {
 #if !UNITY_2019_3_OR_NEWER
-                deviceRole = DeviceRole.Generic,
+                deviceRole = InputDeviceRole.Generic,
 #endif
 
                 inputFeatures = new List<XRFeatureDescriptor>()
@@ -537,7 +540,7 @@ internal class XRTests : InputTestFixture
                 capabilities = new XRDeviceDescriptor
                 {
 #if !UNITY_2019_3_OR_NEWER
-                    deviceRole = DeviceRole.Generic,
+                    deviceRole = InputDeviceRole.Generic,
 #endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
@@ -614,7 +617,7 @@ internal class XRTests : InputTestFixture
                 capabilities = new XRDeviceDescriptor
                 {
 #if !UNITY_2019_3_OR_NEWER
-                    deviceRole = DeviceRole.Generic,
+                    deviceRole = InputDeviceRole.Generic,
 #endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {

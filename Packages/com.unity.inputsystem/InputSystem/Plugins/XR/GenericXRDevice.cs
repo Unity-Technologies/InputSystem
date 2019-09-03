@@ -48,9 +48,9 @@ namespace UnityEngine.InputSystem.XR
                 else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
 #else
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded)
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
-                else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
 #endif
             }
