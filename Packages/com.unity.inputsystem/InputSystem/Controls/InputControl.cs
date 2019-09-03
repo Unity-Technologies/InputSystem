@@ -655,7 +655,7 @@ namespace UnityEngine.InputSystem
         protected InputControl()
         {
             // Set defaults for state block setup. Subclasses may override.
-            m_StateBlock.byteOffset = InputStateBlock.InvalidOffset; // Request automatic layout by default.
+            m_StateBlock.byteOffset = InputStateBlock.AutomaticOffset; // Request automatic layout by default.
         }
 
         /// <summary>

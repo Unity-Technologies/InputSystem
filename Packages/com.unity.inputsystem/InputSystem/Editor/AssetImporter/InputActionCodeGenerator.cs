@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.BeginBlock();
                 writer.WriteLine("get");
                 writer.BeginBlock();
-                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.GetControlSchemeIndex(\"{scheme.name}\");");
+                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.FindControlSchemeIndex(\"{scheme.name}\");");
                 writer.WriteLine($"return asset.controlSchemes[m_{identifier}SchemeIndex];");
                 writer.EndBlock();
                 writer.EndBlock();

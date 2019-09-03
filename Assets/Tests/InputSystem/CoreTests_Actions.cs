@@ -3735,9 +3735,9 @@ partial class CoreTests
         asset.AddControlScheme("scheme1");
         asset.AddControlScheme("scheme2");
 
-        Assert.That(asset.GetControlScheme("SCHEme1").name, Is.EqualTo("scheme1"));
-        Assert.That(asset.GetControlScheme("scheme2").name, Is.EqualTo("scheme2"));
-        Assert.That(asset.TryGetControlScheme("doesNotExist"), Is.Null);
+        Assert.That(asset.FindControlScheme("SCHEme1").Value.name, Is.EqualTo("scheme1"));
+        Assert.That(asset.FindControlScheme("scheme2").Value.name, Is.EqualTo("scheme2"));
+        Assert.That(asset.FindControlScheme("doesNotExist"), Is.Null);
     }
 
     [Test]
@@ -3770,14 +3770,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanBaseOneControlSchemeOnAnother()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanRequireSpecificDevicesForControlScheme()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3787,13 +3779,13 @@ partial class CoreTests
             .WithRequiredDevice("<XRController>{RightHand}")
             .WithOptionalDevice("<Gamepad>");
 
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements, Has.Count.EqualTo(3));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].controlPath, Is.EqualTo("<XRController>{LeftHand}"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].controlPath, Is.EqualTo("<XRController>{RightHand}"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].controlPath, Is.EqualTo("<Gamepad>"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].isOptional, Is.True);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements, Has.Count.EqualTo(3));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[0].controlPath, Is.EqualTo("<XRController>{LeftHand}"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[0].isOptional, Is.False);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[1].controlPath, Is.EqualTo("<XRController>{RightHand}"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[1].isOptional, Is.False);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[2].controlPath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[2].isOptional, Is.True);
     }
 
     ////REVIEW: this one probably warrants breaking it up a little

@@ -936,7 +936,7 @@ namespace UnityEngine.InputSystem
                     // We've been given a control scheme to initialize this. Try that one and
                     // that one only. Might mean we end up with missing devices.
 
-                    var controlScheme = m_Actions.TryGetControlScheme(s_InitControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(s_InitControlScheme);
                     if (controlScheme == null)
                     {
                         Debug.LogError($"No control scheme '{s_InitControlScheme}' in '{m_Actions}'", this);
@@ -950,7 +950,7 @@ namespace UnityEngine.InputSystem
                 {
                     // There's a control scheme we should try by default.
 
-                    var controlScheme = m_Actions.TryGetControlScheme(m_DefaultControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(m_DefaultControlScheme);
                     if (controlScheme == null)
                     {
                         Debug.LogError($"Cannot find default control scheme '{m_DefaultControlScheme}' in '{m_Actions}'", this);

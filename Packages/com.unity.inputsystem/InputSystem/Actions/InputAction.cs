@@ -292,12 +292,12 @@ namespace UnityEngine.InputSystem
         /// An optional mask that determines which bindings of the action to enable and
         /// which to ignore.
         /// </summary>
-        /// <value>Mask that determines which bindings on the action to enable.</value>
+        /// <value>Optional mask that determines which bindings on the action to enable.</value>
         /// <remarks>
         /// Binding masks can be applied at three different levels: for an entire asset through
         /// <see cref="InputActionAsset.bindingMask"/>, for a specific map through <see
         /// cref="InputActionMap.bindingMask"/>, and for single actions through this property.
-        /// By default, none of the masks will be set.
+        /// By default, none of the masks will be set (i.e. they will be <c>null</c>).
         ///
         /// When an action is enabled, all the binding masks that apply to it are taken into
         /// account. Specifically, this means that any given binding on the action will be
@@ -307,7 +307,7 @@ namespace UnityEngine.InputSystem
         ///
         /// Masks are matched against bindings using <see cref="InputBinding.Matches"/>.
         ///
-        /// Note that if you modify the masks applicable to an action while the action is
+        /// Note that if you modify the masks applicable to an action while it is
         /// enabled, the action's <see cref="controls"/> will get updated immediately to
         /// respect the mask. To avoid repeated binding resolution, it is most efficient
         /// to apply binding masks before enabling actions.
@@ -345,6 +345,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         /// <seealso cref="InputBinding.MaskByGroup"/>
+        /// <seealso cref="InputActionMap.bindingMask"/>
+        /// <seealso cref="InputActionAsset.bindingMask"/>
         public InputBinding? bindingMask
         {
             get => m_BindingMask;
@@ -450,6 +452,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is triggered when the action has been started.
         /// </summary>
+        /// <remarks>
+        /// See <see cref="phase"/> for details of how an action progresses through phases
+        /// and triggers this callback.
+        /// </remarks>
         /// <see cref="InputActionPhase.Started"/>
         public event Action<CallbackContext> started
         {
@@ -461,6 +467,10 @@ namespace UnityEngine.InputSystem
         /// Event that is triggered when the action has been <see cref="started"/>
         /// but then canceled before being fully <see cref="performed"/>.
         /// </summary>
+        /// <remarks>
+        /// See <see cref="phase"/> for details of how an action progresses through phases
+        /// and triggers this callback.
+        /// </remarks>
         /// <see cref="InputActionPhase.Canceled"/>
         public event Action<CallbackContext> canceled
         {
@@ -471,6 +481,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is triggered when the action has been fully performed.
         /// </summary>
+        /// <remarks>
+        /// See <see cref="phase"/> for details of how an action progresses through phases
+        /// and triggers this callback.
+        /// </remarks>
         /// <see cref="InputActionPhase.Performed"/>
         public event Action<CallbackContext> performed
         {
@@ -800,7 +814,8 @@ namespace UnityEngine.InputSystem
         /// get a free-standing action not associated with any action map.
         ///
         /// Also, note that the <see cref="id"/> of the action is not cloned. Instead, the
-        /// clone will receive a new unique ID.
+        /// clone will receive a new unique ID. Also, callbacks install on events such
+        /// as <see cref="started"/> will not be copied over to the clone.
         /// </remarks>
         public InputAction Clone()
         {

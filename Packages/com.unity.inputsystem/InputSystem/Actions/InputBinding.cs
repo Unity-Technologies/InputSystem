@@ -299,7 +299,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
-        [NonSerialized] private Guid m_Guid;
+        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// This is the bindings path which is effectively being used.

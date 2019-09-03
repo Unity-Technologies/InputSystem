@@ -41,6 +41,14 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     public class InputActionAsset : ScriptableObject, IInputActionCollection
     {
+        /// <summary>
+        /// File extension (without the dot) for InputActionAssets in JSON format.
+        /// </summary>
+        /// <value>File extension for InputActionAsset source files.</value>
+        /// <remarks>
+        /// Files with this extension will automatically be imported by Unity as
+        /// InputActionAssets.
+        /// </remarks>
         public const string Extension = "inputactions";
 
         /// <summary>
@@ -68,16 +76,46 @@ namespace UnityEngine.InputSystem
         /// <value>Action maps contained in the asset.</value>
         /// <seealso cref="AddActionMap"/>
         /// <seealso cref="RemoveActionMap(InputActionMap)"/>
-        /// <seealso cref="FindActionMap"/>
+        /// <seealso cref="FindActionMap(string,bool)"/>
         public ReadOnlyArray<InputActionMap> actionMaps => new ReadOnlyArray<InputActionMap>(m_ActionMaps);
 
         /// <summary>
         /// List of control schemes defined in the asset.
         /// </summary>
-        /// <seealso cref="AddControlScheme"/>
-        /// <seealso cref="RemoveControlScheme"/>
+        /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionSetupExtensions.RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
 
+        /// <summary>
+        /// Binding mask to apply to all action maps and actions in the asset.
+        /// </summary>
+        /// <value>Optional mask that determines which bindings in the asset to enable.</value>
+        /// <remarks>
+        /// Binding masks can be applied at three different levels: for an entire asset through
+        /// this property, for a specific map through <see cref="InputActionMap.bindingMask"/>,
+        /// and for single actions through <see cref="InputAction.bindingMask"/>. By default,
+        /// none of the masks will be set (i.e. they will be <c>null</c>).
+        ///
+        /// When an action is enabled, all the binding masks that apply to it are taken into
+        /// account. Specifically, this means that any given binding on the action will be
+        /// enabled only if it matches the mask applied to the asset, the mask applied
+        /// to the map that contains the action, and the mask applied to the action itself.
+        /// All the masks are individually optional.
+        ///
+        /// Masks are matched against bindings using <see cref="InputBinding.Matches"/>.
+        ///
+        /// Note that if you modify the masks applicable to an action while it is
+        /// enabled, the action's <see cref="InputAction.controls"/> will get updated immediately to
+        /// respect the mask. To avoid repeated binding resolution, it is most efficient
+        /// to apply binding masks before enabling actions.
+        ///
+        /// Binding masks are non-destructive. All the bindings on the action are left
+        /// in pace. Setting a mask will not affect the value of the <see cref="InputAction.bindings"/>
+        /// and <see cref="InputActionMap.bindings"/> properties.
+        /// </remarks>
+        /// <seealso cref="InputBinding.MaskByGroup"/>
+        /// <seealso cref="InputAction.bindingMask"/>
+        /// <seealso cref="InputActionMap.bindingMask"/>
         public InputBinding? bindingMask
         {
             get => m_BindingMask;
@@ -92,6 +130,49 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Set of devices that bindings in the asset can bind to.
+        /// </summary>
+        /// <value>Optional set of devices to use by bindings in the asset.</value>
+        /// <remarks>
+        /// By default (with this property being <c>null</c>), bindings will bind to any of the
+        /// controls available through <see cref="InputSystem.devices"/>, i.e. controls from all
+        /// devices in the system will be used.
+        ///
+        /// By setting this property, binding resolution can instead be restricted to just specific
+        /// devices. This restriction can either be applied to an entire asset using this property
+        /// or to specific action maps by using <see cref="InputActionMap.devices"/>. Note that if
+        /// both this property and <see cref="InputActionMap.devices"/> is set for a specific action
+        /// map, the list of devices on the action map will take precedence and the list on the
+        /// asset will be ignored for bindings in that action map.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create an asset with a single action map and a single action with a
+        /// // gamepad binding.
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        /// var actionMap = new InputActionMap();
+        /// var fireAction = actionMap.AddAction("Fire", binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// asset.AddActionMap(actionMap);
+        ///
+        /// // Let's assume we have two gamepads connected. If we enable the
+        /// // action map now, the 'Fire' action will bind to both.
+        /// actionMap.Enable();
+        ///
+        /// // This will print two controls.
+        /// Debug.Log(string.Join("\n", fireAction.controls));
+        ///
+        /// // To restrict the setup to just the first gamepad, we can assign
+        /// // to the 'devices' property (in this case, we could do so on either
+        /// // the action map or on the asset; we choose the latter here).
+        /// asset.devices = new InputDevice[] { Gamepad.all[0] };
+        ///
+        /// // Now this will print only one control.
+        /// Debug.Log(string.Join("\n", fireAction.controls));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
             get => m_Devices;
@@ -157,7 +238,13 @@ namespace UnityEngine.InputSystem
         /// maps and actions.
         ///
         /// Use <see cref="LoadFromJson"/> to deserialize the JSON data back into an InputActionAsset.
+        ///
+        /// Be aware that the format used by this method is <em>different</em> than what you
+        /// get if you call <c>JsonUtility.ToJson</c> on an InputActionAsset instance. In other
+        /// words, the JSON format is not identical to the Unity serialized object representation
+        /// of the asset.
         /// </remarks>
+        /// <seealso cref="FromJson"/>
         public string ToJson()
         {
             var fileJson = new WriteFileJson
@@ -257,6 +344,11 @@ namespace UnityEngine.InputSystem
         /// <c>.inputactions</c> assets are stored in JSON format. This method allows turning
         /// the JSON source text of such an asset into a new <c>InputActionMap</c> instance.
         ///
+        /// Be aware that the format used by this method is <em>different</em> than what you
+        /// get if you call <c>JsonUtility.ToJson</c> on an InputActionAsset instance. In other
+        /// words, the JSON format is not identical to the Unity serialized object representation
+        /// of the asset.
+        ///
         /// <example>
         /// <code>
         /// var asset = InputActionAsset.FromJson(@"
@@ -341,10 +433,6 @@ namespace UnityEngine.InputSystem
         /// <param name="throwIfNotFound">If <c>true</c>, instead of returning <c>null</c> when the action
         /// cannot be found, throw <c>ArgumentException</c>.</param>
         /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="throwIfNotFound"/> is true and the
-        /// action could not be found. -Or- If <paramref name="actionNameOrId"/> contains a slash but is missing
-        /// either the action or the map name.</exception>
         /// <remarks>
         /// <example>
         /// <code>
@@ -377,6 +465,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="throwIfNotFound"/> is true and the
+        /// action could not be found. -Or- If <paramref name="actionNameOrId"/> contains a slash but is missing
+        /// either the action or the map name.</exception>
         public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
             if (actionNameOrId == null)
@@ -429,76 +521,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'");
 
             return null;
-        }
-
-        /// <summary>
-        /// Add an action map to the asset.
-        /// </summary>
-        /// <param name="map">A named action map.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
-        /// map with the same name.</exception>
-        public void AddActionMap(InputActionMap map)
-        {
-            if (map == null)
-                throw new ArgumentNullException(nameof(map));
-            if (string.IsNullOrEmpty(map.name))
-                throw new InvalidOperationException("Maps added to an input action asset must be named");
-            if (map.asset != null)
-                throw new InvalidOperationException(
-                    $"Cannot add map '{map}' to asset '{this}' as it has already been added to asset '{map.asset}'");
-            ////REVIEW: some of the rules here seem stupid; just replace?
-            if (FindActionMap(map.name) != null)
-                throw new InvalidOperationException(
-                    $"An action map called '{map.name}' already exists in the asset");
-
-            ArrayHelpers.Append(ref m_ActionMaps, map);
-            map.m_Asset = this;
-        }
-
-        /// <summary>
-        /// Remove the given action map from the asset.
-        /// </summary>
-        /// <param name="map">An action map. If the given map is not part of the asset, the method
-        /// does nothing.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="map"/> is <c>null</c>.</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
-        /// cref="InputActionMap.enabled"/>).</exception>
-        /// <seealso cref="RemoveActionMap(string)"/>
-        /// <seealso cref="actionMaps"/>
-        public void RemoveActionMap(InputActionMap map)
-        {
-            if (map == null)
-                throw new ArgumentNullException(nameof(map));
-            if (map.enabled)
-                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
-
-            // Ignore if not part of this asset.
-            if (map.m_Asset != this)
-                return;
-
-            ArrayHelpers.Erase(ref m_ActionMaps, map);
-            map.m_Asset = null;
-        }
-
-        /// <summary>
-        /// Remove the action map with the given name or ID from the asset.
-        /// </summary>
-        /// <param name="nameOrId">The name or ID (see <see cref="InputActionMap.id"/>) of a map in the
-        /// asset. Note that lookup is case-insensitive. If no map with the given name or ID is found,
-        /// the method does nothing.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
-        /// <exception cref="InvalidOperationException">The map referenced by <paramref name="nameOrId"/> is currently enabled
-        /// (see <see cref="InputActionMap.enabled"/>).</exception>
-        /// <seealso cref="RemoveActionMap(string)"/>
-        /// <seealso cref="actionMaps"/>
-        public void RemoveActionMap(string nameOrId)
-        {
-            if (nameOrId == null)
-                throw new ArgumentNullException(nameof(nameOrId));
-            var map = FindActionMap(nameOrId);
-            if (map != null)
-                RemoveActionMap(map);
         }
 
         /// <summary>
@@ -571,6 +593,12 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
+        /// <summary>
+        /// Find an action by its ID (see <see cref="InputAction.id"/>).
+        /// </summary>
+        /// <param name="guid">ID of the action to look for.</param>
+        /// <returns>The action in the asset with the given ID or null if no action
+        /// in the asset has the given ID.</returns>
         public InputAction FindAction(Guid guid)
         {
             if (m_ActionMaps == null)
@@ -587,18 +615,16 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
-        public void AddControlScheme(InputControlScheme controlScheme)
-        {
-            if (string.IsNullOrEmpty(controlScheme.name))
-                throw new ArgumentException("Cannot add control scheme without name to asset " + name, nameof(controlScheme));
-            if (TryGetControlScheme(controlScheme.name) != null)
-                throw new InvalidOperationException(
-                    $"Asset '{name}' already contains a control scheme called '{controlScheme.name}'");
-
-            ArrayHelpers.Append(ref m_ControlSchemes, controlScheme);
-        }
-
-        public int TryGetControlSchemeIndex(string name)
+        /// <summary>
+        /// Find the control scheme with the given name and return its index
+        /// in <see cref="controlSchemes"/>.
+        /// </summary>
+        /// <param name="name">Name of the control scheme. Matching is case-insensitive.</param>
+        /// <returns>The index of the given control scheme or -1 if no control scheme
+        /// with the given name could be found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c>
+        /// or empty.</exception>
+        public int FindControlSchemeIndex(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
@@ -613,61 +639,76 @@ namespace UnityEngine.InputSystem
             return -1;
         }
 
-        public int GetControlSchemeIndex(string name)
+        /// <summary>
+        /// Find the control scheme with the given name and return it.
+        /// </summary>
+        /// <param name="name">Name of the control scheme. Matching is case-insensitive.</param>
+        /// <returns>The control scheme with the given name or null if no scheme
+        /// with the given name could be found in the asset.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c>
+        /// or empty.</exception>
+        public InputControlScheme? FindControlScheme(string name)
         {
-            var index = TryGetControlSchemeIndex(name);
-            if (index == -1)
-                throw new ArgumentException($"No control scheme called '{name}' in '{this.name}'", nameof(name));
-            return index;
-        }
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
 
-        public InputControlScheme? TryGetControlScheme(string name)
-        {
-            var index = TryGetControlSchemeIndex(name);
+            var index = FindControlSchemeIndex(name);
             if (index == -1)
                 return null;
 
             return m_ControlSchemes[index];
         }
 
-        public void RemoveControlScheme(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            ArrayHelpers.EraseAt(ref m_ControlSchemes, GetControlSchemeIndex(name));
-        }
-
-        public InputControlScheme GetControlScheme(string name)
-        {
-            var index = GetControlSchemeIndex(name);
-            return m_ControlSchemes[index];
-        }
-
+        /// <summary>
+        /// Enable all action maps in the asset.
+        /// </summary>
+        /// <remarks>
+        /// This method is equivalent to calling <see cref="InputActionMap.Enable"/> on
+        /// all maps in <see cref="actionMaps"/>.
+        /// </remarks>
         public void Enable()
         {
             foreach (var map in actionMaps)
                 map.Enable();
         }
 
+        /// <summary>
+        /// Disable all action maps in the asset.
+        /// </summary>
+        /// <remarks>
+        /// This method is equivalent to calling <see cref="InputActionMap.Disable"/> on
+        /// all maps in <see cref="actionMaps"/>.
+        /// </remarks>
         public void Disable()
         {
             foreach (var map in actionMaps)
                 map.Disable();
         }
 
+        /// <summary>
+        /// Return <c>true</c> if the given action is part of the asset.
+        /// </summary>
+        /// <param name="action">An action. Can be null.</param>
+        /// <returns>True if the given action is part of the asset, false otherwise.</returns>
         public bool Contains(InputAction action)
         {
-            if (action == null)
-                return false;
-
-            var map = action.actionMap;
+            var map = action?.actionMap;
             if (map == null)
                 return false;
 
             return map.asset == this;
         }
 
+        /// <summary>
+        /// Enumerate all actions in the asset.
+        /// </summary>
+        /// <returns>Enumerate over all actions in the asset.</returns>
+        /// <remarks>
+        /// Actions will be enumerated one action map in <see cref="actionMaps"/>
+        /// after the other. The actions from each map will be yielded in turn.
+        ///
+        /// This method will allocate GC heap memory.
+        /// </remarks>
         public IEnumerator<InputAction> GetEnumerator()
         {
             if (m_ActionMaps == null)

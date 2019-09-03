@@ -11,13 +11,15 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A named set of zero or more device requirements along an associated binding group.
+    /// A named set of zero or more device requirements along with an associated binding group.
     /// </summary>
     /// <remarks>
     /// Control schemes provide an additional layer on top of binding groups. While binding
     /// groups allow differentiating sets of bindings (e.g. a "Keyboard&amp;Mouse" group versus
     /// a "Gamepad" group), control schemes impose a set of devices requirements that must be
     /// met in order for a specific set of bindings to be usable.
+    ///
+    /// Note that control schemes can only be defined at the <see cref="InputActionAsset"/> level.
     /// </remarks>
     /// <seealso cref="InputActionAsset.controlSchemes"/>
     [Serializable]
@@ -29,7 +31,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// May be empty or null except if the control scheme is part of an <see cref="InputActionAsset"/>.
         /// </remarks>
-        /// <seealso cref="InputActionAsset.AddControlScheme"/>
+        /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         public string name => m_Name;
 
         /// <summary>

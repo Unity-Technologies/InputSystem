@@ -572,7 +572,7 @@ namespace InputSamples.Controls
         {
             get
             {
-                if (m_MouseSchemeIndex == -1) m_MouseSchemeIndex = asset.GetControlSchemeIndex("Mouse");
+                if (m_MouseSchemeIndex == -1) m_MouseSchemeIndex = asset.FindControlSchemeIndex("Mouse");
                 return asset.controlSchemes[m_MouseSchemeIndex];
             }
         }
@@ -581,7 +581,7 @@ namespace InputSamples.Controls
         {
             get
             {
-                if (m_PenSchemeIndex == -1) m_PenSchemeIndex = asset.GetControlSchemeIndex("Pen");
+                if (m_PenSchemeIndex == -1) m_PenSchemeIndex = asset.FindControlSchemeIndex("Pen");
                 return asset.controlSchemes[m_PenSchemeIndex];
             }
         }
@@ -590,7 +590,7 @@ namespace InputSamples.Controls
         {
             get
             {
-                if (m_TouchSchemeIndex == -1) m_TouchSchemeIndex = asset.GetControlSchemeIndex("Touch");
+                if (m_TouchSchemeIndex == -1) m_TouchSchemeIndex = asset.FindControlSchemeIndex("Touch");
                 return asset.controlSchemes[m_TouchSchemeIndex];
             }
         }

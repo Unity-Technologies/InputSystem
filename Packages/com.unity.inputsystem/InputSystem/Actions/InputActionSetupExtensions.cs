@@ -5,22 +5,119 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Extensions to set up <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">
-    /// InputActionMaps</see>.
+    /// Methods to change the setup of <see cref="InputAction"/>, <see cref="InputActionMap"/>,
+    /// and <see cref="InputActionAsset"/> objects.
     /// </summary>
+    /// <remarks>
+    /// Unlike the methods in <see cref="InputActionRebindingExtensions"/>, the methods here are
+    /// generally destructive, i.e. they will rearrange the data for actions.
+    /// </remarks>
     public static class InputActionSetupExtensions
     {
+        /// <summary>
+        /// Create an action map with the given name and add it to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the action map to</param>
+        /// <param name="name">Name to assign to the </param>
+        /// <returns>The newly added action map.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> or
+        /// <exception cref="InvalidOperationException">An action map with the given <paramref name="name"/>
+        /// already exists in <paramref name="asset"/>.</exception>
+        /// <paramref name="name"/> is <c>null</c> or empty.</exception>
         public static InputActionMap AddActionMap(this InputActionAsset asset, string name)
         {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
+            if (asset.FindActionMap(name) != null)
+                throw new InvalidOperationException(
+                    $"An action map called '{name}' already exists in the asset");
 
             var map = new InputActionMap(name);
             map.GenerateId();
             asset.AddActionMap(map);
             return map;
+        }
+
+        /// <summary>
+        /// Add an action map to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the map to.</param>
+        /// <param name="map">A named action map.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="map"/> or <paramref name="asset"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
+        /// map with the same name.</exception>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void AddActionMap(this InputActionAsset asset, InputActionMap map)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
+            if (string.IsNullOrEmpty(map.name))
+                throw new InvalidOperationException("Maps added to an input action asset must be named");
+            if (map.asset != null)
+                throw new InvalidOperationException(
+                    $"Cannot add map '{map}' to asset '{asset}' as it has already been added to asset '{map.asset}'");
+            ////REVIEW: some of the rules here seem stupid; just replace?
+            if (asset.FindActionMap(map.name) != null)
+                throw new InvalidOperationException(
+                    $"An action map called '{map.name}' already exists in the asset");
+
+            ArrayHelpers.Append(ref asset.m_ActionMaps, map);
+            map.m_Asset = asset;
+        }
+
+        /// <summary>
+        /// Remove the given action map from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the action map to.</param>
+        /// <param name="map">An action map. If the given map is not part of the asset, the method
+        /// does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="map"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
+        /// cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void RemoveActionMap(this InputActionAsset asset, InputActionMap map)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
+            if (map.enabled)
+                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
+
+            // Ignore if not part of this asset.
+            if (map.m_Asset != asset)
+                return;
+
+            ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
+            map.m_Asset = null;
+        }
+
+        /// <summary>
+        /// Remove the action map with the given name or ID from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to remove the action map from.</param>
+        /// <param name="nameOrId">The name or ID (see <see cref="InputActionMap.id"/>) of a map in the
+        /// asset. Note that lookup is case-insensitive. If no map with the given name or ID is found,
+        /// the method does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">The map referenced by <paramref name="nameOrId"/> is currently enabled
+        /// (see <see cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void RemoveActionMap(this InputActionAsset asset, string nameOrId)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (nameOrId == null)
+                throw new ArgumentNullException(nameof(nameOrId));
+            var map = asset.FindActionMap(nameOrId);
+            if (map != null)
+                asset.RemoveActionMap(map);
         }
 
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
@@ -321,6 +418,30 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Add a new control scheme to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the control scheme to.</param>
+        /// <param name="controlScheme">Control scheme to add.</param>
+        /// <exception cref="ArgumentException"><paramref name="controlScheme"/> has no name.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">A control scheme with the same name as <paramref name="controlScheme"/>
+        /// already exists in the asset.</exception>
+        /// <remarks>
+        /// </remarks>
+        public static void AddControlScheme(this InputActionAsset asset, InputControlScheme controlScheme)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (string.IsNullOrEmpty(controlScheme.name))
+                throw new ArgumentException("Cannot add control scheme without name to asset " + asset.name, nameof(controlScheme));
+            if (asset.FindControlScheme(controlScheme.name) != null)
+                throw new InvalidOperationException(
+                    $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
+
+            ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
+        }
+
+        /// <summary>
         /// Add a new control scheme to the given <paramref name="asset"/>.
         /// </summary>
         /// <param name="asset">Asset to add the control scheme to.</param>
@@ -341,6 +462,28 @@ namespace UnityEngine.InputSystem
             asset.AddControlScheme(new InputControlScheme(name));
 
             return new ControlSchemeSyntax(asset, index);
+        }
+
+        /// <summary>
+        /// Remove the control scheme with the given name from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to remove the control scheme from.</param>
+        /// <param name="name">Name of the control scheme. Matching is case-insensitive.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null -or- <paramref name="name"/>
+        /// is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// If no control scheme with the given name can be found, the method does nothing.
+        /// </remarks>
+        public static void RemoveControlScheme(this InputActionAsset asset, string name)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
+
+            var index = asset.FindControlSchemeIndex(name);
+            if (index != -1)
+                ArrayHelpers.EraseAt(ref asset.m_ControlSchemes, index);
         }
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
