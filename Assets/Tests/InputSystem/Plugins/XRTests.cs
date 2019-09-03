@@ -158,7 +158,13 @@ internal class XRTests : InputTestFixture
     [Test]
     [Category("Devices")]
     [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
+    [TestCase("Acer AH100", "WindowsMR", typeof(WMRHMD))]
+    [TestCase("Acer AH100", "", typeof(WMRHMD))]
+    [TestCase("Samsung Windows Mixed Reality 800ZAA", "", typeof(WMRHMD))]
     [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
+    [TestCase("Spatial Controller - Left", "Vendor: 1118 Product: 1627 Version 0", typeof(WMRSpatialController))]
+    [TestCase("Spatial Controller - Right", "Vendor: 1118 Product: 1627 Version 0", typeof(WMRSpatialController))]
+    [TestCase("OpenVR Controller(WindowsMR)", "WindowsMR", typeof(WMRSpatialController))]
     [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
     [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
     [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
@@ -175,7 +181,7 @@ internal class XRTests : InputTestFixture
     [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
     [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
     [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
-    [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
+    [TestCase("OpenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
     [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
     [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left", "Valve", typeof(KnucklesController))]
     public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
@@ -467,7 +473,9 @@ internal class XRTests : InputTestFixture
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
+#if !UNITY_2019_3_OR_NEWER
                 deviceRole = role,
+#endif
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -489,7 +497,10 @@ internal class XRTests : InputTestFixture
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
+#if !UNITY_2019_3_OR_NEWER
                 deviceRole = DeviceRole.Generic,
+#endif
+
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -523,7 +534,9 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
+#if !UNITY_2019_3_OR_NEWER
                     deviceRole = DeviceRole.Generic,
+#endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -598,7 +611,9 @@ internal class XRTests : InputTestFixture
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
+#if !UNITY_2019_3_OR_NEWER
                     deviceRole = DeviceRole.Generic,
+#endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()

@@ -2409,9 +2409,9 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+            //#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_LUMIN
             XR.XRSupport.Initialize();
-            #endif
+            //#endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
             Linux.LinuxSupport.Initialize();

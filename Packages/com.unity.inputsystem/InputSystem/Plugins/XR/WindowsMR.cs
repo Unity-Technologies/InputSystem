@@ -14,9 +14,9 @@ namespace UnityEngine.InputSystem.XR
         public IntegerControl trackingState { get; private set; }
         [InputControl]
         public ButtonControl isTracked { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "HeadPosition" })]
         public Vector3Control devicePosition { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "HeadRotation" })]
         public QuaternionControl deviceRotation { get; private set; }
         [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
@@ -53,41 +53,86 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
-    [Scripting.Preserve]
+    public class HololensHand : XRController
+    {
+        [InputControl]
+        public IntegerControl trackingState { get; private set; }
+        [InputControl]
+        public ButtonControl isTracked { get; private set; }
+        [InputControl(aliases = new[] { "gripPosition" })]
+        public Vector3Control devicePosition { get; private set; }
+        [InputControl(aliases = new[] { "gripOrientation" })]
+        public QuaternionControl deviceRotation { get; private set; }
+        [InputControl(aliases = new[] { "gripVelocity" })]
+        public Vector3Control deviceVelocity { get; private set; }
+        [InputControl(aliases = new[] { "triggerbutton" })]
+        public ButtonControl airTap { get; private set; }
+        [InputControl]
+        public AxisControl sourceLossRisk { get; private set; }
+        [InputControl]
+        public Vector3Control sourceLossMitigationDirection { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            airTap = GetChildControl<ButtonControl>("airTap");
+            trackingState = GetChildControl<IntegerControl>("trackingState");
+            isTracked = GetChildControl<ButtonControl>("isTracked");
+            devicePosition = GetChildControl<Vector3Control>("devicePosition");
+            deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
+            deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
+            sourceLossRisk = GetChildControl<AxisControl>("sourceLossRisk");
+            sourceLossMitigationDirection = GetChildControl<Vector3Control>("sourceLossMitigationDirection");
+        }
+    }
+
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
     public class WMRSpatialController : XRControllerWithRumble
     {
-        [InputControl(aliases = new[] { "Primary2DAxis" })]
+        [InputControl(aliases = new[] { "Primary2DAxis", "thumbstickaxes" })]
         public Vector2Control joystick { get; private set; }
-        [InputControl]
-        public AxisControl trigger { get; private set; }
-        [InputControl(aliases = new[] { "Secondary2DAxis" })]
+        [InputControl(aliases = new[] { "Secondary2DAxis", "touchpadaxes" })]
         public Vector2Control touchpad { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripaxis" })]
         public AxisControl grip { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripbutton" })]
         public ButtonControl gripPressed { get; private set; }
-        [InputControl(aliases = new[] { "Primary" })]
+        [InputControl(aliases = new[] { "Primary", "menubutton" })]
         public ButtonControl menu { get; private set; }
-        [InputControl]
-        public ButtonControl joystickClicked { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "triggeraxis" })]
+        public AxisControl trigger { get; private set; }
+        [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl triggerPressed { get; private set; }
-        [InputControl(aliases = new[] { "joystickorpadpressed" })]
+        [InputControl(aliases = new[] { "thumbstickpressed" })]
+        public ButtonControl joystickClicked { get; private set; }
+        [InputControl(aliases = new[] { "joystickorpadpressed", "touchpadpressed" })]
         public ButtonControl touchpadClicked { get; private set; }
-        [InputControl(aliases = new[] { "joystickorpadtouched" })]
+        [InputControl(aliases = new[] { "joystickorpadtouched", "touchpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
         [InputControl]
         public IntegerControl trackingState { get; private set; }
         [InputControl]
         public ButtonControl isTracked { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripPosition" })]
         public Vector3Control devicePosition { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripOrientation" })]
         public QuaternionControl deviceRotation { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(aliases = new[] { "gripAngularVelocity" })]
         public Vector3Control deviceAngularVelocity { get; private set; }
+
+        [InputControl]
+        public AxisControl batteryLevel { get; private set; }
+        [InputControl]
+        public AxisControl sourceLossRisk { get; private set; }
+        [InputControl]
+        public Vector3Control sourceLossMitigationDirection { get; private set; }
+        [InputControl]
+        public Vector3Control pointerPosition { get; private set; }
+        [InputControl(aliases = new[] { "PointerOrientation" })]
+        public QuaternionControl pointerRotation { get; private set; }
 
         protected override void FinishSetup()
         {
@@ -109,6 +154,12 @@ namespace UnityEngine.InputSystem.XR
             deviceRotation = GetChildControl<QuaternionControl>("deviceRotation");
             deviceVelocity = GetChildControl<Vector3Control>("deviceVelocity");
             deviceAngularVelocity = GetChildControl<Vector3Control>("deviceAngularVelocity");
+
+            batteryLevel = GetChildControl<AxisControl>("batteryLevel");
+            sourceLossRisk = GetChildControl<AxisControl>("sourceLossRisk");
+            sourceLossMitigationDirection = GetChildControl<Vector3Control>("sourceLossMitigationDirection");
+            pointerPosition = GetChildControl<Vector3Control>("pointerPosition");
+            pointerRotation = GetChildControl<QuaternionControl>("pointerRotation");
         }
     }
 }

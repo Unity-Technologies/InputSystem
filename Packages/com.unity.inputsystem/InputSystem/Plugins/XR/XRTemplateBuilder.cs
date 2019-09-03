@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+using UnityEngine.XR;
+#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -33,6 +36,12 @@ namespace UnityEngine.InputSystem.XR
                     return sizeof(float) * 3;
                 case FeatureType.Rotation:
                     return sizeof(float) * 4;
+                case FeatureType.Hand:
+                    return sizeof(uint) * 26;
+                case FeatureType.Bone:
+                    return sizeof(uint) + (sizeof(float) * 3) + (sizeof(float) * 4);
+                case FeatureType.Eyes:
+                    return ((sizeof(float) * 3) * 3) + ((sizeof(float) * 4) * 2) + (sizeof(float) * 2);
                 case FeatureType.Custom:
                     return featureDescriptor.customSize;
             }
@@ -69,6 +78,8 @@ namespace UnityEngine.InputSystem.XR
                 return null;
             }
 
+            Debug.Log(description.capabilities);
+
             // Try to parse the XR descriptor.
             XRDeviceDescriptor deviceDescriptor;
             try
@@ -87,11 +98,20 @@ namespace UnityEngine.InputSystem.XR
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
+#if UNITY_2019_3_OR_NEWER
+                const InputDeviceCharacteristics controllerCharacteristics = (InputDeviceCharacteristics)(InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller);
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
+                    matchedLayout = "XRHMD";
+                else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
+                    matchedLayout = "XRController";
+#else
                 if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
                     matchedLayout = "XRController";
                 else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
                     matchedLayout = "XRHMD";
+#endif
             }
+            Debug.Log($"[TOMB] Matched Layout: {matchedLayout}");
 
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))
@@ -237,6 +257,26 @@ namespace UnityEngine.InputSystem.XR
                             .WithUsages(currentUsages);
                         break;
                     }
+                    case FeatureType.Hand:
+                        {
+                            break;
+                        }
+                    case FeatureType.Bone:
+                        {
+                            builder.AddControl(featureName)
+                                .WithLayout("Bone")
+                                .WithByteOffset(currentOffset)
+                                .WithUsages(currentUsages);
+                            break;
+                        }
+                    case FeatureType.Eyes:
+                        {
+                            builder.AddControl(featureName)
+                                .WithLayout("Eyes")
+                                .WithByteOffset(currentOffset)
+                                .WithUsages(currentUsages);
+                            break;
+                        }
                 }
                 currentOffset += nextOffset;
             }
