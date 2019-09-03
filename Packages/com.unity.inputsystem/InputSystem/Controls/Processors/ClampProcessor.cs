@@ -2,6 +2,7 @@
 
 namespace UnityEngine.InputSystem.Processors
 {
+    [Scripting.Preserve]
     internal class ClampProcessor : InputProcessor<float>
     {
         public float min;

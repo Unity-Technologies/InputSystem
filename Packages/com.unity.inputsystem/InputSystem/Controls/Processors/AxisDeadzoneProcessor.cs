@@ -1,5 +1,6 @@
 namespace UnityEngine.InputSystem.Processors
 {
+    [Scripting.Preserve]
     internal class AxisDeadzoneProcessor : InputProcessor<float>
     {
         public float min;
