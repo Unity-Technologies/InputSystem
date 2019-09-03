@@ -123,12 +123,16 @@ namespace UnityEngine.InputSystem.XR
         public float rightEyeOpenAmount;
     }
 
+    [Scripting.Preserve]
     public class BoneControl : InputControl<Bone>
     {
+        [Scripting.Preserve]
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
         public IntegerControl parentBoneIndex { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 4, displayName = "Position")]
         public Vector3Control position { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
 
@@ -162,20 +166,28 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    [Scripting.Preserve]
     public class EyesControl : InputControl<Eyes>
     {
+        [Scripting.Preserve]
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 28, displayName = "RightEyePosition")]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 56, displayName = "FixationPoint")]
         public Vector3Control fixationPoint { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
         public AxisControl leftEyeOpenAmount { get; private set; }
+        [Scripting.Preserve]
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
         public AxisControl rightEyeOpenAmount { get; private set; }
 
