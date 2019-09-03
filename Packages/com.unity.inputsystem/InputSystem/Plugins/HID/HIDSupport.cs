@@ -84,7 +84,14 @@ namespace UnityEngine.InputSystem.HID
         /// <see cref="HID.GenericDesktop.MultiAxisController"/>, <see cref="HID.GenericDesktop.TabletPCControls"/>,
         /// and <see cref="HID.GenericDesktop.AssistiveControl"/>.
         /// </remarks>
-        public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages { get; set; }
+
+        public static HIDPageUsage[] s_SupportedHIDUsages;
+
+        public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages
+        {
+            get => s_SupportedHIDUsages;
+            set => s_SupportedHIDUsages = value.ToArray();
+        }
 
         /// <summary>
         /// Add support for generic HIDs to InputSystem.
@@ -96,12 +103,12 @@ namespace UnityEngine.InputSystem.HID
 #endif
         static void Initialize()
         {
-            supportedHIDUsages = new ReadOnlyArray<HIDPageUsage>(new[]
+            s_SupportedHIDUsages = new[]
             {
                 new HIDPageUsage(HID.GenericDesktop.Joystick),
                 new HIDPageUsage(HID.GenericDesktop.Gamepad),
                 new HIDPageUsage(HID.GenericDesktop.MultiAxisController),
-            });
+            };
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
