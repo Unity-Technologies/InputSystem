@@ -37,7 +37,7 @@ class APIVerificationTests
             return false;
 
         if (
-            // These have fields popuplated by reflection in the Input System
+            // These have fields populated by reflection in the Input System
             type.FullName == typeof(InputProcessor).FullName ||
             type.FullName == typeof(InputControl).FullName ||
             type.FullName == typeof(InputBindingComposite).FullName
@@ -204,6 +204,42 @@ class APIVerificationTests
             methodName = "#ctor";
 
         var methodKey = $"data-uid=\"{method.DeclaringType}.{methodName}";
+        // For non-get/set/add/remove methods, we need to take arguments into account
+        // to be able to differentiate overloads.
+        if (!method.IsGetter && !method.IsSetter && !method.IsAddOn && !method.IsRemoveOn)
+        {
+            string TypeToString(TypeReference type)
+            {
+                if (type.IsByReference)
+                {
+                    // Cecil uss &, docs use @ for 'ref' parameters.
+                    return $"{type.GetElementType().FullName}@";
+                }
+                if (type.IsGenericInstance)
+                {
+                    // Cecil uses `N<...> notation, docs use {...} notation.
+                    var genericInstanceType = (GenericInstanceType)type;
+
+                    // Extract name of generic type. Snip off `N suffix.
+                    var typeName = genericInstanceType.GetElementType().FullName;
+                    var indexOfBacktick = typeName.IndexOf('`');
+                    if (indexOfBacktick != -1)
+                        typeName = typeName.Substring(0, indexOfBacktick);
+
+                    typeName += "{";
+                    typeName += string.Join(",", genericInstanceType.GenericArguments.Select(TypeToString));
+                    typeName += "}";
+
+                    return typeName;
+                }
+                return type.FullName;
+            }
+
+            var parameters = string.Join(",", method.Parameters.Select(p => TypeToString(p.ParameterType)));
+            if (!string.IsNullOrEmpty(parameters))
+                methodKey = $"{methodKey}({parameters})";
+        }
+
         var nextEntryKey = "<a id=";
         var summaryKey = "<div class=\"markdown level1 summary\">";
         var endKey = "</div>";
