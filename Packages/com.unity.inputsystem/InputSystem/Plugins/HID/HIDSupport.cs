@@ -65,6 +65,7 @@ namespace UnityEngine.InputSystem.HID
             }
         }
 
+        private static HIDPageUsage[] s_SupportedHIDUsages;
 
         /// <summary>
         /// An array of HID usages the input is configured to support.
@@ -84,9 +85,6 @@ namespace UnityEngine.InputSystem.HID
         /// <see cref="HID.GenericDesktop.MultiAxisController"/>, <see cref="HID.GenericDesktop.TabletPCControls"/>,
         /// and <see cref="HID.GenericDesktop.AssistiveControl"/>.
         /// </remarks>
-
-        public static HIDPageUsage[] s_SupportedHIDUsages;
-
         public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages
         {
             get => s_SupportedHIDUsages;
