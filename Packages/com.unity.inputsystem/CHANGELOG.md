@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Exceptions in scenes of `Visualizers` sample if respective device was not present on system (e.g. in `PenVisualizer` if no pen was present in system).
+- Fixed control scheme popup window in input action asset editor window showing in the correct screen position on windows.
 
 #### Actions
 
