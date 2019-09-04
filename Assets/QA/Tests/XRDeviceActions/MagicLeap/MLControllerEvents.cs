@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
-#if UNITY_LUMIN
+#if UNITY_MAGIC_LEAP
 using UnityEngine.XR.MagicLeap;
 #endif
 
@@ -24,7 +24,7 @@ public class MLControllerEvents : MonoBehaviour
 
     public void SendVibe()
     {
-#if UNITY_LUMIN
+#if UNITY_MAGIC_LEAP && UNITY_INPUT_SYSTEM
         VibePattern pattern = (VibePattern)vibePatternDropdown.value;
         VibeIntensity intensity = (VibeIntensity)vibeIntensityDropdown.value;
 
@@ -38,7 +38,7 @@ public class MLControllerEvents : MonoBehaviour
 
     public void SendLEDPattern()
     {
-#if UNITY_LUMIN
+#if UNITY_MAGIC_LEAP && UNITY_INPUT_SYSTEM
         LEDPattern pattern = (LEDPattern)ledPatternDropdown.value;
         LEDColor color = (LEDColor)ledColorDropdown.value;
         uint duration = (uint)ledDurationSlider.value;
@@ -53,7 +53,7 @@ public class MLControllerEvents : MonoBehaviour
 
     public void SendLEDEffect()
     {
-#if UNITY_LUMIN
+#if UNITY_LUMIN && UNITY_INPUT_SYSTEM
         LEDEffect effect = (LEDEffect)ledEffectDropdown.value;
         LEDSpeed speed = (LEDSpeed)ledSpeedDropdown.value;
         LEDPattern pattern = (LEDPattern)ledPatternDropdown.value;
