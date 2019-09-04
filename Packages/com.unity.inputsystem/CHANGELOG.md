@@ -19,6 +19,9 @@ however, it has to be formatted properly to pass verification tests.
 - Pending timeouts on a device not being removed when device was removed.
 
 ### Changed
+
+- Replaced `HIDSupport.shouldCreateHID` event with a new `HIDSupport.supportedHIDUsages` property, which takes an array of supported usages.
+
 ### Added
 
 #### Actions
