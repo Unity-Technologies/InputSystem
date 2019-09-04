@@ -2788,16 +2788,9 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.Zero);
     }
 
-    public enum BindingType
-    {
-        Composite,
-        Normal
-    }
     [Test]
     [Category("Actions")]
-    [TestCase(BindingType.Composite)]
-    [TestCase(BindingType.Normal)]
-    public void Actions_ActionListenerWillNotThrowWhenDeviceIsRemoved(BindingType bindingType)
+    public void Actions_ActionListenerWillNotThrowWhenDeviceIsRemoved()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -2805,14 +2798,7 @@ partial class CoreTests
         bool canceled = false;
         bool performed = false;
         var action = new InputAction();
-        if (bindingType == BindingType.Composite)
-        {
-            action.AddCompositeBinding("Axis")
-                .With("Negative", "<Gamepad>/rightTrigger")
-                .With("Positive", "<Gamepad>/leftTrigger");
-        }
-        else
-            action.AddBinding("<Gamepad>/leftTrigger");
+        action.AddBinding("<Gamepad>/leftTrigger");
 
         action.canceled += ctx =>
         {
