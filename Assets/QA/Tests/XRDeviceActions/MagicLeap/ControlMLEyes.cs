@@ -11,7 +11,7 @@ public class ControlMLEyes : MonoBehaviour
 {
     public Toggle uiToggle;
 
-#if UNITY_MAGIC_LEAP && UNITY_INPUT_SYSTEM
+#if UNITY_MAGIC_LEAP
     void Update()
     {
         if (uiToggle == null)
