@@ -504,12 +504,9 @@ namespace UnityEngine.InputSystem
 
         internal ReadOnlyArray<InputControl> GetControlsForSingleAction(InputAction action)
         {
-            Debug.Assert(m_State != null);
-            Debug.Assert(m_MapIndexInState != InputActionState.kInvalidIndex);
-            Debug.Assert(m_Actions != null);
-            Debug.Assert(action != null);
-            Debug.Assert(action.m_ActionMap == this);
-            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action);
+            Debug.Assert(action != null, "Action cannot be null");
+            Debug.Assert(action.m_ActionMap == this, "Action must be in action map");
+            Debug.Assert(!action.isSingletonAction || m_SingletonAction == action, "Action is not a singleton action");
 
             if (m_ControlsForEachAction == null)
                 SetUpPerActionCachedBindingData();
@@ -532,6 +529,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private unsafe void SetUpPerActionCachedBindingData()
         {
+            ////FIXME: Ideally we shouldn't do this here; see comment on InputAction.bindings
             // Make sure our binding resolution data is up to date.
             ResolveBindingsIfNecessary();
 
@@ -870,6 +868,8 @@ namespace UnityEngine.InputSystem
                 {
                     var map = actionMaps[i];
                     map.m_NeedToResolveBindings = false;
+
+                    map.ClearPerActionCachedBindingData();
 
                     if (map.m_SingletonAction != null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);

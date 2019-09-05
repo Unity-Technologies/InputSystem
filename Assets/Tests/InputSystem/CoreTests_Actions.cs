@@ -2115,7 +2115,7 @@ partial class CoreTests
         map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick")
             .AddBinding("/gamepad/rightStick")
             .WithGroup("group")
-            .WithProcessor("deadzone");
+            .WithProcessor("stickDeadzone");
         map.AddAction(name: "action2", binding: "/gamepad/buttonSouth", interactions: "tap,slowTap(duration=0.1)");
 
         var json = map.ToJson();
@@ -2136,7 +2136,7 @@ partial class CoreTests
         Assert.That(maps[0].actions[0].bindings[0].groups, Is.Null);
         Assert.That(maps[0].actions[0].bindings[1].groups, Is.EqualTo("group"));
         Assert.That(maps[0].actions[0].bindings[0].processors, Is.Null);
-        Assert.That(maps[0].actions[0].bindings[1].processors, Is.EqualTo("deadzone"));
+        Assert.That(maps[0].actions[0].bindings[1].processors, Is.EqualTo("stickDeadzone"));
         Assert.That(maps[0].actions[0].bindings[0].interactions, Is.Null);
         Assert.That(maps[0].actions[0].bindings[1].interactions, Is.Null);
         Assert.That(maps[0].actions[1].bindings[0].groups, Is.Null);

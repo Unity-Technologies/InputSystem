@@ -244,6 +244,10 @@ namespace UnityEngine.InputSystem
         ////TODO: add support for turning binding array into displayable info
         ////      (allow to constrain by sets of devices set on action set)
 
+        ////FIXME: ATM accessing this property causes bindings to be resolved. This should not
+        ////       happen. The problem is that in InputActionMap.SetUpPerActionCachedBindingData
+        ////       we set up *both* the control and the binding array. This means that the code
+        ////       requires the list of controls to be up-to-date.
         /// <summary>
         /// The list of bindings associated with the action.
         /// </summary>
