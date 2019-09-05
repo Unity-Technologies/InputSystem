@@ -53,7 +53,7 @@ public class MLControllerEvents : MonoBehaviour
 
     public void SendLEDEffect()
     {
-#if UNITY_MAGIC_LEAP 
+#if UNITY_MAGIC_LEAP
         LEDEffect effect = (LEDEffect)ledEffectDropdown.value;
         LEDSpeed speed = (LEDSpeed)ledSpeedDropdown.value;
         LEDPattern pattern = (LEDPattern)ledPatternDropdown.value;
