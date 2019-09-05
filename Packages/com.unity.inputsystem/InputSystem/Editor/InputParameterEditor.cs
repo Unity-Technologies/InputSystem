@@ -74,8 +74,8 @@ namespace UnityEngine.InputSystem.Editor
     }
 
     /// <summary>
-    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
-    /// or <see cref="IInputInteraction"/>.
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>,
+    /// <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>.
     /// </summary>
     /// <remarks>
     /// Note that a parameter editor takes over the entire editing UI for the object and not just the editing of specific parameters.

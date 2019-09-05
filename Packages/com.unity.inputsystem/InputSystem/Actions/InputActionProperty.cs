@@ -77,6 +77,11 @@ namespace UnityEngine.InputSystem
             m_Reference = reference;
         }
 
+        /// <summary>
+        /// Compare two action properties to see whether they refer to the same action.
+        /// </summary>
+        /// <param name="other">Another action property.</param>
+        /// <returns>True if both properties refer to the same action.</returns>
         public bool Equals(InputActionProperty other)
         {
             return m_Reference == other.m_Reference &&
@@ -84,11 +89,21 @@ namespace UnityEngine.InputSystem
                 m_Action == other.m_Action;
         }
 
+        /// <summary>
+        /// Check whether the property refers to the same action.
+        /// </summary>
+        /// <param name="other">An action.</param>
+        /// <returns>True if <see cref="action"/> is the same as <paramref name="other"/>.</returns>
         public bool Equals(InputAction other)
         {
             return ReferenceEquals(action, other);
         }
 
+        /// <summary>
+        /// Check whether the property references the same action.
+        /// </summary>
+        /// <param name="other">An action reference.</param>
+        /// <returns>True if the property and <paramref name="other"/> reference the same action.</returns>
         public bool Equals(InputActionReference other)
         {
             return m_Reference == other;

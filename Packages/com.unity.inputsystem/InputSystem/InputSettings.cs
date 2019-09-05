@@ -296,6 +296,21 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Default time (in seconds) within which a press and release has to occur for it
+        /// to be registered as a "tap".
+        /// </summary>
+        /// <value>Default upper limit on press durations for them to register as taps.</value>
+        /// <remarks>
+        /// A tap is considered as a quick press-and-release on a button-like input control.
+        /// This property determines just how quick the press-and-release has to be, i.e. what
+        /// the maximum time is that can elapse between the button being pressed and released
+        /// again. If the delay between press and release is greater than this time, the
+        /// input does not qualify as a tap.
+        ///
+        /// The default tap time is 0.2 seconds.
+        /// </remarks>
+        /// <seealso cref="TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
