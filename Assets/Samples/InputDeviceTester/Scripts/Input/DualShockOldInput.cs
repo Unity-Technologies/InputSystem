@@ -18,6 +18,7 @@ public class DualShockOldInput : GamepadOldInput
     private List<DualShockTrigger> m_dualShockTriggers = new List<DualShockTrigger>();
     private readonly Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
 
+#if ENABLE_LEGACY_INPUT_MANAGER
     // Start is called before the first frame update
     void Start()
     {
@@ -145,6 +146,8 @@ public class DualShockOldInput : GamepadOldInput
             }
         }
     }
+
+#endif
 }
 
 // This is for DualShock controller triggers on Windows and OSX
