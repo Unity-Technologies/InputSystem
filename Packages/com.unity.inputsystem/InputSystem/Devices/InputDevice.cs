@@ -246,18 +246,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputSystem.devices"/>
         public bool added => m_DeviceIndex != kInvalidDeviceIndex;
 
-        internal bool removing
-        {
-            get
-            {
-                return (m_DeviceFlags & DeviceFlags.Removing) == DeviceFlags.Removing;
-            }
-            set
-            {
-                m_DeviceFlags = (m_DeviceFlags & ~DeviceFlags.Removing) | (value ? DeviceFlags.Removing : 0);
-            }
-        }
-
         /// <summary>
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
@@ -501,7 +489,6 @@ namespace UnityEngine.InputSystem
             Native = 1 << 4, // It's a device created from data surfaced by NativeInputRuntime.
             Disabled = 1 << 5,
             DisabledStateHasBeenQueried = 1 << 6, // Whether we have fetched the current enable/disable state from the runtime.
-            Removing = 1 << 7, // We are about to remove the device
         }
 
         internal DeviceFlags m_DeviceFlags;

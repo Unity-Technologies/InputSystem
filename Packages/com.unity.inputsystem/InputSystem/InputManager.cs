@@ -868,8 +868,6 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < deviceCount; ++i)
             {
                 var device = m_Devices[i];
-                if (device.removing)
-                    continue;
                 numMatches += InputControlPath.TryFindControls(device, path, 0, ref controls);
             }
 
@@ -1112,7 +1110,7 @@ namespace UnityEngine.InputSystem
             return device;
         }
 
-        public unsafe void RemoveDevice(InputDevice device, bool keepOnListOfAvailableDevices = false)
+        public void RemoveDevice(InputDevice device, bool keepOnListOfAvailableDevices = false)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
@@ -1123,15 +1121,6 @@ namespace UnityEngine.InputSystem
 
             // Remove state monitors while device index is still valid.
             RemoveStateChangeMonitors(device);
-
-            device.removing = true;
-            if (!device.remote)
-                UnsafeUtility.MemClear(device.currentStatePtr, device.valueSizeInBytes);
-
-            // Force enabled actions to remove controls from the device.
-            // We've already set the device index to be invalid so we any attempts
-            // by actions to uninstall state monitors will get ignored.
-            InputActionState.OnDeviceChange(device, InputDeviceChange.Removed);
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
@@ -1172,6 +1161,11 @@ namespace UnityEngine.InputSystem
             // Unbake offset into global state buffers.
             device.BakeOffsetIntoStateBlockRecursive((uint)-device.m_StateBlock.byteOffset);
 
+            // Force enabled actions to remove controls from the device.
+            // We've already set the device index to be invalid so we any attempts
+            // by actions to uninstall state monitors will get ignored.
+            InputActionState.OnDeviceChange(device, InputDeviceChange.Removed);
+
             // Kill before update callback, if applicable.
             if (device is IInputUpdateCallbackReceiver beforeUpdateCallbackReceiver)
                 onBeforeUpdate -= beforeUpdateCallbackReceiver.OnUpdate;
@@ -1194,7 +1188,6 @@ namespace UnityEngine.InputSystem
 
             // Let device know.
             device.NotifyRemoved();
-            device.removing = false;
 
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -1551,7 +1544,6 @@ namespace UnityEngine.InputSystem
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
-            Application.focusChanged += b => Debug.Log($"Focus changed {b}");
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
 
@@ -2221,7 +2213,6 @@ namespace UnityEngine.InputSystem
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
             // Ignore editor updates when the game is playing and has focus. All input goes to player.
-            // Debug.Log($"gameIsPlayingAndHasFocus {gameIsPlayingAndHasFocus} {Application.isFocused}");
             if (gameIsPlayingAndHasFocus)
                 mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates.

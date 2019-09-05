@@ -338,7 +338,7 @@ namespace UnityEngine.InputSystem
                             for (var i = 0; i < list.Count; ++i)
                             {
                                 var device = list[i];
-                                if (!device.added || device.removing)
+                                if (!device.added)
                                     continue; // Skip devices that have been removed.
                                 numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
                             }
