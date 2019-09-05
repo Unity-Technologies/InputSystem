@@ -237,6 +237,7 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLGamepad).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLJoystick).FullName ||
+            type.FullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
 #if UNITY_EDITOR_OSX
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
