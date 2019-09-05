@@ -261,25 +261,25 @@ namespace UnityEngine.InputSystem.XR
                         break;
                     }
                     case FeatureType.Hand:
-                        {
-                            break;
-                        }
+                    {
+                        break;
+                    }
                     case FeatureType.Bone:
-                        {
-                            builder.AddControl(featureName)
-                                .WithLayout("Bone")
-                                .WithByteOffset(currentOffset)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(featureName)
+                            .WithLayout("Bone")
+                            .WithByteOffset(currentOffset)
+                            .WithUsages(currentUsages);
+                        break;
+                    }
                     case FeatureType.Eyes:
-                        {
-                            builder.AddControl(featureName)
-                                .WithLayout("Eyes")
-                                .WithByteOffset(currentOffset)
-                                .WithUsages(currentUsages);
-                            break;
-                        }
+                    {
+                        builder.AddControl(featureName)
+                            .WithLayout("Eyes")
+                            .WithByteOffset(currentOffset)
+                            .WithUsages(currentUsages);
+                        break;
+                    }
                 }
                 currentOffset += nextOffset;
             }

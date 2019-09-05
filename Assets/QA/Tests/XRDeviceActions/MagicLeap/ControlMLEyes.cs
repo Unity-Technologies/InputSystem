@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,13 +20,14 @@ public class ControlMLEyes : MonoBehaviour
         bool desiredState = uiToggle.isOn;
 
         MagicLeapLightwear device = InputSystem.GetDevice<MagicLeapLightwear>();
-        if(device != null)
+        if (device != null)
         {
-            if(desiredState != device.EyesEnabled)
+            if (desiredState != device.EyesEnabled)
             {
                 device.EyesEnabled = desiredState;
             }
         }
     }
+
 #endif
 }

@@ -56,8 +56,8 @@ namespace UnityEngine.InputSystem.XR
                 else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
 #endif //UNITY_2019_3_OR_NEWER
-#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
             }
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         }
     }
 

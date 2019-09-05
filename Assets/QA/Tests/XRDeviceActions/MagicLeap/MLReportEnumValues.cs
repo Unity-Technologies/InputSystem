@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -22,13 +22,13 @@ public class MLReportEnumValues : MonoBehaviour
 #if UNITY_MAGIC_LEAP
     void OnEnable()
     {
-        if(controllerTypeAction != null)
-       {
+        if (controllerTypeAction != null)
+        {
             controllerTypeAction.started += UpdateType;
             controllerTypeAction.performed += UpdateType;
             controllerTypeAction.canceled += UpdateType;
             controllerTypeAction.Enable();
-       }
+        }
 
         if (controllerDoFAction != null)
         {
@@ -76,7 +76,7 @@ public class MLReportEnumValues : MonoBehaviour
 
     void UpdateType(InputAction.CallbackContext context)
     {
-        if(controllerTypeText != null)
+        if (controllerTypeText != null)
         {
             ControllerType type = (ControllerType)context.ReadValue<int>();
             controllerTypeText.text = $"Type: {type}";
@@ -100,5 +100,6 @@ public class MLReportEnumValues : MonoBehaviour
             controllerCalibrationAccuracyText.text = $"Calibration Accuracy: {accuracy}";
         }
     }
+
 #endif
 }
