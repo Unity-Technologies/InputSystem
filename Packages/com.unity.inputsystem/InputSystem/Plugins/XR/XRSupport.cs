@@ -13,17 +13,17 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// A simple Regex pattern that allows InputDeviceMatchers to match to any version of the XRInput interface.
         /// </summary>
-        public const string kXRInterfaceMatchAnyVersion = "^(XRInput)";
+        public const string InterfaceMatchAnyVersion = "^(XRInput)";
 
         /// <summary>
         /// The initial, now deprecated interface for XRInput.  This version handles button packing for Android differently from current.
         /// </summary>
-        public const string kXRInterfaceV1 = "XRInput";
+        public const string InterfaceV1 = "XRInput";
 
         /// <summary>
         /// The current interface code sent with devices to identify as XRInput devices.
         /// </summary>
-        public const string kXRInterfaceCurrent = "XRInputV1";
+        public const string InterfaceCurrent = "XRInputV1";
     }
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
@@ -58,23 +58,6 @@ namespace UnityEngine.InputSystem.XR
         public FeatureType featureType;
         public uint customSize;
     }
-
-#if !UNITY_2019_3_OR_NEWER
-    // Sync to UnityXRInputDeviceRole in IUnityXRInput.h
-    /// <summary>
-    /// The generalized role that the device plays.  This can help in grouping devices by type (HMD, vs. hardware tracker vs. handed controller).
-    /// </summary>
-    public enum DeviceRole
-    {
-        Unknown = 0,
-        Generic,
-        LeftHanded,
-        RightHanded,
-        GameController,
-        TrackingReference,
-        HardwareTracker,
-    }
-#endif
 
     //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
     [Serializable]
@@ -254,12 +237,6 @@ namespace UnityEngine.InputSystem.XR
                
             InputSystem.RegisterLayout<XRHMD>();
             InputSystem.RegisterLayout<XRController>();
-
-            InputSystem.RegisterLayout<KnucklesController>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface(XRUtilities.kXRInterfaceMatchAnyVersion)
-                    .WithManufacturer("Valve")
-                    .WithProduct(@"^(OpenVR Controller\(Knuckles)"));
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
         }

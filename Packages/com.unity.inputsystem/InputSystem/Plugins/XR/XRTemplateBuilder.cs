@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.XR
 #if UNITY_INPUT_SYSTEM_ENABLE_XR
 
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
+            if (description.interfaceName != XRUtilities.InterfaceCurrent && description.interfaceName != XRUtilities.InterfaceV1)
             {
                 return null;
             }
@@ -79,8 +79,6 @@ namespace UnityEngine.InputSystem.XR
             {
                 return null;
             }
-
-            Debug.Log(description.capabilities);
 
             // Try to parse the XR descriptor.
             XRDeviceDescriptor deviceDescriptor;
@@ -192,7 +190,7 @@ namespace UnityEngine.InputSystem.XR
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if (interfaceName == XRUtilities.kXRInterfaceV1)
+                if (interfaceName == XRUtilities.InterfaceV1)
                 {
 #if UNITY_ANDROID
                     if (nextOffset < 4)

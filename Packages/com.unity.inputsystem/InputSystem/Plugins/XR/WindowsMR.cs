@@ -10,24 +10,34 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class WMRHMD : XRHMD
     {
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "HeadPosition" })]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "HeadRotation" })]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
@@ -53,22 +63,34 @@ namespace UnityEngine.InputSystem.XR
     /// A Windows Mixed Reality XR controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+<<<<<<< HEAD
+=======
+    [Scripting.Preserve]
+>>>>>>> 12a10559817b365d8d526de27520d9384ecb9a92
     public class HololensHand : XRController
     {
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripPosition" })]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripOrientation" })]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl airTap { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl sourceLossRisk { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
 
@@ -88,49 +110,74 @@ namespace UnityEngine.InputSystem.XR
     }
 
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+<<<<<<< HEAD
+=======
+    [Scripting.Preserve]
+>>>>>>> 12a10559817b365d8d526de27520d9384ecb9a92
     public class WMRSpatialController : XRControllerWithRumble
     {
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary2DAxis", "thumbstickaxes" })]
         public Vector2Control joystick { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Secondary2DAxis", "touchpadaxes" })]
         public Vector2Control touchpad { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripaxis" })]
         public AxisControl grip { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripbutton" })]
         public ButtonControl gripPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary", "menubutton" })]
         public ButtonControl menu { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "triggeraxis" })]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl triggerPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "thumbstickpressed" })]
         public ButtonControl joystickClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "joystickorpadpressed", "touchpadpressed" })]
         public ButtonControl touchpadClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "joystickorpadtouched", "touchpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripPosition" })]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripOrientation" })]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "gripAngularVelocity" })]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl batteryLevel { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public AxisControl sourceLossRisk { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control pointerPosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "PointerOrientation" })]
         public QuaternionControl pointerRotation { get; private set; }
 

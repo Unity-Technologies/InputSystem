@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.XR
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-#else //UNITY_2019_3_OR_NEWER
+#else
                 if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded)
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)

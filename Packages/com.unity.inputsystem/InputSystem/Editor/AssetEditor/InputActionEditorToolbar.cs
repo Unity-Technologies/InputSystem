@@ -49,7 +49,13 @@ namespace UnityEngine.InputSystem.Editor
 
             if (GUI.Button(buttonRect, buttonGUI, EditorStyles.toolbarPopup))
             {
-                buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
+                // PopupWindow.Show already takes the current OnGUI EditorWindow context into account for window coordinates.
+                // However, on macOS, menu commands are performed asynchronously, so we don't have a current OnGUI context.
+                // So in that case, we need to translate the rect to screen coordinates. Don't do that on windows, as we will
+                // overcompensate otherwise.
+                if (Application.platform == RuntimePlatform.OSXEditor)
+                    buttonRect = new Rect(EditorGUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y)), Vector2.zero);
+
                 var menu = new GenericMenu();
 
                 // Add entries to select control scheme, if we have some.
