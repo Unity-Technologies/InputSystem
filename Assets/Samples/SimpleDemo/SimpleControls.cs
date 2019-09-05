@@ -148,10 +148,10 @@ public class SimpleControls : IInputActionCollection
     ""controlSchemes"": []
 }");
         // gameplay
-        m_gameplay = asset.FindActionMap("gameplay");
-        m_gameplay_fire = m_gameplay.FindAction("fire");
-        m_gameplay_move = m_gameplay.FindAction("move");
-        m_gameplay_look = m_gameplay.FindAction("look");
+        m_gameplay = asset.FindActionMap("gameplay", throwIfNotFound: true);
+        m_gameplay_fire = m_gameplay.FindAction("fire", throwIfNotFound: true);
+        m_gameplay_move = m_gameplay.FindAction("move", throwIfNotFound: true);
+        m_gameplay_look = m_gameplay.FindAction("look", throwIfNotFound: true);
     }
 
     ~SimpleControls()
