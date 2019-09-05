@@ -306,7 +306,7 @@ internal class XInputTests : InputTestFixture
                 rightTrigger = 255,
             });
 
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));

@@ -3170,13 +3170,13 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.Space));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(firePerformed, Is.False);
         Assert.That(reloadPerformed, Is.False);
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(firePerformed, Is.True);
         Assert.That(reloadPerformed, Is.False);
@@ -3185,7 +3185,7 @@ partial class CoreTests
         reloadPerformed = false;
 
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(firePerformed, Is.False);
         Assert.That(reloadPerformed, Is.True);
@@ -3230,13 +3230,13 @@ partial class CoreTests
         action.performed += ctx => performed.Add(ctx);
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 1.0f});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performed, Is.Empty);
 
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performed, Has.Count.EqualTo(1));
         // Last control in combination is considered the trigger control.
@@ -3259,7 +3259,7 @@ partial class CoreTests
 
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performed, Has.Count.EqualTo(1));
     }
@@ -3282,7 +3282,7 @@ partial class CoreTests
             new GamepadState {buttons = 1 << (int)GamepadButton.A});
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A});
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performed, Is.Empty);
     }
@@ -3310,7 +3310,7 @@ partial class CoreTests
             new GamepadState {leftTrigger = 1.0f, buttons = 1 << (int)GamepadButton.A}, 0.0);
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState {leftTrigger = 1.0f, buttons = 0}, InputSystem.settings.defaultSlowTapTime + 0.1);
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         Assert.That(performed, Has.Count.EqualTo(1));
         Assert.That(performed[0].interaction, Is.TypeOf<SlowTapInteraction>());

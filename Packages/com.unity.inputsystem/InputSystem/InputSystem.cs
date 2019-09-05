@@ -1903,6 +1903,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The current configuration of the input system.
         /// </summary>
+        /// <value>Global configuration object for the input system.</value>
         /// <remarks>
         /// The input system can be configured on a per-project basis. Settings can either be created and
         /// installed on the fly or persisted as assets in the project.

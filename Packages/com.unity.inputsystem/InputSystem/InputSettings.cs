@@ -41,13 +41,32 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
+        /// <value>When to run input updates.</value>
         /// <remarks>
-        /// By default, input updates will automatically be triggered
+        /// By default, input updates will automatically be triggered as part of the player loop.
+        /// If <c>updateMode</c> is set to <see cref="UpdateMode.ProcessEventsInDynamicUpdate"/>
+        /// (the default), then right at the beginning of a dynamic update (i.e. before all
+        /// <c>MonoBehaviour.Update</c> methods are called), input is processed. And if <c>updateMode</c>
+        /// is set to <see cref="UpdateMode.ProcessEventsInFixedUpdate"/>, then right at the beginning
+        /// of each fixed update (i.e. before all <c>MonoBehaviour.FixedUpdate</c> methods are
+        /// called), input is processed.
         ///
-        /// In the editor,
+        /// Additionally, if there are devices that need updates right before rendering (see <see
+        /// cref="InputDevice.updateBeforeRender"/>), an extra update will be run right before
+        /// rendering. This special update will only consume input on devices that have
+        /// <see cref="InputDevice.updateBeforeRender"/> set to <c>true</c>.
+        ///
+        /// You can run updates manually using <see cref="InputSystem.RunOneFrame"/>. Doing so
+        /// outside of tests is only recommended, however, if <c>updateMode</c> is set to
+        /// <see cref="UpdateMode.ProcessEventsManually"/> (in which case it is actually required
+        /// for input to be processed at all).
+        ///
+        /// Note that in the editor, input updates will also run before each editor update
+        /// (i.e. as part of <c>EditorApplication.update</c>). Player and editor input state
+        /// are kept separate, though, so any input consumed in editor updates will not be visible
+        /// in player updates and vice versa.
         /// </remarks>
         /// <seealso cref="InputSystem.RunOneFrame"/>
-        /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode
         {
             get => m_UpdateMode;

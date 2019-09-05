@@ -977,7 +977,7 @@ internal class UserTests : InputTestFixture
             position = new Vector2(0.123f, 0.234f),
             delta = new Vector2(0.345f, 0.456f),
         });
-        InputSystem.Update();
+        InputSystem.RunOneFrame();
 
         //Assert.That(receivedPosition, Is.EqualTo(new Vector2());
         Assert.That(receivedDelta, Is.EqualTo(new Vector2(-0.345f, -0.456f)).Using(Vector2EqualityComparer.Instance));
