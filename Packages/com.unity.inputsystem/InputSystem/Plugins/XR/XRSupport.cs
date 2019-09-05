@@ -8,6 +8,9 @@ using UnityEngine.InputSystem.Controls;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// A set of static utilities for registering XR Input Devices externally.
+    /// </summary>
     public static class XRUtilities
     {
         /// <summary>
@@ -87,23 +90,58 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    /// <summary>
+    /// Represents a 3 dimensional, tracked bone within a hierarchy of other bones.
+    /// </summary>
     public struct Bone
     {
-        // Todo, this should reference another bone in some way
-        public uint parentBoneIndex;
-        public Vector3 position;
-        public Quaternion rotation;
+        /// <summary>
+        /// The index with the device's controls array where the parent bone resides.
+        /// </summary>
+        public uint parentBoneIndex { get; set; }
+        /// <summary>
+        /// The tracked position of the bone.
+        /// </summary>
+        public Vector3 position { get; set; }
+        /// <summary>
+        /// The tracked rotation of the bone.
+        /// </summary>
+        public Quaternion rotation { get; set; }
     }
 
+    /// <summary>
+    /// Represents a pair of tracked eyes.
+    /// </summary>
     public struct Eyes
     {
-        public Vector3 leftEyePosition;
-        public Quaternion leftEyeRotation;
-        public Vector3 rightEyePosition;
-        public Quaternion rightEyeRotation;
-        public Vector3 fixationPoint;
-        public float leftEyeOpenAmount;
-        public float rightEyeOpenAmount;
+        /// <summary>
+        /// The tracked position of the left eye.
+        /// </summary>
+        public Vector3 leftEyePosition { get; set; }
+        /// <summary>
+        /// The tracked rotation of the left eye.
+        /// </summary>
+        public Quaternion leftEyeRotation { get; set; }
+        /// <summary>
+        /// The tracked position of the right eye.
+        /// </summary>
+        public Vector3 rightEyePosition { get; set; }
+        /// <summary>
+        /// The tracked rotation of the right eye.
+        /// </summary>
+        public Quaternion rightEyeRotation { get; set; }
+        /// <summary>
+        /// The point in 3D space that the pair of eyes is looking.
+        /// </summary>
+        public Vector3 fixationPoint { get; set; }
+        /// <summary>
+        /// The amount [0-1] the left eye is open or closed.  1.0 is fully open.
+        /// </summary>
+        public float leftEyeOpenAmount { get; set; }
+        /// <summary>
+        /// The amount [0-1] the right eye is open or closed.  1.0 is fully open.
+        /// </summary>
+        public float rightEyeOpenAmount { get; set; }
     }
 
     [Scripting.Preserve]
