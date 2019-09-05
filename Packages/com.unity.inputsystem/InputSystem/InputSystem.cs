@@ -2400,6 +2400,10 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            Switch.SwitchSupportHID.Initialize();
+            #endif
+
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
             XR.XRSupport.Initialize();
             #endif
