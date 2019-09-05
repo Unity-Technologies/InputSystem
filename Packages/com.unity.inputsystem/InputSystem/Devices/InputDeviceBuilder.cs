@@ -244,6 +244,12 @@ namespace UnityEngine.InputSystem.Layouts
             var haveControlLayoutWithPath = false;
             for (var i = 0; i < controlLayouts.Length; ++i)
             {
+                // Skip if variants don't match.
+                if (!controlLayouts[i].variants.IsEmpty() &&
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
+                        variants, ','))
+                    continue;
+
                 ////REVIEW: I'm not sure this is good enough. ATM if you have a control layout with
                 ////        name "foo" and one with name "foo/bar", then the latter is taken as an override
                 ////        but the former isn't. However, whether it has a slash in the path or not shouldn't
@@ -261,12 +267,6 @@ namespace UnityEngine.InputSystem.Layouts
                     InsertChildControlOverride(parent, ref controlLayouts[i]);
                     continue;
                 }
-
-                // Skip if variants don't match.
-                if (!controlLayouts[i].variants.IsEmpty() &&
-                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, ','))
-                    continue;
 
                 if (controlLayouts[i].isArray)
                     childCount += controlLayouts[i].arraySize;

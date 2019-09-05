@@ -231,9 +231,9 @@ partial class CoreTests
 
         Assert.That(layout["analog"].defaultState.type, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["analog"].defaultState.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int64));
         Assert.That(layout["digital"].defaultState.ToInt64(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int64));
         Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 

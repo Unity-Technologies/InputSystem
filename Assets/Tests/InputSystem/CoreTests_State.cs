@@ -1091,6 +1091,9 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
+        // QueueEvent aligns to 4-byte boundaries.
+        eventByteCount = eventByteCount.AlignToMultipleOf(4);
+
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
         Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));

@@ -155,25 +155,42 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateDevice_FromLayoutVariant()
     {
-        var leftyGamepad = InputDevice.Build<Gamepad>(layoutVariants: "Lefty");
-        var leftyGamepadPrimary2DMotion = leftyGamepad.GetChildControl("{Primary2DMotion}");
-        var leftyGamepadSecondary2DMotion = leftyGamepad.GetChildControl("{Secondary2DMotion}");
-        //var leftyGamepadPrimaryTrigger = leftyGamepad.GetChildControl("{PrimaryTrigger}");
-        //var leftyGamepadSecondaryTrigger = leftyGamepad.GetChildControl("{SecondaryTrigger}");
-        //shoulder?
-
-        var defaultGamepad = InputDevice.Build<Gamepad>();
-        var defaultGamepadPrimary2DMotion = defaultGamepad.GetChildControl("{Primary2DMotion}");
-        var defaultGamepadSecondary2DMotion = defaultGamepad.GetChildControl("{Secondary2DMotion}");
-        //var defaultGamepadPrimaryTrigger = defaultGamepad.GetChildControl("{PrimaryTrigger}");
-        //var defaultGamepadSecondaryTrigger = defaultGamepad.GetChildControl("{SecondaryTrigger}");
-
-        Assert.That(leftyGamepad.variants, Is.EqualTo("Lefty"));
-        Assert.That(leftyGamepadPrimary2DMotion, Is.SameAs(leftyGamepad.rightStick));
-        Assert.That(leftyGamepadSecondary2DMotion, Is.SameAs(leftyGamepad.leftStick));
-
-        Assert.That(defaultGamepadPrimary2DMotion, Is.SameAs(defaultGamepad.leftStick));
-        Assert.That(defaultGamepadSecondary2DMotion, Is.SameAs(defaultGamepad.rightStick));
+	    var json = @"
+			{
+				""name"" : ""TestDevice"",
+				""controls"" : [
+					{ ""name"" : ""VariantAControl"", ""variants"" : ""A"", ""layout"" : ""Button"" },
+					{ ""name"" : ""VariantBControl"", ""variants"" : ""B"", ""layout"" : ""Button"" },
+					{ ""name"" : ""VariantCControl"", ""variants"" : ""C"", ""layout"" : ""Button"" },
+					{ ""name"" : ""VariantABControl"", ""variants"" : ""A,B"", ""layout"" : ""Button"" },
+					{ ""name"" : ""NoVariantControl"", ""layout"" : ""Button"" }
+				]
+			}
+		";
+	    
+	    InputSystem.RegisterLayout(json);
+		
+        var variantA = InputDevice.Build<InputDevice>(layoutName: "TestDevice", layoutVariants: "A");
+        var variantB = InputDevice.Build<InputDevice>(layoutName: "TestDevice", layoutVariants: "B");
+        var noVariant = InputDevice.Build<InputDevice>(layoutName: "TestDevice");
+        
+        Assert.That(variantA.TryGetChildControl("VariantAControl"), Is.Not.Null);
+        Assert.That(variantA.TryGetChildControl("VariantBControl"), Is.Null);
+        Assert.That(variantA.TryGetChildControl("VariantCControl"), Is.Null);
+        Assert.That(variantA.TryGetChildControl("VariantABControl"), Is.Not.Null);
+        Assert.That(variantA.TryGetChildControl("NoVariantControl"), Is.Not.Null);
+        
+        Assert.That(variantB.TryGetChildControl("VariantAControl"), Is.Null);
+        Assert.That(variantB.TryGetChildControl("VariantBControl"), Is.Not.Null);
+        Assert.That(variantB.TryGetChildControl("VariantCControl"), Is.Null);
+        Assert.That(variantB.TryGetChildControl("VariantABControl"), Is.Not.Null);
+        Assert.That(variantB.TryGetChildControl("NoVariantControl"), Is.Not.Null);
+        
+        Assert.That(noVariant.TryGetChildControl("VariantAControl"), Is.Null);
+        Assert.That(noVariant.TryGetChildControl("VariantBControl"), Is.Null);
+        Assert.That(noVariant.TryGetChildControl("VariantCControl"), Is.Null);
+        Assert.That(noVariant.TryGetChildControl("VariantABControl"), Is.Null);
+        Assert.That(noVariant.TryGetChildControl("NoVariantControl"), Is.Not.Null);
     }
 
     [Test]
