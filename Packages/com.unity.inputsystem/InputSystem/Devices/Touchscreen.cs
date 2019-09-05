@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
         [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
-        byte phaseId;
+        public byte phaseId;
 
         [InputControl(name = "tapCount", displayName = "Tap Count", layout = "Integer")]
         [FieldOffset(33)]
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
         [FieldOffset(35)]
-        byte flags;
+        public byte flags;
 
         // Wasting four bytes in the name of alignment here. Need the explicit fields as il2cpp doesn't respect
         // the explicit field offsets.

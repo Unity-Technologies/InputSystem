@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="action">Action to add the binding to. If the action is part of an <see cref="InputActionMap"/>,
         /// the newly added binding will be visible on <see cref="InputActionMap.bindings"/>.</param>
-        /// <param name="path">Mandatory binding path string. See <see cref="InputBinding.path"/> for details.</param>
+        /// <param name="path">Binding path string. See <see cref="InputBinding.path"/> for details.</param>
         /// <param name="interactions">Optional list of interactions to apply to the binding. See <see
         /// cref="InputBinding.interactions"/> for details.</param>
         /// <param name="processors">Optional list of processors to apply to the binding. See <see
@@ -178,13 +178,9 @@ namespace UnityEngine.InputSystem
         /// <param name="groups">Optional list of binding groups that should be assigned to the binding. See
         /// <see cref="InputBinding.groups"/> for details.</param>
         /// <returns>Fluent-style syntax to further configure the binding.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null,
             string processors = null, string groups = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
-
             return AddBinding(action, new InputBinding
             {
                 path = path,
@@ -410,7 +406,7 @@ namespace UnityEngine.InputSystem
             action.m_Name = newName;
 
             // Update bindings.
-            var bindings = actionMap.m_Bindings;
+            var bindings = action.GetOrCreateActionMap().m_Bindings;
             var bindingCount = bindings.LengthSafe();
             for (var i = 0; i < bindingCount; ++i)
                 if (string.Compare(bindings[i].action, oldName, StringComparison.InvariantCultureIgnoreCase) == 0)

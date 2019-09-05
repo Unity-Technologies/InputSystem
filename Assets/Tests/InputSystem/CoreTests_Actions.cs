@@ -5435,7 +5435,7 @@ partial class CoreTests
         var action = new InputAction();
         action.AddBinding("");
 
-        bool performed = false;
+        var performed = false;
         action.performed += _ => performed = true;
 
         action.Enable();
