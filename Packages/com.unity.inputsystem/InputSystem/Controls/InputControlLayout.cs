@@ -257,6 +257,9 @@ namespace UnityEngine.InputSystem.Layouts
                 else
                     result.usages = other.usages;
 
+                ////FIXME: this should properly merge the parameters, not just pick one or the other
+                ////       easiest thing may be to just concatenate the two strings
+
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
                 else

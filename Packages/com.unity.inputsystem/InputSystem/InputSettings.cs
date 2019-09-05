@@ -235,6 +235,29 @@ namespace UnityEngine.InputSystem
         /// has a value equal to or greater than the button press point, it is considered pressed.
         ///
         /// The default value is 0.5.
+        ///
+        /// Lowering the button press point will make triggers feel more like hair-triggers (akin
+        /// to using the hair-trigger feature on Xbox Elite controllers). However, it may make using
+        /// the directional buttons (i.e. <see cref="Controls.StickControl.up"/> etc) be fickle as
+        /// solely moving in only one direction with sticks isn't easy. To counteract that, the button
+        /// press points on the stick buttons can be raised.
+        ///
+        /// Another solution is to simply lower the press points on the triggers specifically.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterLayoutOverride(@"
+        ///     {
+        ///         ""name"" : ""HairTriggers"",
+        ///         ""extend"" : ""Gamepad"",
+        ///         ""controls"" [
+        ///             { ""name"" : ""leftTrigger"", ""parameters"" : ""pressPoint=0.1"" },
+        ///             { ""name"" : ""rightTrigger"", ""parameters"" : ""pressPoint=0.1"" }
+        ///         ]
+        ///     }
+        /// ");
+        /// </code>
+        /// </example>
         /// </remarks>
         /// <seealso cref="Controls.ButtonControl.pressPoint"/>
         /// <seealso cref="Controls.ButtonControl.isPressed"/>
@@ -370,9 +393,11 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
-
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
+        // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
+        // Having a higher value here also obsoletes the need for custom press points on stick buttons
+        // (the up/down/left/right ones).
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
