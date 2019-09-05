@@ -805,7 +805,6 @@ namespace UnityEngine.InputSystem
             public void Reset()
             {
                 m_ActionToRebind = default;
-                m_CancelAction = default;
                 m_BindingMask = default;
                 m_ControlType = default;
                 m_ExpectedLayout = default;
@@ -1165,7 +1164,6 @@ namespace UnityEngine.InputSystem
             }
 
             private InputAction m_ActionToRebind;
-            private InputAction m_CancelAction;
             private InputBinding? m_BindingMask;
             private Type m_ControlType;
             private InternedString m_ExpectedLayout;

@@ -12,6 +12,11 @@ namespace UnityEngine.InputSystem.DualShock
     [Scripting.Preserve]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
+        [InputControl(name = "buttonWest", displayName = "Square", shortDisplayName = "\u25A1")]
+        [InputControl(name = "buttonNorth", displayName = "Triangle", shortDisplayName = "\u25B3")]
+        [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "\u25CB")]
+        [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "\u274C")]
+
         [InputControl]
         public ButtonControl touchpadButton { get; private set; }
 
@@ -20,18 +25,6 @@ namespace UnityEngine.InputSystem.DualShock
 
         [InputControl(name = "select", displayName = "Share")]
         public ButtonControl shareButton { get; private set; }
-
-        [InputControl(name = "buttonWest", displayName = "Square", shortDisplayName = "\u25A1")]
-        public ButtonControl squareButton { get; private set; }
-
-        [InputControl(name = "buttonNorth", displayName = "Triangle", shortDisplayName = "\u25B3")]
-        public ButtonControl triangleButton { get; private set; }
-
-        [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "\u25CB")]
-        public ButtonControl circleButton { get; private set; }
-
-        [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "\u274C")]
-        public ButtonControl crossButton { get; private set; }
 
         [InputControl(name = "leftShoulder", shortDisplayName = "L1")]
         public ButtonControl L1 { get; private set; }
@@ -73,11 +66,6 @@ namespace UnityEngine.InputSystem.DualShock
             touchpadButton = GetChildControl<ButtonControl>("touchpadButton");
             optionsButton = startButton;
             shareButton = selectButton;
-
-            squareButton = buttonWest;
-            triangleButton = buttonNorth;
-            circleButton = buttonEast;
-            crossButton = buttonSouth;
 
             L1 = leftShoulder;
             R1 = rightShoulder;
