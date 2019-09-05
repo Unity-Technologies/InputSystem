@@ -82,7 +82,7 @@ public class ExternalSamplesUtility
 	{
 		return 
 			Directory.GetFileSystemEntries("Assets").Where(x => !x.Contains("ExternalSamplesUtility"))
-			.Concat(new []{"ProjectSettings/ProjectSettings.asset"})
+			.Concat(Directory.GetFileSystemEntries("ProjectSettingsBackup").Select(x => x.Replace("ProjectSettingsBackup", "ProjectSettings")))
 			.ToArray();
 	}
 
