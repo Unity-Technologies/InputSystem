@@ -11,6 +11,8 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
+using DeviceRole = UnityEngine.XR.InputDeviceRole;
+
 internal class XRTests : InputTestFixture
 {
     [Test]

@@ -251,7 +251,7 @@ namespace UnityEngine.InputSystem.XR
         {
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
-
+               
             InputSystem.RegisterLayout<XRHMD>();
             InputSystem.RegisterLayout<XRController>();
 

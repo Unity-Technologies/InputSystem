@@ -65,6 +65,8 @@ namespace UnityEngine.InputSystem.XR
 
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
             {
@@ -104,12 +106,12 @@ namespace UnityEngine.InputSystem.XR
                     matchedLayout = "XRHMD";
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
-#else
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
+#else //UNITY_2019_3_OR_NEWER
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     matchedLayout = "XRController";
-                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
                     matchedLayout = "XRHMD";
-#endif
+#endif //UNITY_2019_3_OR_NEWER
             }
             Debug.Log($"[TOMB] Matched Layout: {matchedLayout}");
 
@@ -128,6 +130,9 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
 
             return layoutName;
+#else //UNITY_INPUT_SYSTEM_ENABLE_XR
+            return null;
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         }
 
         string ConvertPotentialAliasToName(InputControlLayout layout, string nameOrAlias)
