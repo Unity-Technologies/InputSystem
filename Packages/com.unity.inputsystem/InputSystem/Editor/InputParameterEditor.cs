@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.HelpBox(m_HelpBoxText);
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(m_OpenInputSettingsLabel, EditorStyles.miniButton, GUILayout.MaxWidth(100)))
+                    if (GUILayout.Button(m_OpenInputSettingsLabel, EditorStyles.miniButton))
                         InputSettingsProvider.Open();
                     EditorGUILayout.EndHorizontal();
                 }

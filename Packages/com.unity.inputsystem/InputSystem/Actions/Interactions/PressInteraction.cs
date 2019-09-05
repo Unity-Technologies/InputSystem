@@ -25,6 +25,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
+    [Scripting.Preserve]
     public class PressInteraction : IInputInteraction
     {
         /// <summary>
@@ -72,8 +73,8 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        ////REVIEW: should this trigger Started?
-                        context.PerformedAndGoBackToWaiting();
+                        context.Started();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -82,7 +83,7 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease && !isActuated)
                     {
                         m_WaitingForRelease = false;
-                        context.PerformedAndGoBackToWaiting();
+                        context.Performed();
                     }
                     else if (isActuated)
                     {
@@ -95,13 +96,16 @@ namespace UnityEngine.InputSystem.Interactions
                     if (m_WaitingForRelease)
                     {
                         if (!isActuated)
-                            context.PerformedAndGoBackToWaiting();
-
+                        {
+                            context.Started();
+                            context.Performed();
+                        }
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        context.PerformedAndGoBackToWaiting();
+                        context.Started();
+                        context.Performed();
                         m_WaitingForRelease = true;
                     }
                     break;

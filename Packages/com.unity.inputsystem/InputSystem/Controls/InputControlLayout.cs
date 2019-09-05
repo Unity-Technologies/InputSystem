@@ -27,6 +27,9 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: common usages are on all layouts but only make sense for devices
 
+////REVIEW: useStateFrom seems like a half-measure; it solves the problem of setting up state blocks but they often also
+////        require a specific set of processors
+
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
@@ -94,6 +97,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// This field is required.
             /// </remarks>
             /// <seealso cref="isModifyingChildControlByPath"/>
+            /// <seealso cref="InputControlAttribute.name"/>
             public InternedString name;
 
             public InternedString layout;
@@ -207,7 +211,7 @@ namespace UnityEngine.InputSystem.Layouts
                 var result = new ControlItem();
 
                 result.name = name;
-                Debug.Assert(!name.IsEmpty());
+                Debug.Assert(!name.IsEmpty(), "Name must not be empty");
                 result.isModifyingChildControlByPath = isModifyingChildControlByPath;
 
                 result.displayName = string.IsNullOrEmpty(displayName) ? other.displayName : displayName;
@@ -297,6 +301,8 @@ namespace UnityEngine.InputSystem.Layouts
 
         public FourCC stateFormat => m_StateFormat;
 
+        public int stateSizeInBytes => m_StateSizeInBytes;
+
         public IEnumerable<InternedString> baseLayouts => m_BaseLayouts;
 
         public IEnumerable<InternedString> appliedOverrides => m_AppliedOverrides;
@@ -342,6 +348,7 @@ namespace UnityEngine.InputSystem.Layouts
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
 
+                // Does not use FindControl so that we don't force-intern the given path string.
                 if (m_Controls != null)
                 {
                     for (var i = 0; i < m_Controls.Length; ++i)
@@ -357,6 +364,9 @@ namespace UnityEngine.InputSystem.Layouts
 
         public ControlItem? FindControl(InternedString path)
         {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
             if (m_Controls == null)
                 return null;
 
@@ -369,18 +379,80 @@ namespace UnityEngine.InputSystem.Layouts
             return null;
         }
 
+        public ControlItem? FindControlIncludingArrayElements(string path, out int arrayIndex)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            arrayIndex = -1;
+            if (m_Controls == null)
+                return null;
+
+            var arrayIndexAccumulated = 0;
+            var lastDigitIndex = path.Length;
+            while (lastDigitIndex > 0 && char.IsDigit(path[lastDigitIndex - 1]))
+            {
+                --lastDigitIndex;
+                arrayIndexAccumulated *= 10;
+                arrayIndexAccumulated += path[lastDigitIndex] - '0';
+            }
+
+            var arrayNameLength = 0;
+            if (lastDigitIndex < path.Length && lastDigitIndex > 0) // Protect against name being all digits.
+                arrayNameLength = lastDigitIndex;
+
+            for (var i = 0; i < m_Controls.Length; ++i)
+            {
+                ref var control = ref m_Controls[i];
+                if (string.Compare(control.name, path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return control;
+
+                ////FIXME: what this can't handle is "outerArray4/innerArray5"; not sure we care, though
+                // NOTE: This will *not* match something like "touch4/tap". Which is what we want.
+                //       In case there is a ControlItem
+                if (control.isArray && arrayNameLength > 0 && arrayNameLength == control.name.length &&
+                    string.Compare(control.name.ToString(), 0, path, 0, arrayNameLength,
+                        StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    arrayIndex = arrayIndexAccumulated;
+                    return control;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Return the type of values produced by controls created from the layout.
+        /// </summary>
+        /// <returns>The value type of the control or null if it cannot be determined.</returns>
+        /// <remarks>
+        /// This method only returns the statically inferred value type. This type corresponds
+        /// to the type argument to <see cref="InputControl{TValue}"/> in the inheritance hierarchy
+        /// of <see cref="type"/>. As the type used by the layout may not inherit from
+        /// <see cref="InputControl{TValue}"/>, this may mean that the value type cannot be inferred
+        /// and the method will return null.
+        /// </remarks>
+        /// <seealso cref="InputControl.valueType"/>
+        public Type GetValueType()
+        {
+            return TypeHelpers.GetGenericTypeArgumentFromHierarchy(type, typeof(InputControl<>), 0);
+        }
+
         /// <summary>
         /// Build a layout programmatically. Primarily for use by layout builders
         /// registered with the system.
         /// </summary>
         /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
-        public struct Builder
+        public class Builder
         {
-            public string name;
-            public Type type;
-            public FourCC stateFormat;
-            public string extendsLayout;
-            public bool? updateBeforeRender;
+            public string name { get; set; }
+            public string displayName { get; set; }
+            public Type type { get; set; }
+            public FourCC stateFormat { get; set; }
+            public int stateSizeInBytes { get; set; }
+            public string extendsLayout { get; set; }
+            public bool? updateBeforeRender { get; set; }
 
             private int m_ControlCount;
             private ControlItem[] m_Controls;
@@ -390,21 +462,26 @@ namespace UnityEngine.InputSystem.Layouts
             public struct ControlBuilder
             {
                 internal Builder builder;
-                internal ControlItem[] controls;
                 internal int index;
+
+                public ControlBuilder WithDisplayName(string displayName)
+                {
+                    builder.m_Controls[index].displayName = displayName;
+                    return this;
+                }
 
                 public ControlBuilder WithLayout(string layout)
                 {
                     if (string.IsNullOrEmpty(layout))
                         throw new ArgumentException("Layout name cannot be null or empty", nameof(layout));
 
-                    controls[index].layout = new InternedString(layout);
+                    builder.m_Controls[index].layout = new InternedString(layout);
                     return this;
                 }
 
                 public ControlBuilder WithFormat(FourCC format)
                 {
-                    controls[index].format = format;
+                    builder.m_Controls[index].format = format;
                     return this;
                 }
 
@@ -415,25 +492,25 @@ namespace UnityEngine.InputSystem.Layouts
 
                 public ControlBuilder WithByteOffset(uint offset)
                 {
-                    controls[index].offset = offset;
+                    builder.m_Controls[index].offset = offset;
                     return this;
                 }
 
                 public ControlBuilder WithBitOffset(uint bit)
                 {
-                    controls[index].bit = bit;
+                    builder.m_Controls[index].bit = bit;
                     return this;
                 }
 
                 public ControlBuilder WithSynthetic(bool value)
                 {
-                    controls[index].isSynthetic = value;
+                    builder.m_Controls[index].isSynthetic = value;
                     return this;
                 }
 
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
-                    controls[index].sizeInBits = sizeInBits;
+                    builder.m_Controls[index].sizeInBits = sizeInBits;
                     return this;
                 }
 
@@ -445,10 +522,10 @@ namespace UnityEngine.InputSystem.Layouts
                     for (var i = 0; i < usages.Length; ++i)
                         if (usages[i].IsEmpty())
                             throw new ArgumentException(
-                                $"Empty usage entry at index {i} for control '{controls[index].name}' in layout '{builder.name}'",
+                                $"Empty usage entry at index {i} for control '{builder.m_Controls[index].name}' in layout '{builder.name}'",
                                 nameof(usages));
 
-                    controls[index].usages = new ReadOnlyArray<InternedString>(usages);
+                    builder.m_Controls[index].usages = new ReadOnlyArray<InternedString>(usages);
                     return this;
                 }
 
@@ -465,20 +542,39 @@ namespace UnityEngine.InputSystem.Layouts
 
                 public ControlBuilder WithParameters(string parameters)
                 {
+                    if (string.IsNullOrEmpty(parameters))
+                        return this;
                     var parsed = NamedValue.ParseMultiple(parameters);
-                    controls[index].parameters = new ReadOnlyArray<NamedValue>(parsed);
+                    builder.m_Controls[index].parameters = new ReadOnlyArray<NamedValue>(parsed);
+                    return this;
+                }
+
+                public ControlBuilder WithProcessors(string processors)
+                {
+                    if (string.IsNullOrEmpty(processors))
+                        return this;
+                    var parsed = NameAndParameters.ParseMultiple(processors).ToArray();
+                    builder.m_Controls[index].processors = new ReadOnlyArray<NameAndParameters>(parsed);
                     return this;
                 }
 
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
                 {
-                    controls[index].defaultState = value;
+                    builder.m_Controls[index].defaultState = value;
+                    return this;
+                }
+
+                public ControlBuilder UsingStateFrom(string path)
+                {
+                    if (string.IsNullOrEmpty(path))
+                        return this;
+                    builder.m_Controls[index].useStateFrom = path;
                     return this;
                 }
 
                 public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
                 {
-                    controls[index].arraySize = arraySize;
+                    builder.m_Controls[index].arraySize = arraySize;
                     return this;
                 }
             }
@@ -505,12 +601,13 @@ namespace UnityEngine.InputSystem.Layouts
                     {
                         name = new InternedString(name),
                         isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                        offset = InputStateBlock.InvalidOffset,
+                        bit = InputStateBlock.InvalidOffset
                     });
 
                 return new ControlBuilder
                 {
                     builder = this,
-                    controls = m_Controls,
                     index = index
                 };
             }
@@ -518,6 +615,12 @@ namespace UnityEngine.InputSystem.Layouts
             public Builder WithName(string name)
             {
                 this.name = name;
+                return this;
+            }
+
+            public Builder WithDisplayName(string displayName)
+            {
+                this.displayName = displayName;
                 return this;
             }
 
@@ -537,6 +640,12 @@ namespace UnityEngine.InputSystem.Layouts
             public Builder WithFormat(string format)
             {
                 return WithFormat(new FourCC(format));
+            }
+
+            public Builder WithSizeInBytes(int sizeInBytes)
+            {
+                stateSizeInBytes = sizeInBytes;
+                return this;
             }
 
             public Builder Extend(string baseLayoutName)
@@ -560,7 +669,9 @@ namespace UnityEngine.InputSystem.Layouts
                     new InputControlLayout(new InternedString(name),
                         type == null && string.IsNullOrEmpty(extendsLayout) ? typeof(InputDevice) : type)
                 {
+                    m_DisplayName = displayName,
                     m_StateFormat = stateFormat,
+                    m_StateSizeInBytes = stateSizeInBytes,
                     m_BaseLayouts = new InlinedArray<InternedString>(new InternedString(extendsLayout)),
                     m_Controls = controls,
                     m_UpdateBeforeRender = updateBeforeRender
@@ -740,6 +851,13 @@ namespace UnityEngine.InputSystem.Layouts
                 if (attributes.Length == 0)
                 {
                     if (valueType == null || !typeof(InputControl).IsAssignableFrom(valueType))
+                        continue;
+
+                    // On properties, we require explicit [InputControl] attributes to
+                    // pick them up. Doing it otherwise has proven to lead too easily to
+                    // situations where you inadvertently add new controls to a layout
+                    // just because you added an InputControl-type property to a class.
+                    if (member is PropertyInfo)
                         continue;
                 }
 
@@ -1691,6 +1809,22 @@ namespace UnityEngine.InputSystem.Layouts
                 return result;
             }
 
+            // Return true if the given control layout has a value type whose values
+            // can be assigned to variables of type valueType.
+            public bool ValueTypeIsAssignableFrom(InternedString layoutName, Type valueType)
+            {
+                var controlType = GetControlTypeForLayout(layoutName);
+                if (controlType == null)
+                    return false;
+
+                var valueTypOfControl =
+                    TypeHelpers.GetGenericTypeArgumentFromHierarchy(controlType, typeof(InputControl<>), 0);
+                if (valueTypOfControl == null)
+                    return false;
+
+                return valueType.IsAssignableFrom(valueTypOfControl);
+            }
+
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)
             {
                 var layout = childLayout;
@@ -1782,6 +1916,49 @@ namespace UnityEngine.InputSystem.Layouts
 
                 // Nothing.
                 throw new LayoutNotFoundException(name);
+            }
+        }
+
+        internal static Cache s_CacheInstance;
+        internal static int s_CacheInstanceRef;
+
+        // Constructing InputControlLayouts is very costly as it tends to involve lots of reflection and
+        // piecing data together. Thus, wherever possible, we want to keep layouts around for as long as
+        // we need them yet at the same time not keep them needlessly around while we don't.
+        //
+        // This property makes a cache of layouts available globally yet implements a resource acquisition
+        // based pattern to make sure we keep the cache alive only within specific execution scopes.
+        internal static ref Cache cache
+        {
+            get
+            {
+                Debug.Assert(s_CacheInstanceRef > 0, "Must hold an instance reference");
+                return ref s_CacheInstance;
+            }
+        }
+
+        internal static CacheRefInstance CacheRef()
+        {
+            ++s_CacheInstanceRef;
+            return new CacheRefInstance {valid = true};
+        }
+
+        internal struct CacheRefInstance : IDisposable
+        {
+            public bool valid; // Make sure we can distinguish default-initialized instances.
+            public void Dispose()
+            {
+                if (!valid)
+                    return;
+
+                --s_CacheInstanceRef;
+                if (s_CacheInstanceRef <= 0)
+                {
+                    s_CacheInstance = default;
+                    s_CacheInstanceRef = 0;
+                }
+
+                valid = false;
             }
         }
     }

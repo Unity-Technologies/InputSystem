@@ -71,8 +71,8 @@ namespace UnityEngine.InputSystem
         ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
         public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
 
             return AddBinding(action, new InputBinding
             {
@@ -122,8 +122,8 @@ namespace UnityEngine.InputSystem
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
+            if (binding.path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(binding));
             action.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: should this reference actions by ID?
@@ -139,8 +139,8 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path,
             string interactions = null, string groups = null, string action = null)
         {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(path));
+            if (path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(path));
 
             return AddBinding(actionMap, new InputBinding
             {
@@ -178,8 +178,8 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            if (string.IsNullOrEmpty(binding.path))
-                throw new ArgumentException("Binding path cannot be null or empty", nameof(binding));
+            if (binding.path == null)
+                throw new ArgumentException("Binding path cannot be null", nameof(binding));
             actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindingIndex = AddBindingInternal(actionMap, binding);
@@ -532,16 +532,16 @@ namespace UnityEngine.InputSystem
                 m_CompositeIndex = compositeIndex;
             }
 
-            public CompositeSyntax With(string name, string binding, string interactions = null, string groups = null)
+            public CompositeSyntax With(string name, string binding, string groups = null)
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
                 int bindingIndex;
                 if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups)
                         .m_BindingIndex;
                 else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, interactions: interactions, groups: groups)
+                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups)
                         .m_BindingIndex;
 
                 m_ActionMap.m_Bindings[bindingIndex].name = name;
@@ -569,19 +569,6 @@ namespace UnityEngine.InputSystem
                 m_Asset = null;
                 m_ControlSchemeIndex = -1;
                 m_ControlScheme = controlScheme;
-            }
-
-            public ControlSchemeSyntax BasedOn(string baseControlScheme)
-            {
-                if (string.IsNullOrEmpty(baseControlScheme))
-                    throw new ArgumentNullException(nameof(baseControlScheme));
-
-                if (m_Asset == null)
-                    m_ControlScheme.m_BaseSchemeName = baseControlScheme;
-                else
-                    m_Asset.m_ControlSchemes[m_ControlSchemeIndex].m_BaseSchemeName = baseControlScheme;
-
-                return this;
             }
 
             public ControlSchemeSyntax WithBindingGroup(string bindingGroup)

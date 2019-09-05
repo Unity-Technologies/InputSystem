@@ -1,6 +1,7 @@
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -8,6 +9,7 @@ namespace UnityEngine.InputSystem.XR
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
     /// </summary>
     [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD")]
+    [Scripting.Preserve]
     public class XRHMD : InputDevice
     {
     }
@@ -16,6 +18,7 @@ namespace UnityEngine.InputSystem.XR
     /// The base type for all XR handed controllers.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class XRController : InputDevice
     {
         /// <summary>
@@ -39,14 +42,17 @@ namespace UnityEngine.InputSystem.XR
 
             if (deviceDescriptor != null)
             {
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded)
-                {
+#if UNITY_2019_3_OR_NEWER
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Left) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
-                }
-                else if (deviceDescriptor.deviceRole == DeviceRole.RightHanded)
-                {
+                else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-                }
+#else
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded)
+                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
+                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
+#endif
             }
         }
     }
@@ -54,6 +60,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
+    [Scripting.Preserve]
     public class XRControllerWithRumble : XRController
     {
         public void SendImpulse(float amplitude, float duration)

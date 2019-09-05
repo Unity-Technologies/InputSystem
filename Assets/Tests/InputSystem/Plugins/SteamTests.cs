@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -175,14 +176,12 @@ internal class SteamTests : InputTestFixture
     {
         var receivedStateEvent = false;
         InputSystem.onEvent +=
-            eventPtr =>
+            (eventPtr, device) =>
         {
             if (!eventPtr.IsA<StateEvent>())
                 return;
-            var device = InputSystem.GetDeviceById(eventPtr.deviceId) as TestController;
-            if (device == null)
+            if (!(device is TestController))
                 return;
-
             receivedStateEvent = true;
         };
 
@@ -255,10 +254,10 @@ internal class SteamTests : InputTestFixture
         Assert.That(generatedCode, Contains.Substring("public ButtonControl buttonAction"));
         Assert.That(generatedCode, Contains.Substring("public AxisControl axisAction"));
         Assert.That(generatedCode, Contains.Substring("public Vector2Control vector2Action"));
-        Assert.That(generatedCode, Contains.Substring("stickAction = builder.GetControl<StickControl>(\"stickAction\");"));
-        Assert.That(generatedCode, Contains.Substring("buttonAction = builder.GetControl<ButtonControl>(\"buttonAction\");"));
-        Assert.That(generatedCode, Contains.Substring("axisAction = builder.GetControl<AxisControl>(\"axisAction\");"));
-        Assert.That(generatedCode, Contains.Substring("vector2Action = builder.GetControl<Vector2Control>(\"vector2Action\");"));
+        Assert.That(generatedCode, Contains.Substring("stickAction = GetChildControl<StickControl>(\"stickAction\");"));
+        Assert.That(generatedCode, Contains.Substring("buttonAction = GetChildControl<ButtonControl>(\"buttonAction\");"));
+        Assert.That(generatedCode, Contains.Substring("axisAction = GetChildControl<AxisControl>(\"axisAction\");"));
+        Assert.That(generatedCode, Contains.Substring("vector2Action = GetChildControl<Vector2Control>(\"vector2Action\");"));
         Assert.That(generatedCode, Contains.Substring("protected override void ResolveSteamActions(ISteamControllerAPI api)"));
         Assert.That(generatedCode, Contains.Substring("map1SetHandle = api.GetActionSetHandle(\"map1\");"));
         Assert.That(generatedCode, Contains.Substring("map2SetHandle = api.GetActionSetHandle(\"map2\");"));
@@ -379,6 +378,7 @@ internal class SteamTests : InputTestFixture
     }
 
     [InputControlLayout(stateType = typeof(TestControllerState))]
+    [Preserve]
     class TestController : SteamController
     {
         public ButtonControl fire { get; private set; }

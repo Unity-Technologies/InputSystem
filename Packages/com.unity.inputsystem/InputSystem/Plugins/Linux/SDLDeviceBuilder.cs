@@ -84,50 +84,32 @@ namespace UnityEngine.InputSystem.Linux
             builder.AddControl(stickName)
                 .WithLayout("Stick")
                 .WithByteOffset((uint)byteOffset)
-                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithSizeInBits((uint)xFeature.featureSize * 8 + (uint)yFeature.featureSize * 8)
                 .WithUsages(CommonUsages.Primary2DMotion);
 
             builder.AddControl(stickName + "/x")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Axis")
                 .WithByteOffset(0)
-                .WithSizeInBits((uint)xFeature.size * 8)
-                .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538");
+                .WithSizeInBits((uint)xFeature.featureSize * 8)
+                .WithParameters("clamp=1,clampMin=-1,clampMax=1,scale,scaleFactor=65538");
 
             builder.AddControl(stickName + "/y")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Axis")
                 .WithByteOffset(4)
-                .WithSizeInBits((uint)xFeature.size * 8)
-                .WithParameters("clamp,clampMin=-1,clampMax=1,scale,scaleFactor=65538,invert");
+                .WithSizeInBits((uint)xFeature.featureSize * 8)
+                .WithParameters("clamp=1,clampMin=-1,clampMax=1,scale,scaleFactor=65538,invert");
 
             builder.AddControl(stickName + "/up")
-                .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
-                .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
-                .WithByteOffset(4)
-                .WithSizeInBits((uint)yFeature.size * 8);
+                .WithParameters("clamp=1,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert");
 
             builder.AddControl(stickName + "/down")
-                .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
-                .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538,invert=false")
-                .WithByteOffset(4)
-                .WithSizeInBits((uint)yFeature.size * 8);
+                .WithParameters("clamp=1,clampMin=0,clampMax=1,scale,scaleFactor=65538,invert=false");
 
             builder.AddControl(stickName + "/left")
-                .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
-                .WithParameters("clamp,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert")
-                .WithByteOffset(0)
-                .WithSizeInBits((uint)xFeature.size * 8);
+                .WithParameters("clamp=1,clampMin=-1,clampMax=0,scale,scaleFactor=65538,invert");
 
             builder.AddControl(stickName + "/right")
-                .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
-                .WithParameters("clamp,clampMin=0,clampMax=1,scale,scaleFactor=65538")
-                .WithByteOffset(0)
-                .WithSizeInBits((uint)xFeature.size * 8);
+                .WithParameters("clamp=1,clampMin=0,clampMax=1,scale,scaleFactor=65538");
         }
 
         private static bool IsHatX(SDLFeatureDescriptor feature)
@@ -164,36 +146,36 @@ namespace UnityEngine.InputSystem.Linux
             builder.AddControl(hatName)
                 .WithLayout("Dpad")
                 .WithByteOffset((uint)xFeature.offset)
-                .WithSizeInBits((uint)xFeature.size * 8)
+                .WithSizeInBits((uint)xFeature.featureSize * 8 + (uint)yFeature.featureSize * 8)
                 .WithUsages(CommonUsages.Hatswitch);
 
             builder.AddControl(hatName + "/up")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
                 .WithByteOffset(4)
-                .WithSizeInBits((uint)yFeature.size * 8);
+                .WithBitOffset(0)
+                .WithSizeInBits((uint)yFeature.featureSize * 8);
 
             builder.AddControl(hatName + "/down")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
                 .WithByteOffset(4)
-                .WithSizeInBits((uint)yFeature.size * 8);
+                .WithBitOffset(0)
+                .WithSizeInBits((uint)yFeature.featureSize * 8);
 
             builder.AddControl(hatName + "/left")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=0,invert")
                 .WithByteOffset(0)
-                .WithSizeInBits((uint)xFeature.size * 8);
+                .WithBitOffset(0)
+                .WithSizeInBits((uint)xFeature.featureSize * 8);
 
             builder.AddControl(hatName + "/right")
                 .WithFormat(InputStateBlock.FormatInt)
-                .WithLayout("Button")
                 .WithParameters("scale,scaleFactor=2147483647,clamp,clampMin=0,clampMax=1")
                 .WithByteOffset(0)
-                .WithSizeInBits((uint)xFeature.size * 8);
+                .WithBitOffset(0)
+                .WithSizeInBits((uint)xFeature.featureSize * 8);
         }
 
         internal InputControlLayout Build()
@@ -213,7 +195,7 @@ namespace UnityEngine.InputSystem.Linux
                     {
                         var usage = (SDLAxisUsage)feature.usageHint;
                         var featureName = LinuxSupport.GetAxisNameFromUsage(usage);
-                        var parameters = "scale,scaleFactor=65538,clamp,clampMin=-1,clampMax=1";
+                        var parameters = "scale,scaleFactor=65538,clamp=1,clampMin=-1,clampMax=1";
 
                         // If X is followed by Y, build a stick out of the two.
                         if (IsAxis(feature, SDLAxisUsage.X) && i + 1 < m_Descriptor.controls.Length)
@@ -266,7 +248,7 @@ namespace UnityEngine.InputSystem.Linux
                     {
                         var usage = (SDLAxisUsage)feature.usageHint;
                         var featureName = LinuxSupport.GetAxisNameFromUsage(usage);
-                        var parameters = "scale,scaleFactor=2147483647,clamp,clampMin=-1,clampMax=1";
+                        var parameters = "scale,scaleFactor=2147483647,clamp=1,clampMin=-1,clampMax=1";
 
                         if (i + 1 < m_Descriptor.controls.Length)
                         {

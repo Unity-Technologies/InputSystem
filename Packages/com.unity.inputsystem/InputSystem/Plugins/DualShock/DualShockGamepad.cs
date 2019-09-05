@@ -9,8 +9,10 @@ namespace UnityEngine.InputSystem.DualShock
     /// A Sony DualShock controller.
     /// </summary>
     [InputControlLayout(displayName = "PS4 Controller")]
+    [Scripting.Preserve]
     public class DualShockGamepad : Gamepad, IDualShockHaptics
     {
+        [InputControl]
         public ButtonControl touchpadButton { get; private set; }
 
         [InputControl(name = "start", displayName = "Options")]

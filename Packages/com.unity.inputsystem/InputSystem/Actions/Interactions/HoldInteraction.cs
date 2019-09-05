@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// The action is started when the control is pressed. If the control is released before the
     /// set <see cref="duration"/>, the action is canceled.
     /// </remarks>
+    [Scripting.Preserve]
     public class HoldInteraction : IInputInteraction
     {
         /// <summary>
@@ -45,7 +46,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.PerformedAndGoBackToWaiting();
+                context.Performed();
                 return;
             }
 

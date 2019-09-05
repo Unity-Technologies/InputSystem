@@ -8,9 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow associating control schemes with platforms, too?
 
-////REVIEW: move `baseScheme` entirely into JSON data only such that we resolve it during loading?
-////        (and thus support it only input assets only)
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -34,19 +31,6 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputActionAsset.AddControlScheme"/>
         public string name => m_Name;
-
-        ////REVIEW: is this actually functional? if not, kill
-        //problem: how do you do any subtractive operation? should we care?
-        //problem: this won't allow resolving things on just an InputControlScheme itself; needs context
-        /// <summary>
-        /// Name of control scheme that this scheme is based on.
-        /// </summary>
-        /// <remarks>
-        /// When the control scheme is enabled, all bindings from the base control
-        /// scheme will also be enabled. At the same time, bindings act as overrides on
-        /// bindings coming through from the base scheme.
-        /// </remarks>
-        public string baseScheme => m_BaseSchemeName;
 
         /// <summary>
         /// Binding group that is associated with the control scheme.
@@ -74,14 +58,12 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public ReadOnlyArray<DeviceRequirement> deviceRequirements => new ReadOnlyArray<DeviceRequirement>(m_DeviceRequirements);
 
-        public InputControlScheme(string name, string basedOn = null, IEnumerable<DeviceRequirement> devices = null)
+        public InputControlScheme(string name, IEnumerable<DeviceRequirement> devices = null)
+            : this()
         {
-            m_Name = name;
-            m_BaseSchemeName = string.Empty;
-            m_BindingGroup = name; // Defaults to name.
-            m_BaseSchemeName = basedOn;
-            m_DeviceRequirements = null;
+            SetNameAndBindingGroup(name);
 
+            m_DeviceRequirements = null;
             if (devices != null)
             {
                 m_DeviceRequirements = devices.ToArray();
@@ -90,9 +72,63 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal void SetNameAndBindingGroup(string name)
+        {
+            m_Name = name;
+            bindingGroup = name.Contains(InputBinding.Separator)
+                ? name.Replace(InputBinding.kSeparatorString, "")
+                : name;
+        }
+
+        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TList>(TDevices devices, TList schemes)
+            where TDevices : IReadOnlyList<InputDevice>
+            where TList : IEnumerable<InputControlScheme>
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
+            MatchResult? bestResult = null;
+            InputControlScheme? bestScheme = null;
+
+            foreach (var scheme in schemes)
+            {
+                var matchResult = scheme.PickDevicesFrom(devices);
+
+                // Ignore if scheme doesn't fit devices.
+                if (!matchResult.isSuccessfulMatch)
+                {
+                    matchResult.Dispose();
+                    continue;
+                }
+
+                // Ignore if it does fit but we already have a fit covering more of the devices we have.
+                if (bestResult != null && bestResult.Value.devices.Count > matchResult.devices.Count)
+                {
+                    matchResult.Dispose();
+                    continue;
+                }
+
+                bestResult = matchResult;
+                bestScheme = scheme;
+            }
+
+            if (bestResult != null)
+            {
+                bestResult.Value.Dispose();
+                return bestScheme;
+            }
+
+            return null;
+        }
+
         public static InputControlScheme? FindControlSchemeForDevice<TList>(InputDevice device, TList schemes)
             where TList : IEnumerable<InputControlScheme>
         {
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
             foreach (var scheme in schemes)
                 if (scheme.SupportsDevice(device))
                     return scheme;
@@ -288,7 +324,6 @@ namespace UnityEngine.InputSystem
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
-                  string.Equals(m_BaseSchemeName, other.m_BaseSchemeName, StringComparison.InvariantCultureIgnoreCase) &&
                   string.Equals(m_BindingGroup, other.m_BindingGroup, StringComparison.InvariantCultureIgnoreCase)))
                 return false;
 
@@ -332,7 +367,6 @@ namespace UnityEngine.InputSystem
             unchecked
             {
                 var hashCode = (m_Name != null ? m_Name.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (m_BaseSchemeName != null ? m_BaseSchemeName.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_BindingGroup != null ? m_BindingGroup.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_DeviceRequirements != null ? m_DeviceRequirements.GetHashCode() : 0);
                 return hashCode;
@@ -376,7 +410,6 @@ namespace UnityEngine.InputSystem
         }
 
         [SerializeField] internal string m_Name;
-        [SerializeField] internal string m_BaseSchemeName;
         [SerializeField] internal string m_BindingGroup;
         [SerializeField] internal DeviceRequirement[] m_DeviceRequirements;
 
@@ -770,8 +803,6 @@ namespace UnityEngine.InputSystem
         internal struct SchemeJson
         {
             public string name;
-            ////TODO: nuke 'basedOn'
-            public string basedOn;
             public string bindingGroup;
             public DeviceJson[] devices;
 
@@ -817,7 +848,6 @@ namespace UnityEngine.InputSystem
                 return new InputControlScheme
                 {
                     m_Name = string.IsNullOrEmpty(name) ? null : name,
-                    m_BaseSchemeName = string.IsNullOrEmpty(basedOn) ? null : basedOn,
                     m_BindingGroup = string.IsNullOrEmpty(bindingGroup) ? null : bindingGroup,
                     m_DeviceRequirements = deviceRequirements,
                 };
@@ -837,7 +867,6 @@ namespace UnityEngine.InputSystem
                 return new SchemeJson
                 {
                     name = scheme.m_Name,
-                    basedOn = scheme.m_BaseSchemeName,
                     bindingGroup = scheme.m_BindingGroup,
                     devices = devices,
                 };

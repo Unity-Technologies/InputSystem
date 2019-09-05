@@ -5,8 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.UI.Editor;
 using UnityEngine.InputSystem.Users;
@@ -14,7 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
-namespace UnityEngine.InputSystem.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// A custom inspector for the <see cref="PlayerInput"/> component.
@@ -62,7 +60,7 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized)
                 OnActionAssetChange();
             ++EditorGUI.indentLevel;
-            if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 0)
+            if (m_ControlSchemeOptions != null && m_ControlSchemeOptions.Length > 1) // Don't show if <Any> is the only option.
             {
                 // Default control scheme picker.
 
@@ -81,6 +79,15 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
                             m_ControlSchemeOptions[selected].text;
                     }
                     m_SelectedDefaultControlScheme = selected;
+                }
+
+                var neverAutoSwitchProperty = serializedObject.FindProperty("m_NeverAutoSwitchControlSchemes");
+                var neverAutoSwitchValueOld = neverAutoSwitchProperty.boolValue;
+                var neverAutoSwitchValueNew = !EditorGUILayout.Toggle(m_AutoSwitchText, !neverAutoSwitchValueOld);
+                if (neverAutoSwitchValueOld != neverAutoSwitchValueNew)
+                {
+                    neverAutoSwitchProperty.boolValue = neverAutoSwitchValueNew;
+                    serializedObject.ApplyModifiedProperties();
                 }
             }
             if (m_ActionMapOptions != null && m_ActionMapOptions.Length > 0)
@@ -449,7 +456,7 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
             m_SelectedDefaultControlScheme = 0;
             var controlSchemes = asset.controlSchemes;
             m_ControlSchemeOptions = new GUIContent[controlSchemes.Count + 1];
-            m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
+            m_ControlSchemeOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<Any>"));
             ////TODO: sort alphabetically
             for (var i = 0; i < controlSchemes.Count; ++i)
             {
@@ -499,12 +506,18 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
             EditorGUIUtility.TrTextContent("Behavior",
                 "Determine how notifications should be sent when an input-related event associated with the player happens.");
         [NonSerialized] private readonly GUIContent m_DefaultControlSchemeText =
-            EditorGUIUtility.TrTextContent("Default Control Scheme", "Which control scheme to try by default. If not set, PlayerInput "
+            EditorGUIUtility.TrTextContent("Default Scheme", "Which control scheme to try by default. If not set, PlayerInput "
                 + "will simply go through all control schemes in the action asset and try one after the other. If set, PlayerInput will try "
                 + "the given scheme first but if using that fails (e.g. when not required devices are missing) will fall back to trying the other "
                 + "control schemes in order.");
         [NonSerialized] private readonly GUIContent m_DefaultActionMapText =
-            EditorGUIUtility.TrTextContent("Default Action Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
+            EditorGUIUtility.TrTextContent("Default Map", "Action map to enable by default. If not set, no actions will be enabled by default.");
+        [NonSerialized] private readonly GUIContent m_AutoSwitchText =
+            EditorGUIUtility.TrTextContent("Auto-Switch",
+                "By default, when there is only a single PlayerInput, the player "
+                + "is allowed to freely switch between control schemes simply by starting to use a different device. By toggling this property off, this "
+                + "behavior is disabled and even with a single player, the player will stay locked onto the explicitly selected control scheme. Note "
+                + "that you can still change control schemes explicitly through the PlayerInput API.\n\nWhen there are multiple PlayerInputs in the game, auto-switching is disabled automatically regardless of the value of this property.");
         [NonSerialized] private readonly GUIContent m_DebugText = EditorGUIUtility.TrTextContent("Debug");
         [NonSerialized] private GUIContent m_UIPropertyText;
         [NonSerialized] private GUIContent m_CameraPropertyText;

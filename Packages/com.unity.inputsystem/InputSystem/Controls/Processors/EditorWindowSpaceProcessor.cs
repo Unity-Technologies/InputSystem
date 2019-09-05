@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.ComponentModel;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -17,6 +18,8 @@ namespace UnityEngine.InputSystem.Processors
     /// the coordinates it receives.
     /// </remarks>
     /// <seealso cref="Pointer.position"/>
+    [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
         public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
@@ -29,11 +32,15 @@ namespace UnityEngine.InputSystem.Processors
                 (EditorApplication.isPlaying && Application.isFocused))
                 return value;
 
-            var command = QueryEditorWindowCoordinatesCommand.Create(value);
-            ////TODO: don't issue this on the device itself but rather on the system mouse; this way
-            ////      it's not necessary for all pointer devices to implement the IOCTL separately
-            if (control.device.ExecuteCommand(ref command) > 0)
-                return command.inOutCoordinates;
+            if (Mouse.s_PlatformMouseDevice != null)
+            {
+                var command = QueryEditorWindowCoordinatesCommand.Create(value);
+                // Not all pointer devices implement the editor window position IOCTL,
+                // so we try the global mouse device if available.
+                if (Mouse.s_PlatformMouseDevice.ExecuteCommand(ref command) > 0)
+                    return command.inOutCoordinates;
+            }
+
             return value;
         }
     }

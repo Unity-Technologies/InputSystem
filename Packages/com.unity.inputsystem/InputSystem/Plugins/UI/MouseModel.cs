@@ -184,6 +184,18 @@ namespace UnityEngine.InputSystem.UI
         public int pointerId { get; private set; }
 
         /// <summary>
+        /// Used by InputSystemUIInputModel to map this MouseModel to a device, to map incoming action callbacks to pointer models
+        /// (so we can handle multiple independent pointers/touches).
+        /// </summary>
+        public InputDevice device { get; private set; }
+
+        /// <summary>
+        /// Used by InputSystemUIInputModel to map this MouseModel to a touch, to map incoming action callbacks to pointer models
+        /// (so we can handle multiple independent pointers/touches).
+        /// </summary>
+        public int touchId { get; private set; }
+
+        /// <summary>
         /// A flag representing whether any mouse data has changed this frame, meaning that events should be processed.
         /// </summary>
         /// <remarks>
@@ -279,9 +291,11 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        public MouseModel(int pointerId)
+        public MouseModel(int pointerId, InputDevice device, int touchId)
         {
             this.pointerId = pointerId;
+            this.device = device;
+            this.touchId = touchId;
             changedThisFrame = false;
             m_Position = deltaPosition = m_ScrollDelta = Vector2.zero;
 

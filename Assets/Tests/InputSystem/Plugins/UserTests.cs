@@ -762,6 +762,23 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanDetectUseOfUnpairedDevice_FromControlThatDoesNotSupportMagnitude()
+    {
+        ++InputUser.listenForUnpairedDeviceActivity;
+
+        var receivedControls = new List<InputControl>();
+        InputUser.onUnpairedDeviceUsed +=
+            (control, eventPtr) => { receivedControls.Add(control); };
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Set(mouse.delta, new Vector2(0, 0.234f));
+
+        Assert.That(receivedControls, Is.EquivalentTo(new[] { mouse.delta.y }));
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CanDetectUseOfUnpairedDevice()
     {
         // Instead of adding a standard Gamepad, add a custom one that has a noisy gyro
@@ -781,7 +798,7 @@ internal class UserTests : InputTestFixture
 
         var receivedControls = new List<InputControl>();
         InputUser.onUnpairedDeviceUsed +=
-            control => { receivedControls.Add(control); };
+            (control, eventPtr) => { receivedControls.Add(control); };
 
         InputSystem.RegisterLayout(gamepadWithNoisyGyro);
         var gamepad = (Gamepad)InputSystem.AddDevice("GamepadWithNoisyGyro");
@@ -846,7 +863,7 @@ internal class UserTests : InputTestFixture
 
         var receivedControls = new List<InputControl>();
         InputUser.onUnpairedDeviceUsed +=
-            control =>
+            (control, eventPtr) =>
         {
             InputUser.PerformPairingWithDevice(control.device);
             receivedControls.Add(control);

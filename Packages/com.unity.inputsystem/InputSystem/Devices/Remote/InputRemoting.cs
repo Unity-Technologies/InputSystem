@@ -200,12 +200,10 @@ namespace UnityEngine.InputSystem
             Send(message);
         }
 
-        private unsafe void SendEvent(InputEventPtr eventPtr)
+        private unsafe void SendEvent(InputEventPtr eventPtr, InputDevice device)
         {
             if (m_Subscribers == null)
                 return;
-
-            var device = m_LocalManager.TryGetDeviceById(eventPtr.deviceId);
 
             ////REVIEW: we probably want to have better control over this and allow producing local events
             ////        against remote devices which *are* indeed sent across the wire

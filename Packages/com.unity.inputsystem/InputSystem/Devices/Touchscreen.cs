@@ -49,41 +49,42 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
-        [InputControl(layout = "Integer")]
+        [InputControl(displayName = "Touch ID", layout = "Integer")]
         [FieldOffset(0)]
         public int touchId;
 
-        [InputControl]
+        [InputControl(displayName = "Position")]
         [FieldOffset(4)]
         public Vector2 position;
 
-        [InputControl]
+        [InputControl(displayName = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
-        [InputControl(layout = "Axis")]
+        [InputControl(displayName = "Pressure", layout = "Axis")]
         [FieldOffset(20)]
         public float pressure;
 
-        [InputControl]
+        [InputControl(displayName = "Radius")]
         [FieldOffset(24)]
         public Vector2 radius;
 
-        [InputControl(name = "phase", layout = "TouchPhase")]
-        [InputControl(name = "press", layout = "TouchPress", useStateFrom = "phase")]
+        [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
+        [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
         public byte phaseId;
 
-        [InputControl(name = "tapCount", layout = "Integer")]
+        [InputControl(name = "tapCount", displayName = "Tap Count", layout = "Integer")]
         [FieldOffset(33)]
         public byte tapCount;
 
-        [InputControl(layout = "Digital")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(34)]
-        public byte displayIndex;
+        byte displayIndex;
 
-        [InputControl(name = "indirectTouch", layout = "Button", bit = 0)]
-        [InputControl(name = "tap", layout = "Button", bit = 5)]
+        [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0)]
+        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
         [FieldOffset(35)]
         public byte flags;
 
@@ -93,10 +94,10 @@ namespace UnityEngine.InputSystem.LowLevel
         internal int padding;
 
         // NOTE: The following data is NOT sent by native but rather data we add on the managed side to each touch.
-        [InputControl(name = "startTime", layout  = "Double")]
+        [InputControl(displayName = "Start Time", layout  = "Double")]
         [FieldOffset(40)]
         public double startTime; // In *external* time, i.e. currentTimeOffsetToRealtimeSinceStartup baked in.
-        [InputControl]
+        [InputControl(displayName = "Start Position")]
         [FieldOffset(48)]
         public Vector2 startPosition;
 
@@ -206,31 +207,26 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Having this touch be its own separate state and own separate control allows actions to track the
         /// state of the primary touch even if the touch moves from one finger to another in <see cref="touchData"/>.
         /// </remarks>
-        [InputControl(name = "primaryTouch", layout = "Touch", synthetic = true)]
+        [InputControl(name = "primaryTouch", displayName = "Primary Touch", layout = "Touch", synthetic = true)]
+        [InputControl(name = "primaryTouch/tap", usage = "PrimaryAction")]
+
         // Add controls compatible with what Pointer expects and redirect their
         // state to the state of touch0 so that this essentially becomes our
         // pointer control.
         // NOTE: Some controls from Pointer don't make sense for touch and we "park"
         //       them by assigning them invalid offsets (thus having automatic state
         //       layout put them at the end of our fixed state).
-        [InputControl(name = "pointerId", useStateFrom = "primaryTouch/touchId")]
         [InputControl(name = "position", useStateFrom = "primaryTouch/position")]
         [InputControl(name = "delta", useStateFrom = "primaryTouch/delta")]
         [InputControl(name = "pressure", useStateFrom = "primaryTouch/pressure")]
         [InputControl(name = "radius", useStateFrom = "primaryTouch/radius")]
-        [InputControl(name = "displayIndex", useStateFrom = "primaryTouch/displayIndex")]
-        [InputControl(name = "tap", useStateFrom = "primaryTouch/tap", layout = "Button", synthetic = true, usage = "PrimaryAction")]
-        [InputControl(name = "tapCount", useStateFrom = "primaryTouch/tapCount", layout = "Integer", synthetic = true)]
         [InputControl(name = "press", useStateFrom = "primaryTouch/phase", layout = "TouchPress", synthetic = true, usages = new string[0])]
-        // Touch does not support twist and tilt. These will always be at default value.
-        [InputControl(name = "twist", offset = InputStateBlock.AutomaticOffset)]
-        [InputControl(name = "tilt", offset = InputStateBlock.AutomaticOffset)]
         [FieldOffset(0)]
         public fixed byte primaryTouchData[TouchState.kSizeInBytes];
 
         internal const int kTouchDataOffset = TouchState.kSizeInBytes;
 
-        [InputControl(layout = "Touch", name = "touch", arraySize = MaxTouches)]
+        [InputControl(layout = "Touch", name = "touch", displayName = "Touch", arraySize = MaxTouches)]
         [FieldOffset(kTouchDataOffset)]
         public fixed byte touchData[MaxTouches * TouchState.kSizeInBytes];
 
@@ -312,17 +308,9 @@ namespace UnityEngine.InputSystem
     /// it is recommended to use the higher-level <see cref="Plugins.EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
+    [Scripting.Preserve]
     public class Touchscreen : Pointer, IInputStateCallbackReceiver
     {
-        /// <summary>
-        /// Button that triggers when the screen is tapped.
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        public ButtonControl tap { get; private set; }
-
-        public IntegerControl tapCount { get; private set; }
-
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
         /// </summary>
@@ -369,8 +357,6 @@ namespace UnityEngine.InputSystem
         {
             base.FinishSetup();
 
-            tap = GetChildControl<ButtonControl>("tap");
-            tapCount = GetChildControl<IntegerControl>("tapCount");
             primaryTouch = GetChildControl<TouchControl>("primaryTouch");
 
             // Find out how many touch controls we have.

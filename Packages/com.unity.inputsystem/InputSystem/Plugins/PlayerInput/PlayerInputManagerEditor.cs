@@ -3,7 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Users;
 
-namespace UnityEngine.InputSystem.PlayerInput.Editor
+namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
     /// Custom inspector for <see cref="PlayerInputManager"/>.
@@ -171,12 +171,6 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
                 fixedNumberProperty.intValue = -1;
             }
 
-            // Split-screen border.
-            var splitScreenBorderProperty = serializedObject.FindProperty("m_SplitScreenBorderWidth");
-            if (m_SplitScreenBorderLabel == null)
-                m_SplitScreenBorderLabel = new GUIContent("Border Width", splitScreenBorderProperty.tooltip);
-            EditorGUILayout.PropertyField(splitScreenBorderProperty, m_SplitScreenBorderLabel);
-
             // Split-screen area.
             var splitScreenAreaProperty = serializedObject.FindProperty("m_SplitScreenRect");
             if (m_SplitScreenAreaLabel == null)
@@ -224,7 +218,6 @@ namespace UnityEngine.InputSystem.PlayerInput.Editor
         [NonSerialized] private GUIContent m_SplitScreenLabel;
         [NonSerialized] private GUIContent m_MaintainAspectRatioLabel;
         [NonSerialized] private GUIContent m_SplitScreenAreaLabel;
-        [NonSerialized] private GUIContent m_SplitScreenBorderLabel;
         [NonSerialized] private GUIContent m_FixedNumberOfSplitScreensLabel;
         [NonSerialized] private readonly GUIContent m_EnableMaxPlayerCountLabel =
             EditorGUIUtility.TrTextContent("Limit Number of Players", "TODO");

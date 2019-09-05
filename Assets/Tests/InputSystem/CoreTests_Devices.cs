@@ -13,6 +13,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
@@ -542,6 +543,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
+    [Preserve]
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
     {
         public int addedCount;
@@ -921,13 +923,15 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
@@ -935,8 +939,12 @@ partial class CoreTests
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(gamepad));
+        Assert.That(receivedEventPtr.valid, Is.True);
+        Assert.That(receivedEventPtr.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.IsA<StateEvent>(), Is.True);
     }
 
+    [Preserve]
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
     {
         [InputControl(format = "FLT")]
@@ -967,19 +975,22 @@ partial class CoreTests
         var device = InputSystem.AddDevice<TestDeviceThatResetsStateInCallback>();
 
         var receivedCalls = 0;
-        InputDevice receivedDevice = null;
+        InputDevice receivedDevice = default;
+        InputEventPtr receivedEventPtr = default;
 
         InputState.onChange +=
-            d =>
+            (d, e) =>
         {
             ++receivedCalls;
             receivedDevice = d;
+            receivedEventPtr = e;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(receivedDevice, Is.SameAs(device));
+        Assert.That(receivedEventPtr.valid, Is.False);
     }
 
     [Test]
@@ -1021,6 +1032,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(TestDeviceFullState))]
+    [Preserve]
     private class TestDeviceIntegratingStateItself : InputDevice, IInputStateCallbackReceiver
     {
         public void OnNextUpdate()
@@ -1308,8 +1320,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Devices added directly via AddDevice() don't end up on the list of
         // available devices. Devices reported by the runtime do.
         runtime.ReportNewInputDevice(@"
@@ -1819,10 +1829,20 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_JoysticksHaveDeadzonesOnStick()
+    {
+        var joystick = InputSystem.AddDevice<Joystick>();
+
+        InputSystem.QueueStateEvent(joystick, new JoystickState {stick = new Vector2(0.001f, 0.002f)});
+        InputSystem.Update();
+
+        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_PointerDeltasDoNotAccumulateFromPreviousFrame()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var pointer = InputSystem.AddDevice<Pointer>();
 
         InputSystem.QueueStateEvent(pointer, new PointerState { delta = new Vector2(0.5f, 0.5f) });
@@ -2201,14 +2221,12 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanUseTouchscreenAsPointer()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var device = InputSystem.AddDevice<Touchscreen>();
 
         // First finger goes down.
         BeginTouch(4, new Vector2(0.123f, 0.456f), time: 0);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.123).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2220,7 +2238,7 @@ partial class CoreTests
         // First finger moves.
         MoveTouch(4, new Vector2(0.234f, 0.345f), time: 0.1);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.EqualTo(0.111).Within(0.000001));
@@ -2232,7 +2250,7 @@ partial class CoreTests
         // Second finger goes down. No effect.
         BeginTouch(5, new Vector2(0.111f, 0.222f), time: 0.2);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.234).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2245,7 +2263,7 @@ partial class CoreTests
         // end yet.
         EndTouch(4, new Vector2(0.345f, 0.456f), time: 0.3);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.EqualTo(0.111).Within(0.000001));
@@ -2257,7 +2275,7 @@ partial class CoreTests
         // Second finger moves. No effect on primary touch.
         MoveTouch(5, new Vector2(0.456f, 0.567f), time: 0.4);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2269,7 +2287,7 @@ partial class CoreTests
         // Second finger goes up. Primary touch now ends.
         EndTouch(5, new Vector2(0.777f, 0.888f), time: 0.4);
 
-        Assert.That(device.pointerId.ReadValue(), Is.EqualTo(4));
+        Assert.That(device.primaryTouch.touchId.ReadValue(), Is.EqualTo(4));
         Assert.That(device.position.x.ReadValue(), Is.EqualTo(0.345).Within(0.000001));
         Assert.That(device.position.y.ReadValue(), Is.EqualTo(0.456).Within(0.000001));
         Assert.That(device.delta.x.ReadValue(), Is.Zero.Within(0.000001));
@@ -2277,15 +2295,6 @@ partial class CoreTests
         Assert.That(device.press.isPressed, Is.False);
         Assert.That(device.press.wasPressedThisFrame, Is.False);
         Assert.That(device.press.wasReleasedThisFrame, Is.True);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_TouchscreenTapButtonIsSynthetic()
-    {
-        var touchscreen = InputSystem.AddDevice<Touchscreen>();
-
-        Assert.That(touchscreen.tap.synthetic, Is.True);
     }
 
     // Touchscreen is somewhat special in that treats its available TouchState slots like a pool
@@ -2416,8 +2425,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetStartTimeOfTouches()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
         BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
@@ -2444,8 +2451,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -2456,18 +2461,15 @@ partial class CoreTests
         // in turn is wired to the tap
         using (var allTouchTaps = new InputStateHistory<float>("<Touchscreen>/touch*/tap"))
         using (var primaryTouchTap = new InputStateHistory<float>(touchscreen.primaryTouch.tap))
-        using (var screenTap = new InputStateHistory<float>(touchscreen.tap))
         {
             allTouchTaps.StartRecording();
             primaryTouchTap.StartRecording();
-            screenTap.StartRecording();
 
             BeginTouch(4, new Vector2(0.123f, 0.234f), time: 0.1);
             BeginTouch(5, new Vector2(0.234f, 0.345f), time: 0.2);
 
             Assert.That(allTouchTaps, Is.Empty);
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             EndTouch(4, new Vector2(1, 2), time: 0.3);
             EndTouch(5, new Vector2(2, 3), time: 0.3);
@@ -2492,7 +2494,6 @@ partial class CoreTests
             // released within defaultTapTime, the fact we had to switch from one touch
             // to another on primaryTouch means we don't trigger a tap.
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             allTouchTaps.Clear();
 
@@ -2503,7 +2504,6 @@ partial class CoreTests
 
             Assert.That(allTouchTaps, Is.Empty);
             Assert.That(primaryTouchTap, Is.Empty);
-            Assert.That(screenTap, Is.Empty);
 
             // Run a single finger tap.
             BeginTouch(4, new Vector2(1, 2), time: 0.6);
@@ -2524,14 +2524,6 @@ partial class CoreTests
             Assert.That(primaryTouchTap[1].ReadValue(), Is.EqualTo(0));
             Assert.That(primaryTouchTap[0].time, Is.EqualTo(0.8));
             Assert.That(primaryTouchTap[1].time, Is.EqualTo(0.8));
-
-            Assert.That(screenTap, Has.Count.EqualTo(2));
-            Assert.That(screenTap[0].control, Is.SameAs(touchscreen.tap));
-            Assert.That(screenTap[1].control, Is.SameAs(touchscreen.tap));
-            Assert.That(screenTap[0].ReadValue(), Is.EqualTo(1));
-            Assert.That(screenTap[1].ReadValue(), Is.EqualTo(0));
-            Assert.That(screenTap[0].time, Is.EqualTo(0.8));
-            Assert.That(screenTap[1].time, Is.EqualTo(0.8));
         }
     }
 
@@ -2539,8 +2531,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanDetectTouchTaps_AndKeepTrackOfTapCounts()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // Give us known tap settings.
         InputSystem.settings.defaultTapTime = 0.5f;
         InputSystem.settings.tapRadius = 5;
@@ -2553,21 +2543,18 @@ partial class CoreTests
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(1));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(1));
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.EqualTo(1));
 
         BeginTouch(1, new Vector2(0.123f, 0.234f), time: 2);
         EndTouch(1, new Vector2(0.123f, 0.234f), time: 2);
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.EqualTo(2));
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.EqualTo(2));
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.EqualTo(2));
 
         runtime.currentTime = 10;
         InputSystem.Update();
 
         Assert.That(touchscreen.touches[0].tapCount.ReadValue(), Is.Zero);
         Assert.That(touchscreen.primaryTouch.tapCount.ReadValue(), Is.Zero);
-        Assert.That(touchscreen.tapCount.ReadValue(), Is.Zero);
     }
 
     [Test]
@@ -2666,8 +2653,6 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_TouchTimestampsFromDifferentIdsDontAffectEachOther()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         // On iOS and probably Android, when you're touching the screen with two fingers. Touches with different ids can come in different order.
         // Here's an example, in what order OS sends us touches
         // NewInput: Touch Moved 2227.000000 x 1214.000000, id = 5, time = 24.478610

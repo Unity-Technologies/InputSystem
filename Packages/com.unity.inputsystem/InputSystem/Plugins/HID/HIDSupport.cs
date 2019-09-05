@@ -28,27 +28,67 @@ namespace UnityEngine.InputSystem.HID
     /// </remarks>
     public static class HIDSupport
     {
-        public static event ShouldCreateHIDCallback shouldCreateHID
+        /// <summary>
+        /// A pair of HID usage page and HID usage number.
+        /// </summary>
+        /// <remarks>
+        /// Used to describe a HID usage for the <see cref="supportedHIDUsages"/> property.
+        /// </remarks>
+        public struct HIDPageUsage
         {
-            add => s_ShouldCreateHID.Append(value);
-            remove => s_ShouldCreateHID.Remove(value);
+            /// <summary>
+            /// The usage page.
+            /// </summary>
+            public HID.UsagePage page;
+
+            /// <summary>
+            /// A number specifying the usage on the usage page.
+            /// </summary>
+            public int usage;
+
+            /// <summary>
+            /// Create a HIDPageUsage struct by specifying a page and usage.
+            /// </summary>
+            public HIDPageUsage(HID.UsagePage page, int usage)
+            {
+                this.page = page;
+                this.usage = usage;
+            }
+
+            /// <summary>
+            /// Create a HIDPageUsage struct from the GenericDesktop usage page by specifying the usage.
+            /// </summary>
+            public HIDPageUsage(HID.GenericDesktop usage)
+            {
+                this.page = HID.UsagePage.GenericDesktop;
+                this.usage = (int)usage;
+            }
         }
 
-        internal static InlinedArray<ShouldCreateHIDCallback> s_ShouldCreateHID;
+        private static HIDPageUsage[] s_SupportedHIDUsages;
 
-        private static bool? DefaultShouldCreateHIDCallback(HID.HIDDeviceDescriptor descriptor)
+        /// <summary>
+        /// An array of HID usages the input is configured to support.
+        /// </summary>
+        /// <remarks>
+        /// The input system will only create <see cref="InputDevice"/>s for HIDs with usages
+        /// listed in this array. Any other HID will be ignored. This saves the input system from
+        /// spending resources on creating layouts and devices for HIDs which are not supported or
+        /// not usable for game input.
+        ///
+        /// By default, this includes only <see cref="HID.GenericDesktop.Joystick"/>,
+        /// <see cref="HID.GenericDesktop.Gamepad"/> and <see cref="HID.GenericDesktop.MultiAxisController"/>,
+        /// but you can set this property to include any other HID usages.
+        ///
+        /// Note that currently on macOS, the only HID usages which can be enabled are
+        /// <see cref="HID.GenericDesktop.Joystick"/>, <see cref="HID.GenericDesktop.Gamepad"/>,
+        /// <see cref="HID.GenericDesktop.MultiAxisController"/>, <see cref="HID.GenericDesktop.TabletPCControls"/>,
+        /// and <see cref="HID.GenericDesktop.AssistiveControl"/>.
+        /// </remarks>
+        public static ReadOnlyArray<HIDPageUsage> supportedHIDUsages
         {
-            if (descriptor.usagePage == HID.UsagePage.GenericDesktop)
-            {
-                switch (descriptor.usage)
-                {
-                    case (int)HID.GenericDesktop.Joystick:
-                    case (int)HID.GenericDesktop.Gamepad:
-                    case (int)HID.GenericDesktop.MultiAxisController:
-                        return true;
-                }
-            }
-            return null;
+            get => s_SupportedHIDUsages;
+            set => s_SupportedHIDUsages = value.ToArray();
         }
 
         /// <summary>
@@ -61,7 +101,12 @@ namespace UnityEngine.InputSystem.HID
 #endif
         static void Initialize()
         {
-            s_ShouldCreateHID.Append(DefaultShouldCreateHIDCallback);
+            s_SupportedHIDUsages = new[]
+            {
+                new HIDPageUsage(HID.GenericDesktop.Joystick),
+                new HIDPageUsage(HID.GenericDesktop.Gamepad),
+                new HIDPageUsage(HID.GenericDesktop.MultiAxisController),
+            };
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;

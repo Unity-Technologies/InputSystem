@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -20,6 +21,58 @@ using UnityEngine.InputSystem.Editor;
 
 partial class CoreTests
 {
+    [Test]
+    [Category("State")]
+    public void State_CanGetCurrentUpdateType()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(default(InputUpdateType)));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Manual));
+
+        #if UNITY_EDITOR
+        runtime.onShouldRunUpdate = _ => true;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetUpdateCount()
+    {
+        Assert.That(InputState.updateCount, Is.Zero);
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanGetUpdateCount_ForEditorUpdates()
+    {
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+    }
+
     [Test]
     [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
@@ -414,22 +467,18 @@ partial class CoreTests
         runtime.onShouldRunUpdate = _ => true;
 
         var receivedUpdate = false;
-        InputUpdateType? receivedUpdateType = null;
         InputSystem.onBeforeUpdate +=
-            type =>
+            () =>
         {
             Assert.That(receivedUpdate, Is.False);
             receivedUpdate = true;
-            receivedUpdateType = type;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Before render. Disabled by default. Add a device that needs before-render updates
         // so that the update gets enabled.
@@ -445,17 +494,14 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
 
 #if UNITY_EDITOR
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Editor.
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
 #endif
     }
 
@@ -466,8 +512,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitorFired = false;
@@ -556,7 +600,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputSystem.settings.timesliceEvents = false;
         InputEditorUserSettings.lockInputToGameView = false;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -609,6 +652,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
@@ -821,6 +865,38 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromTimeoutCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var timeoutCount = 0;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, time, eventPtr, monitorIndex) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                ++timeoutCount;
+                InputState.AddChangeMonitorTimeout(control, monitor, time + 1.5);
+            });
+
+        InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
+
+        // Trigger first timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(1));
+
+        // Trigger second timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_StateChangeMonitor_CanBeAddedFromMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -872,6 +948,25 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_RemovingMonitorRemovesTimeouts()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.Fail("Should not reach here");
+            });
+        InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
+        InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
+
+        runtime.currentTime = 4;
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanThrowExceptionFromStateChangeMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -892,7 +987,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.onEvent += eventPtr => Assert.Fail("No event should be triggered");
+        InputSystem.onEvent += (e, d) => Assert.Fail("No event should be triggered");
 
         InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
 
@@ -1041,8 +1136,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanRecordHistory()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
@@ -1323,8 +1416,6 @@ partial class CoreTests
     [Category("State")]
     public unsafe void State_CanCopyRecordedHistory_FromOneHistoryToAnother()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history1 = new InputStateHistory<float>(gamepad.leftTrigger))
         using (var history2 = new InputStateHistory<float>())

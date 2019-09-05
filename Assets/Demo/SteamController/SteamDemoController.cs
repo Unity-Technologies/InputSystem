@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Steam;
 #if UNITY_EDITOR
@@ -35,14 +36,23 @@ public class SteamDemoController : SteamController
         InputSystem.RegisterLayout<SteamDemoController>(matches: deviceMatcher);
     }
 
+    [InputControl]
     public StickControl move { get; protected set; }
+    [InputControl]
     public Vector2Control look { get; protected set; }
+    [InputControl]
     public ButtonControl fire { get; protected set; }
+    [InputControl]
     public ButtonControl jump { get; protected set; }
+    [InputControl]
     public ButtonControl menu { get; protected set; }
+    [InputControl]
     public ButtonControl steamEnterMenu { get; protected set; }
+    [InputControl]
     public Vector2Control navigate { get; protected set; }
+    [InputControl]
     public ButtonControl click { get; protected set; }
+    [InputControl]
     public ButtonControl steamExitMenu { get; protected set; }
 
     protected override void FinishSetup()
@@ -85,6 +95,7 @@ public class SteamDemoController : SteamController
     public SteamHandle<InputAction> navigateHandle { get; private set; }
     public SteamHandle<InputAction> clickHandle { get; private set; }
     public SteamHandle<InputAction> steamExitMenuHandle { get; private set; }
+
     private SteamActionSetInfo[] m_ActionSets;
     public override ReadOnlyArray<SteamActionSetInfo> steamActionSets
     {
@@ -125,7 +136,10 @@ public unsafe struct SteamDemoControllerState : IInputStateTypeInfo
 {
     public FourCC format
     {
-        get { return new FourCC('S', 't', 'e', 'a'); }
+        get
+        {
+            return new FourCC('S', 't', 'e', 'a');
+        }
     }
 
     [InputControl(name = "fire", layout = "Button", bit = 0)]

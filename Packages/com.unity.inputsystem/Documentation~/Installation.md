@@ -2,7 +2,7 @@
 
 This is a short guide on how to install and activate the new input system in your Unity project.
 
->NOTE: The new input system requires Unity 2018.3+ and the new .NET 4 runtime. It does not work in projects using the old .NET 3.5 runtime.
+>NOTE: The new input system requires Unity 2019.1+ and the .NET 4 runtime. It does not work in projects using the old .NET 3.5 runtime.
 
 ## Installing the Package
 
@@ -20,7 +20,7 @@ From the list, select the latest "Input System" package and install it.
 
 By default, Unity's classic input system is active and support for the new input system is inactive. This is to allow existing Unity projects to continue to function as is.
 
-To fully switch from the old input system to the new input system for a project, go into "Edit >> Project Settings... >> Player" and change "Active Input Handling" from "Input Manager" to "Input System (Preview)".
+To fully switch from the old input system to the new input system for a project, go into "Edit >> Project Settings... >> Player" and change "Active Input Handling" from "Input Manager" to "Input System Package" (or "Input System (Preview)" in 2019.2 or older).
 
 ![Switch Active Input Handling](Images/ActiveInputHandling.png)
 

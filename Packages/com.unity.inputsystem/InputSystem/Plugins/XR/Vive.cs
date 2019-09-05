@@ -7,25 +7,62 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive VR headset.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class ViveHMD : XRHMD
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control leftEyeVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control rightEyeVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control centerEyeVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -57,25 +94,51 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive Wand controller.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class ViveWand : XRControllerWithRumble
     {
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl primary { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl trackpadTouched { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -104,34 +167,56 @@ namespace UnityEngine.InputSystem.XR
     /// A Valve Knuckles VR controller.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class KnucklesController : XRControllerWithRumble
     {
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "B",  "Primary"})]
         public ButtonControl primaryButton { get; private set; }
 
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "JoystickOrPadTouched" })]
         public ButtonControl trackpadTouched { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "Primary2DAxis" })]
         public Vector2Control trackpad { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl grip { get; private set; }
 
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "A",  "GripButton" })]
         public ButtonControl gripPressed { get; private set; }
 
-
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl trigger { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
-
 
         protected override void FinishSetup()
         {
@@ -158,11 +243,20 @@ namespace UnityEngine.InputSystem.XR
     /// An HTC Vive lighthouse.
     /// </summary>
     [InputControlLayout]
+    [Scripting.Preserve]
     public class ViveLighthouse : InputDevice
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
 
         protected override void FinishSetup()
@@ -179,13 +273,26 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// An HTC Vive tracker.
     /// </summary>
+    [Scripting.Preserve]
     public class ViveTracker : InputDevice
     {
+        [Scripting.Preserve]
+        [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         protected override void FinishSetup()
@@ -202,14 +309,23 @@ namespace UnityEngine.InputSystem.XR
     }
 
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [Scripting.Preserve]
     public class HandedViveTracker : ViveTracker
     {
+        [Scripting.Preserve]
+        [InputControl]
         public AxisControl grip { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl gripPressed { get; private set; }
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl primary { get; private set; }
+        [Scripting.Preserve]
         [InputControl(aliases = new[] { "JoystickOrPadPressed" })]
         public ButtonControl trackpadPressed { get; private set; }
-
+        [Scripting.Preserve]
+        [InputControl]
         public ButtonControl triggerPressed { get; private set; }
 
         protected override void FinishSetup()

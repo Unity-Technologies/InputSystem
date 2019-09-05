@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -173,7 +174,7 @@ partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.leftStick.up.clamp, Is.True);
+        Assert.That(gamepad.leftStick.up.clamp, Is.EqualTo(AxisControl.Clamp.AfterNormalize));
         Assert.That(gamepad.leftStick.up.clampMin, Is.EqualTo(0));
         Assert.That(gamepad.leftStick.up.clampMax, Is.EqualTo(1));
     }
@@ -236,8 +237,10 @@ partial class CoreTests
         Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 
+    [Preserve]
     class TestDeviceWithDefaultState : InputDevice
     {
+        [Preserve]
         [InputControl(defaultState = 0.1234)]
         public AxisControl control { get; set; }
     }
@@ -320,7 +323,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""rightTrigger"",
-                        ""parameters"" : ""clamp=true,clampMin=0.123,clampMax=0.456""
+                        ""parameters"" : ""clamp=1,clampMin=0.123,clampMax=0.456""
                     }
                 ]
             }
@@ -330,7 +333,7 @@ partial class CoreTests
 
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        Assert.That(device.rightTrigger.clamp, Is.True);
+        Assert.That(device.rightTrigger.clamp, Is.EqualTo(AxisControl.Clamp.BeforeNormalize));
         Assert.That(device.rightTrigger.clampMin, Is.EqualTo(0.123).Within(0.00001f));
         Assert.That(device.rightTrigger.clampMax, Is.EqualTo(0.456).Within(0.00001f));
     }
@@ -370,6 +373,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateStructWithArrayOfControls))]
+    [Preserve]
     private class TestDeviceWithArrayOfControls : InputDevice
     {
     }
@@ -434,7 +438,7 @@ partial class CoreTests
                 ""controls"" : [
                     {
                         ""name"" : ""leftStick/x"",
-                        ""parameters"" : ""clamp""
+                        ""parameters"" : ""normalize""
                     }
                 ]
             }
@@ -443,10 +447,11 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = InputDevice.Build<Gamepad>("MyDevice");
 
-        Assert.That(device.leftStick.x.clamp, Is.True);
+        Assert.That(device.leftStick.x.normalize, Is.True);
     }
 
     [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
+    [Preserve]
     private class DeviceWithCommonUsages : InputDevice
     {
     }
@@ -974,6 +979,7 @@ partial class CoreTests
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
     }
 
+    [Preserve]
     private class MyButtonControl : ButtonControl
     {
     }
@@ -1044,6 +1050,7 @@ partial class CoreTests
         Assert.Fail();
     }
 
+    [Preserve]
     private class TestLayoutType : Pointer
     {
     }
@@ -1057,6 +1064,26 @@ partial class CoreTests
         var layout = InputSystem.LoadLayout("TestLayoutType");
 
         Assert.That(layout.baseLayouts, Is.EquivalentTo(new[] {new InternedString("Pointer")}));
+    }
+
+    [Preserve]
+    class DeviceWithControlProperties : InputDevice
+    {
+        public ButtonControl propertyWithoutAttribute { get; set; }
+        [Preserve]
+        [InputControl]
+        public ButtonControl propertyWithAttribute { get; set; }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_RegisteringLayoutType_OnlyAddsPropertiesWithExplicitAttribute()
+    {
+        var device = InputSystem.AddDevice<DeviceWithControlProperties>();
+
+        Assert.That(device.TryGetChildControl("propertyWithoutAttribute"), Is.Null);
+        Assert.That(device.TryGetChildControl("propertyWithAttribute"), Is.Not.Null);
+        Assert.That(device.TryGetChildControl("propertyWithAttribute"), Is.TypeOf<ButtonControl>());
     }
 
     // We consider layouts built by layout builders as being auto-generated. We want them to
@@ -1118,6 +1145,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateStructWithPrimitiveFields))]
+    [Preserve]
     private class DeviceWithStateStructWithPrimitiveFields : InputDevice
     {
     }
@@ -1143,6 +1171,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithFixedArray))]
+    [Preserve]
     private class DeviceWithStateStructWithFixedArray : InputDevice
     {
     }
@@ -1187,6 +1216,43 @@ partial class CoreTests
         Assert.That(testControl.stateBlock.sizeInBits, Is.EqualTo(device.leftStick.x.stateBlock.sizeInBits));
         Assert.That(testControl.stateBlock.format, Is.EqualTo(device.leftStick.x.stateBlock.format));
         Assert.That(testControl.stateBlock.bitOffset, Is.EqualTo(device.leftStick.x.stateBlock.bitOffset));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanHaveOneControlUseStateOfAnotherControl_EvenWhenStateSetupIsChangedInDerivedLayout()
+    {
+        const string controlJson = @"
+            {
+                ""name"" : ""MyControl"",
+                ""extend"" : ""Vector2"",
+                ""controls"" : [
+                    { ""name"" : ""x"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""y"", ""layout"" : ""Axis"", ""useStateFrom"" : ""x"" }
+                ]
+            }
+        ";
+
+        const string deviceJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Sensor"",
+                ""controls"" : [
+                    { ""name"" : ""ctrl"", ""layout"" : ""MyControl"" },
+                    { ""name"" : ""ctrl/x"", ""format"" : ""BIT"", ""bit"" : 12, ""offset"" : 21, ""sizeInBits"" : 7 }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(controlJson);
+        InputSystem.RegisterLayout(deviceJson);
+
+        var device = InputDevice.Build<InputDevice>("MyDevice");
+
+        Assert.That(device["ctrl/y"].stateBlock.format, Is.EqualTo(new FourCC("BIT")));
+        Assert.That(device["ctrl/y"].stateBlock.sizeInBits, Is.EqualTo(7));
+        Assert.That(device["ctrl/y"].stateBlock.byteOffset, Is.EqualTo(21));
+        Assert.That(device["ctrl/y"].stateBlock.bitOffset, Is.EqualTo(12));
     }
 
     [Test]
@@ -1246,7 +1312,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(baseJson);
         InputSystem.RegisterLayout(derivedJson);
 
-        var device = InputDevice.Build<InputDevice>("Deriver");
+        var device = InputDevice.Build<InputDevice>("Derived");
 
         Assert.That(device["stick"].stateBlock.sizeInBits, Is.EqualTo(2 * 2 * 8));
     }
@@ -1329,8 +1395,10 @@ partial class CoreTests
         Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
     }
 
+    [Preserve]
     class TestDeviceWithMinMaxValue : InputDevice
     {
+        [Preserve]
         [InputControl(minValue = 0.1234f, maxValue = 0.5432f)]
         public AxisControl control { get; set; }
     }
@@ -1376,15 +1444,20 @@ partial class CoreTests
         Assert.That(layout["control"].maxValue.ToInt32(), Is.EqualTo(123));
     }
 
+    [Preserve]
     class BaseClassWithControl : InputDevice
     {
+        [Preserve]
+        [InputControl]
         public AxisControl controlFromBase { get; set; }
     }
 
+    [Preserve]
     class DerivedClassModifyingControlFromBaseClass : BaseClassWithControl
     {
         // One kink is that InputControlAttribute can only go on fields and properties
         // so we have to put it on some unrelated control.
+        [Preserve]
         [InputControl(name = "controlFromBase", format = "SHRT")]
         public ButtonControl controlFromDerived { get; set; }
     }
@@ -1489,11 +1562,14 @@ partial class CoreTests
         Assert.That(device["button"].synthetic, Is.True);
     }
 
+    [Preserve]
     class DeviceWithAutoOffsetControl : InputDevice
     {
+        [Preserve]
         [InputControl(offset = 4, sizeInBits = 32)]
         public ButtonControl button1;
 
+        [Preserve]
         [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public ButtonControl button2 { get; set; }
     }
@@ -1507,17 +1583,22 @@ partial class CoreTests
         Assert.That(device["button2"].stateBlock.byteOffset, Is.EqualTo(8));
     }
 
+    [Preserve]
     private class BaseDeviceFixedFixedOffsetControl : InputDevice
     {
+        [Preserve]
         [InputControl(offset = 4, format = "FLT")]
         public ButtonControl control;
 
+        [Preserve]
         [InputControl(offset = 8)]
         public AxisControl otherControl;
     }
 
+    [Preserve]
     private class DerivedDeviceWithAutomaticOffsetControl : BaseDeviceFixedFixedOffsetControl
     {
+        [Preserve]
         [InputControl(offset = InputStateBlock.AutomaticOffset)]
         public new ButtonControl control;
     }
@@ -1851,11 +1932,13 @@ partial class CoreTests
     }
 
     [InputControlLayout(variants = "A", stateType = typeof(StateWithTwoLayoutVariants))]
+    [Preserve]
     private class DeviceWithLayoutVariantA : InputDevice
     {
     }
 
     [InputControlLayout(variants = "B", stateType = typeof(StateWithTwoLayoutVariants))]
+    [Preserve]
     private class DeviceWithLayoutVariantB : InputDevice
     {
     }
@@ -2099,6 +2182,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(BaseInputState))]
+    [Preserve]
     private class BaseInputDevice : InputDevice
     {
     }
@@ -2109,6 +2193,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(DerivedInputState))]
+    [Preserve]
     private class DerivedInputDevice : InputDevice
     {
     }

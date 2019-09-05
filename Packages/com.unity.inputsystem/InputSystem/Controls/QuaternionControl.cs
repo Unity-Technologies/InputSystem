@@ -8,6 +8,7 @@ namespace UnityEngine.InputSystem.Controls
     /// <summary>
     /// A generic input control reading quaternion (rotation) values.
     /// </summary>
+    [Scripting.Preserve]
     public class QuaternionControl : InputControl<Quaternion>
     {
         // Accessing these components as individual controls usually doesn't make too much sense,
@@ -16,9 +17,13 @@ namespace UnityEngine.InputSystem.Controls
         // Also, it allows putting processors on the individual components which may be necessary
         // to properly convert the source data.
 
+        [InputControl(displayName = "X")]
         public AxisControl x { get; private set; }
+        [InputControl(displayName = "Y")]
         public AxisControl y { get; private set; }
+        [InputControl(displayName = "Z")]
         public AxisControl z { get; private set; }
+        [InputControl(displayName = "W")]
         public AxisControl w { get; private set; }
 
         public QuaternionControl()

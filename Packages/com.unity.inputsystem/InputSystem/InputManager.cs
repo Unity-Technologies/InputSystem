@@ -27,7 +27,7 @@ using UnityEngine.InputSystem.Editor;
 
 ////REVIEW: change the event properties over to using IObservable?
 
-////REVIEW: instead of RegisterInteraction and RegisterControlProcessor, have a generic RegisterInterface (or something)?
+////REVIEW: instead of RegisterInteraction and RegisterProcessor, have a generic RegisterInterface (or something)?
 
 ////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
 
@@ -39,10 +39,10 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
-    using DeviceStateChangeListener = Action<InputDevice>;
+    using DeviceStateChangeListener = Action<InputDevice, InputEventPtr>;
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
-    using EventListener = Action<InputEventPtr>;
-    using UpdateListener = Action<InputUpdateType>;
+    using EventListener = Action<InputEventPtr, InputDevice>;
+    using UpdateListener = Action;
 
     /// <summary>
     /// Hub of the input system.
@@ -428,6 +428,11 @@ namespace UnityEngine.InputSystem
             bool isReplacement, bool isKnownToBeDeviceLayout = false, bool isOverride = false)
         {
             ++m_LayoutRegistrationVersion;
+
+            // Force-clear layout cache. Don't clear reference count so that
+            // the cache gets cleared out properly when released in case someone
+            // is using it ATM.
+            InputControlLayout.s_CacheInstance = default;
 
             // For layouts that aren't overrides, add the name of the base
             // layout to the lookup table.
@@ -1321,6 +1326,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Clear();
+
+            // Clear timeouts pending on any control on the device.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].control?.device == device)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
@@ -1340,6 +1350,12 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+
+            // Remove pending timeouts on the monitor.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].monitor == monitor &&
+                    m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
@@ -1365,8 +1381,7 @@ namespace UnityEngine.InputSystem
                     && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
                     && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
                 {
-                    ////TODO: leave state empty and compact array lazily on traversal
-                    m_StateChangeMonitorTimeouts.RemoveAt(i);
+                    m_StateChangeMonitorTimeouts[i] = default;
                     break;
                 }
             }
@@ -1520,6 +1535,8 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
+            composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
+            composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -1588,6 +1605,10 @@ namespace UnityEngine.InputSystem
             if (ReferenceEquals(InputBindingComposite.s_Composites.table, m_Composites.table))
                 InputBindingComposite.s_Composites = new TypeTable();
 
+            // Clear layout cache.
+            InputControlLayout.s_CacheInstance = default;
+            InputControlLayout.s_CacheInstanceRef = 0;
+
             // Detach from runtime.
             if (m_Runtime != null)
             {
@@ -1627,6 +1648,7 @@ namespace UnityEngine.InputSystem
         internal int m_AvailableDeviceCount;
         internal AvailableDevice[] m_AvailableDevices; // A record of all devices reported to the system (from native or user code).
 
+        ////REVIEW: should these be weak-referenced?
         internal int m_DisconnectedDevicesCount;
         internal InputDevice[] m_DisconnectedDevices;
 
@@ -1651,7 +1673,6 @@ namespace UnityEngine.InputSystem
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
-        private bool m_HaveSentFirstUserInteractionAnalytics;
         #endif
 
         internal IInputRuntime m_Runtime;
@@ -1877,10 +1898,12 @@ namespace UnityEngine.InputSystem
 
         private unsafe void InitializeNoiseMask(InputDevice device)
         {
-            Debug.Assert(device != null);
-            Debug.Assert(device.added);
-            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer);
+            Debug.Assert(device != null, "Device must not be null");
+            Debug.Assert(device.added, "Device must have been added");
+            Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Device state block offset is invalid");
+            Debug.Assert(
+                device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer,
+                "Device state block is not contained in state buffer");
 
             var controls = device.allControls;
             var controlCount = controls.Count;
@@ -1901,12 +1924,12 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 var stateBlock = control.m_StateBlock;
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset);
-                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset);
+                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
+                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
+                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
+                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
-                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes);
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                     (int)stateBlock.sizeInBits, true);
@@ -2053,6 +2076,9 @@ namespace UnityEngine.InputSystem
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
+                ////TODO: have to handle updatecount here, too
+                InputUpdate.s_LastUpdateType = updateType;
+
                 for (var i = 0; i < m_DevicesCount; ++i)
                 {
                     var device = m_Devices[i];
@@ -2070,7 +2096,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, updateType, "onBeforeUpdate");
+            DelegateHelpers.InvokeCallbacksSafe(ref m_BeforeUpdateListeners, "onBeforeUpdate");
         }
 
         /// <summary>
@@ -2282,8 +2308,7 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = false;
-            timesliceEvents = gameIsPlayingAndHasFocus && m_Settings.timesliceEvents; // We never timeslice for editor updates.
+            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
@@ -2296,7 +2321,7 @@ namespace UnityEngine.InputSystem
                 #if ENABLE_PROFILER
                 Profiler.EndSample();
                 #endif
-                InvokeAfterUpdateCallback(updateType);
+                InvokeAfterUpdateCallback();
                 eventBuffer.Reset();
                 return;
             }
@@ -2354,25 +2379,9 @@ namespace UnityEngine.InputSystem
                 if (currentEventReadPtr->internalTime <= currentTime)
                     totalEventLag += currentTime - currentEventReadPtr->internalTime;
 
-                // Give listeners a shot at the event.
-                var listenerCount = m_EventListeners.length;
-                if (listenerCount > 0)
-                {
-                    for (var i = 0; i < listenerCount; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr));
-
-                    // If a listener marks the event as handled, we don't process it further.
-                    if (currentEventReadPtr->handled)
-                    {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        continue;
-                    }
-                }
-
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
-                if (!isBeforeRenderUpdate)
+                if (device == null)
                     device = TryGetDeviceById(currentEventReadPtr->deviceId);
                 if (device == null)
                 {
@@ -2386,6 +2395,22 @@ namespace UnityEngine.InputSystem
 
                     // No device found matching event. Ignore it.
                     continue;
+                }
+
+                // Give listeners a shot at the event.
+                var listenerCount = m_EventListeners.length;
+                if (listenerCount > 0)
+                {
+                    for (var i = 0; i < listenerCount; ++i)
+                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+
+                    // If a listener marks the event as handled, we don't process it further.
+                    if (currentEventReadPtr->handled)
+                    {
+                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
+                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                        continue;
+                    }
                 }
 
                 // Process.
@@ -2557,14 +2582,14 @@ namespace UnityEngine.InputSystem
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
-            InvokeAfterUpdateCallback(updateType);
+            InvokeAfterUpdateCallback();
             ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
         }
 
-        private void InvokeAfterUpdateCallback(InputUpdateType updateType)
+        private void InvokeAfterUpdateCallback()
         {
             for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i](updateType);
+                m_AfterUpdateListeners[i]();
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
@@ -2669,8 +2694,7 @@ namespace UnityEngine.InputSystem
 
         private void ProcessStateChangeMonitorTimeouts()
         {
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
-            if (timeoutCount == 0)
+            if (m_StateChangeMonitorTimeouts.length == 0)
                 return;
 
             // Go through the list and both trigger expired timers and remove any irrelevant
@@ -2678,7 +2702,7 @@ namespace UnityEngine.InputSystem
             // NOTE: We do not actually release any memory we may have allocated.
             var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
             var remainingTimeoutCount = 0;
-            for (var i = 0; i < timeoutCount; ++i)
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
             {
                 // If we have reset this entry in RemoveStateChangeMonitorTimeouts(),
                 // skip over it and let compaction get rid of it.
@@ -2713,7 +2737,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(eventPtr != null, "Received NULL event ptr");
 
             var stateBlockOfDevice = device.m_StateBlock;
-            var stateBlockSizeOfDevice = stateBlockOfDevice.alignedSizeInBytes;
+            var stateBlockSizeOfDevice = stateBlockOfDevice.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
             var offsetInDeviceStateToCopyTo = 0u;
             uint sizeOfStateToCopy;
             uint receivedStateSize;
@@ -2836,7 +2860,7 @@ namespace UnityEngine.InputSystem
 
             // Notify listeners.
             for (var i = 0; i < m_DeviceStateChangeListeners.length; ++i)
-                m_DeviceStateChangeListeners[i](device);
+                m_DeviceStateChangeListeners[i](device, eventPtr);
 
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
@@ -2859,7 +2883,7 @@ namespace UnityEngine.InputSystem
             // NOTE: This copying must only happen once, right after a buffer flip. Otherwise we may copy old,
             //       stale input state from the back buffer over state that has already been updated with newer
             //       data.
-            var deviceStateSize = deviceStateBlock.alignedSizeInBytes;
+            var deviceStateSize = deviceStateBlock.sizeInBits / 8; // Always byte-aligned; avoid calling alignedSizeInBytes.
             if (flippedBuffers && deviceStateSize != stateSizeInBytes)
             {
                 var backBuffer = buffers.GetBackBuffer(deviceIndex);
@@ -2971,7 +2995,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             public bool haveSentStartupAnalytics;
-            public bool haveSentFirstUserInteractionAnalytics;
             #endif
         }
 
@@ -3015,7 +3038,6 @@ namespace UnityEngine.InputSystem
 
                 #if UNITY_ANALYTICS || UNITY_EDITOR
                 haveSentStartupAnalytics = m_HaveSentStartupAnalytics,
-                haveSentFirstUserInteractionAnalytics = m_HaveSentFirstUserInteractionAnalytics,
                 #endif
             };
         }
@@ -3034,7 +3056,6 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_ANALYTICS || UNITY_EDITOR
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
-            m_HaveSentFirstUserInteractionAnalytics = state.haveSentFirstUserInteractionAnalytics;
             #endif
 
             ////REVIEW: instead of accessing globals here, we could move this to when we re-create devices

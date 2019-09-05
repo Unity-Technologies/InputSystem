@@ -28,15 +28,24 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// Several aspects of the input system can be customized to tailor how the system functions to the
-    /// specific needs of a project.
+    /// specific needs of a project. These settings are collected in this class. There is one global
+    /// settings object active at any one time. It can be accessed and set through <see cref="InputSystem.settings"/>.
+    ///
+    /// Changing a setting on the object takes effect immediately. It also triggers the
+    /// <see cref="InputSystem.onSettingsChange"/> callback.
     /// </remarks>
     /// <seealso cref="InputSystem.settings"/>
     /// <seealso cref="InputSystem.onSettingsChange"/>
     public class InputSettings : ScriptableObject
     {
         /// <summary>
-        /// Determine how the input system updates, i.e. processing pending input events.
+        /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
+        /// <remarks>
+        /// By default, input updates will automatically be triggered
+        ///
+        /// In the editor,
+        /// </remarks>
         /// <seealso cref="InputSystem.Update()"/>
         /// <seealso cref="timesliceEvents"/>
         public UpdateMode updateMode
@@ -47,26 +56,6 @@ namespace UnityEngine.InputSystem
                 if (m_UpdateMode == value)
                     return;
                 m_UpdateMode = value;
-                OnChange();
-            }
-        }
-
-        /// <summary>
-        /// If enabled, any given input event will only be processed for any given fixed or dynamic
-        /// update if it has been generated before or within the time slice allotted to the update.
-        /// </summary>
-        /// <remarks>
-        /// Normally, the input system will directly consume any input that's available regardless of when
-        /// it was produced.
-        /// </remarks>
-        public bool timesliceEvents
-        {
-            get => m_TimesliceEvents;
-            set
-            {
-                if (m_TimesliceEvents == value)
-                    return;
-                m_TimesliceEvents = value;
                 OnChange();
             }
         }
@@ -272,10 +261,6 @@ namespace UnityEngine.InputSystem
             + "before each dynamic update. This setting can be used to restrict event processing to only where the application needs it.")]
         [SerializeField] private UpdateMode m_UpdateMode = UpdateMode.ProcessEventsInDynamicUpdate;
 
-        [Tooltip("Whether events should be distributed across updates according to their timestamps. This is most relevant when fixed "
-            + "updates are enabled. If enabled, the system will compute a real-time time span corresponding to each update and will process only "
-            + "those events that have timestamps within or before that time span.")]
-        [SerializeField] private bool m_TimesliceEvents = true;
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
 

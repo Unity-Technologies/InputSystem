@@ -382,6 +382,46 @@ namespace UnityEngine.InputSystem
             return control.CompareState(control.currentStatePtr, statePtr, control.noiseMaskPtr);
         }
 
+        /// <summary>
+        /// Compare the control's stored state in <paramref name="firstStatePtr"/> to <paramref name="secondStatePtr"/>.
+        /// </summary>
+        /// <param name="firstStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/>.</param>
+        /// <param name="secondStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/></param>
+        /// <param name="maskPtr">Optional mask. If supplied, it will be used to mask the comparison between
+        /// <paramref name="firstStatePtr"/> and <paramref name="secondStatePtr"/> such that any bit not set in the
+        /// mask will be ignored even if different between the two states. This can be used, for example, to ignore
+        /// noise in the state (<see cref="InputControl.noiseMaskPtr"/>).</param>
+        /// <returns>True if the state is equivalent in both memory buffers.</returns>
+        /// <remarks>
+        /// Unlike <see cref="InputControl.CompareValue"/>, this method only compares raw memory state. If used on a stick, for example,
+        /// it may mean that this method returns false for two stick values that would compare equal using <see cref="CompareValue"/>
+        /// (e.g. if both stick values fall below the deadzone).
+        /// </remarks>
+        /// <seealso cref="InputControl.CompareValue"/>
+        public static unsafe bool CompareState(this InputControl control, void* firstStatePtr, void* secondStatePtr, void* maskPtr = null)
+        {
+            ////REVIEW: for compound controls, do we want to go check leaves so as to not pick up on non-control noise in the state?
+            ////        e.g. from HID input reports; or should we just leave that to maskPtr?
+
+            var firstPtr = (byte*)firstStatePtr + (int)control.m_StateBlock.byteOffset;
+            var secondPtr = (byte*)secondStatePtr + (int)control.m_StateBlock.byteOffset;
+            var mask = maskPtr != null ? (byte*)maskPtr + (int)control.m_StateBlock.byteOffset : null;
+
+            if (control.m_StateBlock.sizeInBits == 1)
+            {
+                // If we have a mask and the bit is set in the mask, the control is to be ignored
+                // and thus we consider it at default value.
+                if (mask != null && MemoryHelpers.ReadSingleBit(mask, control.m_StateBlock.bitOffset))
+                    return true;
+
+                return MemoryHelpers.ReadSingleBit(secondPtr, control.m_StateBlock.bitOffset) ==
+                    MemoryHelpers.ReadSingleBit(firstPtr, control.m_StateBlock.bitOffset);
+            }
+
+            return MemoryHelpers.MemCmpBitRegion(firstPtr, secondPtr,
+                control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits, mask);
+        }
+
         public static unsafe bool CompareState(this InputControl control, void* statePtr, void* maskPtr = null)
         {
             if (control == null)
@@ -465,7 +505,9 @@ namespace UnityEngine.InputSystem
             // We need to unsubtract those offsets here.
             stateOffset += device.m_StateBlock.byteOffset;
 
-            if (control.m_StateBlock.byteOffset - stateOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            // Return null if state is out of range.
+            var controlOffset = (int)control.m_StateBlock.byteOffset - stateOffset;
+            if (controlOffset < 0 || controlOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return null;
 
             return (byte*)statePtr - (int)stateOffset;

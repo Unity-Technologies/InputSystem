@@ -317,7 +317,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
         {
             // Leave menu.
 
-            user.ResumeHaptics();
+            //user.ResumeHaptics();
 
             controls.gameplay.Enable();
             controls.menu.Disable();///REVIEW: this should likely be left to the UI input module
@@ -328,7 +328,7 @@ public class DemoPlayerController : MonoBehaviour, DemoControls.IGameplayActions
         {
             // Enter menu.
 
-            user.PauseHaptics();
+            //user.PauseHaptics();
 
             controls.gameplay.Disable();
             controls.menu.Enable();///REVIEW: this should likely be left to the UI input module

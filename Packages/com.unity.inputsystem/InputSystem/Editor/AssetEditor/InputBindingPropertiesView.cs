@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Editor
         public static FourCC k_GroupsChanged => new FourCC("GRPS");
         public static FourCC k_PathChanged => new FourCC("PATH");
         public static FourCC k_CompositeTypeChanged => new FourCC("COMP");
-        public static FourCC k_CompositePartAssignmentChanged = new FourCC("PART");
+        public static FourCC k_CompositePartAssignmentChanged => new FourCC("PART");
 
         public InputBindingPropertiesView(
             SerializedProperty bindingProperty,
@@ -36,7 +36,8 @@ namespace UnityEngine.InputSystem.Editor
             m_BindingProperty = bindingProperty;
             m_GroupsProperty = bindingProperty.FindPropertyRelative("m_Groups");
             m_PathProperty = bindingProperty.FindPropertyRelative("m_Path");
-            m_BindingGroups = m_GroupsProperty.stringValue.Split(InputBinding.Separator).ToList();
+            m_BindingGroups = m_GroupsProperty.stringValue
+                .Split(new[] {InputBinding.Separator}, StringSplitOptions.RemoveEmptyEntries).ToList();
             m_ExpectedControlLayout = expectedControlLayout;
             m_ControlSchemes = controlSchemes;
 
@@ -154,6 +155,15 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var composite in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
+                if (!string.IsNullOrEmpty(m_ExpectedControlLayout))
+                {
+                    var valueType = InputBindingComposite.GetValueType(composite);
+                    if (valueType != null &&
+                        !InputControlLayout.s_Layouts.ValueTypeIsAssignableFrom(
+                            new InternedString(m_ExpectedControlLayout), valueType))
+                        continue;
+                }
+
                 if (InputBindingComposite.s_Composites.LookupTypeRegistration(composite) == compositeType)
                     selectedCompositeIndex = currentIndex;
                 var name = ObjectNames.NicifyVariableName(composite);
@@ -244,9 +254,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnBindingGroupsChanged()
         {
-            ////FIXME: changing the binding group of a GLOBAL binding when a control scheme is selected does not cause the binding to disappear from the control scheme immediately
-            ////       (same goes for the other way round)
-
             m_GroupsProperty.stringValue = string.Join(InputBinding.kSeparatorString, m_BindingGroups.ToArray());
             m_GroupsProperty.serializedObject.ApplyModifiedProperties();
 
@@ -287,7 +294,6 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent[] m_CompositeTypeOptions;
         private string[] m_CompositeTypes;
 
-        private readonly bool m_IsPartOfComposite;
         private int m_SelectedCompositePart;
         private GUIContent[] m_CompositePartOptions;
         private string[] m_CompositeParts;

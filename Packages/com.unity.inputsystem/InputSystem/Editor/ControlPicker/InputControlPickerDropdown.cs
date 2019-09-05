@@ -160,12 +160,13 @@ namespace UnityEngine.InputSystem.Editor
             parent.AddChild(deviceItem);
 
             // Add common usage variants.
-            if (m_Mode != InputControlPicker.Mode.PickDevice && layout.commonUsages.Count > 0)
+            if (layout.commonUsages.Count > 0)
             {
                 foreach (var usage in layout.commonUsages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
-                    AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
+                    if (m_Mode == InputControlPicker.Mode.PickControl)
+                        AddControlTreeItemsRecursive(layout, usageItem, layout.name, usage, searchable);
                     deviceItem.AddChild(usageItem);
                 }
                 deviceItem.AddSeparator();
@@ -278,26 +279,27 @@ namespace UnityEngine.InputSystem.Editor
         private void AddControlItem(DeviceDropdownItem parent, ControlDropdownItem parentControl,
             InputControlLayout.ControlItem control, string device, string usage, bool searchable)
         {
-            ////FIXME: this also filters children out that match the given layout filter
-            if (!LayoutMatchesExpectedControlLayoutFilter(control.layout))
-                return;
-
             // If it's an array, generate a control entry for each array element.
             for (var i = 0; i < (control.isArray ? control.arraySize : 1); ++i)
             {
                 var name = control.isArray ? control.name + i : control.name;
                 var displayName = !string.IsNullOrEmpty(control.displayName)
-                    ? (control.isArray ? control.displayName + i : control.displayName)
+                    ? (control.isArray ? $"{control.displayName} #{i}" : control.displayName)
                     : name;
 
                 var child = new ControlDropdownItem(parentControl, name, displayName,
                     device, usage, searchable);
                 child.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
-
-                parent.AddChild(child);
-
-                // Add children.
                 var controlLayout = EditorInputControlLayoutCache.TryGetLayout(control.layout);
+
+                if (LayoutMatchesExpectedControlLayoutFilter(control.layout))
+                    parent.AddChild(child);
+                else if (controlLayout.controls.Any(x => LayoutMatchesExpectedControlLayoutFilter(x.layout)))
+                {
+                    child.enabled = false;
+                    parent.AddChild(child);
+                }
+                // Add children.
                 if (controlLayout != null)
                     AddControlTreeItemsRecursive(controlLayout, parent, device, usage,
                         searchable, child);
@@ -309,10 +311,11 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var key in keyboard.children.OfType<KeyControl>())
             {
                 // If the key has a display name that differs from the key name, show it in the UI.
-                var displayName = key.name;
+                var displayName = key.m_DisplayNameFromLayout;
                 var keyDisplayName = key.displayName;
-                if (keyDisplayName.All(x => x.IsPrintable()) && keyDisplayName != key.name)
-                    displayName = $"{key.name} (Current Layout: {key.displayName})";
+                if (keyDisplayName.All(x => x.IsPrintable()) && string.Compare(keyDisplayName, displayName,
+                    StringComparison.InvariantCultureIgnoreCase) != 0)
+                    displayName = $"{displayName} (Current Layout: {key.displayName})";
 
                 var item = new ControlDropdownItem(null, key.name, displayName,
                     keyboard.layout, "", searchable);

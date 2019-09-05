@@ -141,7 +141,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOf<TValue>(TValue[] array, Predicate<TValue> predicate)
+        public static int IndexOf<TValue>(this TValue[] array, Predicate<TValue> predicate)
         {
             if (array == null)
                 return -1;
@@ -211,6 +211,7 @@ namespace UnityEngine.InputSystem.Utilities
                 // Copy contents from old array.
                 UnsafeUtility.MemCpy(newArray.GetUnsafePtr(), array.GetUnsafeReadOnlyPtr(),
                     UnsafeUtility.SizeOf<TValue>() * (newSize < oldSize ? newSize : oldSize));
+                array.Dispose();
             }
             array = newArray;
         }

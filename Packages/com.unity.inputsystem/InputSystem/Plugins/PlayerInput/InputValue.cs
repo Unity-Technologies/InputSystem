@@ -1,8 +1,9 @@
 using System;
+using System.Diagnostics;
 
 ////TODO: ToString()
 
-namespace UnityEngine.InputSystem.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Wraps around values provided by input actions.
@@ -14,6 +15,7 @@ namespace UnityEngine.InputSystem.PlayerInput
     /// the receiver from having to know about action callback specifics.
     /// </remarks>
     /// <seealso cref="InputAction"/>
+    [DebuggerDisplay("Value = {Get()}")]
     public class InputValue
     {
         /// <summary>

@@ -7,19 +7,167 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.9.1-preview] - 2099-1-1
+## [0.9.6-preview] - 2099-1-1
+
+### Fixed
+
+- Exceptions in scenes of `Visualizers` sample if respective device was not present on system (e.g. in `PenVisualizer` if no pen was present in system).
+
+#### Actions
+
+- Setting timeouts from `IInputInteraction.Process` not working as expected when processing happened in response to previous timeout expiring (#714).
+- Pending timeouts on a device not being removed when device was removed.
+
+### Changed
+
+- Replaced `HIDSupport.shouldCreateHID` event with a new `HIDSupport.supportedHIDUsages` property, which takes an array of supported usages.
+
+### Added
+
+#### Actions
+
+- Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
+- Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
+
+## [0.9.5-preview] - 2019-8-29
+
+### Fixed
+
+- Don't pass events for null devices (for devices which have not been created) to `InputSystem.onEvent` callbacks.
+- Will close debugger input state windows, when the state is no longer valid instead of throwing exceptions.
+- Fixed pointer coordinates in editor windows for non-mouse pointing devices.
+- Fixed using the input system in il2cpp when managed stripping level is set higher then "Low".
+- Device debugger window will still show when reading from specific controls throws exceptions.
+- Offsets and sizes for elements on Linux joysticks are now computed correctly.
+- Joysticks now have a deadzone processor on the stick itself.
+- Up/down/left/right on sticks are now deadzoned just like X and Y on sticks are.
+- Removed toplevel `X` and `Y` controls on HIDs when there is a `Stick/X` and `Stick/Y` added for the device.
+- HID fallback can now deal with sticks that have X and Y controls of different sizes and sitting in non-contiguous locations in the HID input report.
+- Button 1 on HID joysticks will now correctly come out as the `trigger` control. Previously, the trigger control on the joystick was left pointing to random state.
+
+#### Actions
+
+- Binding paths now show the same way in the action editor UI as they do in the control picker.
+  * For example, where before a binding to `<XInputController>/buttonSouth` was shown as `rightShoulder [XInputController]`, the same binding will now show as `A [Xbox Controller]`.
+- When deleting a control scheme, bindings are now updated. A dialog is presented that allows choosing between deleting the bindings or just unassigning them from the control scheme.
+- When renaming a control scheme, bindings are now updated. Previously the old name was in place on bindings.
+- Control scheme names can no longer be set to empty strings.
+- `PlayerInput.Instantiate` now correctly sets up a given control scheme, if specified.
+  * When passing a `controlScheme:` argument, the result used to be a correctly assigned control scheme at the `InputUser` level but no restrictions being actually applied to the bindings, i.e. every single binding was active regardless of the specified control scheme.
+- NullReferenceExceptions during event processing from `RebindingOperation`.
+
+### Changed
+
+- `InputUser.onUnpairedDeviceUsed` now receives a 2nd argument which is the event that triggered the callback.
+  * Also, the callback is now triggered __BEFORE__ the given event is processed rather than after the event has already been written to the device. This allows updating the pairing state of the system before input is processed.
+  * In practice, this means that, for example, if the user switches from keyboard&mouse to gamepad, the initial input that triggered the switch will get picked up right away.
+- `InputControlPath.ToHumanReadableString` now takes display names from registered `InputControlLayout` instances into account.
+  * This means that the method can now be used to generate strings to display in rebinding UIs.
+- `AxisControl.clamp` is now an enum-valued property rather than a bool. Can now perform clamping *before* normalization.
+
+#### Actions
+
+- When switching devices/controls on actions, the system will no longer subsequently force an initial state check on __all__ actions. Instead, every time an action's bindings get re-resolved, the system will simply cancel all on-going actions and then re-enable them the same way it would happen by manually calling `InputAction.Enable`.
+- Removed non-functional `InputControlScheme.baseScheme` API and `basedOn` serialized property. This was never fully implemented.
+
+### Added
+
+- Can right-click devices in Input Debugger (also those under "Unsupported") and select "Copy Device Description" to copy the internal `InputDeviceDescription` of the device in JSON format to the system clipboard.
+  * This information is helpful for us to debug problems related to specific devices.
+- If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
+
+## [0.9.3-preview] - 2019-8-15
+
+### Fixed
+
+- `XInputController` and `XboxOneGamepad` no longer have two extraneous, non-functional "menu" and "view" buttons.
+- Fixed `InputUser.onUnpairedDeviceUser` ignoring input on controls that do not support `EvaluateMagnitude`.
+  * This led to situations, for example, where `PlayerInput` would not initialize a control scheme switch from a `<Mouse>/delta` binding as the delta X and Y axes do not have min&max limits and thus return -1 from `EvaluateMagnitude`.
+- Fixed available processor list not updated right away when changing the action type in the Input Action editor window.
+
+#### Actions
+
+- `NullReferenceException` when the input debugger is open with actions being enabled.
+- When selecting a device to add to a control scheme, can now select devices with specific usages, too (e.g. "LeftHand" XRController).
+
+### Changed
+
+- Removed `timesliceEvents` setting - and made this tied to the update mode instead. We now always time slice when using fixed updates, and not when using dynamic updates.
+- When adding a composite, only ones compatible with the value type of the current action are shown. This will, for example, no longer display a `2D Vector` composite as an option on a floating-point button action.
+- The `InputState.onChange` callback now receives a second argument which is the event (if any) that triggered the state change on the device.
+
+### Added
+
+- `InputSystemUIInputModule` can now track multiple pointing devices separately, to allow multi-touch input - required to allow control of multiple On-Scree controls at the same time with different fingers.
+- Two new composite bindings have been added.
+  * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
+  * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
+
+## [0.9.2-preview] - 2019-8-9
+
+### Fixed
+
+- A `RebindingOperation` will now fall back to the default path generation behavior if the callback provided to `OnGeneratePath` returns null.
+- Fixed the Input Action editor window throwing exceptions when trying to view action properties.
+
+### Actions
+
+- `PlayerInput` will now copy overrides when creating duplicate actions.
+- It is now possible to use an empty binding path with a non empty override path.
+- It is now possible to use set an empty override path to disable a binding.
+- It is not possible to query the effectively used path of a binding using `effectivePath`.
+- Actions embedded into MonoBehaviour components can now have their properties edited in the inspector. Previously there was no way to get to the properties in this workflow. There is a gear icon now on the action that will open the action properties.
+
+### Changed
+
+### Added
+
+- Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
+
+## [0.9.1-preview] - 2019-8-8
 
 ### Fixed
 
 - Fixed GC heap garbage being caused by triggered by event processing.
   * This meant that every processing of input would trigger garbage being allocated on the managed heap. The culprit was a peculiarity in the C# compiler which caused a struct in `InputEventPtr.IsA` to be allocated on the heap.
+- The bindings selection popup window will now show child controls matching the current action type even if the parent control does not match.
+- Fixed `duration` values reported for Hold and Press interactions.
+- DualShock 3 on macOS:
+  * Fixed actions bound to the dpad control performing correctly.
+  * Fixed non-present touchpad button control being triggered incorrectly.
+- Fixed compile issues with switch classes on standalone Linux.
+- Leak of unmanaged memory in `InputControlList`.
 
 #### Actions
 
 - Fixed actions not updating their set of controls when the usages of a device are changed.
+- Composite bindings with the default interaction will now correctly cancel when the composite is released, even if there are multiple composite bindings on the action.
 
 ### Changed
 
+- `MouseState`, `KeyboardState`, and `GamepadState` have been made public again.
+- `PlayerInput` and `PlayerInputManager` have been moved from the `UnityEngine.InputSystem.PlayerInput` namespace to `UnityEngine.InputSystem`.
+- The signature of `InputSystem.onEvent` has changed. The callback now takes a second argument which is the device the given event is sent to (null if there's no corresponding `InputDevice`).
+  ```
+  // Before:
+  InputSystem.onEvent +=
+      eventPtr =>
+      {
+          var device = InputSystem.GetDeviceById(eventPtr.deviceId);
+          //...
+      };
+
+  // Now:
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          //...
+      };
+  ```
+- The signatures of `InputSystem.onBeforeUpdate` and `InputSystem.onAfterUpdate` have changed. The callbacks no longer receive an `InputUpdateType` argument.
+  * Use `InputState.currentUpdateType` in case you need to know the type of update being run.
+- `InputUpdateType` has been moved to the `UnityEngine.InputSystem.LowLevel` namespace.
+- `InputSystem.Update(InputUpdateType)` has been removed from the public API.
 - The way input devices are built internally has been streamlined.
   * `InputDeviceBuilder` is now internal. It is no longer necessary to access it to look up child controls. Simply use `InputControl.GetChildControl` instead.
   * To build a device without adding it to the system, call the newly added `InputDevice.Build` method.
@@ -27,6 +175,16 @@ however, it has to be formatted properly to pass verification tests.
     InputDevice.Build<Mouse>();
     ```
   * `InputSystem.SetLayoutVariant` has been removed. Layout variants can no longer be set retroactively but must be decided on as part of device creation.
+- `InputSystem.RegisterControlProcessor` has been renamed to just `InputSystem.RegisterProcessor`.
+
+#### Actions
+
+* `InputAction.ReadValue<TValue>()` is longer correlated to `InputAction.triggered`. It simply returns the current value of a bound control or composite while the action is being interacted with.
+* `InputInteractionContext.PerformedAndGoBackToWaiting` has been renamed to just `InputInteractionContext.Performed`.
+
+#### Actions
+
+- Individual composite part bindings can now no longer have interactions assigned to them as that never made any sense.
 
 ### Added
 
@@ -34,6 +192,13 @@ however, it has to be formatted properly to pass verification tests.
   * Call `InputSystem.AddDeviceUsage(device,usage)` to add additional usages to a device.
   * Call `InputSystem.RemoveDeviceUsage(device,usage)` to remove existing usages from a device.
   * `InputSystem.SetDeviceUsage(device,usage)` still exists. It will clear all existing usages from the given device.
+- A new `VisualizerSamples` sample that can be installed through the package manager.
+  * Contains two components `InputControlVisualizer` and `InputActionVisualizer` that help visualizing/debugging control/device and action activity through in-game overlays. A few sample scenes illustrate how to use them.
+
+#### Actions
+
+- Added `InputAction.ReadValueAsObject` API.
+- Added `InputAction.activeControl` API.
 
 ## [0.9.0-preview] - 2019-7-18
 

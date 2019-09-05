@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 
 ////TODO: add support for reacting to players missing devices
 
-namespace UnityEngine.InputSystem.PlayerInput
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Manages joining and leaving of players.
@@ -33,8 +34,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         public const string PlayerJoinedMessage = "OnPlayerJoined";
 
         public const string PlayerLeftMessage = "OnPlayerLeft";
-        public const string PlayerJoinFailedMessage = "OnPlayerJoinFailed";
-        public const string SplitScreenSetupChanged = "OnSplitScreenSetupChanged";
 
         /// <summary>
         /// If enabled, each player will automatically be assigned a portion of the available screen area.
@@ -97,11 +96,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         public bool maintainAspectRatioInSplitScreen => m_MaintainAspectRatioInSplitScreen;
 
         public int fixedNumberOfSplitScreens => m_FixedNumberOfSplitScreens;
-
-        /// <summary>
-        /// If this is non-zero, split-screen areas will be
-        /// </summary>
-        public float splitScreenBorderWidth => m_SplitScreenBorderWidth;
 
         /// <summary>
         /// The normalized screen rectangle available for allocating player split-screens into.
@@ -390,7 +384,6 @@ namespace UnityEngine.InputSystem.PlayerInput
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [SerializeField] internal int m_MaxPlayerCount = -1;
         [SerializeField] internal bool m_AllowJoining = true;
-        [SerializeField] internal bool m_JoinPlayersWithMissingDevices;
         [SerializeField] internal PlayerJoinBehavior m_JoinBehavior;
         [SerializeField] internal PlayerJoinedEvent m_PlayerJoinedEvent;
         [SerializeField] internal PlayerLeftEvent m_PlayerLeftEvent;
@@ -399,13 +392,12 @@ namespace UnityEngine.InputSystem.PlayerInput
         [SerializeField] internal bool m_SplitScreen;
         [SerializeField] internal bool m_MaintainAspectRatioInSplitScreen;
         [SerializeField] internal int m_FixedNumberOfSplitScreens = -1;
-        [SerializeField] internal float m_SplitScreenBorderWidth;
         [SerializeField] internal Rect m_SplitScreenRect = new Rect(0, 0, 1, 1);
 
         [NonSerialized] private bool m_JoinActionDelegateHooked;
         [NonSerialized] private bool m_UnpairedDeviceUsedDelegateHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_JoinActionDelegate;
-        [NonSerialized] private Action<InputControl> m_UnpairedDeviceUsedDelegate;
+        [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerJoinedCallbacks;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_PlayerLeftCallbacks;
 
@@ -445,7 +437,7 @@ namespace UnityEngine.InputSystem.PlayerInput
             return true;
         }
 
-        private void OnUnpairedDeviceUsed(InputControl control)
+        private void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
         {
             if (!m_AllowJoining)
                 return;

@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         public bool isActive => currentTouch.valid;
 
         /// <summary>
-        /// The current position of the finger on the screen or <code>default(Vector2)</code> if there is no
+        /// The current position of the finger on the screen or <c>default(Vector2)</c> if there is no
         /// ongoing touch.
         /// </summary>
         public Vector2 screenPosition
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         ////REVIEW: should lastTouch and currentTouch have accumulated deltas? would that be confusing?
 
         /// <summary>
-        /// The last touch that happened on the finger or <code>default(Touch)</code> (with <see cref="Touch.valid"/> being
+        /// The last touch that happened on the finger or <c>default(Touch)</c> (with <see cref="Touch.valid"/> being
         /// false) if no touch has been registered on the finger yet.
         /// </summary>
         /// <remarks>
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         }
 
         /// <summary>
-        /// The currently ongoing for the finger or <code>default(Touch)</code> (with <see cref="Touch.valid"/> abeing false)
+        /// The currently ongoing for the finger or <c>default(Touch)</c> (with <see cref="Touch.valid"/> abeing false)
         /// if no touch is currently in progress on the finger.
         /// </summary>
         public Touch currentTouch

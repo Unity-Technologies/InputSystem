@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -7,6 +6,7 @@ namespace UnityEngine.InputSystem.Controls
     /// <summary>
     /// A floating-point 3D vector control composed of three <see cref="AxisControl">AxisControls</see>.
     /// </summary>
+    [Scripting.Preserve]
     public class Vector3Control : InputControl<Vector3>
     {
         [InputControl(offset = 0, displayName = "X")]

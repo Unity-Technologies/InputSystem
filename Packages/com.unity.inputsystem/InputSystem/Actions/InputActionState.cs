@@ -110,10 +110,10 @@ namespace UnityEngine.InputSystem
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
 
-        private Action<InputUpdateType> m_OnBeforeUpdateDelegate;
-        private Action<InputUpdateType> m_OnAfterUpdateDelegate;
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
+        private Action m_OnBeforeUpdateDelegate;
+        private Action m_OnAfterUpdateDelegate;
 
         /// <summary>
         /// Initialize execution state with given resolved binding information.
@@ -212,7 +212,7 @@ namespace UnityEngine.InputSystem
         /// <param name="device">Any input device.</param>
         /// <returns>True if any of the maps in the state has the device in its <see cref="InputActionMap.devices"/>
         /// list or if any of the device's controls are contained in <see cref="controls"/>.</returns>
-        public bool IsUsingDevice(InputDevice device)
+        private bool IsUsingDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
 
@@ -246,7 +246,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
-        public bool CanUseDevice(InputDevice device)
+        private bool CanUseDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
 
@@ -363,11 +363,8 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Enable all controls on the binding.
-                // NOTE: We force an initial state check on actions here regardless of whether the action has
-                //       it enabled or not. The reason is that we use this path to temporarily disable actions
-                //       and re-enabling them should have the actions resume where they left off (where applicable).
-                EnableControls(actionState->mapIndex, bindingState->controlStartIndex, bindingState->controlCount,
-                    forceStateCheck: true);
+                EnableControls(actionState->mapIndex, bindingState->controlStartIndex,
+                    bindingState->controlCount);
             }
 
             // Make sure we get an initial state check.
@@ -655,7 +652,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
-        private void EnableControls(int mapIndex, int controlStartIndex, int numControls, bool forceStateCheck = false)
+        private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null, "State must have controls");
             Debug.Assert(controlStartIndex >= 0 && (controlStartIndex < totalControlCount || numControls == 0),
@@ -669,7 +666,7 @@ namespace UnityEngine.InputSystem
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                if (forceStateCheck || bindingStates[bindingIndex].wantsInitialStateCheck)
+                if (bindingStates[bindingIndex].wantsInitialStateCheck)
                     bindingStates[bindingIndex].initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
             }
@@ -722,9 +719,10 @@ namespace UnityEngine.InputSystem
         // NOTE: We do this as a callback from onBeforeUpdate rather than directly when the action is enabled
         //       to ensure that the callbacks happen during input processing and not randomly from wherever
         //       an action happens to be enabled.
-        private void OnBeforeInitialUpdate(InputUpdateType type)
+        private void OnBeforeInitialUpdate()
         {
-            ////TODO: deal with update type
+            if (InputState.currentUpdateType == InputUpdateType.BeforeRender)
+                return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
             UnhookOnBeforeUpdate();
@@ -776,7 +774,7 @@ namespace UnityEngine.InputSystem
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
             #if UNITY_EDITOR
-            if (InputState.currentUpdate == InputUpdateType.Editor)
+            if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
             #endif
 
@@ -849,6 +847,13 @@ namespace UnityEngine.InputSystem
                 passThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].passThrough,
             };
 
+            // If we have pending initial state checks that will run in the next update,
+            // force-reset the flag on the control that just triggered. This ensures that we're
+            // not triggering an action twice from the same state change in case the initial state
+            // check happens later (see Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice).
+            if (m_OnBeforeUpdateHooked)
+                bindingStatePtr->initialStateCheckPending = false;
+
             // If the binding is part of a composite, check for interactions on the composite
             // itself and give them a first shot at processing the value change.
             var haveInteractionsOnComposite = false;
@@ -887,7 +892,7 @@ namespace UnityEngine.InputSystem
             // If we have interactions, let them do all the processing. The presence of an interaction
             // essentially bypasses the default phase progression logic of an action.
             var interactionCount = bindingStatePtr->interactionCount;
-            if (interactionCount > 0)
+            if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
             {
                 ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
             }
@@ -1041,6 +1046,13 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
+            var actionStateControlIndex = actionState->controlIndex;
+            if (bindingStates[actionState->bindingIndex].isPartOfComposite)
+            {
+                var compositeBindingIndex = bindingStates[actionState->bindingIndex].compositeOrCompositeBindingIndex;
+                actionStateControlIndex = bindingStates[compositeBindingIndex].controlStartIndex;
+            }
+
             // If the control is actuated *less* then the current level of actuation we
             // recorded for the action *and* the control that changed is the one that is currently
             // driving the action, we have to check whether there is another actuation
@@ -1049,7 +1061,7 @@ namespace UnityEngine.InputSystem
             {
                 // If we're not currently driving the action, it's simple. Doesn't matter that we lowered
                 // actuation as we didn't have the highest actuation anyway.
-                if (triggerControlIndex != actionState->controlIndex)
+                if (triggerControlIndex != actionStateControlIndex)
                 {
                     Profiler.EndSample();
                     ////REVIEW: should we *count* actuations instead? (problem is that then we have to reliably determine when a control
@@ -1164,6 +1176,10 @@ namespace UnityEngine.InputSystem
             //       before we let it drive the action.
             if (Mathf.Approximately(trigger.magnitude, actionState->magnitude))
             {
+                // However, if we have changed the control to a different control on the same composite, we *should* let
+                // it drive the action - this is like a direction change on the same control.
+                if (bindingStates[trigger.bindingIndex].isPartOfComposite && triggerControlIndex == actionStateControlIndex)
+                    return false;
                 if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex)
                     actionState->hasMultipleConcurrentActuations = true;
                 return true;
@@ -1276,6 +1292,7 @@ namespace UnityEngine.InputSystem
                     controlIndex = controlIndex,
                     bindingIndex = bindingIndex,
                     interactionIndex = interactionIndex,
+                    startTime = currentState.startTime
                 },
                 timerHasExpired = true,
             };
@@ -1408,14 +1425,15 @@ namespace UnityEngine.InputSystem
                         var index = interactionStartIndex + i;
                         if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
                         {
+                            var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
                                 phase = InputActionPhase.Started,
                                 controlIndex = interactionStates[index].triggerControlIndex,
                                 bindingIndex = trigger.bindingIndex,
                                 interactionIndex = index,
-                                time = trigger.time,
-                                startTime = interactionStates[index].startTime
+                                time = startTime,
+                                startTime = startTime,
                             };
                             ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
                             break;

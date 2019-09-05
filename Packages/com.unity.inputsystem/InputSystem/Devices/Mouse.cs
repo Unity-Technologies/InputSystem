@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: State layout must match with MouseInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 30)]
-    internal struct MouseState : IInputStateTypeInfo
+    public struct MouseState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
 
@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public Vector2 delta;
 
         ////REVIEW: have half-axis buttons on the scroll axes? (up, down, left, right)
-        [InputControl]
+        [InputControl(displayName = "Scroll")]
         [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
         [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
@@ -45,17 +45,16 @@ namespace UnityEngine.InputSystem.LowLevel
         ////       "infer" USHT as the format which will then end up with a layout where two 4 byte float controls are "packed" into a 16bit sized parent;
         ////       in other words, setting VEC2 here manually should *not* be necessary
         [InputControl(name = "pressure", layout = "Axis", usage = "Pressure", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
-        [InputControl(name = "twist", layout = "Axis", usage = "Twist", offset = InputStateBlock.AutomaticOffset, format = "FLT", sizeInBits = 32)]
         [InputControl(name = "radius", layout = "Vector2", usage = "Radius", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
-        [InputControl(name = "tilt", layout = "Vector2", usage = "Tilt", offset = InputStateBlock.AutomaticOffset, format = "VEC2", sizeInBits = 64)]
         [InputControl(name = "pointerId", layout = "Digital", format = "BIT", sizeInBits = 1, offset = InputStateBlock.AutomaticOffset)] // Will stay at 0.
         public ushort buttons;
 
-        [InputControl(layout = "Integer")]
+        // Not currently used, but still needed in this struct for padding,
+        // as il2cpp does not implement FieldOffset.
         [FieldOffset(26)]
-        public ushort displayIndex;
+        ushort displayIndex;
 
-        [InputControl(layout = "Integer")]
+        [InputControl(layout = "Integer", displayName = "Click Count")]
         [FieldOffset(28)]
         public ushort clickCount;
 
@@ -70,18 +69,33 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
     }
 
-    internal enum MouseButton
+    /// <summary>
+    /// Button indices for <see cref="MouseState.buttons"/>.
+    /// </summary>
+    public enum MouseButton
     {
+        /// <summary>
+        /// Left mouse button.
+        /// </summary>
         Left,
+        /// <summary>
+        /// Right mouse button.
+        /// </summary>
         Right,
+        /// <summary>
+        /// Middle mouse button.
+        /// </summary>
         Middle,
+        /// <summary>
+        /// First side button.
+        /// </summary>
         Forward,
+        /// <summary>
+        /// Second side button.
+        /// </summary>
         Back
     }
 }
@@ -98,6 +112,7 @@ namespace UnityEngine.InputSystem
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
+    [UnityEngine.Scripting.Preserve]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>
@@ -142,6 +157,16 @@ namespace UnityEngine.InputSystem
             base.OnRemoved();
             if (current == this)
                 current = null;
+        }
+
+        internal static Mouse s_PlatformMouseDevice;
+
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            if (native && s_PlatformMouseDevice == null)
+                s_PlatformMouseDevice = this;
         }
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
