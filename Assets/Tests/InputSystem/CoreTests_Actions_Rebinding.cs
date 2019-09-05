@@ -131,6 +131,40 @@ internal partial class CoreTests
         Assert.That(() => map.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_ApplyingOverride_CausesPerActionBindingAndControlCachesToBeFlushed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // NOTE: We're not using a singleton action here as those will not have per-action
+        //       caches anyway (their binding and control data is simply the same as that
+        //       of their hidden internal map).
+        var actionMap = new InputActionMap();
+        actionMap.AddAction("action1", binding: "<Gamepad>/leftTrigger");
+        var action = actionMap.AddAction("action2", binding: "<Gamepad>/buttonSouth");
+        actionMap.AddAction("action3", binding: "<Gamepad>/rightTrigger");
+
+        // Add a binding to the action that now comes after the binding to action3 we
+        // just added.
+        action.AddBinding("<Keyboard>/space");
+
+        // Ping bindings and controls to make sure the per-action get put in place.
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        // Cast a wide net by default so that we get a marked difference
+        // in the controls array.
+        action.ApplyBindingOverride(0, new InputBinding { overridePath = "<Gamepad>/button*" });
+
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/button*"));
+        Assert.That(action.controls, Has.Count.EqualTo(4)); // All four face buttons.
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonNorth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonWest));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonEast));
+    }
+
     ////REVIEW: can we can this work with chained bindings and e.g. bind "Shift+W" successfully?
 
     ////TODO: allow restricting by control paths so that we can restrict it by device requirements found in control schemes

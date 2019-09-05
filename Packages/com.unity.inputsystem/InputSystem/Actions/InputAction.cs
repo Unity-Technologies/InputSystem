@@ -262,15 +262,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// May allocate memory each time the control setup changes on the action.
         /// </remarks>
-        public ReadOnlyArray<InputControl> controls
-        {
-            get
-            {
-                var map = GetOrCreateActionMap();
-                map.ResolveBindingsIfNecessary();
-                return map.GetControlsForSingleAction(this);
-            }
-        }
+        public ReadOnlyArray<InputControl> controls => GetOrCreateActionMap().GetControlsForSingleAction(this);
 
         /// <summary>
         /// The current phase of the action.

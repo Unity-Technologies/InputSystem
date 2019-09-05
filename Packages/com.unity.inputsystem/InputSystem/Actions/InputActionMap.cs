@@ -532,6 +532,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private unsafe void SetUpPerActionCachedBindingData()
         {
+            // Make sure our binding resolution data is up to date.
+            ResolveBindingsIfNecessary();
+
             // Handle case where we don't have any bindings.
             if (m_Bindings == null)
                 return;
@@ -726,6 +729,10 @@ namespace UnityEngine.InputSystem
             // enable actions.
             if (m_EnabledActionsCount == 0)
             {
+                // Make sure that if actions query their bindings or controls, we
+                // force a call to ResolveBindings().
+                ClearPerActionCachedBindingData();
+
                 m_NeedToResolveBindings = true;
                 return false;
             }
@@ -863,9 +870,6 @@ namespace UnityEngine.InputSystem
                 {
                     var map = actionMaps[i];
                     map.m_NeedToResolveBindings = false;
-
-                    ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
-                    map.m_ControlsForEachAction = null;
 
                     if (map.m_SingletonAction != null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);

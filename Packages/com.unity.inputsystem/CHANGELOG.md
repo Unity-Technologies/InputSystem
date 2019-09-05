@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Setting timeouts from `IInputInteraction.Process` not working as expected when processing happened in response to previous timeout expiring (#714).
 - Pending timeouts on a device not being removed when device was removed.
+- Applying binding overrides (interactively or through `ApplyBindingOverride`) will now correctly flush cached data on `InputAction.bindings`.
 
 ### Changed
 
