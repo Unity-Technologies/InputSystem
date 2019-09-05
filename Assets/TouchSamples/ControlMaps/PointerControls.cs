@@ -487,8 +487,8 @@ namespace InputSamples.Controls
     ]
 }");
             // pointer
-            m_pointer = asset.FindActionMap("pointer");
-            m_pointer_point = m_pointer.FindAction("point");
+            m_pointer = asset.FindActionMap("pointer", throwIfNotFound: true);
+            m_pointer_point = m_pointer.FindAction("point", throwIfNotFound: true);
         }
 
         ~PointerControls()

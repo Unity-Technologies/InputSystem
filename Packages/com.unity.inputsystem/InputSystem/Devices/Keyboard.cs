@@ -808,7 +808,7 @@ namespace UnityEngine.InputSystem
     /// keyboard has certain keys or not.
     /// </remarks>
     [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
-    [UnityEngine.Scripting.Preserve]
+    [Scripting.Preserve]
     public class Keyboard : InputDevice, ITextInputReceiver
     {
         /// <summary>

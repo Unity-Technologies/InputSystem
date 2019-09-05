@@ -259,8 +259,6 @@ namespace UnityEngine.InputSystem
             RegisterLayout(typeof(T), name, matches);
         }
 
-        //DOC---------------------------------------------------------------------------------------
-
         /// <summary>
         /// Register a layout in JSON format.
         /// </summary>

@@ -36,8 +36,8 @@ namespace UnityEngine.InputSystem.Controls
     /// In terms of memory, a stick controls is still just from one value for the X axis
     /// and one value for the Y axis.
     ///
-    /// Unlike dpads (see <see cref="DpadControl">), sticks will usually have deadzone processors
-    /// (see <see cref="StickDeadzoneProcessor">) applied to them to get rid of noise around the
+    /// Unlike dpads (see <see cref="DpadControl"/>), sticks will usually have deadzone processors
+    /// (see <see cref="StickDeadzoneProcessor"/>) applied to them to get rid of noise around the
     /// resting point of the stick. The X and Y axis also have deadzones applied to them by
     /// default (<see cref="AxisDeadzoneProcessor"/>). Note, however, that the deadzoning of
     /// individual axes is different from the deadzoning applied to the stick as a whole and

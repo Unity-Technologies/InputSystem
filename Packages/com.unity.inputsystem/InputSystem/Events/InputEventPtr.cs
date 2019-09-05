@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     /// Note that event pointers generally refer to event buffers that are continually reused. This means
     /// that event pointers should not be held on to. Instead, to hold onto event data, manually copy
-    /// an event to a buffer using <see cref="CopyTo"/>.
+    /// an event to a buffer.
     /// </remarks>
     public unsafe struct InputEventPtr : IEquatable<InputEventPtr>
     {

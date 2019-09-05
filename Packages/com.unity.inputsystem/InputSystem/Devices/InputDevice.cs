@@ -335,8 +335,10 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
+        /// <inheritdoc/>
         public override Type valueType => typeof(byte[]);
 
+        /// <inheritdoc/>
         public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
 
         /// <summary>
@@ -362,6 +364,7 @@ namespace UnityEngine.InputSystem
         ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
         ////        at the same time, seems questionable.
 
+        /// <inheritdoc/>
         public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
         {
             throw new NotImplementedException();
@@ -448,32 +451,41 @@ namespace UnityEngine.InputSystem
         /// Xbox gamepad, the PS4 gamepad would still constantly make itself <see cref="Gamepad.current"/>
         /// by simply flooding the system with events.
         ///
-        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/>
-        ///
-        ///
-        /// Use this to set static properties that give fast access to the latest device used of a given
-        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
-        ///
-        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
-        /// be multiple current working directories, one for each type.
-        ///
-        /// A device will be made current by the system initially when it is created and subsequently whenever
-        /// it receives an event.
+        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/> (disabled by default),
+        /// noise on <c>.current</c> getters will be filtered out and a device will only see <c>MakeCurrent</c>
+        /// getting called if there input was detected on non-noisy controls.
         /// </remarks>
         /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="Pointer.current"/>
         /// <seealso cref="Gamepad.current"/>
         /// <seealso cref="Mouse.current"/>
         /// <seealso cref="Pen.current"/>
-        ///
         public virtual void MakeCurrent()
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device is added to <see cref="InputSystem.devices"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is called <em>after</em> the device has already been added.
+        /// </remarks>
+        /// <seealso cref="InputSystem.devices"/>
+        /// <seealso cref="InputDeviceChange.Added"/>
+        /// <seealso cref="OnRemoved"/>
         protected virtual void OnAdded()
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device is removed from <see cref="InputSystem.devices"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is called <em>after</em> the device has already been removed.
+        /// </remarks>
+        /// <seealso cref="InputSystem.devices"/>
+        /// <seealso cref="InputDeviceChange.Removed"/>
+        /// <seealso cref="OnRemoved"/>
         protected virtual void OnRemoved()
         {
         }

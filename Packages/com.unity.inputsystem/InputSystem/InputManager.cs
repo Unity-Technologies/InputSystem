@@ -1067,6 +1067,8 @@ namespace UnityEngine.InputSystem
             // Notify device.
             device.NotifyAdded();
 
+            ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
+            ////        it current, no?
             // Make the device current.
             device.MakeCurrent();
 
@@ -1872,10 +1874,10 @@ namespace UnityEngine.InputSystem
             for (var n = 0; n < controlCount; ++n)
             {
                 var control = controls[n];
-                if (!control.hasDefaultValue)
+                if (!control.hasDefaultState)
                     continue;
 
-                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue);
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultState);
             }
 
             // Copy default state to all front and back buffers.

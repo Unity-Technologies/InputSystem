@@ -15,23 +15,52 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 30)]
     public struct MouseState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('M', 'O', 'U', 'S');
+        /// <summary>
+        /// Memory format identifier for MouseState.
+        /// </summary>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('M', 'O', 'U', 'S');
 
+        /// <summary>
+        /// Screen-space position of the mouse in pixels.
+        /// </summary>
+        /// <value>Position of mouse on screen.</value>
+        /// <seealso cref="Mouse.position"/>
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
 
+        /// <summary>
+        /// Screen-space motion delta of the mouse in pixels.
+        /// </summary>
+        /// <value>Mouse movement.</value>
+        /// <seealso cref="Mouse.delta"/>
         [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
 
         ////REVIEW: have half-axis buttons on the scroll axes? (up, down, left, right)
+        /// <summary>
+        /// Scroll-wheel delta of the mouse.
+        /// </summary>
+        /// <value>Scroll wheel delta.</value>
+        /// <seealso cref="Mouse.scroll"/>
         [InputControl(displayName = "Scroll")]
         [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
         [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 
+        /// <summary>
+        /// Button mask for which buttons on the mouse are currently pressed.
+        /// </summary>
+        /// <value>Button state mask.</value>
+        /// <seealso cref="MouseButton"/>
+        /// <seealso cref="Mouse.leftButton"/>
+        /// <seealso cref="Mouse.middleButton"/>
+        /// <seealso cref="Mouse.rightButton"/>
+        /// <seealso cref="Mouse.forwardButton"/>
+        /// <seealso cref="Mouse.backButton"/>
         [InputControl(name = "press", useStateFrom = "leftButton", synthetic = true, usages = new string[0])]
         [InputControl(name = "leftButton", layout = "Button", bit = (int)MouseButton.Left, usage = "PrimaryAction", displayName = "Left Button", shortDisplayName = "LMB")]
         [InputControl(name = "rightButton", layout = "Button", bit = (int)MouseButton.Right, usage = "SecondaryAction", displayName = "Right Button", shortDisplayName = "RMB")]
@@ -54,11 +83,23 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(26)]
         ushort displayIndex;
 
+        ////TODO: this needs proper documentation
+        /// <summary>
+        /// Number of clicks performed in succession.
+        /// </summary>
+        /// <value>Successive click count.</value>
+        /// <seealso cref="Mouse.clickCount"/>
         [InputControl(layout = "Integer", displayName = "Click Count")]
         [FieldOffset(28)]
         public ushort clickCount;
 
-        ////REVIEW: move this and the same methods in other states to extension methods?
+        /// <summary>
+        /// Set the button mask for the given button.
+        /// </summary>
+        /// <param name="button">Button whose state to set.</param>
+        /// <param name="state">Whether to set the bit on or off.</param>
+        /// <returns>The same MouseState with the change applied.</returns>
+        /// <seealso cref="buttons"/>
         public MouseState WithButton(MouseButton button, bool state = true)
         {
             var bit = 1 << (int)button;
@@ -69,7 +110,11 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC format => kFormat;
+        /// <summary>
+        /// Returns <see cref="Format"/>.
+        /// </summary>
+        /// <seealso cref="InputStateBlock.format"/>
+        public FourCC format => Format;
     }
 
     /// <summary>
@@ -80,22 +125,31 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Left mouse button.
         /// </summary>
+        /// <seealso cref="Mouse.leftButton"/>
         Left,
+
         /// <summary>
         /// Right mouse button.
         /// </summary>
+        /// <seealso cref="Mouse.rightButton"/>
         Right,
+
         /// <summary>
         /// Middle mouse button.
         /// </summary>
+        /// <seealso cref="Mouse.middleButton"/>
         Middle,
+
         /// <summary>
         /// First side button.
         /// </summary>
+        /// <seealso cref="Mouse.forwardButton"/>
         Forward,
+
         /// <summary>
         /// Second side button.
         /// </summary>
+        /// <seealso cref="Mouse.backButton"/>
         Back
     }
 }
@@ -103,7 +157,7 @@ namespace UnityEngine.InputSystem.LowLevel
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A mouse input device.
+    /// An input device representing a mouse.
     /// </summary>
     /// <remarks>
     /// Adds a scroll wheel and a typical 3-button setup with a left, middle, and right
@@ -112,7 +166,7 @@ namespace UnityEngine.InputSystem
     /// To control cursor display and behavior, use <see cref="UnityEngine.Cursor"/>.
     /// </remarks>
     [InputControlLayout(stateType = typeof(MouseState), isGenericTypeOfDevice = true)]
-    [UnityEngine.Scripting.Preserve]
+    [Scripting.Preserve]
     public class Mouse : Pointer, IInputStateCallbackReceiver
     {
         /// <summary>

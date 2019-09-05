@@ -26,8 +26,10 @@ namespace UnityEngine.InputSystem.XInput
         [InputControl(name = "buttonEast", displayName = "B")]
         [InputControl(name = "buttonWest", displayName = "X")]
         [InputControl(name = "buttonNorth", displayName = "Y")]
-        [InputControl(name = "leftShoulder", displayName = "Left Bumper")]
-        [InputControl(name = "rightShoulder", displayName = "Right Bumper")]
+        [InputControl(name = "leftShoulder", displayName = "Left Bumper", shortDisplayName = "LB")]
+        [InputControl(name = "rightShoulder", displayName = "Right Bumper", shortDisplayName = "RB")]
+        [InputControl(name = "leftTrigger", shortDisplayName = "LT")]
+        [InputControl(name = "rightTrigger", shortDisplayName = "RT")]
         // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
         [InputControl(name = "start", displayName = "Menu")]
         [InputControl(name = "select", displayName = "View")]

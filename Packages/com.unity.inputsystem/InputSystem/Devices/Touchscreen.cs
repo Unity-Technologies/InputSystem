@@ -41,6 +41,14 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// State layout for a single touch.
     /// </summary>
+    /// <remarks>
+    /// This is the low-level memory representation of a single touch, i.e the
+    /// way touches are internally transmitted and stored in the system. To update
+    /// touches on a <see cref="Touchscreen"/>, <see cref="StateEvent"/>s containing
+    /// TouchStates are sent to the screen.
+    /// </remarks>
+    /// <seealso cref="TouchControl"/>
+    /// <seealso cref="Touchscreen"/>
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
@@ -49,14 +57,38 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
 
+        /// <summary>
+        /// Numeric ID of the touch.
+        /// </summary>
+        /// <value>Numeric ID of the touch.</value>
+        /// <remarks>
+        /// While a touch is ongoing, it must have a non-zero ID different from
+        /// all other ongoing touches. Starting with <see cref="TouchPhase.Began"/>
+        /// and ending with <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>,
+        /// a touch is identified by its ID, i.e. a TouchState with the same ID
+        /// belongs to the same touch.
+        ///
+        /// After a touch has ended or been canceled, an ID can be reused.
+        /// </remarks>
+        /// <seealso cref="TouchControl.touchId"/>
         [InputControl(displayName = "Touch ID", layout = "Integer")]
         [FieldOffset(0)]
         public int touchId;
 
+        /// <summary>
+        /// Screen-space position of the touch in pixels.
+        /// </summary>
+        /// <value>Screen-space position of the touch.</value>
+        /// <seealso cref="TouchControl.position"/>
         [InputControl(displayName = "Position")]
         [FieldOffset(4)]
         public Vector2 position;
 
+        /// <summary>
+        /// Screen-space motion delta of the touch in pixels.
+        /// </summary>
+        /// <value>Screen-space movement delta.</value>
+        /// <seealso cref="TouchControl.delta"/>
         [InputControl(displayName = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
@@ -69,10 +101,11 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(24)]
         public Vector2 radius;
 
+        // Use `phase` to access.
         [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
         [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
-        public byte phaseId;
+        byte phaseId;
 
         [InputControl(name = "tapCount", displayName = "Tap Count", layout = "Integer")]
         [FieldOffset(33)]
@@ -86,7 +119,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
         [FieldOffset(35)]
-        public byte flags;
+        byte flags;
 
         // Wasting four bytes in the name of alignment here. Need the explicit fields as il2cpp doesn't respect
         // the explicit field offsets.

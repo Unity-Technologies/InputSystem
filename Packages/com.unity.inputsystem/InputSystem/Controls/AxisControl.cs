@@ -12,21 +12,52 @@ namespace UnityEngine.InputSystem.Controls
     /// Can optionally be configured to perform normalization.
     /// Stored as either a float, a short, a byte, or a single bit.
     /// </remarks>
-    [UnityEngine.Scripting.Preserve]
+    [Scripting.Preserve]
     public class AxisControl : InputControl<float>
     {
+        /// <summary>
+        /// Clamping behavior for an axis control.
+        /// </summary>
         public enum Clamp
         {
+            /// <summary>
+            /// Do not clamp values.
+            /// </summary>
             None = 0,
+
+            /// <summary>
+            /// Clamp values to <see cref="clampMin"/> and <see cref="clampMax"/>
+            /// before normalizing the value.
+            /// </summary>
             BeforeNormalize = 1,
+
+            /// <summary>
+            /// Clamp values to <see cref="clampMin"/> and <see cref="clampMax"/>
+            /// after normalizing the value.
+            /// </summary>
             AfterNormalize = 2,
+
+            /// <summary>
+            /// Clamp values any value below <see cref="clampMin"/> or above <see cref="clampMax"/>
+            /// to <see cref="clampConstant"/> before normalizing the value.
+            /// </summary>
             ToConstantBeforeNormalize = 3,
         }
 
         // These can be added as processors but they are so common that we
         // build the functionality right into AxisControl to save us an
         // additional object and an additional virtual call.
+
+        /// <summary>
+        /// Clamping behavior when reading values.
+        /// </summary>
+        /// <value>Clamping behavior.</value>
+        /// <remarks>
+        /// When a value is read from the control's state, it is first converted
+        /// to a floating-point number.
+        /// </remarks>
         public Clamp clamp;
+
         public float clampMin;
         public float clampMax;
         public float clampConstant;
@@ -40,6 +71,11 @@ namespace UnityEngine.InputSystem.Controls
         public bool scale;
         public float scaleFactor;
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected float Preprocess(float value)
         {
             if (scale)
@@ -60,15 +96,17 @@ namespace UnityEngine.InputSystem.Controls
             return value;
         }
 
+        /// <summary>
+        /// Default-initialize the control.
+        /// </summary>
+        /// <remarks>
+        /// Defaults the format to <see cref="InputStateBlock.FormatFloat"/>.
+        /// </remarks>
         public AxisControl()
         {
             m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
-        // Read a floating-point value from the given state. Automatically checks
-        // the state format of the control and performs conversions.
-        // NOTE: Throws if the format set on 'stateBlock' is not of integer, floating-point,
-        //       or bitfield type.
         /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {

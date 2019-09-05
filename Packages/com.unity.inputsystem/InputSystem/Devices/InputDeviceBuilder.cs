@@ -413,8 +413,8 @@ namespace UnityEngine.InputSystem.Layouts
             control.m_ShortDisplayNameFromLayout = controlItem.shortDisplayName;
 
             // Set default value.
-            control.m_DefaultValue = controlItem.defaultState;
-            if (!control.m_DefaultValue.isEmpty)
+            control.m_DefaultState = controlItem.defaultState;
+            if (!control.m_DefaultState.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 
             // Set min and max value. Don't just overwrite here as the control's constructor may

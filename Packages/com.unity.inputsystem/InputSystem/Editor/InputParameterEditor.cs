@@ -121,7 +121,8 @@ namespace UnityEngine.InputSystem.Editor
         internal struct CustomOrDefaultSetting
         {
             public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue,
-                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true)
+                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true,
+                float defaultInitializedValue = default)
             {
                 m_GetValue = getValue;
                 m_SetValue = setValue;
@@ -133,7 +134,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
                 if (defaultComesFromInputSettings)
                     m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
-                m_UseDefaultValue = Mathf.Approximately(getValue(), 0);
+                m_DefaultInitializedValue = defaultInitializedValue;
+                m_UseDefaultValue = Mathf.Approximately(getValue(), defaultInitializedValue);
                 m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
                 m_HelpBoxText =
                     EditorGUIUtility.TrTextContent(
@@ -158,7 +160,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (!newUseDefault)
                         m_SetValue(m_GetDefaultValue());
                     else
-                        m_SetValue(0);
+                        m_SetValue(m_DefaultInitializedValue);
                 }
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
@@ -181,6 +183,7 @@ namespace UnityEngine.InputSystem.Editor
             private Func<float> m_GetDefaultValue;
             private bool m_UseDefaultValue;
             private bool m_DefaultComesFromInputSettings;
+            private float m_DefaultInitializedValue;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;

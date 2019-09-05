@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     /// <seealso cref="Keyboard.anyKey"/>
     [InputControlLayout(hideInUI = true)]
-    [UnityEngine.Scripting.Preserve]
+    [Scripting.Preserve]
     public class AnyKeyControl : ButtonControl
     {
         ////TODO: wasPressedThisFrame and wasReleasedThisFrame

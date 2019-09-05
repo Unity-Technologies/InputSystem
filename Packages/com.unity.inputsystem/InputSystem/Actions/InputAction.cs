@@ -158,7 +158,7 @@ namespace UnityEngine.InputSystem
         ///
         /// An action can be renamed after creation using <see cref="InputActionSetupExtensions.Rename"/>..
         /// </remarks>
-        /// <seealso cref="InputActionMap.GetAction(string)"/>
+        /// <seealso cref="InputActionMap.FindAction(string,bool)"/>
         public string name => m_Name;
 
         /// <summary>
@@ -420,14 +420,31 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        //DOC-------------------------------------------------------------------------------
-
         /// <summary>
         /// The current phase of the action.
         /// </summary>
         /// <remarks>
         /// When listening for control input and when responding to control value changes,
-        /// actions will go through several possible phases. TODO
+        /// actions will go through several possible phases.
+        ///
+        /// In general, when an action starts receiving input, it will go to <see cref="InputActionPhase.Started"/>
+        /// and when it stops receiving input, it will go to <see cref="InputActionPhase.Canceled"/>.
+        /// When <see cref="InputActionPhase.Performed"/> is used depends primarily on the type
+        /// of action. <see cref="InputActionType.Value"/> will trigger <see cref="InputActionPhase.Performed"/>
+        /// whenever the value of the control changes (including the first time; i.e. it will first
+        /// trigger <see cref="InputActionPhase.Started"/> and then <see cref="InputActionPhase.Performed"/>
+        /// right after) whereas <see cref="InputActionType.Button"/> will trigger <see cref="InputActionPhase.Performed"/>
+        /// as soon as the button press threshold (<see cref="InputSettings.buttonPressThreshold"/>)
+        /// has been crossed.
+        ///
+        /// Note that both interactions and the action <see cref="type"/> can affect the phases
+        /// that an action goes through. <see cref="InputActionType.PassThrough"/> actions will
+        /// only ever use <see cref="InputActionPhase.Performed"/> and not go to <see
+        /// cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Canceled"/> (as
+        /// pass-through actions do not follow the start-performed-canceled model in general).
+        /// Also, interactions can choose their
+        ///
+        /// While an action is disabled, its phase is <see cref="InputActionPhase.Disabled"/>.
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
 
@@ -1085,20 +1102,35 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.
         /// </summary>
+        /// <remarks>
+        /// This struct should not be held on to past the duration of the callback.
+        /// </remarks>
         /// <seealso cref="performed"/>
         /// <seealso cref="started"/>
         /// <seealso cref="canceled"/>
         /// <seealso cref="InputActionMap.actionTriggered"/>
-        public struct CallbackContext
+        public struct CallbackContext // Ideally would be a ref struct but couldn't use it in lambdas then.
         {
             internal InputActionState m_State;
             internal int m_ActionIndex;
+
+            ////REVIEW: there should probably be a mechanism for the user to be able to correlate
+            ////        the callback to a specific binding on the action
 
             internal int actionIndex => m_ActionIndex;
             internal unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
             internal unsafe int controlIndex => m_State.actionStates[actionIndex].controlIndex;
             internal unsafe int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
 
+            /// <summary>
+            /// Current phase of the action. Equivalent to accessing <see cref="InputAction.phase"/>
+            /// on <see cref="action"/>.
+            /// </summary>
+            /// <value>Current phase of the action.</value>
+            /// <seealso cref="started"/>
+            /// <seealso cref="performed"/>
+            /// <seealso cref="canceled"/>
+            /// <seealso cref="InputAction.phase"/>
             public unsafe InputActionPhase phase
             {
                 get
@@ -1109,23 +1141,45 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            /// <summary>
+            /// Whether the <see cref="action"/> has just been started.
+            /// </summary>
+            /// <value>If true, the action was just started.</value>
+            /// <seealso cref="InputAction.started"/>
             public bool started => phase == InputActionPhase.Started;
 
+            /// <summary>
+            /// Whether the <see cref="action"/> has just been performed.
+            /// </summary>
+            /// <value>If true, the action was just performed.</value>
+            /// <seealso cref="InputAction.performed"/>
             public bool performed => phase == InputActionPhase.Performed;
 
+            /// <summary>
+            /// Whether the <see cref="action"/> has just been canceled.
+            /// </summary>
+            /// <value>If true, the action was just canceled.</value>
+            /// <seealso cref="InputAction.canceled"/>
             public bool canceled => phase == InputActionPhase.Canceled;
 
             /// <summary>
             /// The action that got triggered.
             /// </summary>
+            /// <value>Action that got triggered.</value>
             public InputAction action => m_State?.GetActionOrNull(bindingIndex);
 
             /// <summary>
             /// The control that triggered the action.
             /// </summary>
+            /// <value>Control that triggered the action.</value>
             /// <remarks>
             /// In case of a composite binding, this is the control of the composite that activated the
             /// composite as a whole. For example, in case of a WASD-style binding, it could be the W key.
+            ///
+            /// Note that an action may also change its <see cref="phase"/> in response to a timeout.
+            /// For example, a <see cref="Interactions.TapInteraction"/> will cancel itself if the
+            /// button control is not released within a certain time. When this happens, the <c>control</c>
+            /// property will be the control that last fed input into the action.
             /// </remarks>
             public InputControl control => m_State?.controls[controlIndex];
 
@@ -1133,6 +1187,24 @@ namespace UnityEngine.InputSystem
             /// The interaction that triggered the action or <c>null</c> if the binding that triggered does not
             /// have any particular interaction set on it.
             /// </summary>
+            /// <value>Interaction that triggered the callback.</value>
+            /// <remarks>
+            /// <example>
+            /// <code>
+            /// void FirePerformed(InputAction.CallbackContext context)
+            /// {
+            ///     // If SlowTap interaction was performed, perform a charged
+            ///     // firing. Otherwise, fire normally.
+            ///     if (context.interaction is SlowTapInteraction)
+            ///         FireChargedProjectile();
+            ///     else
+            ///         FireNormalProjectile();
+            /// }
+            /// </code>
+            /// </example>
+            /// </remarks>
+            /// <seealso cref="InputBinding.interactions"/>
+            /// <seealso cref="InputAction.interactions"/>
             public IInputInteraction interaction
             {
                 get
@@ -1149,10 +1221,16 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// The time at which the action got triggered.
             /// </summary>
+            /// <value>Time relative to <c>Time.realtimeSinceStartup</c> at which
+            /// the action got triggered.</value>
             /// <remarks>
             /// This is usually determined by the timestamp of the input event that activated a control
-            /// bound to the action.
+            /// bound to the action. What this means is that this is normally <em>not</em> the
+            /// value of <c>Time.realtimeSinceStartup</c> when the input system calls the
+            /// callback but rather the time at which the input was generated that triggered
+            /// the action.
             /// </remarks>
+            /// <seealso cref="InputEvent.time"/>
             public unsafe double time
             {
                 get
@@ -1166,9 +1244,15 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Time at which the action was started.
             /// </summary>
+            /// <value>Value relative to <c>Time.realtimeSinceStartup</c> when the action
+            /// changed to <see cref="started"/>.</value>
             /// <remarks>
             /// This is only relevant for actions that go through distinct a <see cref="InputActionPhase.Started"/>
             /// cycle as driven by <see cref="IInputInteraction">interactions</see>.
+            ///
+            /// The value of this property is that of <see cref="time"/> when <see
+            /// cref="InputAction.started"/> was called. See the <see cref="time"/>
+            /// property for how the timestamp works.
             /// </remarks>
             public unsafe double startTime
             {
@@ -1183,10 +1267,72 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Time difference between <see cref="time"/> and <see cref="startTime"/>.
             /// </summary>
+            /// <value>Difference between <see cref="time"/> and <see cref="startTime"/>.</value>
+            /// <remarks>
+            /// This property can be used, for example, to determine how long a button
+            /// was held down.
+            ///
+            /// <example>
+            /// <code>
+            /// // Let's create a button action bound to the A button
+            /// // on the gamepad.
+            /// var action = new InputAction(
+            ///     type: InputActionType.Button,
+            ///     binding: "&lt;Gamepad&gt;/buttonSouth");
+            ///
+            /// // When the action is performed (which will happen when the
+            /// // button is pressed and then released) we take the duration
+            /// // of the press to determine how many projectiles to spawn.
+            /// action.performed +=
+            ///     context =>
+            ///     {
+            ///         const float kSpawnRate = 3; // 3 projectiles per second
+            ///         var projectileCount = kSpawnRate * context.duration;
+            ///         for (var i = 0; i &lt; projectileCount; ++i)
+            ///         {
+            ///             var projectile = UnityEngine.Object.Instantiate(projectile);
+            ///             // Apply other changes to the projectile...
+            ///         }
+            ///     };
+            /// </code>
+            /// </example>
+            /// </remarks>
             public double duration => time - startTime;
 
+            /// <summary>
+            /// Type of value returned by <see cref="ReadValueAsObject"/> and expected
+            /// by <see cref="ReadValue{TValue}"/>.
+            /// </summary>
+            /// <value>Type of object returned when reading a value.</value>
+            /// <remarks>
+            /// The type of value returned by an action is usually determined by the
+            /// <see cref="InputControl"/> that triggered the action, i.e. by the
+            /// control referenced from <see cref="control"/>.
+            ///
+            /// However, if the binding that triggered is a composite, then the composite
+            /// will determine values and not the individual control that triggered (that
+            /// one just feeds values into the composite).
+            /// </remarks>
+            /// <seealso cref="InputControl.valueType"/>
+            /// <seealso cref="InputBindingComposite.valueType"/>
             public Type valueType => m_State?.GetValueType(bindingIndex, controlIndex);
 
+            /// <summary>
+            /// Size of values returned by <see cref="ReadValue(void*,int)"/>.
+            /// </summary>
+            /// <value>Size of value returned when reading.</value>
+            /// <remarks>
+            /// All input values passed around by the system are required to be "blittable",
+            /// i.e. they cannot contain references, cannot be heap objects themselves, and
+            /// must be trivially mem-copyable. This means that any value can be read out
+            /// and retained in a raw byte buffer.
+            ///
+            /// The value of this property determines how many bytes will be written
+            /// by <see cref="ReadValue(void*,int)"/>.
+            /// </remarks>
+            /// <seealso cref="InputControl.valueSizeInBytes"/>
+            /// <seealso cref="InputBindingComposite.valueSizeInBytes"/>
+            /// <seealso cref="ReadValue(void*,int)"/>
             public int valueSizeInBytes
             {
                 get
@@ -1214,11 +1360,25 @@ namespace UnityEngine.InputSystem
                 return value;
             }
 
+            /// <summary>
+            /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to
+            /// know the type of value at compile time.
+            /// </summary>
+            /// <returns>The current value from the binding that triggered the action.</returns>
+            /// <remarks>
+            /// This method allocates GC heap memory. Using it during normal gameplay will lead
+            /// to frame-rate instabilities.
+            /// </remarks>
+            /// <seealso cref="ReadValue{TValue}"/>
             public object ReadValueAsObject()
             {
                 return m_State?.ReadValueAsObject(bindingIndex, controlIndex);
             }
 
+            /// <summary>
+            /// Return a string representation of the context useful for debugging.
+            /// </summary>
+            /// <returns>String representation of the context.</returns>
             public override string ToString()
             {
                 return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";

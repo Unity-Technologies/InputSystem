@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A mapping of control input to an action.
+    /// A mapping of controls to an action.
     /// </summary>
     /// <remarks>
     /// Each binding represents a value received from controls (see <see cref="InputControl"/>).
@@ -37,9 +37,12 @@ namespace UnityEngine.InputSystem
     /// bindings that are part of <see cref="InputActionMap.bindings"/> will resolve action names to
     /// actions in the same <see cref="InputActionMap"/>.
     ///
-    /// A binding can also be used as a form of search mask. In this use, <see cref="path"/>,
+    /// A binding can also be used as a form of search mask or filter. In this use, <see cref="path"/>,
     /// <see cref="action"/>, and <see cref="groups"/> become search criteria that are matched
     /// against other bindings. See <see cref="Matches(InputBinding)"/> for details. This use
+    /// is employed in places such as <see cref="InputActionRebindingExtensions"/> as well as in
+    /// binding masks on actions (<see cref="InputAction.bindingMask"/>), action maps (<see
+    /// cref="InputActionMap.bindingMask"/>), and assets (<see cref="InputActionAsset.bindingMask"/>).
     /// </remarks>
     [Serializable]
     public struct InputBinding : IEquatable<InputBinding>
@@ -71,8 +74,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Optional name for the binding.
         /// </summary>
+        /// <value>Name of the binding.</value>
         /// <remarks>
-        /// For bindings that <see cref="isPartOfComposite">are part of composites</see>, this is
+        /// For bindings that are part of composites (see <see cref="isPartOfComposite"/>), this is
         /// the name of the field on the binding composite object that should be initialized with
         /// the control target of the binding.
         /// </remarks>
@@ -82,6 +86,13 @@ namespace UnityEngine.InputSystem
             set => m_Name = value;
         }
 
+        /// <summary>
+        /// Unique ID of the binding.
+        /// </summary>
+        /// <value>Unique ID of the binding.</value>
+        /// <remarks>
+        /// TODO
+        /// </remarks>
         public Guid id
         {
             get
@@ -369,6 +380,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Return a string representation of the binding useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the binding.</returns>
+        /// <example>
+        /// <code>
+        /// var binding = new InputBinding
+        /// {
+        ///     action = "fire",
+        ///     path = "&lt;Gamepad&gt;/buttonSouth",
+        ///     groups = "Gamepad"
+        /// };
+        ///
+        /// // Returns "fire: &lt;Gamepad&gt;/buttonSouth [Gamepad]".
+        /// binding.ToString();
+        /// </code>
+        /// </example>
         public override string ToString()
         {
             var builder = new StringBuilder();

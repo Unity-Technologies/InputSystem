@@ -388,13 +388,17 @@ namespace UnityEngine.InputSystem
         /// was found.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
         /// <seealso cref="FindAction(Guid)"/>
-        public InputAction FindAction(string nameOrId)
+        public InputAction FindAction(string nameOrId, bool throwIfNotFound = false)
         {
             if (nameOrId == null)
                 throw new ArgumentNullException(nameof(nameOrId));
             var index = FindActionIndex(nameOrId);
             if (index == -1)
+            {
+                if (throwIfNotFound)
+                    throw new ArgumentException($"No action '{nameOrId}' in '{this}'", nameof(nameOrId));
                 return null;
+            }
             return m_Actions[index];
         }
 

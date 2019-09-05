@@ -288,7 +288,7 @@ namespace UnityEngine.InputSystem
     /// The Gamepad layout provides a standardized layouts for gamepads. Generally, if a specific
     /// device is represented as a Gamepad, the controls, such as the face buttons, are guaranteed
     /// to be mapped correctly and consistently. If, based on the set of supported devices available
-    /// to the input system, this cannot be guaranteed, a given device is usually represted as a
+    /// to the input system, this cannot be guaranteed, a given device is usually represented as a
     /// generic <see cref="Joystick"/> or as just a plain <see cref="HID.HID"/> instead.
     ///
     /// <example>
@@ -369,18 +369,60 @@ namespace UnityEngine.InputSystem
         /// <value>Control representing a click with the right stick.</value>
         public ButtonControl rightStickButton { get; private set; }
 
+        /// <summary>
+        /// The right button in the middle section of the gamepad (called "menu" on Xbox
+        /// controllers and "options" on PS4 controllers).
+        /// </summary>
+        /// <value>Control representing the right button in midsection.</value>
         public ButtonControl startButton { get; private set; }
+
+        /// <summary>
+        /// The left button in the middle section of the gamepad (called "view" on Xbox
+        /// controllers and "share" on PS4 controllers).
+        /// </summary>
+        /// <value>Control representing the left button in midsection.</value>
         public ButtonControl selectButton { get; private set; }
 
+        /// <summary>
+        /// The 4-way directional pad on the gamepad.
+        /// </summary>
+        /// <value>Control representing the d-pad.</value>
         public DpadControl dpad { get; private set; }
 
+        /// <summary>
+        /// The left shoulder/bumper button that sits on top of <see cref="leftTrigger"/>.
+        /// </summary>
+        /// <value>Control representing the left shoulder button.</value>
         public ButtonControl leftShoulder { get; private set; }
+
+        /// <summary>
+        /// The right shoulder/bumper button that sits on top of <see cref="rightTrigger"/>.
+        /// </summary>
+        /// <value>Control representing the right shoulder button.</value>
         public ButtonControl rightShoulder { get; private set; }
 
+        /// <summary>
+        /// The left thumbstick on the gamepad.
+        /// </summary>
+        /// <value>Control representing the left thumbstick.</value>
         public StickControl leftStick { get; private set; }
+
+        /// <summary>
+        /// The right thumbstick on the gamepad.
+        /// </summary>
+        /// <value>Control representing the right thumbstick.</value>
         public StickControl rightStick { get; private set; }
 
+        /// <summary>
+        /// The left trigger button sitting below <see cref="leftShoulder"/>.
+        /// </summary>
+        /// <value>Control representing the left trigger button.</value>
         public ButtonControl leftTrigger { get; private set; }
+
+        /// <summary>
+        /// The right trigger button sitting below <see cref="rightShoulder"/>.
+        /// </summary>
+        /// <value>Control representing the right trigger button.</value>
         public ButtonControl rightTrigger { get; private set; }
 
         /// <summary>
@@ -431,7 +473,6 @@ namespace UnityEngine.InputSystem
         /// <value>Same as <see cref="buttonSouth"/>.</value>
         public ButtonControl crossButton => buttonSouth;
 
-        ////REVIEW: what about having 'axes' and 'buttons' read-only arrays like Joysticks and allowing to index that?
         public ButtonControl this[GamepadButton button]
         {
             get
@@ -461,8 +502,9 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// The gamepad last used by the user or null if there is no gamepad connected to the system.
+        /// The gamepad last used by the player or <c>null</c> if there is no gamepad connected to the system.
         /// </summary>
+        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         public static Gamepad current { get; private set; }
 
         /// <summary>
@@ -507,6 +549,12 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
+        /// <summary>
+        /// Make the gamepad the <see cref="current"/> gamepad.
+        /// </summary>
+        /// <remarks>
+        /// This is called automatically by the system when there is input on a gamepad.
+        /// </remarks>
         public override void MakeCurrent()
         {
             base.MakeCurrent();

@@ -819,7 +819,7 @@ namespace UnityEngine.InputSystem
         internal ControlFlags m_ControlFlags;
 
         ////REVIEW: store these in arrays in InputDevice instead?
-        internal PrimitiveValue m_DefaultValue;
+        internal PrimitiveValue m_DefaultState;
         internal PrimitiveValue m_MinValue;
         internal PrimitiveValue m_MaxValue;
 
@@ -843,7 +843,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal bool hasDefaultValue => !m_DefaultValue.isEmpty;
+        internal bool hasDefaultState => !m_DefaultState.isEmpty;
 
         // This method exists only to not slap the internal interaction on all overrides of
         // FinishSetup().

@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method allocates GC memory and should thus not be used during normal gameplay.
         /// </remarks>
-        /// <seealso cref="InputControl.hasDefaultValue"/>
+        /// <seealso cref="InputControl.hasDefaultState"/>
         /// <seealso cref="InputControl.defaultStatePtr"/>
         public static unsafe object ReadDefaultValueAsObject(this InputControl control)
         {
