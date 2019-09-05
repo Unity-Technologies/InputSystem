@@ -91,10 +91,7 @@ namespace UnityEngine.InputSystem.HID
             // Read HID descriptor.
             var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
 
-            // Check callbacks to see whether we should actually create a device for this specific HID.
-            // If no callback says yes or one says no, we ignore the device.
-            if (HIDSupport.s_ShouldCreateHID.All(f => f(hidDeviceDescriptor) != true) ||
-                HIDSupport.s_ShouldCreateHID.Any(f => f(hidDeviceDescriptor) == false))
+            if (!HIDSupport.supportedHIDUsages.Contains(new HIDSupport.HIDPageUsage(hidDeviceDescriptor.usagePage, hidDeviceDescriptor.usage)))
                 return null;
 
             // Determine if there's any usable elements on the device.
@@ -1154,6 +1151,7 @@ namespace UnityEngine.InputSystem.HID
             Keypad = 0x07,
             MultiAxisController = 0x08,
             TabletPCControls = 0x09,
+            AssistiveControl = 0x0A,
             X = 0x30,
             Y = 0x31,
             Z = 0x32,
