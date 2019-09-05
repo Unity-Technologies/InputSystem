@@ -204,24 +204,86 @@ class APIVerificationTests
             methodName = "#ctor";
 
         var methodKey = $"data-uid=\"{method.DeclaringType}.{methodName}";
+
+        // For generic methods, tag ``N onto name.
+        if (method.HasGenericParameters)
+            methodKey = $"{methodKey}``{method.GenericParameters.Count}";
+
         // For non-get/set/add/remove methods, we need to take arguments into account
         // to be able to differentiate overloads.
         if (!method.IsGetter && !method.IsSetter && !method.IsAddOn && !method.IsRemoveOn)
         {
+            string ConvertTypeName(string typeName)
+            {
+                // DocFX, at least with our current setup, seems to not be able
+                // handle any type references that aren't in the current package
+                // or in system libraries. Meaning that a method references anything in
+                // UnityEngine.dll, for example, whatever the reference is, it will
+                // get truncated to just the type name. So, "UnityEngine.EventSystems.PointerEventData",
+                // for example, comes out as just "PointerEventData".
+
+                if (!typeName.StartsWith("UnityEngine.InputSystem.") &&
+                    (typeName.StartsWith("UnityEngine.") ||
+                     typeName.StartsWith("UnityEditor.") ||
+                     typeName.StartsWith("Unity.") ||
+                     typeName.StartsWith("System.Linq")))
+                {
+                    var lastDot = typeName.LastIndexOf('.');
+                    return typeName.Substring(lastDot + 1);
+                }
+
+                // Nested types in Cecil use '/', in docs we use '.'.
+                return typeName.Replace('/', '.');
+            }
+
             string TypeToString(TypeReference type)
             {
-                if (type.IsByReference)
+                var isByReference = type.IsByReference;
+                var isArray = false;
+
+                // If it's a Type& reference, switch to the referenced type.
+                if (type is ByReferenceType)
                 {
-                    // Cecil uss &, docs use @ for 'ref' parameters.
-                    return $"{type.GetElementType().FullName}@";
+                    isByReference = true;
+                    type = type.GetElementType();
                 }
-                if (type.IsGenericInstance)
+
+                // If it's a Type[] reference, switch to referenced type.
+                if (type is ArrayType)
+                {
+                    isArray = true;
+                    type = type.GetElementType();
+                }
+
+                // Parameters on generic methods and types are referenced by position,
+                // not by name.
+                string typeName;
+                if (type is GenericParameter genericParameter)
+                {
+                    ////FIXME: This doesn't work properly. The docs use `` on parameters
+                    ////       *coming* from methods and ` on parameters *coming* from types.
+                    ////       However, Cecil's GenericParameter is also used for generic
+                    ////       *arguments* and there, GenericParameter.Type simply indicates what
+                    ////       generic thing the argument is applied to, *not* where it is defined.
+                    ////       So something like "Foo<TControl>(InputControlList<TControl>)" will
+                    ////       give us GenericParameterType.Type on the use of TControl.
+                    ////       I found no way to tell the two apart. I.e. to tell whether the
+                    ////       *definition* is coming from a method or type.
+
+                    // Method parameters are referenced with ``, type parameters
+                    // with `.
+                    var prefix = genericParameter.Type == GenericParameterType.Method
+                        ? "``"
+                        : "`";
+                    typeName = $"{prefix}{genericParameter.Position}";
+                }
+                else if (type.IsGenericInstance)
                 {
                     // Cecil uses `N<...> notation, docs use {...} notation.
                     var genericInstanceType = (GenericInstanceType)type;
 
                     // Extract name of generic type. Snip off `N suffix.
-                    var typeName = genericInstanceType.GetElementType().FullName;
+                    typeName = ConvertTypeName(type.GetElementType().FullName);
                     var indexOfBacktick = typeName.IndexOf('`');
                     if (indexOfBacktick != -1)
                         typeName = typeName.Substring(0, indexOfBacktick);
@@ -229,10 +291,33 @@ class APIVerificationTests
                     typeName += "{";
                     typeName += string.Join(",", genericInstanceType.GenericArguments.Select(TypeToString));
                     typeName += "}";
-
-                    return typeName;
                 }
-                return type.FullName;
+                else if (type.HasGenericParameters)
+                {
+                    // Same deal as IsGenericInstance.
+
+                    typeName = ConvertTypeName(type.FullName);
+                    var indexOfBacktick = typeName.IndexOf('`');
+                    if (indexOfBacktick != -1)
+                        typeName = typeName.Substring(0, indexOfBacktick);
+
+                    typeName += "{";
+                    typeName += string.Join(",", type.GenericParameters.Select(TypeToString));
+                    typeName += "}";
+                }
+                else
+                {
+                    typeName = ConvertTypeName(type.FullName);
+                }
+
+                if (isArray)
+                    typeName += "[]";
+
+                // Cecil uss &, docs use @ for 'ref' parameters.
+                if (isByReference)
+                    typeName += "@";
+
+                return typeName;
             }
 
             var parameters = string.Join(",", method.Parameters.Select(p => TypeToString(p.ParameterType)));
@@ -240,9 +325,10 @@ class APIVerificationTests
                 methodKey = $"{methodKey}({parameters})";
         }
 
-        var nextEntryKey = "<a id=";
-        var summaryKey = "<div class=\"markdown level1 summary\">";
-        var endKey = "</div>";
+        const string nextEntryKey = "<a id=";
+        const string summaryKey = "<div class=\"markdown level1 summary\">";
+        const string endKey = "</div>";
+
         var methodIndex = docs.IndexOf(methodKey);
         if (methodIndex == -1)
         {
@@ -254,11 +340,7 @@ class APIVerificationTests
         var endIndex = docs.IndexOf(endKey, summaryIndex);
         var nextEntryIndex = docs.IndexOf(nextEntryKey, methodIndex);
         if (summaryIndex != -1 && endIndex != -1 && (summaryIndex < nextEntryIndex || nextEntryIndex == -1))
-        {
-            Console.WriteLine($"summary for {method}:{docs.Substring(summaryIndex + summaryKey.Length, endIndex - (summaryIndex + summaryKey.Length))}");
-
             return docs.Substring(summaryIndex + summaryKey.Length, endIndex - (summaryIndex + summaryKey.Length));
-        }
 
         return null;
     }
