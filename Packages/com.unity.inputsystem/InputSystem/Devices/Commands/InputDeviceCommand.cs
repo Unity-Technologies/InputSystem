@@ -28,6 +28,8 @@ namespace UnityEngine.InputSystem.LowLevel
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
         internal const int kBaseCommandSize = 8;
+        public const int BaseCommandSize = 8;
+
 
         /// <summary>
         /// Generic failure code for <see cref="IOCTL"/> calls.

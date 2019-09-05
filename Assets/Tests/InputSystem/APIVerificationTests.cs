@@ -237,9 +237,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLGamepad).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLJoystick).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.NPad).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGamepad).FullName ||
 #if UNITY_EDITOR_OSX
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
@@ -255,10 +252,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
 #endif
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.PS4TouchControl).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.DualShockGamepadPS4).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.MoveControllerPS4).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.LowLevel.PS4Touch).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.iOS.iOSGameController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock3GamepadHID).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock4GamepadHID).FullName ||
@@ -276,7 +269,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.INPadRumble).FullName ||
             ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||
