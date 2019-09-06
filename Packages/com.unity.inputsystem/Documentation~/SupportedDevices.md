@@ -6,25 +6,24 @@ This page lists the types/products of input devices supported by the input syste
 
 The following devices are supported in a way that does not require recognition of particular products.
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox|PS4|Switch|WebGL|
+|Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox(3)|PS4(3)|Switch(3)|WebGL|
 |------|-------|---|-----|---|-------|---|----|---|------|-----|
 |[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
 |[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
 |[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|
 |[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|No|No|No|No|
-|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No (3)|No|No|
+|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|
 |[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|Yes|
 
     (1) Tablet support for Mac is coming in Unity 2020.1.
     (2) Joysticks are supported as generic HIDs (See "Other Gamepads,
         Joysticks and Racing Wheels" below).
-    (3) The gyro/accelerometer in the PS4 controller is supported but is built
-        directly into the gamepad and not represented as a separate Gyroscope
-        device.
+    (3) Consoles are supported using separate packages, which need to be
+        installed in your project.
 
 ## Gamepads
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox|PS4|Switch|WebGL|
+|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|Xbox(7)|PS4(7)|Switch(7)|WebGL|
 |------|-------|---|-----|---|-------|---|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|No|Yes|No|No|Sometimes (2)|
@@ -45,6 +44,10 @@ The following devices are supported in a way that does not require recognition o
         other than the PS4 at the moment. Also, on such platforms, we only support
         PS4 controllers when connected via Bluetooth or USB; we do NOT support the
         "DualShock 4 USB Wireless Adaptor".
+    (6) We support Mfi certified controllers on iOS.
+    (7) Consoles are supported using separate packages, which need to be
+        installed in your project.
+
 
 ### WebGL
 
