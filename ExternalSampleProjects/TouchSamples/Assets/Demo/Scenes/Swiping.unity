@@ -332,7 +332,7 @@ GameObject:
   - component: {fileID: 468364887}
   - component: {fileID: 468364889}
   - component: {fileID: 468364886}
-  m_Layer: 12
+  m_Layer: 11
   m_Name: GlassBin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1066,7 +1066,7 @@ GameObject:
   - component: {fileID: 1302176667}
   - component: {fileID: 1302176669}
   - component: {fileID: 1302176666}
-  m_Layer: 12
+  m_Layer: 11
   m_Name: MetalBin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1190,7 +1190,7 @@ GameObject:
   - component: {fileID: 1450235724}
   - component: {fileID: 1450235726}
   - component: {fileID: 1450235723}
-  m_Layer: 12
+  m_Layer: 11
   m_Name: PaperBin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1314,7 +1314,7 @@ GameObject:
   - component: {fileID: 1668115373}
   - component: {fileID: 1668115375}
   - component: {fileID: 1668115372}
-  m_Layer: 12
+  m_Layer: 11
   m_Name: PlasticBin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1476,8 +1476,9 @@ MonoBehaviour:
     type: 3}
   m_ScrollWheelAction: {fileID: 4502412055082496612, guid: ca9f5fa95ffab41fb9a615ab714db018,
     type: 3}
-  m_Touches: []
-  m_TrackedDevices: []
+  m_TrackedDevicePositionAction: {fileID: 0}
+  m_TrackedDeviceOrientationAction: {fileID: 0}
+  m_TrackedDeviceSelectAction: {fileID: 0}
 --- !u!114 &1696799943
 MonoBehaviour:
   m_ObjectHideFlags: 0

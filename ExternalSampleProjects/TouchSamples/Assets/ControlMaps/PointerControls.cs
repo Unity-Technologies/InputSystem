@@ -1,4 +1,4 @@
-// GENERATED AUTOMATICALLY FROM 'Assets/TouchSamples/ControlMaps/PointerControls.inputactions'
+// GENERATED AUTOMATICALLY FROM 'Assets/ControlMaps/PointerControls.inputactions'
 
 using System.Collections;
 using System.Collections.Generic;
@@ -453,7 +453,6 @@ namespace InputSamples.Controls
     ""controlSchemes"": [
         {
             ""name"": ""Mouse"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Mouse"",
             ""devices"": [
                 {
@@ -465,7 +464,6 @@ namespace InputSamples.Controls
         },
         {
             ""name"": ""Pen"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Pen"",
             ""devices"": [
                 {
@@ -477,7 +475,6 @@ namespace InputSamples.Controls
         },
         {
             ""name"": ""Touch"",
-            ""basedOn"": """",
             ""bindingGroup"": ""Touch"",
             ""devices"": [
                 {

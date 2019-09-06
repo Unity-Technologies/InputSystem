@@ -5295,9 +5295,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cc52fa249ac6da4581a6d781547d778, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UseMouse: 0
-  m_UsePen: 0
-  m_UseTouch: 0
+  m_UseMouse: 1
+  m_UsePen: 1
+  m_UseTouch: 1
 --- !u!1 &937695053
 GameObject:
   m_ObjectHideFlags: 0
@@ -15437,8 +15437,9 @@ MonoBehaviour:
     type: 3}
   m_ScrollWheelAction: {fileID: 4502412055082496612, guid: ca9f5fa95ffab41fb9a615ab714db018,
     type: 3}
-  m_Touches: []
-  m_TrackedDevices: []
+  m_TrackedDevicePositionAction: {fileID: 0}
+  m_TrackedDeviceOrientationAction: {fileID: 0}
+  m_TrackedDeviceSelectAction: {fileID: 0}
 --- !u!114 &1755407911
 MonoBehaviour:
   m_ObjectHideFlags: 0
