@@ -85,23 +85,23 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorGUI.BeginChangeCheck();
 
-                EditorGUILayout.PropertyField(m_UpdateMode);
+                EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
 
-                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
-                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
+                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
+                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
 
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
-                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
-                EditorGUILayout.PropertyField(m_DefaultTapTime);
-                EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
-                EditorGUILayout.PropertyField(m_DefaultHoldTime);
-                EditorGUILayout.PropertyField(m_TapRadius);
-                EditorGUILayout.PropertyField(m_MultiTapDelayTime);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
+                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
+                EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
+                EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
+                EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
+                EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
+                EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -222,6 +222,18 @@ namespace UnityEngine.InputSystem.Editor
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
+            m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
+            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
+            m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
+            m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
+            m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
+            m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
+            m_DefaultTapTimeContent = new GUIContent("Default Tap Time", "Default duration to be used for Tap and MultiTap interactions. Also used by by Touch screen devices to distinguish taps from to new touches.");
+            m_DefaultSlowTapTimeContent = new GUIContent("Default Slow Tap Time", "Default duration to be used for SlowTap interactions.");
+            m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
+            m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
+            m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
+
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
             m_SupportedDevices = new ReorderableList(m_SettingsObject, supportedDevicesProperty)
@@ -306,7 +318,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
-        [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
@@ -325,6 +336,18 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
+
+        GUIContent m_UpdateModeContent;
+        GUIContent m_FilterNoiseOnCurrentContent;
+        GUIContent m_CompensateForScreenOrientationContent;
+        GUIContent m_DefaultDeadzoneMinContent;
+        GUIContent m_DefaultDeadzoneMaxContent;
+        GUIContent m_DefaultButtonPressPointContent;
+        GUIContent m_DefaultTapTimeContent;
+        GUIContent m_DefaultSlowTapTimeContent;
+        GUIContent m_DefaultHoldTimeContent;
+        GUIContent m_TapRadiusContent;
+        GUIContent m_MultiTapDelayTimeContent;
 
         private static InputSettingsProvider s_Instance;
 

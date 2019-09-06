@@ -14,6 +14,7 @@ public class KeyboardMouseOldInput : MonoBehaviour
     public Text m_keyboardInfoText;
     public Text m_mouseInfoText;
 
+#if ENABLE_LEGACY_INPUT_MANAGER
     void Update()
     {
         // Keyboard input or mouse button is pressed
@@ -150,4 +151,6 @@ public class KeyboardMouseOldInput : MonoBehaviour
     {
         m_MessageWindow.text += "<color=blue>" + msg + "</color>\n";
     }
+
+#endif
 }

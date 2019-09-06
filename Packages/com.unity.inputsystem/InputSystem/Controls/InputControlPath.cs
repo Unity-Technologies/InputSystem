@@ -1070,11 +1070,16 @@ namespace UnityEngine.InputSystem
                         if (parentLayout != null)
                         {
                             var controlName = new InternedString(name.ToString());
-                            var control = parentLayout.FindControl(controlName);
+                            var control = parentLayout.FindControlIncludingArrayElements(controlName, out var arrayIndex);
                             if (control != null)
                             {
                                 if (!string.IsNullOrEmpty(control.Value.displayName))
-                                    nameString = control.Value.displayName;
+                                {
+                                    if (arrayIndex != -1)
+                                        nameString = $"{control.Value.displayName} #{arrayIndex}";
+                                    else
+                                        nameString = control.Value.displayName;
+                                }
 
                                 // If we don't have an explicit <layout> part in the component,
                                 // remember the name of the layout referenced by the control name so

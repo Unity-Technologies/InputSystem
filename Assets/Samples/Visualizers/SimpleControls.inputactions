@@ -44,17 +44,6 @@
                 },
                 {
                     "name": "",
-                    "id": "6530c131-b549-4f2f-ae63-0ed5c6c242f4",
-                    "path": "<SteamDemoController>/fire",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "fire",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "e1b8c4dd-7b3a-4db6-a93a-0889b59b1afc",
                     "path": "<Gamepad>/leftStick",
                     "interactions": "",
@@ -121,17 +110,6 @@
                 },
                 {
                     "name": "",
-                    "id": "f96cc25e-7a56-479c-b093-65340e94c1ab",
-                    "path": "<SteamDemoController>/move",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "move",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "c106d6e6-2780-47ff-b318-396171bd54cc",
                     "path": "<Gamepad>/rightStick",
                     "interactions": "",
@@ -147,17 +125,6 @@
                     "path": "<Pointer>/delta",
                     "interactions": "",
                     "processors": "ScaleVector2(x=2,y=2)",
-                    "groups": "",
-                    "action": "look",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f93b4751-8811-456b-8827-af4eb2cf5fab",
-                    "path": "<SteamDemoController>/look",
-                    "interactions": "",
-                    "processors": "",
                     "groups": "",
                     "action": "look",
                     "isComposite": false,

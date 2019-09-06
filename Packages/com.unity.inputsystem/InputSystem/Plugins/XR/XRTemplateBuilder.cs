@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using System.Text;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -57,7 +58,7 @@ namespace UnityEngine.InputSystem.XR
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
             // If the device isn't a XRInput, we're not interested.
-            if (description.interfaceName != XRUtilities.kXRInterfaceCurrent && description.interfaceName != XRUtilities.kXRInterfaceV1)
+            if (description.interfaceName != XRUtilities.InterfaceCurrent && description.interfaceName != XRUtilities.InterfaceV1)
             {
                 return null;
             }
@@ -87,10 +88,18 @@ namespace UnityEngine.InputSystem.XR
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
-                if (deviceDescriptor.deviceRole == DeviceRole.LeftHanded || deviceDescriptor.deviceRole == DeviceRole.RightHanded)
-                    matchedLayout = "XRController";
-                else if (deviceDescriptor.deviceRole == DeviceRole.Generic)
+#if UNITY_2019_3_OR_NEWER
+                const InputDeviceCharacteristics controllerCharacteristics = (InputDeviceCharacteristics)(InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller);
+                if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
                     matchedLayout = "XRHMD";
+                else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
+                    matchedLayout = "XRController";
+#else
+                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
+                    matchedLayout = "XRController";
+                else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
+                    matchedLayout = "XRHMD";
+#endif
             }
 
             string layoutName = null;
@@ -167,7 +176,7 @@ namespace UnityEngine.InputSystem.XR
 
                 uint nextOffset = GetSizeOfFeature(feature);
 
-                if (interfaceName == XRUtilities.kXRInterfaceV1)
+                if (interfaceName == XRUtilities.InterfaceV1)
                 {
 #if UNITY_ANDROID
                     if (nextOffset < 4)

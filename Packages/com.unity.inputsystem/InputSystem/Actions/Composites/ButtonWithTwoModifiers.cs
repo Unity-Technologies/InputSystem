@@ -43,6 +43,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="ButtonWithOneModifier"/>
+    [Scripting.Preserve]
     public class ButtonWithTwoModifiers : InputBindingComposite<float>
     {
         /// <summary>

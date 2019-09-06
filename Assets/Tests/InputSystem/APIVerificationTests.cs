@@ -138,13 +138,16 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    public void API_ControlTypesHavePreserveAttribute()
+    [TestCase(typeof(InputControl))]
+    [TestCase(typeof(IInputInteraction))]
+    [TestCase(typeof(InputBindingComposite))]
+    [TestCase(typeof(InputProcessor))]
+    public void API_TypesCreatedByReflectionHavePreserveAttribute(Type type)
     {
-        var controlType = typeof(InputControl);
-        var controlTypes = controlType.Assembly.GetTypes().Where(t => controlType.IsAssignableFrom(t));
-        Assert.That(controlTypes, Is.Not.Empty);
-        var controlTypesWithoutPreserveAttribute = controlTypes.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")));
-        Assert.That(controlTypesWithoutPreserveAttribute, Is.Empty);
+        var types = type.Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)).Concat(typeof(APIVerificationTests).Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)));
+        Assert.That(types, Is.Not.Empty);
+        var typesWithoutPreserveAttribute = types.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")));
+        Assert.That(typesWithoutPreserveAttribute, Is.Empty);
     }
 
     [Test]

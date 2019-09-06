@@ -1326,6 +1326,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Clear();
+
+            // Clear timeouts pending on any control on the device.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].control?.device == device)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
@@ -1345,6 +1350,12 @@ namespace UnityEngine.InputSystem
                 return;
 
             m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex);
+
+            // Remove pending timeouts on the monitor.
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
+                if (m_StateChangeMonitorTimeouts[i].monitor == monitor &&
+                    m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex)
+                    m_StateChangeMonitorTimeouts[i] = default;
         }
 
         public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
@@ -1370,8 +1381,7 @@ namespace UnityEngine.InputSystem
                     && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
                     && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
                 {
-                    ////TODO: leave state empty and compact array lazily on traversal
-                    m_StateChangeMonitorTimeouts.RemoveAt(i);
+                    m_StateChangeMonitorTimeouts[i] = default;
                     break;
                 }
             }
@@ -2684,8 +2694,7 @@ namespace UnityEngine.InputSystem
 
         private void ProcessStateChangeMonitorTimeouts()
         {
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
-            if (timeoutCount == 0)
+            if (m_StateChangeMonitorTimeouts.length == 0)
                 return;
 
             // Go through the list and both trigger expired timers and remove any irrelevant
@@ -2693,7 +2702,7 @@ namespace UnityEngine.InputSystem
             // NOTE: We do not actually release any memory we may have allocated.
             var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
             var remainingTimeoutCount = 0;
-            for (var i = 0; i < timeoutCount; ++i)
+            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
             {
                 // If we have reset this entry in RemoveStateChangeMonitorTimeouts(),
                 // skip over it and let compaction get rid of it.

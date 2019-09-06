@@ -17,6 +17,9 @@ public class EventsystemPicker : MonoBehaviour
     void Start()
     {
         m_toggles = GetComponent<ToggleGroup>().ActiveToggles();
+        m_oldSystem.enabled = false;
+        m_newSystem.enabled = true;
+
         foreach (Toggle toggle in m_toggles)
         {
             toggle.onValueChanged.AddListener(delegate {
