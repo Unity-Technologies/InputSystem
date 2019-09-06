@@ -1,10 +1,9 @@
 promote:
   name: Promote to Production
   agent:
-  - name: win
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: b1.large
+    flavor: m1.large
   variables:
     UPMCI_PROMOTION: 1
   commands:
