@@ -110,7 +110,6 @@ namespace UnityEngine.InputSystem.XR
                     matchedLayout = "XRHMD";
 #endif //UNITY_2019_3_OR_NEWER
             }
-            Debug.Log($"[TOMB] Matched Layout: {matchedLayout}");
 
             string layoutName = null;
             if (string.IsNullOrEmpty(description.manufacturer))

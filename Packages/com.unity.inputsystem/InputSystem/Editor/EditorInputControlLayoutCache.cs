@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
         public static Texture2D GetIconForLayout(string layoutName)
         {
             if (string.IsNullOrEmpty(layoutName))
-                return null;
+                throw new ArgumentNullException(nameof(layoutName));
 
             Refresh();
 
