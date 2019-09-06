@@ -11,7 +11,6 @@ promote:
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
     - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=Publish sh ExternalSampleProjects/publish.sh     
   triggers:
