@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
@@ -484,5 +485,58 @@ internal partial class CoreTests
 
             Assert.That(trace, Started<HoldInteraction>(holdAction));
         }
+    }
+
+    [Preserve]
+    private class CancelingTestInteraction : IInputInteraction
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+            if (context.ControlIsActuated())
+            {
+                context.Performed();
+                context.Canceled();
+            }
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueIsDefaultWhenActionIsCanceled()
+    {
+        InputSystem.RegisterInteraction<CancelingTestInteraction>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", binding: "<Gamepad>/leftTrigger", interactions: "CancelingTest");
+        int performedCount = 0;
+        float performedValue = -1;
+        action.performed += ctx =>
+        {
+            performedValue = ctx.ReadValue<float>();
+            performedCount++;
+        };
+
+        int canceledCount = 0;
+        float canceledValue = -1;
+        action.canceled += ctx =>
+        {
+            canceledValue = ctx.ReadValue<float>();
+            canceledCount++;
+        };
+
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 1.0f);
+
+        Assert.That(performedCount, Is.EqualTo(1));
+        Assert.That(performedValue, Is.EqualTo(1.0));
+
+        Assert.That(canceledCount, Is.EqualTo(1));
+        Assert.That(canceledValue, Is.EqualTo(0.0));
     }
 }
