@@ -3,7 +3,7 @@ promote:
   agent:
     type: Unity::VM
     image: package-ci/win10:stable
-    flavor: m1.large
+    flavor: b1.large
   variables:
     UPMCI_PROMOTION: 1
   commands:
