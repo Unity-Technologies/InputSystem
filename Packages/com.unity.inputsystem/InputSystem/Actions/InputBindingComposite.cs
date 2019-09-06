@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem
     /// A binding that synthesizes a value from from several component bindings.
     /// </summary>
     ////TODO: clarify whether this can have state or not
+    [Scripting.Preserve]
     public abstract class InputBindingComposite
     {
         public abstract Type valueType { get; }
@@ -129,6 +130,7 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
+    [Scripting.Preserve]
     public abstract class InputBindingComposite<TValue> : InputBindingComposite
         where TValue : struct
     {

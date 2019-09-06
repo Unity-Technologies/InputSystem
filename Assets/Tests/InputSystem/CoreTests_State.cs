@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -651,6 +652,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
@@ -863,6 +865,38 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromTimeoutCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var timeoutCount = 0;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, time, eventPtr, monitorIndex) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                ++timeoutCount;
+                InputState.AddChangeMonitorTimeout(control, monitor, time + 1.5);
+            });
+
+        InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
+
+        // Trigger first timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(1));
+
+        // Trigger second timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_StateChangeMonitor_CanBeAddedFromMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -910,6 +944,25 @@ partial class CoreTests
 
         Press(gamepad.buttonWest);
         LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_RemovingMonitorRemovesTimeouts()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.Fail("Should not reach here");
+            });
+        InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
+        InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
+
+        runtime.currentTime = 4;
+        InputSystem.Update();
     }
 
     [Test]

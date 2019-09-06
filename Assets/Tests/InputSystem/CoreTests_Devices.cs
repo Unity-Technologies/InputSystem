@@ -13,6 +13,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
@@ -542,6 +543,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
+    [Preserve]
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
     {
         public int addedCount;
@@ -942,6 +944,7 @@ partial class CoreTests
         Assert.That(receivedEventPtr.IsA<StateEvent>(), Is.True);
     }
 
+    [Preserve]
     private class TestDeviceThatResetsStateInCallback : InputDevice, IInputStateCallbackReceiver
     {
         [InputControl(format = "FLT")]
@@ -1029,6 +1032,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(TestDeviceFullState))]
+    [Preserve]
     private class TestDeviceIntegratingStateItself : InputDevice, IInputStateCallbackReceiver
     {
         public void OnNextUpdate()

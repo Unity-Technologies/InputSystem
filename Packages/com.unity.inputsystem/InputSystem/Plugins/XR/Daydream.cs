@@ -10,24 +10,34 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class DaydreamHMD : XRHMD
     {
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control leftEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl leftEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control rightEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl rightEyeRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control centerEyePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl centerEyeRotation { get; private set; }
 
@@ -55,35 +65,50 @@ namespace UnityEngine.InputSystem.XR
     [Scripting.Preserve]
     public class DaydreamController : XRController
     {
+        [Scripting.Preserve]
         [InputControl]
         public Vector2Control touchpad { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl volumeUp { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl recentered { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl volumeDown { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl recentering { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl app { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl home { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl touchpadClicked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl touchpadTouched { get; private set; }
 
+        [Scripting.Preserve]
         [InputControl]
         public IntegerControl trackingState { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public ButtonControl isTracked { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control devicePosition { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public QuaternionControl deviceRotation { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceVelocity { get; private set; }
+        [Scripting.Preserve]
         [InputControl]
         public Vector3Control deviceAcceleration { get; private set; }
 

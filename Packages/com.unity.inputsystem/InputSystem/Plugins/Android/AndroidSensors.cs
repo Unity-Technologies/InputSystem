@@ -122,6 +122,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class AndroidCompensateDirectionProcessor : CompensateDirectionProcessor
     {
         // Taken from platforms\android-<API>\arch-arm\usr\include\android\sensor.h
@@ -136,6 +137,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     }
 
     [DesignTimeVisible(false)]
+    [Scripting.Preserve]
     internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
         public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)

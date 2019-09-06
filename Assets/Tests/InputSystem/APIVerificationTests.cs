@@ -138,13 +138,16 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    public void API_ControlTypesHavePreserveAttribute()
+    [TestCase(typeof(InputControl))]
+    [TestCase(typeof(IInputInteraction))]
+    [TestCase(typeof(InputBindingComposite))]
+    [TestCase(typeof(InputProcessor))]
+    public void API_TypesCreatedByReflectionHavePreserveAttribute(Type type)
     {
-        var controlType = typeof(InputControl);
-        var controlTypes = controlType.Assembly.GetTypes().Where(t => controlType.IsAssignableFrom(t));
-        Assert.That(controlTypes, Is.Not.Empty);
-        var controlTypesWithoutPreserveAttribute = controlTypes.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")));
-        Assert.That(controlTypesWithoutPreserveAttribute, Is.Empty);
+        var types = type.Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)).Concat(typeof(APIVerificationTests).Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)));
+        Assert.That(types, Is.Not.Empty);
+        var typesWithoutPreserveAttribute = types.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")));
+        Assert.That(typesWithoutPreserveAttribute, Is.Empty);
     }
 
     [Test]
@@ -234,9 +237,7 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLGamepad).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLJoystick).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.NPad).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGamepad).FullName ||
 #if UNITY_EDITOR_OSX
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
@@ -252,10 +253,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
 #endif
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.PS4TouchControl).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.DualShockGamepadPS4).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.MoveControllerPS4).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.PS4.LowLevel.PS4Touch).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.iOS.iOSGameController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock3GamepadHID).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock4GamepadHID).FullName ||
@@ -273,7 +270,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.INPadRumble).FullName ||
             ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||

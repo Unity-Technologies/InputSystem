@@ -364,6 +364,9 @@ namespace UnityEngine.InputSystem.Layouts
 
         public ControlItem? FindControl(InternedString path)
         {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
             if (m_Controls == null)
                 return null;
 
@@ -371,6 +374,49 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 if (m_Controls[i].name == path)
                     return m_Controls[i];
+            }
+
+            return null;
+        }
+
+        public ControlItem? FindControlIncludingArrayElements(string path, out int arrayIndex)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            arrayIndex = -1;
+            if (m_Controls == null)
+                return null;
+
+            var arrayIndexAccumulated = 0;
+            var lastDigitIndex = path.Length;
+            while (lastDigitIndex > 0 && char.IsDigit(path[lastDigitIndex - 1]))
+            {
+                --lastDigitIndex;
+                arrayIndexAccumulated *= 10;
+                arrayIndexAccumulated += path[lastDigitIndex] - '0';
+            }
+
+            var arrayNameLength = 0;
+            if (lastDigitIndex < path.Length && lastDigitIndex > 0) // Protect against name being all digits.
+                arrayNameLength = lastDigitIndex;
+
+            for (var i = 0; i < m_Controls.Length; ++i)
+            {
+                ref var control = ref m_Controls[i];
+                if (string.Compare(control.name, path, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    return control;
+
+                ////FIXME: what this can't handle is "outerArray4/innerArray5"; not sure we care, though
+                // NOTE: This will *not* match something like "touch4/tap". Which is what we want.
+                //       In case there is a ControlItem
+                if (control.isArray && arrayNameLength > 0 && arrayNameLength == control.name.length &&
+                    string.Compare(control.name.ToString(), 0, path, 0, arrayNameLength,
+                        StringComparison.InvariantCultureIgnoreCase) == 0)
+                {
+                    arrayIndex = arrayIndexAccumulated;
+                    return control;
+                }
             }
 
             return null;
