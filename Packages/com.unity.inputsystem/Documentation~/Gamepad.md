@@ -69,7 +69,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 ```
 
 >NOTE: Only the following combinations of devices/OSes currently support rumble:
->* PS4, Xbox and Switch controllers when connected to their respective consoles.
+>* PS4, Xbox and Switch controllers when connected to their respective consoles (requires console-specific packages to be installed in your project).
 >* PS4 controllers when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on windows.
 [//]: # (TODO: are we missing any supported configs?)
@@ -101,21 +101,13 @@ PlayStation controllers are well supported on different devices. They are implem
 
 * [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface (supported on macOS, Windows, UWP, and Linux).
 
-* [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) A DualShock controller connected to a PlayStation 4 console. Only available when building for PS4, will not compile on other platforms.
+[`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
 
-Some of these implement additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
-
-* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller. Supported on [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) and [`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html).
-
-* [`acceleration`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_acceleration), [`orientation`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_orientation) and [`angularVelocity`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_angularVelocity): Controls which let you access the sensor data on the gamepad ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) only)
-
-* [`touches`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html#UnityEngine_InputSystem_PS4_DualShockGamepadPS4_touches): Lets you get input from the touch screen on the gamepad. ([`DualShockGamepadPS4`](../api/UnityEngine.InputSystem.PS4.DualShockGamepadPS4.html) only)
-
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller.
 
 >NOTES:
 >* We support PlayStation controllers on WebGL in some browser/OS configs, but they will always be represented as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) devices, and we do not support Rumble or any other DualShock specific functionality.
->* We do not support the "DualShock 4 USB Wireless Adaptor" to connect a PlayStation controller to a desktop machine. Use USB or Bluetooth to connect  it.
-
+>* We do not support the "DualShock 4 USB Wireless Adaptor" to connect a PlayStation controller to a desktop machine. Use USB or Bluetooth to connect it.
 
 ## Xbox
 
@@ -127,17 +119,6 @@ On other platforms we use specific derived classes to represent Xbox controllers
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth (only the latest generation of Xbox One controllers supports Bluetooth). No additional driver is needed for this case.
 
-* [`XboxOneGamepad`](../api/UnityEngine.InputSystem.XInput.XboxOneGamepad.html): A gamepad on an Xbox one console. We support additional, Xbox specific functionality for this case:
->*  The `gamepadId` and `xboxUserId` properties can be used to identify the gamepad and user.
->* Xbox gamepads have extended rumble functionality in the form of two additional motors that are located in the triggers. [`XboxOneGamepad`](../api/UnityEngine.InputSystem.XInput.XboxOneGamepad.html) implements [`IXboxOneRumble`](../api/UnityEngine.InputSystem.XInput.IXboxOneRumble.html) that features an extended `SetMotorSpeeds` method giving access to all four motors:
-
-```CSharp
-// Rumble the low-frequency (left) motor at 1/4 speed, the high-frequency (right)
-// motor at 3/4 speed, turn off the left trigger motor, and rumble the right
-// trigger motor at full speed.
-XboxOneGamepad.current.SetMotorSpeeds(0.25f, 0.75, 0f, 1f);
-```
-
 >NOTES:
 >* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). Only USB connections are supported, no wireless dongles. However, the latest generation of Xbox One controllers natively supported Bluetooth, and are natively supported on Macs as HID devices without any additional driver when connected via Bluetooth.
 >* We support Xbox controllers on WebGL in some browser/OS configs, but they will always be represented as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) devices, and we do not support Rumble or any other Xbox specific functionality.
@@ -146,5 +127,3 @@ XboxOneGamepad.current.SetMotorSpeeds(0.25f, 0.75, 0f, 1f);
 ## Switch
 
 We support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements the basic gamepad functionality.
-
-On the Switch console itself, we have extended support for Switch Pro as well as Joy-Con controllers using the [`NPad`](../api/UnityEngine.InputSystem.Switch.NPad.html) class. Refer to the [`NPad` scripting API documentation](../api/UnityEngine.InputSystem.Switch.NPad.html)  for more information.

@@ -11,17 +11,10 @@ namespace UnityEngine.InputSystem.Switch
 #else
     internal
 #endif
-    static class SwitchSupport
+    static class SwitchSupportHID
     {
         public static void Initialize()
         {
-        #if UNITY_EDITOR || UNITY_SWITCH
-            InputSystem.RegisterLayout<NPad>(
-                matches: new InputDeviceMatcher()
-                    .WithInterface("Switch")
-                    .WithManufacturer("Nintendo")
-                    .WithProduct("Wireless Controller"));
-        #endif
         #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             InputSystem.RegisterLayout<SwitchProControllerHID>(
                 matches: new InputDeviceMatcher()

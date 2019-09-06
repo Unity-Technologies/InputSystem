@@ -27,7 +27,9 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kBaseCommandSize)]
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
+        ////TODO: Remove kBaseCommandSize
         internal const int kBaseCommandSize = 8;
+        public const int BaseCommandSize = 8;
 
         /// <summary>
         /// Generic failure code for <see cref="IOCTL"/> calls.

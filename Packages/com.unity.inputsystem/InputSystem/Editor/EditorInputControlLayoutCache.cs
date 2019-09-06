@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.DualShock;
-using UnityEngine.InputSystem.Switch;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
@@ -376,7 +375,7 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         /// <remarks>
         /// An example is the "acceleration" control defined by some layouts based on <see cref="Gamepad"/> (e.g.
-        /// <see cref="DualShockGamepad.acceleration"/> and <see cref="NPad.acceleration"/>). This means gamepads
+        /// <see cref="DualShockGamepad.acceleration"/>. This means gamepads
         /// MAY have a gyro and thus MAY have an "acceleration" control.
         ///
         /// In bindings (<see cref="InputBinding"/>), it is perfectly valid to deal with this opportunistically
