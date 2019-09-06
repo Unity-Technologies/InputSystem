@@ -1,5 +1,5 @@
 {
-    "name": "NewAssembly",
+    "name": "XRDeviceActions",
     "references": [
         "GUID:28d8685fae23c21419ef42894cb9b075",
         "GUID:75469ad4d38634e559750d17036d5f7c",
