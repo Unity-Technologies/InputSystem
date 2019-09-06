@@ -63,10 +63,9 @@ namespace UnityEngine.InputSystem.XR
             return sanitizedName.ToString();
         }
 
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
         internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
-
             // If the device isn't a XRInput, we're not interested.
             if (description.interfaceName != XRUtilities.InterfaceCurrent && description.interfaceName != XRUtilities.InterfaceV1)
             {
@@ -128,10 +127,8 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayoutBuilder(() => layout.Build(), layoutName, matchedLayout);
 
             return layoutName;
-#else //UNITY_INPUT_SYSTEM_ENABLE_XR
-            return null;
-#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         }
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
 
         string ConvertPotentialAliasToName(InputControlLayout layout, string nameOrAlias)
         {

@@ -270,6 +270,7 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
 
@@ -277,6 +278,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<XRController>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
+#endif
         }
     }
 }
