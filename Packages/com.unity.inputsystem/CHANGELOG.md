@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.9.6-preview] - 2099-1-1
+## [0.9.7-preview] - 2099-1-1
+
+### Fixed
+#### Actions
+### Changed
+### Added
+
+## [0.9.6-preview] - 2019-9-6
 
 ### Fixed
 
