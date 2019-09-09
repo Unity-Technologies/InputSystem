@@ -2008,7 +2008,6 @@ namespace UnityEngine.InputSystem
                     var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
 
                     ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
-
                     if (isFirstValue)
                     {
                         result = value;
