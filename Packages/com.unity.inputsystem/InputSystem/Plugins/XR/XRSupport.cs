@@ -1,8 +1,7 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using System;
 using System.Collections.Generic;
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
-#endif
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
 
@@ -69,13 +68,11 @@ namespace UnityEngine.InputSystem.XR
         public string deviceName;
         public string manufacturer;
         public string serialNumber;
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
 #if UNITY_2019_3_OR_NEWER
         public InputDeviceCharacteristics characteristics;
 #else //UNITY_2019_3_OR_NEWER
         public InputDeviceRole deviceRole;
 #endif //UNITY_2019_3_OR_NEWER
-#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         public int deviceId;
         public List<XRFeatureDescriptor> inputFeatures;
 
@@ -270,7 +267,6 @@ namespace UnityEngine.InputSystem.XR
         /// </summary>
         public static void Initialize()
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
             InputSystem.RegisterLayout<BoneControl>("Bone");
             InputSystem.RegisterLayout<EyesControl>("Eyes");
 
@@ -278,7 +274,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<XRController>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
-#endif
         }
     }
 }
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
