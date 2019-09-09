@@ -4,6 +4,8 @@ promote:
     type: Unity::VM::osx
     image: buildfarm/mac:stable
     flavor: m1.mac
+  dependencies:
+    - .yamato/publish-samples.yml   
   variables:
     UPMCI_PROMOTION: 1
   commands:
