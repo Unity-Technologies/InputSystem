@@ -23,7 +23,7 @@ Acceleration events are not made available separately from other input events. T
 
     void StartTrace()
     {
-        trace = new InputEventTrace() {deviceId = Accelerometer.current.id};
+        trace = new InputEventTrace() {deviceId = Accelerometer.current.deviceId};
         trace.Enable();
     }
 

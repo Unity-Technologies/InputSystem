@@ -2242,7 +2242,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
         /// Usually this happens in response to the player loop running and triggering updates at set points. However,
-        /// updates can also be manually triggered through <see cref="InputSystem.RunOneFrame"/>.
+        /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
         ///
         /// The method receives the event buffer used internally by the runtime to collect events.
         ///

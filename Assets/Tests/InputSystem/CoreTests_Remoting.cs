@@ -38,7 +38,7 @@ partial class CoreTests
         using (var remote = new FakeRemote())
         {
             InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.5f}, 0.1234);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             // Make second input manager process the events it got.
             // NOTE: This will also switch the system to the state buffers from the second input manager.
@@ -146,7 +146,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.QueueStateEvent(device, new GamepadState());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         InputSystem.RemoveDevice(device);
 
         fakeEditorConnection.Send(RemoteInputPlayerConnection.kStopSendingMsg, null);
@@ -154,7 +154,7 @@ partial class CoreTests
         // We should not obseve any messages for these, as we stopped sending!
         device = InputSystem.AddDevice<Gamepad>();
         InputSystem.QueueStateEvent(device, new GamepadState());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         InputSystem.RemoveDevice(device);
 
         fakeEditorConnection.DisconnectAll();

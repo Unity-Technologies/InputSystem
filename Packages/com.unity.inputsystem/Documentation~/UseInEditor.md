@@ -19,7 +19,7 @@ class MyEditorWindow : EditorWindow
 }
 ```
 
-Note that this encompases all code running in `OnGUI()` methods, not just the code running directly in EditorWindows. This means that the input system can also be used in property drawers, inspectors, and similar places.
+Note that this encompasses all code running in `OnGUI()` methods, not just the code running directly in EditorWindows. This means that the input system can also be used in property drawers, inspectors, and similar places.
 
 ## Limitations
 

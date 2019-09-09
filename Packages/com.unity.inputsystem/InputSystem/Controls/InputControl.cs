@@ -311,9 +311,9 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// A control is considered "noisy" if it produces different values without necessarily requiring user
         /// interaction. A good example are sensors (see <see cref="Sensor"/>). For example, the PS4 controller
-        /// which has a gyroscope sensor built into the device ((<see cref="PS4.DualShockGamepadPS4.acceleration"/>).
-        /// Whereas sticks and buttons on the device require user interaction to produce non-default values, the
-        /// gyro will produce varying values even if the device just sits there without user interaction.
+        /// which has a gyroscope sensor built into the device. Whereas sticks and buttons on the device require
+        /// user interaction to produce non-default values, the gyro will produce varying values even if the
+        /// device just sits there without user interaction.
         ///
         /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
         /// control has been built from.

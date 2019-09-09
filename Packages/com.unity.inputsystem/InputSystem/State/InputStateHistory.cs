@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Gamepad.current.leftStick.QueueValueChange(new Vector2(0.123f, 0.234f));
     /// Gamepad.current.leftStick.QueueValueChange(new Vector2(0.234f, 0.345f));
     /// Gamepad.current.leftStick.QueueValueChange(new Vector2(0.345f, 0.456f));
-    /// InputSystem.RunOneFrame();
+    /// InputSystem.Update();
     ///
     /// // Every value change will be visible in the history.
     /// foreach (var record in history)

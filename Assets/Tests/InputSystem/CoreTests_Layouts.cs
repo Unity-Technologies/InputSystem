@@ -956,7 +956,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(initialJson);
 
         runtime.ReportNewInputDevice(new InputDeviceDescription {product = "Test"}.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 

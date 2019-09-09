@@ -29,7 +29,7 @@ internal partial class CoreTests
             // Expire the tap. The system should transitioning from the tap to a slowtap.
             // Note the starting time of the slowTap will be 0 not 2.
             runtime.currentTime = 2;
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(trace,
                 Canceled<TapInteraction>(action, gamepad.buttonSouth)
@@ -195,7 +195,7 @@ internal partial class CoreTests
         action.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.0);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
@@ -206,7 +206,7 @@ internal partial class CoreTests
         startedReceivedCalls = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10.25);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.Zero);
@@ -218,7 +218,7 @@ internal partial class CoreTests
         canceledReceivedCalls = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.5);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
@@ -230,7 +230,7 @@ internal partial class CoreTests
         startedReceivedCalls = 0;
 
         runtime.currentTime = 10.75 + timeOffset;
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.Zero);
@@ -240,7 +240,7 @@ internal partial class CoreTests
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
         runtime.currentTime = 11 + timeOffset;
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.Zero);
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
@@ -286,7 +286,7 @@ internal partial class CoreTests
         action.Enable();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.South}, 0.0);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(1));
         Assert.That(performedReceivedCalls, Is.Zero);
@@ -296,7 +296,7 @@ internal partial class CoreTests
         startedReceivedCalls = 0;
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState(), InputSystem.settings.defaultTapTime);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(startedReceivedCalls, Is.EqualTo(0));
         Assert.That(performedReceivedCalls, Is.EqualTo(1));
@@ -324,7 +324,7 @@ internal partial class CoreTests
             // Press button.
             runtime.currentTime = 1;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 1);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             var actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -338,7 +338,7 @@ internal partial class CoreTests
             // Release before tap time and make sure the double tap cancels.
             runtime.currentTime = 12;
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 1.75);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -354,7 +354,7 @@ internal partial class CoreTests
             runtime.currentTime = 2.5;
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 2);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 2.25);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -368,7 +368,7 @@ internal partial class CoreTests
 
             // Wait for longer than tapDelay and make sure we're seeing a cancellation.
             runtime.currentTime = 4;
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(1));
@@ -387,7 +387,7 @@ internal partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 4.9);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 5);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 5.9);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));
@@ -410,7 +410,7 @@ internal partial class CoreTests
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 7.25);
             InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 7.5);
             InputSystem.QueueStateEvent(gamepad, new GamepadState(), 7.75);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             actions = trace.ToArray();
             Assert.That(actions, Has.Length.EqualTo(2));

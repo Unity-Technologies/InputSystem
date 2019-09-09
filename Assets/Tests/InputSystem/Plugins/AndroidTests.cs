@@ -78,7 +78,7 @@ internal class AndroidTests : InputTestFixture
                 .WithAxis(AndroidAxis.Z, rightStick.x)
                 .WithAxis(AndroidAxis.Rz, rightStick.y));
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
@@ -119,7 +119,7 @@ internal class AndroidTests : InputTestFixture
                 .WithAxis(AndroidAxis.Z, -rightStick.x)
                 .WithAxis(AndroidAxis.Rz, -rightStick.y));
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(controller.leftStick.left.ReadValue(), Is.EqualTo(new AxisDeadzoneProcessor().Process(leftStick.x)));
         Assert.That(controller.leftStick.right.ReadValue(), Is.EqualTo(0.0f));
@@ -160,7 +160,7 @@ internal class AndroidTests : InputTestFixture
             new AndroidGameControllerState()
                 .WithAxis(AndroidAxis.HatX, 1)
                 .WithAxis(AndroidAxis.HatY, 1));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.False);
         Assert.That(gamepad.dpad.right.isPressed, Is.True);
@@ -171,7 +171,7 @@ internal class AndroidTests : InputTestFixture
             new AndroidGameControllerState()
                 .WithAxis(AndroidAxis.HatX, -1)
                 .WithAxis(AndroidAxis.HatY, -1));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.True);
         Assert.That(gamepad.dpad.right.isPressed, Is.False);
@@ -182,7 +182,7 @@ internal class AndroidTests : InputTestFixture
             new AndroidGameControllerState()
                 .WithAxis(AndroidAxis.HatX, 0)
                 .WithAxis(AndroidAxis.HatY, 0));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.left.isPressed, Is.False);
         Assert.That(gamepad.dpad.right.isPressed, Is.False);
@@ -249,7 +249,7 @@ internal class AndroidTests : InputTestFixture
                 .WithAxis(AndroidAxis.Z, -1)
                 .WithAxis(AndroidAxis.Rz, -1));
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.0f).Within(0.000001));
@@ -262,7 +262,7 @@ internal class AndroidTests : InputTestFixture
                 .WithAxis(AndroidAxis.Ry, -0.456f));
 
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         Assert.That(gamepad.rightStick.ReadValue(), Is.EqualTo(rightStickDeadzone.Process(new Vector2(0.123f, 0.456f))));
@@ -346,7 +346,7 @@ internal class AndroidTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(control.ReadValue(), Is.EqualTo(0.123f).Within(0.0000001));
         }
@@ -366,7 +366,7 @@ internal class AndroidTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(control.ReadValue(), Is.EqualTo(5));
         }
@@ -396,7 +396,7 @@ internal class AndroidTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
             InputSystem.settings.compensateForScreenOrientation = false;
@@ -425,7 +425,7 @@ internal class AndroidTests : InputTestFixture
 
             InputSystem.QueueEvent(stateEventPtr);
             InputSystem.QueueEvent(stateEventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             runtime.screenOrientation = ScreenOrientation.LandscapeLeft;
             InputSystem.settings.compensateForScreenOrientation = false;

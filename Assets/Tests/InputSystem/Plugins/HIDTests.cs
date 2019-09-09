@@ -47,7 +47,7 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -102,7 +102,7 @@ internal class HIDTests : InputTestFixture
         var deviceId = runtime.AllocateDeviceId();
 
         runtime.ReportNewInputDevice(descriptionJson, deviceId);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
@@ -112,7 +112,7 @@ internal class HIDTests : InputTestFixture
         );
 
         runtime.ReportNewInputDevice(descriptionJson, deviceId);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
@@ -206,7 +206,7 @@ internal class HIDTests : InputTestFixture
                     productId = 0x234
                 }.ToJson()
             }.ToJson(), deviceId);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         // Grab device.
         var device = (Joystick)InputSystem.GetDeviceById(deviceId);
@@ -310,7 +310,7 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
             }.ToJson(), deviceId);
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -356,7 +356,7 @@ internal class HIDTests : InputTestFixture
             product = "TestHID",
             capabilities = hidDescriptor.ToJson()
         }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = InputSystem.devices.First(x => x is HID);
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(32));
@@ -386,7 +386,7 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
         Assert.That(device.hidDescriptor.productId, Is.EqualTo(1234));
@@ -429,7 +429,7 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
                 capabilities = hidDescriptor2.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
         Assert.That(InputSystem.devices[0].layout, Is.Not.EqualTo(InputSystem.devices[1].layout));
@@ -495,7 +495,7 @@ internal class HIDTests : InputTestFixture
                 product = "TestHID",
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = InputSystem.devices[0];
 
@@ -510,7 +510,7 @@ internal class HIDTests : InputTestFixture
             vx = 0,
             vy = -10000,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
@@ -530,7 +530,7 @@ internal class HIDTests : InputTestFixture
             vx = 10000,
             vy = 10000,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
@@ -550,7 +550,7 @@ internal class HIDTests : InputTestFixture
             vx = 10000 / 2,
             vy = 0,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["Rz"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
         Assert.That(device["Vz"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
@@ -586,7 +586,7 @@ internal class HIDTests : InputTestFixture
                     capabilities = hidDescriptor.ToJson()
                 }.ToJson());
 
-            Assert.That(() => InputSystem.RunOneFrame(), Throws.Nothing);
+            Assert.That(() => InputSystem.Update(), Throws.Nothing);
         }
         finally
         {
@@ -619,7 +619,7 @@ internal class HIDTests : InputTestFixture
                 interfaceName = HID.kHIDInterface,
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = (HID)InputSystem.devices.First(x => x is HID);
         Assert.That(device.name, Is.EqualTo("1234-5678 MultiAxisController"));
@@ -648,7 +648,7 @@ internal class HIDTests : InputTestFixture
                 interfaceName = HID.kHIDInterface,
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         InputSystem.SaveAndReset();
         InputSystem.Restore();
@@ -696,7 +696,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
         Assert.That(hid["hat"], Is.TypeOf<DpadControl>());
@@ -724,63 +724,63 @@ internal class HIDTests : InputTestFixture
             stateData[0] = kNull;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUp;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kUpRight;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.up + Vector2.right).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRight;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kRightDown;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.right + Vector2.down).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDown;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kDownLeft;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.down + Vector2.left).normalized).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeft;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
 
             stateData[0] = kLeftUp;
 
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(hid["hat"].ReadValueAsObject(), Is.EqualTo((Vector2.left + Vector2.up).normalized).Using(Vector2EqualityComparer.Instance));
         }
@@ -837,7 +837,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
         Assert.That(hid["hat"], Is.TypeOf<DpadControl>());
@@ -883,7 +883,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -924,7 +924,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -958,7 +958,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -1003,7 +1003,7 @@ internal class HIDTests : InputTestFixture
                 capabilities = hidDescriptor.ToJson()
             }.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
 
@@ -1012,7 +1012,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
 
         InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
             Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(1, 1)))
@@ -1136,7 +1136,7 @@ internal class HIDTests : InputTestFixture
 
         // Test lower limit.
         InputSystem.QueueStateEvent(device, new G25RacingWheelState());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
             Is.EqualTo(new Vector2(-1, 1).normalized).Using(Vector2EqualityComparer.Instance));
@@ -1155,7 +1155,7 @@ internal class HIDTests : InputTestFixture
 
         // Test upper limit.
         InputSystem.QueueStateEvent(device, new G25RacingWheelState {xAxis = ((1 << 14) - 1) << 2, yAxis = 0xff});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),
             Is.EqualTo(new Vector2(1, -1).normalized).Using(new Vector2EqualityComparer(0.01f)));

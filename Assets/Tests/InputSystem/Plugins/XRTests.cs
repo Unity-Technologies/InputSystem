@@ -33,7 +33,7 @@ internal class XRTests : InputTestFixture
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -53,7 +53,7 @@ internal class XRTests : InputTestFixture
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.LeftHanded);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var controller = InputSystem.devices[0];
 
@@ -77,7 +77,7 @@ internal class XRTests : InputTestFixture
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -95,7 +95,7 @@ internal class XRTests : InputTestFixture
         deviceDescription.manufacturer = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -110,7 +110,7 @@ internal class XRTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -124,7 +124,7 @@ internal class XRTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(CreateMangledNameDeviceDescription().ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -145,7 +145,7 @@ internal class XRTests : InputTestFixture
         deviceDescription.capabilities = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var generatedLayout = InputSystem.LoadLayout("XRInput::Manufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
@@ -154,7 +154,7 @@ internal class XRTests : InputTestFixture
         deviceDescription.capabilities = "Not a JSON String";
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         generatedLayout = InputSystem.LoadLayout("XRInput::XRManufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
@@ -197,7 +197,7 @@ internal class XRTests : InputTestFixture
         deviceDescription.manufacturer = manufacturer;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
@@ -210,7 +210,7 @@ internal class XRTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = InputSystem.devices[0];
 
@@ -224,7 +224,7 @@ internal class XRTests : InputTestFixture
             rotation = Quaternion.identity,
             lastElement = 0,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(((ButtonControl)device["Button"]).isPressed, Is.False);
         Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(0));
@@ -245,7 +245,7 @@ internal class XRTests : InputTestFixture
             rotation = new Quaternion(0.6f, 0.7f, 0.8f, 0.9f),
             lastElement = byte.MaxValue,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(((ButtonControl)device["Button"]).isPressed, Is.True);
         Assert.That(device["DiscreteState"].ReadValueAsObject(), Is.EqualTo(17));
@@ -263,7 +263,7 @@ internal class XRTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
@@ -328,7 +328,7 @@ internal class XRTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(ButtonPackedXRDeviceState.CreateDeviceDescription().ToJson());
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
@@ -416,7 +416,7 @@ internal class XRTests : InputTestFixture
             device.vector3.WriteValueIntoEvent(position, stateEvent);
 
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.Dynamic);
+            InputSystem.Update(InputUpdateType.Dynamic);
             Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
             Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
@@ -424,7 +424,7 @@ internal class XRTests : InputTestFixture
             go2.transform.position = Vector3.zero;
             go2.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.BeforeRender);
+            InputSystem.Update(InputUpdateType.BeforeRender);
             Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
             Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
 
@@ -436,7 +436,7 @@ internal class XRTests : InputTestFixture
             tpd.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
 
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.Dynamic);
+            InputSystem.Update(InputUpdateType.Dynamic);
             Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
             Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
 
@@ -444,7 +444,7 @@ internal class XRTests : InputTestFixture
             go4.transform.position = Vector3.zero;
             go4.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.BeforeRender);
+            InputSystem.Update(InputUpdateType.BeforeRender);
             Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
             Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
@@ -456,7 +456,7 @@ internal class XRTests : InputTestFixture
             go5.transform.rotation = new Quaternion(0, 0, 0, 0);
 
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.Dynamic);
+            InputSystem.Update(InputUpdateType.Dynamic);
             Assert.That(tpd.gameObject.transform.position, Is.EqualTo(position));
             Assert.That(!tpd.gameObject.transform.rotation.Equals(rotation));
 
@@ -465,7 +465,7 @@ internal class XRTests : InputTestFixture
             go6.transform.position = Vector3.zero;
             go6.transform.rotation = new Quaternion(0, 0, 0, 0);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame(InputUpdateType.BeforeRender);
+            InputSystem.Update(InputUpdateType.BeforeRender);
             Assert.That(tpd.gameObject.transform.position, Is.Not.EqualTo(position));
             Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
         }

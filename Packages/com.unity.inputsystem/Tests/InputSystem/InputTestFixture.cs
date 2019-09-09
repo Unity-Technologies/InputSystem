@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem
         {
             // Update state.
             InputSystem.QueueStateEvent(device, state);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             // Now verify that only the buttons we expect to be pressed are pressed.
             foreach (var control in device.allControls)
@@ -295,7 +295,7 @@ namespace UnityEngine.InputSystem
             }
 
             if (!queueEventOnly)
-                InputSystem.RunOneFrame();
+                InputSystem.Update();
         }
 
         public void Move(InputControl<Vector2> positionControl, Vector2 position, Vector2? delta = null, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
@@ -307,7 +307,7 @@ namespace UnityEngine.InputSystem
                 Set(deltaControl,  delta ?? position - positionControl.ReadValue(), time: time, timeOffset: timeOffset, queueEventOnly: true);
 
             if (!queueEventOnly)
-                InputSystem.RunOneFrame();
+                InputSystem.Update();
         }
 
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
@@ -352,7 +352,7 @@ namespace UnityEngine.InputSystem
                 delta = delta,
             }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
             if (!queueEventOnly)
-                InputSystem.RunOneFrame();
+                InputSystem.Update();
         }
 
         public void Trigger<TValue>(InputAction action, InputControl<TValue> control, TValue value)

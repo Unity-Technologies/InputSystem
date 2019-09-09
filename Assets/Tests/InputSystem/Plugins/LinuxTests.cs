@@ -15,7 +15,7 @@ internal class LinuxTests : InputTestFixture
     {
         runtime.ReportNewInputDevice(TestSDLJoystick.descriptorString);
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var device = InputSystem.devices[0];
 
@@ -169,7 +169,7 @@ internal class LinuxTests : InputTestFixture
             yAxis = short.MaxValue,
             throttleAxis = int.MinValue,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(joystick.stick.x.ReadUnprocessedValue(), Is.EqualTo(-1).Within(0.00001));
         Assert.That(joystick.stick.y.ReadUnprocessedValue(), Is.EqualTo(-1).Within(0.00001));
@@ -189,7 +189,7 @@ internal class LinuxTests : InputTestFixture
             yAxis = short.MinValue,
             throttleAxis = int.MaxValue,
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(joystick.stick.x.ReadUnprocessedValue(), Is.EqualTo(1).Within(0.00001));
         Assert.That(joystick.stick.y.ReadUnprocessedValue(), Is.EqualTo(1).Within(0.00001));
@@ -201,7 +201,7 @@ internal class LinuxTests : InputTestFixture
         Assert.That(joystick["Throttle"].ReadValueAsObject(), Is.EqualTo(1).Within(0.00001));
 
         InputSystem.QueueStateEvent(joystick, new TestSDLJoystick());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(joystick.stick.x.ReadUnprocessedValue(), Is.EqualTo(0).Within(0.00001));
         Assert.That(joystick.stick.y.ReadUnprocessedValue(), Is.EqualTo(0).Within(0.00001));

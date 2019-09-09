@@ -40,7 +40,7 @@ internal class SwitchTests : InputTestFixture
                 rightStickX = 0x7fff,
                 rightStickY = 0xefff,
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = controller.rightStick.TryGetProcessor<StickDeadzoneProcessor>();
@@ -89,7 +89,7 @@ internal class SwitchTests : InputTestFixture
                 attitude = new Quaternion(0.111f, 0.222f, 0.333f, 0.444f),
                 angularVelocity = new Vector3(0.444f, 0.555f, 0.666f),
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var leftStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = controller.leftStick.TryGetProcessor<StickDeadzoneProcessor>();

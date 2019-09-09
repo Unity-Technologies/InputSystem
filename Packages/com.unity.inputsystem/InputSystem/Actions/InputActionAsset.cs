@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem
         /// to apply binding masks before enabling actions.
         ///
         /// Binding masks are non-destructive. All the bindings on the action are left
-        /// in pace. Setting a mask will not affect the value of the <see cref="InputAction.bindings"/>
+        /// in place. Setting a mask will not affect the value of the <see cref="InputAction.bindings"/>
         /// and <see cref="InputActionMap.bindings"/> properties.
         /// </remarks>
         /// <seealso cref="InputBinding.MaskByGroup"/>

@@ -156,7 +156,7 @@ partial class CoreTests
                 rightTrigger = 0.123f
             }.WithButton(
                 GamepadButton.South));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.IsActuated(), Is.False);
         Assert.That(gamepad.rightStick.IsActuated(), Is.True);
@@ -191,12 +191,12 @@ partial class CoreTests
         var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
 
         InputSystem.QueueStateEvent(device, firstState);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
 
         InputSystem.QueueStateEvent(device, secondState);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var processedVector = new StickDeadzoneProcessor { min = 0.1f, max = 0.9f }.Process(new Vector2(0.5f, 0.5f));
         Assert.That(device.leftStick.ReadValue(), Is.EqualTo(processedVector));
@@ -231,12 +231,12 @@ partial class CoreTests
         var processor = device.leftTrigger.TryGetProcessor<AxisDeadzoneProcessor>();
 
         InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.05f});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device.leftTrigger.ReadValue(), Is.Zero.Within(0.0001));
 
         InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.5f});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(device.leftTrigger.ReadValue(),
             Is.EqualTo(processor.Process(0.5f)));
@@ -273,7 +273,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.up.ReadValue(),
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.5f)));
@@ -285,7 +285,7 @@ partial class CoreTests
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(-0.5f, -0.5f)});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.up.ReadValue(),
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
@@ -309,7 +309,7 @@ partial class CoreTests
                 leftStick = new Vector2(0.5f, 0.5f),
                 leftTrigger = 0.5f
             }.WithButton(GamepadButton.South));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.rightStick.EvaluateMagnitude(), Is.EqualTo(0).Within(0.00001));
         Assert.That(gamepad.leftStick.EvaluateMagnitude(),
@@ -340,7 +340,7 @@ partial class CoreTests
         Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.True);
 
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(0.1234f, 0.2345f));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.CheckStateIsAtDefault(), Is.False);
         Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.False);
@@ -373,14 +373,14 @@ partial class CoreTests
             // Actuate noisy control.
             device["noisy"].WriteValueIntoEvent(1f, eventPtr);
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
 
             // Actuate non-noisy control, too.
             device["notNoisy"].WriteValueIntoEvent(1f, eventPtr);
             InputSystem.QueueEvent(eventPtr);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             Assert.That(device.CheckStateIsAtDefaultIgnoringNoise(), Is.False);
         }
@@ -456,7 +456,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
     }
@@ -495,7 +495,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(value, Is.Not.Null);
         Assert.That(value.Value, Is.EqualTo(0.1234).Within(0.00001));
@@ -516,7 +516,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.1234).Within(0.000001));
@@ -537,7 +537,7 @@ partial class CoreTests
         };
 
         InputSystem.QueueDeltaStateEvent(gamepad.leftTrigger, 0.8765f);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.1234).Within(0.000001));
@@ -565,7 +565,7 @@ partial class CoreTests
         gamepad.leftTrigger.QueueValueChange(0.123f);
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
 
         gamepad.leftTrigger.QueueValueChange(0.234f);
@@ -573,7 +573,7 @@ partial class CoreTests
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.345).Within(0.00001));
     }
@@ -587,11 +587,11 @@ partial class CoreTests
 
         gamepad.leftTrigger.QueueValueChange(0.123f, 0.5);
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0).Within(0.00001));
 
         runtime.currentTimeForFixedUpdate = 1;
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.123).Within(0.00001));
     }
 
@@ -603,7 +603,7 @@ partial class CoreTests
 
         // Up.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadUp});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
 
@@ -613,14 +613,14 @@ partial class CoreTests
             {
                 buttons = 1 << (int)GamepadButton.DpadUp | 1 << (int)GamepadButton.DpadLeft
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.left).normalized.x).Within(0.00001));
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
 
         // Left.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadLeft});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
 
@@ -630,14 +630,14 @@ partial class CoreTests
             {
                 buttons = 1 << (int)GamepadButton.DpadDown | 1 << (int)GamepadButton.DpadLeft
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.down + Vector2.left).normalized.x).Within(0.00001));
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.left).normalized.y).Within(0.00001));
 
         // Down.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadDown});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
 
@@ -647,7 +647,7 @@ partial class CoreTests
             {
                 buttons = 1 << (int)GamepadButton.DpadDown | 1 << (int)GamepadButton.DpadRight
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x,
             Is.EqualTo((Vector2.down + Vector2.right).normalized.x).Within(0.00001));
@@ -656,7 +656,7 @@ partial class CoreTests
 
         // Right.
         InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadRight});
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
 
@@ -666,7 +666,7 @@ partial class CoreTests
             {
                 buttons = 1 << (int)GamepadButton.DpadUp | 1 << (int)GamepadButton.DpadRight
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue().x, Is.EqualTo((Vector2.up + Vector2.right).normalized.x).Within(0.00001));
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.right).normalized.y).Within(0.00001));
@@ -711,7 +711,7 @@ partial class CoreTests
         var dpad = (DpadControl)device["dpad"];
 
         InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(1));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(dpad.left.isPressed, Is.True);
         Assert.That(dpad.right.isPressed, Is.False);
@@ -721,7 +721,7 @@ partial class CoreTests
         Assert.AreEqual(dpad.y.ReadValueAsObject(), 0.0f);
 
         InputSystem.QueueStateEvent(device, new DiscreteButtonDpadState(8));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(dpad.left.isPressed, Is.True);
         Assert.That(dpad.down.isPressed, Is.True);

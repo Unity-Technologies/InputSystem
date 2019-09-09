@@ -20,7 +20,7 @@ There are three distinct ways in which the input system processes input.
 |----|-----------|
 |[`Fixed Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are processed in intervals of fixed length. This corresponds to how [`MonoBehaviour.FixedUpdate`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html) operates. The length of each interval is determined by [`Time.fixedDeltaTime`](https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html).|
 |[`Dynamic Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are processed in irregular intervals governed by the current framerate.|
-|[`Manual Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are not processed automatically but instead are flushed out whenever the user calls [`InputSystem.RunOneFrame()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RunOneFrame).|
+|[`Manual Update`](../api/UnityEngine.InputSystem.InputSettings.UpdateMode.html)|Events are not processed automatically but instead are flushed out whenever the user calls [`InputSystem.Update()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update).|
 
 >NOTE: There are two additional types of updates performed by the system in the form of [`InputUpdateType.BeforeRender`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (late update for XR tracking devices) and [`InputUpdateType.Editor`](../api/UnityEngine.InputSystem.LowLevel.InputUpdateType.html) (for EditorWindows) but these do not fundamentally alter how input is consumed in an application.
 

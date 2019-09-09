@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem
     /// When input is received on controls bound to an action, the action will trigger callbacks
     /// in response. These callbacks are <see cref="started"/>, <see cref="performed"/>, and
     /// <see cref="canceled"/>. The callbacks are triggered as part of input system updates
-    /// (see <see cref="InputSystem.RunOneFrame"/>), i.e. they happen before the respective
+    /// (see <see cref="InputSystem.Update"/>), i.e. they happen before the respective
     /// <see cref="MonoBehaviour.Update"/> or <see cref="MonoBehaviour.FixedUpdate"/> methods
     /// get executed (depending on which <see cref="InputSettings.updateMode"/> the system is
     /// set to).
@@ -313,7 +313,7 @@ namespace UnityEngine.InputSystem
         /// to apply binding masks before enabling actions.
         ///
         /// Binding masks are non-destructive. All the bindings on the action are left
-        /// in pace. Setting a mask will not affect the value of the <see cref="bindings"/>
+        /// in place. Setting a mask will not affect the value of the <see cref="bindings"/>
         /// property.
         ///
         /// <example>
@@ -515,7 +515,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
         /// state, this property will stay true for the duration of the current frame (i.e. until the next
-        /// <see cref="InputSystem.RunOneFrame"/> runs) as long as the action was triggered at least once.
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
         ///
         /// <example>
         /// <code>
@@ -767,17 +767,17 @@ namespace UnityEngine.InputSystem
         ///
         /// // Perform some fake input on the gamepad. Note that the action
         /// // will *NOT* get triggered as it is not enabled.
-        /// // NOTE: We use RunOneFrame() here only for demonstration purposes. In most cases,
+        /// // NOTE: We use Update() here only for demonstration purposes. In most cases,
         /// //       it's not a good method to call directly as it basically injects artificial
         /// //       input frames into the player loop. Usually a recipe for breakage.
         /// InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
-        /// InputSystem.RunOneFrame();
+        /// InputSystem.Update();
         ///
         /// action.Enable();
         ///
         /// // Now, with the left trigger already being down and the action enabled, it will
         /// // trigger in the next frame.
-        /// InputSystem.RunOneFrame();
+        /// InputSystem.Update();
         /// </code>
         /// </example>
         /// </remarks>

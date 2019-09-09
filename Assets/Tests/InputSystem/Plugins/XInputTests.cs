@@ -91,7 +91,7 @@ internal class XInputTests : InputTestFixture
                 leftTrigger = 0.567f,
                 rightTrigger = 0.891f,
             });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         var leftStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
         var rightStickDeadzone = gamepad.leftStick.TryGetProcessor<StickDeadzoneProcessor>();
@@ -162,7 +162,7 @@ internal class XInputTests : InputTestFixture
                 rightTrigger = 255,
             });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
@@ -233,7 +233,7 @@ internal class XInputTests : InputTestFixture
                 rightTrigger = 1023,
             });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
@@ -306,7 +306,7 @@ internal class XInputTests : InputTestFixture
                 rightTrigger = 255,
             });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(gamepad.leftStick.x.ReadValue(), Is.EqualTo(0.9999).Within(0.001));
         Assert.That(gamepad.leftStick.y.ReadValue(), Is.EqualTo(0.9999).Within(0.001));

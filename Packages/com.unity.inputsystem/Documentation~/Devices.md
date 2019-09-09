@@ -79,7 +79,7 @@ The input system keeps track of disconnected devices in [`InputSystem.disconnect
 
 ## Device IDs
 
-Each device that is created will receive a unique, numeric ID. The ID can be accessed through [`InputDevice.id`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
+Each device that is created will receive a unique, numeric ID. The ID can be accessed through [`InputDevice.deviceId`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
 
 The IDs are managed by the runtime and allocated through `IInputRuntime.AllocateDeviceId`. The runtime itself does not keep a record about which ID corresponds to which device.
 

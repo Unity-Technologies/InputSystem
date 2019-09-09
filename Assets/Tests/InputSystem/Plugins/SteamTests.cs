@@ -51,7 +51,7 @@ internal class SteamTests : InputTestFixture
     {
         m_SteamAPI.controllers = new ulong[] {1};
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle")
@@ -60,7 +60,7 @@ internal class SteamTests : InputTestFixture
         m_SteamAPI.controllers = new ulong[] {1, 2};
 
         // Make sure update discovers newly added Steam controllers.
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices,
             Has.Exactly(1).TypeOf<TestController>().And.With.Property("steamControllerHandle")
@@ -80,13 +80,13 @@ internal class SteamTests : InputTestFixture
     {
         m_SteamAPI.controllers = new ulong[] {1, 2};
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices, Has.Exactly(2).TypeOf<TestController>());
 
         m_SteamAPI.controllers = new ulong[] {2};
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(InputSystem.devices,
             Has.None.TypeOf<TestController>().And.With.Property("steamControllerHandle")
@@ -102,8 +102,8 @@ internal class SteamTests : InputTestFixture
     {
         m_SteamAPI.controllers = new ulong[] {1};
 
-        InputSystem.RunOneFrame();
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
+        InputSystem.Update();
 
         var device = (TestController)InputSystem.devices.First(x => x is TestController);
 
@@ -117,7 +117,7 @@ internal class SteamTests : InputTestFixture
     public void Devices_CanManuallyActivateActionSetsOnSteamControllers()
     {
         m_SteamAPI.AddController(1);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         var device = (TestController)InputSystem.devices.First(x => x is TestController);
 
         device.ActivateSteamActionSet(device.gameplaySetHandle);
@@ -140,7 +140,7 @@ internal class SteamTests : InputTestFixture
         map.AddAction("look", binding: "<TestController>/look");
 
         m_SteamAPI.AddController(1);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         map.Enable();
 
@@ -162,7 +162,7 @@ internal class SteamTests : InputTestFixture
 
         // Then add controller.
         m_SteamAPI.controllers = new ulong[] {1};
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.Fail();
         //Assert.That(m_SteamAPI.actionSetActivations, Has.Count.EqualTo(1));
@@ -187,7 +187,7 @@ internal class SteamTests : InputTestFixture
 
         m_SteamAPI.AddController(1);
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         var controller = (TestController)InputSystem.devices.First(x => x is TestController);
 
         controller.ActivateSteamActionSet(controller.gameplaySetHandle);
@@ -202,7 +202,7 @@ internal class SteamTests : InputTestFixture
             active = true
         };
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         Assert.That(receivedStateEvent, Is.True);
         Assert.That(controller.fire.isPressed, Is.True);

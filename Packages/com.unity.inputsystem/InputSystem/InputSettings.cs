@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem
         /// rendering. This special update will only consume input on devices that have
         /// <see cref="InputDevice.updateBeforeRender"/> set to <c>true</c>.
         ///
-        /// You can run updates manually using <see cref="InputSystem.RunOneFrame"/>. Doing so
+        /// You can run updates manually using <see cref="InputSystem.Update"/>. Doing so
         /// outside of tests is only recommended, however, if <c>updateMode</c> is set to
         /// <see cref="UpdateMode.ProcessEventsManually"/> (in which case it is actually required
         /// for input to be processed at all).
@@ -66,7 +66,7 @@ namespace UnityEngine.InputSystem
         /// are kept separate, though, so any input consumed in editor updates will not be visible
         /// in player updates and vice versa.
         /// </remarks>
-        /// <seealso cref="InputSystem.RunOneFrame"/>
+        /// <seealso cref="InputSystem.Update"/>
         public UpdateMode updateMode
         {
             get => m_UpdateMode;
@@ -463,7 +463,7 @@ namespace UnityEngine.InputSystem
         /// automatically in response to whether devices are present requiring this type of update (<see
         /// cref="InputDevice.updateBeforeRender"/>). This update does not consume extra state.
         /// </remarks>
-        /// <seealso cref="InputSystem.RunOneFrame"/>
+        /// <seealso cref="InputSystem.Update"/>
         /// <seealso cref="InputUpdateType"/>
         /// <seealso cref="MonoBehaviour.FixedUpdate"/>
         /// <seealso cref="MonoBehaviour.Update"/>
@@ -492,13 +492,13 @@ namespace UnityEngine.InputSystem
             ProcessEventsInFixedUpdate,
 
             /// <summary>
-            /// Do not run updates automatically. In this mode, <see cref="InputSystem.RunOneFrame"/> must be called
+            /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
             /// </summary>
             /// <remarks>
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
-            /// Note that failing to call <see cref="InputSystem.RunOneFrame"/> may result in a lot of events
+            /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
             /// </remarks>
             ProcessEventsManually,

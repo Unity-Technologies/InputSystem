@@ -165,7 +165,7 @@ internal class UITests : InputTestFixture
 
         // Move mouse over left child.
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100) });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -176,7 +176,7 @@ internal class UITests : InputTestFixture
         // Check basic down/up
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 0 });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
@@ -191,7 +191,7 @@ internal class UITests : InputTestFixture
 
         // Check down and drag
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Right });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -204,7 +204,7 @@ internal class UITests : InputTestFixture
 
         // Move to new location on left child
         InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(100, 200));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -215,7 +215,7 @@ internal class UITests : InputTestFixture
 
         // Move children
         InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(350, 200));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -228,7 +228,7 @@ internal class UITests : InputTestFixture
 
         // Release button
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(350, 200), buttons = 0 });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -241,7 +241,7 @@ internal class UITests : InputTestFixture
 
         // Check Scroll
         InputSystem.QueueDeltaStateEvent(mouse.scroll, Vector2.one);
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Is.Empty);
@@ -303,7 +303,7 @@ internal class UITests : InputTestFixture
             touchId = 1,
             position = new Vector2(100, 100)
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -318,7 +318,7 @@ internal class UITests : InputTestFixture
             phase = TouchPhase.Began
         });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -336,7 +336,7 @@ internal class UITests : InputTestFixture
             touchId = 2,
             position = new Vector2(400, 100)
         });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
@@ -351,7 +351,7 @@ internal class UITests : InputTestFixture
             phase = TouchPhase.Began
         });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(2));
@@ -379,7 +379,7 @@ internal class UITests : InputTestFixture
             phase = TouchPhase.Ended
         });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(3));
@@ -410,7 +410,7 @@ internal class UITests : InputTestFixture
             phase = TouchPhase.Ended
         });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
@@ -473,7 +473,7 @@ internal class UITests : InputTestFixture
         // Click left gameObject of player 0
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 0 });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
@@ -485,7 +485,7 @@ internal class UITests : InputTestFixture
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 300), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 300), buttons = 0 });
 
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
@@ -496,7 +496,7 @@ internal class UITests : InputTestFixture
         // Click right gameObject of player 0
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 100), buttons = 1 << (int)MouseButton.Left });
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 100), buttons = 0 });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
             player.eventSystem.InvokeUpdate();
@@ -555,7 +555,7 @@ internal class UITests : InputTestFixture
 
         // Check Player 0 Move Axes
         InputSystem.QueueDeltaStateEvent(gamepads[0].leftStick, new Vector2(1.0f, 0.0f));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
         {
@@ -585,7 +585,7 @@ internal class UITests : InputTestFixture
 
         // Check Player 0 Submit
         InputSystem.QueueStateEvent(gamepads[0], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
         {
@@ -600,7 +600,7 @@ internal class UITests : InputTestFixture
 
         // Check Player 1 Submit
         InputSystem.QueueStateEvent(gamepads[1], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
 
         foreach (var player in players)
         {
@@ -673,7 +673,7 @@ internal class UITests : InputTestFixture
         // Check Move Axes
         // Fixme: replacing this with Set(gamepads[0].leftStick, new Vector2(1, 0)); throws a NRE.
         InputSystem.QueueDeltaStateEvent(gamepad.leftStick, new Vector2(1.0f, 0.0f));
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -683,7 +683,7 @@ internal class UITests : InputTestFixture
 
         // Check Submit
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -693,7 +693,7 @@ internal class UITests : InputTestFixture
 
         // Check Cancel
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.East });
-        InputSystem.RunOneFrame();
+        InputSystem.Update();
         eventSystem.InvokeUpdate();
 
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -806,7 +806,7 @@ internal class UITests : InputTestFixture
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
             trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             leftChildReceiver.Reset();
             rightChildReceiver.Reset();
@@ -814,7 +814,7 @@ internal class UITests : InputTestFixture
             // Move over left child.
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -827,7 +827,7 @@ internal class UITests : InputTestFixture
             InputSystem.QueueEvent(stateEvent);
             trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
@@ -841,7 +841,7 @@ internal class UITests : InputTestFixture
             // Check down and drag
             trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -853,7 +853,7 @@ internal class UITests : InputTestFixture
             // Move to new location on left child
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -10.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -865,7 +865,7 @@ internal class UITests : InputTestFixture
             // Move children
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -878,7 +878,7 @@ internal class UITests : InputTestFixture
 
             trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
@@ -948,7 +948,7 @@ internal class UITests : InputTestFixture
             trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent2);
             trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
             InputSystem.QueueEvent(stateEvent2);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
 
             leftChildReceiver.Reset();
             rightChildReceiver.Reset();
@@ -956,7 +956,7 @@ internal class UITests : InputTestFixture
             // Move over left child.
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -967,7 +967,7 @@ internal class UITests : InputTestFixture
 
             trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent2);
             InputSystem.QueueEvent(stateEvent2);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -981,7 +981,7 @@ internal class UITests : InputTestFixture
             InputSystem.QueueEvent(stateEvent);
             trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
@@ -1001,7 +1001,7 @@ internal class UITests : InputTestFixture
             InputSystem.QueueEvent(stateEvent2);
             trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
             InputSystem.QueueEvent(stateEvent2);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
@@ -1019,7 +1019,7 @@ internal class UITests : InputTestFixture
             // Move to new location on right child
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
             InputSystem.QueueEvent(stateEvent);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -1033,7 +1033,7 @@ internal class UITests : InputTestFixture
 
             trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent2);
             InputSystem.QueueEvent(stateEvent2);
-            InputSystem.RunOneFrame();
+            InputSystem.Update();
             eventSystem.InvokeUpdate();
 
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
