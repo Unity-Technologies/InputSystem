@@ -1,7 +1,9 @@
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Layouts;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
+#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -37,6 +39,7 @@ namespace UnityEngine.InputSystem.XR
         {
             base.FinishSetup();
 
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
             var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
@@ -52,8 +55,9 @@ namespace UnityEngine.InputSystem.XR
                     InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
                 else if (deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
-#endif
+#endif //UNITY_2019_3_OR_NEWER
             }
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         }
     }
 
