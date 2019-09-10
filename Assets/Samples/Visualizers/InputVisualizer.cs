@@ -1,5 +1,8 @@
 using System;
 
+// Some fields assigned through only through serialization.
+#pragma warning disable CS0649
+
 namespace UnityEngine.InputSystem.Samples
 {
     /// <summary>
