@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Processors
         public float y = 1;
 
         /// <inheritdoc />
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl control)
         {
             return new Vector2(value.x * x, value.y * y);
         }

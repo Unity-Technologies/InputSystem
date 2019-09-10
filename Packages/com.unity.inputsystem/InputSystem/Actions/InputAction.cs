@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
     /// in response. These callbacks are <see cref="started"/>, <see cref="performed"/>, and
     /// <see cref="canceled"/>. The callbacks are triggered as part of input system updates
     /// (see <see cref="InputSystem.Update"/>), i.e. they happen before the respective
-    /// <see cref="MonoBehaviour.Update"/> or <see cref="MonoBehaviour.FixedUpdate"/> methods
+    /// <c>MonoBehaviour.Update</c> or <c>MonoBehaviour.FixedUpdate</c> methods
     /// get executed (depending on which <see cref="InputSettings.updateMode"/> the system is
     /// set to).
     ///
@@ -104,8 +104,8 @@ namespace UnityEngine.InputSystem
     /// callback to globally listen for action activity. To simply record action activity instead
     /// of responding to it directly, you can use <see cref="InputActionTrace"/>.
     ///
-    /// If you prefer to poll an action directly as part of your <see cref="MonoBehaviour.Update"/>
-    /// or <see cref="MonoBehaviour.FixedUpdate"/> logic, you can do so using the <see cref="triggered"/>
+    /// If you prefer to poll an action directly as part of your <c>MonoBehaviour.Update</c>
+    /// or <c>MonoBehaviour.FixedUpdate</c> logic, you can do so using the <see cref="triggered"/>
     /// and <see cref="ReadValue{TValue}"/> methods.
     ///
     /// <example>
@@ -852,6 +852,8 @@ namespace UnityEngine.InputSystem
             return Clone();
         }
 
+        ////TODO: ReadValue(void*, int)
+
         /// <summary>
         /// Read the current value of the action. This is the last value received on <see cref="started"/>,
         /// or <see cref="performed"/>. If the action is in canceled or waiting phase, returns default(TValue).
@@ -862,7 +864,7 @@ namespace UnityEngine.InputSystem
         /// This method can be used as an alternative to hooking into <see cref="started"/>, <see cref="performed"/>,
         /// and/or <see cref="canceled"/> and reading out the value using <see cref="CallbackContext.ReadValue{TValue}"/>
         /// there. Instead, this API acts more like a polling API that can be called, for example, as part of
-        /// <see cref="MonoBehaviour.Update"/>.
+        /// <c>MonoBehaviour.Update</c>.
         ///
         /// <example>
         /// <code>
@@ -1056,16 +1058,6 @@ namespace UnityEngine.InputSystem
             };
         }
 
-        internal void ThrowIfModifyingBindingsIsNotAllowed()
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    $"Cannot modify bindings on action '{this}' while the action is enabled");
-            if (GetOrCreateActionMap().enabled)
-                throw new InvalidOperationException(
-                    $"Cannot modify bindings on action '{this}' while its action map is enabled");
-        }
-
         internal int BindingIndexOnActionToBindingIndexOnMap(int indexOfBindingOnAction)
         {
             // We don't want to hit InputAction.bindings here as this requires setting up per-action
@@ -1117,10 +1109,10 @@ namespace UnityEngine.InputSystem
             ////REVIEW: there should probably be a mechanism for the user to be able to correlate
             ////        the callback to a specific binding on the action
 
-            internal int actionIndex => m_ActionIndex;
-            internal unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
-            internal unsafe int controlIndex => m_State.actionStates[actionIndex].controlIndex;
-            internal unsafe int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
+            private int actionIndex => m_ActionIndex;
+            private unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
+            private unsafe int controlIndex => m_State.actionStates[actionIndex].controlIndex;
+            private unsafe int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
 
             /// <summary>
             /// Current phase of the action. Equivalent to accessing <see cref="InputAction.phase"/>
@@ -1181,6 +1173,8 @@ namespace UnityEngine.InputSystem
             /// button control is not released within a certain time. When this happens, the <c>control</c>
             /// property will be the control that last fed input into the action.
             /// </remarks>
+            /// <seealso cref="InputAction.controls"/>
+            /// <seealso cref="InputBinding.path"/>
             public InputControl control => m_State?.controls[controlIndex];
 
             /// <summary>
@@ -1346,11 +1340,56 @@ namespace UnityEngine.InputSystem
 
             ////TODO: need ability to read as button
 
+            /// <summary>
+            /// Read the value of the action as a raw byte buffer. This allows reading
+            /// values without having to know value types but also, unlike <see cref="ReadValueAsObject"/>,
+            /// without allocating GC heap memory.
+            /// </summary>
+            /// <param name="buffer">Memory buffer to read the value into.</param>
+            /// <param name="bufferSize">Size of buffer allocated at <paramref name="buffer"/>. Must be
+            /// at least <see cref="valueSizeInBytes"/>.</param>
+            /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <c>null</c>.</exception>
+            /// <exception cref="ArgumentException"><paramref name="bufferSize"/> is too small.</exception>
+            /// <remarks>
+            /// <example>
+            /// <code>
+            /// // Read a Vector2 using the raw memory ReadValue API.
+            /// // Here we just read into a local variable which we could
+            /// // just as well (and more easily) do using ReadValue&lt;Vector2&gt;.
+            /// // Still, it serves as a demonstration for how the API
+            /// // operates in general.
+            /// unsafe
+            /// {
+            ///     var value = default(Vector2);
+            ///     var valuePtr = UnsafeUtility.AddressOf(ref value);
+            ///     context.ReadValue(buffer, UnsafeUtility.SizeOf&lt;Vector2&gt;());
+            /// }
+            /// </code>
+            /// </example>
+            /// </remarks>
+            /// <seealso cref="InputControlExtensions.ReadValueIntoBuffer"/>
+            /// <seealso cref="InputAction.ReadValue{TValue}"/>
+            /// <seealso cref="ReadValue{TValue}"/>
             public unsafe void ReadValue(void* buffer, int bufferSize)
             {
+                if (buffer == null)
+                    throw new ArgumentNullException(nameof(buffer));
+
                 m_State?.ReadValue(bindingIndex, controlIndex, buffer, bufferSize);
             }
 
+            /// <summary>
+            /// Read the value of the action.
+            /// </summary>
+            /// <typeparam name="TValue">Type of value to read. This must correspond to the
+            /// expected by either <see cref="control"/> or, if it is a composite, by the
+            /// <see cref="InputBindingComposite"/> in use.</typeparam>
+            /// <returns>The value read from the action.</returns>
+            /// <exception cref="InvalidOperationException">The given type <typeparamref name="TValue"/>
+            /// does not match the value type expected by the control or binding composite.</exception>
+            /// <seealso cref="InputAction.ReadValue{TValue}"/>
+            /// <seealso cref="ReadValue(void*,int)"/>
+            /// <seealso cref="ReadValueAsObject"/>
             public TValue ReadValue<TValue>()
                 where TValue : struct
             {

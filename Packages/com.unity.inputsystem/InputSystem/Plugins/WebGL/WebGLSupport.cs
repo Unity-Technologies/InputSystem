@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.WebGL
                 builder.AddControl("Trigger")
                     .WithLayout("AnyKey")
                     .WithByteOffset(buttonStartOffset)
-                    .WithSynthetic(true)
+                    .IsSynthetic(true)
                     .WithSizeInBits((uint)(32 * capabilities.numButtons))
                     .WithFormat(InputStateBlock.FormatBit);
 

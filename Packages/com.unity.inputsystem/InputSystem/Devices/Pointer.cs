@@ -107,6 +107,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Normalized pressure with which the pointer is currently pressed while in contact with the pointer surface.
         /// </summary>
+        /// <value>Control representing the pressure with which the pointer is pressed down.</value>
         /// <remarks>
         /// This is only meaningful for pointing devices that support pressure. Mice do not, pens usually do, and touch
         /// usually does on mobile platforms.

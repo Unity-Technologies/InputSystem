@@ -55,7 +55,12 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         internal const int kSizeInBytes = 56;
 
-        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
+        /// <summary>
+        /// Memory format tag for TouchState.
+        /// </summary>
+        /// <value>Returns "TOUC".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('T', 'O', 'U', 'C');
 
         /// <summary>
         /// Numeric ID of the touch.
@@ -93,15 +98,41 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(12)]
         public Vector2 delta;
 
+        /// <summary>
+        /// Pressure-level of the touch against the touchscreen.
+        /// </summary>
+        /// <value>Pressure of touch.</value>
+        /// <remarks>
+        /// The core range for this value is [0..1] with 1 indicating maximum pressure. Note, however,
+        /// that the actual value may go beyond 1 in practice. This is because the system will usually
+        /// define "maximum pressure" to be less than the physical maximum limit the hardware is capable
+        /// of reporting so that to achieve maximum pressure, one does not need to press as hard as
+        /// possible.
+        /// </remarks>
+        /// <seealso cref="TouchControl.pressure"/>
         [InputControl(displayName = "Pressure", layout = "Axis")]
         [FieldOffset(20)]
         public float pressure;
 
+        /// <summary>
+        /// Radius of the touch print on the surface.
+        /// </summary>
+        /// <value>Touch extents horizontally and vertically.</value>
+        /// <remarks>
+        /// The touch radius is given in screen-space pixel coordinates along X and Y centered in the middle
+        /// of the touch. Note that not all screens and systems support radius detection on touches so this
+        /// value may be at <c>default</c> for an otherwise perfectly valid touch.
+        /// </remarks>
+        /// <seealso cref="TouchControl.radius"/>
         [InputControl(displayName = "Radius")]
         [FieldOffset(24)]
         public Vector2 radius;
 
-        // Use `phase` to access.
+        /// <summary>
+        /// <see cref="TouchPhase"/> value of the touch.
+        /// </summary>
+        /// <value>Current <see cref="TouchPhase"/>.</value>
+        /// <seealso cref="phase"/>
         [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
         [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
@@ -127,13 +158,39 @@ namespace UnityEngine.InputSystem.LowLevel
         internal int padding;
 
         // NOTE: The following data is NOT sent by native but rather data we add on the managed side to each touch.
+
+        /// <summary>
+        /// Time that the touch was started. Relative to <c>Time.realTimeSinceStartup</c>.
+        /// </summary>
+        /// <value>Time that the touch was started.</value>
+        /// <remarks>
+        /// This is set automatically by <see cref="Touchscreen"/> and does not need to be provided
+        /// by events sent to the touchscreen.
+        /// </remarks>
+        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="TouchControl.startTime"/>
         [InputControl(displayName = "Start Time", layout  = "Double")]
         [FieldOffset(40)]
         public double startTime; // In *external* time, i.e. currentTimeOffsetToRealtimeSinceStartup baked in.
+
+        /// <summary>
+        /// The position where the touch started.
+        /// </summary>
+        /// <value>Screen-space start position of the touch.</value>
+        /// <remarks>
+        /// This is set automatically by <see cref="Touchscreen"/> and does not need to be provided
+        /// by events sent to the touchscreen.
+        /// </remarks>
+        /// <seealso cref="TouchControl.startPosition"/>
         [InputControl(displayName = "Start Position")]
         [FieldOffset(48)]
         public Vector2 startPosition;
 
+        /// <summary>
+        /// Get or set the phase of the touch.
+        /// </summary>
+        /// <value>Phase of the touch.</value>
+        /// <seealso cref="TouchControl.phase"/>
         public TouchPhase phase
         {
             get => (TouchPhase)phaseId;
@@ -145,6 +202,14 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isInProgress => phase == TouchPhase.Began || phase == TouchPhase.Moved ||
         phase == TouchPhase.Stationary;
 
+        /// <summary>
+        /// Whether  TODO
+        /// </summary>
+        /// <value>Whether the touch is the first TODO</value>
+        /// <remarks>
+        /// This flag will be set internally by <see cref="Touchscreen"/>. Generally, it is
+        /// not necessary to set this bit manually when feeding data to Touchscreens.
+        /// </remarks>
         public bool isPrimaryTouch
         {
             get => (flags & (byte)TouchFlags.PrimaryTouch) != 0;
@@ -193,8 +258,13 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC format => kFormat;
+        /// <inheritdoc/>
+        public FourCC format => Format;
 
+        /// <summary>
+        /// Return a string representation of the state useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the touch state.</returns>
         public override string ToString()
         {
             return $"{{ id={touchId} phase={phase} pos={position} delta={delta} pressure={pressure} radius={radius} primary={isPrimaryTouch} }}";
@@ -207,6 +277,8 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     /// Combines multiple pointers each corresponding to a single contact.
     ///
+    /// Normally, TODO (sending state events)
+    ///
     /// All touches combine to quite a bit of state; ideally send delta events that update
     /// only specific fingers.
     ///
@@ -216,7 +288,12 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
     public unsafe struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
+        /// <summary>
+        /// Memory format tag for TouchscreenState.
+        /// </summary>
+        /// <value>Returns "TSCR".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('T', 'S', 'C', 'R');
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.
@@ -281,7 +358,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC format => kFormat;
+        public FourCC format => Format;
     }
 }
 
@@ -475,7 +552,7 @@ namespace UnityEngine.InputSystem
         protected new unsafe void OnEvent(InputEventPtr eventPtr)
         {
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
-            if (eventPtr.stateFormat != TouchState.kFormat)
+            if (eventPtr.stateFormat != TouchState.Format)
             {
                 InputState.Change(this, eventPtr);
                 return;

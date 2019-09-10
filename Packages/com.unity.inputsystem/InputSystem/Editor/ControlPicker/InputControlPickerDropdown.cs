@@ -236,7 +236,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             foreach (var control in layout.controls.OrderBy(a => a.name))
             {
-                if (control.isModifyingChildControlByPath)
+                if (control.isModifyingExistingControl)
                     continue;
 
                 // Skip variants except the default variant and variants dictated by the layout itself.

@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
         private const float kAccelerationMultiplier = -1.0f / kSensorStandardGravity;
 
-        public override Vector3 Process(Vector3 vector, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 vector, InputControl control)
         {
             return base.Process(vector * kAccelerationMultiplier, control);
         }
@@ -140,7 +140,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     [Scripting.Preserve]
     internal class AndroidCompensateRotationProcessor : CompensateRotationProcessor
     {
-        public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
+        public override Quaternion Process(Quaternion value, InputControl control)
         {
             // https://developer.android.com/reference/android/hardware/SensorEvent#values
             // "...The rotation vector represents the orientation of the device as a combination of an angle and an axis, in which the device has rotated through an angle theta around an axis <x, y, z>."

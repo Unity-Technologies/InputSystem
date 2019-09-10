@@ -13,7 +13,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using Property = NUnit.Framework.PropertyAttribute;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;

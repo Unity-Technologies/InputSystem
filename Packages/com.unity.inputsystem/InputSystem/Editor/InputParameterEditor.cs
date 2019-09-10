@@ -78,7 +78,63 @@ namespace UnityEngine.InputSystem.Editor
     /// <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>.
     /// </summary>
     /// <remarks>
-    /// Note that a parameter editor takes over the entire editing UI for the object and not just the editing of specific parameters.
+    /// Custom parameter editors do not need to be registered explicitly. Say you have a custom
+    /// <see cref="InputProcessor"/> called <c>QuantizeProcessor</c>. To define a custom editor
+    /// UI for it, simply define a new class based on <c>InputParameterEditor&lt;QuantizeProcessor&gt</c>.
+    ///
+    /// <example>
+    /// <code>
+    /// public class QuantizeProcessorEditor : InputParameterEditor&lt;QuantizeProcessor&gt;
+    /// {
+    ///     // You can put initialization logic in OnEnable, if you need it.
+    ///     public override void OnEnable()
+    ///     {
+    ///         // Use the 'target' property to access the QuantizeProcessor instance.
+    ///     }
+    ///
+    ///     // In OnGUI, you can define custom UI elements. Use EditorGUILayout to lay
+    ///     // out the controls.
+    ///     public override void OnGUI()
+    ///     {
+    ///         // Say that QuantizeProcessor has a "stepping" property that determines
+    ///         // the stepping distance for discrete values returned by the processor.
+    ///         // We can expose it here as a float field. To apply the modification to
+    ///         // processor object, we just assign the value back to the field on it.
+    ///         target.stepping = EditorGUILayout.FloatField(
+    ///             m_SteppingLabel, target.stepping);
+    ///     }
+    ///
+    ///     private GUIContent m_SteppingLabel = new GUIContent("Stepping",
+    ///         "Discrete stepping with which input values will be quantized.");
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// Note that a parameter editor takes over the entire editing UI for the object and
+    /// not just the editing of specific parameters.
+    ///
+    /// The default parameter editor will derive names from the names of the respective
+    /// fields just like the Unity inspector does. Also, it will respect tooltips applied
+    /// to these fields with Unity's <c>TooltipAttribute</c>.
+    ///
+    /// So, let's say that <c>QuantizeProcessor</c> from our example was defined like
+    /// below. In that case, the result would be equivalent to the custom parameter editor
+    /// UI defined above.
+    ///
+    /// <example>
+    /// <code>
+    /// public class QuantizeProcessor : InputProcessor&lt;float&gt;
+    /// {
+    ///     [Tooltip("Discrete stepping with which input values will be quantized.")]
+    ///     public float stepping;
+    ///
+    ///     public override float Process(float value, InputControl control)
+    ///     {
+    ///         return value - value % stepping;
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     public abstract class InputParameterEditor<TObject> : InputParameterEditor
         where TObject : class

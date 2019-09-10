@@ -8,9 +8,9 @@ namespace UnityEngine.InputSystem.Utilities
     /// <example>
     /// <code>
     /// </code>
-    /// private class CompositeWithVector2Part : InputBindingComposite&lt;Vector2&gt;
+    /// public class CompositeWithVector2Part : InputBindingComposite&lt;Vector2&gt;
     /// {
-    ///     [InputControlAttribute(layout = "Vector2")]
+    ///     [InputControl(layout = "Vector2")]
     ///     public int part;
     ///
     ///     public override Vector2 ReadValue(ref InputBindingCompositeContext context)
@@ -41,9 +41,9 @@ namespace UnityEngine.InputSystem.Utilities
     /// <example>
     /// <code>
     /// </code>
-    /// private class CompositeWithVector3Part : InputBindingComposite&lt;Vector3&gt;
+    /// public class CompositeWithVector3Part : InputBindingComposite&lt;Vector3&gt;
     /// {
-    ///     [InputControlAttribute(layout = "Vector3")]
+    ///     [InputControl(layout = "Vector3")]
     ///     public int part;
     ///
     ///     public override Vector3 ReadValue(ref InputBindingCompositeContext context)

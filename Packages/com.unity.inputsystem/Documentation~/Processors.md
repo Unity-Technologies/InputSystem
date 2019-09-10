@@ -215,16 +215,36 @@ public class MyValueShiftProcessor : InputProcessor<float>
     [Tooltip("Number to add to incoming values.")]
     public float valueShift = 0;
 
-    public override float Process(float value, InputControl<float> control)
+    public override float Process(float value, InputControl control)
     {
         return value + valueShift;
     }
 }
 ```
 
-Now, you need to tell the Input System about your processor. So, somewhere in your initialization code, you should call:
+Next, you need to tell the Input System about your processor. So, as part of code that runs during startup, you need to call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_RegisterProcessor). The easiest way to do so is locally within the processor class like so:
 
 ```CSharp
+#if UNITY_EDITOR
+[InitializeOnLoad]
+#endif
+public class MyValueShiftProcessor : InputProcessor<float>
+{
+    #if UNITY_EDITOR
+    static MyValueShiftProcessor()
+    {
+        Initialize();
+    }
+    #endif
+
+    [RuntimeInitializeOnLoadMethod]
+    static void Initialize()
+    {
+        InputSystem.RegisterProcessor<MyValueShiftProcessor>();
+    }
+
+    //...
+}
 InputSystem.RegisterProcessor<MyValueShiftProcessor>();
 ```
 
@@ -232,4 +252,32 @@ Now, your new processor will become available up in the [Input Action Asset Edit
 
 ```CSharp
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
+```
+
+Optionally, if you want to customize the UI for how your processor is edited in the editor, you can do so by defining a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.InputParameterEditor-1.html) for it.
+
+```CSharp
+// No registration is necessary for an InputParameterEditor.
+// The system will automatically find subclasses based on the
+// <..> type parameter.
+#if UNITY_EDITOR
+public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProcessor>
+{
+    private GUIContent m_SliderLabel = new GUIContent("Shift By");
+
+    public override void OnEnable()
+    {
+        // Put initialization code here. Use 'target' to refer
+        // to the instance of MyValueShiftProcessor that is being
+        // edited.
+    }
+
+    public override void OnGUI()
+    {
+        // Define your custom UI here using EditorGUILayout.
+        target.valueShift = EditorGUILayout.Slider(m_SliderLabel,
+            target.valueShift, 0, 10);
+    }
+}
+#endif
 ```

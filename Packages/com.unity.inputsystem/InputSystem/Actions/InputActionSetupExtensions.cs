@@ -216,26 +216,34 @@ namespace UnityEngine.InputSystem
         /// Returns a fluent-style syntax structure that allows performing additional modifications
         /// based on the new binding.
         /// </returns>
+        /// <exception cref="InvalidOperationException"><paramref name="action"/> is enabled or is part
+        /// of an <see cref="InputActionMap"/> that is enabled.</exception>
         /// <remarks>
         /// This works both with actions that are part of an action set as well as with actions that aren't.
         ///
         /// Note that actions must be disabled while altering their binding sets. Also, if the action belongs
         /// to a set, all actions in the set must be disabled.
+        ///
+        /// <example>
+        /// <code>
+        /// fireAction.AddBinding()
+        ///     .WithPath("&lt;Gamepad&gt;/buttonSouth")
+        ///     .WithGroup("Gamepad");
+        /// </code>
+        /// </example>
         /// </remarks>
-        public static BindingSyntax AddBinding(this InputAction action, InputBinding binding)
+        public static BindingSyntax AddBinding(this InputAction action, InputBinding binding = default)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (binding.path == null)
                 throw new ArgumentException("Binding path cannot be null", nameof(binding));
-            action.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: should this reference actions by ID?
             Debug.Assert(action.m_Name != null || action.isSingletonAction);
             binding.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
@@ -284,7 +292,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (binding.path == null)
                 throw new ArgumentException("Binding path cannot be null", nameof(binding));
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, null, bindingIndex);
@@ -298,7 +305,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException("Composite name cannot be null or empty", nameof(composite));
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: use 'name' instead of 'path' field here?
             var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
@@ -364,7 +370,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(action));
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
             var bindingIndex = actionMap.FindBinding(match);
             if (bindingIndex == -1)
                 throw new ArgumentException($"Cannot find binding matching '{match}' in '{action}'", nameof(match));
@@ -511,6 +516,7 @@ namespace UnityEngine.InputSystem
         /// Syntax to configure a binding added to an <see cref="InputAction"/> or an
         /// <see cref="InputActionMap"/>.
         /// </summary>
+        /// <seealso cref="AddBinding(InputAction,InputBinding)"/>
         public struct BindingSyntax
         {
             private readonly InputActionMap m_ActionMap;
@@ -524,17 +530,30 @@ namespace UnityEngine.InputSystem
                 m_BindingIndex = bindingIndex;
             }
 
+            /// <summary>
+            /// Set the <see cref="InputBinding.name"/> of the binding.
+            /// </summary>
+            /// <param name="name">Name for the binding.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <seealso cref="InputBinding.name"/>
+            /// <seealso cref="AddBinding"/>
             public BindingSyntax WithName(string name)
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].name = name;
-                // No need to clear cached data.
+                m_ActionMap.ClearPerActionCachedBindingData();
                 return this;
             }
 
+            /// <summary>
+            /// Set the <see cref="InputBinding.path"/> of the binding.
+            /// </summary>
+            /// <param name="path">Path for the binding.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <seealso cref="InputBinding.path"/>
             public BindingSyntax WithPath(string path)
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].path = path;
-                // No need to clear cached data.
+                m_ActionMap.ClearPerActionCachedBindingData();
                 return this;
             }
 

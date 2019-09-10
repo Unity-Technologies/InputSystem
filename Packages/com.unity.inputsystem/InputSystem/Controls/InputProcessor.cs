@@ -2,10 +2,12 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 ////TODO: come up with a mechanism to allow (certain) processors to be stateful
 
 ////TODO: cache processors globally; there's no need to instantiate the same processor with the same parameters multiple times
+////      (except if they do end up being stateful)
 
 namespace UnityEngine.InputSystem
 {
@@ -13,11 +15,17 @@ namespace UnityEngine.InputSystem
     /// A processor that conditions/transforms input values.
     /// </summary>
     /// <remarks>
+    /// To define a custom processor, it is usable best to derive from <see cref="InputProcessor{TValue}"/>
+    /// instead of from this class. Doing so will avoid having to deal with things such as the raw memory
+    /// buffers of <see cref="Process"/>.
+    ///
+    /// Note, however, that if you do want to define a processor that can process more than one type of
+    /// value, you can derive directly from this class.
     /// </remarks>
     /// <seealso cref="InputBinding.processors"/>
     /// <seealso cref="InputControlLayout.ControlItem.processors"/>
     /// <seealso cref="InputSystem.RegisterProcessor{T}"/>
-    [Scripting.Preserve]
+    [Preserve]
     public abstract class InputProcessor
     {
         /// <summary>
@@ -28,17 +36,13 @@ namespace UnityEngine.InputSystem
         /// that the processor has (<see cref="valueType"/>).</param>
         /// <returns>A processed value based on <paramref name="value"/>.</returns>
         /// <remarks>
-        /// This method allocates GC memory. To process values without allocating GC memory, it is necessary to know
-        /// the value type of a processor at compile time and call <see cref="InputProcessor{TValue}.Process"/> directly.
+        /// This method allocates GC heap memory. To process values without allocating GC memory, it is necessary to either know
+        /// the value type of a processor at compile time and call <see cref="InputProcessor{TValue}.Process(TValue,UnityEngine.InputSystem.InputControl)"/>
+        /// directly or to use <see cref="Process"/> instead and process values in raw memory buffers.
         /// </remarks>
         public abstract object ProcessAsObject(object value, InputControl control);
 
         public abstract unsafe void Process(void* buffer, int bufferSize, InputControl control);
-
-        /// <summary>
-        /// Value type expected by the processor.
-        /// </summary>
-        public abstract Type valueType { get; }
 
         internal static TypeTable s_Processors;
 
@@ -65,6 +69,8 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// A processor that conditions/transforms input values.
     /// </summary>
+    /// <typeparam name="TValue">Type of value to be processed. Only InputControls that use the
+    /// same value type will be compatible with the processor.</typeparam>
     /// <remarks>
     /// Each <see cref="InputControl"/> can have a stack of processors assigned to it.
     ///
@@ -75,9 +81,7 @@ namespace UnityEngine.InputSystem
     /// However, processors can have configurable parameters. Every public field on a processor
     /// object can be set using "parameters" in JSON or by supplying parameters through the
     /// <see cref="InputControlAttribute.processors"/> field.
-    /// </remarks>
-    /// <typeparam name="TValue">Type of value to be processed. Only InputControls that use the
-    /// same value type will be compatible with the processor.</typeparam>
+    ///
     /// <example>
     /// <code>
     /// // To register the processor, call
@@ -114,6 +118,10 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
+    ///
+    /// See <see cref="Editor.InputParameterEditor{T}"/> for how to define custom parameter
+    /// editing UIs for processors.
+    /// </remarks>
     /// <seealso cref="InputSystem.RegisterProcessor"/>
     [Scripting.Preserve]
     public abstract class InputProcessor<TValue> : InputProcessor
@@ -127,13 +135,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <param name="value">Input value to process.</param>
         /// <param name="control">Control that the value originally came from. This can be null if the value did
-        /// not originate from a control. This can be the case, for example, if the processor sits on a composite
-        /// binding (<see cref="InputBindingComposite"/>) as composites are not directly associated with controls
-        /// but rather source their values through their child bindings.</param>
+        ///     not originate from a control. This can be the case, for example, if the processor sits on a composite
+        ///     binding (<see cref="InputBindingComposite"/>) as composites are not directly associated with controls
+        ///     but rather source their values through their child bindings.</param>
         /// <returns>Processed input value.</returns>
-        public abstract TValue Process(TValue value, InputControl<TValue> control);
-
-        public override Type valueType => typeof(TValue);
+        public abstract TValue Process(TValue value, InputControl control);
 
         public override object ProcessAsObject(object value, InputControl control)
         {
@@ -147,12 +153,7 @@ namespace UnityEngine.InputSystem
 
             var valueOfType = (TValue)value;
 
-            var controlOfType = control as InputControl<TValue>;
-            if (controlOfType == null && control != null)
-                throw new ArgumentException(
-                    $"Expecting control of type 'InputControl<{typeof(TValue).Name}>' but got control '{control}' of type '{control.GetType().Name}' instead");
-
-            return Process(valueOfType, controlOfType);
+            return Process(valueOfType, control);
         }
 
         public override unsafe void Process(void* buffer, int bufferSize, InputControl control)
@@ -166,16 +167,11 @@ namespace UnityEngine.InputSystem
                     $"Expected buffer of at least {valueSize} bytes but got buffer with just {bufferSize} bytes",
                     nameof(bufferSize));
 
-            var controlOfType = control as InputControl<TValue>;
-            if (controlOfType == null && control != null)
-                throw new ArgumentException(
-                    $"Expecting control of type 'InputControl<{typeof(TValue).Name}>' but got control '{control}' of type '{control.GetType().Name}' instead");
-
             var value = default(TValue);
             var valuePtr = UnsafeUtility.AddressOf(ref value);
             UnsafeUtility.MemCpy(valuePtr, buffer, valueSize);
 
-            value = Process(value, controlOfType);
+            value = Process(value, control);
 
             valuePtr = UnsafeUtility.AddressOf(ref value);
             UnsafeUtility.MemCpy(buffer, valuePtr, valueSize);

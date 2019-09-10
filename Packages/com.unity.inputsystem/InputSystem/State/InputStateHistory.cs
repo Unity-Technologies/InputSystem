@@ -59,9 +59,34 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         private const int kDefaultHistorySize = 128;
 
+        /// <summary>
+        /// Total number of state records currently captured in the history.
+        /// </summary>
+        /// <value>Number of records in the collection.</value>
+        /// <remarks>
+        /// This will always be at most <see cref="historyDepth"/>.
+        /// </remarks>
+        /// <seealso cref="historyDepth"/>
+        /// <seealso cref="RecordStateChange(InputControl,InputEventPtr)"/>
         public int Count => m_RecordCount;
+
+        /// <summary>
+        /// Current version stamp. Every time a record is stored in the history,
+        /// this is incremented by one.
+        /// </summary>
+        /// <value>Version stamp that indicates the number of mutations.</value>
+        /// <seealso cref="RecordStateChange(InputControl,InputEventPtr)"/>
         public uint version => m_CurrentVersion;
 
+        /// <summary>
+        /// Maximum number of records that can be recorded in the history.
+        /// </summary>
+        /// <value>Upper limit on number of records.</value>
+        /// <exception cref="ArgumentException"><paramref name="value"/> is negative.</exception>
+        /// <remarks>
+        /// A fixed size memory block of unmanaged memory will be allocated to store history
+        /// records. This property determines TODO
+        /// </remarks>
         public int historyDepth
         {
             get => m_HistoryDepth;

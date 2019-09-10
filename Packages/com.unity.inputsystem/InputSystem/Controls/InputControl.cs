@@ -430,7 +430,10 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="valueType"/>
         public abstract int valueSizeInBytes { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Return a string representation of the control useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the control.</returns>
         public override string ToString()
         {
             return $"{layout}:{path}";

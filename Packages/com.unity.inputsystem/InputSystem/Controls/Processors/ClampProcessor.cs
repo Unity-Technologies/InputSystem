@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Processors
         public float min;
         public float max;
 
-        public override float Process(float value, InputControl<float> control)
+        public override float Process(float value, InputControl control)
         {
             return Mathf.Clamp(value, min, max);
         }

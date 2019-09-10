@@ -18,7 +18,6 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-using Property = NUnit.Framework.PropertyAttribute;
 
 #pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
@@ -2723,7 +2722,7 @@ partial class CoreTests
     [Preserve]
     private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl control)
         {
             return new Vector2(0.1234f, 0.5678f);
         }

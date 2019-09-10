@@ -1100,7 +1100,7 @@ internal class PlayerInputTests : InputTestFixture
         var manager = new GameObject();
         var listener = manager.AddComponent<MessageListener>();
         var managerComponent = manager.AddComponent<PlayerInputManager>();
-        managerComponent.joinAction = joinAction;
+        managerComponent.joinAction = new InputActionProperty(joinAction);
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenJoinActionIsTriggered;
         managerComponent.playerPrefab = playerPrefab;
 

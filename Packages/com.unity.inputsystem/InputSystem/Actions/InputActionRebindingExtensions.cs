@@ -22,19 +22,53 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Extensions to help with dynamically rebinding <see cref="InputAction">actions</see> in
+    /// Extensions to help with dynamically rebinding <see cref="InputAction"/>s in
     /// various ways.
     /// </summary>
     /// <remarks>
     /// Unlike <see cref="InputActionSetupExtensions"/>, the extension methods in here are meant to be
-    /// called during normal game operation.
+    /// called during normal game operation, i.e. as part of screens whether the user can rebind
+    /// controls.
     ///
     /// The two primary duties of these extensions are to apply binding overrides that non-destructively
     /// redirect existing bindings and to facilitate user-controlled rebinding by listening for controls
     /// actuated by the user.
     /// </remarks>
+    /// <seealso cref="InputActionSetupExtensions"/>
+    /// <seealso cref="InputBinding"/>
+    /// <seealso cref="InputAction.bindings"/>
     public static class InputActionRebindingExtensions
     {
+        /// <summary>
+        /// Put an override on all matching bindings of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">Action to apply the override to.</param>
+        /// <param name="newPath">New binding path to take effect. Supply an empty string
+        /// to disable the binding(s). See <see cref="InputControlPath"/> for details on
+        /// the path language.</param>
+        /// <param name="group">Optional list of binding groups to target the override
+        /// to. For example, <c>"Keyboard;Gamepad"</c> will only apply overrides to bindings
+        /// that either have the <c>"Keyboard"</c> or the <c>"Gamepad"</c> binding group
+        /// listed in <see cref="InputBinding.groups"/>.</param>
+        /// <param name="path">Only override bindings that have this exact path.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// Calling this method is equivalent to calling <see cref="ApplyBindingOverride(InputAction,InputBinding)"/>
+        /// with the properties of the given <see cref="InputBinding"/> initialized accordingly.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the binding to the gamepad A button with a binding to
+        /// // the Y button.
+        /// fireAction.ApplyBindingOverride("&lt;Gamepad&gt;/buttonNorth",
+        ///     path: "&lt;Gamepad&gt;/buttonSouth);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="ApplyBindingOverride(InputAction,InputBinding)"/>
+        /// <seealso cref="InputBinding.effectivePath"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.Matches"/>
         public static void ApplyBindingOverride(this InputAction action, string newPath, string group = null, string path = null)
         {
             if (action == null)
@@ -44,16 +78,52 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        ///
+        /// Apply overrides to all bindings on <paramref name="action"/> that match <paramref name="bindingOverride"/>.
+        /// The override values are taken from <see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideProcessors"/>,
+        /// and <seealso cref="InputBinding.overrideInteractions"/> on <paramref name="bindingOverride"/>.
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="bindingOverride"></param>
+        /// <param name="action">Action to override bindings on.</param>
+        /// <param name="bindingOverride">A binding that both acts as a mask (see <see cref="InputBinding.Matches"/>)
+        /// on the bindings to <paramref name="action"/> and as a container for the override values.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
         /// <remarks>
+        /// The method will go through all of the bindings for <paramref name="action"/> (i.e. its <see cref="InputAction.bindings"/>)
+        /// and call <see cref="InputBinding.Matches"/> on them with <paramref name="bindingOverride"/>.
+        /// For every binding that returns <c>true</c> from <c>Matches</c>, the override values from the
+        /// binding (i.e. <see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideProcessors"/>,
+        /// and <see cref="InputBinding.overrideInteractions"/>) are copied into the binding.
+        ///
         /// Binding overrides are non-destructive. They do not change the bindings set up for an action
         /// but rather apply non-destructive modifications that change the paths of existing bindings.
         /// However, this also means that for overrides to work, there have to be existing bindings that
         /// can be modified.
+        ///
+        /// This is achieved by setting <see cref="InputBinding.overridePath"/> which is a non-serialized
+        /// property. When resolving bindings, the system will use <see cref="InputBinding.effectivePath"/>
+        /// which uses <see cref="InputBinding.overridePath"/> if set or <see cref="InputBinding.path"/>
+        /// otherwise. The same applies to <see cref="InputBinding.effectiveProcessors"/> and <see
+        /// cref="InputBinding.effectiveInteractions"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the binding in the "KeyboardMouse" group on 'fireAction'
+        /// // by setting its override binding path to the space bar on the keyboard.
+        /// fireAction.ApplyBindingOverride(new InputBinding
+        /// {
+        ///     groups = "KeyboardMouse",
+        ///     overridePath = "&lt;Keyboard&gt;/space"
+        /// });
+        /// </code>
+        /// </example>
+        ///
+        /// If the given action is enabled when calling this method, the effect will be immediate,
+        /// i.e. binding resolution takes place and <see cref="InputAction.controls"/> are updated.
+        /// If the action is not enabled, binding resolution is deferred to when controls are needed
+        /// next (usually when either <see cref="InputAction.controls"/> is queried or when the
+        /// action is enabled).
         /// </remarks>
+        /// <seealso cref="InputAction.bindings"/>
+        /// <seealso cref="InputBinding.Matches"/>
         public static void ApplyBindingOverride(this InputAction action, InputBinding bindingOverride)
         {
             if (action == null)
@@ -64,6 +134,38 @@ namespace UnityEngine.InputSystem
             ApplyBindingOverride(actionMap, bindingOverride);
         }
 
+        /// <summary>
+        /// Apply a binding override to the Nth binding on the given action.
+        /// </summary>
+        /// <param name="action">Action to apply the binding override to.</param>
+        /// <param name="bindingIndex">Index of the binding in <see cref="InputAction.bindings"/> to
+        /// which to apply the override to.</param>
+        /// <param name="bindingOverride">A binding that specifies the overrides to apply. In particular,
+        /// the <see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideProcessors"/>, and
+        /// <see cref="InputBinding.overrideInteractions"/> properties will be copied into the binding
+        /// in <see cref="InputAction.bindings"/>. The remaining fields will be ignored by this method.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is out of range.</exception>
+        /// <remarks>
+        /// Unlike <see cref="ApplyBindingOverride(InputAction,InputBinding)"/> this method will
+        /// not use <see cref="InputBinding.Matches"/> to determine which binding to apply the
+        /// override to. Instead, it will apply the override to the binding at the given index
+        /// and to that binding alone.
+        ///
+        /// The remaining details of applying overrides are identical to <see
+        /// cref="ApplyBindingOverride(InputAction,InputBinding)"/>.
+        ///
+        /// Note that calling this method with an empty (default-constructed) <paramref name="bindingOverride"/>
+        /// is equivalent to resetting all overrides on the given binding.
+        ///
+        /// <example>
+        /// <code>
+        /// // Reset the overrides on the second binding on 'fireAction'.
+        /// fireAction.ApplyBindingOverride(1, default);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="ApplyBindingOverride(InputAction,InputBinding)"/>
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, InputBinding bindingOverride)
         {
             if (action == null)
@@ -74,12 +176,35 @@ namespace UnityEngine.InputSystem
             ApplyBindingOverride(action.GetOrCreateActionMap(), indexOnMap, bindingOverride);
         }
 
+        /// <summary>
+        /// Apply a binding override to the Nth binding on the given action.
+        /// </summary>
+        /// <param name="action">Action to apply the binding override to.</param>
+        /// <param name="bindingIndex">Index of the binding in <see cref="InputAction.bindings"/> to
+        /// which to apply the override to.</param>
+        /// <param name="path">Override path (<see cref="InputBinding.overridePath"/>) to set on
+        /// the given binding in <see cref="InputAction.bindings"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is out of range.</exception>
+        /// <remarks>
+        /// Calling this method is equivalent to calling <see cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
+        /// like so:
+        ///
+        /// <example>
+        /// <code>
+        /// action.ApplyBindingOverride(new InputBinding { overridePath = path });
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
         public static void ApplyBindingOverride(this InputAction action, int bindingIndex, string path)
         {
             if (path == null)
                 throw new ArgumentException("Binding path cannot be null", nameof(path));
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
+
+        //DOC---------------------------------------------
 
         /// <summary>
         /// Apply the given binding override to all bindings in the map that are matched by the override.
@@ -88,14 +213,12 @@ namespace UnityEngine.InputSystem
         /// <param name="bindingOverride"></param>
         /// <returns>The number of bindings overridden in the given map.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="actionMap"/> is currently enabled.</exception>
         /// <remarks>
         /// </remarks>
         public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindings = actionMap.m_Bindings;
             if (bindings == null)
@@ -112,11 +235,15 @@ namespace UnityEngine.InputSystem
                 // Set overrides on binding.
                 bindings[i].overridePath = bindingOverride.overridePath;
                 bindings[i].overrideInteractions = bindingOverride.overrideInteractions;
+                bindings[i].overrideProcessors = bindingOverride.overrideProcessors;
                 ++matchCount;
             }
 
             if (matchCount > 0)
+            {
+                actionMap.ClearPerActionCachedBindingData();
                 actionMap.LazyResolveBindings();
+            }
 
             return matchCount;
         }
@@ -132,6 +259,8 @@ namespace UnityEngine.InputSystem
 
             actionMap.m_Bindings[bindingIndex].overridePath = bindingOverride.overridePath;
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
+            actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
+
             actionMap.LazyResolveBindings();
         }
 
@@ -139,10 +268,10 @@ namespace UnityEngine.InputSystem
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            action.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
             bindingOverride.overrideInteractions = null;
+            bindingOverride.overrideProcessors = null;
 
             // Simply apply but with a null binding.
             ApplyBindingOverride(action, bindingOverride);
@@ -152,21 +281,29 @@ namespace UnityEngine.InputSystem
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             bindingOverride.overridePath = null;
             bindingOverride.overrideInteractions = null;
+            bindingOverride.overrideProcessors = null;
 
             // Simply apply but with a null binding.
             ApplyBindingOverride(actionMap, bindingOverride);
         }
 
-        // Restore all bindings to their default paths.
+        /// <summary>
+        /// Remove all binding overrides on <paramref name="action"/>, i.e. clear all <see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/> set on bindings
+        /// for the given action.
+        /// </summary>
+        /// <param name="action">Action to remove overrides from.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// T
+        /// </remarks>
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            action.ThrowIfModifyingBindingsIsNotAllowed();
 
             var actionName = action.name;
             var actionMap = action.GetOrCreateActionMap();
@@ -182,6 +319,7 @@ namespace UnityEngine.InputSystem
 
                 bindings[i].overridePath = null;
                 bindings[i].overrideInteractions = null;
+                bindings[i].overrideProcessors = null;
             }
 
             actionMap.LazyResolveBindings();
@@ -196,7 +334,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
                 ApplyBindingOverride(actionMap, binding);
@@ -209,7 +346,6 @@ namespace UnityEngine.InputSystem
             if (overrides == null)
                 throw new ArgumentNullException(nameof(overrides));
 
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             foreach (var binding in overrides)
                 RemoveBindingOverride(actionMap, binding);
@@ -218,14 +354,12 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Restore all bindings in the map to their defaults.
         /// </summary>
-        /// <param name="actionMap">Action map to remove overrides from. Must not have enabled actions.</param>
+        /// <param name="actionMap">Action map to remove overrides from.</param>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
-        /// <exception cref="InvalidOperationException"><paramref name="actionMap"/> is currently enabled.</exception>
         public static void RemoveAllBindingOverrides(this InputActionMap actionMap)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             if (actionMap.m_Bindings == null)
                 return; // No bindings in map.
@@ -397,8 +531,19 @@ namespace UnityEngine.InputSystem
             /// This is true after calling <see cref="Start"/> and set to false when
             /// <see cref="OnComplete"/> or <see cref="OnCancel"/> is called.
             /// </remarks>
+            /// <seealso cref="Start"/>
+            /// <seealso cref="completed"/>
+            /// <seealso cref="canceled"/>
             public bool started => (m_Flags & Flags.Started) != 0;
 
+            /// <summary>
+            /// Whether the rebind has been completed.
+            /// </summary>
+            /// <value>True if the rebind has been completed.</value>
+            /// <remarks>
+            /// TODO
+            /// </remarks>
+            /// <seealso cref="OnComplete(Action{RebindingOperation})"/>
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
             public bool canceled => (m_Flags & Flags.Canceled) != 0;
@@ -410,7 +555,7 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Perform rebinding on the bindings of the given action.
             /// </summary>
-            /// <param name="action">Action to perform rebinding on. Must be disabled.</param>
+            /// <param name="action">Action to perform rebinding on.</param>
             /// <returns>The same RebindingOperation instance.</returns>
             /// <remarks>
             /// Note that by default, a rebind does not have a binding mask or any other setting
@@ -424,7 +569,6 @@ namespace UnityEngine.InputSystem
             /// it will automatically be passed to <see cref="WithExpectedControlType(string)"/>.
             /// </remarks>
             /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-            /// <exception cref="InvalidOperationException"><paramref name="action"/> is currently enabled.</exception>
             /// <seealso cref="PerformInteractiveRebinding"/>
             public RebindingOperation WithAction(InputAction action)
             {
@@ -432,8 +576,6 @@ namespace UnityEngine.InputSystem
 
                 if (action == null)
                     throw new ArgumentNullException(nameof(action));
-                if (action.enabled)
-                    throw new InvalidOperationException($"Cannot rebind action '{action}' while it is enabled");
 
                 m_ActionToRebind = action;
 
@@ -790,7 +932,6 @@ namespace UnityEngine.InputSystem
 
             public void Dispose()
             {
-                ////FIXME: these have to be made thread-safe
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
                 m_Candidates.Dispose();
@@ -802,6 +943,16 @@ namespace UnityEngine.InputSystem
                 Dispose();
             }
 
+            /// <summary>
+            /// Reset the configuration on the rebind.
+            /// </summary>
+            /// <remarks>
+            /// Call this method to reset the effects of calling methods such as <see cref="WithAction"/>,
+            /// <see cref="WithBindingGroup"/>, etc. but retain other data that the rebind operation
+            /// may have allocated already. If you are reusing the same <c>RebindingOperation</c>
+            /// multiple times, a good strategy is to reset and reconfigure the operation before starting
+            /// it again.
+            /// </remarks>
             public void Reset()
             {
                 m_ActionToRebind = default;

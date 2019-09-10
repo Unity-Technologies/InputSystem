@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Processors
         public float max;
         public float zero;
 
-        public override float Process(float value, InputControl<float> control)
+        public override float Process(float value, InputControl control)
         {
             return Normalize(value, min, max, zero);
         }

@@ -447,7 +447,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    [Ignore("Still needs a lot of documentation work to happen")]
+    //[Ignore("Still needs a lot of documentation work to happen")]
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
         var docsFolder = GenerateDocsDirectory();

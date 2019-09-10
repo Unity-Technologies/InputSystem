@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.Processors
         [Tooltip("Scale factor to multiply incoming float values by.")]
         public float factor = 1;
 
-        public override float Process(float value, InputControl<float> control)
+        public override float Process(float value, InputControl control)
         {
             return value * factor;
         }

@@ -19,7 +19,6 @@ using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-using Property = NUnit.Framework.PropertyAttribute;
 using Quaternion = UnityEngine.Quaternion;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using Vector2 = UnityEngine.Vector2;
@@ -1259,7 +1258,7 @@ partial class CoreTests
         var description =
             new InputDeviceDescription
         {
-            deviceClass = "Gamepad",
+            deviceClass = "Gamepad"
         };
 
         var originalDeviceId = runtime.ReportNewInputDevice(description);
@@ -1310,27 +1309,34 @@ partial class CoreTests
         Assert.That(InputSystem.disconnectedDevices, Has.Count.Zero);
     }
 
-    //Keep weak ref to device when getting disconnect event
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_WhenRemovedThroughEvent_AreReusedWhenReconnectedAndNotReclaimedYet()
+    public void Devices_WhenRetainedOnDisconnectedList_CanBePurgedManually()
     {
-        runtime.ReportNewInputDevice(new InputDeviceDescription
-        {
-            deviceClass = "Gamepad"
-        }.ToJson());
+        var deviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                deviceClass = "Gamepad"
+            });
+
         InputSystem.Update();
+        var device = InputSystem.GetDeviceById(deviceId);
 
-        var gamepad = (Gamepad)InputSystem.devices[0];
+        Assert.That(device, Is.Not.Null);
+        Assert.That(InputSystem.devices, Is.EquivalentTo(new[] { device }));
+        Assert.That(InputSystem.disconnectedDevices, Is.Empty);
 
-        var inputEvent = DeviceRemoveEvent.Create(gamepad.deviceId, runtime.currentTime);
+        var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
         InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 
-        Assert.That(InputSystem.devices, Has.Count.Zero);
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
 
-        Assert.Fail();
+        InputSystem.FlushDisconnectedDevices();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
     }
 
     [Test]

@@ -754,7 +754,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!control.layout.IsEmpty())
                     item.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
 
-                ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
+                ////TODO: fully merge TreeViewItems from isModifyingExistingControl control layouts into the control they modify
 
                 ////TODO: allow clicking this field to jump to the layout
                 if (!control.layout.IsEmpty())

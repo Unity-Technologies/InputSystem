@@ -114,29 +114,38 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether any action in the map is currently enabled.
         /// </summary>
+        /// <value>True if any action in <see cref="actions"/> is currently enabled.</value>
+        /// <seealso cref="InputAction.enabled"/>
+        /// <seealso cref="Enable"/>
+        /// <seealso cref="InputAction.Enable"/>
         public bool enabled => m_EnabledActionsCount > 0;
 
         /// <summary>
         /// List of actions contained in the map.
         /// </summary>
+        /// <value>Collection of actions belonging to the map.</value>
         /// <remarks>
         /// Actions are owned by their map. The same action cannot appear in multiple maps.
         ///
-        /// Does not allocate. Note that values returned by the property become invalid if
-        /// the setup of actions in a set is changed.
+        /// Accessing this property. Note that values returned by the property become invalid if
+        /// the setup of actions in a map is changed.
         /// </remarks>
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         /// <summary>
         /// List of bindings contained in the map.
         /// </summary>
+        /// <value>Collection of bindings in the map.</value>
         /// <remarks>
-        /// <see cref="InputBinding">InputBindings</see> are owned by action maps and not by individual
-        /// actions. The bindings in a map can form a tree and conceptually, this array represents a depth-first
-        /// traversal of the tree.
+        /// <see cref="InputBinding"/>s are owned by action maps and not by individual actions.
         ///
-        /// Bindings that trigger actions refer to the action by name.
+        /// Bindings that trigger actions refer to the action by <see cref="InputAction.name"/>
+        /// or <see cref="InputAction.id"/>.
+        ///
+        /// Accessing this property does not allocate. Note that values returned by the property
+        /// become invalid if the setup of bindings in a map is changed.
         /// </remarks>
+        /// <seealso cref="InputAction.bindings"/>
         public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
 
         /// <summary>
@@ -148,6 +157,7 @@ namespace UnityEngine.InputSystem
         /// For action maps that are part of assets, this property will return the control schemes
         /// from the asset. For free-standing action maps, this will return an empty list.
         /// </remarks>
+        /// <seealso cref="InputActionAsset.controlSchemes"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes
         {
             get
@@ -922,14 +932,6 @@ namespace UnityEngine.InputSystem
         {
             m_BindingsForEachAction = null;
             m_ControlsForEachAction = null;
-        }
-
-        ////TODO: allow this; just disable temporarily
-        internal void ThrowIfModifyingBindingsIsNotAllowed()
-        {
-            if (enabled)
-                throw new InvalidOperationException(
-                    $"Cannot modify bindings on action map '{this}' while the map is enabled");
         }
 
         internal void GenerateId()

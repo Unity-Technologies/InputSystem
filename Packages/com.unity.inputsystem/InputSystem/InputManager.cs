@@ -385,40 +385,19 @@ namespace UnityEngine.InputSystem
                 RegisterControlLayoutMatcher(internedLayoutName, deviceMatcher);
         }
 
-        public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
+        public void RegisterControlLayoutBuilder(Func<InputControlLayout> method, string name,
             string baseLayout = null)
         {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
-            if (method.IsGenericMethod)
-                throw new ArgumentException($"Method must not be generic ({method})", nameof(method));
-            if (method.GetParameters().Length > 0)
-                throw new ArgumentException($"Method must not take arguments ({method})", nameof(method));
-            if (!typeof(InputControlLayout).IsAssignableFrom(method.ReturnType))
-                throw new ArgumentException($"Method must return InputControlLayout ({method})", nameof(method));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
-
-            ////FIXME: this is no longer necessary; kill it
-            // If we have an instance, make sure it is [Serializable].
-            if (instance != null)
-            {
-                var type = instance.GetType();
-                if (type.GetCustomAttribute<SerializableAttribute>(true) == null)
-                    throw new ArgumentException(
-                        $"Instance used with {method} to construct a layout must be [Serializable] but {type} is not",
-                        nameof(instance));
-            }
 
             var internedLayoutName = new InternedString(name);
             var internedBaseLayoutName = new InternedString(baseLayout);
             var isReplacement = DoesLayoutExist(internedLayoutName);
 
-            m_Layouts.layoutBuilders[internedLayoutName] = new InputControlLayout.BuilderInfo
-            {
-                method = method,
-                instance = instance
-            };
+            m_Layouts.layoutBuilders[internedLayoutName] = method;
 
             PerformLayoutPostRegistration(internedLayoutName, new InlinedArray<InternedString>(internedBaseLayoutName),
                 isReplacement);
@@ -807,40 +786,32 @@ namespace UnityEngine.InputSystem
                 m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
-        public int ListControlLayouts(List<string> layouts, string basedOn = null)
+        public IEnumerable<string> ListControlLayouts(string basedOn = null)
         {
-            if (layouts == null)
-                throw new ArgumentNullException(nameof(layouts));
-
-            var countBefore = layouts.Count;
-
             ////FIXME: this may add a name twice
-            ////REVIEW: are we handling layout overrides correctly here? they shouldn't end up on the list
 
             if (!string.IsNullOrEmpty(basedOn))
             {
                 var internedBasedOn = new InternedString(basedOn);
                 foreach (var entry in m_Layouts.layoutTypes)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutBuilders)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
             }
             else
             {
                 foreach (var entry in m_Layouts.layoutTypes)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutBuilders)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
             }
-
-            return layouts.Count - countBefore;
         }
 
         // Adds all controls that match the given path spec to the given list.
@@ -1194,6 +1165,12 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+        }
+
+        public void FlushDisconnectedDevices()
+        {
+            m_DisconnectedDevices.Clear(m_DisconnectedDevicesCount);
+            m_DisconnectedDevicesCount = 0;
         }
 
         public InputDevice TryGetDevice(string nameOrLayout)
@@ -1932,6 +1909,10 @@ namespace UnityEngine.InputSystem
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
+
+                if (stateBlock.byteOffset + stateBlock.alignedSizeInBytes >
+                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes)
+                    Debug.Log("Foo");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                     (int)stateBlock.sizeInBits, true);

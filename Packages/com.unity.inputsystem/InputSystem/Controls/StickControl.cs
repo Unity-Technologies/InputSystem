@@ -57,6 +57,10 @@ namespace UnityEngine.InputSystem.Controls
         // say, leftStick/x and leftStick/left, leftStick/x wins out.
 
         ////REVIEW: up/down/left/right should probably prohibit being written to
+        ////REVIEW: Should up/down/left/control actually be their own control types that *read* the values
+        ////        from X and Y instead of sharing their state? The current setup easily leads to various
+        ////        problems because more than just the state block is needed to read the value of a control
+        ////        from state correctly.
 
         /// <summary>
         /// A synthetic button representing the upper half of the stick's Y axis.

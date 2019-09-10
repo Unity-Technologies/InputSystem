@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Memory format identifier for MouseState.
         /// </summary>
+        /// <value>Returns "MOUS".</value>
         /// <seealso cref="InputStateBlock.format"/>
         public static FourCC Format => new FourCC('M', 'O', 'U', 'S');
 

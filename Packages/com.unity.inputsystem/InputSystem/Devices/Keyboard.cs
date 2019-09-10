@@ -17,7 +17,12 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('K', 'E', 'Y', 'S');
+        /// <summary>
+        /// Memory format tag for KeybboardState.
+        /// </summary>
+        /// <value>Returns "KEYS".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
 
         private const int kSizeInBits = Keyboard.KeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
@@ -151,7 +156,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC format => kFormat;
+        public FourCC format => Format;
     }
 }
 
@@ -819,14 +824,60 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.
         /// </summary>
+        /// <value>Triggered whenever the keyboard receives text input.</value>
         /// <remarks>
         /// <example>
         /// <code>
-        /// Keyboard.current.onTextInput +=
-        ///     ch =>
+        /// // Let's say we want to do a typing game. We could define a component
+        /// // something along those lines to match the typed input.
+        /// public class MatchTextByTyping : MonoBehaviour
+        /// {
+        ///     public string text
         ///     {
-        ///         TODO
+        ///         get => m_Text;
+        ///         set
+        ///         {
+        ///             m_Text = value;
+        ///             m_Position = 0;
+        ///         }
         ///     }
+        ///
+        ///     public Action onTextTypedCorrectly { get; set; }
+        ///     public Action onTextTypedIncorrectly { get; set; }
+        ///
+        ///     private int m_Position;
+        ///     private string m_Text;
+        ///
+        ///     protected void OnEnable()
+        ///     {
+        ///         Keyboard.current.onTextInput += OnTextInput;
+        ///     }
+        ///
+        ///     protected void OnDisable()
+        ///     {
+        ///         Keyboard.current.onTextInput -= OnTextInput;
+        ///     }
+        ///
+        ///     private void OnTextInput(char ch)
+        ///     {
+        ///         if (m_Text == null || m_Position >= m_Text.Length)
+        ///             return;
+        ///
+        ///         if (m_Text[m_Position] == ch)
+        ///         {
+        ///             ++m_Position;
+        ///             if (m_Position == m_Text.Length)
+        ///                 onTextTypeCorrectly?.Invoke();
+        ///         }
+        ///         else
+        ///         {
+        ///             m_Text = null;
+        ///             m_Position = 0;
+        ///
+        ///             onTextTypedIncorrectly?.Invoke();
+        ///         }
+        ///     }
+        /// }
         /// </code>
         /// </example>
         /// </remarks>
@@ -2005,6 +2056,14 @@ namespace UnityEngine.InputSystem
                 keyboardLayout = command.ReadLayoutName();
         }
 
+        /// <summary>
+        /// Called when text input on the keyboard is received.
+        /// </summary>
+        /// <param name="character">Character that has been entered.</param>
+        /// <remarks>
+        /// The system will call this automatically whenever a <see cref="TextEvent"/> is
+        /// received that targets the keyboard device.
+        /// </remarks>
         public void OnTextInput(char character)
         {
             for (var i = 0; i < m_TextInputListeners.length; ++i)

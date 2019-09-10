@@ -109,6 +109,12 @@ namespace UnityEngine.InputSystem
             return m_Reference == other;
         }
 
+        /// <summary>
+        /// Check whether the given object is an InputActionProperty referencing the same action.
+        /// </summary>
+        /// <param name="obj">An object or <c>null</c>.</param>
+        /// <returns>True if the given <paramref name="obj"/> is an InputActionProperty equivalent to this one.</returns>
+        /// <seealso cref="Equals(InputActionProperty)"/>
         public override bool Equals(object obj)
         {
             if (m_UseReference)
@@ -116,6 +122,10 @@ namespace UnityEngine.InputSystem
             return Equals(obj as InputAction);
         }
 
+        /// <summary>
+        /// Compute a hash code for the object.
+        /// </summary>
+        /// <returns>A hash code.</returns>
         public override int GetHashCode()
         {
             if (m_UseReference)
@@ -123,44 +133,28 @@ namespace UnityEngine.InputSystem
             return m_Action.GetHashCode();
         }
 
+        /// <summary>
+        /// Compare the two properties for equivalence.
+        /// </summary>
+        /// <param name="left">The first property.</param>
+        /// <param name="right">The second property.</param>
+        /// <returns>True if the two action properties are equivalent.</returns>
+        /// <seealso cref="Equals(InputActionProperty)"/>
         public static bool operator==(InputActionProperty left, InputActionProperty right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Compare the two properties for not being equivalent.
+        /// </summary>
+        /// <param name="left">The first property.</param>
+        /// <param name="right">The second property.</param>
+        /// <returns>True if the two action properties are not equivalent.</returns>
+        /// <seealso cref="Equals(InputActionProperty)"/>
         public static bool operator!=(InputActionProperty left, InputActionProperty right)
         {
             return !left.Equals(right);
-        }
-
-        public static bool operator==(InputActionProperty left, InputAction right)
-        {
-            return ReferenceEquals(left.action, right);
-        }
-
-        public static bool operator!=(InputActionProperty left, InputAction right)
-        {
-            return !ReferenceEquals(left.action, right);
-        }
-
-        public static bool operator==(InputAction left, InputActionProperty right)
-        {
-            return ReferenceEquals(left, right.action);
-        }
-
-        public static bool operator!=(InputAction left, InputActionProperty right)
-        {
-            return !ReferenceEquals(left, right.action);
-        }
-
-        public static implicit operator InputActionProperty(InputAction action)
-        {
-            return new InputActionProperty(action);
-        }
-
-        public static InputActionProperty ToInputActionProperty(InputAction action)
-        {
-            return new InputActionProperty(action);
         }
 
         [SerializeField] private bool m_UseReference;

@@ -16,7 +16,6 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
-using Property = NUnit.Framework.PropertyAttribute;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
