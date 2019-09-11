@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Users
     /// ////REVIEW: does this really make sense?
     /// </remarks>
     [Serializable]
-    public class InputUserSettings
+    internal class InputUserSettings
     {
         /// <summary>
         /// Customized bindings for the user.
