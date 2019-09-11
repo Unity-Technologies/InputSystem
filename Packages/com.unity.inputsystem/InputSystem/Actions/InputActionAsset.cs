@@ -74,14 +74,15 @@ namespace UnityEngine.InputSystem
         /// List of action maps defined in the asset.
         /// </summary>
         /// <value>Action maps contained in the asset.</value>
-        /// <seealso cref="AddActionMap"/>
-        /// <seealso cref="RemoveActionMap(InputActionMap)"/>
+        /// <seealso cref="InputActionSetupExtensions.AddActionMap(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionSetupExtensions.RemoveActionMap(InputActionAsset,InputActionMap)"/>
         /// <seealso cref="FindActionMap(string,bool)"/>
         public ReadOnlyArray<InputActionMap> actionMaps => new ReadOnlyArray<InputActionMap>(m_ActionMaps);
 
         /// <summary>
         /// List of control schemes defined in the asset.
         /// </summary>
+        /// <value>Control schemes defined for the asset.</value>
         /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         /// <seealso cref="InputActionSetupExtensions.RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);

@@ -21,6 +21,10 @@ namespace UnityEngine.InputSystem.XInput
     [Scripting.Preserve]
     public class XInputController : Gamepad
     {
+        /// <summary>
+        /// Same as <see cref="Gamepad.startButton"/>.
+        /// </summary>
+        /// <value>Same control as <see cref="Gamepad.startButton"/>.</value>
         // Change the display names for the buttons to conform to Xbox conventions.
         [InputControl(name = "buttonSouth", displayName = "A")]
         [InputControl(name = "buttonEast", displayName = "B")]
@@ -33,18 +37,24 @@ namespace UnityEngine.InputSystem.XInput
         // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
         [InputControl(name = "start", displayName = "Menu")]
         [InputControl(name = "select", displayName = "View")]
-
         public ButtonControl menu { get; private set; }
+
+        /// <summary>
+        /// Same as <see cref="Gamepad.selectButton"/>
+        /// </summary>
+        /// <value>Same control as <see cref="Gamepad.selectButton"/>.</value>
         public ButtonControl view { get; private set; }
 
         /// <summary>
         /// What specific kind of XInput controller this is.
         /// </summary>
+        /// <value>XInput device subtype.</value>
         /// <remarks>
         /// When the controller is picked up through interfaces other than XInput or through old versions of
         /// XInput, this will always be <see cref="DeviceSubType.Unknown"/>. Put another way, this value is
         /// meaningful only on recent Microsoft platforms.
         /// </remarks>
+        /// <seealso href="https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes"/>
         public DeviceSubType subType
         {
             get
@@ -55,6 +65,22 @@ namespace UnityEngine.InputSystem.XInput
             }
         }
 
+        /// <summary>
+        /// Return the device flags as reported by XInput.
+        /// </summary>
+        /// <value>XInput device flags.</value>
+        /// <seealso href="https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_capabilities"/>
+        public DeviceFlags flags
+        {
+            get
+            {
+                if (!m_HaveParsedCapabilities)
+                    ParseCapabilities();
+                return m_Flags;
+            }
+        }
+
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -65,6 +91,7 @@ namespace UnityEngine.InputSystem.XInput
 
         private bool m_HaveParsedCapabilities;
         private DeviceSubType m_SubType;
+        private DeviceFlags m_Flags;
 
         private void ParseCapabilities()
         {
@@ -72,15 +99,28 @@ namespace UnityEngine.InputSystem.XInput
             {
                 var capabilities = JsonUtility.FromJson<Capabilities>(description.capabilities);
                 m_SubType = capabilities.subType;
+                m_Flags = capabilities.flags;
             }
             m_HaveParsedCapabilities = true;
         }
 
-        public enum DeviceType
+        /// <summary>
+        /// Controller type enumeration in <c>Type</c> field of <c>XINPUT_CAPABILITIES</c>.
+        /// </summary>
+        /// <remarks>
+        /// See <a href="https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_capabilities">MSDN</a>.
+        /// </remarks>
+        internal enum DeviceType
         {
             Gamepad = 0x00
         }
 
+        /// <summary>
+        /// Controller subtype enumeration in <c>SubType</c> field of <c>XINPUT_CAPABILITIES</c>.
+        /// </summary>
+        /// <remarks>
+        /// See <a href="https://docs.microsoft.com/en-us/windows/win32/xinput/xinput-and-controller-subtypes">MSDN</a>.
+        /// </remarks>
         public enum DeviceSubType
         {
             Unknown = 0x00,
@@ -96,8 +136,14 @@ namespace UnityEngine.InputSystem.XInput
             ArcadePad = 0x13
         }
 
+        /// <summary>
+        /// Controller flags in <c>Flags</c> field of <c>XINPUT_CAPABILITIES</c>.
+        /// </summary>
+        /// <remarks>
+        /// See <a href="https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_capabilities">MSDN</a>.
+        /// </remarks>
         [Flags]
-        public enum DeviceCapabilities
+        public new enum DeviceFlags
         {
             ForceFeedbackSupported = 0x01,
             Wireless = 0x02,
@@ -107,11 +153,11 @@ namespace UnityEngine.InputSystem.XInput
         }
 
         [Serializable]
-        public struct Capabilities
+        internal struct Capabilities
         {
             public DeviceType type;
             public DeviceSubType subType;
-            public DeviceCapabilities capabilities;
+            public DeviceFlags flags;
         }
     }
 }

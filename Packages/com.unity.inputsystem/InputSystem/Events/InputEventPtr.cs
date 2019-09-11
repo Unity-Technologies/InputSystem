@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
-    /// the unsafe operations necessary to work with events.
+    /// the unsafe operations necessary to work with them.
     /// </summary>
     /// <remarks>
     /// Note that event pointers generally refer to event buffers that are continually reused. This means
@@ -22,13 +22,25 @@ namespace UnityEngine.InputSystem.LowLevel
         // a pointer to a specific type of event.
         private readonly InputEvent* m_EventPtr;
 
+        /// <summary>
+        /// Initialize the pointer to refer to the given event.
+        /// </summary>
+        /// <param name="eventPtr">Pointer to an event. Can be <c>null</c>.</param>
         public InputEventPtr(InputEvent* eventPtr)
         {
             m_EventPtr = eventPtr;
         }
 
+        /// <summary>
+        /// Whether the pointer is not <c>null</c>.
+        /// </summary>
+        /// <value>True if the struct refers to an event.</value>
         public bool valid => m_EventPtr != null;
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public bool handled
         {
             get
@@ -229,11 +241,6 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         public static implicit operator InputEvent*(InputEventPtr eventPtr)
-        {
-            return eventPtr.data;
-        }
-
-        public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
         {
             return eventPtr.data;
         }

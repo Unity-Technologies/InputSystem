@@ -450,8 +450,8 @@ namespace UnityEngine.InputSystem
         /// asset. Also used as default name of <see cref="InputControlScheme.bindingGroup">binding group</see> associated
         /// with the control scheme.</param>
         /// <returns>Syntax to allow providing additional configuration for the newly added control scheme.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null or <paramref name="name"/>
-        /// is null or empty.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="name"/>
+        /// is <c>null</c> or empty.</exception>
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
             if (asset == null)

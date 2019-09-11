@@ -163,6 +163,11 @@ public class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
         // and an InputDeviceMatcher can be used to match specific properties of such
         // a description. See the documentation of InputDeviceMatcher for more
         // details.
+        //
+        // NOTE: In case your device is more dynamic in nature and cannot have a single
+        //       static layout, there is also the possibility to build layouts on the fly.
+        //       Check out the API documentation for InputSystem.onFindLayoutForDevice and
+        //       for InputSystem.RegisterLayoutBuilder.
         InputSystem.RegisterLayout<CustomDevice>(
             matches: new InputDeviceMatcher()
                 .WithInterface("Custom"));
@@ -228,6 +233,16 @@ public class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
     // So, let's fake it here. First, to create the device, we simply add a menu entry
     // in the editor. Means that in the player, this device will never be functional
     // but this serves as a demonstration only anyway.
+    //
+    // NOTE: Nothing of the following is necessary if you have a device that is
+    //       detected and sent input for by the Unity runtime itself, i.e. that is
+    //       picked up from the underlying platform APIs by Unity itself. In this
+    //       case, when your device is connected, Unity will automatically report an
+    //       InputDeviceDescription and all you have to do is make sure that the
+    //       InputDeviceMatcher you supply to RegisterLayout matches that description.
+    //
+    //       Also, IInputUpdateCallbackReceiver and any other manual queuing of input
+    //       is unnecessary in that case as Unity will queue input for the device.
 
     #if UNITY_EDITOR
     [MenuItem("Tools/Custom Device Sample/Create Device")]
@@ -300,6 +315,11 @@ public class CustomDevice : InputDevice, IInputUpdateCallbackReceiver
         //          This will *NOT* work correctly. *All* input state must be stored
         //          under the domain of the input system. InputDevices themselves
         //          cannot private store their own separate state.
+        //
+        //          What you *can* do however, is simply add fields your state struct
+        //          (CustomDeviceState in our case) that contain the state you want
+        //          to keep. It is not necessary to expose these as InputControls if
+        //          you don't want to.
 
         // Map WASD to stick.
         var wPressed = keyboard.wKey.isPressed;

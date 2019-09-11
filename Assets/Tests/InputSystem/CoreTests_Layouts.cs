@@ -541,7 +541,7 @@ partial class CoreTests
     public void Layouts_CanOverrideLayoutMatchesForDiscoveredDevices()
     {
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate runtime) =>
                 "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
@@ -558,18 +558,18 @@ partial class CoreTests
         // the callbacks are processed in, the system should call our callback in the middle
         // and not stop at one of the callbacks returning a layout name.
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
                 "Keyboard";
 
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
         {
             description.product = "Test";
             return null;
         };
 
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
                 "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad", product = "Original"});

@@ -213,9 +213,12 @@ internal class HIDTests : InputTestFixture
         Assert.That(device, Is.Not.Null);
         Assert.That(device, Is.TypeOf<Joystick>());
 
-        InputDeviceDescription deviceDescription = device.description;
+        var deviceDescription = device.description;
         Assert.That(deviceDescription.interfaceName, Is.EqualTo(HID.kHIDInterface));
-        HID.HIDDeviceDescriptor hidDescriptor = HID.ReadHIDDeviceDescriptor(device, runtime);
+
+        var hidDescriptor = HID.ReadHIDDeviceDescriptor(ref deviceDescription,
+            (ref InputDeviceCommand command) => runtime.DeviceCommand(device.deviceId, ref command));
+
         // Check HID descriptor.
         Assert.That(hidDescriptor.vendorId, Is.EqualTo(0x123));
         Assert.That(hidDescriptor.productId, Is.EqualTo(0x234));

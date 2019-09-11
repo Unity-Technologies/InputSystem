@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem
             InputState.Change(delta, Vector2.zero);
         }
 
-        protected unsafe void OnEvent(InputEventPtr eventPtr)
+        protected unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             var statePtr = currentStatePtr;
 
@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem
 
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
-            OnEvent(eventPtr);
+            OnStateEvent(eventPtr);
         }
     }
 }

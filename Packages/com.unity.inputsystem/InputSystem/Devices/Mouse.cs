@@ -84,7 +84,6 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(26)]
         ushort displayIndex;
 
-        ////TODO: this needs proper documentation
         /// <summary>
         /// Number of clicks performed in succession.
         /// </summary>
@@ -142,13 +141,13 @@ namespace UnityEngine.InputSystem.LowLevel
         Middle,
 
         /// <summary>
-        /// First side button.
+        /// Second side button.
         /// </summary>
         /// <seealso cref="Mouse.forwardButton"/>
         Forward,
 
         /// <summary>
-        /// Second side button.
+        /// First side button.
         /// </summary>
         /// <seealso cref="Mouse.backButton"/>
         Back
@@ -173,40 +172,87 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The horizontal and vertical scroll wheels.
         /// </summary>
+        /// <value>Control representing the mouse scroll wheels.</value>
+        /// <remarks>
+        /// The <c>x</c> component corresponds to the horizontal scroll wheel, the
+        /// <c>y</c> component to the vertical scroll wheel. Most mice do not have
+        /// horizontal scroll wheels and will thus only see activity on <c>y</c>.
+        /// </remarks>
         public Vector2Control scroll { get; private set; }
 
         /// <summary>
         /// The left mouse button.
         /// </summary>
+        /// <value>Control representing the left mouse button.</value>
         public ButtonControl leftButton { get; private set; }
 
         /// <summary>
         /// The middle mouse button.
         /// </summary>
+        /// <value>Control representing the middle mouse button.</value>
         public ButtonControl middleButton { get; private set; }
 
         /// <summary>
         /// The right mouse button.
         /// </summary>
+        /// <value>Control representing the right mouse button.</value>
         public ButtonControl rightButton { get; private set; }
 
-        public ButtonControl forwardButton { get; private set; }
-
+        /// <summary>
+        /// The first side button, often labeled/used as "back".
+        /// </summary>
+        /// <value>Control representing the back button on the mouse.</value>
+        /// <remarks>
+        /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_4</c>.
+        /// </remarks>
         public ButtonControl backButton { get; private set; }
 
+        /// <summary>
+        /// The second side button, often labeled/used as "forward".
+        /// </summary>
+        /// <value>Control representing the forward button on the mouse.</value>
+        /// <remarks>
+        /// On Windows, this corresponds to <c>RI_MOUSE_BUTTON_5</c>.
+        /// </remarks>
+        public ButtonControl forwardButton { get; private set; }
+
+        /// <summary>
+        /// Number of times any of the mouse buttons has been clicked in succession within
+        /// the system-defined click time threshold.
+        /// </summary>
+        /// <value>Control representing the mouse click count.</value>
         public IntegerControl clickCount { get; private set;  }
+
         /// <summary>
         /// The mouse that was added or updated last or null if there is no mouse
         /// connected to the system.
         /// </summary>
+        /// <seealso cref="InputDevice.MakeCurrent"/>
         public new static Mouse current { get; private set; }
 
+        /// <summary>
+        /// Called when the mouse becomes the current mouse.
+        /// </summary>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <summary>
+        /// Called when the mouse is added to the system.
+        /// </summary>
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            if (native && s_PlatformMouseDevice == null)
+                s_PlatformMouseDevice = this;
+        }
+
+        /// <summary>
+        /// Called when the device is removed from the system.
+        /// </summary>
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -215,14 +261,6 @@ namespace UnityEngine.InputSystem
         }
 
         internal static Mouse s_PlatformMouseDevice;
-
-        protected override void OnAdded()
-        {
-            base.OnAdded();
-
-            if (native && s_PlatformMouseDevice == null)
-                s_PlatformMouseDevice = this;
-        }
 
         ////REVIEW: how should we handle this being called from EditorWindow's? (where the editor window space processor will turn coordinates automatically into editor window space)
         /// <summary>
@@ -239,6 +277,7 @@ namespace UnityEngine.InputSystem
             ExecuteCommand(ref command);
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             scroll = GetChildControl<Vector2Control>("scroll");
@@ -251,20 +290,27 @@ namespace UnityEngine.InputSystem
             base.FinishSetup();
         }
 
+        /// <summary>
+        /// Implements <see cref="IInputStateCallbackReceiver.OnNextUpdate"/> for the mouse.
+        /// </summary>
         protected new void OnNextUpdate()
         {
             base.OnNextUpdate();
             InputState.Change(scroll, Vector2.zero);
         }
 
-        protected new unsafe void OnEvent(InputEventPtr eventPtr)
+        /// <summary>
+        /// Implements <see cref="IInputStateCallbackReceiver.OnStateEvent"/> for the mouse.
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             var statePtr = currentStatePtr;
 
             Accumulate(scroll.x, statePtr, eventPtr);
             Accumulate(scroll.y, statePtr, eventPtr);
 
-            base.OnEvent(eventPtr);
+            base.OnStateEvent(eventPtr);
         }
 
         void IInputStateCallbackReceiver.OnNextUpdate()
@@ -274,7 +320,7 @@ namespace UnityEngine.InputSystem
 
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
-            OnEvent(eventPtr);
+            OnStateEvent(eventPtr);
         }
     }
 }

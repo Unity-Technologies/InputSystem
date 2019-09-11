@@ -549,7 +549,7 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
-        protected new unsafe void OnEvent(InputEventPtr eventPtr)
+        protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
             if (eventPtr.stateFormat != TouchState.Format)
@@ -782,7 +782,7 @@ namespace UnityEngine.InputSystem
 
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
-            OnEvent(eventPtr);
+            OnStateEvent(eventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases

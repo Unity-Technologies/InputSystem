@@ -730,18 +730,37 @@ namespace UnityEngine.InputSystem
             }
 
             ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
-            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks?
+            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
             // Give listeners a shot to select/create a layout.
-            var haveOverriddenLayoutName = false;
-            for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+            if (m_DeviceFindLayoutCallbacks.length > 0)
             {
-                var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref deviceDescription, layoutName, m_Runtime);
-                if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                // First time we get here, put our delegate for executing device commands
+                // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
+                // need to expose the runtime to the onFindLayoutForDevice callbacks.
+                if (m_DeviceFindExecuteCommandDelegate == null)
+                    m_DeviceFindExecuteCommandDelegate =
+                        (ref InputDeviceCommand commandRef) =>
+                    {
+                        if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
+                            return InputDeviceCommand.GenericFailure;
+                        return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
+                    };
+                m_DeviceFindExecuteCommandDeviceId = deviceId;
+
+                var haveOverriddenLayoutName = false;
+                for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
-                    layoutName = new InternedString(newLayout);
-                    haveOverriddenLayoutName = true;
+                    var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName,
+                                                                   m_DeviceFindExecuteCommandDelegate);
+
+                    if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    {
+                        layoutName = new InternedString(newLayout);
+                        haveOverriddenLayoutName = true;
+                    }
                 }
             }
+
             Profiler.EndSample();
             return layoutName;
         }
@@ -1650,6 +1669,11 @@ namespace UnityEngine.InputSystem
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
 
+        // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
+        // only once to avoid creating garbage.
+        private InputDeviceExecuteCommandDelegate m_DeviceFindExecuteCommandDelegate;
+        private int m_DeviceFindExecuteCommandDeviceId;
+
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
         #endif
@@ -1909,10 +1933,6 @@ namespace UnityEngine.InputSystem
                 Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
                 Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
-
-                if (stateBlock.byteOffset + stateBlock.alignedSizeInBytes >
-                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes)
-                    Debug.Log("Foo");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
                     (int)stateBlock.sizeInBits, true);

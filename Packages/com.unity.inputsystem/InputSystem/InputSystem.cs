@@ -426,8 +426,18 @@ namespace UnityEngine.InputSystem
         /// }
         /// </code>
         /// </example>
+        ///
+        /// Layout builders can be used in combination with <see cref="onFindLayoutForDevice"/> to
+        /// build layouts dynamically for devices as they are connected to the system.
+        ///
+        /// Be aware that the same builder <em>must</em> not build different layouts. Each
+        /// layout registered in the system is considered to be immutable for as long as it
+        /// is registered. So, if a layout builder is registered under the name "Custom", for
+        /// example, then every time the builder is invoked, it must return the same identical
+        /// <see cref="InputControlLayout"/>.
         /// </remarks>
         /// <seealso cref="InputControlLayout.Builder"/>
+        /// <seealso cref="onFindLayoutForDevice"/>
         public static void RegisterLayoutBuilder(Func<InputControlLayout> buildMethod, string name,
             string baseLayout = null, InputDeviceMatcher? matches = null)
         {
@@ -1009,43 +1019,139 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        //DOC--------------------------------------------------
-
         /// <summary>
         /// Event that is signalled when the system is trying to match a layout to
         /// a device it has discovered.
         /// </summary>
         /// <remarks>
         /// This event allows customizing the layout discovery process and to generate
-        /// layouts on the fly, if need be. The system will invoke callbacks with the
-        /// name of the layout it has matched (or <c>null</c> if it couldn't find any
-        /// matching layout to the device based on the current layout setup. If all
-        /// the callbacks return <c>null</c>, that layout will be instantiated. If,
-        /// however, any of the callbacks returns a new name instead, the system will use that
-        /// layout instead.
+        /// layouts on the fly, if need be. When a device is reported from the Unity
+        /// runtime or through <see cref="AddDevice(InputDeviceDescription)"/>, it is
+        /// reported in the form of an <see cref="InputDeviceDescription"/>. The system
+        /// will take that description and run it through all the <see cref="InputDeviceMatcher"/>s
+        /// that have been registered for layouts (<see cref="RegisterLayoutMatcher{TDevice}"/>).
+        /// Based on that, it will come up with either no matching layout or with a single
+        /// layout that has the highest matching score according to <see
+        /// cref="InputDeviceMatcher.MatchPercentage"/> (or, in case multiple layouts have
+        /// the same score, the first one to achieve that score -- which is quasi-non-deterministic).
         ///
-        /// To generate layouts on the fly, register them with the system in the callback and
-        /// then return the name of the newly generated layout from the callback.
+        /// It will then take this layout name (which, again, may be empty) and invoke this
+        /// event here passing it not only the layout name but also information such as the
+        /// <see cref="InputDeviceDescription"/> for the device. Each of the callbacks hooked
+        /// into the event will be run in turn. The <em>first</em> one to return a string
+        /// that is not <c>null</c> and not empty will cause a switch from the layout the
+        /// system has chosen to the layout that has been returned by the callback. The remaining
+        /// layouts after that will then be invoked with that newly selected name but will not
+        /// be able to change the name anymore.
         ///
-        /// Note that this callback will also be invoked if the system could not match any
-        /// existing layout to the device. In that case, the <c>matchedLayout</c> argument
-        /// to the callback will be <c>null</c>.
+        /// If none of the callbacks returns a string that is not <c>null</c> or empty,
+        /// the system will stick with the layout that it had initially selected.
         ///
-        /// Callbacks also receive a device ID and reference to the input runtime. For devices
-        /// where more information has to be fetched from the runtime in order to generate a
-        /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
-        /// Note that for devices that are not coming from the runtime (i.e. devices created
-        /// directly in script code), the device ID will be <see cref="InputDevice.InvalidDeviceId"/>.
-        /// </remarks>
+        /// Once all callbacks have been run, the system will either have a final layout
+        /// name or not. If it does, a device is created using that layout. If it does not,
+        /// no device is created.
+        ///
+        /// One thing this allows is to generate callbacks on the fly. Let's say that if
+        /// an input device is reported with the "Custom" interface, we want to generate
+        /// a layout for it on the fly. For details about how to build layouts dynamically
+        /// from code, see <see cref="InputControlLayout.Builder"/> and <see cref="RegisterLayoutBuilder"/>.
+        ///
         /// <example>
         /// <code>
         /// InputSystem.onFindLayoutForDevice +=
         ///     (deviceId, description, matchedLayout, runtime) =>
         ///     {
-        ///         ////TODO: complete example
+        ///         // If the system does have a matching layout, we do nothing.
+        ///         // This could be the case, for example, if we already generated
+        ///         // a layout for the device or if someone explicitly registered
+        ///         // a layout.
+        ///         if (!string.IsNullOrEmpty(matchedLayout))
+        ///             return null; // Tell system we did nothing.
+        ///
+        ///         // See if the reported device uses the "Custom" interface. We
+        ///         // are only interested in those.
+        ///         if (description.interfaceName != "Custom")
+        ///             return null; // Tell system we did nothing.
+        ///
+        ///         // So now we know that we want to build a layout on the fly
+        ///         // for this device. What we do is to register what's called a
+        ///         // layout builder. These can use C# code to build an InputControlLayout
+        ///         // on the fly.
+        ///
+        ///         // First we need to come up with a sufficiently unique name for the layout
+        ///         // under which we register the builder. This will usually involve some
+        ///         // information from the InputDeviceDescription we have been supplied with.
+        ///         // Let's say we can sufficiently tell devices on our interface apart by
+        ///         // product name alone. So we just do this:
+        ///         var layoutName = "Custom" + description.product;
+        ///
+        ///         // We also need an InputDeviceMatcher that in the future will automatically
+        ///         // select our newly registered layout whenever a new device of the same type
+        ///         // is connected. We can get one simply like so:
+        ///         var matcher = InputDeviceMatcher.FromDescription(description);
+        ///
+        ///         // With these pieces in place, we can register our builder which
+        ///         // mainly consists of a delegate that will get invoked when an instance
+        ///         // of InputControlLayout is needed for the layout.
+        ///         InputSystem.RegisterLayoutBuilder(
+        ///             () =>
+        ///             {
+        ///                 // Here is where we do the actual building. In practice, this would
+        ///                 // probably look at the 'capabilities' property of the InputDeviceDescription
+        ///                 // we got and create a tailor-made layout. But what you put in the layout here
+        ///                 // really depends on the specific use case you have.
+        ///                 //
+        ///                 // We just add some preset things here which should still sufficiently
+        ///                 // serve as a demonstration.
+        ///                 //
+        ///                 // Note that we can base our layout here on whatever other layout in the system.
+        ///                 // We could extend Gamepad, for example. If we don't choose a base layout, the
+        ///                 // system automatically implies InputDevice.
+        ///
+        ///                 var builder = new InputControlLayout.Builder()
+        ///                     .WithDisplayName(description.product);
+        ///
+        ///                 // Add controls.
+        ///                 builder.AddControl("stick")
+        ///                     .WithLayout("Stick");
+        ///
+        ///                 return builder.Build();
+        ///             },
+        ///             layoutName,
+        ///             matches: matcher);
+        ///
+        ///         // So, we want the system to use our layout for the device that has just
+        ///         // been connected. We return it from this callback to do that.
+        ///         return layoutName;
         ///     };
         /// </code>
         /// </example>
+        ///
+        /// Note that it may appear like one could simply use <see cref="RegisterLayoutBuilder"/>
+        /// like below instead of going through <c>onFindLayoutForDevice</c>.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterLayoutBuilder(
+        ///     () =>
+        ///     {
+        ///         // Layout building code from above...
+        ///     },
+        ///     "CustomLayout",
+        ///     matches: new InputDeviceMatcher().WithInterface("Custom"));
+        /// </code>
+        /// </example>
+        ///
+        /// However, the difference here is that all devices using the "Custom" interface will
+        /// end up with the same single layout -- which has to be identical. By hooking into
+        /// <c>onFindLayoutForDevice</c>, it is possible to register a new layout for every new
+        /// type of device that is discovered and thus build a multitude of different layouts.
+        ///
+        /// It is best to register for this callback during startup. One way to do it is to
+        /// use <c>InitializeOnLoadAttribute</c> and <c>RuntimeInitializeOnLoadMethod</c>.
+        /// </remarks>
+        /// <seealso cref="RegisterLayoutBuilder"/>
+        /// <seealso cref="InputControlLayout"/>
         public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add
@@ -1065,6 +1171,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Frequency at which devices that need polling are being queried in the background.
         /// </summary>
+        /// <value>Polled device sampling frequency in Hertz.</value>
         /// <remarks>
         /// Input data is gathered from platform APIs either as events or polled periodically.
         ///
@@ -1100,6 +1207,8 @@ namespace UnityEngine.InputSystem
             get => s_Manager.pollingFrequency;
             set => s_Manager.pollingFrequency = value;
         }
+
+        //DOC--------------------------------------------------
 
         /// <summary>
         /// Add a new device by instantiating the given device layout.

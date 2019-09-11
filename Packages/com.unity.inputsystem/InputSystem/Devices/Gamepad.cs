@@ -565,6 +565,7 @@ namespace UnityEngine.InputSystem
         /// to the system.
         /// </summary>
         /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
+        /// <seealso cref="InputDevice.MakeCurrent"/>
         public static Gamepad current { get; private set; }
 
         /// <summary>
