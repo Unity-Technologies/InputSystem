@@ -35,8 +35,23 @@ namespace UnityEngine.InputSystem.Layouts
     /// <summary>
     /// Delegate used by <see cref="InputSystem.onFindLayoutForDevice"/>.
     /// </summary>
-    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
-        IInputRuntime runtime);
+    /// <param name="description">The device description supplied by the runtime or through <see
+    /// cref="InputSystem.AddDevice(InputDeviceDescription)"/>. This is passed by reference instead of
+    /// by value to allow the callback to fill out fields such as <see cref="InputDeviceDescription.capabilities"/>
+    /// on the fly based on information queried from external APIs or from the runtime.</param>
+    /// <param name="matchedLayout">Name of the layout that has been selected for the device or <c>null</c> if
+    /// no matching layout could be found. Matching is determined from the <see cref="InputDeviceMatcher"/>s for
+    /// layouts registered in the system.</param>
+    /// <param name="executeDeviceCommand">A delegate which can be invoked to execute <see cref="InputDeviceCommand"/>s
+    /// on the device.</param>
+    /// <returns>  Return <c>null</c> or an empty string to indicate that </returns>
+    /// <remarks>
+    /// </remarks>
+    /// <seealso cref="InputSystem.onFindLayoutForDevice"/>
+    /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
+    /// <seealso cref="InputControlLayout"/>
+    public delegate string InputDeviceFindControlLayoutDelegate(ref InputDeviceDescription description,
+        string matchedLayout, InputDeviceExecuteCommandDelegate executeDeviceCommand);
 
     /// <summary>
     /// A control layout specifies the composition of an <see cref="InputControl"/> or

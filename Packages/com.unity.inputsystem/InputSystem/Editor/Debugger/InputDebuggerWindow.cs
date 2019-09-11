@@ -98,8 +98,8 @@ namespace UnityEngine.InputSystem.Editor
             Refresh();
         }
 
-        private string OnFindLayout(int deviceId, ref InputDeviceDescription description, string matchedLayout,
-            IInputRuntime runtime)
+        private string OnFindLayout(ref InputDeviceDescription description, string matchedLayout,
+            InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             // If there's no matched layout, there's a chance this device will go in
             // the unsupported list. There's no direct notification for that so we

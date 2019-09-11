@@ -418,7 +418,17 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The input runtime used during testing.
         /// </summary>
-        public InputTestRuntime runtime { get; private set; }
+        internal InputTestRuntime runtime { get; private set; }
+
+        /// <summary>
+        /// Get or set the current time used by the input system.
+        /// </summary>
+        /// <value>Current time used by the input system.</value>
+        public double currentTime
+        {
+            get => runtime.currentTime = currentTime;
+            set => runtime.currentTime = value;
+        }
 
         public class ActionConstraint : Constraint
         {
