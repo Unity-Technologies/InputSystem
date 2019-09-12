@@ -204,8 +204,6 @@ namespace UnityEngine.InputSystem
             ApplyBindingOverride(action, bindingIndex, new InputBinding {overridePath = path});
         }
 
-        //DOC---------------------------------------------
-
         /// <summary>
         /// Apply the given binding override to all bindings in the map that are matched by the override.
         /// </summary>
