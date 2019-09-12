@@ -211,8 +211,6 @@ namespace UnityEngine.InputSystem
         /// <param name="bindingOverride"></param>
         /// <returns>The number of bindings overridden in the given map.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
-        /// <remarks>
-        /// </remarks>
         public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
@@ -296,9 +294,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="action">Action to remove overrides from.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        /// <remarks>
-        /// T
-        /// </remarks>
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
             if (action == null)
