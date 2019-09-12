@@ -261,6 +261,7 @@ namespace UnityEngine.InputSystem
             actionMap.m_Bindings[bindingIndex].overrideInteractions = bindingOverride.overrideInteractions;
             actionMap.m_Bindings[bindingIndex].overrideProcessors = bindingOverride.overrideProcessors;
 
+            actionMap.ClearPerActionCachedBindingData();
             actionMap.LazyResolveBindings();
         }
 
@@ -322,6 +323,7 @@ namespace UnityEngine.InputSystem
                 bindings[i].overrideProcessors = null;
             }
 
+            actionMap.ClearPerActionCachedBindingData();
             actionMap.LazyResolveBindings();
         }
 
@@ -562,6 +564,7 @@ namespace UnityEngine.InputSystem
             /// it will automatically be passed to <see cref="WithExpectedControlType(string)"/>.
             /// </remarks>
             /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+            /// <exception cref="InvalidOperationException"><paramref name="action"/> is currently enabled.</exception>
             /// <seealso cref="PerformInteractiveRebinding"/>
             public RebindingOperation WithAction(InputAction action)
             {
@@ -569,6 +572,8 @@ namespace UnityEngine.InputSystem
 
                 if (action == null)
                     throw new ArgumentNullException(nameof(action));
+                if (action.enabled)
+                    throw new InvalidOperationException($"Cannot rebind action '{action}' while it is enabled");
 
                 m_ActionToRebind = action;
 

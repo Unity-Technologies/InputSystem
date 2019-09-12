@@ -1336,7 +1336,7 @@ partial class CoreTests
         InputSystem.FlushDisconnectedDevices();
 
         Assert.That(InputSystem.devices, Is.Empty);
-        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+        Assert.That(InputSystem.disconnectedDevices, Is.Empty);
     }
 
     [Test]

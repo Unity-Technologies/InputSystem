@@ -5310,17 +5310,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotApplyOverride_WhileActionIsEnabled()
-    {
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
-        action.Enable();
-
-        Assert.That(() => action.ApplyBindingOverride("/gamepad/rightTrigger"),
-            Throws.InvalidOperationException);
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_OnActionWithMultipleBindings_OverridingWithoutGroupOrPath_OverridesAll()
     {
         var action = new InputAction(name: "test");
@@ -5508,15 +5497,6 @@ partial class CoreTests
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightTrigger));
     }
 
-    [Test]
-    [Category("Actions")]
-    public void Actions_WhenActionIsEnabled_CannotRemoveOverrides()
-    {
-        var action = new InputAction(name: "foo");
-        action.Enable();
-        Assert.That(() => action.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
-    }
-
     // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
     // machinery allows specifying a binding mask to respect.
     [Test]
@@ -5530,17 +5510,6 @@ partial class CoreTests
         action.RemoveBindingOverride(bindingOverride);
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_WhenActionIsEnabled_CannotRemoveSpecificOverride()
-    {
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
-        var bindingOverride = new InputBinding {path = "/gamepad/rightTrigger"};
-        action.ApplyBindingOverride(bindingOverride);
-        action.Enable();
-        Assert.That(() => action.RemoveBindingOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
     [Test]
