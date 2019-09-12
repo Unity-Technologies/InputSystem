@@ -184,5 +184,11 @@ namespace UnityEngine.InputSystem
         /// The resolved, cached input action.
         /// </summary>
         [NonSerialized] private InputAction m_Action;
+
+        // Make annoying Microsoft code analyzer happy.
+        public InputAction ToInputAction()
+        {
+            return action;
+        }
     }
 }

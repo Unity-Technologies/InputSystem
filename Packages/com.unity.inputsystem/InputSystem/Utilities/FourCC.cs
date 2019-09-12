@@ -155,5 +155,16 @@ namespace UnityEngine.InputSystem.Utilities
         {
             return left.m_Code != right.m_Code;
         }
+
+        // Make annoying Microsoft code analyzer happy.
+        public static FourCC FromInt32(int i)
+        {
+            return i;
+        }
+
+        public static int ToInt32(FourCC fourCC)
+        {
+            return fourCC.m_Code;
+        }
     }
 }

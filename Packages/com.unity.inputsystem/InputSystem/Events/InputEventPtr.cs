@@ -244,5 +244,11 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             return eventPtr.data;
         }
+
+        // Make annoying Microsoft code analyzer happy.
+        public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
+        {
+            return eventPtr.data;
+        }
     }
 }
