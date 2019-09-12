@@ -10,7 +10,13 @@ however, it has to be formatted properly to pass verification tests.
 ## [0.9.7-preview] - 2099-1-1
 
 ### Fixed
+
+-Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+
 #### Actions
+
+- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
+
 ### Changed
 ### Added
 
@@ -24,7 +30,6 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
-- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
 - Setting timeouts from `IInputInteraction.Process` not working as expected when processing happened in response to previous timeout expiring (#714).
 - Pending timeouts on a device not being removed when device was removed.
 
