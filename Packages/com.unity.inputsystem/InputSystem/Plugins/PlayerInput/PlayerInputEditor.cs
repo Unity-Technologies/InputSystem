@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem.Editor
                 foreach (var action in asset)
                 {
                     // Skip if it was already in there.
-                    if (oldActionEvents.Any(x => x.actionId == action.id.ToString()))
+                    if (oldActionEvents != null && oldActionEvents.Any(x => x.actionId == action.id.ToString()))
                         continue;
 
                     AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));

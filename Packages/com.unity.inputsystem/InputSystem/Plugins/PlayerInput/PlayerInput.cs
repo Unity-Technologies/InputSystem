@@ -1444,6 +1444,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        [Serializable]
         public class ActionEvent : UnityEvent<InputAction.CallbackContext>
         {
             public string actionId => m_ActionId;
