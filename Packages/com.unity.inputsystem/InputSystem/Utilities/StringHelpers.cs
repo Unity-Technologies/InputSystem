@@ -173,6 +173,9 @@ namespace UnityEngine.InputSystem.Utilities
                 while (pos < length && char.IsWhiteSpace(str[pos]))
                     ++pos;
 
+                if (pos == length)
+                    break;
+
                 if (str[pos] == '"')
                 {
                     ++pos;

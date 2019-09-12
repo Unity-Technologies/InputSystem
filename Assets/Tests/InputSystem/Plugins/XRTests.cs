@@ -17,6 +17,8 @@ using Usages = UnityEngine.InputSystem.CommonUsages;
 
 using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
+using DeviceRole = UnityEngine.XR.InputDeviceRole;
+
 internal class XRTests : InputTestFixture
 {
     [Test]
@@ -159,49 +161,6 @@ internal class XRTests : InputTestFixture
         generatedLayout = InputSystem.LoadLayout("XRInput::XRManufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
         Assert.That(InputSystem.devices, Is.Empty);
-    }
-
-    [Test]
-    [Category("Devices")]
-    [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
-    [TestCase("Acer AH100", "WindowsMR", typeof(WMRHMD))]
-    [TestCase("Acer AH100", "", typeof(WMRHMD))]
-    [TestCase("Samsung Windows Mixed Reality 800ZAA", "", typeof(WMRHMD))]
-    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
-    [TestCase("Spatial Controller - Left", "Vendor: 1118 Product: 1627 Version 0", typeof(WMRSpatialController))]
-    [TestCase("Spatial Controller - Right", "Vendor: 1118 Product: 1627 Version 0", typeof(WMRSpatialController))]
-    [TestCase("OpenVR Controller(WindowsMR)", "WindowsMR", typeof(WMRSpatialController))]
-    [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
-    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
-    [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
-    [TestCase("Oculus Remote", "Oculus", typeof(OculusRemote))]
-    [TestCase("Oculus Go", "Samsung", typeof(OculusStandaloneHMDBase))]
-    [TestCase("Oculus HMD", "Samsung", typeof(OculusStandaloneHMDExtended))]
-    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
-    [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
-    [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive. MV", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive DVT", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive Pro", "HTC", typeof(ViveHMD))]
-    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
-    [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
-    [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
-    [TestCase("OpenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
-    [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    [TestCase("OpenVR Controller(Knuckles EV3.0 Left) - Left", "Valve", typeof(KnucklesController))]
-    public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
-    {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
-        deviceDescription.product = name;
-        deviceDescription.manufacturer = manufacturer;
-        runtime.ReportNewInputDevice(deviceDescription.ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        var createdDevice = InputSystem.devices[0];
-        Assert.That(createdDevice, Is.TypeOf(expectedDeviceType));
     }
 
     [Test]

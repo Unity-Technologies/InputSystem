@@ -1394,7 +1394,7 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null)
+                if (m_State != null && phase != InputActionPhase.Canceled)
                     value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
                 return value;
             }

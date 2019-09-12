@@ -7,7 +7,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.HID;
-using UnityEngine.InputSystem.PS4;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
@@ -2872,16 +2871,12 @@ namespace UnityEngine.InputSystem
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         private static void PerformDefaultPluginInitialization()
         {
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_XBOXONE || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
             XInputSupport.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA
             DualShockSupport.Initialize();
-            #endif
-
-            #if UNITY_EDITOR || UNITY_PS4
-            PS4Support.Initialize();
             #endif
 
             #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
@@ -2900,11 +2895,11 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_SWITCH || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
-            Switch.SwitchSupport.Initialize();
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_LUMIN) && UNITY_INPUT_SYSTEM_ENABLE_XR
             XR.XRSupport.Initialize();
             #endif
 

@@ -268,27 +268,27 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #endif // UNITY_EDITOR
 
-        #if UNITY_ANALYTICS || UNITY_EDITOR
-
         public void RegisterAnalyticsEvent(string name, int maxPerHour, int maxPropertiesPerEvent)
         {
+            #if UNITY_ANALYTICS
             const string vendorKey = "unity.input";
             #if UNITY_EDITOR
             EditorAnalytics.RegisterEventWithLimit(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
             #else
             Analytics.Analytics.RegisterEvent(name, maxPerHour, maxPropertiesPerEvent, vendorKey);
-            #endif
+            #endif // UNITY_EDITOR
+            #endif // UNITY_ANALYTICS
         }
 
         public void SendAnalyticsEvent(string name, object data)
         {
+            #if UNITY_ANALYTICS
             #if UNITY_EDITOR
             EditorAnalytics.SendEventWithLimit(name, data);
             #else
             Analytics.Analytics.SendEvent(name, data);
-            #endif
+            #endif // UNITY_EDITOR
+            #endif // UNITY_ANALYTICS
         }
-
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

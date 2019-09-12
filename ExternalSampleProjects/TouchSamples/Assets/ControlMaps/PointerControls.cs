@@ -1,4 +1,4 @@
-// GENERATED AUTOMATICALLY FROM 'Assets/TouchSamples/ControlMaps/PointerControls.inputactions'
+// GENERATED AUTOMATICALLY FROM 'Assets/ControlMaps/PointerControls.inputactions'
 
 using System.Collections;
 using System.Collections.Generic;

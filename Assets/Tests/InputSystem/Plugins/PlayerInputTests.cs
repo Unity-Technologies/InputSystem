@@ -577,9 +577,8 @@ internal class PlayerInputTests : InputTestFixture
             Is.EquivalentTo(new[]
                 // This looks counter-intuitive but what happens is that when switching from gamepad1 to gamepad2,
                 // the system will first cancel ongoing actions. So it'll cancel "Move" which, given how PlayerInput
-                // sends messages, will simply come out as another "Move". And it's still bound to gamepad2's leftStick
-                // at that point, so the value we record is (0.234,0.345).
-            {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))),
+                // sends messages, will simply come out as another "Move" with a zero value.
+            {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.0f, 0.0f))),
              new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))}));
     }
 

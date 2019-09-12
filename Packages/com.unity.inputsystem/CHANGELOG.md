@@ -7,14 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [0.9.6-preview] - 2099-1-1
+## [0.9.7-preview] - 2099-1-1
+
+### Fixed
+#### Actions
+### Changed
+### Added
+
+## [0.9.6-preview] - 2019-9-6
 
 ### Fixed
 
 - Exceptions in scenes of `Visualizers` sample if respective device was not present on system (e.g. in `PenVisualizer` if no pen was present in system).
+- Fixed exception in Input Action Asset Editor window when typing whitespace into the search field.
+- Fixed control scheme popup window in input action asset editor window showing in the correct screen position on windows.
 
 #### Actions
 
+- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
 - Setting timeouts from `IInputInteraction.Process` not working as expected when processing happened in response to previous timeout expiring (#714).
 - Pending timeouts on a device not being removed when device was removed.
 

@@ -1,3 +1,4 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -34,6 +35,12 @@ namespace UnityEngine.InputSystem.XR
                     return sizeof(float) * 3;
                 case FeatureType.Rotation:
                     return sizeof(float) * 4;
+                case FeatureType.Hand:
+                    return sizeof(uint) * 26;
+                case FeatureType.Bone:
+                    return sizeof(uint) + (sizeof(float) * 3) + (sizeof(float) * 4);
+                case FeatureType.Eyes:
+                    return ((sizeof(float) * 3) * 3) + ((sizeof(float) * 4) * 2) + (sizeof(float) * 2);
                 case FeatureType.Custom:
                     return featureDescriptor.customSize;
             }
@@ -95,12 +102,12 @@ namespace UnityEngine.InputSystem.XR
                     matchedLayout = "XRHMD";
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
-#else
+#else //UNITY_2019_3_OR_NEWER
                 if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
                     matchedLayout = "XRController";
                 else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
                     matchedLayout = "XRHMD";
-#endif
+#endif //UNITY_2019_3_OR_NEWER
             }
 
             string layoutName = null;
@@ -247,6 +254,26 @@ namespace UnityEngine.InputSystem.XR
                             .WithUsages(currentUsages);
                         break;
                     }
+                    case FeatureType.Hand:
+                    {
+                        break;
+                    }
+                    case FeatureType.Bone:
+                    {
+                        builder.AddControl(featureName)
+                            .WithLayout("Bone")
+                            .WithByteOffset(currentOffset)
+                            .WithUsages(currentUsages);
+                        break;
+                    }
+                    case FeatureType.Eyes:
+                    {
+                        builder.AddControl(featureName)
+                            .WithLayout("Eyes")
+                            .WithByteOffset(currentOffset)
+                            .WithUsages(currentUsages);
+                        break;
+                    }
                 }
                 currentOffset += nextOffset;
             }
@@ -255,3 +282,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
+#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
