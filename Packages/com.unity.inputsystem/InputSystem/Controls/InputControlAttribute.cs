@@ -170,6 +170,20 @@ namespace UnityEngine.InputSystem.Layouts
         /// Optional list of processors to add to the control.
         /// </summary>
         /// <value>Processors to apply to the control.</value>
+        /// <remarks>
+        /// Each element in the list is a name of a processor (as registered with
+        /// <see cref="InputSystem.RegisterProcessor{T}"/>) followed by an optional
+        /// list of parameters.
+        ///
+        /// For example, <c>"normalize(min=0,max=256)"</c> is one element that puts
+        /// a <c>NormalizeProcessor</c> on the control and sets its <c>min</c> field
+        /// to 0 and its its <c>max</c> field to 256.
+        ///
+        /// Multiple processors can be put on a control by separating them with a comma.
+        /// For example, <c>"normalize(max=256),scale(factor=2)"</c> puts both a <c>NormalizeProcessor</c>
+        /// and a <c>ScaleProcessor</c> on the control. Processors are applied in the
+        /// order they are listed.
+        /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
         /// <seealso cref="InputBinding.processors"/>
         public string processors { get; set; }
@@ -207,17 +221,6 @@ namespace UnityEngine.InputSystem.Layouts
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] aliases { get; set; }
 
-        /// <summary>
-        /// TODO
-        /// </summary>
-        /// <remarks>
-        ///
-        /// <example>
-        /// <code>
-        ///
-        /// </code>
-        /// </example>
-        /// </remarks>
         public string useStateFrom { get; set; }
 
         public uint bit { get; set; } = InputStateBlock.InvalidOffset;

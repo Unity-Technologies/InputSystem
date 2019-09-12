@@ -156,7 +156,18 @@ namespace UnityEngine.InputSystem
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
     {
+        /// <summary>
+        /// Name of the message that is sent with <c>UnityEngine.Object.SendMessage</c> when a
+        /// player loses a device.
+        /// </summary>
+        /// <seealso cref="onDeviceLost"/>
         public const string DeviceLostMessage = "OnDeviceLost";
+
+        /// <summary>
+        /// Name of the message that is sent with <c>UnityEngine.Object.SendMessage</c> when a
+        /// player regains a device.
+        /// </summary>
+        /// <seealso cref="onDeviceRegained"/>
         public const string DeviceRegainedMessage = "OnDeviceRegained";
 
         /// <summary>

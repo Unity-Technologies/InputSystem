@@ -449,10 +449,6 @@ namespace UnityEngine.InputSystem
         ///
         /// To reset the configuration of a rebind operation without releasing its memory, call <see cref="Reset"/>.
         ///
-        /// A rebind operation may take several frames to complete. TODO
-        ///
-        /// Note that not all types of controls make sense to perform interactive rebinding on. For example, TODO
-        ///
         /// <example>
         /// <code>
         /// var rebind = new RebindingOperation()
@@ -540,9 +536,6 @@ namespace UnityEngine.InputSystem
             /// Whether the rebind has been completed.
             /// </summary>
             /// <value>True if the rebind has been completed.</value>
-            /// <remarks>
-            /// TODO
-            /// </remarks>
             /// <seealso cref="OnComplete(Action{RebindingOperation})"/>
             public bool completed => (m_Flags & Flags.Completed) != 0;
 
@@ -652,7 +645,8 @@ namespace UnityEngine.InputSystem
             /// on the device's broad category.
             ///
             /// For example, if the user has a DualShock controller and performs an interactive rebind, we usually do not want
-            /// to generate override paths that reflect TODO
+            /// to generate override paths that reflects that the input specifically came from a DualShock controller. Rather,
+            /// we're usually interested in the fact that it came from a gamepad.
             /// </remarks>
             /// <seealso cref="InputBinding.overridePath"/>
             public RebindingOperation WithoutGeneralizingPathOfSelectedControl()

@@ -1369,8 +1369,6 @@ namespace UnityEngine.InputSystem
             s_Manager.AddDevice(device);
         }
 
-        //DOC--------------------------------------------------
-
         /// <summary>
         /// Remove a device from the system such that it no longer receives input and is no longer part of the
         /// set of devices in <see cref="devices"/>.
@@ -2300,8 +2298,6 @@ namespace UnityEngine.InputSystem
         /// inserting extra frames, i.e. it will advance the entire state of the input system by one complete
         /// frame.
         ///
-        /// When using <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/> TODO
-        ///
         /// When using <see cref="InputUpdateType.Manual"/>, this method MUST be called for input to update in the
         /// player. Not calling the method as part of the player loop may result in excessive memory
         /// consumption and/or potential loss of input.
@@ -2443,8 +2439,8 @@ namespace UnityEngine.InputSystem
         ///         if (change == InputActionChange.ActionPerformed)
         ///         {
         ///             var action = (InputAction)obj;
-        ///             var control = action.lastTriggerControl; TODO this is missing now
-        ///             ....
+        ///             var control = action.activeControl;
+        ///             //...
         ///         }
         ///     };
         /// </code>

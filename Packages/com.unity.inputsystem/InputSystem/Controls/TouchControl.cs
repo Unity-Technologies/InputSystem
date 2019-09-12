@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Controls
         public IntegerControl tapCount { get; private set; }
 
         /// <summary>
-        /// Time in seconds relative to <c>Time.realTimeSinceStartup</c> when the touch began.
+        /// Time in seconds on the same timeline as <c>Time.realTimeSinceStartup</c> when the touch began.
         /// </summary>
         /// <value>Control representing the start time of the touch.</value>
         /// <remarks>
