@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem
     /// Within a map, all actions have to have names and each action name must
     /// be unique. The <see cref="InputBinding.action"/> property of bindings in a map
     /// are resolved within the <see cref="actions"/> in the map. Looking up actions
-    /// by name can be done through <see cref="GetAction(string)"/>.
+    /// by name can be done through <see cref="FindAction(string,bool)"/>.
     ///
     /// The <see cref="name"/> of the map itself can be empty, except if the map is part of
     /// an <see cref="InputActionAsset"/> in which case it is required to have a name
@@ -44,44 +44,58 @@ namespace UnityEngine.InputSystem
     /// driving and for walking plus one more map for the actions shared between
     /// the two modes.
     ///
-    /// TODO
+    /// Action maps are usually created in the <a href="../manual/ActionAssets.html">action
+    /// editor</a> as part of <see cref="InputActionAsset"/>s. However, they can also be
+    /// created standing on their own directly in code or from JSON (see <see cref="FromJson"/>).
     ///
-    /// ...creation...
+    /// <example>
+    /// <code>
+    /// // Create a free-standing action map.
+    /// var map = new InputActionMap();
     ///
-    /// ...enabling...
+    /// // Add some actions and bindings to it.
+    /// map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
+    /// map.AddAction("action2", binding: "&lt;Gamepad&gt;/buttonSouth");
+    /// </code>
+    /// </example>
     ///
-    ///
-    /// Also stores data for actions. All actions have to have an associated
-    /// action map. "Lose" actions constructed without a map will internally
-    /// create their own map to hold their data.
-    ///
-    /// A common usage pattern for action maps is to use them to group action
-    /// "contexts". So one map could hold "menu" actions, for example, whereas
-    /// another set holds "gameplay" actions. This kind of splitting can be
-    /// made arbitrarily complex. Like, you could have separate "driving" and
-    /// "walking" action maps, for example, that you enable and disable depending
-    /// on whether the player is walking or driving around.
+    /// Actions in action maps, like actions existing by themselves outside of action
+    /// maps, do not actively process input except if enabled. Actions can either
+    /// be enabled individually (see <see cref="InputAction.Enable"/> and <see
+    /// cref="InputAction.Disable"/>) or in bulk by enabling and disabling the
+    /// entire map (see <see cref="Enable"/> and <see cref="Disable"/>).
     /// </remarks>
+    /// <seealso cref="InputActionAsset"/>
+    /// <seealso cref="InputAction"/>
     [Serializable]
     public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
     {
         /// <summary>
         /// Name of the action map.
         /// </summary>
+        /// <value>Name of the action map.</value>
+        /// <remarks>
+        /// For action maps that are part of <see cref="InputActionAsset"/>s, this will always be
+        /// a non-null, non-empty string that is unique within the maps in the asset. For action maps
+        /// that are standing on their own, this can be null or empty.
+        /// </remarks>
         public string name => m_Name;
 
         /// <summary>
         /// If the action map is part of an asset, this refers to the asset. Otherwise it is <c>null</c>.
         /// </summary>
+        /// <value>Asset to which the action map belongs.</value>
         public InputActionAsset asset => m_Asset;
 
         /// <summary>
         /// A stable, unique identifier for the map.
         /// </summary>
+        /// <value>Unique ID for the action map.</value>
         /// <remarks>
         /// This can be used instead of the name to refer to the action map. Doing so allows referring to the
         /// map such that renaming it does not break references.
         /// </remarks>
+        /// <seealso cref="InputAction.id"/>
         public Guid id
         {
             get
@@ -130,6 +144,7 @@ namespace UnityEngine.InputSystem
         /// Accessing this property. Note that values returned by the property become invalid if
         /// the setup of actions in a map is changed.
         /// </remarks>
+        /// <seealso cref="InputAction.actionMap"/>
         public ReadOnlyArray<InputAction> actions => new ReadOnlyArray<InputAction>(m_Actions);
 
         /// <summary>
@@ -291,10 +306,10 @@ namespace UnityEngine.InputSystem
         /// <exception cref="KeyNotFoundException">No action with the name or ID of <paramref name="actionNameOrId"/>
         /// was found in the action map.</exception>
         /// <remarks>
-        /// This method is equivalent to <see cref="FindAction(string)"/> except it throws <c>KeyNotFoundException</c>
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except it throws <c>KeyNotFoundException</c>
         /// if no action with the given name or ID can be found.
         /// </remarks>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         /// <seealso cref="FindAction(Guid)"/>
         /// <see cref="actions"/>
         public InputAction this[string actionNameOrId]

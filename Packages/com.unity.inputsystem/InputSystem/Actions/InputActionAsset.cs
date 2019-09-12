@@ -17,13 +17,36 @@ namespace UnityEngine.InputSystem
     /// An asset containing action maps and control schemes.
     /// </summary>
     /// <remarks>
-    /// Usually imported from JSON using <see cref="Editor.InputActionImporter"/>.
+    /// InputActionAssets can be created in code but are usually stored in JSON format on
+    /// disk with the ".inputactions" extension and are imported by Unity using a custom
+    /// importer.
+    ///
+    /// To create an InputActionAsset in code, use the <c>Singleton</c> API and populate the
+    /// asset with the methods found in <see cref="InputActionSetupExtensions"/>. Alternatively,
+    /// you can load an InputActionAsset directly from a string in JSON format using <see cref="FromJson"/>.
+    ///
+    /// <example>
+    /// <code>
+    /// // Create and configure an asset in code.
+    /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
+    /// </code>
+    /// </example>
+    ///
+    /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
+    /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
+    /// (see <see cref="Enable"/> and <see cref="Disable"/>). The name of each action map must be unique.
+    /// The list of action maps can be queried from <see cref="actionMaps"/>.
+    ///
+    /// InputActionAssets can only define <see cref="InputControlScheme"/>s. They can be added to
+    /// an asset with <see cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
+    /// and can be queried from <see cref="controlSchemes"/>.
     ///
     /// Be aware that input action assets do not separate between static (configuration) data and dynamic
-    /// (instance) data. For audio, for example, <see cref="AudioClip"/> represents the static,
-    /// shared data portion of audio playback whereas <see cref="AudioSource"/> represents the
-    /// dynamic, per-instance audio playback portion (referencing the clip through <see
-    /// cref="AudioSource.clip"/>.
+    /// (instance) data. For audio, for example, <c>AudioClip</c> represents the static,
+    /// shared data portion of audio playback whereas <c>AudioSource"</c> represents the
+    /// dynamic, per-instance audio playback portion (referencing the clip through <c>AudioSource.clip</c>).
     ///
     /// For input, such a split is less beneficial as the same input is generally not exercised
     /// multiple times in parallel. Keeping both static and dynamic data together simplifies
@@ -33,8 +56,9 @@ namespace UnityEngine.InputSystem
     /// exercise it multiple times in parallel. A prominent example of such a use case is
     /// local multiplayer where each player gets the same set of actions but is controlling
     /// them with a different device (or devices) each. This is easily achieved by simply
-    /// <see cref="UnityEngine.Object.Instantiate">instantiating</see> the input action
-    /// asset multiple times.
+    /// using <c>UnityEngine.Object.Instantiate</c> to instantiate the input action
+    /// asset multiple times. <see cref="PlayerInput"/> will automatically do so in its
+    /// internals.
     ///
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.

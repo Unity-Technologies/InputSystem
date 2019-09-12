@@ -492,7 +492,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         /// <seealso cref="RegisterLayoutMatcher{TDevice}"/>
-        /// <seealso cref="RegisterLayoutMatcher()"/>
+        /// <seealso cref="RegisterLayoutMatcher(string,InputDeviceMatcher)"/>
         public static string TryFindMatchingLayout(InputDeviceDescription deviceDescription)
         {
             return s_Manager.TryFindMatchingControlLayout(ref deviceDescription);
@@ -635,6 +635,7 @@ namespace UnityEngine.InputSystem
         /// cref="InputControl{T}.ReadValue"/>.
         ///
         /// <example>
+        /// <code>
         /// // Let's say that we want to define a processor that adds some random jitter to its input.
         /// // We have to pick a value type to operate on if we want to derive from InputProcessor&lt;T&gt;
         /// // so we go with float here.
@@ -710,6 +711,7 @@ namespace UnityEngine.InputSystem
         ///             + "to each input value.);
         /// }
         /// #endif
+        /// </code>
         /// </example>
         ///
         /// Note that it is allowed to register the same processor type multiple types with
@@ -752,6 +754,7 @@ namespace UnityEngine.InputSystem
         /// cref="InputControl{T}.ReadValue"/>.
         ///
         /// <example>
+        /// <code>
         /// // Let's say that we want to define a processor that adds some random jitter to its input.
         /// // We have to pick a value type to operate on if we want to derive from InputProcessor&lt;T&gt;
         /// // so we go with float here.
@@ -827,6 +830,7 @@ namespace UnityEngine.InputSystem
         ///             + "to each input value.);
         /// }
         /// #endif
+        /// </code>
         /// </example>
         ///
         /// Note that it is allowed to register the same processor type multiple types with
@@ -1096,17 +1100,18 @@ namespace UnityEngine.InputSystem
         ///         InputSystem.RegisterLayoutBuilder(
         ///             () =>
         ///             {
-        ///                 // Here is where we do the actual building. In practice, this would
-        ///                 // probably look at the 'capabilities' property of the InputDeviceDescription
-        ///                 // we got and create a tailor-made layout. But what you put in the layout here
-        ///                 // really depends on the specific use case you have.
+        ///                 // Here is where we do the actual building. In practice,
+        ///                 // this would probably look at the 'capabilities' property
+        ///                 // of the InputDeviceDescription we got and create a tailor-made
+        ///                 // layout. But what you put in the layout here really depends on
+        ///                 // the specific use case you have.
         ///                 //
         ///                 // We just add some preset things here which should still sufficiently
         ///                 // serve as a demonstration.
         ///                 //
-        ///                 // Note that we can base our layout here on whatever other layout in the system.
-        ///                 // We could extend Gamepad, for example. If we don't choose a base layout, the
-        ///                 // system automatically implies InputDevice.
+        ///                 // Note that we can base our layout here on whatever other layout
+        ///                 // in the system. We could extend Gamepad, for example. If we don't
+        ///                 // choose a base layout, the system automatically implies InputDevice.
         ///
         ///                 var builder = new InputControlLayout.Builder()
         ///                     .WithDisplayName(description.product);
@@ -1208,8 +1213,6 @@ namespace UnityEngine.InputSystem
             set => s_Manager.pollingFrequency = value;
         }
 
-        //DOC--------------------------------------------------
-
         /// <summary>
         /// Add a new device by instantiating the given device layout.
         /// </summary>
@@ -1220,13 +1223,22 @@ namespace UnityEngine.InputSystem
         /// unique automatically by the system by appending numbers to them (e.g. "gamepad", "gamepad1",
         /// "gamepad2", etc.).</param>
         /// <param name="variants">Semicolon-separated list of layout variants to use for the device.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="layout"/> is <c>null</c> or empty.</exception>
         /// <returns>The newly created input device.</returns>
         /// <remarks>
+        /// The device will be added to the <see cref="devices"/> list and a notification on
+        /// <see cref="onDeviceChange"/> will be triggered.
+        ///
         /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
         ///
         /// <example>
         /// <code>
+        /// // This is one way to instantiate the "Gamepad" layout.
         /// InputSystem.AddDevice("Gamepad");
+        ///
+        /// // In this case, because the "Gamepad" layout is based on the Gamepad
+        /// // class, we can also do this instead:
+        /// InputSystem.AddDevice&lt;Gamepad&gt;();
         /// </code>
         /// </example>
         /// </remarks>
@@ -1235,24 +1247,30 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="onDeviceChange"/>
         /// <seealso cref="InputDeviceChange.Added"/>
         /// <seealso cref="devices"/>
+        /// <seealso cref="RegisterLayout(Type,string,Nullable{InputDeviceMatcher})"/>
         public static InputDevice AddDevice(string layout, string name = null, string variants = null)
         {
+            if (string.IsNullOrEmpty(layout))
+                throw new ArgumentNullException(nameof(layout));
             return s_Manager.AddDevice(layout, name, new InternedString(variants));
         }
 
         /// <summary>
         /// Add a new device by instantiating the layout registered for type <typeparamref name="TDevice"/>.
         /// </summary>
-        /// <param name="name">Name to give to the device. If null, a default name will be given to the
-        /// device (usually based on the name of its layout). Note that if a device with the same name
-        /// already exists, a number will be appended to the name.</param>
+        /// <param name="name">Name to assign to the device. If null, the layout's display name (<see
+        /// cref="InputControlLayout.displayName"/> is used instead. Note that device names are made
+        /// unique automatically by the system by appending numbers to them (e.g. "gamepad", "gamepad1",
+        /// "gamepad2", etc.).</param>
         /// <typeparam name="TDevice">Type of device to add.</typeparam>
         /// <returns>The newly added device.</returns>
         /// <exception cref="InvalidOperationException">Instantiating the layout for <typeparamref name="TDevice"/>
-        /// did not produce a device of type <typeparamref name="TDevice"/>. This can happen, for exam</exception>
+        /// did not produce a device of type <typeparamref name="TDevice"/>.</exception>
         /// <remarks>
         /// The device will be added to the <see cref="devices"/> list and a notification on
         /// <see cref="onDeviceChange"/> will be triggered.
+        ///
+        /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
         ///
         /// <example>
         /// <code>
@@ -1261,6 +1279,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="RemoveDevice"/>
+        /// <seealso cref="onDeviceChange"/>
+        /// <seealso cref="InputDeviceChange.Added"/>
+        /// <seealso cref="devices"/>
         public static TDevice AddDevice<TDevice>(string name = null)
             where TDevice : InputDevice
         {
@@ -1277,27 +1299,78 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        ///
+        /// Tell the input system that a new device has become available.
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="description">Description of the input device.</param>
+        /// <returns>The newly created device that has been added to <see cref="devices"/>.</returns>
+        /// <exception cref="ArgumentException">The given <paramref name="description"/> is empty -or-
+        /// no layout can be found that matches the given device <paramref name="description"/>.</exception>
         /// <remarks>
+        /// This method is different from methods such as <see cref="AddDevice(string,string,string)"/>
+        /// or <see cref="AddDevice{TDevice}"/> in that it employs the usual matching process the
+        /// same way that it happens when the Unity runtime reports an input device.
         ///
+        /// In particular, the same procedure described in the documentation for <see cref="onFindLayoutForDevice"/>
+        /// is employed where all registered <see cref="InputDeviceMatcher"/>s are matched against the
+        /// supplied device description and the most suitable match determines the layout to use. This in
+        /// turn is run through <see cref="onFindLayoutForDevice"/> to determine the final layout to use.
+        ///
+        /// If no suitable layout can be found, the method throws <c>ArgumentException</c>.
         /// <example>
         /// <code>
+        /// InputSystem.AddDevice(
+        ///     new InputDeviceDescription
+        ///     {
+        ///         interfaceName = "Custom",
+        ///         product = "Product"
+        ///     });
         /// </code>
         /// </example>
         /// </remarks>
-        /// <returns>The newly created device that has been added to <see cref="devices"/>.</returns>
-        /// <exception cref="ArgumentException">No layout can be found that matches the given device <paramref name="description"/>.</exception>
         public static InputDevice AddDevice(InputDeviceDescription description)
         {
+            if (description.empty)
+                throw new ArgumentException("Description must not be empty", nameof(description));
             return s_Manager.AddDevice(description);
         }
 
+        /// <summary>
+        /// Add the given device back to the system.
+        /// </summary>
+        /// <param name="device">An input device. If the device is currently already added to
+        /// the system (i.e. is in <see cref="devices"/>), the method will do nothing.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        /// This can be used when a device has been manually removed with <see cref="RemoveDevice"/>.
+        ///
+        /// The device will be added to the <see cref="devices"/> list and a notification on
+        /// <see cref="onDeviceChange"/> will be triggered.
+        ///
+        /// It may be tempting to do the following but this will not work:
+        ///
+        /// <example>
+        /// <code>
+        /// // This will *NOT* work.
+        /// var device = new Gamepad();
+        /// InputSystem.AddDevice(device);
+        /// </code>
+        /// </example>
+        ///
+        /// <see cref="InputDevice"/>s, like <see cref="InputControl"/>s in general, cannot
+        /// simply be instantiated with <c>new</c> but must be created by the input system
+        /// instead.
+        /// </remarks>
+        /// <seealso cref="RemoveDevice"/>
+        /// <seealso cref="AddDevice{TDevice}"/>
+        /// <seealso cref="devices"/>
         public static void AddDevice(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
             s_Manager.AddDevice(device);
         }
+
+        //DOC--------------------------------------------------
 
         /// <summary>
         /// Remove a device from the system such that it no longer receives input and is no longer part of the
@@ -2536,10 +2609,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
+        /// <value>Current version of the input system.</value>
         public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
 
         ////REVIEW: restrict metrics to editor and development builds?
-
+        /// <summary>
+        /// Get various up-to-date metrics about the input system.
+        /// </summary>
+        /// <value>Up-to-date metrics on input system activity.</value>
         public static InputMetrics metrics => s_Manager.metrics;
 
         internal static InputManager s_Manager;

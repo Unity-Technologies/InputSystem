@@ -40,14 +40,63 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// <summary>
         /// Whether this touch record holds valid data.
         /// </summary>
+        /// <value>If true, the data contained in the touch is valid.</value>
         /// <remarks>
-        /// This is true only if the struct instance has been obtained ...
+        /// Touch data is stored in unmanaged memory as a circular input buffer. This means that when
+        /// the buffer runs out of capacity, older touch entries will get reused. When this happens,
+        /// existing <c>Touch</c> instances referring to the record become invalid.
+        ///
+        /// This property can be used to determine whether the record held on to by the <c>Touch</c>
+        /// instance is still valid.
+        ///
+        /// This property will be <c>false</c> for default-initialized <c>Touch</c> instances.
+        ///
+        /// Note that accessing most of the other properties on this struct when the touch is
+        /// invalid will trigger <c>InvalidOperationException</c>.
         /// </remarks>
         public bool valid => m_TouchRecord.valid;
 
+        /// <summary>
+        /// The finger used for the touch contact. Null only for default-initialized
+        /// instances of the struct.
+        /// </summary>
+        /// <value>Finger used for the touch contact.</value>
+        /// <seealso cref="activeFingers"/>
         public Finger finger => m_Finger;
+
+        /// <summary>
+        /// Current phase of the touch.
+        /// </summary>
+        /// <value>Current phase of the touch.</value>
+        /// <remarks>
+        /// Every touch goes through a predefined cycle that starts with <see cref="TouchPhase.Began"/>,
+        /// then potentially <see cref="TouchPhase.Moved"/> and/or <see cref="TouchPhase.Stationary"/>,
+        /// and finally concludes with either <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>.
+        ///
+        /// This property indicates where in the cycle the touch is.
+        /// </remarks>
+        /// <seealso cref="isInProgress"/>
+        /// <seealso cref="TouchControl.phase"/>
         public TouchPhase phase => state.phase;
+
+        /// <summary>
+        /// Unique ID of the touch as (usually) assigned by the platform.
+        /// </summary>
+        /// <value>Unique, non-zero ID of the touch.</value>
+        /// <remarks>
+        /// Each touch contact that is made with the screen receives its own unique ID which is
+        /// normally assigned by the underlying platform.
+        ///
+        /// Note a platform may reuse touch IDs after their respective touches have finished.
+        /// This means that the guarantee of uniqueness is only made with respect to <see cref="activeTouches"/>.
+        ///
+        /// In particular, all touches in <see cref="history"/> will have the same ID whereas
+        /// touches in the a finger's <see cref="Finger.touchHistory"/> may end up having the same
+        /// touch ID even though constituting different physical touch contacts.
+        /// </remarks>
+        /// <seealso cref="TouchControl.touchId"/>
         public int touchId => state.touchId;
+
         public float pressure => state.pressure;
         public Vector2 radius => state.radius;
         public double startTime => state.startTime;
@@ -59,6 +108,11 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         public int tapCount => state.tapCount;
         public bool isTap => state.isTap;
 
+        /// <summary>
+        /// Whether the touch is currently in progress, i.e. has a <see cref="phase"/> of
+        /// <see cref="TouchPhase.Began"/>, <see cref="TouchPhase.Moved"/>, or <see cref="TouchPhase.Stationary"/>.
+        /// </summary>
+        /// <value>Whether the touch is currently ongoing.</value>
         public bool isInProgress
         {
             get

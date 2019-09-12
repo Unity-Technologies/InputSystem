@@ -307,8 +307,8 @@ namespace UnityEngine.InputSystem
         {
             var statePtr = currentStatePtr;
 
-            Accumulate(scroll.x, statePtr, eventPtr);
-            Accumulate(scroll.y, statePtr, eventPtr);
+            scroll.x.AccumulateValueInEvent(statePtr, eventPtr);
+            scroll.y.AccumulateValueInEvent(statePtr, eventPtr);
 
             base.OnStateEvent(eventPtr);
         }

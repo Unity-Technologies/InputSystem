@@ -286,7 +286,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// and leaves state management for a touchscreen as a whole to the managed part of the system.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
-    public unsafe struct TouchscreenState : IInputStateTypeInfo
+    internal unsafe struct TouchscreenState : IInputStateTypeInfo
     {
         /// <summary>
         /// Memory format tag for TouchscreenState.
@@ -414,8 +414,37 @@ namespace UnityEngine.InputSystem
     /// A multi-touch surface.
     /// </summary>
     /// <remarks>
+    /// Touchscreen is somewhat different from most other device implementations in that it does not usually
+    /// consume input in the form of a full device snapshot but rather consumes input sent to it in the form
+    /// of events containing a <see cref="TouchState"/> each. This is unusual as <see cref="TouchState"/>
+    /// uses a memory format different from <see cref="TouchState.Format"/>. However, when a <c>Touchscreen</c>
+    /// sees an event containing a <see cref="TouchState"/>, it will handle that event on a special code path.
+    ///
+    /// This allows <c>Touchscreen</c> to decide on its own which control in <see cref="touches"/> to store
+    /// a touch at and to perform things such as tap detection (see <see cref="TouchControl.tap"/> and
+    /// <see cref="TouchControl.tapCount"/>) and primary touch handling (see <see cref="primaryTouch"/>).
+    ///
+    /// <example>
+    /// <code>
+    /// // Create a touchscreen device.
+    /// var touchscreen = InputSystem.AddDevice&lt;Touchscreen&gt;();
+    ///
+    /// // Send a touch to the device.
+    /// InputSystem.QueueStateEvent(touchscreen,
+    ///     new TouchState
+    ///     {
+    ///         phase = TouchPhase.Began,
+    ///         // Must have a valid, non-zero touch ID. Touchscreen will not operate
+    ///         // correctly if we don't set IDs properly.
+    ///         touchId = 1,
+    ///         position = new Vector2(123, 234),
+    ///         // Delta will be computed by Touchscreen automatically.
+    ///     });
+    /// </code>
+    /// </example>
+    ///
     /// Note that this class presents a fairly low-level touch API. When working with touch from script code,
-    /// it is recommended to use the higher-level <see cref="Plugins.EnhancedTouch.Touch"/> API instead.
+    /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
@@ -450,12 +479,14 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public new static Touchscreen current { get; internal set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -463,6 +494,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -549,6 +581,10 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
+        /// <summary>
+        /// Called whenever a new state event is received.
+        /// </summary>
+        /// <param name="eventPtr"></param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
@@ -787,7 +823,7 @@ namespace UnityEngine.InputSystem
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases
         // in one operation.
-        private static unsafe void TriggerTap(TouchControl control, ref TouchState state, InputEventPtr eventPtr)
+        private static void TriggerTap(TouchControl control, ref TouchState state, InputEventPtr eventPtr)
         {
             ////REVIEW: we're updating the entire TouchControl here; we could update just the tap state using a delta event; problem
             ////        is that the tap *down* still needs a full update on the state

@@ -1,9 +1,11 @@
+using UnityEngine.Scripting;
+
 namespace UnityEngine.InputSystem.Processors
 {
     // Normalizes input values in the range [min..max] to unsigned normalized
     // form [0..1] if min is >= 0 and to signed normalized form [-1..1] if
     // min < 0.
-    [Scripting.Preserve]
+    [Preserve]
     internal class NormalizeProcessor : InputProcessor<float>
     {
         public float min;

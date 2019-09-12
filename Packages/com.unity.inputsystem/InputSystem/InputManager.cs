@@ -992,7 +992,7 @@ namespace UnityEngine.InputSystem
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
             if (string.IsNullOrEmpty(device.layout))
-                throw new ArgumentException("Device has no associated layout", nameof(device));
+                throw new InvalidOperationException("Device has no associated layout");
 
             // Ignore if the same device gets added multiple times.
             if (ArrayHelpers.Contains(m_Devices, device))
@@ -1069,6 +1069,7 @@ namespace UnityEngine.InputSystem
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
+            ////REVIEW: is throwing here really such a useful thing?
             return AddDevice(description, throwIfNoLayoutFound: true);
         }
 

@@ -9,13 +9,43 @@ using UnityEngine.InputSystem.Layouts;
 namespace UnityEngine.InputSystem.XInput
 {
     /// <summary>
-    /// An XInput compatible game controller.
+    /// An XInput-compatible game controller.
     /// </summary>
     /// <remarks>
     /// Note that on non-Microsoft platforms, XInput controllers will not actually use the XInput interface
     /// but will rather be interfaced with through different APIs -- on OSX, for example, HID is used to
     /// interface with Xbox controlllers. In those cases, XInput-specific functionality (like <see cref="Capabilities"/>)
     /// will not be available.
+    ///
+    /// On Windows, XInput controllers will be reported with <see cref="InputDeviceDescription.interfaceName"/>
+    /// set to <c>"XInput"</c> and with a JSON representation of <a
+    /// href="https://docs.microsoft.com/en-us/windows/win32/api/xinput/ns-xinput-xinput_capabilities">XINPUT_CAPABILITIES</a>
+    /// available in <see cref="InputDeviceDescription.capabilities"/>. This means that you match on those
+    /// <c>subType</c> and/or <c>flags</c> for example.
+    ///
+    /// <example>
+    /// <code>
+    /// // Create an XInput-specific guitar layout subtype.
+    /// // NOTE: Works only on Windows.
+    /// InputSystem.RegisterLayout(@"
+    ///     {
+    ///         ""name"" : ""XInputGuitar"",
+    ///         ""displayName"" : ""Guitar"",
+    ///         ""extend"" : ""XInputController"",
+    ///         ""device"" : {
+    ///             ""interface"" : ""XInput"",
+    ///             ""capabilities"" : [
+    ///                 { ""path"" : ""subType"", ""value"" : ""6"" }
+    ///             ]
+    ///         }
+    ///     }
+    /// ");
+    /// </code>
+    /// </example>
+    ///
+    /// Now, when an XInput controller is connected and reports itself with the
+    /// subtype "Guitar", it is turned into an "XInputGuitar" instead of an
+    /// "XInputController".
     /// </remarks>
     [InputControlLayout(displayName = "Xbox Controller")]
     [Scripting.Preserve]

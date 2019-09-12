@@ -50,7 +50,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(player.playerIndex, Is.EqualTo(0));
         Assert.That(player.actions, Is.SameAs(prefabPlayerInput.actions));
         Assert.That(player.devices, Is.EquivalentTo(new[] { gamepad }));
-        Assert.That(player.controlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(player.currentControlScheme, Is.EqualTo("Gamepad"));
     }
 
     [Test]
@@ -69,7 +69,7 @@ internal class PlayerInputTests : InputTestFixture
         var player = PlayerInput.Instantiate(prefab, controlScheme: "Keyboard&Mouse");
 
         Assert.That(player.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
-        Assert.That(player.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(player.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
     }
 
     [Test]
@@ -131,7 +131,7 @@ internal class PlayerInputTests : InputTestFixture
         var instance = PlayerInput.Instantiate(prefab, pairWithDevices: new InputDevice[] { keyboard, mouse });
 
         Assert.That(instance.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
-        Assert.That(instance.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(instance.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(instance.actions["gameplay/fire"].controls, Has.Count.EqualTo(1));
         Assert.That(instance.actions["gameplay/fire"].controls[0], Is.SameAs(mouse.leftButton));
         Assert.That(instance.actions["gameplay/look"].controls, Has.Count.EqualTo(1));
@@ -598,12 +598,12 @@ internal class PlayerInputTests : InputTestFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
-        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
 
         Press(gamepad.buttonSouth);
 
-        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
     }
 
@@ -622,13 +622,13 @@ internal class PlayerInputTests : InputTestFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
-        Assert.That(playerInput.controlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
 
-        var result = playerInput.SwitchControlScheme(gamepad);
+        var result = playerInput.SwitchCurrentControlScheme(gamepad);
         Assert.That(result, Is.True);
 
-        Assert.That(playerInput.controlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
     }
 
@@ -696,8 +696,8 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(player1.devices, Is.EquivalentTo(new[] { keyboard }));
         Assert.That(player2.devices, Is.EquivalentTo(new[] { keyboard }));
-        Assert.That(player1.controlScheme, Is.EqualTo("Keyboard WASD"));
-        Assert.That(player2.controlScheme, Is.EqualTo("Keyboard Arrows"));
+        Assert.That(player1.currentControlScheme, Is.EqualTo("Keyboard WASD"));
+        Assert.That(player2.currentControlScheme, Is.EqualTo("Keyboard Arrows"));
         Assert.That(player1.actions["fire"].controls, Is.EquivalentTo(new[] { keyboard.leftCtrlKey }));
         Assert.That(player2.actions["fire"].controls, Is.EquivalentTo(new[] { keyboard.rightCtrlKey }));
 

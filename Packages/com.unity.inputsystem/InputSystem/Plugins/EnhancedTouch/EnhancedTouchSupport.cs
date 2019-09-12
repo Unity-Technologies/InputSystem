@@ -13,13 +13,61 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// API to control enhanced touch facilities like <see cref="Touch"/> that are not
     /// enabled by default.
     /// </summary>
+    /// <remarks>
+    /// Enhanced touch support provides automatic finger tracking and touch history recording.
+    /// It is an API designed for polling, i.e. for querying touch state directly in methods
+    /// such as <c>MonoBehaviour.Update</c>. Enhanced touch support cannot be used in combination
+    /// with <see cref="InputAction"/>s though both can be used side-by-side.
+    ///
+    /// <example>
+    /// <code>
+    /// public class MyBehavior : MonoBehaviour
+    /// {
+    ///     protected void OnEnable()
+    ///     {
+    ///         EnhancedTouchSupport.Enable();
+    ///     }
+    ///
+    ///     protected void OnDisable()
+    ///     {
+    ///         EnhancedTouchSupport.Disable();
+    ///     }
+    ///
+    ///     protected void Update()
+    ///     {
+    ///         var activeTouches = Touch.activeTouches;
+    ///         for (var i = 0; i &lt; activeTouches.Count; ++i)
+    ///             Debug.Log("Active touch: " + activeTouches[i]);
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// </remarks>
+    /// <seealso cref="Touch"/>
+    /// <seealso cref="Finger"/>
     public static class EnhancedTouchSupport
     {
+        /// <summary>
+        /// Whether enhanced touch support is currently enabled.
+        /// </summary>
+        /// <value>True if EnhancedTouch support has been enabled.</value>
         public static bool enabled => s_Enabled > 0;
 
         private static int s_Enabled;
         private static InputSettings.UpdateMode s_UpdateMode;
 
+        /// <summary>
+        /// Enable enhanced touch support.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method is necessary to enable the functionality provided
+        /// by <see cref="Touch"/> and <see cref="Finger"/>. These APIs add extra
+        /// processing to touches and are thus disabled by default.
+        ///
+        /// Calls to <c>Enable</c> and <see cref="Disable"/> balance each other out.
+        /// If <c>Enable</c> is called repeatedly, it will take as many calls to
+        /// <see cref="Disable"/> to disable the system again.
+        /// </remarks>
         public static void Enable()
         {
             ++s_Enabled;
@@ -33,6 +81,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             SetUpState();
         }
 
+        /// <summary>
+        /// Disable enhanced touch support.
+        /// </summary>
+        /// <remarks>
+        /// This method only undoes a single call to <see cref="Enable"/>.
+        /// </remarks>
         public static void Disable()
         {
             if (!enabled)
