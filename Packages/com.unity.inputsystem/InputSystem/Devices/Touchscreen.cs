@@ -298,11 +298,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.
         /// </summary>
-        /// <remarks>
-        /// While most touchscreens only support a number of concurrent touches that is significantly lower
-        /// than this number, having a larger pool of touch states to work with makes it possible to
-        /// track short-lived touches better.
-        /// </remarks>
+        /// <value>Maximum number of concurrent touches.</value>
         public const int MaxTouches = 10;
 
         /// <summary>
@@ -453,23 +449,28 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
         /// </summary>
+        /// <value>Control tracking the screen's primary touch.</value>
         /// <remarks>
         /// This touch duplicates touch data from whichever touch is deemed the primary touch at the moment.
         /// When going from no fingers down to any finger down, the first finger to touch the screen is
-        /// deemed the "primary touch". It stays the primary touch until released. At that point, if any other
-        /// finger is still down, the next finger in <see cref="touchData"/> is
+        /// deemed the "primary touch". It stays the primary touch until the last finger is released.
         ///
-        /// Having this touch be its own separate state and own separate control allows actions to track the
-        /// state of the primary touch even if the touch moves from one finger to another in <see cref="touchData"/>.
+        /// Note that unlike the touch from which it originates, the primary touch will be kept ongoing for
+        /// as long as there is still a finger on the screen. Put another way, <see cref="TouchControl.phase"/>
+        /// of <c>primaryTouch</c> will only transition to <see cref="TouchPhase.Ended"/> once the last finger
+        /// has been lifted off the screen.
         /// </remarks>
         public TouchControl primaryTouch { get; private set; }
 
         /// <summary>
-        /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
+        /// Array of all <see cref="TouchControl"/>s on the device.
         /// </summary>
+        /// <value>All <see cref="TouchControl"/>s on the screen.</value>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.MaxTouches"/> entries regardless of
-        /// which touches (if any) are currently in progress.
+        /// By default, a touchscreen will allocate 10 touch controls. This can be changed
+        /// by modifying the "Touchscreen" layout itself or by derived layouts. In practice,
+        /// this means that this array will usually have a fixed length of 10 entries but
+        /// it may deviate from that.
         /// </remarks>
         public ReadOnlyArray<TouchControl> touches { get; private set; }
 
@@ -477,6 +478,7 @@ namespace UnityEngine.InputSystem
         /// The touchscreen that was added or updated last or null if there is no
         /// touchscreen connected to the system.
         /// </summary>
+        /// <value>Current touch screen.</value>
         public new static Touchscreen current { get; internal set; }
 
         /// <inheritdoc />

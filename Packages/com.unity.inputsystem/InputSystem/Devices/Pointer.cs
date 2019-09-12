@@ -72,8 +72,8 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// This class abstracts over general "pointing" behavior where a pointer is moved across a 2D
-    /// surface. Operating at the <c>Pointer</c> level allows treating <c>Mouse</c>, <c>Pen</c>,
-    /// and <c>Touchscreen</c> all as pointers with a set of shared behaviors.
+    /// surface. Operating at the <c>Pointer</c> level allows treating <see>Mouse</see>, <see>Pen</see>,
+    /// and <see>Touchscreen</see> all as pointers with a set of shared behaviors.
     ///
     /// Note that a pointer may have "multi-point" ability as is the case with multi-touch where
     /// multiple touches represent multiple concurrent "pointers". However, for any pointer device
@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem
         ///
         /// For one, deltas will automatically reset to <c>(0,0)</c> between frames. If, for example,
         /// the current delta value is <c>(12,8)</c>, then after the next <see cref="InputSystem.Update"/>,
-        /// the delta automatically set to <c>(0,0)</c>. More precisely, deltas will reset as part
+        /// the delta is automatically set to <c>(0,0)</c>. More precisely, deltas will reset as part
         /// of <see cref="InputSystem.onBeforeUpdate"/>. This happens every time regardless of whether
         /// there are pending motion events for the pointer or not. But because it happens in
         /// <see cref="InputSystem.onBeforeUpdate"/> (i.e. <em>before</em> events are processed),
@@ -129,8 +129,8 @@ namespace UnityEngine.InputSystem
         ///
         /// Note that the resetting is visible to <see cref="InputAction"/>s. This means that when
         /// binding to a delta control from an action that is not using <see cref="InputActionType.PassThrough"/>,
-        /// you will see the action getting cancelled a the start of every frame. With a <c>PassThrough</c>
-        /// action, you will instead see it perform one extra time with a zero value.
+        /// you will see the action getting cancelled at the start of every frame. With a <c>PassThrough</c>
+        /// actions, you will instead see it perform one extra time with a zero value.
         ///
         /// The other special behavior of deltas is accumulation. When receiving more than one
         /// motion update in a frame, deltas will not simply switch from one value to the other

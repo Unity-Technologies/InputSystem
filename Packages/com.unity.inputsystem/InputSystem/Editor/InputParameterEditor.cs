@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
     /// <remarks>
     /// Custom parameter editors do not need to be registered explicitly. Say you have a custom
     /// <see cref="InputProcessor"/> called <c>QuantizeProcessor</c>. To define a custom editor
-    /// UI for it, simply define a new class based on <c>InputParameterEditor&lt;QuantizeProcessor&gt</c>.
+    /// UI for it, simply define a new class based on <c>InputParameterEditor&lt;QuantizeProcessor&gt;</c>.
     ///
     /// <example>
     /// <code>

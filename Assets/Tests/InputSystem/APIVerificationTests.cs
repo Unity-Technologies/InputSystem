@@ -420,7 +420,7 @@ class APIVerificationTests
 
     string GenerateDocsDirectory()
     {
-        var docsFolder = "Temp/docstest";
+        const string docsFolder = "Temp/docstest";
         Directory.CreateDirectory(docsFolder);
         Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
         return docsFolder;

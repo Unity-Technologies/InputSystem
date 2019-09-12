@@ -207,7 +207,7 @@ A Stick Deadzone Processor scales the values of a Vector2 control (such as a sti
 
 ## Writing Custom Processors
 
-You can also write a custom processor to use in your project. Newly added processors are usable in the UI and data the same way that built-in processors are. Simply add a class deriving from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl__0__) method:
+You can also write a custom processor to use in your project. Newly added processors are usable in the UI and data the same way that built-in processors are. Simply add a class deriving from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
@@ -222,7 +222,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
 }
 ```
 
-Next, you need to tell the Input System about your processor. So, as part of code that runs during startup, you need to call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_RegisterProcessor). The easiest way to do so is locally within the processor class like so:
+Next, you need to tell the Input System about your processor. So, as part of code that runs during startup, you need to call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_). The easiest way to do so is locally within the processor class like so:
 
 ```CSharp
 #if UNITY_EDITOR
@@ -254,7 +254,7 @@ Now, your new processor will become available up in the [Input Action Asset Edit
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
 ```
 
-Optionally, if you want to customize the UI for how your processor is edited in the editor, you can do so by defining a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.InputParameterEditor-1.html) for it.
+Optionally, if you want to customize the UI for how your processor is edited in the editor, you can do so by defining a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.Editor.InputParameterEditor-1.html) for it.
 
 ```CSharp
 // No registration is necessary for an InputParameterEditor.
