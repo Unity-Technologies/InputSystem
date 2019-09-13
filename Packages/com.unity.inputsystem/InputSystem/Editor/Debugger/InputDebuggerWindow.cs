@@ -18,18 +18,15 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add warning if input backends are not enabled
 
-////TODO: show input users and their actions and devices
-
 ////TODO: append " (Disabled) to disabled devices and grey them out
 
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
 ////TODO: refresh when unrecognized device pops up
 
-////TODO: context menu
-////      devices: open debugger window, remove device, enable/disable device (DONE)
-////      layouts: copy as json, remove layout
-////      actions: enable/disable action (have tree for all disabled actions)
+////TODO: cache layout tree (super costly to build) and only rebuild if layout version changes
+
+////TODO: context menu for actions (enable and disable and stuff)
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -90,7 +87,23 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnActionChange(object actionOrMap, InputActionChange change)
         {
-            Refresh();
+            switch (change)
+            {
+                // When an action is triggered, we only need a repaint.
+                case InputActionChange.ActionStarted:
+                case InputActionChange.ActionPerformed:
+                case InputActionChange.ActionCanceled:
+                    Repaint();
+                    break;
+
+                case InputActionChange.ActionEnabled:
+                case InputActionChange.ActionDisabled:
+                case InputActionChange.ActionMapDisabled:
+                case InputActionChange.ActionMapEnabled:
+                case InputActionChange.BoundControlsChanged:
+                    Refresh();
+                    break;
+            }
         }
 
         private void OnSettingsChange()
@@ -383,6 +396,24 @@ namespace UnityEngine.InputSystem.Editor
                 : base(state)
             {
                 Reload();
+            }
+
+            protected override void RowGUI(RowGUIArgs args)
+            {
+                var item = args.item;
+
+                // If the item is an action that's enabled and in-progress,
+                // update the item's label with current state from the action.
+                if (item is ActionItem actionItem && actionItem.action.enabled &&
+                    actionItem.action.phase != InputActionPhase.Waiting)
+                {
+                    var action = actionItem.action;
+                    args.label = $"{item.displayName}={action.ReadValueAsObject()}";
+                }
+
+                ////TODO: show values on bound controls (we will need a separate Refresh() getting triggered for that)
+
+                base.RowGUI(args);
             }
 
             protected override void ContextClickedItem(int id)
@@ -865,7 +896,14 @@ namespace UnityEngine.InputSystem.Editor
                 var name = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
                 if (!action.enabled)
                     name += " (Disabled)";
-                var item = AddChild(parent, name, ref id);
+                var item = new ActionItem
+                {
+                    action = action,
+                    depth = parent.depth + 1,
+                    id = ++id,
+                    displayName = name
+                };
+                parent.AddChild(item);
 
                 // Grab state.
                 var actionMap = action.GetOrCreateActionMap();
@@ -899,7 +937,15 @@ namespace UnityEngine.InputSystem.Editor
                             text += "]";
                         }
 
-                        AddChild(item, text, ref id);
+                        var controlItem = new BoundControlItem
+                        {
+                            id = ++id,
+                            depth = item.depth + 1,
+                            displayName = text,
+                            action = action,
+                            control = control
+                        };
+                        item.AddChild(controlItem);
                     }
                 }
             }
@@ -919,6 +965,17 @@ namespace UnityEngine.InputSystem.Editor
 
             private List<InputDeviceDescription> m_UnsupportedDevices;
             private List<InputAction> m_EnabledActions = new List<InputAction>();
+
+            private class ActionItem : TreeViewItem
+            {
+                public InputAction action;
+            }
+
+            private class BoundControlItem : TreeViewItem
+            {
+                public InputAction action;
+                public InputControl control;
+            }
 
             private class DeviceItem : TreeViewItem
             {
