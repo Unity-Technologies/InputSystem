@@ -19,37 +19,15 @@ using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: why can't I join with a mouse left click?
 
-//pairing with specific devices requires PlayerInputManager
-
-//what happens if multiple local players are supposed to be able to operate the same UIs?
-
-//how does the player get his devices?
-
-//case 1: only one player in the game; can use whatever devices supported by the actions
-//        optional: can have default control scheme
-//        optional: can let users switch control schemes freely
-//case 2:
-
-//case1: start with default control scheme; optionally: let player switch automatically
-//case2:
-
-//in single player, will check last used device and base default control scheme on that
-
-//how do we distinguish between an action that needs a continuous state and one that is one-off?
-// for messages: send xxxStarted/xxxStopped variants
-// for events: user has to use context to determine what happened
-
-
-// if it's coming from a press interaction, send OnXXXDown and OnXXXUp?
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A wrapper around the input system that takes care of managing input actions
-    /// and players.
+    /// Represents a separate player in the game complete with a set of actions exclusive
+    /// to the player and a set of paired device.
     /// </summary>
     /// <remarks>
-    /// This is a helper to get set up with the new input system quickly. It takes
+    /// PlayerInput is a high-level wrapper around much of the input system's functionality
+    /// which is meant to help getting set up with the new input system quickly. It takes
     /// care of <see cref="InputAction"/> bookkeeping and has a custom UI to help
     /// setting up input.
     ///
@@ -63,19 +41,10 @@ namespace UnityEngine.InputSystem
     /// cref="GameObject.SendMessage(string,object)"/> to send messages to the <see cref="GameObject"/>
     /// that PlayerInput sits on.
     ///
-    /// Notifications are sent
-    ///
-    /// 1) when actions are triggered,
-    /// 2) when a player loses or regains a device,
-    /// 3) when the player switches to a different control scheme,
-    /// 4) when the player changes bindings,
-    ///
-    /// If <see cref="notificationBehavior"/> is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> or
-    /// <see cref="UnityEngine.InputSystem.PlayerNotifications.BroadcastMessages"/>, then an ... OnFireStarted
-    ///
     /// <example>
     /// <code>
     /// // Component to sit next to PlayerInput.
+    /// [RequireComponent(typeof(PlayerInput))]
     /// public class MyPlayerLogic : MonoBehaviour
     /// {
     ///     public GameObject projectilePrefab;
@@ -84,15 +53,8 @@ namespace UnityEngine.InputSystem
     ///     private Vector2 m_Move;
     ///     private bool m_Fire;
     ///
-    ///     // Player has joined the game.
-    ///     public void OnPlayerJoined()
-    ///     {
-    ///         // Put player at spawn point.
-    ///         transform.position = PickSpawnPoint().transform.position;
-    ///     }
-    ///
     ///     // 'Fire' input action has been triggered. For 'Fire' we want continuous
-    ///     // action (i.e. firing) while the fire buttion is held such that the action
+    ///     // action (i.e. firing) while the fire button is held such that the action
     ///     // gets triggered repeatedly while the button is down. We can easily set this
     ///     // up by having a "Press" interaction on the button and setting it to repeat
     ///     // at fixed intervals.
@@ -104,27 +66,76 @@ namespace UnityEngine.InputSystem
     ///     // 'Move' input action has been triggered.
     ///     public void OnMove(InputValue value)
     ///     {
-    ///         TODO
+    ///         m_Move = value.Get&lt;Vector2&gt;();
     ///     }
     ///
-    ///     public void OnFixedUpdate()
+    ///     // 'Look' input action has been triggered.
+    ///     public void OnLook(InputValue value)
     ///     {
-    ///         TODO
+    ///         m_Look = value.Get&lt;Vector2&gt;();
     ///     }
     ///
-    ///     private GameObject PickSpawnPoint()
+    ///     public void OnUpdate()
     ///     {
-    ///         // Pick a spawn point for the player...
+    ///         // Update transform from m_Move and m_Look
     ///     }
     /// }
     /// </code>
     /// </example>
     ///
-    /// A player can be uniquely associated with a
+    /// It is also possible to use the polling API of <see cref="InputAction"/>s (see
+    /// <see cref="InputAction.triggered"/> and <see cref="InputAction.ReadValue{TValue}"/>)
+    /// in combination with PlayerInput.
+    ///
+    /// <example>
+    /// <code>
+    /// // Component to sit next to PlayerInput.
+    /// [RequireComponent(typeof(PlayerInput))]
+    /// public class MyPlayerLogic : MonoBehaviour
+    /// {
+    ///     public GameObject projectilePrefab;
+    ///
+    ///     private PlayerInput m_PlayerInput;
+    ///     private InputAction m_LookAction;
+    ///     private InputAction m_MoveAction;
+    ///     private InputAction m_FireAction;
+    ///
+    ///     public void OnUpdate()
+    ///     {
+    ///         // First update we look up all the data we need.
+    ///         // NOTE: We don't do this in OnEnable as PlayerInput itself performing some
+    ///         //       initialization work in OnEnable.
+    ///         if (m_PlayerInput == null)
+    ///         {
+    ///             m_PlayerInput = GetComponent&lt;PlayerInput&gt;();
+    ///             m_FireAction = m_PlayerInput.actions["fire"]"
+    ///             m_LookAction = m_PlayerInput.actions["look"]"
+    ///             m_MoveAction = m_PlayerInput.actions["move"]"
+    ///         }
+    ///
+    ///         if (m_FireAction.triggered)
+    ///             /* firing logic... */;
+    ///
+    ///         var move = m_MoveAction.ReadValue&lt;Vector2&gt;();
+    ///         var look = m_LookAction.ReadValue&lt;Vector2&gt;();
+    ///         /* Update transform from move&amp;look... *;
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// Each PlayerInput is assigned zero or more devices. By default, the system will not assign
+    /// the same device to more than one PlayerInput meaning that no two players will end up using
+    /// the same device. However, this can be bypassed by explicitly passing devices to <see
+    /// cref="Instantiate(GameObject,int,string,int,InputDevice[])"/> which can be useful to set
+    /// up split-keyboard input, for example.
+    ///
+    /// If player joining is performed through <see cref="PlayerInputManager"/>, the device from
+    /// which a player joined will be assigned to the player. However,
     ///
     ///
-    /// When a game is started, a PlayerInput component will pick from the locally available
-    /// devices to decide which to use with the component's input actions (<see cref="InputActionAsset.devices"/>).
+    /// When enabled, a PlayerInput component will pick from the locally available
+    /// devices to decide which to use with the component's input actions (see <see cref="InputActionAsset.devices"/>).
     /// Once picked, the devices will be for the exclusive use by the PlayerInput component.
     ///
     /// The picking process can be guided in one of several ways:
@@ -145,14 +156,32 @@ namespace UnityEngine.InputSystem
     [DisallowMultipleComponent]
     public class PlayerInput : MonoBehaviour
     {
+        /// <summary>
+        /// Name of the message that is sent with <c>UnityEngine.Object.SendMessage</c> when a
+        /// player loses a device.
+        /// </summary>
+        /// <seealso cref="onDeviceLost"/>
         public const string DeviceLostMessage = "OnDeviceLost";
+
+        /// <summary>
+        /// Name of the message that is sent with <c>UnityEngine.Object.SendMessage</c> when a
+        /// player regains a device.
+        /// </summary>
+        /// <seealso cref="onDeviceRegained"/>
         public const string DeviceRegainedMessage = "OnDeviceRegained";
 
+        /// <summary>
+        /// Whether input is on the player is active.
+        /// </summary>
+        /// <value>If true, the player is receiving input.</value>
+        /// <seealso cref="ActivateInput"/>
+        /// <seealso cref="PassivateInput"/>
         public bool active => m_InputActive;
 
         /// <summary>
-        /// Unique index of the player.
+        /// Unique, zero-based index of the player. For example, <c>2</c> for the third player.
         /// </summary>
+        /// <value>Unique index of the player.</value>
         /// <remarks>
         /// Once assigned, a player index will not change.
         ///
@@ -163,32 +192,37 @@ namespace UnityEngine.InputSystem
         public int playerIndex => m_PlayerIndex;
 
         /// <summary>
-        /// If split-screen is enabled (<see cref="UnityEngine.InputSystem.PlayerInputManager.splitScreen"/>), this is the index of the
-        /// screen area used by the player.
+        /// If split-screen is enabled (<see cref="UnityEngine.InputSystem.PlayerInputManager.splitScreen"/>),
+        /// this is the index of the screen area used by the player.
         /// </summary>
+        /// <value>Index of split-screen area assigned to player or -1 if the player is not
+        /// using split-screen.</value>
         /// <seealso cref="camera"/>
+        /// <seealso cref="PlayerInputManager.splitScreen"/>
         public int splitScreenIndex => m_SplitScreenIndex;
 
         /// <summary>
         /// Input actions associated with the player.
         /// </summary>
+        /// <value>Asset holding the player's input actions.</value>
         /// <remarks>
         /// Note that every player will maintain a unique copy of the given actions such that
         /// each player receives an identical copy. When assigning the same actions to multiple players,
         /// the first player will use the given actions as is but any subsequent player will make a copy
         /// of the actions using <see cref="Object.Instantiate(Object)"/>.
         ///
-        /// The asset may contain an arbitrary number of action maps. However, the first action map in the
-        /// asset is treated special ...
+        /// The asset may contain an arbitrary number of action maps. By setting <see cref="defaultActionMap"/>,
+        /// one of them can be selected to enabled automatically when PlayerInput is enabled. If no default
+        /// action map is selected, none of the action maps will be enabled by PlayerInput itself. Use
+        /// <see cref="SwitchCurrentActionMap"/> or just call <see cref="InputActionMap.Enable"/> directly
+        /// to enable a specific map.
         ///
-        /// Notifications will be send for all actions in the asset, not just for those in the first action
-        /// map. This means that if additional maps are manually enabled and disabled,
-        ///
-        /// There is one exception to this, however. For any action from the asset that is also referenced
-        /// by an <see cref="InputSystemUIInputModule"/> sitting on the <see cref="GameObject"/> of
-        /// <see cref="uiEventSystem"/>, no notification will be triggered when the action is fired.
+        /// Notifications will be sent for all actions in the asset, not just for those in the first action
+        /// map. This means that if additional maps are manually enabled and disabled, notifications will
+        /// be sent for their actions as they receive input.
         /// </remarks>
         /// <seealso cref="InputUser.actions"/>
+        /// <seealso cref="SwitchCurrentActionMap"/>
         public InputActionAsset actions
         {
             ////FIXME: this may return the wrong set of action if called before OnEnable
@@ -219,7 +253,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public string controlScheme
+        /// <summary>
+        /// Name of the currently active control scheme.
+        /// </summary>
+        /// <value>Name of the currently active control scheme or <c>null</c>.</value>
+        /// <remarks>
+        /// When there is only a single PlayerInput in the game and there is no <see cref="PlayerInputManager"/>
+        /// that has joining enabled,TODO
+        ///
+        /// Note that this property will be <c>null</c> if there are no control schemes
+        /// defined in <see cref="actions"/>.
+        /// </remarks>
+        /// <seealso cref="SwitchCurrentControlScheme(UnityEngine.InputSystem.InputDevice[])"/>
+        /// <seealso cref="defaultControlScheme"/>
+        public string currentControlScheme
         {
             get
             {
@@ -231,6 +278,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// The default control scheme to try.
+        /// </summary>
+        /// <value>Name of the default control scheme.</value>
+        /// <remarks>
+        /// When PlayerInput is enabled and this is not <c>null</c> and not empty, the PlayerInput
+        /// will look up the control scheme in <see cref="InputActionAsset.controlSchemes"/> of
+        /// <see cref="actions"/>. If found, PlayerInput will try to activate the scheme. This will
+        /// succeed only if all devices required by the control scheme are either already paired to
+        /// the player or are available as devices not used by other PlayerInputs.
+        ///
+        /// Note that this property only determines the first control scheme to try. If using the
+        /// control scheme fails, PlayerInput will fall back to trying the other control schemes
+        /// (if any) available from <see cref="actions"/>.
+        /// </remarks>
+        /// <seealso cref="SwitchCurrentControlScheme(InputDevice[])"/>
+        /// <seealso cref="currentControlScheme"/>
         public string defaultControlScheme
         {
             get => m_DefaultControlScheme;
@@ -249,20 +313,17 @@ namespace UnityEngine.InputSystem
         /// then switching to a gamepad, PlayerInput should automatically switch to the control scheme for
         /// gamepads, if present.
         ///
-        /// When there is more than one PlayerInput, this behavior is automatically turned off as we wouldn't
-        /// know which player is switching if a currently unpaired device is used.
+        /// When there is more than one PlayerInput or when joining is enabled <see cref="PlayerInputManager"/>,
+        /// this behavior is automatically turned off as we wouldn't know which player is switching if a
+        /// currently unpaired device is used.
         ///
         /// By setting this property to true, auto-switching of control schemes is forcibly turned off and
         /// will thus not be performed even if there is only a single PlayerInput in the game.
         ///
-        /// This property is most useful for games that do not have an explicit lobby but rather allow joining
-        /// throughout the game. Classic beat 'em up games where a second player may join the brawl at any time
-        /// are a good example.
-        ///
         /// Note that you can still switch control schemes manually using <see
-        /// cref="SwitchControlScheme(string,InputDevice[])"/>.
+        /// cref="SwitchCurrentControlScheme(string,InputDevice[])"/>.
         /// </remarks>
-        /// <seealso cref="controlScheme"/>
+        /// <seealso cref="currentControlScheme"/>
         public bool neverAutoSwitchControlSchemes
         {
             get => m_NeverAutoSwitchControlSchemes;
@@ -277,11 +338,40 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Name or ID (in the form of "{...}") of the action map to enable by default.
+        /// The currently enabled action map.
         /// </summary>
+        /// <value>Reference to the currently enabled action or <c>null</c> if no action
+        /// map has been enabled by PlayerInput.</value>
         /// <remarks>
-        /// TODO
+        /// Note that the concept of "current action map" is local to PlayerInput. You can still freely
+        /// enable and disable action maps directly on the <see cref="actions"/> asset. This property
+        /// only tracks which action map has been enabled under the control of PlayerInput, i.e. either
+        /// by means of <see cref="defaultActionMap"/> or by using <see cref="SwitchCurrentActionMap"/>.
         /// </remarks>
+        /// <seealso cref="SwitchCurrentActionMap"/>
+        public InputActionMap currentActionMap
+        {
+            get => m_CurrentActionMap;
+            set
+            {
+                m_CurrentActionMap?.Disable();
+                m_CurrentActionMap = value;
+                m_CurrentActionMap?.Enable();
+            }
+        }
+
+        /// <summary>
+        /// Name (see <see cref="InputActionMap.name"/>) or ID (see <see cref="InputActionMap.id"/>) of the action
+        /// map to enable by default.
+        /// </summary>
+        /// <value>Action map to enable by default or <c>null</c>.</value>
+        /// <remarks>
+        /// By default, when enabled, PlayerInput will not enable any of the actions in the <see cref="actions"/>
+        /// asset. By setting this property, however, PlayerInput can be made to automatically enable the respective
+        /// action map.
+        /// </remarks>
+        /// <seealso cref="currentActionMap"/>
+        /// <seealso cref="SwitchCurrentActionMap"/>
         public string defaultActionMap
         {
             get => m_DefaultActionMap;
@@ -292,6 +382,7 @@ namespace UnityEngine.InputSystem
         /// Determines how the component notifies listeners about input actions and other input-related
         /// events pertaining to the player.
         /// </summary>
+        /// <value>How to trigger notifications on events.</value>
         /// <remarks>
         /// By default, the component will use <see cref="GameObject.SendMessage(string,object)"/> to send messages
         /// to the <see cref="GameObject"/>. This can be changed by selecting a different <see cref="UnityEngine.InputSystem.PlayerNotifications"/>
@@ -457,8 +548,11 @@ namespace UnityEngine.InputSystem
         public InputUser user => m_InputUser;
 
         /// <summary>
-        /// The devices used by the player.
+        /// The devices paired to the player.
         /// </summary>
+        /// <value>List of devices paired to player.</value>
+        /// <remarks>
+        /// </remarks>
         /// <seealso cref="InputUser.pairedDevices"/>
         public ReadOnlyArray<InputDevice> devices
         {
@@ -471,39 +565,51 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Whether the player is missed required devices. This means that the player's
+        /// input setup is probably at least partially non-functional.
+        /// </summary>
+        /// <value>True if the player is missing devices required by the control scheme.</value>
+        /// <remarks>
+        /// This can happen, for example, if the a device is unplugged during the game.
+        /// </remarks>
+        /// <seealso cref="InputControlScheme.deviceRequirements"/>
+        /// <seealso cref="InputUser.hasMissingRequiredDevices"/>
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
 
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
+        /// <summary>
+        /// Whether PlayerInput operates in single-player mode.
+        /// </summary>
+        /// <value>If true, there is only a single PlayerInput.</value>
+        /// <remarks>
+        ///
+        /// </remarks>
         public static bool isSinglePlayer =>
             s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
         public void ActivateInput()
         {
-            // Enable default action map, if set.
-            if (m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
-            {
-                var actionMap = m_Actions.TryGetActionMap(m_DefaultActionMap);
-                if (actionMap != null)
-                {
-                    actionMap.Enable();
-                    m_EnabledActionMap = actionMap;
-                }
-                else
-                    Debug.LogError($"Cannot find action map '{m_DefaultActionMap}' in '{m_Actions}'", this);
-            }
             m_InputActive = true;
+
+            // If we have no current action map but there's a default
+            // action map, make it current.
+            if (m_CurrentActionMap == null && m_Actions != null && !string.IsNullOrEmpty(m_DefaultActionMap))
+                SwitchCurrentActionMap(m_DefaultActionMap);
+            else
+                m_CurrentActionMap?.Enable();
         }
 
         public void PassivateInput()
         {
-            m_EnabledActionMap?.Disable();
+            m_CurrentActionMap?.Disable();
 
             m_InputActive = false;
         }
 
-        public bool SwitchControlScheme(params InputDevice[] devices)
+        public bool SwitchCurrentControlScheme(params InputDevice[] devices)
         {
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
@@ -515,11 +621,11 @@ namespace UnityEngine.InputSystem
             if (scheme == null)
                 return false;
 
-            SwitchControlScheme(scheme.Value.name, devices);
+            SwitchCurrentControlScheme(scheme.Value.name, devices);
             return true;
         }
 
-        public void SwitchControlScheme(string controlScheme, params InputDevice[] devices)
+        public void SwitchCurrentControlScheme(string controlScheme, params InputDevice[] devices)
         {
             if (string.IsNullOrEmpty(controlScheme))
                 throw new ArgumentNullException(nameof(controlScheme));
@@ -552,7 +658,7 @@ namespace UnityEngine.InputSystem
             }
 
             // Must have map.
-            var actionMap = m_Actions.TryGetActionMap(mapNameOrId);
+            var actionMap = m_Actions.FindActionMap(mapNameOrId);
             if (actionMap == null)
             {
                 Debug.LogError($"Cannot find action map '{mapNameOrId}' in actions '{m_Actions}'", this);
@@ -562,6 +668,13 @@ namespace UnityEngine.InputSystem
             currentActionMap = actionMap;
         }
 
+        /// <summary>
+        /// Return the Nth player.
+        /// </summary>
+        /// <param name="playerIndex">Index of the player to return.</param>
+        /// <returns>The player with the given player index or <c>null</c> if no such
+        /// player exists.</returns>
+        /// <seealso cref="PlayerInput.playerIndex"/>
         public static PlayerInput GetPlayerByIndex(int playerIndex)
         {
             for (var i = 0; i < s_AllActivePlayersCount; ++i)
@@ -570,6 +683,21 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
+        /// <summary>
+        /// Find the first PlayerInput who the given device is paired to.
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <returns>The player who is paired to the given device or <c>null</c> if no
+        /// PlayerInput currently is paired to <paramref name="device"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Find the player paired to first gamepad.
+        /// var player = PlayerInput.FindFirstPairedToDevice(Gamepad.all[0]);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static PlayerInput FindFirstPairedToDevice(InputDevice device)
         {
             if (device == null)
@@ -584,6 +712,18 @@ namespace UnityEngine.InputSystem
             return null;
         }
 
+        /// <summary>
+        /// Instantiate a player object and set up and enable its inputs.
+        /// </summary>
+        /// <param name="prefab">Prefab to clone. Must contain a PlayerInput component somewhere in its hierarchy.</param>
+        /// <param name="playerIndex">Player index to assign to the player. See <see cref="PlayerInput.playerIndex"/>.
+        /// By default will be assigned automatically based on how many players are in <see cref="all"/>.</param>
+        /// <param name="controlScheme">Control scheme to activate</param>
+        /// <param name="splitScreenIndex"></param>
+        /// <param name="pairWithDevice">Device to pair to the user. By default, this is <c>null</c> which means
+        /// that TODO</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="prefab"/> is <c>null</c>.</exception>
         public static PlayerInput Instantiate(GameObject prefab, int playerIndex = -1, string controlScheme = null,
             int splitScreenIndex = -1, InputDevice pairWithDevice = null)
         {
@@ -687,18 +827,7 @@ namespace UnityEngine.InputSystem
         // by the receiver. We reuse the same object over and over to avoid allocating garbage.
         [NonSerialized] private InputValue m_InputValueObject;
 
-        [NonSerialized] internal InputActionMap m_EnabledActionMap;
-
-        public InputActionMap currentActionMap
-        {
-            get => m_EnabledActionMap;
-            set
-            {
-                m_EnabledActionMap?.Disable();
-                m_EnabledActionMap = value;
-                m_EnabledActionMap?.Enable();
-            }
-        }
+        [NonSerialized] internal InputActionMap m_CurrentActionMap;
 
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
@@ -834,6 +963,8 @@ namespace UnityEngine.InputSystem
                     }
                 }
             }
+
+            m_CurrentActionMap = null;
         }
 
         ////REVIEW: should this take the action *type* into account? e.g. have different behavior when the type is "Button"?
@@ -936,7 +1067,7 @@ namespace UnityEngine.InputSystem
                     // We've been given a control scheme to initialize this. Try that one and
                     // that one only. Might mean we end up with missing devices.
 
-                    var controlScheme = m_Actions.TryGetControlScheme(s_InitControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(s_InitControlScheme);
                     if (controlScheme == null)
                     {
                         Debug.LogError($"No control scheme '{s_InitControlScheme}' in '{m_Actions}'", this);
@@ -950,7 +1081,7 @@ namespace UnityEngine.InputSystem
                 {
                     // There's a control scheme we should try by default.
 
-                    var controlScheme = m_Actions.TryGetControlScheme(m_DefaultControlScheme);
+                    var controlScheme = m_Actions.FindControlScheme(m_DefaultControlScheme);
                     if (controlScheme == null)
                     {
                         Debug.LogError($"Cannot find default control scheme '{m_DefaultControlScheme}' in '{m_Actions}'", this);
@@ -1315,6 +1446,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        [Serializable]
         public class ActionEvent : UnityEvent<InputAction.CallbackContext>
         {
             public string actionId => m_ActionId;

@@ -98,8 +98,8 @@ namespace UnityEngine.InputSystem.Editor
             Refresh();
         }
 
-        private string OnFindLayout(int deviceId, ref InputDeviceDescription description, string matchedLayout,
-            IInputRuntime runtime)
+        private string OnFindLayout(ref InputDeviceDescription description, string matchedLayout,
+            InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             // If there's no matched layout, there's a chance this device will go in
             // the unsupported list. There's no direct notification for that so we
@@ -346,17 +346,19 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Contents
         {
-            public static GUIContent optionsContent = new GUIContent("Options");
-            public static GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
-            public static GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
-            public static GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
-            public static GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
-            public static GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
-            public static GUIContent openDebugView = new GUIContent("Open Device Debug View");
-            public static GUIContent copyDeviceDescription = new GUIContent("Copy Device Description");
-            public static GUIContent removeDevice = new GUIContent("Remove Device");
-            public static GUIContent enableDevice = new GUIContent("Enable Device");
-            public static GUIContent disableDevice = new GUIContent("Disable Device");
+            public static readonly GUIContent optionsContent = new GUIContent("Options");
+            public static readonly GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
+            public static readonly GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
+            public static readonly GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
+            public static readonly GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
+            public static readonly GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
+            public static readonly GUIContent openDebugView = new GUIContent("Open Device Debug View");
+            public static readonly GUIContent copyDeviceDescription = new GUIContent("Copy Device Description");
+            public static readonly GUIContent copyLayoutAsJSON = new GUIContent("Copy Layout as JSON");
+            public static readonly GUIContent createDeviceFromLayout = new GUIContent("Create Device from Layout");
+            public static readonly GUIContent removeDevice = new GUIContent("Remove Device");
+            public static readonly GUIContent enableDevice = new GUIContent("Enable Device");
+            public static readonly GUIContent disableDevice = new GUIContent("Disable Device");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -409,6 +411,21 @@ namespace UnityEngine.InputSystem.Editor
                     menu.AddItem(Contents.copyDeviceDescription, false,
                         () => EditorGUIUtility.systemCopyBuffer = unsupportedDeviceItem.description.ToJson());
                     menu.ShowAsContext();
+                }
+
+                if (item is LayoutItem layoutItem)
+                {
+                    var layout = EditorInputControlLayoutCache.TryGetLayout(layoutItem.layoutName);
+                    if (layout != null)
+                    {
+                        var menu = new GenericMenu();
+                        menu.AddItem(Contents.copyLayoutAsJSON, false,
+                            () => EditorGUIUtility.systemCopyBuffer = layout.ToJson());
+                        if (layout.isDeviceLayout)
+                            menu.AddItem(Contents.createDeviceFromLayout, false,
+                                () => InputSystem.AddDevice(layout.name));
+                        menu.ShowAsContext();
+                    }
                 }
             }
 
@@ -674,8 +691,16 @@ namespace UnityEngine.InputSystem.Editor
 
             private TreeViewItem AddControlLayoutItem(InputControlLayout layout, TreeViewItem parent, ref int id)
             {
-                var item = AddChild(parent, layout.name, ref id);
+                var item = new LayoutItem
+                {
+                    parent = parent,
+                    depth = parent.depth + 1,
+                    id = ++id,
+                    displayName = layout.displayName ?? layout.name,
+                    layoutName = layout.name,
+                };
                 item.icon = EditorInputControlLayoutCache.GetIconForLayout(layout.name);
+                parent.AddChild(item);
 
                 // Header.
                 AddChild(item, "Type: " + layout.type.Name, ref id);
@@ -729,7 +754,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!control.layout.IsEmpty())
                     item.icon = EditorInputControlLayoutCache.GetIconForLayout(control.layout);
 
-                ////TODO: fully merge TreeViewItems from isModifyingChildControlByPath control layouts into the control they modify
+                ////TODO: fully merge TreeViewItems from isModifyingExistingControl control layouts into the control they modify
 
                 ////TODO: allow clicking this field to jump to the layout
                 if (!control.layout.IsEmpty())
@@ -908,6 +933,11 @@ namespace UnityEngine.InputSystem.Editor
             private class ConfigurationItem : TreeViewItem
             {
                 public string name;
+            }
+
+            private class LayoutItem : TreeViewItem
+            {
+                public InternedString layoutName;
             }
         }
     }

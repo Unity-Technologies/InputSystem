@@ -79,7 +79,7 @@ The input system keeps track of disconnected devices in [`InputSystem.disconnect
 
 ## Device IDs
 
-Each device that is created will receive a unique, numeric ID. The ID can be accessed through [`InputDevice.id`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_id).
+Each device that is created will receive a unique, numeric ID. The ID can be accessed through [`InputDevice.deviceId`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
 
 The IDs are managed by the runtime and allocated through `IInputRuntime.AllocateDeviceId`. The runtime itself does not keep a record about which ID corresponds to which device.
 
@@ -172,7 +172,7 @@ Here we will deal with case 1) where we want to create a new input device entire
 The first step is to create a C# `struct` that represents the form in which input is received and stored and also describes the `InputControl` instances that should be created for the device in order to retrieve said state.
 
 ```CSharp
-// A "state struct" describes the memory format used a device. Each device can
+// A "state struct" describes the memory format used by a device. Each device can
 // receive and store memory in its custom format. InputControls are then connected
 // the individual pieces of memory and read out values from them.
 //
@@ -259,9 +259,9 @@ InputSystem.AddDevice<MyDevice>();
 
 While this creates a fully set up device with our two controls on it, the device will simply sit there and not do anything. It will not receive input as right now, we don't yet have code that actually generates input. So, let's take care of that next.
 
-Queuing input is easy. We can do that from pretty much anywhere (even from a thread) using [`InputSystem.QueueStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueStateEvent__1_UnityEngine_InputSystem_InputDevice___0_System_Double_) or [`InputSystem.QueueDeltaStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueDeltaStateEvent__1_UnityEngine_InputSystem_InputControl___0_System_Double_). For this demonstration, we will make use of [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html) which, when implemented by any [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), will add an [`OnUpdate()`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html#UnityEngine_InputSystem_IInputUpdateCallbackReceiver_OnUpdate) method that automatically gets called during [`InputSystem.onBeforeUpdate`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onBeforeUpdate) and thus can feed input events into the current input update.
+Queuing input is easy. We can do that from pretty much anywhere (even from a thread) using [`InputSystem.QueueStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueStateEvent__1_UnityEngine_InputSystem_InputDevice___0_System_Double_) or [`InputSystem.QueueDeltaStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueDeltaStateEvent__1_UnityEngine_InputSystem_InputControl___0_System_Double_). For this demonstration, we will make use of [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html) which, when implemented by any [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), will add an [`OnUpdate()`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html#UnityEngine_InputSystem_LowLevel_IInputUpdateCallbackReceiver_OnUpdate) method that automatically gets called during [`InputSystem.onBeforeUpdate`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onBeforeUpdate) and thus can feed input events into the current input update.
 
->NOTE: To reemphasize, you don't need to do it this way. If you already have a place where input for your device becomes available, you can simply queue input events from there instead of using [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html).
+>NOTE: To reemphasize, you don't need to do it this way. If you already have a place where input for your device becomes available, you can simply queue input events from there instead of using [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html).
 
 ```CSharp
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver

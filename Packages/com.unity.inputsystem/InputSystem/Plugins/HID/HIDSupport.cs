@@ -121,7 +121,7 @@ namespace UnityEngine.InputSystem.HID
                 {
                     if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
                     {
-                        HIDDescriptorWindow.CreateOrShowExisting(device.id, device.description);
+                        HIDDescriptorWindow.CreateOrShowExisting(device.deviceId, device.description);
                     }
                 }
             };

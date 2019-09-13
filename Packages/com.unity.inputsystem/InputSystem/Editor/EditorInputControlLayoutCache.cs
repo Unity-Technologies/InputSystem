@@ -217,8 +217,7 @@ namespace UnityEngine.InputSystem.Editor
                 s_LayoutCacheRef = InputControlLayout.CacheRef();
             }
 
-            var layoutNames = new List<string>();
-            manager.ListControlLayouts(layoutNames);
+            var layoutNames = manager.ListControlLayouts().ToArray();
 
             // Remember which layout maps to which device matchers.
             var layoutMatchers = InputControlLayout.s_Layouts.layoutMatchers;
@@ -305,7 +304,7 @@ namespace UnityEngine.InputSystem.Editor
                 //
                 // NOTE: We're looking at layouts post-merging here. Means we have already picked up all the
                 //       controls present on the base.
-                if (control.isFirstDefinedInThisLayout && !control.isModifyingChildControlByPath && !control.layout.IsEmpty())
+                if (control.isFirstDefinedInThisLayout && !control.isModifyingExistingControl && !control.layout.IsEmpty())
                 {
                     foreach (var baseLayout in layout.baseLayouts)
                         AddOptionalControlRecursive(baseLayout, ref control);
@@ -339,7 +338,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void AddOptionalControlRecursive(InternedString layoutName, ref InputControlLayout.ControlItem controlItem)
         {
-            Debug.Assert(!controlItem.isModifyingChildControlByPath);
+            Debug.Assert(!controlItem.isModifyingExistingControl);
             Debug.Assert(!controlItem.layout.IsEmpty());
 
             // Recurse into base.

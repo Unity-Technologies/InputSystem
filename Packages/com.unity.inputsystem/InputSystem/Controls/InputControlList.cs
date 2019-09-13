@@ -19,13 +19,12 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Keep a list of <see cref="InputControl">input controls</see> without allocating
-    /// managed memory.
+    /// Keep a list of <see cref="InputControl"/>s without allocating managed memory.
     /// </summary>
     /// <remarks>
     /// This struct is mainly used by methods such as <see cref="InputSystem.FindControls(string)"/>
     /// or <see cref="InputControlPath.TryFindControls{TControl}"/> to store an arbitrary length
-    /// list of resulting matches without having to allocate GC memory.
+    /// list of resulting matches without having to allocate GC heap memory.
     ///
     /// Requires the control setup in the system to not change while the list is being used. If devices are
     /// removed from the system, the list will no longer be valid. Also, only works with controls of devices that
@@ -34,8 +33,8 @@ namespace UnityEngine.InputSystem
     /// references on the fly. If the device setup in the system changes, the indices may become invalid.
     ///
     /// This struct allocates unmanaged memory and thus must be disposed or it will leak memory. By default
-    /// allocates <see cref="Allocator.Persistent"> persistent</see> memory. You can direct it to use another
-    /// allocator by passing an <see cref="Allocator"/> value to one of the constructors.
+    /// allocates <c>Allocator.Persistent</c> memory. You can direct it to use another allocator by
+    /// passing an <see cref="Allocator"/> value to one of the constructors.
     ///
     /// <example>
     /// <code>

@@ -41,34 +41,98 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// State layout for a single touch.
     /// </summary>
+    /// <remarks>
+    /// This is the low-level memory representation of a single touch, i.e the
+    /// way touches are internally transmitted and stored in the system. To update
+    /// touches on a <see cref="Touchscreen"/>, <see cref="StateEvent"/>s containing
+    /// TouchStates are sent to the screen.
+    /// </remarks>
+    /// <seealso cref="TouchControl"/>
+    /// <seealso cref="Touchscreen"/>
     // IMPORTANT: Must match TouchInputState in native code.
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct TouchState : IInputStateTypeInfo
     {
         internal const int kSizeInBytes = 56;
 
-        public static FourCC kFormat => new FourCC('T', 'O', 'U', 'C');
+        /// <summary>
+        /// Memory format tag for TouchState.
+        /// </summary>
+        /// <value>Returns "TOUC".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('T', 'O', 'U', 'C');
 
+        /// <summary>
+        /// Numeric ID of the touch.
+        /// </summary>
+        /// <value>Numeric ID of the touch.</value>
+        /// <remarks>
+        /// While a touch is ongoing, it must have a non-zero ID different from
+        /// all other ongoing touches. Starting with <see cref="TouchPhase.Began"/>
+        /// and ending with <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>,
+        /// a touch is identified by its ID, i.e. a TouchState with the same ID
+        /// belongs to the same touch.
+        ///
+        /// After a touch has ended or been canceled, an ID can be reused.
+        /// </remarks>
+        /// <seealso cref="TouchControl.touchId"/>
         [InputControl(displayName = "Touch ID", layout = "Integer")]
         [FieldOffset(0)]
         public int touchId;
 
+        /// <summary>
+        /// Screen-space position of the touch in pixels.
+        /// </summary>
+        /// <value>Screen-space position of the touch.</value>
+        /// <seealso cref="TouchControl.position"/>
         [InputControl(displayName = "Position")]
         [FieldOffset(4)]
         public Vector2 position;
 
+        /// <summary>
+        /// Screen-space motion delta of the touch in pixels.
+        /// </summary>
+        /// <value>Screen-space movement delta.</value>
+        /// <seealso cref="TouchControl.delta"/>
         [InputControl(displayName = "Delta")]
         [FieldOffset(12)]
         public Vector2 delta;
 
+        /// <summary>
+        /// Pressure-level of the touch against the touchscreen.
+        /// </summary>
+        /// <value>Pressure of touch.</value>
+        /// <remarks>
+        /// The core range for this value is [0..1] with 1 indicating maximum pressure. Note, however,
+        /// that the actual value may go beyond 1 in practice. This is because the system will usually
+        /// define "maximum pressure" to be less than the physical maximum limit the hardware is capable
+        /// of reporting so that to achieve maximum pressure, one does not need to press as hard as
+        /// possible.
+        /// </remarks>
+        /// <seealso cref="TouchControl.pressure"/>
         [InputControl(displayName = "Pressure", layout = "Axis")]
         [FieldOffset(20)]
         public float pressure;
 
+        /// <summary>
+        /// Radius of the touch print on the surface.
+        /// </summary>
+        /// <value>Touch extents horizontally and vertically.</value>
+        /// <remarks>
+        /// The touch radius is given in screen-space pixel coordinates along X and Y centered in the middle
+        /// of the touch. Note that not all screens and systems support radius detection on touches so this
+        /// value may be at <c>default</c> for an otherwise perfectly valid touch.
+        /// </remarks>
+        /// <seealso cref="TouchControl.radius"/>
         [InputControl(displayName = "Radius")]
         [FieldOffset(24)]
         public Vector2 radius;
 
+        /// <summary>
+        /// <see cref="TouchPhase"/> value of the touch.
+        /// </summary>
+        /// <value>Current <see cref="TouchPhase"/>.</value>
+        /// <seealso cref="phase"/>
         [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
         [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
@@ -94,13 +158,39 @@ namespace UnityEngine.InputSystem.LowLevel
         internal int padding;
 
         // NOTE: The following data is NOT sent by native but rather data we add on the managed side to each touch.
+
+        /// <summary>
+        /// Time that the touch was started. Relative to <c>Time.realTimeSinceStartup</c>.
+        /// </summary>
+        /// <value>Time that the touch was started.</value>
+        /// <remarks>
+        /// This is set automatically by <see cref="Touchscreen"/> and does not need to be provided
+        /// by events sent to the touchscreen.
+        /// </remarks>
+        /// <seealso cref="InputEvent.time"/>
+        /// <seealso cref="TouchControl.startTime"/>
         [InputControl(displayName = "Start Time", layout  = "Double")]
         [FieldOffset(40)]
         public double startTime; // In *external* time, i.e. currentTimeOffsetToRealtimeSinceStartup baked in.
+
+        /// <summary>
+        /// The position where the touch started.
+        /// </summary>
+        /// <value>Screen-space start position of the touch.</value>
+        /// <remarks>
+        /// This is set automatically by <see cref="Touchscreen"/> and does not need to be provided
+        /// by events sent to the touchscreen.
+        /// </remarks>
+        /// <seealso cref="TouchControl.startPosition"/>
         [InputControl(displayName = "Start Position")]
         [FieldOffset(48)]
         public Vector2 startPosition;
 
+        /// <summary>
+        /// Get or set the phase of the touch.
+        /// </summary>
+        /// <value>Phase of the touch.</value>
+        /// <seealso cref="TouchControl.phase"/>
         public TouchPhase phase
         {
             get => (TouchPhase)phaseId;
@@ -112,6 +202,14 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isInProgress => phase == TouchPhase.Began || phase == TouchPhase.Moved ||
         phase == TouchPhase.Stationary;
 
+        /// <summary>
+        /// Whether  TODO
+        /// </summary>
+        /// <value>Whether the touch is the first TODO</value>
+        /// <remarks>
+        /// This flag will be set internally by <see cref="Touchscreen"/>. Generally, it is
+        /// not necessary to set this bit manually when feeding data to Touchscreens.
+        /// </remarks>
         public bool isPrimaryTouch
         {
             get => (flags & (byte)TouchFlags.PrimaryTouch) != 0;
@@ -160,8 +258,13 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC format => kFormat;
+        /// <inheritdoc/>
+        public FourCC format => Format;
 
+        /// <summary>
+        /// Return a string representation of the state useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the touch state.</returns>
         public override string ToString()
         {
             return $"{{ id={touchId} phase={phase} pos={position} delta={delta} pressure={pressure} radius={radius} primary={isPrimaryTouch} }}";
@@ -174,6 +277,8 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     /// Combines multiple pointers each corresponding to a single contact.
     ///
+    /// Normally, TODO (sending state events)
+    ///
     /// All touches combine to quite a bit of state; ideally send delta events that update
     /// only specific fingers.
     ///
@@ -181,18 +286,19 @@ namespace UnityEngine.InputSystem.LowLevel
     /// and leaves state management for a touchscreen as a whole to the managed part of the system.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = MaxTouches * TouchState.kSizeInBytes)]
-    public unsafe struct TouchscreenState : IInputStateTypeInfo
+    internal unsafe struct TouchscreenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('T', 'S', 'C', 'R');
+        /// <summary>
+        /// Memory format tag for TouchscreenState.
+        /// </summary>
+        /// <value>Returns "TSCR".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('T', 'S', 'C', 'R');
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.
         /// </summary>
-        /// <remarks>
-        /// While most touchscreens only support a number of concurrent touches that is significantly lower
-        /// than this number, having a larger pool of touch states to work with makes it possible to
-        /// track short-lived touches better.
-        /// </remarks>
+        /// <value>Maximum number of concurrent touches.</value>
         public const int MaxTouches = 10;
 
         /// <summary>
@@ -248,7 +354,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC format => kFormat;
+        public FourCC format => Format;
     }
 }
 
@@ -304,8 +410,37 @@ namespace UnityEngine.InputSystem
     /// A multi-touch surface.
     /// </summary>
     /// <remarks>
+    /// Touchscreen is somewhat different from most other device implementations in that it does not usually
+    /// consume input in the form of a full device snapshot but rather consumes input sent to it in the form
+    /// of events containing a <see cref="TouchState"/> each. This is unusual as <see cref="TouchState"/>
+    /// uses a memory format different from <see cref="TouchState.Format"/>. However, when a <c>Touchscreen</c>
+    /// sees an event containing a <see cref="TouchState"/>, it will handle that event on a special code path.
+    ///
+    /// This allows <c>Touchscreen</c> to decide on its own which control in <see cref="touches"/> to store
+    /// a touch at and to perform things such as tap detection (see <see cref="TouchControl.tap"/> and
+    /// <see cref="TouchControl.tapCount"/>) and primary touch handling (see <see cref="primaryTouch"/>).
+    ///
+    /// <example>
+    /// <code>
+    /// // Create a touchscreen device.
+    /// var touchscreen = InputSystem.AddDevice&lt;Touchscreen&gt;();
+    ///
+    /// // Send a touch to the device.
+    /// InputSystem.QueueStateEvent(touchscreen,
+    ///     new TouchState
+    ///     {
+    ///         phase = TouchPhase.Began,
+    ///         // Must have a valid, non-zero touch ID. Touchscreen will not operate
+    ///         // correctly if we don't set IDs properly.
+    ///         touchId = 1,
+    ///         position = new Vector2(123, 234),
+    ///         // Delta will be computed by Touchscreen automatically.
+    ///     });
+    /// </code>
+    /// </example>
+    ///
     /// Note that this class presents a fairly low-level touch API. When working with touch from script code,
-    /// it is recommended to use the higher-level <see cref="Plugins.EnhancedTouch.Touch"/> API instead.
+    /// it is recommended to use the higher-level <see cref="EnhancedTouch.Touch"/> API instead.
     /// </remarks>
     [InputControlLayout(stateType = typeof(TouchscreenState), isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
@@ -314,23 +449,28 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Synthetic control that has the data for the touch that is deemed the "primary" touch at the moment.
         /// </summary>
+        /// <value>Control tracking the screen's primary touch.</value>
         /// <remarks>
         /// This touch duplicates touch data from whichever touch is deemed the primary touch at the moment.
         /// When going from no fingers down to any finger down, the first finger to touch the screen is
-        /// deemed the "primary touch". It stays the primary touch until released. At that point, if any other
-        /// finger is still down, the next finger in <see cref="touchData"/> is
+        /// deemed the "primary touch". It stays the primary touch until the last finger is released.
         ///
-        /// Having this touch be its own separate state and own separate control allows actions to track the
-        /// state of the primary touch even if the touch moves from one finger to another in <see cref="touchData"/>.
+        /// Note that unlike the touch from which it originates, the primary touch will be kept ongoing for
+        /// as long as there is still a finger on the screen. Put another way, <see cref="TouchControl.phase"/>
+        /// of <c>primaryTouch</c> will only transition to <see cref="TouchPhase.Ended"/> once the last finger
+        /// has been lifted off the screen.
         /// </remarks>
         public TouchControl primaryTouch { get; private set; }
 
         /// <summary>
-        /// Array of all <see cref="TouchControl">TouchControls</see> on the device.
+        /// Array of all <see cref="TouchControl"/>s on the device.
         /// </summary>
+        /// <value>All <see cref="TouchControl"/>s on the screen.</value>
         /// <remarks>
-        /// Will always contain <see cref="TouchscreenState.MaxTouches"/> entries regardless of
-        /// which touches (if any) are currently in progress.
+        /// By default, a touchscreen will allocate 10 touch controls. This can be changed
+        /// by modifying the "Touchscreen" layout itself or by derived layouts. In practice,
+        /// this means that this array will usually have a fixed length of 10 entries but
+        /// it may deviate from that.
         /// </remarks>
         public ReadOnlyArray<TouchControl> touches { get; private set; }
 
@@ -338,14 +478,17 @@ namespace UnityEngine.InputSystem
         /// The touchscreen that was added or updated last or null if there is no
         /// touchscreen connected to the system.
         /// </summary>
+        /// <value>Current touch screen.</value>
         public new static Touchscreen current { get; internal set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -353,6 +496,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -439,10 +583,14 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
-        protected new unsafe void OnEvent(InputEventPtr eventPtr)
+        /// <summary>
+        /// Called whenever a new state event is received.
+        /// </summary>
+        /// <param name="eventPtr"></param>
+        protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
-            if (eventPtr.stateFormat != TouchState.kFormat)
+            if (eventPtr.stateFormat != TouchState.Format)
             {
                 InputState.Change(this, eventPtr);
                 return;
@@ -672,12 +820,12 @@ namespace UnityEngine.InputSystem
 
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
-            OnEvent(eventPtr);
+            OnStateEvent(eventPtr);
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases
         // in one operation.
-        private static unsafe void TriggerTap(TouchControl control, ref TouchState state, InputEventPtr eventPtr)
+        private static void TriggerTap(TouchControl control, ref TouchState state, InputEventPtr eventPtr)
         {
             ////REVIEW: we're updating the entire TouchControl here; we could update just the tap state using a delta event; problem
             ////        is that the tap *down* still needs a full update on the state

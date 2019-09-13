@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Processors
         public bool invertY = true;
         public bool invertZ = true;
 
-        public override Vector3 Process(Vector3 value, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 value, InputControl control)
         {
             if (invertX)
                 value.x *= -1;

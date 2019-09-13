@@ -121,7 +121,7 @@ This will generate a C# script that makes working with the asset a lot simpler.
 
 ```CSharp
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 // IGameplayActions is an interface generated from the "gameplay" action map
 // we added (note that if you called the action map differently, the name of

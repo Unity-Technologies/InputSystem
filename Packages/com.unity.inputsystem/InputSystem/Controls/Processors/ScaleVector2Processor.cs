@@ -20,7 +20,8 @@ namespace UnityEngine.InputSystem.Processors
         [Tooltip("Scale factor to multiple the incoming Vector2's Y component by.")]
         public float y = 1;
 
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
+        /// <inheritdoc />
+        public override Vector2 Process(Vector2 value, InputControl control)
         {
             return new Vector2(value.x * x, value.y * y);
         }

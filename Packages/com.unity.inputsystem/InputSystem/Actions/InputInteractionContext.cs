@@ -18,12 +18,18 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// If the binding is not associated with an action, this is <c>null</c>.
         /// </remarks>
+        /// <seealso cref="InputBinding.action"/>
         public InputAction action => m_State.GetActionOrNull(ref m_TriggerState);
 
         /// <summary>
         /// The bound control that changed its state to trigger the binding associated
         /// with the interaction.
         /// </summary>
+        /// <remarks>
+        /// In case the binding associated with the interaction is a composite, this is
+        /// one of the controls that are part of the composite.
+        /// </remarks>
+        /// <seealso cref="InputBinding.path"/>
         public InputControl control => m_State.GetControl(ref m_TriggerState);
 
         public InputActionPhase phase => m_TriggerState.phase;

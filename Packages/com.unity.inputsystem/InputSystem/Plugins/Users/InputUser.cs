@@ -226,9 +226,6 @@ namespace UnityEngine.InputSystem.Users
         ///
         /// Note that is generally does not make sense for users to share actions. Instead, each user should
         /// receive a set of actions private to the user.
-        ///
-        /// If <see cref="settings"/> are applied with customized bindings (<see cref="InputUserSettings.customBindings"/>),
-        /// these are applied automatically to the actions.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
         /// <seealso cref="InputActionMap"/>
@@ -1798,7 +1795,8 @@ namespace UnityEngine.InputSystem.Users
 
             public int lostDeviceStartIndex;
 
-            public InputUserSettings settings;
+            ////TODO
+            //public InputUserSettings settings;
 
             public UserFlags flags;
         }

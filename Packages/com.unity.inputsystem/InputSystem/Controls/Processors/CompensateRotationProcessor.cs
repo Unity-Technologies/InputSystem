@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Processors
     [Scripting.Preserve]
     internal class CompensateRotationProcessor : InputProcessor<Quaternion>
     {
-        public override Quaternion Process(Quaternion value, InputControl<Quaternion> control)
+        public override Quaternion Process(Quaternion value, InputControl control)
         {
             if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;

@@ -153,8 +153,8 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
 
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
+            string matchedTemplate, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;

@@ -20,30 +20,69 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     // IMPORTANT: Must match with PenInputState in native.
     [StructLayout(LayoutKind.Explicit, Size = 36)]
-    internal struct PenState : IInputStateTypeInfo
+    public struct PenState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('P', 'E', 'N');
+        /// <summary>
+        /// Format code for PenState.
+        /// </summary>
+        /// <value>Returns "PEN ".</value>
+        /// <seealso cref="InputStateBlock.format"/>
+        public static FourCC Format => new FourCC('P', 'E', 'N');
 
+        /// <summary>
+        /// Current screen-space position of the pen.
+        /// </summary>
+        /// <value>Screen-space position.</value>
+        /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
 
+        /// <summary>
+        /// Screen-space motion delta.
+        /// </summary>
+        /// <value>Screen-space motion delta.</value>
+        /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
 
+        /// <summary>
+        /// The way the pen is leaned over perpendicular to the tablet surface. X goes [-1..1] left to right
+        /// (with -1 and 1 being completely flush to the surface) and Y goes [-1..1] bottom to top.
+        /// </summary>
+        /// <value>Amount pen is leaning over.</value>
+        /// <seealso cref="Pen.tilt"/>
         [InputControl(layout = "Vector2", displayName = "Tilt", usage = "Tilt")]
         [FieldOffset(16)]
         public Vector2 tilt;
 
+        /// <summary>
+        /// Pressure with which the pen is pressed against the surface. 0 is none, 1 is full pressure.
+        /// </summary>
+        /// <value>Pressure with which the pen is pressed.</value>
+        /// <remarks>
+        /// May go beyond 1 depending on pressure calibration on the system. The maximum pressure point
+        /// may be set to less than the physical maximum pressure point determined by the hardware.
+        /// </remarks>
+        /// <seealso cref="Pointer.pressure"/>
         [InputControl(layout = "Analog", usage = "Pressure", defaultState = 0.0f)]
         [FieldOffset(24)]
         public float pressure;
 
+        /// <summary>
+        /// Amount by which the pen is rotated around itself.
+        /// </summary>
+        /// <value>Rotation of the pen around itself.</value>
+        /// <seealso cref="Pen.twist"/>
         [InputControl(layout = "Axis", displayName = "Twist", usage = "Twist")]
         [FieldOffset(28)]
         public float twist;
 
+        /// <summary>
+        /// Button mask for which buttons on the pen are active.
+        /// </summary>
+        /// <value>Bitmask for buttons on the pen.</value>
         [InputControl(name = "tip", displayName = "Tip", layout = "Button", bit = (int)PenButton.Tip, usage = "PrimaryAction")]
         [InputControl(name = "press", useStateFrom = "tip", synthetic = true, usages = new string[0])]
         [InputControl(name = "eraser", displayName = "Eraser", layout = "Button", bit = (int)PenButton.Eraser)]
@@ -63,6 +102,12 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(34)]
         ushort displayIndex;
 
+        /// <summary>
+        /// Set or unset the bit in <see cref="buttons"/> for the given <paramref name="button"/>.
+        /// </summary>
+        /// <param name="button">Button whose state to set.</param>
+        /// <param name="state">Whether the button is on or off.</param>
+        /// <returns>Same PenState with an updated <see cref="buttons"/> mask.</returns>
         public PenState WithButton(PenButton button, bool state = true)
         {
             if (state)
@@ -72,10 +117,8 @@ namespace UnityEngine.InputSystem.LowLevel
             return this;
         }
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        /// <inheritdoc />
+        public FourCC format => Format;
     }
 }
 
@@ -157,7 +200,7 @@ namespace UnityEngine.InputSystem
     }
 
     /// <summary>
-    /// A pen/stylus input device.
+    /// Represents a pen/stylus input device.
     /// </summary>
     /// <remarks>
     /// Unlike mice but like touch, pens are absolute pointing devices moving across a fixed
@@ -174,12 +217,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The tip button of the pen.
         /// </summary>
+        /// <value>Control representing the tip button.</value>
         /// <seealso cref="PenButton.Tip"/>
         public ButtonControl tip { get; private set; }
 
         /// <summary>
         /// The eraser button of the pen, i.e. the button on the end opposite to the tip.
         /// </summary>
+        /// <value>Control representing the eraser button.</value>
         /// <remarks>
         /// If the pen does not have an eraser button, this control will still be present
         /// but will not trigger.
@@ -190,6 +235,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The button on the side of the pen barrel and located closer to the tip of the pen.
         /// </summary>
+        /// <value>Control representing the first side button.</value>
         /// <remarks>
         /// If the pen does not have barrel buttons, this control will still be present
         /// but will not trigger.
@@ -200,6 +246,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The button on the side of the pen barrel and located closer to the eraser end of the pen.
         /// </summary>
+        /// <value>Control representing the second side button.</value>
         /// <remarks>
         /// If the pen does not have barrel buttons, this control will still be present
         /// but will not trigger.
@@ -207,8 +254,26 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PenButton.BarrelSecond"/>
         public ButtonControl secondBarrelButton { get; private set; }
 
+        /// <summary>
+        /// Third button the side of the pen barrel.
+        /// </summary>
+        /// <value>Control representing the third side button.</value>
+        /// <remarks>
+        /// If the pen does not have a third barrel buttons, this control will still be present
+        /// but will not trigger.
+        /// </remarks>
+        /// <seealso cref="PenButton.BarrelThird"/>
         public ButtonControl thirdBarrelButton { get; private set; }
 
+        /// <summary>
+        /// Fourth button the side of the pen barrel.
+        /// </summary>
+        /// <value>Control representing the fourth side button.</value>
+        /// <remarks>
+        /// If the pen does not have a fourth barrel buttons, this control will still be present
+        /// but will not trigger.
+        /// </remarks>
+        /// <seealso cref="PenButton.BarrelFourth"/>
         public ButtonControl fourthBarrelButton { get; private set; }
 
         /// <summary>
@@ -222,12 +287,22 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="PenButton.InRange"/>
         public ButtonControl inRange { get; private set; }
 
+        /// <summary>
+        /// Orientation of the pen relative to the tablet surface, i.e. the amount by which it is leaning
+        /// over along the X and Y axis.
+        /// </summary>
+        /// <value>Control presenting the amount the pen is leaning over.</value>
+        /// <remarks>
+        /// X axis goes from [-1..1] left to right with -1 and 1 meaning the pen is flush with the tablet surface. Y axis
+        /// goes from [-1..1] bottom to top.
+        /// </remarks>
         public Vector2Control tilt { get; private set; }
 
         /// <summary>
         /// Rotation of the pointer around its own axis. 0 means the pointer is facing away from the user (12 'o clock position)
         /// and ~1 means the pointer has been rotated clockwise almost one full rotation.
         /// </summary>
+        /// <value>Control representing the twist of the pen around itself.</value>
         /// <remarks>
         /// Twist is generally only supported by pens and even among pens, twist support is rare. An example product that
         /// supports twist is the Wacom Art Pen.
@@ -243,6 +318,11 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public new static Pen current { get; internal set; }
 
+        /// <summary>
+        /// Return the given pen button.
+        /// </summary>
+        /// <param name="button">Pen button to return.</param>
+        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
         public ButtonControl this[PenButton button]
         {
             get
@@ -262,12 +342,22 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Make this the last used pen, i.e. <see cref="current"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is called automatically by the system when a pen is added or receives
+        /// input.
+        /// </remarks>
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <summary>
+        /// Called when the pen is removed from the system.
+        /// </summary>
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -275,6 +365,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             tip = GetChildControl<ButtonControl>("tip");

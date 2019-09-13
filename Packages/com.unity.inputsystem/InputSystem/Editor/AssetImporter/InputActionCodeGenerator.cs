@@ -93,16 +93,16 @@ namespace UnityEngine.InputSystem.Editor
 
             var maps = asset.actionMaps;
             var schemes = asset.controlSchemes;
-            foreach (var set in maps)
+            foreach (var map in maps)
             {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                writer.WriteLine($"// {map.name}");
+                writer.WriteLine($"m_{mapName} = asset.FindActionMap(\"{map.name}\", throwIfNotFound: true);");
 
-                foreach (var action in set.actions)
+                foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"m_{setName}_{actionName} = m_{setName}.GetAction(\"{action.name}\");");
+                    writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
                 }
             }
             writer.EndBlock();
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.BeginBlock();
                 writer.WriteLine("get");
                 writer.BeginBlock();
-                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.GetControlSchemeIndex(\"{scheme.name}\");");
+                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.FindControlSchemeIndex(\"{scheme.name}\");");
                 writer.WriteLine($"return asset.controlSchemes[m_{identifier}SchemeIndex];");
                 writer.EndBlock();
                 writer.EndBlock();

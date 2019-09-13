@@ -5,22 +5,119 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// Extensions to set up <see cref="InputAction">InputActions</see> and <see cref="InputActionMap">
-    /// InputActionMaps</see>.
+    /// Methods to change the setup of <see cref="InputAction"/>, <see cref="InputActionMap"/>,
+    /// and <see cref="InputActionAsset"/> objects.
     /// </summary>
+    /// <remarks>
+    /// Unlike the methods in <see cref="InputActionRebindingExtensions"/>, the methods here are
+    /// generally destructive, i.e. they will rearrange the data for actions.
+    /// </remarks>
     public static class InputActionSetupExtensions
     {
+        /// <summary>
+        /// Create an action map with the given name and add it to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the action map to</param>
+        /// <param name="name">Name to assign to the </param>
+        /// <returns>The newly added action map.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> or
+        /// <exception cref="InvalidOperationException">An action map with the given <paramref name="name"/>
+        /// already exists in <paramref name="asset"/>.</exception>
+        /// <paramref name="name"/> is <c>null</c> or empty.</exception>
         public static InputActionMap AddActionMap(this InputActionAsset asset, string name)
         {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
+            if (asset.FindActionMap(name) != null)
+                throw new InvalidOperationException(
+                    $"An action map called '{name}' already exists in the asset");
 
             var map = new InputActionMap(name);
             map.GenerateId();
             asset.AddActionMap(map);
             return map;
+        }
+
+        /// <summary>
+        /// Add an action map to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the map to.</param>
+        /// <param name="map">A named action map.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="map"/> or <paramref name="asset"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> has no name or asset already contains a
+        /// map with the same name.</exception>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void AddActionMap(this InputActionAsset asset, InputActionMap map)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
+            if (string.IsNullOrEmpty(map.name))
+                throw new InvalidOperationException("Maps added to an input action asset must be named");
+            if (map.asset != null)
+                throw new InvalidOperationException(
+                    $"Cannot add map '{map}' to asset '{asset}' as it has already been added to asset '{map.asset}'");
+            ////REVIEW: some of the rules here seem stupid; just replace?
+            if (asset.FindActionMap(map.name) != null)
+                throw new InvalidOperationException(
+                    $"An action map called '{map.name}' already exists in the asset");
+
+            ArrayHelpers.Append(ref asset.m_ActionMaps, map);
+            map.m_Asset = asset;
+        }
+
+        /// <summary>
+        /// Remove the given action map from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the action map to.</param>
+        /// <param name="map">An action map. If the given map is not part of the asset, the method
+        /// does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="map"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> is currently enabled (see <see
+        /// cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void RemoveActionMap(this InputActionAsset asset, InputActionMap map)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (map == null)
+                throw new ArgumentNullException(nameof(map));
+            if (map.enabled)
+                throw new InvalidOperationException("Cannot remove an action map from the asset while it is enabled");
+
+            // Ignore if not part of this asset.
+            if (map.m_Asset != asset)
+                return;
+
+            ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
+            map.m_Asset = null;
+        }
+
+        /// <summary>
+        /// Remove the action map with the given name or ID from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to remove the action map from.</param>
+        /// <param name="nameOrId">The name or ID (see <see cref="InputActionMap.id"/>) of a map in the
+        /// asset. Note that lookup is case-insensitive. If no map with the given name or ID is found,
+        /// the method does nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> or <paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">The map referenced by <paramref name="nameOrId"/> is currently enabled
+        /// (see <see cref="InputActionMap.enabled"/>).</exception>
+        /// <seealso cref="RemoveActionMap(InputActionAsset,string)"/>
+        /// <seealso cref="InputActionAsset.actionMaps"/>
+        public static void RemoveActionMap(this InputActionAsset asset, string nameOrId)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (nameOrId == null)
+                throw new ArgumentNullException(nameof(nameOrId));
+            var map = asset.FindActionMap(nameOrId);
+            if (map != null)
+                asset.RemoveActionMap(map);
         }
 
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
@@ -33,7 +130,7 @@ namespace UnityEngine.InputSystem
             if (map.enabled)
                 throw new InvalidOperationException(
                     $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
-            if (map.TryGetAction(name) != null)
+            if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
 
@@ -68,12 +165,22 @@ namespace UnityEngine.InputSystem
             return action;
         }
 
-        ////REVIEW: these multiple string args are so easy to mess up; put into syntax instead?
-        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null, string processors = null, string groups = null)
+        /// <summary>
+        /// Add a new binding to the given action.
+        /// </summary>
+        /// <param name="action">Action to add the binding to. If the action is part of an <see cref="InputActionMap"/>,
+        /// the newly added binding will be visible on <see cref="InputActionMap.bindings"/>.</param>
+        /// <param name="path">Binding path string. See <see cref="InputBinding.path"/> for details.</param>
+        /// <param name="interactions">Optional list of interactions to apply to the binding. See <see
+        /// cref="InputBinding.interactions"/> for details.</param>
+        /// <param name="processors">Optional list of processors to apply to the binding. See <see
+        /// cref="InputBinding.processors"/> for details.</param>
+        /// <param name="groups">Optional list of binding groups that should be assigned to the binding. See
+        /// <see cref="InputBinding.groups"/> for details.</param>
+        /// <returns>Fluent-style syntax to further configure the binding.</returns>
+        public static BindingSyntax AddBinding(this InputAction action, string path, string interactions = null,
+            string processors = null, string groups = null)
         {
-            if (path == null)
-                throw new ArgumentException("Binding path cannot be null", nameof(path));
-
             return AddBinding(action, new InputBinding
             {
                 path = path,
@@ -87,10 +194,8 @@ namespace UnityEngine.InputSystem
         /// Add a binding that references the given <paramref name="control"/> and triggers
         /// the given <seealso cref="action"/>.
         /// </summary>
-        /// <param name="action">Action to trigger. Also determines where to add the binding. If the action is not part
-        /// of an <see cref="InputActionMap">action map</see>, the binding is added directly to <paramref name="action"/>.
-        /// If it is part of a map, the binding is added to the action map (<see cref="InputAction.actionMap"/>).</param>
-        /// <param name="control">Control to binding to. The full <see cref="InputControl.path"/> of the control will
+        /// <param name="action">Action to trigger.</param>
+        /// <param name="control">Control to bind to. The full <see cref="InputControl.path"/> of the control will
         /// be used in the resulting <see cref="InputBinding">binding</see>.</param>
         /// <returns>Syntax to configure the binding further.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is null or <paramref name="control"/> is null.</exception>
@@ -99,7 +204,6 @@ namespace UnityEngine.InputSystem
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
-
             return AddBinding(action, control.path);
         }
 
@@ -112,26 +216,34 @@ namespace UnityEngine.InputSystem
         /// Returns a fluent-style syntax structure that allows performing additional modifications
         /// based on the new binding.
         /// </returns>
+        /// <exception cref="InvalidOperationException"><paramref name="action"/> is enabled or is part
+        /// of an <see cref="InputActionMap"/> that is enabled.</exception>
         /// <remarks>
         /// This works both with actions that are part of an action set as well as with actions that aren't.
         ///
         /// Note that actions must be disabled while altering their binding sets. Also, if the action belongs
         /// to a set, all actions in the set must be disabled.
+        ///
+        /// <example>
+        /// <code>
+        /// fireAction.AddBinding()
+        ///     .WithPath("&lt;Gamepad&gt;/buttonSouth")
+        ///     .WithGroup("Gamepad");
+        /// </code>
+        /// </example>
         /// </remarks>
-        public static BindingSyntax AddBinding(this InputAction action, InputBinding binding)
+        public static BindingSyntax AddBinding(this InputAction action, InputBinding binding = default)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
             if (binding.path == null)
                 throw new ArgumentException("Binding path cannot be null", nameof(binding));
-            action.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: should this reference actions by ID?
             Debug.Assert(action.m_Name != null || action.isSingletonAction);
             binding.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, action, bindingIndex);
         }
@@ -180,7 +292,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(actionMap));
             if (binding.path == null)
                 throw new ArgumentException("Binding path cannot be null", nameof(binding));
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new BindingSyntax(actionMap, null, bindingIndex);
@@ -194,7 +305,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException("Composite name cannot be null or empty", nameof(composite));
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
 
             ////REVIEW: use 'name' instead of 'path' field here?
             var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
@@ -260,7 +370,6 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(action));
 
             var actionMap = action.GetOrCreateActionMap();
-            actionMap.ThrowIfModifyingBindingsIsNotAllowed();
             var bindingIndex = actionMap.FindBinding(match);
             if (bindingIndex == -1)
                 throw new ArgumentException($"Cannot find binding matching '{match}' in '{action}'", nameof(match));
@@ -269,7 +378,6 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: update binding mask if necessary
-        ////REVIEW: should we allow renaming singleton actions to empty/null names?
         /// <summary>
         /// Rename an existing action.
         /// </summary>
@@ -280,6 +388,9 @@ namespace UnityEngine.InputSystem
         /// null or empty.</exception>
         /// <exception cref="InvalidOperationException"><see cref="InputAction.actionMap"/> of <paramref name="action"/>
         /// already contains an action called <paramref name="newName"/>.</exception>
+        /// <remarks>
+        /// Renaming an action will also update the bindings that refer to the action.
+        /// </remarks>
         public static void Rename(this InputAction action, string newName)
         {
             if (action == null)
@@ -292,11 +403,43 @@ namespace UnityEngine.InputSystem
 
             // Make sure name isn't already taken in map.
             var actionMap = action.actionMap;
-            if (actionMap?.TryGetAction(newName) != null)
+            if (actionMap?.FindAction(newName) != null)
                 throw new InvalidOperationException(
                     $"Cannot rename '{action}' to '{newName}' in map '{actionMap}' as the map already contains an action with that name");
 
+            var oldName = action.m_Name;
             action.m_Name = newName;
+
+            // Update bindings.
+            var bindings = action.GetOrCreateActionMap().m_Bindings;
+            var bindingCount = bindings.LengthSafe();
+            for (var i = 0; i < bindingCount; ++i)
+                if (string.Compare(bindings[i].action, oldName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    bindings[i].action = newName;
+        }
+
+        /// <summary>
+        /// Add a new control scheme to the asset.
+        /// </summary>
+        /// <param name="asset">Asset to add the control scheme to.</param>
+        /// <param name="controlScheme">Control scheme to add.</param>
+        /// <exception cref="ArgumentException"><paramref name="controlScheme"/> has no name.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c>.</exception>
+        /// <exception cref="InvalidOperationException">A control scheme with the same name as <paramref name="controlScheme"/>
+        /// already exists in the asset.</exception>
+        /// <remarks>
+        /// </remarks>
+        public static void AddControlScheme(this InputActionAsset asset, InputControlScheme controlScheme)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (string.IsNullOrEmpty(controlScheme.name))
+                throw new ArgumentException("Cannot add control scheme without name to asset " + asset.name, nameof(controlScheme));
+            if (asset.FindControlScheme(controlScheme.name) != null)
+                throw new InvalidOperationException(
+                    $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
+
+            ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
         }
 
         /// <summary>
@@ -307,8 +450,8 @@ namespace UnityEngine.InputSystem
         /// asset. Also used as default name of <see cref="InputControlScheme.bindingGroup">binding group</see> associated
         /// with the control scheme.</param>
         /// <returns>Syntax to allow providing additional configuration for the newly added control scheme.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null or <paramref name="name"/>
-        /// is null or empty.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="name"/>
+        /// is <c>null</c> or empty.</exception>
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
             if (asset == null)
@@ -320,6 +463,28 @@ namespace UnityEngine.InputSystem
             asset.AddControlScheme(new InputControlScheme(name));
 
             return new ControlSchemeSyntax(asset, index);
+        }
+
+        /// <summary>
+        /// Remove the control scheme with the given name from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to remove the control scheme from.</param>
+        /// <param name="name">Name of the control scheme. Matching is case-insensitive.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is null -or- <paramref name="name"/>
+        /// is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// If no control scheme with the given name can be found, the method does nothing.
+        /// </remarks>
+        public static void RemoveControlScheme(this InputActionAsset asset, string name)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
+
+            var index = asset.FindControlSchemeIndex(name);
+            if (index != -1)
+                ArrayHelpers.EraseAt(ref asset.m_ControlSchemes, index);
         }
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
@@ -351,6 +516,7 @@ namespace UnityEngine.InputSystem
         /// Syntax to configure a binding added to an <see cref="InputAction"/> or an
         /// <see cref="InputActionMap"/>.
         /// </summary>
+        /// <seealso cref="AddBinding(InputAction,InputBinding)"/>
         public struct BindingSyntax
         {
             private readonly InputActionMap m_ActionMap;
@@ -364,17 +530,30 @@ namespace UnityEngine.InputSystem
                 m_BindingIndex = bindingIndex;
             }
 
+            /// <summary>
+            /// Set the <see cref="InputBinding.name"/> of the binding.
+            /// </summary>
+            /// <param name="name">Name for the binding.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <seealso cref="InputBinding.name"/>
+            /// <seealso cref="AddBinding"/>
             public BindingSyntax WithName(string name)
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].name = name;
-                // No need to clear cached data.
+                m_ActionMap.ClearPerActionCachedBindingData();
                 return this;
             }
 
+            /// <summary>
+            /// Set the <see cref="InputBinding.path"/> of the binding.
+            /// </summary>
+            /// <param name="path">Path for the binding.</param>
+            /// <returns>The same binding syntax for further configuration.</returns>
+            /// <seealso cref="InputBinding.path"/>
             public BindingSyntax WithPath(string path)
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].path = path;
-                // No need to clear cached data.
+                m_ActionMap.ClearPerActionCachedBindingData();
                 return this;
             }
 

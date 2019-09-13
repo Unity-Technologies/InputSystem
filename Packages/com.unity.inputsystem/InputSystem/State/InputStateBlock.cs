@@ -12,17 +12,20 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow bitOffset to be non-zero for byte-aligned control as long as result is byte-aligned
 
+////REVIEW: The combination of byte and bit offset instead of just a single bit offset has turned out
+////        to be plenty awkward to use in practice; should be replace it?
+
 ////REVIEW: AutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
 ////        controls for which a more elegant and robust mechanism can surely be devised
 
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Information about a memory region storing state.
+    /// Information about a memory region storing input state.
     /// </summary>
     /// <remarks>
-    /// Input state is kept in raw memory blocks. All state is centrally managed by InputManager; controls
-    /// cannot keep their own independent state.
+    /// Input state is kept in raw memory blocks. All state is centrally managed by the input system;
+    /// controls cannot keep their own independent state.
     ///
     /// Each state block is tagged with a format code indicating the storage format used for the
     /// memory block. This can either be one out of a set of primitive formats (such as "INT") or a custom
@@ -36,23 +39,85 @@ namespace UnityEngine.InputSystem.LowLevel
     ///
     /// Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits.
     /// </remarks>
+    /// <seealso cref="InputControl.stateBlock"/>
     public unsafe struct InputStateBlock
     {
         public const uint InvalidOffset = 0xffffffff;
         public const uint AutomaticOffset = 0xfffffffe;
 
-        // Primitive state type codes.
+        /// <summary>
+        /// Format code for a variable-width bitfield representing an unsigned value,
+        /// i.e. all bits including the highest one represent the magnitude of the value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatBit = new FourCC('B', 'I', 'T');
+
+        /// <summary>
+        /// Format code for a variable-width bitfield representing a signed value, i.e. the
+        /// highest bit is used as a sign bit (0=unsigned, 1=signed) and the remaining bits represent
+        /// the magnitude of the value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatSBit = new FourCC('S', 'B', 'I', 'T');
+
+        /// <summary>
+        /// Format code for a 32-bit signed integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatInt = new FourCC('I', 'N', 'T');
+
+        /// <summary>
+        /// Format code for a 32-bit unsigned integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatUInt = new FourCC('U', 'I', 'N', 'T');
+
+        /// <summary>
+        /// Format code for a 16-bit signed integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatShort = new FourCC('S', 'H', 'R', 'T');
+
+        /// <summary>
+        /// Format code for a 16-bit unsigned integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatUShort = new FourCC('U', 'S', 'H', 'T');
+
+        /// <summary>
+        /// Format code for an 8-bit unsigned integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatByte = new FourCC('B', 'Y', 'T', 'E');
+
+        /// <summary>
+        /// Format code for an 8-bit signed integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatSByte = new FourCC('S', 'B', 'Y', 'T');
+
+        /// <summary>
+        /// Format code for a 64-bit signed integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatLong = new FourCC('L', 'N', 'G');
+
+        /// <summary>
+        /// Format code for a 64-bit unsigned integer value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatULong = new FourCC('U', 'L', 'N', 'G');
+
+        /// <summary>
+        /// Format code for a 32-bit floating-point value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatFloat = new FourCC('F', 'L', 'T');
+
+        /// <summary>
+        /// Format code for a 64-bit floating-point value.
+        /// </summary>
+        /// <seealso cref="format"/>
         public static readonly FourCC FormatDouble = new FourCC('D', 'B', 'L');
 
         ////REVIEW: are these really useful?

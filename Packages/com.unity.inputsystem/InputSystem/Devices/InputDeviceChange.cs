@@ -31,7 +31,8 @@ namespace UnityEngine.InputSystem
     public enum InputDeviceChange
     {
         /// <summary>
-        /// A new device was added to the system.
+        /// A new device was added to the system. This is triggered <em>after</em> the device
+        /// has already been added, i.e. it already appears on <see cref="InputSystem.devices"/>.
         /// </summary>
         /// <seealso cref="InputSystem.AddDevice(string,string,string)"/>
         /// <seealso cref="InputSystem.AddDevice{TDevice}(string)"/>
@@ -39,7 +40,8 @@ namespace UnityEngine.InputSystem
         Added,
 
         /// <summary>
-        /// An existing device was removed from the system.
+        /// An existing device was removed from the system. This is triggered <em>after</em> the
+        /// device has already been removed, i.e. it already has been cleared from <see cref="InputSystem.devices"/>.
         /// </summary>
         /// <remarks>
         /// Other than when a device is removed programmatically, this happens when a device

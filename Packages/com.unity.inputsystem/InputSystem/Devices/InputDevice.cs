@@ -40,8 +40,8 @@ namespace UnityEngine.InputSystem
     /// cref="InputSystem.AddDevice{TDevice}(string)"/>.
     ///
     /// <example>
-    /// Add a "synthetic" gamepad that isn't actually backed by hardware:
     /// <code>
+    /// // Add a "synthetic" gamepad that isn't actually backed by hardware.
     /// var gamepad = InputSystem.AddDevice&lt;Gamepad&gt;();
     /// </code>
     /// </example>
@@ -53,7 +53,6 @@ namespace UnityEngine.InputSystem
     /// as a new "layout".
     ///
     /// <example>
-    /// Creating a custom type of input device.
     /// <code>
     /// // InputControlLayoutAttribute attribute is only necessary if you want
     /// // to override default behavior that occurs when registering your device
@@ -101,7 +100,7 @@ namespace UnityEngine.InputSystem
     ///     }
     /// }
     ///
-    /// // A "state struct" describes the memory format used a device. Each device can
+    /// // A "state struct" describes the memory format used by a device. Each device can
     /// // receive and store memory in its custom format. InputControls are then connected
     /// // the individual pieces of memory and read out values from them.
     /// [StructLayout(LayoutKind.Explicit, Size = 32)]
@@ -134,6 +133,11 @@ namespace UnityEngine.InputSystem
     /// Devices can have usages like any other control (<see cref="InputControl.usages"/>). Unlike other controls,
     /// however, usages of InputDevices are allowed to be changed on the fly without requiring a change to the
     /// device layout (see <see cref="InputSystem.SetDeviceUsage(InputDevice,string)"/>).
+    ///
+    /// For a more complete example of how to implement custom input devices, check out the "Custom Device"
+    /// sample which you can install from the Unity package manager.
+    ///
+    /// And, as always, you can also find more information in the <a href="../manual/Devices.html">manual</a>.
     /// </remarks>
     /// <seealso cref="InputControl"/>
     /// <seealso cref="Mouse"/>
@@ -144,7 +148,7 @@ namespace UnityEngine.InputSystem
     public class InputDevice : InputControl
     {
         /// <summary>
-        /// Value of an invalid <see cref="id"/>.
+        /// Value of an invalid <see cref="deviceId"/>.
         /// </summary>
         /// <remarks>
         /// The input system will not assigned this ID to any device.
@@ -160,10 +164,17 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The description of a device is unchanging over its lifetime and does not
         /// comprise data about a device's configuration (which is considered mutable).
+        ///
+        /// In most cases, the description for a device is supplied by the Unity runtime.
+        /// This it the case for all <see cref="native"/> input devices. However, it is
+        /// also possible to inject new devices in the form of device descriptions into
+        /// the system using <see cref="InputSystem.AddDevice(InputDeviceDescription)"/>.
+        ///
+        /// The description of a device is what is matched by an <see cref="InputDeviceMatcher"/>
+        /// to find the <see cref="InputControl.layout"/> to use for a device.
         /// </remarks>
         public InputDeviceDescription description => m_Description;
 
-        ////REVIEW: this might be useful even at the control level
         /// <summary>
         /// Whether the device is currently enabled (i.e. sends and receives events).
         /// </summary>
@@ -234,15 +245,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the device has been added to the system.
         /// </summary>
+        /// <value>If true, the device is currently among the devices in <see cref="InputSystem.devices"/>.</value>
         /// <remarks>
-        /// Input devices can be constructed manually through <see cref="InputDeviceBuilder"/>. Also,
-        /// they can be removed through <see cref="InputSystem.RemoveDevice"/>. This property reflects
-        /// whether the device is currently added to the system.
-        ///
-        /// Note that devices in <see cref="InputSystem.disconnectedDevices"/> will all have this
-        /// property return false.
+        /// Devices may be removed at any time. Either when their hardware is unplugged or when they
+        /// are manually removed through <see cref="InputSystem.RemoveDevice"/> or by being excluded
+        /// through <see cref="InputSettings.supportedDevices"/>. When a device is removed, its instance,
+        /// however, will not disappear. This property can be used to check whether the device is part
+        /// of the current set of active devices.
         /// </remarks>
-        /// <seealso cref="InputSystem.AddDevice(InputDevice)"/>
         /// <seealso cref="InputSystem.devices"/>
         public bool added => m_DeviceIndex != kInvalidDeviceIndex;
 
@@ -250,6 +260,7 @@ namespace UnityEngine.InputSystem
         /// Whether the device is mirrored from a remote input system and not actually present
         /// as a "real" device in the local system.
         /// </summary>
+        /// <value>Whether the device mirrors a device from a remotely connected input system.</value>
         /// <seealso cref="InputSystem.remoting"/>
         /// <seealso cref="InputRemoting"/>
         public bool remote => (m_DeviceFlags & DeviceFlags.Remote) == DeviceFlags.Remote;
@@ -257,6 +268,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the device comes from the <see cref="IInputRuntime">runtime</see>
         /// </summary>
+        /// <value>Whether the device has been discovered by the Unity runtime.</value>
         /// <remarks>
         /// Devices can be discovered when <see cref="IInputRuntime.onDeviceDiscovered">reported</see>
         /// by the runtime or they can be added manually through the various <see cref="InputSystem.AddDevice(InputDevice)">
@@ -296,7 +308,7 @@ namespace UnityEngine.InputSystem
         /// IDs are assigned by the input runtime.
         /// </remarks>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
-        public int id => m_Id;
+        public int deviceId => m_DeviceId;
 
         /// <summary>
         /// Timestamp of last state event used to update the device.
@@ -328,8 +340,10 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: This violates the constraint of controls being required to not have reference types as value types.
+        /// <inheritdoc/>
         public override Type valueType => typeof(byte[]);
 
+        /// <inheritdoc/>
         public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
 
         /// <summary>
@@ -347,7 +361,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputDevice()
         {
-            m_Id = InvalidDeviceId;
+            m_DeviceId = InvalidDeviceId;
             m_ParticipantId = kLocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
         }
@@ -355,11 +369,13 @@ namespace UnityEngine.InputSystem
         ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
         ////        at the same time, seems questionable.
 
+        /// <inheritdoc/>
         public override unsafe object ReadValueFromBufferAsObject(void* buffer, int bufferSize)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc/>
         public override unsafe object ReadValueFromStateAsObject(void* statePtr)
         {
             if (m_DeviceIndex == kInvalidDeviceIndex)
@@ -376,6 +392,7 @@ namespace UnityEngine.InputSystem
             return array;
         }
 
+        /// <inheritdoc/>
         public override unsafe void ReadValueFromStateIntoBuffer(void* statePtr, void* bufferPtr, int bufferSize)
         {
             if (statePtr == null)
@@ -389,6 +406,7 @@ namespace UnityEngine.InputSystem
             UnsafeUtility.MemCpy(bufferPtr, adjustedStatePtr, m_StateBlock.alignedSizeInBytes);
         }
 
+        /// <inheritdoc/>
         public override unsafe bool CompareValue(void* firstStatePtr, void* secondStatePtr)
         {
             if (firstStatePtr == null)
@@ -424,23 +442,55 @@ namespace UnityEngine.InputSystem
         /// Make this the current device of its type.
         /// </summary>
         /// <remarks>
-        /// Use this to set static properties that give fast access to the latest device used of a given
-        /// type (<see cref="Gamepad.current"/> or <see cref="XRController.leftHand"/> and <see cref="XRController.rightHand"/>).
+        /// This method is called automatically by the input system when a device is
+        /// added or when input is received on it. Many types of devices have <c>.current</c>
+        /// getters that allow querying the last used device of a specific type directly (for
+        /// example, see <see cref="Gamepad.current"/>).
         ///
-        /// This functionality is somewhat like a 'pwd' for the semantic paths but one where there can
-        /// be multiple current working directories, one for each type.
+        /// There is one special case, however, related to noise. A device that has noisy controls
+        /// (i.e. controls for which <see cref="InputControl.noisy"/> is true) may receive input events
+        /// that contain no meaningful user interaction but are simply just noise from the device. A
+        /// good example of this is the PS4 gamepad which has a built-in gyro and may thus constantly
+        /// feed events into the input system even if not being actually in use. If, for example, an
+        /// Xbox gamepad and PS4 gamepad are both connected to a PC and the user is playing with the
+        /// Xbox gamepad, the PS4 gamepad would still constantly make itself <see cref="Gamepad.current"/>
+        /// by simply flooding the system with events.
         ///
-        /// A device will be made current by the system initially when it is created and subsequently whenever
-        /// it receives an event.
+        /// By enabling <see cref="InputSettings.filterNoiseOnCurrent"/> (disabled by default),
+        /// noise on <c>.current</c> getters will be filtered out and a device will only see <c>MakeCurrent</c>
+        /// getting called if there input was detected on non-noisy controls.
         /// </remarks>
+        /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
+        /// <seealso cref="Pointer.current"/>
+        /// <seealso cref="Gamepad.current"/>
+        /// <seealso cref="Mouse.current"/>
+        /// <seealso cref="Pen.current"/>
         public virtual void MakeCurrent()
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device is added to <see cref="InputSystem.devices"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is called <em>after</em> the device has already been added.
+        /// </remarks>
+        /// <seealso cref="InputSystem.devices"/>
+        /// <seealso cref="InputDeviceChange.Added"/>
+        /// <seealso cref="OnRemoved"/>
         protected virtual void OnAdded()
         {
         }
 
+        /// <summary>
+        /// Called by the system when the device is removed from <see cref="InputSystem.devices"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is called <em>after</em> the device has already been removed.
+        /// </remarks>
+        /// <seealso cref="InputSystem.devices"/>
+        /// <seealso cref="InputDeviceChange.Removed"/>
+        /// <seealso cref="OnRemoved"/>
         protected virtual void OnRemoved()
         {
         }
@@ -476,7 +526,7 @@ namespace UnityEngine.InputSystem
                     return result.Value;
             }
 
-            return InputRuntime.s_Instance.DeviceCommand(id, ref command);
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
         }
 
         [Flags]
@@ -492,7 +542,7 @@ namespace UnityEngine.InputSystem
         }
 
         internal DeviceFlags m_DeviceFlags;
-        internal int m_Id;
+        internal int m_DeviceId;
         internal int m_ParticipantId;
         internal int m_DeviceIndex; // Index in InputManager.m_Devices.
         internal InputDeviceDescription m_Description;

@@ -1426,7 +1426,7 @@ namespace UnityEngine.InputSystem.Editor
                                 return CheckChildrenFor(Match.Success, item) ? Match.Success : Match.Failure;
 
                             var deviceLayout = InputControlPath.TryGetDeviceLayout(bindingItem.path);
-                            return deviceLayout == text
+                            return string.Equals(deviceLayout, text, StringComparison.InvariantCultureIgnoreCase)
                                 || InputControlLayout.s_Layouts.IsBasedOn(new InternedString(deviceLayout), new InternedString(text))
                                 ? Match.Success
                                 : Match.Failure;

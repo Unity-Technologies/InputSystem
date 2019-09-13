@@ -74,15 +74,16 @@ namespace UnityEngine.InputSystem.HID.Editor
             m_DeviceDescription = deviceDescription;
             m_Initialized = true;
 
-            // Set up tree view for HID desctiptor.
-            var hidDescriptor = HID.ReadHIDDeviceDescriptor(deviceId, ref m_DeviceDescription, InputRuntime.s_Instance);
+            // Set up tree view for HID descriptor.
+            var hidDescriptor = HID.ReadHIDDeviceDescriptor(ref m_DeviceDescription,
+                (ref InputDeviceCommand command) => InputRuntime.s_Instance.DeviceCommand(m_DeviceId, ref command));
             if (m_TreeViewState == null)
                 m_TreeViewState = new TreeViewState();
             m_TreeView = new HIDDescriptorTreeView(m_TreeViewState, hidDescriptor);
             m_TreeView.SetExpanded(1, true);
 
-            m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", deviceDescription.manufacturer,
-                deviceDescription.product));
+            m_Label = new GUIContent(
+                $"HID Descriptor for '{deviceDescription.manufacturer} {deviceDescription.product}'");
         }
 
         [NonSerialized] private bool m_Initialized;

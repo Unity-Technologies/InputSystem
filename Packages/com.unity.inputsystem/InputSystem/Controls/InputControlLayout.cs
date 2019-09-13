@@ -33,16 +33,32 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
-    /// Delegate used by <see cref="InputSystem.onFindLayoutForDevice"/> and <see cref="InputSystem.onFindControlLayoutForDevice"/>.
+    /// Delegate used by <see cref="InputSystem.onFindLayoutForDevice"/>.
     /// </summary>
-    public delegate string InputDeviceFindControlLayoutDelegate(int deviceId, ref InputDeviceDescription description, string matchedLayout,
-        IInputRuntime runtime);
+    /// <param name="description">The device description supplied by the runtime or through <see
+    /// cref="InputSystem.AddDevice(InputDeviceDescription)"/>. This is passed by reference instead of
+    /// by value to allow the callback to fill out fields such as <see cref="InputDeviceDescription.capabilities"/>
+    /// on the fly based on information queried from external APIs or from the runtime.</param>
+    /// <param name="matchedLayout">Name of the layout that has been selected for the device or <c>null</c> if
+    /// no matching layout could be found. Matching is determined from the <see cref="InputDeviceMatcher"/>s for
+    /// layouts registered in the system.</param>
+    /// <param name="executeDeviceCommand">A delegate which can be invoked to execute <see cref="InputDeviceCommand"/>s
+    /// on the device.</param>
+    /// <returns>  Return <c>null</c> or an empty string to indicate that </returns>
+    /// <remarks>
+    /// </remarks>
+    /// <seealso cref="InputSystem.onFindLayoutForDevice"/>
+    /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
+    /// <seealso cref="InputControlLayout"/>
+    public delegate string InputDeviceFindControlLayoutDelegate(ref InputDeviceDescription description,
+        string matchedLayout, InputDeviceExecuteCommandDelegate executeDeviceCommand);
 
     /// <summary>
-    /// A control layout specifies the composition of an input control.
+    /// A control layout specifies the composition of an <see cref="InputControl"/> or
+    /// <see cref="InputDevice"/>.
     /// </summary>
     /// <remarks>
-    /// Control layouts can be created in three ways:
+    /// Control layouts can be created in three possible ways:
     ///
     /// <list type="number">
     /// <item><description>Loaded from JSON.</description></item>
@@ -61,6 +77,8 @@ namespace UnityEngine.InputSystem.Layouts
     ///
     /// InputControlLayout objects are considered temporaries. Except in the
     /// editor, they are not kept around beyond device creation.
+    ///
+    /// See the <a href="../manual/Layouts.html">manual</a> for more details on control layouts.
     /// </remarks>
     public class InputControlLayout
     {
@@ -74,66 +92,69 @@ namespace UnityEngine.InputSystem.Layouts
         /// </summary>
         public struct ControlItem
         {
-            [Flags]
-            private enum Flags
-            {
-                IsModifyingChildControlByPath = 1 << 0,
-                IsNoisy = 1 << 1,
-                IsSynthetic = 1 << 2,
-                IsFirstDefinedInThisLayout = 1 << 3,
-            }
-
             /// <summary>
-            /// Name of the control.
+            /// Name of the control. Cannot be empty or <c>null</c>.
             /// </summary>
+            /// <value>Name of the control.</value>
             /// <remarks>
-            /// This may also be a path. This can be used to reach
-            /// inside another layout and modify properties of a control inside
-            /// of it. An example for this is adding a "leftStick" control using the
-            /// Stick layout and then adding two control layouts that refer to
-            /// "leftStick/x" and "leftStick/y" respectively to modify the state
-            /// format used by the stick.
+            /// This may also be a path of the form <c>"parentName/childName..."</c>.
+            /// This can be used to reach inside another layout and modify properties of
+            /// a control inside of it. An example for this is adding a "leftStick" control
+            /// using the Stick layout and then adding two control layouts that refer to
+            /// "leftStick/x" and "leftStick/y" respectively to modify the state format used
+            /// by the stick.
             ///
             /// This field is required.
             /// </remarks>
-            /// <seealso cref="isModifyingChildControlByPath"/>
+            /// <seealso cref="isModifyingExistingControl"/>
             /// <seealso cref="InputControlAttribute.name"/>
-            public InternedString name;
+            public InternedString name { get; internal set; }
 
-            public InternedString layout;
-            public InternedString variants;
-            public string useStateFrom;
+            /// <summary>
+            /// Name of the layout to use for the control.
+            /// </summary>
+            /// <value>Name of layout to use.</value>
+            /// <remarks>
+            /// Must be the name of a control layout, not device layout.
+            ///
+            /// An example would be "Stick".
+            /// </remarks>
+            /// <seealso cref="InputSystem.RegisterLayout(Type,string,Nullable{InputDeviceMatcher}"/>
+            public InternedString layout { get; internal set; }
+
+            public InternedString variants { get; internal set; }
+            public string useStateFrom { get; internal set; }
 
             /// <summary>
             /// Optional display name of the control.
             /// </summary>
             /// <seealso cref="InputControl.displayName"/>
-            public string displayName;
+            public string displayName { get; internal set; }
 
             /// <summary>
             /// Optional abbreviated display name of the control.
             /// </summary>
             /// <seealso cref="InputControl.shortDisplayName"/>
-            public string shortDisplayName;
+            public string shortDisplayName { get; internal set; }
 
-            public ReadOnlyArray<InternedString> usages;
-            public ReadOnlyArray<InternedString> aliases;
-            public ReadOnlyArray<NamedValue> parameters;
-            public ReadOnlyArray<NameAndParameters> processors;
-            public uint offset;
-            public uint bit;
-            public uint sizeInBits;
-            public FourCC format;
-            private Flags flags;
-            public int arraySize;
+            public ReadOnlyArray<InternedString> usages { get; internal set; }
+            public ReadOnlyArray<InternedString> aliases { get; internal set; }
+            public ReadOnlyArray<NamedValue> parameters { get; internal set; }
+            public ReadOnlyArray<NameAndParameters> processors { get; internal set; }
+            public uint offset { get; internal set; }
+            public uint bit { get; internal set; }
+            public uint sizeInBits { get; internal set; }
+            public FourCC format { get; internal set; }
+            private Flags flags { get; set; }
+            public int arraySize { get; internal set; }
 
             /// <summary>
             /// Optional default value for the state memory associated with the control.
             /// </summary>
-            public PrimitiveValue defaultState;
+            public PrimitiveValue defaultState { get; internal set; }
 
-            public PrimitiveValue minValue;
-            public PrimitiveValue maxValue;
+            public PrimitiveValue minValue { get; internal set; }
+            public PrimitiveValue maxValue { get; internal set; }
 
             // If true, the layout will not add a control but rather a modify a control
             // inside the hierarchy added by 'layout'. This allows, for example, to modify
@@ -141,22 +162,32 @@ namespace UnityEngine.InputSystem.Layouts
             // layout instead of having to have a custom stick layout for the left stick
             // than in turn would have to make use of a custom axis layout for the X axis.
             // Instead, you can just have a control layout with the name "leftStick/x".
-            public bool isModifyingChildControlByPath
+            public bool isModifyingExistingControl
             {
-                get => (flags & Flags.IsModifyingChildControlByPath) == Flags.IsModifyingChildControlByPath;
-                set
+                get => (flags & Flags.isModifyingExistingControl) == Flags.isModifyingExistingControl;
+                internal set
                 {
                     if (value)
-                        flags |= Flags.IsModifyingChildControlByPath;
+                        flags |= Flags.isModifyingExistingControl;
                     else
-                        flags &= ~Flags.IsModifyingChildControlByPath;
+                        flags &= ~Flags.isModifyingExistingControl;
                 }
             }
 
+            /// <summary>
+            /// Get or set whether to mark the control as noisy.
+            /// </summary>
+            /// <value>Whether to mark the control as noisy.</value>
+            /// <remarks>
+            /// Noisy controls may generate varying input even without "proper" user interaction. For example,
+            /// a sensor may generate slightly different input values over time even if in fact the very thing
+            /// (such as the device orientation) that is being measured is not changing.
+            /// </remarks>
+            /// <seealso cref="InputControl.noisy"/>
             public bool isNoisy
             {
                 get => (flags & Flags.IsNoisy) == Flags.IsNoisy;
-                set
+                internal set
                 {
                     if (value)
                         flags |= Flags.IsNoisy;
@@ -166,17 +197,19 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             /// <summary>
-            /// If true, the control is considered a "synthetic" control.
+            /// Get or set whether to mark the control as "synthetic".
             /// </summary>
+            /// <value>Whether to mark the control as synthetic.</value>
             /// <remarks>
             /// Synthetic controls are artificial controls that provide input but do not correspond to actual controls
             /// on the hardware. An example is <see cref="Keyboard.anyKey"/> which is an artificial button that triggers
             /// if any key on the keyboard is pressed.
             /// </remarks>
+            /// <seealso cref="InputControl.synthetic"/>
             public bool isSynthetic
             {
                 get => (flags & Flags.IsSynthetic) == Flags.IsSynthetic;
-                set
+                internal set
                 {
                     if (value)
                         flags |= Flags.IsSynthetic;
@@ -185,10 +218,17 @@ namespace UnityEngine.InputSystem.Layouts
                 }
             }
 
+            /// <summary>
+            /// Whether the control is introduced by the layout.
+            /// </summary>
+            /// <value>If true, the control is first introduced by this layout.</value>
+            /// <remarks>
+            /// The value of this property is automatically determined by the input system.
+            /// </remarks>
             public bool isFirstDefinedInThisLayout
             {
                 get => (flags & Flags.IsFirstDefinedInThisLayout) != 0;
-                set
+                internal set
                 {
                     if (value)
                         flags |= Flags.IsFirstDefinedInThisLayout;
@@ -206,13 +246,14 @@ namespace UnityEngine.InputSystem.Layouts
             /// <remarks>
             /// <see cref="name"/> will not be touched.
             /// </remarks>
+            /// <seealso cref="InputControlLayout.MergeLayout"/>
             public ControlItem Merge(ControlItem other)
             {
                 var result = new ControlItem();
 
                 result.name = name;
                 Debug.Assert(!name.IsEmpty(), "Name must not be empty");
-                result.isModifyingChildControlByPath = isModifyingChildControlByPath;
+                result.isModifyingExistingControl = isModifyingExistingControl;
 
                 result.displayName = string.IsNullOrEmpty(displayName) ? other.displayName : displayName;
                 result.shortDisplayName = string.IsNullOrEmpty(shortDisplayName) ? other.shortDisplayName : shortDisplayName;
@@ -255,6 +296,9 @@ namespace UnityEngine.InputSystem.Layouts
                 else
                     result.usages = other.usages;
 
+                ////FIXME: this should properly merge the parameters, not just pick one or the other
+                ////       easiest thing may be to just concatenate the two strings
+
                 if (parameters.Count == 0)
                     result.parameters = other.parameters;
                 else
@@ -287,6 +331,15 @@ namespace UnityEngine.InputSystem.Layouts
 
                 return result;
             }
+
+            [Flags]
+            private enum Flags
+            {
+                isModifyingExistingControl = 1 << 0,
+                IsNoisy = 1 << 1,
+                IsSynthetic = 1 << 2,
+                IsFirstDefinedInThisLayout = 1 << 3,
+            }
         }
 
         // Unique name of the layout.
@@ -309,6 +362,13 @@ namespace UnityEngine.InputSystem.Layouts
 
         public ReadOnlyArray<InternedString> commonUsages => new ReadOnlyArray<InternedString>(m_CommonUsages);
 
+        /// <summary>
+        /// List of child controls defined for the layout.
+        /// </summary>
+        /// <value>Child controls defined for the layout.</value>
+        /// <remarks>
+        /// Note that this list TODO
+        /// </remarks>
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
@@ -446,19 +506,72 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="InputSystem.RegisterLayoutBuilder"/>
         public class Builder
         {
+            /// <summary>
+            /// Name to assign to the layout.
+            /// </summary>
+            /// <value>Name to assign to the layout.</value>
+            /// <seealso cref="InputControlLayout.name"/>
             public string name { get; set; }
+
+            /// <summary>
+            /// Display name to assign to the layout.
+            /// </summary>
+            /// <value>Display name to assign to the layout</value>
+            /// <seealso cref="InputControlLayout.displayName"/>
             public string displayName { get; set; }
+
+            /// <summary>
+            /// <see cref="InputControl"/> type to instantiate for the layout.
+            /// </summary>
+            /// <value>Control type to instantiate for the layout.</value>
+            /// <seealso cref="InputControlLayout.type"/>
             public Type type { get; set; }
+
+            /// <summary>
+            /// Memory format FourCC code to apply to state memory used by the
+            /// layout.
+            /// </summary>
+            /// <value>FourCC memory format tag.</value>
+            /// <seealso cref="InputControlLayout.stateFormat"/>
+            /// <seealso cref="InputStateBlock.format"/>
             public FourCC stateFormat { get; set; }
+
+            /// <summary>
+            /// Total size of memory used by the layout.
+            /// </summary>
+            /// <value>Size of memory used by the layout.</value>
+            /// <seealso cref="InputControlLayout.stateSizeInBytes"/>
             public int stateSizeInBytes { get; set; }
+
+            /// <summary>
+            /// Which layout to base this layout on.
+            /// </summary>
+            /// <value>Name of base layout.</value>
+            /// <seealso cref="InputControlLayout.baseLayouts"/>
             public string extendsLayout { get; set; }
+
+            /// <summary>
+            /// For device layouts, whether the device wants an extra update
+            /// before rendering.
+            /// </summary>
+            /// <value>True if before-render updates should be enabled for the device.</value>
+            /// <seealso cref="InputDevice.updateBeforeRender"/>
+            /// <seealso cref="InputControlLayout.updateBeforeRender"/>
             public bool? updateBeforeRender { get; set; }
+
+            /// <summary>
+            /// List of control items set up by the layout.
+            /// </summary>
+            /// <value>Controls set up by the layout.</value>
+            /// <seealso cref="AddControl"/>
+            public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);
 
             private int m_ControlCount;
             private ControlItem[] m_Controls;
 
-            public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls, 0, m_ControlCount);
-
+            /// <summary>
+            /// Syntax for configuring an individual <see cref="ControlItem"/>.
+            /// </summary>
             public struct ControlBuilder
             {
                 internal Builder builder;
@@ -502,9 +615,15 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
-                public ControlBuilder WithSynthetic(bool value)
+                public ControlBuilder IsSynthetic(bool value)
                 {
                     builder.m_Controls[index].isSynthetic = value;
+                    return this;
+                }
+
+                public ControlBuilder IsNoisy(bool value)
+                {
+                    builder.m_Controls[index].isNoisy = value;
                     return this;
                 }
 
@@ -600,7 +719,7 @@ namespace UnityEngine.InputSystem.Layouts
                     new ControlItem
                     {
                         name = new InternedString(name),
-                        isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                        isModifyingExistingControl = name.IndexOf('/') != -1,
                         offset = InputStateBlock.InvalidOffset,
                         bit = InputStateBlock.InvalidOffset
                     });
@@ -1029,7 +1148,7 @@ namespace UnityEngine.InputSystem.Layouts
                 processors = new ReadOnlyArray<NameAndParameters>(processors),
                 usages = new ReadOnlyArray<InternedString>(usages),
                 aliases = new ReadOnlyArray<InternedString>(aliases),
-                isModifyingChildControlByPath = isModifyingChildControlByPath,
+                isModifyingExistingControl = isModifyingChildControlByPath,
                 isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
                 isSynthetic = isSynthetic,
@@ -1516,7 +1635,7 @@ namespace UnityEngine.InputSystem.Layouts
                     useStateFrom = useStateFrom,
                     bit = bit,
                     sizeInBits = sizeInBits,
-                    isModifyingChildControlByPath = name.IndexOf('/') != -1,
+                    isModifyingExistingControl = name.IndexOf('/') != -1,
                     isNoisy = noisy,
                     isSynthetic = synthetic,
                     isFirstDefinedInThisLayout = true,
@@ -1614,7 +1733,7 @@ namespace UnityEngine.InputSystem.Layouts
 
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
-            public Dictionary<InternedString, BuilderInfo> layoutBuilders;
+            public Dictionary<InternedString, Func<InputControlLayout>> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InternedString[]> layoutOverrides;
             ////TODO: find a smarter approach that doesn't require linearly scanning through all matchers
@@ -1626,7 +1745,7 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 layoutTypes = new Dictionary<InternedString, Type>();
                 layoutStrings = new Dictionary<InternedString, string>();
-                layoutBuilders = new Dictionary<InternedString, BuilderInfo>();
+                layoutBuilders = new Dictionary<InternedString, Func<InputControlLayout>>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
                 layoutMatchers = new List<LayoutMatcher>();
@@ -1689,12 +1808,9 @@ namespace UnityEngine.InputSystem.Layouts
                 // providing layouts.
                 if (layoutBuilders.TryGetValue(name, out var builder))
                 {
-                    var layoutObject = builder.method.Invoke(builder.instance, null);
-                    if (layoutObject == null)
+                    var layout = builder();
+                    if (layout == null)
                         throw new InvalidOperationException($"Layout builder '{name}' returned null when invoked");
-                    if (!(layoutObject is InputControlLayout layout))
-                        throw new InvalidOperationException(
-                            $"Layout builder '{name}' returned '{layoutObject}' which is not an InputControlLayout");
                     return layout;
                 }
 
@@ -1851,12 +1967,6 @@ namespace UnityEngine.InputSystem.Layouts
 
         // This collection is owned and managed by InputManager.
         internal static Collection s_Layouts;
-
-        internal struct BuilderInfo
-        {
-            public MethodInfo method;
-            public object instance;
-        }
 
         public class LayoutNotFoundException : Exception
         {

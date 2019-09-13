@@ -10,10 +10,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    /// <summary>
-    /// Delegate used by <see cref="InputSystem.onUpdate"/>.
-    /// </summary>
-    public delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
+    internal delegate void InputUpdateDelegate(InputUpdateType updateType, ref InputEventBuffer eventBuffer);
 
     /// <summary>
     /// Input functions that have to be performed by the underlying input runtime.
@@ -23,7 +20,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// periodic updates that flushes out events from the queue. Updates can also be manually
     /// triggered by calling <see cref="Update"/>.
     /// </remarks>
-    public unsafe interface IInputRuntime
+    internal unsafe interface IInputRuntime
     {
         /// <summary>
         /// Allocate a new unique device ID.
@@ -186,7 +183,7 @@ namespace UnityEngine.InputSystem.LowLevel
             where TCommand : struct, IInputDeviceCommandInfo
         {
             if (runtime == null)
-                throw new System.ArgumentNullException(nameof(runtime));
+                throw new ArgumentNullException(nameof(runtime));
 
             return runtime.DeviceCommand(deviceId, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }

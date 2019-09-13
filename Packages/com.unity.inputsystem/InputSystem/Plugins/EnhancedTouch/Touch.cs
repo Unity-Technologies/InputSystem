@@ -40,25 +40,178 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// <summary>
         /// Whether this touch record holds valid data.
         /// </summary>
+        /// <value>If true, the data contained in the touch is valid.</value>
         /// <remarks>
-        /// This is true only if the struct instance has been obtained ...
+        /// Touch data is stored in unmanaged memory as a circular input buffer. This means that when
+        /// the buffer runs out of capacity, older touch entries will get reused. When this happens,
+        /// existing <c>Touch</c> instances referring to the record become invalid.
+        ///
+        /// This property can be used to determine whether the record held on to by the <c>Touch</c>
+        /// instance is still valid.
+        ///
+        /// This property will be <c>false</c> for default-initialized <c>Touch</c> instances.
+        ///
+        /// Note that accessing most of the other properties on this struct when the touch is
+        /// invalid will trigger <c>InvalidOperationException</c>.
         /// </remarks>
         public bool valid => m_TouchRecord.valid;
 
+        /// <summary>
+        /// The finger used for the touch contact. Null only for default-initialized
+        /// instances of the struct.
+        /// </summary>
+        /// <value>Finger used for the touch contact.</value>
+        /// <seealso cref="activeFingers"/>
         public Finger finger => m_Finger;
+
+        /// <summary>
+        /// Current phase of the touch.
+        /// </summary>
+        /// <value>Current phase of the touch.</value>
+        /// <remarks>
+        /// Every touch goes through a predefined cycle that starts with <see cref="TouchPhase.Began"/>,
+        /// then potentially <see cref="TouchPhase.Moved"/> and/or <see cref="TouchPhase.Stationary"/>,
+        /// and finally concludes with either <see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>.
+        ///
+        /// This property indicates where in the cycle the touch is.
+        /// </remarks>
+        /// <seealso cref="isInProgress"/>
+        /// <seealso cref="TouchControl.phase"/>
         public TouchPhase phase => state.phase;
+
+        /// <summary>
+        /// Unique ID of the touch as (usually) assigned by the platform.
+        /// </summary>
+        /// <value>Unique, non-zero ID of the touch.</value>
+        /// <remarks>
+        /// Each touch contact that is made with the screen receives its own unique ID which is
+        /// normally assigned by the underlying platform.
+        ///
+        /// Note a platform may reuse touch IDs after their respective touches have finished.
+        /// This means that the guarantee of uniqueness is only made with respect to <see cref="activeTouches"/>.
+        ///
+        /// In particular, all touches in <see cref="history"/> will have the same ID whereas
+        /// touches in the a finger's <see cref="Finger.touchHistory"/> may end up having the same
+        /// touch ID even though constituting different physical touch contacts.
+        /// </remarks>
+        /// <seealso cref="TouchControl.touchId"/>
         public int touchId => state.touchId;
+
+        /// <summary>
+        /// Normalized pressure of the touch against the touch surface.
+        /// </summary>
+        /// <value>Pressure level of the touch.</value>
+        /// <remarks>
+        /// Not all touchscreens are pressure-sensitive. If unsupported, this property will
+        /// always return 0.
+        ///
+        /// In general, touch pressure is supported on mobile platforms only.
+        ///
+        /// Note that it is possible for the value to go above 1 even though it is considered normalized. The reason is
+        /// that calibration on the system can put the maximum pressure point below the physically supported maximum value.
+        /// </remarks>
+        /// <seealso cref="TouchControl.pressure"/>
         public float pressure => state.pressure;
+
+        /// <summary>
+        /// Screen-space radius of the touch.
+        /// </summary>
+        /// <value>Horizontal and vertical extents of the touch contact.</value>
+        /// <remarks>
+        /// If supported by the underlying device, this reports the size of the touch contact based on its
+        /// <see cref="screenPosition"/> center point. If not supported, this will be <c>default(Vector2)</c>.
+        /// </remarks>
+        /// <seealso cref="TouchControl.radius"/>
         public Vector2 radius => state.radius;
+
+        /// <summary>
+        /// Time in seconds on the same timeline as <c>Time.realTimeSinceStartup</c> when the touch began.
+        /// </summary>
+        /// <value>Start time of the touch.</value>
+        /// <remarks>
+        /// This is the value of <see cref="InputEvent.time"/> when the touch started with
+        /// <see cref="phase"/> <see cref="TouchPhase.Began"/>.
+        /// </remarks>
+        /// <seealso cref="TouchControl.startTime"/>
         public double startTime => state.startTime;
+
+        /// <summary>
+        /// Time in seconds on the same timeline as <c>Time.realTimeSinceStartup</c> when the touch record was
+        /// reported.
+        /// </summary>
+        /// <value>Time the touch record was reported.</value>
+        /// <remarks>
+        /// This is the value <see cref="InputEvent.time"/> of the event that signaled the current state
+        /// change for the touch.
+        /// </remarks>
         public double time => m_TouchRecord.time;
+
+        /// <summary>
+        /// The touchscreen on which the touch occurred.
+        /// </summary>
+        /// <value>Touchscreen associated with the touch.</value>
         public Touchscreen screen => finger.screen;
+
+        /// <summary>
+        /// Screen-space position of the touch.
+        /// </summary>
+        /// <value>Screen-space position of the touch.</value>
+        /// <seealso cref="TouchControl.position"/>
         public Vector2 screenPosition => state.position;
+
+        /// <summary>
+        /// Screen-space position where the touch started.
+        /// </summary>
+        /// <value>Start position of the touch.</value>
+        /// <seealso cref="TouchControl.startPosition"/>
         public Vector2 startScreenPosition => state.startPosition;
+
+        /// <summary>
+        /// Screen-space motion delta of the touch.
+        /// </summary>
+        /// <value>Screen-space motion delta of the touch.</value>
+        /// <remarks>
+        /// Note that deltas have behaviors attached to them different from most other
+        /// controls. See <see cref="Pointer.delta"/> for details.
+        /// </remarks>
+        /// <seealso cref="TouchControl.delta"/>
         public Vector2 delta => state.delta;
+
+        /// <summary>
+        /// Number of times that the touch has been tapped in succession.
+        /// </summary>
+        /// <value>Indicates how many taps have been performed one after the other.</value>
+        /// <remarks>
+        /// Successive taps have to come within <see cref="InputSettings.multiTapDelayTime"/> for them
+        /// to increase the tap count. I.e. if a new tap finishes within that time after <see cref="startTime"/>
+        /// of the previous touch, the tap count is increased by one. If more than <see cref="InputSettings.multiTapDelayTime"/>
+        /// passes after a tap with no successive tap, the tap count is reset to zero.
+        /// </remarks>
+        /// <seealso cref="TouchControl.tapCount"/>
         public int tapCount => state.tapCount;
+
+        /// <summary>
+        /// Whether the touch has performed a tap.
+        /// </summary>
+        /// <value>Indicates whether the touch has tapped the screen.</value>
+        /// <remarks>
+        /// A tap is defined as a touch that begins and ends within <see cref="InputSettings.defaultTapTime"/> and
+        /// stays within <see cref="InputSettings.tapRadius"/> of its <see cref="startScreenPosition"/>. If this
+        /// is the case for a touch, this button is set to 1 at the time the touch goes to <see cref="phase"/>
+        /// <see cref="TouchPhase.Ended"/>.
+        ///
+        /// Resets to 0 only when another touch is started on the control or when the control is reset.
+        /// </remarks>
+        /// <seealso cref="tapCount"/>
+        /// <seealso cref="InputSettings.defaultTapTime"/>
+        /// <seealso cref="TouchControl.tap"/>
         public bool isTap => state.isTap;
 
+        /// <summary>
+        /// Whether the touch is currently in progress, i.e. has a <see cref="phase"/> of
+        /// <see cref="TouchPhase.Began"/>, <see cref="TouchPhase.Moved"/>, or <see cref="TouchPhase.Stationary"/>.
+        /// </summary>
+        /// <value>Whether the touch is currently ongoing.</value>
         public bool isInProgress
         {
             get

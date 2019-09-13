@@ -13,7 +13,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using Property = NUnit.Framework.PropertyAttribute;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -536,7 +535,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -557,7 +556,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -579,7 +578,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         // Remove state monitor and change leftStick again.
         InputState.RemoveChangeMonitor(gamepad.leftStick, monitor);
@@ -1090,6 +1089,9 @@ partial class CoreTests
         var eventByteCount =
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
+
+        // QueueEvent aligns to 4-byte boundaries.
+        eventByteCount = eventByteCount.AlignToMultipleOf(4);
 
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
         Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));

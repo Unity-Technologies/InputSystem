@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Interface to allow custom input devices to receive callbacks when the input system is updated.

@@ -231,9 +231,9 @@ partial class CoreTests
 
         Assert.That(layout["analog"].defaultState.type, Is.EqualTo(TypeCode.Double));
         Assert.That(layout["analog"].defaultState.ToDouble(), Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["digital"].defaultState.type, Is.EqualTo(TypeCode.Int64));
         Assert.That(layout["digital"].defaultState.ToInt64(), Is.EqualTo(1234));
-        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(layout["hexDigital"].defaultState.type, Is.EqualTo(TypeCode.Int64));
         Assert.That(layout["hexDigital"].defaultState.ToInt64(), Is.EqualTo(0x1234));
     }
 
@@ -541,7 +541,7 @@ partial class CoreTests
     public void Layouts_CanOverrideLayoutMatchesForDiscoveredDevices()
     {
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate runtime) =>
                 "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
@@ -558,18 +558,18 @@ partial class CoreTests
         // the callbacks are processed in, the system should call our callback in the middle
         // and not stop at one of the callbacks returning a layout name.
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
                 "Keyboard";
 
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
         {
             description.product = "Test";
             return null;
         };
 
         InputSystem.onFindLayoutForDevice +=
-            (int deviceId, ref InputDeviceDescription description, string layoutMatch, IInputRuntime runtime) =>
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
                 "Keyboard";
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad", product = "Original"});
@@ -960,7 +960,7 @@ partial class CoreTests
 
         var oldDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
-        var oldDeviceId = oldDevice.id;
+        var oldDeviceId = oldDevice.deviceId;
         var oldDeviceDescription = oldDevice.description;
 
         const string newJson = @"
@@ -975,7 +975,7 @@ partial class CoreTests
 
         var newDevice = InputSystem.devices.First(x => x.layout == "MyDevice");
 
-        Assert.That(newDevice.id, Is.EqualTo(oldDeviceId));
+        Assert.That(newDevice.deviceId, Is.EqualTo(oldDeviceId));
         Assert.That(newDevice.description, Is.EqualTo(oldDeviceDescription));
     }
 

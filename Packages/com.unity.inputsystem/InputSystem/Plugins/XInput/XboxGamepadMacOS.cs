@@ -92,10 +92,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(10)] public short rightStickX;
         [FieldOffset(12)] public short rightStickY;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         public XInputControllerOSXState WithButton(Button button)
         {
@@ -107,10 +104,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit)]
     internal struct XInputControllerWirelessOSXState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('H', 'I', 'D');
 
         public enum Button
         {

@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A collection of input actions (<see cref="InputAction"/>).
+    /// A collection of input actions (see <see cref="InputAction"/>).
     /// </summary>
     /// <seealso cref="InputActionMap"/>
     /// <seealso cref="InputActionAsset"/>

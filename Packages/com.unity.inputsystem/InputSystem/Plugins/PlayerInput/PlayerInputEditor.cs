@@ -107,7 +107,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         // Use ID rather than name.
                         var asset = (InputActionAsset)serializedObject.FindProperty("m_Actions").objectReferenceValue;
-                        var actionMap = asset.TryGetActionMap(m_ActionMapOptions[selected].text);
+                        var actionMap = asset.FindActionMap(m_ActionMapOptions[selected].text);
                         if (actionMap != null)
                             defaultActionMapProperty.stringValue = actionMap.id.ToString();
                     }
@@ -439,7 +439,7 @@ namespace UnityEngine.InputSystem.Editor
                 foreach (var action in asset)
                 {
                     // Skip if it was already in there.
-                    if (oldActionEvents.Any(x => x.actionId == action.id.ToString()))
+                    if (oldActionEvents != null && oldActionEvents.Any(x => x.actionId == action.id.ToString()))
                         continue;
 
                     AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));
@@ -472,7 +472,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Read out action maps.
             var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
-                ? asset.TryGetActionMap(playerInput.defaultActionMap)
+                ? asset.FindActionMap(playerInput.defaultActionMap)
                 : null;
             m_SelectedDefaultActionMap = 0;
             var actionMaps = asset.actionMaps;

@@ -18,7 +18,6 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
-using Property = NUnit.Framework.PropertyAttribute;
 
 #pragma warning disable CS0649
 [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
@@ -1987,7 +1986,7 @@ partial class CoreTests
 
         Assert.That(action1.name, Is.EqualTo("newName"));
         Assert.That(map["newName"], Is.SameAs(action1));
-        Assert.That(map.TryGetAction("action1"), Is.Null);
+        Assert.That(map.FindAction("action1"), Is.Null);
 
         Assert.That(() => action1.Rename("action2"), Throws.InvalidOperationException);
     }
@@ -2001,6 +2000,25 @@ partial class CoreTests
         action.Rename("newName");
 
         Assert.That(action.name, Is.EqualTo("newName"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_RenamingActionUpdatesBindings()
+    {
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action1");
+        var action2 = map.AddAction("action2");
+
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action2.AddBinding("<Gamepad>/buttonNorth");
+        action1.AddBinding("<Keyboard>/space");
+
+        action1.Rename("newName");
+
+        Assert.That(action1.bindings, Has.Count.EqualTo(2));
+        Assert.That(action1.bindings[0].path, Is.EqualTo("<Gamepad>/buttonSouth"));
+        Assert.That(action1.bindings[1].path, Is.EqualTo("<Keyboard>/space"));
     }
 
     ////TODO: add test to ensure that if adding an action after controls have been resolved, does the right thing
@@ -2050,13 +2068,13 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction("action1"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction("action2"), Is.SameAs(action2));
-        Assert.That(map.TryGetAction("action3"), Is.Null);
+        Assert.That(map.FindAction("action1"), Is.SameAs(action1));
+        Assert.That(map.FindAction("action2"), Is.SameAs(action2));
+        Assert.That(map.FindAction("action3"), Is.Null);
 
         // Lookup is case-insensitive.
-        Assert.That(map.TryGetAction("Action1"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction("Action2"), Is.SameAs(action2));
+        Assert.That(map.FindAction("Action1"), Is.SameAs(action1));
+        Assert.That(map.FindAction("Action2"), Is.SameAs(action2));
     }
 
     [Test]
@@ -2068,9 +2086,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction(action1.id), Is.SameAs(action1));
-        Assert.That(map.TryGetAction(action2.id), Is.SameAs(action2));
-        Assert.That(map.TryGetAction(Guid.NewGuid()), Is.Null);
+        Assert.That(map.FindAction(action1.id), Is.SameAs(action1));
+        Assert.That(map.FindAction(action2.id), Is.SameAs(action2));
+        Assert.That(map.FindAction(Guid.NewGuid()), Is.Null);
     }
 
     [Test]
@@ -2082,9 +2100,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction(action1.id.ToString()), Is.SameAs(action1));
-        Assert.That(map.TryGetAction(action2.id.ToString()), Is.SameAs(action2));
-        Assert.That(map.TryGetAction(Guid.NewGuid().ToString()), Is.Null);
+        Assert.That(map.FindAction(action1.id.ToString()), Is.SameAs(action1));
+        Assert.That(map.FindAction(action2.id.ToString()), Is.SameAs(action2));
+        Assert.That(map.FindAction(Guid.NewGuid().ToString()), Is.Null);
     }
 
     // We used to require string GUIDs to be using a "{...}" format when looking up actions. We no
@@ -2098,9 +2116,9 @@ partial class CoreTests
         var action1 = map.AddAction("action1");
         var action2 = map.AddAction("action2");
 
-        Assert.That(map.TryGetAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
-        Assert.That(map.TryGetAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
-        Assert.That(map.TryGetAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
+        Assert.That(map.FindAction($"{{{action1.id.ToString()}}}"), Is.SameAs(action1));
+        Assert.That(map.FindAction($"{{{action2.id.ToString()}}}"), Is.SameAs(action2));
+        Assert.That(map.FindAction($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -2704,7 +2722,7 @@ partial class CoreTests
     [Preserve]
     private class ConstantVector2TestProcessor : InputProcessor<Vector2>
     {
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl control)
         {
             return new Vector2(0.1234f, 0.5678f);
         }
@@ -3639,8 +3657,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap("test"), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap("other"), Is.Null);
+        Assert.That(asset.FindActionMap("test"), Is.SameAs(map));
+        Assert.That(asset.FindActionMap("other"), Is.Null);
     }
 
     [Test]
@@ -3651,8 +3669,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap(map.id.ToString()), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap(Guid.NewGuid().ToString()), Is.Null);
+        Assert.That(asset.FindActionMap(map.id.ToString()), Is.SameAs(map));
+        Assert.That(asset.FindActionMap(Guid.NewGuid().ToString()), Is.Null);
     }
 
     // Legacy format where we use "{...}" notation to indicate we have a GUID string. No longer necessary but
@@ -3665,8 +3683,8 @@ partial class CoreTests
         var map = new InputActionMap("test");
         asset.AddActionMap(map);
 
-        Assert.That(asset.TryGetActionMap($"{{{map.id}}}"), Is.SameAs(map));
-        Assert.That(asset.TryGetActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
+        Assert.That(asset.FindActionMap($"{{{map.id}}}"), Is.SameAs(map));
+        Assert.That(asset.FindActionMap($"{{{Guid.NewGuid().ToString()}}}"), Is.Null);
     }
 
     [Test]
@@ -3756,9 +3774,9 @@ partial class CoreTests
         asset.AddControlScheme("scheme1");
         asset.AddControlScheme("scheme2");
 
-        Assert.That(asset.GetControlScheme("SCHEme1").name, Is.EqualTo("scheme1"));
-        Assert.That(asset.GetControlScheme("scheme2").name, Is.EqualTo("scheme2"));
-        Assert.That(asset.TryGetControlScheme("doesNotExist"), Is.Null);
+        Assert.That(asset.FindControlScheme("SCHEme1").Value.name, Is.EqualTo("scheme1"));
+        Assert.That(asset.FindControlScheme("scheme2").Value.name, Is.EqualTo("scheme2"));
+        Assert.That(asset.FindControlScheme("doesNotExist"), Is.Null);
     }
 
     [Test]
@@ -3791,14 +3809,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_CanBaseOneControlSchemeOnAnother()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanRequireSpecificDevicesForControlScheme()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -3808,13 +3818,13 @@ partial class CoreTests
             .WithRequiredDevice("<XRController>{RightHand}")
             .WithOptionalDevice("<Gamepad>");
 
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements, Has.Count.EqualTo(3));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].controlPath, Is.EqualTo("<XRController>{LeftHand}"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[0].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].controlPath, Is.EqualTo("<XRController>{RightHand}"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[1].isOptional, Is.False);
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].controlPath, Is.EqualTo("<Gamepad>"));
-        Assert.That(asset.GetControlScheme("scheme").deviceRequirements[2].isOptional, Is.True);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements, Has.Count.EqualTo(3));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[0].controlPath, Is.EqualTo("<XRController>{LeftHand}"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[0].isOptional, Is.False);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[1].controlPath, Is.EqualTo("<XRController>{RightHand}"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[1].isOptional, Is.False);
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[2].controlPath, Is.EqualTo("<Gamepad>"));
+        Assert.That(asset.FindControlScheme("scheme").Value.deviceRequirements[2].isOptional, Is.True);
     }
 
     ////REVIEW: this one probably warrants breaking it up a little
@@ -5300,17 +5310,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotApplyOverride_WhileActionIsEnabled()
-    {
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
-        action.Enable();
-
-        Assert.That(() => action.ApplyBindingOverride("/gamepad/rightTrigger"),
-            Throws.InvalidOperationException);
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_OnActionWithMultipleBindings_OverridingWithoutGroupOrPath_OverridesAll()
     {
         var action = new InputAction(name: "test");
@@ -5464,7 +5463,7 @@ partial class CoreTests
         var action = new InputAction();
         action.AddBinding("");
 
-        bool performed = false;
+        var performed = false;
         action.performed += _ => performed = true;
 
         action.Enable();
@@ -5498,15 +5497,6 @@ partial class CoreTests
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightTrigger));
     }
 
-    [Test]
-    [Category("Actions")]
-    public void Actions_WhenActionIsEnabled_CannotRemoveOverrides()
-    {
-        var action = new InputAction(name: "foo");
-        action.Enable();
-        Assert.That(() => action.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
-    }
-
     // We may want to perform a rebind on just one specific control scheme. For this, the rebinding
     // machinery allows specifying a binding mask to respect.
     [Test]
@@ -5520,17 +5510,6 @@ partial class CoreTests
         action.RemoveBindingOverride(bindingOverride);
 
         Assert.That(action.bindings[0].overridePath, Is.Null);
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_WhenActionIsEnabled_CannotRemoveSpecificOverride()
-    {
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
-        var bindingOverride = new InputBinding {path = "/gamepad/rightTrigger"};
-        action.ApplyBindingOverride(bindingOverride);
-        action.Enable();
-        Assert.That(() => action.RemoveBindingOverride(bindingOverride), Throws.InvalidOperationException);
     }
 
     [Test]
@@ -5627,7 +5606,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCloneAction()
     {
-        var action = new InputAction(name: "action");
+        var action = new InputAction(name: "action", type: InputActionType.PassThrough, interactions: "foo",
+            processors: "bar", expectedControlType: "ctrltype");
+
         action.AddBinding("/gamepad/leftStick").WithInteraction("tap").WithGroup("group");
         action.AddBinding("/gamepad/rightStick");
 
@@ -5636,6 +5617,9 @@ partial class CoreTests
         Assert.That(clone, Is.Not.SameAs(action));
         Assert.That(clone.name, Is.EqualTo(action.name));
         Assert.That(clone.id, Is.Not.EqualTo(action.id));
+        Assert.That(clone.interactions, Is.EqualTo("foo"));
+        Assert.That(clone.processors, Is.EqualTo("bar"));
+        Assert.That(clone.expectedControlType, Is.EqualTo("ctrltype"));
         Assert.That(clone.bindings, Has.Count.EqualTo(action.bindings.Count));
         Assert.That(clone.bindings[0].path, Is.EqualTo(action.bindings[0].path));
         Assert.That(clone.bindings[0].interactions, Is.EqualTo(action.bindings[0].interactions));

@@ -27,8 +27,8 @@ namespace UnityEngine.InputSystem.WebGL
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
 
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
+            string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             // If the device isn't a WebGL device, we're not interested.
             if (string.Compare(description.interfaceName, InterfaceName, StringComparison.InvariantCultureIgnoreCase) != 0)
@@ -142,7 +142,7 @@ namespace UnityEngine.InputSystem.WebGL
                 builder.AddControl("Trigger")
                     .WithLayout("AnyKey")
                     .WithByteOffset(buttonStartOffset)
-                    .WithSynthetic(true)
+                    .IsSynthetic(true)
                     .WithSizeInBits((uint)(32 * capabilities.numButtons))
                     .WithFormat(InputStateBlock.FormatBit);
 

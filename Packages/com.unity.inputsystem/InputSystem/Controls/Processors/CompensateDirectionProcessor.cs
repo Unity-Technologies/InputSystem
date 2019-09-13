@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.Processors
     [Scripting.Preserve]
     internal class CompensateDirectionProcessor : InputProcessor<Vector3>
     {
-        public override Vector3 Process(Vector3 value, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 value, InputControl control)
         {
             if (!InputSystem.settings.compensateForScreenOrientation)
                 return value;
