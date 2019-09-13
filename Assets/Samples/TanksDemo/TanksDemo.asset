@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: TanksDemo
   m_EditorClassIdentifier: 
   url: https://github.com/Unity-Technologies/InputSystem/releases/download/%VERSION%/TanksDemo-%VERSION%.unitypackage
+  packageDeps:
+  - com.unity.inputsystem
