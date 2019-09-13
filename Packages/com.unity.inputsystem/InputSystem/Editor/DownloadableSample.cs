@@ -1,4 +1,3 @@
-
 using System.Linq;
 using UnityEditor.PackageManager.Requests;
 #if UNITY_EDITOR
@@ -19,7 +18,7 @@ internal class DownloadableSampleInspector : Editor
 {
     private ListRequest list;
     private AddRequest add;
-    
+
     public void OnEnable()
     {
         list = Client.List();
@@ -32,7 +31,7 @@ internal class DownloadableSampleInspector : Editor
         else
             return list.Result.Any(x => x.packageId.Split('@')[0] == id);
     }
-    
+
     public override void OnInspectorGUI()
     {
         GUILayout.Label("Downloadable Sample", EditorStyles.boldLabel);
@@ -46,7 +45,7 @@ internal class DownloadableSampleInspector : Editor
         }
 
         GUILayout.Space(10);
-        
+
         GUILayout.Label("Package Dependencies", EditorStyles.boldLabel);
 
         // We are adding a new package, wait for the operation to finish and then relist.
@@ -58,7 +57,7 @@ internal class DownloadableSampleInspector : Editor
                 list = Client.List();
             }
         }
-        
+
         if (add != null || !list.IsCompleted)
             // Keep refreshing while we are waiting for Packman to resolve our request.
             Repaint();
@@ -68,7 +67,7 @@ internal class DownloadableSampleInspector : Editor
                 EditorGUILayout.HelpBox($"The {target.name} sample requires the following packages to be installed in your project.", MessageType.Warning);
         }
 
-        
+
         foreach (var req in sample.packageDeps)
         {
             Rect rect = EditorGUILayout.GetControlRect(true, 20);
