@@ -726,7 +726,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     parent = parent,
                     depth = parent.depth + 1,
-                    id = ++id,
+                    id = id++,
                     displayName = layout.displayName ?? layout.name,
                     layoutName = layout.name,
                 };
@@ -900,7 +900,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     action = action,
                     depth = parent.depth + 1,
-                    id = ++id,
+                    id = id++,
                     displayName = name
                 };
                 parent.AddChild(item);
@@ -939,7 +939,7 @@ namespace UnityEngine.InputSystem.Editor
 
                         var controlItem = new BoundControlItem
                         {
-                            id = ++id,
+                            id = id++,
                             depth = item.depth + 1,
                             displayName = text,
                             action = action,
