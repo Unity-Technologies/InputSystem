@@ -16,3 +16,4 @@ MonoBehaviour:
   packageDeps:
   - com.unity.inputsystem
   - com.unity.cinemachine
+  - com.unity.probuilder
