@@ -9,16 +9,37 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [0.9.7-preview] - 2099-1-1
 
+We added a lot of API documentation in this release. We still have some way to go here but the scripting API reference should be significantly more useful compared to before.
+
+Also you may notice that there were a number of tweaks to the input system API. Some types have been moved, some methods been renamed, and some have been collapsed (like the various `TryGet`/`Get`/`Find` methods which are now just `Find`). This is part of an effort to clean the API up on the road towards a final 1.0 release.
+
 ### Fixed
 
--Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Will now close Input Action Asset Editor windows from previous sessions when the corresponding action asset was deleted.
 
 #### Actions
 
-- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
+- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal.
+- Fixed `ApplyBindingOverrides` sometimes not updating the `bindings` array on the action.
 
 ### Changed
+
+- `IInputRuntime` and `InputTestRuntime` are now internal.
+  * As part of this change, `InputSystem.onFindLayoutForDevice` no longer receives an device ID and reference to `IInputRuntime` but rather a delegate which can be invoked to execute commands on the device. This was the sole purpose why the previous two arguments were passed in.
+  * Also, `InputTestFixture` now has a `currentTime` property which can be used to set the internal time of the input system (previously you would use `runtime.currentTime` for that).
+- `TouchscreenState` has been made internal. Use `TouchState` to send state to `Touchscreen`.
+- `InputEditorUserSettings` is now internal. It's mainly just a collection of debugger-related, local user settings.
+- The "Lefty" variant of the "Gamepad" layout has been removed. It didn't really solve well what it was trying to solve.
+- `InputProcessor<TValue>.Process` no longer receives an `InputControl<TValue>` but just an `InputControl`. Due to composites, it cannot be guaranteed that the control has the same value type as the one being processed -- a value that may come from a composite instead of from the control.
+- `InputDevice.id` is now `InputDevice.deviceId`.
+- Several methods that modify the structure of the asset have been moved from `InputActionAsset` to `InputActionSetupExtensions` -- which is meant to collect all methods that destructively modify action setups.
+
 ### Added
+
+- The input debugger now shows action values.
+- Two new samples have been added:
+  * `CustomDevice` shows how to implement a custom device.
+  * `CustomComposite` shows hot to implement a custom composite.
 
 ## [0.9.6-preview] - 2019-9-6
 
