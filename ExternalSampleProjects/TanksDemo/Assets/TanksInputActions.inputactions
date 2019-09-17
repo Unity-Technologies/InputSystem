@@ -59,6 +59,39 @@
                     "isPartOfComposite": false
                 },
                 {
+                    "name": "Keyboard Brake",
+                    "id": "3df3b022-ac9b-4faf-939c-a321654703b6",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Brake",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "positive",
+                    "id": "92d2b926-321a-4698-a34c-48af8a19ddcc",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Brake",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "401cc98f-fc93-40a3-829d-afdeeda728f0",
+                    "path": "<Mouse>/delta/x",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Brake",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
                     "name": "",
                     "id": "f7758674-6c70-4fa9-8551-5cebdc997243",
                     "path": "<Gamepad>/leftStick/x",
@@ -70,7 +103,7 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "1D Axis",
+                    "name": "Keyboard Turret",
                     "id": "5108737a-0e21-4ee7-b70c-541ae02a1015",
                     "path": "1DAxis",
                     "interactions": "",
@@ -81,26 +114,37 @@
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "Negative",
-                    "id": "3c1491e2-3bbb-4db0-bc45-f18d268eee57",
-                    "path": "",
+                    "name": "Positive",
+                    "id": "42e6e05c-262b-4aca-bd91-c6ebcab36f60",
+                    "path": "<Keyboard>/d",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard&Mouse;Gamepad",
+                    "groups": "Keyboard&Mouse",
                     "action": "Turret",
                     "isComposite": false,
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "Positive",
-                    "id": "42e6e05c-262b-4aca-bd91-c6ebcab36f60",
-                    "path": "",
+                    "name": "negative",
+                    "id": "281aa054-ac93-483f-b798-7314bb0dfb2d",
+                    "path": "<Keyboard>/a",
                     "interactions": "",
                     "processors": "",
-                    "groups": "Keyboard&Mouse;Gamepad",
+                    "groups": "Keyboard&Mouse",
                     "action": "Turret",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "084a1f9f-447f-4fc5-913f-2ad8e794bc32",
+                    "path": "<Mouse>/scroll/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Turret",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",
@@ -109,6 +153,28 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse;Gamepad",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "54f842e6-6250-40c1-a656-7763fee99638",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9528a1e9-a7c6-41ec-bdb8-3748f5d45fae",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "Fire",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -131,6 +197,39 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse;Gamepad",
+                    "action": "Gas",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "Keyboard Gas",
+                    "id": "cde84297-16d2-4a5a-9f88-b5ae6dbd15cd",
+                    "path": "1DAxis",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Gas",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "positive",
+                    "id": "d171b72e-ee0f-414d-bc62-b80eb1bb6b76",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Gas",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "39676385-2553-4996-ab73-f27944f90c82",
+                    "path": "<Mouse>/delta/y",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "Gas",
                     "isComposite": false,
                     "isPartOfComposite": false
