@@ -1,13 +1,13 @@
->NOTE: For information on how to install the new input system, please see [Installation](Installation.md).
+>__Note__: For information on how to install the new Input System, please see [Installation](Installation.md).
 
-# Quick Start Guide
+# Quick start guide
 
-* [Getting Input Directly From An Input Device](#getting-input-directly-from-an-input-device)
-* [Getting Input Indirectly Through An Input Action](#getting-input-indirectly-through-an-input-action)
+* [Getting input directly From an Input Device](#getting-input-directly-from-an-input-device)
+* [Getting input indirectly through an Input Action](#getting-input-indirectly-through-an-input-action)
 
-## Getting Input Directly From An Input Device
+## Getting input directly From an Input Device
 
-The quickest way to get started in script is to just read the current state directly from input devices. For example, the following code grabs the gamepad last used by the player and reads out its current state:
+The quickest way to get started in script is to read the current state directly from Input Devices. For example, the following code grabs the gamepad last used by the player and reads its current state:
 
 ```CSharp
 using UnityEngine;
@@ -32,46 +32,46 @@ public class MyPlayerScript : MonoBehaviour
 }
 ```
 
-The same approach works for other types of devices, e.g. [`Keyboard.current`](../api/UnityEngine.InputSystem.Keyboard.html), [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html), etc.
+The same approach works for other Devices types (for example, [`Keyboard.current`](../api/UnityEngine.InputSystem.Keyboard.html) or [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html)).
 
-## Getting Input Indirectly Through An Input Action
+## Getting input indirectly through an Input Action
 
 >Overview:
->1. Add `PlayerInput` component.
->2. Create actions with "Create Actions..." button.
->3. Script action responses.
+>1. Add a `PlayerInput` component.
+>2. Create Actions.
+>3. Script Action responses.
 
-### Step 1: Add [`PlayerInput`](Components.md) Component
+### Step 1: Add a [`PlayerInput`](Components.md) Component
 
-Getting input directly from an input device is quick and convenient but requires a separate path for each type of device and also makes it hard to later change which control on the device leads to which action being taken by the game.
+Getting input directly from an Input Device is quick and convenient, but requires a separate path for each type of Device. That also makes it harder to later change which Device Control triggers a specific event in the game.
 
-An alternative is to use actions as an intermediary between devices and the responses they trigger in the game. The easiest way to do so is using the [`PlayerInput`](Components.md) component. You can add the component from the "Add Component" menu in the GameObject inspector or by selecting `Component >> Input >> Player Input` in the main menu.
+Alternatively, you can use Actions as an intermediary between Devices and the in-game responses they trigger. The easiest way to do this is to use the [`PlayerInput`](Components.md) component. You can add the component using the __Add Component__ button in the GameObject Inspector:
 
 ![Add Player Input Component](Images/AddPlayerInput.png)
 
 ### Step 2: Create Actions
 
-Each [`PlayerInput`](Components.md) component represents one player in the game. To receive input, the component must be connected to a set of actions. The quickest way to create a new set of actions is to click the "Create Actions..." button in the inspector of the component. This will create an asset prepopulated with a default set of maps, actions, and bindings.
+Each [`PlayerInput`](Components.md) component represents one player in the game. To receive input, the component must be connected to a set of Input Actions. The quickest way to create a new set of Actions is to click the __Create Actions…__ button in the Inspector window for that component. This will create an Asset prepopulated with a default set of Input Action Maps, Input Actions, and Input Bindings.
 
 ![Create Actions from Player Input Component](Images/PlayerInputCreateActions.png)
 
-A file requester will pop up that asks you where to create the new asset. Choose a name and folder somewhere inside the "Assets" folder of your project (or just accept the defaults) and click "Okay". This will create a new `.inputactions` asset in your project, connect it to the [`PlayerInput`](Components.md) component, and bring up the editor for `.inputactions` files.
+When you click the __Create Actions…__ button, Unity asks you where to create the new asset. Choose a name and folder inside the *Assets* folder of your Project (or just accept the defaults) and click __Okay__. This creates a new `.inputactions` Asset in your Project, connects it to the [`PlayerInput`](Components.md) component, and brings up the editor window for `.inputactions` files.
 
 ![MyGameActions](Images/MyGameActions.png)
 
-The default set can be freely edited to fit the needs of your project. See the in-depth documentation for the [action editor](ActionAssets.md#editing-input-action-assets) for instructions on how to use the editor.
+You can edit the default set to fit the needs of your Project. See the in-depth documentation for the [Action editor](ActionAssets.md#editing-input-action-assets) for instructions on how to use this window.
 
 ## Step 3: Setting Up Action Responses
 
-With the actions in place on the compone nt, all that remains is to set up a response for each action. Through the "Behavior" setting in the inspector, [`PlayerInput`](Components.md) gives you several ways by which responses can be set up:
+Once the component has its Actions, you must set up a response for each Action. [`PlayerInput`](Components.md) allows you to set up responses in several ways, using the __Behavior__ property in the Inspector window:
 
 ![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)
 
-For more details about the options, see [here](Components.md#notification-behaviors). In our case, we will use "Invoke Unity Events" which uses `UnityEvent` the same way the Unity UI does. When selecting this option, an event for each action that is linked to the component will be displayed. This allows us to directly wire in the target method for each event.
+For more details about the options, see documentation on [notification behaviors](Components.md#notification-behaviors). The screenshot above uses __Invoke Unity Events__, which uses `UnityEvent` in the same way the Unity UI does. Unity displays an event for each Action that is linked to the component. This allows you to directly wire in the target method for each event.
 
 ![PlayerInput Action Events](Images/MyPlayerActionEvents.png)
 
-Each method takes an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) argument that gives access to things like the control that triggered the action and its value. See [here](Actions.md#started-performed-and-canceled-callbacks) for more details.
+Each method takes an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) argument that gives access to the Control that triggered the Action and the Action's value. See documentation on  [Action  callbacks](Actions.md#started-performed-and-canceled-callbacks) for more details.
 
 ```CSharp
 public class MyPlayerScript : MonoBehaviour
@@ -85,6 +85,6 @@ public class MyPlayerScript : MonoBehaviour
 
 This completes the basic setup using [`PlayerInput`](Components.md).
 
-### Alternate Ways to Set Up Input Actions
+### Alternate ways to set up Input Actions
 
-There are ways other than [`PlayerInput`](Components.md) to set up input actions. See the [documentation](Actions.md#creating-actions) for details.
+There are ways other than [`PlayerInput`](Components.md) to set up Input Actions. See documentation on [Creating Actions](Actions.md#creating-actions) for details.
