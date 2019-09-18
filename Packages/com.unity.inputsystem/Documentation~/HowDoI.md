@@ -10,7 +10,7 @@ Devices:
 Actions:
 
 * […create a simple Fire-type Action?](#create-a-simple-fire-type-action)
-* […require a button to be held for 0.4 seconds before triggering an Action?](#require-a-button-to-be-held-for-0.4-seconds-before-triggering-an-action)
+* […require a button to be held for 0.4 seconds before triggering an Action?](#require-a-button-to-be-held-for-04-seconds-before-triggering-an-action)
 * […use a "positive" and a "negative" button to drive an axis?](#use-a-positive-and-a-negative-button-to-drive-an-axis)
 * […create a UI to rebind input in my game?](#create-a-ui-to-rebind-input-in-my-game)
 

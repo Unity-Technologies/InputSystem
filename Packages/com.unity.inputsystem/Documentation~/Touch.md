@@ -6,7 +6,7 @@
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
-* high-level support implemented in the [`EnhancedTouch.Touch`](#touch-class) class.
+* high-level support implemented in the [`EnhancedTouch.Touch`](#enhancedtouchtouch-class) class.
 
 Touch input is supported on Android, iOS, Windows, and UWP.
 
@@ -26,7 +26,7 @@ Additional to the [Controls inherited from `Pointer`](Pointers.md#controls), tou
 |[`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches)|[`ReadOnlyArray<TouchControl>`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|An array of touch Controls, representing all the touches on the Device.|
 
 A touch screen Device consists of multiple [`TouchControls`](../api/UnityEngine.InputSystem.Controls.TouchControl.html). Each of these represents a potential finger touching the Device. The [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) Control represents the touch which is currently driving the [`Pointer`](Pointers.md) representation, and which should be used to interact with the UI. This is usually the first finger to have touched the screen.
- [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) is always identical to one of the entries in the [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array. The [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array contains all touches the system can track. This array has a fixed size, regardless of how many fingers are currently active. If you need an API that only represents active touches, look at the higher-level [`EnhancedTouch.Touch` class](#touch-class).
+ [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) is always identical to one of the entries in the [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array. The [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array contains all touches the system can track. This array has a fixed size, regardless of how many fingers are currently active. If you need an API that only represents active touches, look at the higher-level [`EnhancedTouch.Touch` class](#enhancedtouchtouch-class).
 
 Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html) on the Device, including [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch), is made up of the following child Controls.
 
@@ -46,7 +46,7 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 
 ### Using touch with [Actions](Actions.md)
 
-Touch input can be used with Actions like any other [`Pointer`](Pointers.md) Device, by [binding](ActionBindings.md) to the [pointer Controls](Pointer.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This will get you input from the primary touch (as well as from any other non-touch pointer Devices). 
+Touch input can be used with Actions like any other [`Pointer`](Pointers.md) Device, by [binding](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This will get you input from the primary touch (as well as from any other non-touch pointer Devices). 
 
 However, if you care about getting input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`, or use a wildcard Bindings to bind one Action to all touches like this: `<Touchscreen>/touch*/press`. If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](Actions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
 

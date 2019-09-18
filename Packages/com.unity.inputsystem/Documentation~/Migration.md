@@ -83,7 +83,7 @@ Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSys
 
 No corresponding API yet.
 
-### [`UnityEngine.Input.gyro`](https://docs.unity3d.com/ScriptReference/Input-gyro.html)
+### <a name="gyro"></a>[`UnityEngine.Input.gyro`](https://docs.unity3d.com/ScriptReference/Input-gyro.html)
 
 The `UnityEngine.Gyroscope` class is replaced by multiple separate sensor Devices in the new Input System:
 
@@ -108,7 +108,7 @@ InputSystem.EnableDevice(Gyroscope.current);
 InputSystem.DisableDevice(Gyroscope.current);
 ```
 
->__Note__: `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#unityengineinputgyro) section above.
+>__Note__: `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#gyro) section above.
 
 ### [`UnityEngine.Input.gyro.gravity`](https://docs.unity3d.com/ScriptReference/Gyroscope-gravity.html)
 
@@ -132,7 +132,7 @@ Gyroscope.current.samplingFrequency = 1.0f / updateInterval;
 
 >__Note__:
 >* [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) is in Hz, not in seconds as [`updateInterval`](https://docs.unity3d.com/ScriptReference/Gyroscope-updateInterval.html), so you need to divide 1 by the value.
->* `UnityEngine.Gyroscope` is replaced by multiple separate sensor Devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#unityengineinputgyro) section above.
+>* `UnityEngine.Gyroscope` is replaced by multiple separate sensor Devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#gyro) section above.
 
 ### [`UnityEngine.Input.gyro.userAcceleration`](https://docs.unity3d.com/ScriptReference/Gyroscope-userAcceleration.html)
 

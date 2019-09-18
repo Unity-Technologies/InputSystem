@@ -1,16 +1,16 @@
 # Interactions
 
 * [Operation](#operation)
-    * [Multiple Controls on an Action](#multiple-Controls-on-an-action)
-    * [Multiple Interactios on a Binding](#multiple-Interactions-on-a-binding)
-* [Predefined Interactions](#predefined-Interactions)
-    * [Default Interaction](#default-Interaction)
+    * [Multiple Controls on an Action](#multiple-controls-on-an-action)
+    * [Multiple Interactios on a Binding](#multiple-interactions-on-a-binding)
+* [Predefined Interactions](#predefined-interactions)
+    * [Default Interaction](#default-interaction)
     * [Press](#press)
     * [Hold](#hold)
     * [Tap](#tap)
     * [SlowTap](#slowtap)
     * [MultiTap](#multitap)
-* [Custom Interactions](#writing-custom-Interactions)
+* [Custom Interactions](#writing-custom-interactions)
 
 An Interaction represents a specific input pattern. For example, a ["hold"](#hold) is an Interaction that requires a Control to be held for at least a minimum amount of time.
 
@@ -81,7 +81,7 @@ If you are using [Input Action Assets](ActionAssets.md), you can add any Interac
 
 ![Binding Processors](Images/BindingProcessors.png)
 
-To remove an Interaction, click the minus button next to it. Clicking the up and down arrows changes the [order of Interactions](#multiple-Interactions-on-a-binding).
+To remove an Interaction, click the minus button next to it. Clicking the up and down arrows changes the [order of Interactions](#multiple-interactions-on-a-binding).
 
 If you create your Bindings in code, you can add Interaction like this:
 
@@ -95,7 +95,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 Interactions on Actions work very similar to Interactions on Bindings, but they affect all Controls bound to an Action, not just the ones coming from a specific Binding. If there are Interactions on both the Binding and the Action, the Input System processes the ones from the binding first.
 
-You can add and edit Interactions on Actions in the [Input Action Assets](ActionAssets.md) editor window the [same way](#Interactions-on-bindings) as you would do for Bindings: select an Action to Edit, then add the Interactions in the right window pane.
+You can add and edit Interactions on Actions in the [Input Action Assets](ActionAssets.md) editor window the [same way](#interactions-on-bindings) as you would do for Bindings: select an Action to Edit, then add the Interactions in the right window pane.
 
 If you create your Actions in code, you can add Interactions like this:
 
@@ -105,7 +105,7 @@ var Action = new InputAction(Interactions: "tap(duration=0.8)");
 
 ## Predefined Interactions
 
-The Input System package comes with a set of basic Interactions you can use. If an Action has no Interactions set, the system uses its [default Interaction](#default-Interaction).
+The Input System package comes with a set of basic Interactions you can use. If an Action has no Interactions set, the system uses its [default Interaction](#default-interaction).
 
 >__Note__: The built-in Interaction operate on Control actuation and don't use Control values directly. The Input System evaluates the `pressPoint` parameters against the magnitude of the Control actuation. This means you can use these Interactions on any Control which has a magnitude, such as sticks, and not just on buttons.
 
@@ -115,7 +115,7 @@ If you haven't specifically added an Interaction to a  Binding or its Action, th
 
 [`Value`](Actions.md#value) or [`Button`](Actions.md#button) type Actions have the following behavior:
 
-1. As soon as a bound Control becomes [actuated](Controls.md#Control-actuation), the Action goes from `Waiting` to `Started` and then immediately to `Performed` and back to `Started`. You will see one callback on [`InputAction.started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) followed by one callback on [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed).
+1. As soon as a bound Control becomes [actuated](Controls.md#control-actuation), the Action goes from `Waiting` to `Started` and then immediately to `Performed` and back to `Started`. You will see one callback on [`InputAction.started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) followed by one callback on [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed).
 2. For as long as the bound Control remains actuated, the Action stays in `Started` and triggers `Performed` whenever the value of the Control changes (that is, you will see one call to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)).
 3. When the bound Control stops being actuated, the Action goes to `Canceled` and then back to `Waiting`. You will see one call to [`InputAction.canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled).
 

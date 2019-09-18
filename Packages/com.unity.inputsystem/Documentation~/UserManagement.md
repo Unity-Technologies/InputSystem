@@ -42,4 +42,4 @@ Platforms that support user account association are Xbox One, PlayStation 4, Nin
 
 ## Debugging
 
-Check the debugger documentation to learn [how to debug active users](Debugging.md#debugging-usersplayerinput).
+Check the debugger documentation to learn [how to debug active users](Debugging.md#debugging-users-and-playerinput).

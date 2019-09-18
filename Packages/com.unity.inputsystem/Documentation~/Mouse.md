@@ -14,7 +14,7 @@ You can query the last used or last added mouse with [`Mouse.current`](../api/Un
 
 ## Controls
 
-In addition to the [Controls inherited from `Pointer`](Pointers.md#Controls), Mouse devices implement the following Controls:
+In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), Mouse devices implement the following Controls:
 
 |Control|Type|Description|
 |-------|----|-----------|

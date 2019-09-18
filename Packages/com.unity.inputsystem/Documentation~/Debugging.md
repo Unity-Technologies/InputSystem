@@ -46,7 +46,7 @@ Finally, at the bottom of the window, you can inspect the event stream coming fr
 
 The Input Debugger window lists all enabled [actions](Actions.md) in the __Actions__ list. This list only appears if at least one Action is active and the Editor is in Play mode. If an Action has actively bound Controls, you can click the arrow next to the Action to see a list of the Controls. This is useful to debug whether your Bindings correctly map to the Controls you want them to bind to. See documentation on [Binding resolution](ActionBindings.md#binding-resolution) for more information about how Unity maps Bindings to Controls.
 
->__Note__: Actions belonging to [`InputUsers`](UserManagement.md) don't appear here. They appear in the [__Users__](#debugging-usersplayerinput) list instead.
+>__Note__: Actions belonging to [`InputUsers`](UserManagement.md) don't appear here. They appear in the [__Users__](#debugging-users-and-playerinput) list instead.
 
 ### Debugging users and PlayerInput
 
@@ -56,7 +56,7 @@ When there are any [`InputUser`](UserManagement.md) instances (If you are using 
 
 ### Debugging layouts
 
-The [__Layouts__](Layouts.md) list in the Input Debugger window shows a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. This is mostly handy when you want to [create a new Device mapping](HowDoI.md#-create-my-own-custom-devices), and want to see how it gets represented by the Input System.
+The [__Layouts__](Layouts.md) list in the Input Debugger window shows a breakdown of all registered [Control and Device layouts](Layouts.md). This is the database of supported hardware and the knowledge of how to represent a given piece of input hardware. This is mostly handy when you want to [create a new Device mapping](HowDoI.md#create-my-own-custom-devices), and want to see how it gets represented by the Input System.
 
 ![Layouts in Input Debugger](Images/LayoutsInDebugger.png)
 
