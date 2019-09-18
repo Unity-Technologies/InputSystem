@@ -46,7 +46,7 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 
 ### Using touch with [Actions](Actions.md)
 
-Touch input can be used with Actions like any other [`Pointer`](Pointers.md) Device, by [binding](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This will get you input from the primary touch (as well as from any other non-touch pointer Devices). 
+Touch input can be used with Actions like any other [`Pointer`](Pointers.md) Device, by [binding](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This will get you input from the primary touch (as well as from any other non-touch pointer Devices).
 
 However, if you care about getting input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`, or use a wildcard Bindings to bind one Action to all touches like this: `<Touchscreen>/touch*/press`. If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](Actions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
 

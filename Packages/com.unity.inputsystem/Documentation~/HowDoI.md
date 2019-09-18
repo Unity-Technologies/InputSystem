@@ -16,7 +16,7 @@ Actions:
 
 ## …check if the space key has been pressed this frame?
 
-Use this code: 
+Use this code:
 
 ```CSharp
     Keyboard.current.space.wasPressedThisFrame
@@ -338,7 +338,7 @@ An alternative way is to inform the Input System that a Device is available, and
 
 # …create my own custom Devices?
 
-There are two possible ways to do this. 
+There are two possible ways to do this.
 
 If you want to use one of the existing C# [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) classes in code to interface with your Device, you can build on an existing template using JSON:
 

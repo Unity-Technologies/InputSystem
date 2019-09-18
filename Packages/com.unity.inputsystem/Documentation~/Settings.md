@@ -36,7 +36,7 @@ Some Devices have noise in their input and receive input even if they're not bei
 
 To counteract this, enable noise filtering. When this setting is enabled and your game receives input, the system determines whether the input comes from a Device that has noisy Controls ([`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy)). If it does, the system also determines whether the given input contains any state changes on a Control that isn't flagged as noisy. If so, that Device becomes current. Otherwise, your game still consumes the input, which is also visible on the Device, but the Device doesn't become current.
 
->__Note__: The system does not currently detect other forms of noise, mainly those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves. 
+>__Note__: The system does not currently detect other forms of noise, mainly those on gamepad sticks. This means that if the sticks wiggle a small amount but are still within deadzone limits, the Device still becomes current. This doesn't require actuating the sticks themselves. On most gamepads, there's a small tolerance within which the sticks move when the entire device moves.
 
 ## Compensate For Screen Orientation
 
@@ -50,7 +50,7 @@ If this setting is enabled, rotation values reported by [sensors](Sensors.md) ar
 |[`ScreenOrientation.LandscapeRight`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.html)|Values rotate by 270 degrees.|
 
 This setting affects the following sensors:
-* [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) 
+* [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html)
 * [`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html)
 * [`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html)
 * [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html)

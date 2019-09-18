@@ -85,7 +85,7 @@ The most important property of any Binding is the [control path](Controls.md#con
 
 ![Control Picker](Images/InputControlPicker.png)
 
-In the Control picker window, you can explore a tree of Input Devices and Controls that the Input System recognizes, and bind to these Controls. Unity filters this list by the Action's [`Control Type`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_expectedControlType) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick. 
+In the Control picker window, you can explore a tree of Input Devices and Controls that the Input System recognizes, and bind to these Controls. Unity filters this list by the Action's [`Control Type`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_expectedControlType) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
 
 The Device and Control tree is organized hierarchically from generic to specific. For example, navigate to __Gamepad__, and choose the Control path `<Gamepad>/buttonSouth`, this matches the lower action button on any gamepad. On the other hand, if you navigate to __Gamepad__, then scroll down to __More Specific Gamepads__ and select __PS4 Controller__, and then choose the Control path `<DualShockGamepad>/buttonSouth`, this only matches the "cross" button on PlayStation gamepads, and doesn't match any other gamepads.
 

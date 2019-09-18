@@ -92,7 +92,7 @@ public class MyPlayerScript : MonoBehaviour
 
 ### Notification behaviors
 
-You can use the [`Behavior`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_notificationBehavior) property in the Inspector to determine how a [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component notifies game code when something related to the player has occurred. 
+You can use the [`Behavior`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_notificationBehavior) property in the Inspector to determine how a [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component notifies game code when something related to the player has occurred.
 
 The following options are available:
 
