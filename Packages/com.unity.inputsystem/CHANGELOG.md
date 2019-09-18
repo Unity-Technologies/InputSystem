@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 -Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Fixed an issue where Stick Controls could not be created in Players built with medium or high code stripping level enabled.
 
 #### Actions
 
