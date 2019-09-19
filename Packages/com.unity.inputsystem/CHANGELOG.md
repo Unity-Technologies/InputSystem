@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 -Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Fixed incorrect default state for axes on some controllers.
 
 #### Actions
 

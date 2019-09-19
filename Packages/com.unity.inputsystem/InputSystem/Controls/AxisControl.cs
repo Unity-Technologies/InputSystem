@@ -209,6 +209,16 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            // if we don't have any default state, and we are using normalizeZero, then the default value
+            // should not be zero. Generate it from normalizeZero.
+            if (!hasDefaultState && normalize && Mathf.Abs(normalizeZero) > Mathf.Epsilon)
+                m_DefaultState = stateBlock.FloatToPrimitiveValue(normalizeZero);
+        }
+
         /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
