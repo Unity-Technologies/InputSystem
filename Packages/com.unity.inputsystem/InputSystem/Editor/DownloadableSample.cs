@@ -63,7 +63,7 @@ internal class DownloadableSampleInspector : Editor
         else
         {
             if (!sample.packageDeps.All(x => HasPackage(x)))
-                EditorGUILayout.HelpBox($"The {target.name} sample requires the following packages to be installed in your project.", MessageType.Warning);
+                EditorGUILayout.HelpBox($"The {target.name} sample requires the following packages to be installed in your Project. Please install all the required packages before downloading the sample!", MessageType.Warning);
         }
 
 
@@ -90,7 +90,7 @@ internal class DownloadableSampleInspector : Editor
                 GUI.Label(rect, "Missing \u2717", EditorStyles.label);
                 rect.x += rect.width - 80;
                 rect.width = 80;
-                if (GUI.Button(rect, "Add"))
+                if (GUI.Button(rect, "Install"))
                     add = Client.Add(req);
             }
         }
