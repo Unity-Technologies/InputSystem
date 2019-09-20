@@ -76,15 +76,19 @@ namespace UnityEngine.InputSystem.Controls
         // Also puts AxisDeadzones on the axes.
         [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
         [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
+        [Scripting.Preserve]
         public ButtonControl up { get; private set; }
 
         [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down", shortDisplayName = "\u2193")]
+        [Scripting.Preserve]
         public ButtonControl down { get; private set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left", shortDisplayName = "\u2190")]
+        [Scripting.Preserve]
         public ButtonControl left { get; private set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right", shortDisplayName = "\u2192")]
+        [Scripting.Preserve]
         public ButtonControl right { get; private set; }
 
         protected override void FinishSetup()
