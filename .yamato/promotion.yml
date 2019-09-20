@@ -4,6 +4,8 @@ promote:
     type: Unity::VM
     image: package-ci/win10:stable
     flavor: b1.large
+  dependencies:
+    - .yamato/publish-samples.yml 
   variables:
     UPMCI_PROMOTION: 1
   commands:

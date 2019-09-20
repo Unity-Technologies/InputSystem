@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method allocates GC memory and should thus not be used during normal gameplay.
         /// </remarks>
-        /// <seealso cref="InputControl.hasDefaultValue"/>
+        /// <seealso cref="InputControl.hasDefaultState"/>
         /// <seealso cref="InputControl.defaultStatePtr"/>
         public static unsafe object ReadDefaultValueAsObject(this InputControl control)
         {
@@ -539,6 +539,35 @@ namespace UnityEngine.InputSystem
                 control.WriteValueIntoEvent(value, eventPtr);
                 InputSystem.QueueEvent(eventPtr);
             }
+        }
+
+        /// <summary>
+        /// Modify <paramref name="newState"/> to write an accumulated value of the control
+        /// rather than the value currently found in the event.
+        /// </summary>
+        /// <param name="control">Control to perform the accumulation on.</param>
+        /// <param name="currentStatePtr">Memory containing the control's current state. See <see
+        /// cref="InputControl.currentStatePtr"/>.</param>
+        /// <param name="newState">Event containing the new state about to be written to the device.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method reads the current, unprocessed value of the control from <see cref="currentStatePtr"/>
+        /// and then adds it to the value of the control found in <paramref name="newState"/>.
+        ///
+        /// Note that the method does nothing if a value for the control is not contained in <paramref name="newState"/>.
+        /// This can be the case, for example, for <see cref="DeltaStateEvent"/>s.
+        /// </remarks>
+        /// <seealso cref="Pointer.delta"/>
+        public static unsafe void AccumulateValueInEvent(this InputControl<float> control, void* currentStatePtr, InputEventPtr newState)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            if (!control.ReadUnprocessedValueFromEvent(newState, out var newDelta))
+                return; // Value for the control not contained in the given event.
+
+            var oldDelta = control.ReadUnprocessedValueFromState(currentStatePtr);
+            control.WriteValueIntoEvent(oldDelta + newDelta, newState);
         }
 
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)

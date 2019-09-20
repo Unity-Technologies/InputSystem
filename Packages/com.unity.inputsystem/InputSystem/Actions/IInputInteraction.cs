@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 ////TODO: allow interactions to be constrained to a specific InputActionType
 
@@ -144,6 +145,7 @@ namespace UnityEngine.InputSystem
     ///
     /// <example>
     /// <code>
+    /// #if UNITY_EDITOR
     /// public class MyCustomInteractionEditor : InputParameterEditor&lt;MyCustomInteraction&gt;
     /// {
     ///     protected override void OnEnable()
@@ -156,6 +158,7 @@ namespace UnityEngine.InputSystem
     ///         // Use standard Unity UI calls do create your own parameter editor UI.
     ///     }
     /// }
+    /// #endif
     /// </code>
     /// </example>
     /// </remarks>
@@ -163,7 +166,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputBinding.interactions"/>
     /// <seealso cref="InputAction.interactions"/>
     /// <seealso cref="Editor.InputParameterEditor"/>
-    [Scripting.Preserve]
+    [Preserve]
     public interface IInputInteraction
     {
         /// <summary>
@@ -262,9 +265,11 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// Advertising the value type will an interaction type to be filtered out in the UI if the value type
     /// it has is not compatible with the value type expected by the action.
+    ///
+    /// In all other ways, this interface is identical to <see cref="IInputInteraction"/>.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces", Justification = "This interface is used to mark implementing classes to advertise the value it expects. This seems more elegant then the suggestion to use an attribute.")]
-    [Scripting.Preserve]
+    [Preserve]
     public interface IInputInteraction<TValue> : IInputInteraction
         where TValue : struct
     {

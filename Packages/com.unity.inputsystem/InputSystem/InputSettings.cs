@@ -41,13 +41,32 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.
         /// </summary>
+        /// <value>When to run input updates.</value>
         /// <remarks>
-        /// By default, input updates will automatically be triggered
+        /// By default, input updates will automatically be triggered as part of the player loop.
+        /// If <c>updateMode</c> is set to <see cref="UpdateMode.ProcessEventsInDynamicUpdate"/>
+        /// (the default), then right at the beginning of a dynamic update (i.e. before all
+        /// <c>MonoBehaviour.Update</c> methods are called), input is processed. And if <c>updateMode</c>
+        /// is set to <see cref="UpdateMode.ProcessEventsInFixedUpdate"/>, then right at the beginning
+        /// of each fixed update (i.e. before all <c>MonoBehaviour.FixedUpdate</c> methods are
+        /// called), input is processed.
         ///
-        /// In the editor,
+        /// Additionally, if there are devices that need updates right before rendering (see <see
+        /// cref="InputDevice.updateBeforeRender"/>), an extra update will be run right before
+        /// rendering. This special update will only consume input on devices that have
+        /// <see cref="InputDevice.updateBeforeRender"/> set to <c>true</c>.
+        ///
+        /// You can run updates manually using <see cref="InputSystem.Update"/>. Doing so
+        /// outside of tests is only recommended, however, if <c>updateMode</c> is set to
+        /// <see cref="UpdateMode.ProcessEventsManually"/> (in which case it is actually required
+        /// for input to be processed at all).
+        ///
+        /// Note that in the editor, input updates will also run before each editor update
+        /// (i.e. as part of <c>EditorApplication.update</c>). Player and editor input state
+        /// are kept separate, though, so any input consumed in editor updates will not be visible
+        /// in player updates and vice versa.
         /// </remarks>
-        /// <seealso cref="InputSystem.Update()"/>
-        /// <seealso cref="timesliceEvents"/>
+        /// <seealso cref="InputSystem.Update"/>
         public UpdateMode updateMode
         {
             get => m_UpdateMode;
@@ -87,6 +106,36 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Whether to not make a device <c>.current</c> (see <see cref="InputDevice.MakeCurrent"/>)
+        /// when there is only noise in the input.
+        /// </summary>
+        /// <value>Whether to check input on devices for noise.</value>
+        /// <remarks>
+        /// This is <em>disabled by default</em>.
+        ///
+        /// When toggled on, this property adds extra processing every time input is
+        /// received on a device that is considered noisy. These devices are those that
+        /// have at least one control that is marked as <see cref="InputControl.noisy"/>.
+        /// A good example is the PS4 controller which has a gyroscope sensor built into
+        /// the device. Whereas sticks and buttons on the device require user interaction
+        /// to produce non-default values, the gyro will produce varying values even if
+        /// the device just sits there without user interaction.
+        ///
+        /// Without noise filtering, a PS4 controller will thus continually make itself
+        /// current as it will send a continuous stream of input even when not actively
+        /// used by the player. By toggling this property on, each input event will be
+        /// run through a noise mask. Only if state has changed outside of memory areas
+        /// marked as noise will the input be considered valid user interaction and the
+        /// device will be made current. Note that in this process, the system does
+        /// <em>not</em> determine whether non-noisy controls on the device have actually
+        /// changed value. All the system establishes is whether such controls have changed
+        /// <em>state</em>. However, processing such as for deadzones may cause values
+        /// to not effectively change even though the non-noisy state of the device has
+        /// changed.
+        /// </remarks>
+        /// <seealso cref="InputDevice.MakeCurrent"/>
+        /// <seealso cref="InputControl.noisy"/>
         public bool filterNoiseOnCurrent
         {
             get => m_FilterNoiseOnCurrent;
@@ -103,6 +152,32 @@ namespace UnityEngine.InputSystem
         /// Default value used when nothing is set explicitly on <see cref="StickDeadzoneProcessor.min"/>
         /// or <see cref="AxisDeadzoneProcessor.min"/>.
         /// </summary>
+        /// <value>Default lower limit for deadzones.</value>
+        /// <remarks>
+        /// "Deadzones" refer to limits established for the range of values accepted as input
+        /// on a control. If the value for the control falls outside the range, i.e. below the
+        /// given minimum or above the given maximum, the value is clamped to the respective
+        /// limit.
+        ///
+        /// This property configures the default lower bound of the value range.
+        ///
+        /// Note that deadzones will by default re-normalize values after clamping. This means that
+        /// inputs at the lower and upper end are dropped and that the range in-between is re-normalized
+        /// to [0..1].
+        ///
+        /// Note that deadzones preserve the sign of inputs. This means that both the upper and
+        /// the lower deadzone bound extend to both the positive and the negative range. For example,
+        /// a deadzone min of 0.1 will clamp values between -0.1 and +0.1.
+        ///
+        /// The most common example of where deadzones are used are the sticks on gamepads, i.e.
+        /// <see cref="Gamepad.leftStick"/> and <see cref="Gamepad.rightStick"/>. Sticks will
+        /// usually be wobbly to some extent (just how wobbly varies greatly between different
+        /// types of controllers -- which means that often deadzones need to be configured on a
+        /// per-device type basis). Using deadzones, stick motion at the extreme ends of the spectrum
+        /// can be filtered out and noise in these areas can effectively be eliminated this way.
+        ///
+        /// The default value for this property is 0.125.
+        /// </remarks>
         /// <seealso cref="StickDeadzoneProcessor"/>
         /// <seealso cref="AxisDeadzoneProcessor"/>
         public float defaultDeadzoneMin
@@ -121,6 +196,32 @@ namespace UnityEngine.InputSystem
         /// Default value used when nothing is set explicitly on <see cref="StickDeadzoneProcessor.max"/>
         /// or <see cref="AxisDeadzoneProcessor.max"/>.
         /// </summary>
+        /// <value>Default upper limit for deadzones.</value>
+        /// <remarks>
+        /// "Deadzones" refer to limits established for the range of values accepted as input
+        /// on a control. If the value for the control falls outside the range, i.e. below the
+        /// given minimum or above the given maximum, the value is clamped to the respective
+        /// limit.
+        ///
+        /// This property configures the default upper bound of the value range.
+        ///
+        /// Note that deadzones will by default re-normalize values after clamping. This means that
+        /// inputs at the lower and upper end are dropped and that the range in-between is re-normalized
+        /// to [0..1].
+        ///
+        /// Note that deadzones preserve the sign of inputs. This means that both the upper and
+        /// the lower deadzone bound extend to both the positive and the negative range. For example,
+        /// a deadzone max of 0.95 will clamp values of &gt;0.95 and &lt;-0.95.
+        ///
+        /// The most common example of where deadzones are used are the sticks on gamepads, i.e.
+        /// <see cref="Gamepad.leftStick"/> and <see cref="Gamepad.rightStick"/>. Sticks will
+        /// usually be wobbly to some extent (just how wobbly varies greatly between different
+        /// types of controllers -- which means that often deadzones need to be configured on a
+        /// per-device type basis). Using deadzones, stick motion at the extreme ends of the spectrum
+        /// can be filtered out and noise in these areas can effectively be eliminated this way.
+        ///
+        /// The default value for this property is 0.925.
+        /// </remarks>
         /// <seealso cref="StickDeadzoneProcessor"/>
         /// <seealso cref="AxisDeadzoneProcessor"/>
         public float defaultDeadzoneMax
@@ -135,6 +236,54 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// The default value threshold for when a button is considered pressed. Used if
+        /// no explicit thresholds are set on parameters such as <see cref="Controls.ButtonControl.pressPoint"/>
+        /// or <see cref="Interactions.PressInteraction.pressPoint"/>.
+        /// </summary>
+        /// <value>Default button press threshold.</value>
+        /// <remarks>
+        /// In the input system, each button constitutes a full floating-point value. Pure
+        /// toggle buttons, such as <see cref="Gamepad.buttonSouth"/> for example, will simply
+        /// alternate between 0 (not pressed) and 1 (pressed). However, buttons may also have
+        /// ranges, such as <see cref="Gamepad.leftTrigger"/> for example. When used in a context
+        /// where a clear distinction between pressed and not pressed is required, we need a value
+        /// beyond which we consider the button pressed.
+        ///
+        /// By setting this property, the default value for this can be configured. If a button
+        /// has a value equal to or greater than the button press point, it is considered pressed.
+        ///
+        /// The default value is 0.5.
+        ///
+        /// Lowering the button press point will make triggers feel more like hair-triggers (akin
+        /// to using the hair-trigger feature on Xbox Elite controllers). However, it may make using
+        /// the directional buttons (i.e. <see cref="Controls.StickControl.up"/> etc) be fickle as
+        /// solely moving in only one direction with sticks isn't easy. To counteract that, the button
+        /// press points on the stick buttons can be raised.
+        ///
+        /// Another solution is to simply lower the press points on the triggers specifically.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterLayoutOverride(@"
+        ///     {
+        ///         ""name"" : ""HairTriggers"",
+        ///         ""extend"" : ""Gamepad"",
+        ///         ""controls"" [
+        ///             { ""name"" : ""leftTrigger"", ""parameters"" : ""pressPoint=0.1"" },
+        ///             { ""name"" : ""rightTrigger"", ""parameters"" : ""pressPoint=0.1"" }
+        ///         ]
+        ///     }
+        /// ");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="Controls.ButtonControl.pressPoint"/>
+        /// <seealso cref="Controls.ButtonControl.isPressed"/>
+        /// <seealso cref="Interactions.PressInteraction.pressPoint"/>
+        /// <seealso cref="Interactions.TapInteraction.pressPoint"/>
+        /// <seealso cref="Interactions.SlowTapInteraction.pressPoint"/>
+        /// <seealso cref="InputBindingCompositeContext.ReadValueAsButton"/>
         public float defaultButtonPressPoint
         {
             get => m_DefaultButtonPressPoint;
@@ -147,6 +296,21 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Default time (in seconds) within which a press and release has to occur for it
+        /// to be registered as a "tap".
+        /// </summary>
+        /// <value>Default upper limit on press durations for them to register as taps.</value>
+        /// <remarks>
+        /// A tap is considered as a quick press-and-release on a button-like input control.
+        /// This property determines just how quick the press-and-release has to be, i.e. what
+        /// the maximum time is that can elapse between the button being pressed and released
+        /// again. If the delay between press and release is greater than this time, the
+        /// input does not qualify as a tap.
+        ///
+        /// The default tap time is 0.2 seconds.
+        /// </remarks>
+        /// <seealso cref="TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
@@ -263,9 +427,11 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private bool m_CompensateForScreenOrientation = true;
         [SerializeField] private bool m_FilterNoiseOnCurrent = false;
-
         [SerializeField] private float m_DefaultDeadzoneMin = 0.125f;
         [SerializeField] private float m_DefaultDeadzoneMax = 0.925f;
+        // A setting of 0.5 seems to roughly be what games generally use on the gamepad triggers.
+        // Having a higher value here also obsoletes the need for custom press points on stick buttons
+        // (the up/down/left/right ones).
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
@@ -297,7 +463,7 @@ namespace UnityEngine.InputSystem
         /// automatically in response to whether devices are present requiring this type of update (<see
         /// cref="InputDevice.updateBeforeRender"/>). This update does not consume extra state.
         /// </remarks>
-        /// <seealso cref="InputSystem.Update()"/>
+        /// <seealso cref="InputSystem.Update"/>
         /// <seealso cref="InputUpdateType"/>
         /// <seealso cref="MonoBehaviour.FixedUpdate"/>
         /// <seealso cref="MonoBehaviour.Update"/>
@@ -326,13 +492,13 @@ namespace UnityEngine.InputSystem
             ProcessEventsInFixedUpdate,
 
             /// <summary>
-            /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update()"/> must be called
+            /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
             /// </summary>
             /// <remarks>
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
-            /// Note that failing to call <see cref="InputSystem.Update()"/> may result in a lot of events
+            /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
             /// </remarks>
             ProcessEventsManually,

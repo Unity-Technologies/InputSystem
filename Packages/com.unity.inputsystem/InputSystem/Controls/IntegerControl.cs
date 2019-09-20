@@ -10,16 +10,21 @@ namespace UnityEngine.InputSystem.Controls
     [Scripting.Preserve]
     public class IntegerControl : InputControl<int>
     {
+        /// <summary>
+        /// Default-initialize an integer control.
+        /// </summary>
         public IntegerControl()
         {
             m_StateBlock.format = InputStateBlock.FormatInt;
         }
 
+        /// <inheritdoc/>
         public override unsafe int ReadUnprocessedValueFromState(void* statePtr)
         {
             return m_StateBlock.ReadInt(statePtr);
         }
 
+        /// <inheritdoc/>
         public override unsafe void WriteValueIntoState(int value, void* statePtr)
         {
             m_StateBlock.WriteInt(statePtr, value);

@@ -13,7 +13,8 @@ namespace UnityEngine.InputSystem.Linux
         [SerializeField] private string m_ParentLayout;
         [SerializeField] private SDLDeviceDescriptor m_Descriptor;
 
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description, string matchedLayout,
+            InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             if (description.interfaceName != LinuxSupport.kInterfaceName)
                 return null;

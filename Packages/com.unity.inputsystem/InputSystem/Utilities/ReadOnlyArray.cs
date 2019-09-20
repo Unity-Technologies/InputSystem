@@ -16,6 +16,15 @@ namespace UnityEngine.InputSystem.Utilities
     /// The purpose of this struct is to allow exposing internal arrays directly such that no
     /// boxing and no going through interfaces is required but at the same time not allowing
     /// the internal arrays to be modified.
+    ///
+    /// It differs from <c>ReadOnlySpan&lt;T&gt;</c> in that it can be stored on the heap and differs
+    /// from <c>ReadOnlyCollection&lt;T&gt;</c> in that it supports slices directly without needing
+    /// an intermediate object representing the slice.
+    ///
+    /// Note that in most cases, the ReadOnlyArray instance should be treated as a <em>temporary</em>.
+    /// The actual array referred to by a ReadOnlyArray instance is usually owned and probably mutated
+    /// by another piece of code. When that code makes changes to the array, the ReadOnlyArray
+    /// instance will not get updated.
     /// </remarks>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
@@ -72,6 +81,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        /// <inheritdoc />
         public IEnumerator<TValue> GetEnumerator()
         {
             return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);

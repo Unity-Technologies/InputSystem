@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Processors
         public float y = 1;
         public float z = 1;
 
-        public override Vector3 Process(Vector3 value, InputControl<Vector3> control)
+        public override Vector3 Process(Vector3 value, InputControl control)
         {
             return new Vector3(value.x * x, value.y * y, value.z * z);
         }

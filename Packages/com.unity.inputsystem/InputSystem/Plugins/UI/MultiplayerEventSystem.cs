@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.UI
 
         protected override void Update()
         {
-            EventSystem originalCurrent = EventSystem.current;
+            var originalCurrent = current;
             current = this; // in order to avoid reimplementing half of the EventSystem class, just temporarily assign this EventSystem to be the globally current one
             try
             {

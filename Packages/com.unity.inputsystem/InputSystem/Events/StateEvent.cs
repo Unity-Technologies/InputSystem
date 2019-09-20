@@ -100,7 +100,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();
 
-            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
+            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.deviceId, InputRuntime.s_Instance.currentTime);
             stateEventPtr->stateFormat = stateFormat;
             UnsafeUtility.MemCpy(stateEventPtr->state, statePtr, stateSize);
 

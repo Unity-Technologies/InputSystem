@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
     /// These settings are not stored in assets in the project along with the other input settings.
     /// Instead, they are serialized to JSON and stored in the project's Library/ folder.
     /// </remarks>
-    public static class InputEditorUserSettings
+    internal static class InputEditorUserSettings
     {
         /// <summary>
         /// Where the settings are stored in the user's project.

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview] - 2019-9-20
+
+### Fixed
+
+-Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Fixed an issue where Stick Controls could not be created in Players built with medium or high code stripping level enabled.
+- Fixed incorrect default state for axes on some controllers.
+
+#### Actions
+
+- Fixed `CallbackContext.ReadValue` throwing when invoked during device removal
+
+### Changed
+### Added
+
 ## [0.9.6-preview] - 2019-9-6
 
 ### Fixed

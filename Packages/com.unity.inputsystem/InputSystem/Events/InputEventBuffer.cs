@@ -29,22 +29,27 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Total number of events in the buffer.
         /// </summary>
+        /// <value>Number of events currently in the buffer.</value>
         public int eventCount => m_EventCount;
 
         /// <summary>
-        /// Size of the buffer in bytes.
+        /// Size of the used portion of the buffer in bytes. Use <see cref="capacityInBytes"/> to
+        /// get the total allocated size.
         /// </summary>
+        /// <value>Used size of buffer in bytes.</value>
         /// <remarks>
         /// If the size is not known, returns <see cref="BufferSizeUnknown"/>.
         ///
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
-        /// <see cref="InputEvent">Input events</see> are variable in size.
+        /// as <see cref="InputEvent"/> instances are variable in size.
         /// </remarks>
         public long sizeInBytes => m_SizeInBytes;
 
         /// <summary>
-        /// Amount of unused bytes in the currently allocated buffer.
+        /// Total size of allocated memory in bytes. This value minus <see cref="sizeInBytes"/> is the
+        /// spare capacity of the buffer. Will never be less than <see cref="sizeInBytes"/>.
         /// </summary>
+        /// <value>Size of allocated memory in bytes.</value>
         /// <remarks>
         /// A buffer's capacity determines how much event data can be written to the buffer before it has to be
         /// reallocated.
@@ -60,8 +65,16 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>
+        /// The raw underlying memory buffer.
+        /// </summary>
+        /// <value>Underlying buffer of unmanaged memory.</value>
         public NativeArray<byte> data => m_Buffer;
 
+        /// <summary>
+        /// Pointer to the first event in the buffer.
+        /// </summary>
+        /// <value>Pointer to first event in buffer.</value>
         public InputEventPtr bufferPtr
         {
             // When using ConvertExistingDataToNativeArray, the NativeArray isn't getting a "safety handle" (seems like a bug)
@@ -342,15 +355,9 @@ namespace UnityEngine.InputSystem.LowLevel
             {
             }
 
-            public InputEventPtr Current
-            {
-                get { return m_CurrentEvent; }
-            }
+            public InputEventPtr Current => m_CurrentEvent;
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 }

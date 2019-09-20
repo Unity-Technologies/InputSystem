@@ -78,7 +78,8 @@ namespace UnityEngine.InputSystem.HID
         // If the system cannot find a more specific layout for a given HID, this method will try
         // to produce a layout builder on the fly based on the HID descriptor received from
         // the device.
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description, string matchedLayout, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description, string matchedLayout,
+            InputDeviceExecuteCommandDelegate executeDeviceCommand)
         {
             // If the system found a matching layout, there's nothing for us to do.
             if (!string.IsNullOrEmpty(matchedLayout))
@@ -89,7 +90,7 @@ namespace UnityEngine.InputSystem.HID
                 return null;
 
             // Read HID descriptor.
-            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(deviceId, ref description, runtime);
+            var hidDeviceDescriptor = ReadHIDDeviceDescriptor(ref description, executeDeviceCommand);
 
             if (!HIDSupport.supportedHIDUsages.Contains(new HIDSupport.HIDPageUsage(hidDeviceDescriptor.usagePage, hidDeviceDescriptor.usage)))
                 return null;
@@ -187,20 +188,8 @@ namespace UnityEngine.InputSystem.HID
             return layoutName;
         }
 
-        public static HIDDeviceDescriptor ReadHIDDeviceDescriptor(InputDevice device, IInputRuntime runtime)
-        {
-            if (device == null)
-                throw new ArgumentNullException(nameof(device));
-
-            var deviceDescription = device.description;
-            if (deviceDescription.interfaceName != kHIDInterface)
-                throw new ArgumentException(
-                    $"Device '{device}' is not a HID (interface is '{deviceDescription.interfaceName}')", nameof(device));
-
-            return ReadHIDDeviceDescriptor(device.id, ref deviceDescription, runtime);
-        }
-
-        public static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(int deviceId, ref InputDeviceDescription deviceDescription, IInputRuntime runtime)
+        internal static unsafe HIDDeviceDescriptor ReadHIDDeviceDescriptor(ref InputDeviceDescription deviceDescription,
+            InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             if (deviceDescription.interfaceName != kHIDInterface)
                 throw new ArgumentException(
@@ -236,14 +225,9 @@ namespace UnityEngine.InputSystem.HID
             // Request descriptor, if necessary.
             if (needToRequestDescriptor)
             {
-                // If the device has no assigned ID yet, we can't perform IOCTLs on the
-                // device so no way to get a report descriptor.
-                if (deviceId == InvalidDeviceId)
-                    return new HIDDeviceDescriptor();
-
                 // Try to get the size of the HID descriptor from the device.
                 var sizeOfDescriptorCommand = new InputDeviceCommand(QueryHIDReportDescriptorSizeDeviceCommandType);
-                var sizeOfDescriptorInBytes = runtime.DeviceCommand(deviceId, ref sizeOfDescriptorCommand);
+                var sizeOfDescriptorInBytes = executeCommandDelegate(ref sizeOfDescriptorCommand);
                 if (sizeOfDescriptorInBytes > 0)
                 {
                     // Now try to fetch the HID descriptor.
@@ -251,7 +235,7 @@ namespace UnityEngine.InputSystem.HID
                                InputDeviceCommand.AllocateNative(QueryHIDReportDescriptorDeviceCommandType, (int)sizeOfDescriptorInBytes))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
-                        if (runtime.DeviceCommand(deviceId, ref *commandPtr) != sizeOfDescriptorInBytes)
+                        if (executeCommandDelegate(ref *commandPtr) != sizeOfDescriptorInBytes)
                             return new HIDDeviceDescriptor();
 
                         // Try to parse the HID report descriptor.
@@ -276,7 +260,7 @@ namespace UnityEngine.InputSystem.HID
                                InputDeviceCommand.AllocateNative(QueryHIDParsedReportDescriptorDeviceCommandType, kMaxDescriptorBufferSize))
                     {
                         var commandPtr = (InputDeviceCommand*)buffer.GetUnsafePtr();
-                        var utf8Length = runtime.DeviceCommand(deviceId, ref *commandPtr);
+                        var utf8Length = executeCommandDelegate(ref *commandPtr);
                         if (utf8Length < 0)
                             return new HIDDeviceDescriptor();
 

@@ -17,7 +17,7 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingChildControlByPath
+////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingExistingControl
 
 namespace UnityEngine.InputSystem.Layouts
 {
@@ -244,6 +244,12 @@ namespace UnityEngine.InputSystem.Layouts
             var haveControlLayoutWithPath = false;
             for (var i = 0; i < controlLayouts.Length; ++i)
             {
+                // Skip if variants don't match.
+                if (!controlLayouts[i].variants.IsEmpty() &&
+                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
+                        variants, ','))
+                    continue;
+
                 ////REVIEW: I'm not sure this is good enough. ATM if you have a control layout with
                 ////        name "foo" and one with name "foo/bar", then the latter is taken as an override
                 ////        but the former isn't. However, whether it has a slash in the path or not shouldn't
@@ -251,7 +257,7 @@ namespace UnityEngine.InputSystem.Layouts
                 ////        considered an override, if not, it shouldn't.
                 // Not a new child if it's a layout reaching in to the hierarchy to modify
                 // an existing child.
-                if (controlLayouts[i].isModifyingChildControlByPath)
+                if (controlLayouts[i].isModifyingExistingControl)
                 {
                     if (controlLayouts[i].isArray)
                         throw new NotSupportedException(
@@ -261,12 +267,6 @@ namespace UnityEngine.InputSystem.Layouts
                     InsertChildControlOverride(parent, ref controlLayouts[i]);
                     continue;
                 }
-
-                // Skip if variants don't match.
-                if (!controlLayouts[i].variants.IsEmpty() &&
-                    !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(controlLayouts[i].variants,
-                        variants, ','))
-                    continue;
 
                 if (controlLayouts[i].isArray)
                     childCount += controlLayouts[i].arraySize;
@@ -296,7 +296,7 @@ namespace UnityEngine.InputSystem.Layouts
                 // Skip control layouts that don't add controls but rather modify child
                 // controls of other controls added by the layout. We do a second pass
                 // to apply their settings.
-                if (controlLayout.isModifyingChildControlByPath)
+                if (controlLayout.isModifyingExistingControl)
                     continue;
 
                 // If the control is part of a variant, skip it if it isn't in the variants we're
@@ -343,7 +343,7 @@ namespace UnityEngine.InputSystem.Layouts
                 for (var i = 0; i < controlLayouts.Length; ++i)
                 {
                     var controlLayout = controlLayouts[i];
-                    if (!controlLayout.isModifyingChildControlByPath)
+                    if (!controlLayout.isModifyingExistingControl)
                         continue;
 
                     // If the control is part of a variants, skip it if it isn't the variants we're
@@ -413,8 +413,8 @@ namespace UnityEngine.InputSystem.Layouts
             control.m_ShortDisplayNameFromLayout = controlItem.shortDisplayName;
 
             // Set default value.
-            control.m_DefaultValue = controlItem.defaultState;
-            if (!control.m_DefaultValue.isEmpty)
+            control.m_DefaultState = controlItem.defaultState;
+            if (!control.m_DefaultState.isEmpty)
                 m_Device.hasControlsWithDefaultState = true;
 
             // Set min and max value. Don't just overwrite here as the control's constructor may

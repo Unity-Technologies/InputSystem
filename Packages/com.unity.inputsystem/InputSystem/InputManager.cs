@@ -385,40 +385,19 @@ namespace UnityEngine.InputSystem
                 RegisterControlLayoutMatcher(internedLayoutName, deviceMatcher);
         }
 
-        public void RegisterControlLayoutBuilder(MethodInfo method, object instance, string name,
+        public void RegisterControlLayoutBuilder(Func<InputControlLayout> method, string name,
             string baseLayout = null)
         {
             if (method == null)
                 throw new ArgumentNullException(nameof(method));
-            if (method.IsGenericMethod)
-                throw new ArgumentException($"Method must not be generic ({method})", nameof(method));
-            if (method.GetParameters().Length > 0)
-                throw new ArgumentException($"Method must not take arguments ({method})", nameof(method));
-            if (!typeof(InputControlLayout).IsAssignableFrom(method.ReturnType))
-                throw new ArgumentException($"Method must return InputControlLayout ({method})", nameof(method));
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
-
-            ////FIXME: this is no longer necessary; kill it
-            // If we have an instance, make sure it is [Serializable].
-            if (instance != null)
-            {
-                var type = instance.GetType();
-                if (type.GetCustomAttribute<SerializableAttribute>(true) == null)
-                    throw new ArgumentException(
-                        $"Instance used with {method} to construct a layout must be [Serializable] but {type} is not",
-                        nameof(instance));
-            }
 
             var internedLayoutName = new InternedString(name);
             var internedBaseLayoutName = new InternedString(baseLayout);
             var isReplacement = DoesLayoutExist(internedLayoutName);
 
-            m_Layouts.layoutBuilders[internedLayoutName] = new InputControlLayout.BuilderInfo
-            {
-                method = method,
-                instance = instance
-            };
+            m_Layouts.layoutBuilders[internedLayoutName] = method;
 
             PerformLayoutPostRegistration(internedLayoutName, new InlinedArray<InternedString>(internedBaseLayoutName),
                 isReplacement);
@@ -584,7 +563,7 @@ namespace UnityEngine.InputSystem
                     if (deviceDescription.empty || !(deviceMatcher.MatchPercentage(deviceDescription) > 0))
                         continue;
 
-                    var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.id);
+                    var layoutName = TryFindMatchingControlLayout(ref deviceDescription, device.deviceId);
                     if (layoutName != device.m_Layout)
                     {
                         device.m_Description = deviceDescription;
@@ -613,7 +592,7 @@ namespace UnityEngine.InputSystem
 
             // Preserve device properties that should not be changed by the re-creation
             // of a device.
-            newDevice.m_Id = oldDevice.m_Id;
+            newDevice.m_DeviceId = oldDevice.m_DeviceId;
             newDevice.m_Description = oldDevice.m_Description;
             if (oldDevice.native)
                 newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
@@ -751,18 +730,37 @@ namespace UnityEngine.InputSystem
             }
 
             ////REVIEW: listeners registering new layouts from in here may potentially lead to the creation of devices; should we disallow that?
-            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks?
+            ////REVIEW: if a callback picks a layout, should we re-run through the list of callbacks? or should we just remove haveOverridenLayoutName?
             // Give listeners a shot to select/create a layout.
-            var haveOverriddenLayoutName = false;
-            for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
+            if (m_DeviceFindLayoutCallbacks.length > 0)
             {
-                var newLayout = m_DeviceFindLayoutCallbacks[i](deviceId, ref deviceDescription, layoutName, m_Runtime);
-                if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                // First time we get here, put our delegate for executing device commands
+                // in place. We wrap the call to IInputRuntime.DeviceCommand so that we don't
+                // need to expose the runtime to the onFindLayoutForDevice callbacks.
+                if (m_DeviceFindExecuteCommandDelegate == null)
+                    m_DeviceFindExecuteCommandDelegate =
+                        (ref InputDeviceCommand commandRef) =>
+                    {
+                        if (m_DeviceFindExecuteCommandDeviceId == InputDevice.InvalidDeviceId)
+                            return InputDeviceCommand.GenericFailure;
+                        return m_Runtime.DeviceCommand(m_DeviceFindExecuteCommandDeviceId, ref commandRef);
+                    };
+                m_DeviceFindExecuteCommandDeviceId = deviceId;
+
+                var haveOverriddenLayoutName = false;
+                for (var i = 0; i < m_DeviceFindLayoutCallbacks.length; ++i)
                 {
-                    layoutName = new InternedString(newLayout);
-                    haveOverriddenLayoutName = true;
+                    var newLayout = m_DeviceFindLayoutCallbacks[i](ref deviceDescription, layoutName,
+                                                                   m_DeviceFindExecuteCommandDelegate);
+
+                    if (!string.IsNullOrEmpty(newLayout) && !haveOverriddenLayoutName)
+                    {
+                        layoutName = new InternedString(newLayout);
+                        haveOverriddenLayoutName = true;
+                    }
                 }
             }
+
             Profiler.EndSample();
             return layoutName;
         }
@@ -807,40 +805,32 @@ namespace UnityEngine.InputSystem
                 m_Layouts.layoutBuilders.ContainsKey(name);
         }
 
-        public int ListControlLayouts(List<string> layouts, string basedOn = null)
+        public IEnumerable<string> ListControlLayouts(string basedOn = null)
         {
-            if (layouts == null)
-                throw new ArgumentNullException(nameof(layouts));
-
-            var countBefore = layouts.Count;
-
             ////FIXME: this may add a name twice
-            ////REVIEW: are we handling layout overrides correctly here? they shouldn't end up on the list
 
             if (!string.IsNullOrEmpty(basedOn))
             {
                 var internedBasedOn = new InternedString(basedOn);
                 foreach (var entry in m_Layouts.layoutTypes)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutBuilders)
                     if (m_Layouts.IsBasedOn(internedBasedOn, entry.Key))
-                        layouts.Add(entry.Key);
+                        yield return entry.Key;
             }
             else
             {
                 foreach (var entry in m_Layouts.layoutTypes)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutStrings)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
                 foreach (var entry in m_Layouts.layoutBuilders)
-                    layouts.Add(entry.Key.ToString());
+                    yield return entry.Key;
             }
-
-            return layouts.Count - countBefore;
         }
 
         // Adds all controls that match the given path spec to the given list.
@@ -982,7 +972,7 @@ namespace UnityEngine.InputSystem
                 deviceDescription: deviceDescription,
                 layoutVariants: variants);
 
-            device.m_Id = deviceId;
+            device.m_DeviceId = deviceId;
             device.m_Description = deviceDescription;
             device.m_DeviceFlags |= deviceFlags;
             if (!string.IsNullOrEmpty(deviceName))
@@ -1002,7 +992,7 @@ namespace UnityEngine.InputSystem
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
             if (string.IsNullOrEmpty(device.layout))
-                throw new ArgumentException("Device has no associated layout", nameof(device));
+                throw new InvalidOperationException("Device has no associated layout");
 
             // Ignore if the same device gets added multiple times.
             if (ArrayHelpers.Contains(m_Devices, device))
@@ -1020,7 +1010,7 @@ namespace UnityEngine.InputSystem
             ////        that may end up tapping a bunch of memory locations in the heap to find the right
             ////        device; could be improved by sorting m_Devices by ID and picking a good starting
             ////        point based on the ID we have instead of searching from [0] always).
-            m_DevicesById[device.id] = device;
+            m_DevicesById[device.deviceId] = device;
 
             // Let InputStateBuffers know this device doesn't have any associated state yet.
             device.m_StateBlock.byteOffset = InputStateBlock.InvalidOffset;
@@ -1038,7 +1028,7 @@ namespace UnityEngine.InputSystem
             // is no longer marked as removed.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
-                if (m_AvailableDevices[i].deviceId == device.id)
+                if (m_AvailableDevices[i].deviceId == device.deviceId)
                     m_AvailableDevices[i].isRemoved = false;
             }
 
@@ -1067,6 +1057,8 @@ namespace UnityEngine.InputSystem
             // Notify device.
             device.NotifyAdded();
 
+            ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
+            ////        it current, no?
             // Make the device current.
             device.MakeCurrent();
 
@@ -1077,6 +1069,7 @@ namespace UnityEngine.InputSystem
 
         public InputDevice AddDevice(InputDeviceDescription description)
         {
+            ////REVIEW: is throwing here really such a useful thing?
             return AddDevice(description, throwIfNoLayoutFound: true);
         }
 
@@ -1124,7 +1117,7 @@ namespace UnityEngine.InputSystem
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
-            var deviceId = device.id;
+            var deviceId = device.deviceId;
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
             m_DevicesById.Remove(deviceId);
 
@@ -1192,6 +1185,12 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+        }
+
+        public void FlushDisconnectedDevices()
+        {
+            m_DisconnectedDevices.Clear(m_DisconnectedDevicesCount);
+            m_DisconnectedDevicesCount = 0;
         }
 
         public InputDevice TryGetDevice(string nameOrLayout)
@@ -1671,6 +1670,11 @@ namespace UnityEngine.InputSystem
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
 
+        // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
+        // only once to avoid creating garbage.
+        private InputDeviceExecuteCommandDelegate m_DeviceFindExecuteCommandDelegate;
+        private int m_DeviceFindExecuteCommandDeviceId;
+
         #if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
         #endif
@@ -1803,19 +1807,19 @@ namespace UnityEngine.InputSystem
         private void AssignUniqueDeviceId(InputDevice device)
         {
             // If the device already has an ID, make sure it's unique.
-            if (device.id != InputDevice.InvalidDeviceId)
+            if (device.deviceId != InputDevice.InvalidDeviceId)
             {
                 // Safety check to make sure out IDs are really unique.
                 // Given they are assigned by the native system they should be fine
                 // but let's make sure.
-                var existingDeviceWithId = TryGetDeviceById(device.id);
+                var existingDeviceWithId = TryGetDeviceById(device.deviceId);
                 if (existingDeviceWithId != null)
                     throw new InvalidOperationException(
-                        $"Duplicate device ID {device.id} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
+                        $"Duplicate device ID {device.deviceId} detected for devices '{device.name}' and '{existingDeviceWithId.name}'");
             }
             else
             {
-                device.m_Id = m_Runtime.AllocateDeviceId();
+                device.m_DeviceId = m_Runtime.AllocateDeviceId();
             }
         }
 
@@ -1872,10 +1876,10 @@ namespace UnityEngine.InputSystem
             for (var n = 0; n < controlCount; ++n)
             {
                 var control = controls[n];
-                if (!control.hasDefaultValue)
+                if (!control.hasDefaultState)
                     continue;
 
-                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultValue);
+                control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultState);
             }
 
             // Copy default state to all front and back buffers.
@@ -1975,7 +1979,7 @@ namespace UnityEngine.InputSystem
                     // It's a device we pulled from the disconnected list. Update the device with the
                     // new ID, re-add it and notify that we've reconnected.
 
-                    device.m_Id = deviceId;
+                    device.m_DeviceId = deviceId;
                     AddDevice(device);
 
                     for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2172,7 +2176,7 @@ namespace UnityEngine.InputSystem
                     var isInAvailableDevices = false;
                     for (var n = 0; n < m_AvailableDeviceCount; ++n)
                     {
-                        if (m_AvailableDevices[n].deviceId == device.id)
+                        if (m_AvailableDevices[n].deviceId == device.deviceId)
                         {
                             isInAvailableDevices = true;
                             break;
@@ -2240,7 +2244,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
         /// Usually this happens in response to the player loop running and triggering updates at set points. However,
-        /// updates can also be manually triggered through <see cref="InputSystem.Update()"/>.
+        /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
         ///
         /// The method receives the event buffer used internally by the runtime to collect events.
         ///
@@ -3015,7 +3019,7 @@ namespace UnityEngine.InputSystem
                     name = device.name,
                     layout = device.layout,
                     variants = device.variants,
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     participantId = device.m_ParticipantId,
                     usages = usages,
                     description = device.m_Description,

@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A mapping of control input to an action.
+    /// A mapping of controls to an action.
     /// </summary>
     /// <remarks>
     /// Each binding represents a value received from controls (see <see cref="InputControl"/>).
@@ -37,27 +37,46 @@ namespace UnityEngine.InputSystem
     /// bindings that are part of <see cref="InputActionMap.bindings"/> will resolve action names to
     /// actions in the same <see cref="InputActionMap"/>.
     ///
-    ///
-    /// A binding can also be used as a override specification. In that scenario, <see cref="path"/>,
-    /// <see cref="action"/>, and <see cref="groups"/> become search criteria that can be used to
-    /// find existing bindings, and <see cref="overridePath"/> becomes the path to override existing
-    /// binding paths with.
-    ///
-    /// Finally, a binding can be used as a form of specifying a mask that matching bindings must
-    /// comply to. For example, a binding that has only <see cref="groups"/> set to "Gamepad" and all
-    /// other fields set to default can be used to mask for bindings in the "Gamepad" group.
+    /// A binding can also be used as a form of search mask or filter. In this use, <see cref="path"/>,
+    /// <see cref="action"/>, and <see cref="groups"/> become search criteria that are matched
+    /// against other bindings. See <see cref="Matches(InputBinding)"/> for details. This use
+    /// is employed in places such as <see cref="InputActionRebindingExtensions"/> as well as in
+    /// binding masks on actions (<see cref="InputAction.bindingMask"/>), action maps (<see
+    /// cref="InputActionMap.bindingMask"/>), and assets (<see cref="InputActionAsset.bindingMask"/>).
     /// </remarks>
     [Serializable]
     public struct InputBinding : IEquatable<InputBinding>
     {
+        /// <summary>
+        /// Character that is used to separate elements in places such as <see cref="groups"/>,
+        /// <see cref="interactions"/>, and <see cref="processors"/>.
+        /// </summary>
+        /// Some strings on bindings represent lists of elements. An example is <see cref="groups"/>
+        /// which may associate a binding with several binding groups, each one delimited by the
+        /// separator.
+        ///
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // A binding that belongs to the "Keyboard&amp;Mouse" and "Gamepad" group.
+        /// new InputBinding
+        /// {
+        ///     path = "*/{PrimaryAction},
+        ///     groups = "Keyboard&amp;Mouse;Gamepad"
+        /// };
+        /// </code>
+        /// </example>
+        /// </remarks>
         public const char Separator = ';';
+
         internal const string kSeparatorString = ";";
 
         /// <summary>
         /// Optional name for the binding.
         /// </summary>
+        /// <value>Name of the binding.</value>
         /// <remarks>
-        /// For bindings that <see cref="isPartOfComposite">are part of composites</see>, this is
+        /// For bindings that are part of composites (see <see cref="isPartOfComposite"/>), this is
         /// the name of the field on the binding composite object that should be initialized with
         /// the control target of the binding.
         /// </remarks>
@@ -67,6 +86,14 @@ namespace UnityEngine.InputSystem
             set => m_Name = value;
         }
 
+        /// <summary>
+        /// Unique ID of the binding.
+        /// </summary>
+        /// <value>Unique ID of the binding.</value>
+        /// <remarks>
+        /// This can be used, for example, when storing binding overrides in local user configurations.
+        /// Using the binding ID, an override can remain associated with one specific binding.
+        /// </remarks>
         public Guid id
         {
             get
@@ -85,13 +112,23 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Control path being bound to.
         /// </summary>
+        /// <value>Path of control(s) to source input from.</value>
         /// <remarks>
+        /// Bindings reference <see cref="InputControl"/>s using a regular expression-like
+        /// language. See <see cref="InputControlPath"/> for details.
+        ///
         /// If the binding is a composite (<see cref="isComposite"/>), the path is the composite
-        /// string instead.
+        /// string instead. For example, for a <see cref="Composites.Vector2Composite"/>, the
+        /// path could be something like <c>"Vector2(normalize=false)"</c>.
+        ///
+        /// The path of a binding may be non-destructively override at runtime using <see cref="overridePath"/>
+        /// which unlike this property is not serialized. <see cref="effectivePath"/> represents the
+        /// final, effective path.
         /// </remarks>
         /// <example>
         /// <code>
-        /// "/*/{PrimaryAction}"
+        /// // A binding that references the left mouse button.
+        /// new InputBinding { path = "&lt;Mouse&gt;/leftButton" }
         /// </code>
         /// </example>
         public string path
@@ -104,8 +141,29 @@ namespace UnityEngine.InputSystem
         /// If the binding is overridden, this is the overriding path.
         /// Otherwise it is null.
         /// </summary>
+        /// <value>Path to override the <see cref="path"/> property with.</value>
         /// <remarks>
-        /// Not serialized as overrides are considered temporary, runtime-only state.
+        /// Unlike the <see cref="path"/> property, the value of the override path is not serialized.
+        /// If set, it will take precedence and determine the result of <see cref="effectivePath"/>.
+        ///
+        /// This property can be set to an empty string to disable the binding. During resolution,
+        /// bindings with an empty <see cref="effectivePath"/> will get skipped.
+        ///
+        /// To set the override on an existing binding, use the methods supplied by <see cref="InputActionRebindingExtensions"/>
+        /// such as <see cref="InputActionRebindingExtensions.ApplyBindingOverride(InputAction,string,string,string)"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override the binding to &lt;Gamepad&gt;/buttonSouth on
+        /// // myAction with a binding to &lt;Gamepad&gt;/buttonNorth.
+        /// myAction.ApplyBindingOverride(
+        ///     new InputBinding
+        ///     {
+        ///         path = "&lt;Gamepad&gt;/buttonSouth",
+        ///         overridePath = "&lt;Gamepad&gt;/buttonNorth"
+        ///     });
+        /// </code>
+        /// </example>
         /// </remarks>
         public string overridePath
         {
@@ -116,17 +174,37 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Optional list of interactions and their parameters.
         /// </summary>
-        /// <example>
-        /// <code>
-        /// "tap,slowTap(duration=1.2)"
-        /// </code>
-        /// </example>
+        /// <value>Interactions to put on the binding.</value>
+        /// <remarks>
+        /// Each element in the list is a name of an interaction (as registered with
+        /// <see cref="InputSystem.RegisterInteraction{T}"/>) followed by an optional
+        /// list of parameters.
+        ///
+        /// For example, <c>"slowTap(duration=1.2,pressPoint=0.123)"</c> is one element
+        /// that puts a <see cref="Interactions.SlowTapInteraction"/> on the binding and
+        /// sets <see cref="Interactions.SlowTapInteraction.duration"/> to 1.2 and
+        /// <see cref="Interactions.SlowTapInteraction.pressPoint"/> to 0.123.
+        ///
+        /// Multiple interactions can be put on a binding by separating them with a comma.
+        /// For example, <c>"tap,slowTap(duration=1.2)"</c> puts both a
+        /// <see cref="Interactions.TapInteraction"/> and <see cref="Interactions.SlowTapInteraction"/>
+        /// on the binding. See <see cref="IInputInteraction"/> for why the order matters.
+        /// </remarks>
+        /// <seealso cref="IInputInteraction"/>
         public string interactions
         {
             get => m_Interactions;
             set => m_Interactions = value;
         }
 
+        /// <summary>
+        /// Interaction settings to override <see cref="interactions"/> with.
+        /// </summary>
+        /// <value>Override string for <see cref="interactions"/> or <c>null</c>.</value>
+        /// <remarks>
+        /// If this is not <c>null</c>, it replaces the value of <see cref="interactions"/>.
+        /// </remarks>
+        /// <seealso cref="effectiveInteractions"/>
         public string overrideInteractions
         {
             get => m_OverrideInteractions;
@@ -136,41 +214,61 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Optional list of processors to apply to control values.
         /// </summary>
+        /// <value>Value processors to apply to the binding.</value>
         /// <remarks>
-        /// This list has the same format as <see cref="InputControlAttribute.processors"/>.
+        /// This string has the same format as <see cref="InputControlAttribute.processors"/>.
         /// </remarks>
+        /// <seealso cref="InputProcessor{TValue}"/>
         public string processors
         {
             get => m_Processors;
             set => m_Processors = value;
         }
 
+        /// <summary>
+        /// Processor settings to override <see cref="processors"/> with.
+        /// </summary>
+        /// <value>Override string for <see cref="processors"/> or <c>null</c>.</value>
+        /// <remarks>
+        /// If this is not <c>null</c>, it replaces the value of <see cref="processors"/>.
+        /// </remarks>
+        /// <seealso cref="effectiveProcessors"/>
         public string overrideProcessors
         {
             get => m_OverrideProcessors;
             set => m_OverrideProcessors = value;
         }
 
-        // Optional group name. This can be used, for example, to divide bindings into
-        // control schemes. So, the binding for keyboard&mouse on an action would have
-        // "keyboard&mouse" as its group, the binding for "touch" would have "touch as
-        // its group, and so on.
-        //
-        // Overriding bindings on actions that have multiple bindings is driven by
-        // binding groups. This can also be used to have multiple binding for the same
-        // device or control scheme and override a specific one.
-        //
-        // NOTE: What a group represents is not proscribed by the system. If a group is
-        //       meant to represent a specific device type or combination of device types,
-        //       this can be implemented on top of the system.
-        //
-        //       One good use case for groups is to mark up bindings that have a certain
-        //       common meaning. Say, for example, you have a several binding chains
-        //       (maybe even across different action sets) where the first binding in the
-        //       chain always represents the same "interaction". Let's say it's the left
-        //       trigger on the gamepad and it'll swap between a primary set of bindings
-        //       on the four-button group on the gamepad and a secondary set. You could
-        //       mark up every single use of the interaction ...
+        /// <summary>
+        /// Optional list of binding groups that the binding belongs to.
+        /// </summary>
+        /// <value>List of binding groups or <c>null</c>.</value>
+        /// <remarks>
+        /// This is used, for example, to divide bindings into <see cref="InputControlScheme"/>s.
+        /// Each control scheme is associated with a unique binding group through <see
+        /// cref="InputControlScheme.bindingGroup"/>.
+        ///
+        /// A binding may be associated with multiple groups by listing each group name
+        /// separate by a semicolon (<see cref="Separator"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// new InputBinding
+        /// {
+        ///     path = "*/{PrimaryAction},
+        ///     // Associate the binding both with the "KeyboardMouse" and
+        ///     // the "Gamepad" group.
+        ///     groups = "KeyboardMouse;Gamepad",
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that the system places no restriction on what binding groups are used
+        /// for in practice. Their use by <see cref="InputControlScheme"/> is only one
+        /// possible one, but which groups to apply and how to use them is ultimately
+        /// up to you.
+        /// </remarks>
+        /// <seealso cref="InputControlScheme.bindingGroup"/>
         public string groups
         {
             get => m_Groups;
@@ -183,7 +281,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This is null if the binding does not trigger an action.
         ///
-        /// For InputBindings that are used as filters, this can be a "mapName/actionName" combination
+        /// For InputBindings that are used as masks, this can be a "mapName/actionName" combination
         /// or "mapName/*" to match all actions in the given map.
         /// </remarks>
         /// <seealso cref="InputAction.name"/>
@@ -194,19 +292,17 @@ namespace UnityEngine.InputSystem
             set => m_Action = value;
         }
 
-        ////TODO: make public when chained bindings are implemented fully
-        internal bool chainWithPrevious
-        {
-            get => (m_Flags & Flags.ThisAndPreviousCombine) == Flags.ThisAndPreviousCombine;
-            set
-            {
-                if (value)
-                    m_Flags |= Flags.ThisAndPreviousCombine;
-                else
-                    m_Flags &= ~Flags.ThisAndPreviousCombine;
-            }
-        }
-
+        /// <summary>
+        /// Whether the binding is a composite.
+        /// </summary>
+        /// <value>True if the binding is a composite.</value>
+        /// <remarks>
+        /// Composite bindings to not bind to controls to themselves but rather source their
+        /// input from one or more "part binding" (see <see cref="isPartOfComposite"/>).
+        ///
+        /// See <see cref="InputBindingComposite{TValue}"/> for more details.
+        /// </remarks>
+        /// <seealso cref="InputBindingComposite{TValue}"/>
         public bool isComposite
         {
             get => (m_Flags & Flags.Composite) == Flags.Composite;
@@ -219,6 +315,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Whether the binding is a "part binding" of a composite.
+        /// </summary>
+        /// <value>True if the binding is part of a composite.</value>
+        /// <remarks>
+        /// The bindings that make up a composite are laid out sequentially in <see cref="InputActionMap.bindings"/>.
+        /// First comes the composite itself which is flagged with <see cref="isComposite"/>. It mentions
+        /// the composite and its parameters in its <see cref="path"/> property. After the composite itself come
+        /// the part bindings. All subsequent bindings marked as <c>isPartOfComposite</c> will be associated
+        /// with the composite.
+        /// </remarks>
+        /// <seealso cref="isComposite"/>
+        /// <seealso cref="InputBindingComposite{TValue}"/>
         public bool isPartOfComposite
         {
             get => (m_Flags & Flags.PartOfComposite) == Flags.PartOfComposite;
@@ -231,6 +340,10 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Generate a new ID for the binding.
+        /// </summary>
+        /// <seealso cref="id"/>
         public void GenerateId()
         {
             m_Guid = Guid.NewGuid();
@@ -266,7 +379,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
         ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
-        [NonSerialized] private Guid m_Guid;
+        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// This is the bindings path which is effectively being used.
@@ -296,33 +409,67 @@ namespace UnityEngine.InputSystem
             string.IsNullOrEmpty(effectivePath) && string.IsNullOrEmpty(action) &&
             string.IsNullOrEmpty(groups);
 
+        /// <summary>
+        /// Check whether the binding is equivalent to the given binding.
+        /// </summary>
+        /// <param name="other">Another binding.</param>
+        /// <returns>True if the two bindings are equivalent.</returns>
+        /// <remarks>
+        /// Bindings are equivalent if their <see cref="effectivePath"/>, <see cref="effectiveInteractions"/>,
+        /// and <see cref="effectiveProcessors"/>, plus their <see cref="action"/> and <see cref="groups"/>
+        /// properties are the same. Note that the string comparisons ignore both case and culture.
+        /// </remarks>
         public bool Equals(InputBinding other)
         {
-            return string.Equals(effectivePath, other.effectivePath) &&
-                string.Equals(effectiveInteractions, other.effectiveInteractions) &&
-                string.Equals(effectiveProcessors, other.effectiveProcessors) &&
-                string.Equals(groups, other.groups) &&
-                string.Equals(action, other.action);
+            return string.Equals(effectivePath, other.effectivePath, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(effectiveInteractions, other.effectiveInteractions, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(effectiveProcessors, other.effectiveProcessors, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(groups, other.groups, StringComparison.InvariantCultureIgnoreCase) &&
+                string.Equals(action, other.action, StringComparison.InvariantCultureIgnoreCase);
         }
 
+        /// <summary>
+        /// Compare the binding to the given object.
+        /// </summary>
+        /// <param name="obj">An object. May be <c>null</c>.</param>
+        /// <returns>True if the given object is an <c>InputBinding</c> that equals this one.</returns>
+        /// <seealso cref="Equals(InputBinding)"/>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
                 return false;
 
-            return obj is InputBinding && Equals((InputBinding)obj);
+            return obj is InputBinding binding && Equals(binding);
         }
 
+        /// <summary>
+        /// Compare the two bindings for equality.
+        /// </summary>
+        /// <param name="left">The first binding.</param>
+        /// <param name="right">The second binding.</param>
+        /// <returns>True if the two bindings are equal.</returns>
+        /// <seealso cref="Equals(InputBinding)"/>
         public static bool operator==(InputBinding left, InputBinding right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>
+        /// Compare the two bindings for inequality.
+        /// </summary>
+        /// <param name="left">The first binding.</param>
+        /// <param name="right">The second binding.</param>
+        /// <returns>True if the two bindings are not equal.</returns>
+        /// <seealso cref="Equals(InputBinding)"/>
         public static bool operator!=(InputBinding left, InputBinding right)
         {
             return !(left == right);
         }
 
+        /// <summary>
+        /// Compute a hash code for the binding.
+        /// </summary>
+        /// <returns>A hash code.</returns>
         public override int GetHashCode()
         {
             unchecked
@@ -336,6 +483,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Return a string representation of the binding useful for debugging.
+        /// </summary>
+        /// <returns>A string representation of the binding.</returns>
+        /// <example>
+        /// <code>
+        /// var binding = new InputBinding
+        /// {
+        ///     action = "fire",
+        ///     path = "&lt;Gamepad&gt;/buttonSouth",
+        ///     groups = "Gamepad"
+        /// };
+        ///
+        /// // Returns "fire: &lt;Gamepad&gt;/buttonSouth [Gamepad]".
+        /// binding.ToString();
+        /// </code>
+        /// </example>
         public override string ToString()
         {
             var builder = new StringBuilder();
@@ -366,14 +530,99 @@ namespace UnityEngine.InputSystem
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 
-        ////TODO: this must be exposed; matching bindings against each other is a public concept
-        internal bool Matches(ref InputBinding other)
+        /// <summary>
+        /// Check whether <paramref name="binding"/> matches the mask
+        /// represented by the current binding.
+        /// </summary>
+        /// <param name="binding">An input binding.</param>
+        /// <returns>True if <paramref name="binding"/> is matched by the mask represented
+        /// by <c>this</c>.</returns>
+        /// <remarks>
+        /// In this method, the current binding acts as a "mask". When used this way, only
+        /// three properties of the binding are taken into account: <see cref="path"/>,
+        /// <see cref="groups"/>, and <see cref="action"/>.
+        ///
+        /// For each of these properties, the method checks whether they are set on the current
+        /// binding and, if so, matches them against the respective property in <paramref name="binding"/>.
+        ///
+        /// The way this matching works is that the value of the property in the current binding is
+        /// allowed to be a semicolon-separated list where each element specifies one possible value
+        /// that will produce a match.
+        ///
+        /// Note that all comparisons are case-insensitive.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create a couple bindings which we can test against.
+        /// var keyboardBinding = new InputBinding
+        /// {
+        ///     path = "&lt;Keyboard&gt;/space",
+        ///     groups = "Keyboard",
+        ///     action = "Fire"
+        /// };
+        /// var gamepadBinding = new InputBinding
+        /// {
+        ///     path = "&lt;Gamepad&gt;/buttonSouth",
+        ///     groups = "Gamepad",
+        ///     action = "Jump"
+        /// };
+        /// var touchBinding = new InputBinding
+        /// {
+        ///     path = "&lt;Touchscreen&gt;/*/tap",
+        ///     groups = "Touch",
+        ///     action = "Jump"
+        /// };
+        ///
+        /// // Example 1: Match any binding in the "Keyboard" or "Gamepad" group.
+        /// var mask1 = new InputBinding
+        /// {
+        ///     // We put two elements in the list here and separate them with a semicolon.
+        ///     groups = "Keyboard;Gamepad"
+        /// };
+        ///
+        /// mask1.Matches(keyboardBinding); // True
+        /// mask1.Matches(gamepadBinding); // True
+        /// mask1.Matches(touchBinding); // False
+        ///
+        /// // Example 2: Match any binding to the "Jump" or the "Roll" action
+        /// //            (the latter we don't actually have a binding for)
+        /// var mask2 = new InputBinding
+        /// {
+        ///     action = "Jump;Roll"
+        /// };
+        ///
+        /// mask2.Matches(keyboardBinding); // False
+        /// mask2.Matches(gamepadBinding); // True
+        /// mask2.Matches(touchBinding); // True
+        ///
+        /// // Example: Match any binding to the space or enter key in the
+        /// //          "Keyboard" group.
+        /// var mask3 = new InputBinding
+        /// {
+        ///     path = "&lt;Keyboard&gt;/space;&lt;Keyboard&gt;/enter",
+        ///     groups = "Keyboard"
+        /// };
+        ///
+        /// mask3.Matches(keyboardBinding); // True
+        /// mask3.Matches(gamepadBinding); // False
+        /// mask3.Matches(touchBinding); // False
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public bool Matches(InputBinding binding)
+        {
+            return Matches(ref binding);
+        }
+
+        // Internally we pass by reference to not unnecessarily copy the struct.
+        internal bool Matches(ref InputBinding binding)
         {
             if (path != null)
             {
+                ////REVIEW: should this use binding.effectivePath?
                 ////TODO: handle things like ignoring leading '/'
-                if (other.path == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, other.path, Separator))
+                if (binding.path == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, binding.path, Separator))
                     return false;
             }
 
@@ -382,21 +631,21 @@ namespace UnityEngine.InputSystem
                 ////TODO: handle "map/action" format
                 ////TODO: handle "map/*" format
                 ////REVIEW: this will not be able to handle cases where one binding references an action by ID and the other by name but both do mean the same action
-                if (other.action == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, other.action, Separator))
+                if (binding.action == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(action, binding.action, Separator))
                     return false;
             }
 
             if (groups != null)
             {
-                if (other.groups == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, other.groups, Separator))
+                if (binding.groups == null
+                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
                     return false;
             }
 
             if (!string.IsNullOrEmpty(m_Id))
             {
-                if (other.id != id)
+                if (binding.id != id)
                     return false;
             }
 
@@ -407,45 +656,8 @@ namespace UnityEngine.InputSystem
         internal enum Flags
         {
             None = 0,
-
-            /// <summary>
-            /// This and the next binding in the list combine such that both need to be
-            /// triggered to trigger the associated action.
-            /// </summary>
-            /// <remarks>
-            /// The order in which the bindings trigger does not matter.
-            ///
-            /// An arbitrarily long sequence of bindings can be arranged as having to trigger
-            /// together.
-            ///
-            /// If this is set, <see cref="ThisAndPreviousCombine"/> has to be set on the
-            /// subsequent binding.
-            /// </remarks>
-            ThisAndNextCombine = 1 << 5,
-            ThisAndNextAreExclusive = 1 << 6,
-
-            // This binding and the previous one in the list are a combo. This one
-            // can only trigger after the previous one already has.
-            ThisAndPreviousCombine = 1 << 0,
-            ThisAndPreviousAreExclusive = 1 << 1,
-
-            /// <summary>
-            /// Whether this binding starts a composite binding group.
-            /// </summary>
-            /// <remarks>
-            /// This flag implies <see cref="PushBindingLevel"/>. The composite is comprised
-            /// of all bindings at the same grouping level. The name of each binding in the
-            /// composite is used to determine which role the resolved controls play in the
-            /// composite.
-            /// </remarks>
             Composite = 1 << 2,
-            PartOfComposite = 1 << 3,////REVIEW: remove and replace with PushBindingLevel and PopBindingLevel?
-
-            /// <summary>
-            ///
-            /// </summary>
-            PushBindingLevel = 1 << 3,
-            PopBindingLevel = 1 << 4,
+            PartOfComposite = 1 << 3,
         }
     }
 }

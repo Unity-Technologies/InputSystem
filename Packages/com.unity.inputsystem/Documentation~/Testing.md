@@ -1,18 +1,21 @@
-# Testing Input
+# Input testing
 
-The input system has built-in support for writing automated tests involving input. This makes it possible to drive input entirely from code without dependencies on platform backends and actual hardware devices. To the tests, the generated input will look identical to input generated at runtime by actual platform code.
+The Input System has built-in support for writing automated input tests. You can drive input entirely from code, without any dependencies on platform backends and physical hardware devices. The automated input tests you write consider the generated input to be the same as input generated at runtime by actual platform code.
 
-## Setting Up Test Assemblies
+## Setting up test assemblies
 
-Using test support requires setting up a test assembly for your tests. To do so, create a new assembly definition ("Create >> Assembly Definition") and add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described [here](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)) as well as `UnityEngine.Input.dll` and `UnityEngine.Input.TestFramework.dll` for the input system.
+Using test support requires setting up a test assembly for your tests. To set up a test assembly, follow these steps:
+
+1. Create a new assembly definition (menu: __Create > Assembly Definition__).
+2. Add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described in [How to create a new test assembly](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)), as well as `UnityEngine.Input.dll` and `UnityEngine.Input.TestFramework.dll` for the Input System.
 
 ![Test Assembly Setup](Images/TestAssemblySetup.png)
 
-## Setting Up Test Fixtures
+## Setting up test fixtures
 
-Use `InputTestFixture` to create an isolated version of the input system for tests. The fixture will set up a blank, default-initialized version of the input system for each test and restore the prior input system state after completion of the test. The default-initialized version has all built-in layout, processor, etc. registrations but has no pre-existing input devices. In addition, the fixture uses a custom `IInputRuntime` implementation (available from the `runtime` property of the fixture) in place of `NativeInputRuntime`.
+Use [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
 
-The fixture can either be used as a base class for your own fixture:
+You can use the fixture as a base class for your own fixture:
 
 ```CSharp
 class MyTests : InputTestFixture
@@ -26,7 +29,7 @@ class MyTests : InputTestFixture
 }
 ```
 
-Or it can be instantiated in your fixture:
+Alternatively, you can instantiate it in your fixture:
 
 ```CSharp
 [TestFixture]
@@ -67,9 +70,9 @@ public class GameTestPrebuildSetup : IPrebuildSetup
 #endif
 ```
 
-## Writing Tests
+## Writing tests
 
-In tests, use `InputSystem.AddDevice<T>()` to add new devices.
+When writing a test, use [`InputSystem.AddDevice<T>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) to add new Devices.
 
 ```CSharp
     [Test]
@@ -91,7 +94,7 @@ In tests, use `InputSystem.AddDevice<T>()` to add new devices.
     }
 ```
 
-To feed input, the easiest way is to use the `Press(button)`, `Release(button)`, `PressAndRelease(button)`, `Set(control,value)`, and `Trigger(action)` helper functions provided by `InputTestFixture`.
+To feed input, the easiest way is to use the [`Press(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Press_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`Release(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Release_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`PressAndRelease(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_PressAndRelease_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), `Set(control,value)`, and [`Trigger(action)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Trigger_UnityEngine_InputSystem_InputAction_) helper methods provided by [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html).
 
 ```CSharp
     [Test]
@@ -127,7 +130,7 @@ To feed input, the easiest way is to use the `Press(button)`, `Release(button)`,
     }
 ```
 
-Alternatively, arbitrary input events can be fed into the system and arbitrary input updates can be run by code.
+Alternatively, you can use code to feed arbitrary input events into the system, and run arbitrary input updates:
 
 ```CSharp
     [Test]
@@ -144,7 +147,7 @@ Alternatively, arbitrary input events can be fed into the system and arbitrary i
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         managerComponent.playerPrefab = playerPrefab;
 
-        // Create a device based on the HID layout with a single button control.
+        // Create a Device based on the HID layout with a single button control.
         const string kLayout = @"
             {
                 ""name"" : ""TestDevice"",
@@ -170,4 +173,4 @@ Alternatively, arbitrary input events can be fed into the system and arbitrary i
     }
 ```
 
->NOTE: For reference, the tests for the input system itself can be found [here](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
+>__Note__: For reference, the tests for the Input System itself can be found in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).

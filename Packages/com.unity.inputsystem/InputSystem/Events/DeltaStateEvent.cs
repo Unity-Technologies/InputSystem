@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (DeltaStateEvent*)buffer.GetUnsafePtr();
 
-            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
+            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.deviceId, InputRuntime.s_Instance.currentTime);
             stateEventPtr->stateFormat = stateFormat;
             stateEventPtr->stateOffset = controlStateBlock.byteOffset - deviceStateBlock.byteOffset; // Make offset relative to device.
             UnsafeUtility.MemCpy(stateEventPtr->deltaState, statePtr, stateSize);

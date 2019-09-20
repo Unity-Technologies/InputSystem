@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         /// <summary>
         /// The screen that the finger is associated with.
         /// </summary>
+        /// <value>Touchscreen associated with the touch.</value>
         public Touchscreen screen { get; }
 
         /// <summary>

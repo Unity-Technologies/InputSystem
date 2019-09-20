@@ -341,7 +341,7 @@ namespace UnityEngine.InputSystem
             var controlCount = layout.controls.Count;
             for (var i = 0; i < controlCount; ++i)
             {
-                if (layout.m_Controls[i].isModifyingChildControlByPath)
+                if (layout.m_Controls[i].isModifyingExistingControl)
                     throw new NotImplementedException();
 
                 ////TODO: shortcut the search if we have a match and there's no wildcards to consider

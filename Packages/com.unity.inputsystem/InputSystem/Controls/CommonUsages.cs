@@ -69,6 +69,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Horizontal motion axis.
         /// </summary>
+        /// <remarks>
         /// Example: X axis on mouse.
         /// </remarks>
         public static readonly InternedString Horizontal = new InternedString("Horizontal");

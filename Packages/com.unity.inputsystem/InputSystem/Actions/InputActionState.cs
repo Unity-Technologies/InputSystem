@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
@@ -1972,65 +1973,8 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        internal TValue ReadCompositePartValue<TValue>(int bindingIndex, int partNumber, out bool buttonValue, out int controlIndex)
-            where TValue : struct, IComparable<TValue>
-        {
-            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
-            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
-
-            var result = default(TValue);
-            var firstChildBindingIndex = bindingIndex + 1;
-            var isFirstValue = true;
-
-            buttonValue = false;
-            controlIndex = kInvalidIndex;
-
-            // Find the binding in the composite that both has the given part number and
-            // the greatest value.
-            //
-            // NOTE: It is tempting to go by control magnitudes instead as those are readily available to us (controlMagnitudes)
-            //       and avoids us reading values that we're not going to use. Unfortunately, we can't do that as several controls
-            //       used by a composite may all have been updated with a single event (e.g. WASD on a keyboard will usually see
-            //       just one update that refreshes the entire state of the keyboard). In that case, one of the controls will
-            //       see its state monitor trigger first and in turn trigger processing of the action and composite. Thus only
-            //       that one single control would have its value refreshed in controlMagnitudes whereas the other control magnitudes
-            //       would be stale.
-            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
-            {
-                if (bindingStates[index].partIndex != partNumber)
-                    continue;
-
-                var controlCount = bindingStates[index].controlCount;
-                var controlStartIndex = bindingStates[index].controlStartIndex;
-                for (var i = 0; i < controlCount; ++i)
-                {
-                    var thisControlIndex = controlStartIndex + i;
-                    var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
-
-                    ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
-
-                    if (isFirstValue)
-                    {
-                        result = value;
-                        isFirstValue = false;
-                        controlIndex = thisControlIndex;
-                        if (controls[thisControlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[thisControlIndex]).isPressed;
-                    }
-                    else if (value.CompareTo(result) > 0)
-                    {
-                        result = value;
-                        controlIndex = thisControlIndex;
-                        if (controls[thisControlIndex] is Controls.ButtonControl)
-                            buttonValue = ((Controls.ButtonControl)controls[thisControlIndex]).isPressed;
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        internal TValue ReadCompositePartValue<TValue, TComparer>(int bindingIndex, int partNumber, TComparer comparer, out int controlIndex)
+        internal TValue ReadCompositePartValue<TValue, TComparer>(int bindingIndex, int partNumber,
+            bool* buttonValuePtr, out int controlIndex, TComparer comparer = default)
             where TValue : struct
             where TComparer : IComparer<TValue>
         {
@@ -2065,8 +2009,6 @@ namespace UnityEngine.InputSystem
                     var thisControlIndex = controlStartIndex + i;
                     var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
 
-                    ////REVIEW: not great that we do ButtonControl typechecks all the time even when they are not necessary
-
                     if (isFirstValue)
                     {
                         result = value;
@@ -2077,6 +2019,23 @@ namespace UnityEngine.InputSystem
                     {
                         result = value;
                         controlIndex = thisControlIndex;
+                    }
+
+                    if (buttonValuePtr != null && controlIndex == thisControlIndex)
+                    {
+                        var control = controls[thisControlIndex];
+                        if (control is ButtonControl button)
+                        {
+                            *buttonValuePtr = button.isPressed;
+                        }
+                        else if (control is InputControl<float>)
+                        {
+                            var valuePtr = UnsafeUtility.AddressOf(ref value);
+                            *buttonValuePtr = *(float*)valuePtr >= InputSystem.settings.defaultButtonPressPoint;
+                        }
+
+                        ////REVIEW: Early out here as soon as *any* button is pressed? Technically, the comparer
+                        ////        could still select a different control, though...
                     }
                 }
             }

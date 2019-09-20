@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem
     /// The fixture will put the input system into a known state where it has only the
     /// built-in set of basic layouts and no devices. The state of the system before
     /// starting a test is recorded and restored when the test finishes.
-    /// </remarks>
+    ///
     /// <example>
     /// <code>
     /// public class MyInputTests : InputTestFixture
@@ -50,10 +50,17 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
+    ///
+    /// The test fixture will also sever the tie of the input system to the Unity runtime.
+    /// This means that while the test fixture is active, the input system will not receive
+    /// input and device discovery or removal notifications from platform code. This ensures
+    /// that while the test is running, input that may be generated on the machine running
+    /// the test will not infer with it.
+    /// </remarks>
     public class InputTestFixture
     {
         /// <summary>
-        /// Put InputSystem into a known state where it only has a basic set of
+        /// Put <see cref="InputSystem"/> into a known state where it only has a basic set of
         /// layouts and does not have any input devices.
         /// </summary>
         /// <remarks>
@@ -61,6 +68,7 @@ namespace UnityEngine.InputSystem
         /// method will automatically be called. If you embed InputTestFixture into
         /// your fixture, you have to explicitly call this method yourself.
         /// </remarks>
+        /// <seealso cref="TearDown"/>
         [SetUp]
         public virtual void Setup()
         {
@@ -101,6 +109,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Restore the state of the input system it had when the test was started.
         /// </summary>
+        /// <seealso cref="Setup"/>
         [TearDown]
         public virtual void TearDown()
         {
@@ -409,7 +418,17 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The input runtime used during testing.
         /// </summary>
-        public InputTestRuntime runtime { get; private set; }
+        internal InputTestRuntime runtime { get; private set; }
+
+        /// <summary>
+        /// Get or set the current time used by the input system.
+        /// </summary>
+        /// <value>Current time used by the input system.</value>
+        public double currentTime
+        {
+            get => runtime.currentTime = currentTime;
+            set => runtime.currentTime = value;
+        }
 
         public class ActionConstraint : Constraint
         {

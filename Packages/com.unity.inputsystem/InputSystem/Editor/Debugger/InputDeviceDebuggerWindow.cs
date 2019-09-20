@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem.Editor
                 for (var i = 0; i < s_OpenDebuggerWindows.Count; ++i)
                 {
                     var existingWindow = s_OpenDebuggerWindows[i];
-                    if (existingWindow.m_DeviceId == device.id)
+                    if (existingWindow.m_DeviceId == device.deviceId)
                     {
                         existingWindow.Show();
                         existingWindow.Focus();
@@ -203,8 +203,8 @@ namespace UnityEngine.InputSystem.Editor
         private void InitializeWith(InputDevice device)
         {
             m_Device = device;
-            m_DeviceId = device.id;
-            m_DeviceIdString = device.id.ToString();
+            m_DeviceId = device.deviceId;
+            m_DeviceIdString = device.deviceId.ToString();
             m_DeviceUsagesString = string.Join(", ", device.usages.Select(x => x.ToString()).ToArray());
 
             var flags = new List<string>();
@@ -224,7 +224,7 @@ namespace UnityEngine.InputSystem.Editor
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.id};
+                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.deviceId};
             m_EventTrace.onEvent += _ =>
             {
                 ////FIXME: this is very inefficient
@@ -294,7 +294,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            if (device.id != m_DeviceId)
+            if (device.deviceId != m_DeviceId)
                 return;
 
             if (change == InputDeviceChange.Removed)

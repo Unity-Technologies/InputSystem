@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// A fixed-size buffer of <see cref="Touch"/> records used to trace the history of touches.
     /// </summary>
     /// <remarks>
+    /// This struct provides access to a recorded list of touches.
     /// </remarks>
     public struct TouchHistory : IReadOnlyList<Touch>
     {

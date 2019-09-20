@@ -74,11 +74,67 @@ namespace UnityEngine.InputSystem.Editor
     }
 
     /// <summary>
-    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>, <see cref="InputBindingComposite"/>,
-    /// or <see cref="IInputInteraction"/>.
+    /// A custom UI for editing parameter values on a <see cref="InputProcessor"/>,
+    /// <see cref="InputBindingComposite"/>, or <see cref="IInputInteraction"/>.
     /// </summary>
     /// <remarks>
-    /// Note that a parameter editor takes over the entire editing UI for the object and not just the editing of specific parameters.
+    /// Custom parameter editors do not need to be registered explicitly. Say you have a custom
+    /// <see cref="InputProcessor"/> called <c>QuantizeProcessor</c>. To define a custom editor
+    /// UI for it, simply define a new class based on <c>InputParameterEditor&lt;QuantizeProcessor&gt;</c>.
+    ///
+    /// <example>
+    /// <code>
+    /// public class QuantizeProcessorEditor : InputParameterEditor&lt;QuantizeProcessor&gt;
+    /// {
+    ///     // You can put initialization logic in OnEnable, if you need it.
+    ///     public override void OnEnable()
+    ///     {
+    ///         // Use the 'target' property to access the QuantizeProcessor instance.
+    ///     }
+    ///
+    ///     // In OnGUI, you can define custom UI elements. Use EditorGUILayout to lay
+    ///     // out the controls.
+    ///     public override void OnGUI()
+    ///     {
+    ///         // Say that QuantizeProcessor has a "stepping" property that determines
+    ///         // the stepping distance for discrete values returned by the processor.
+    ///         // We can expose it here as a float field. To apply the modification to
+    ///         // processor object, we just assign the value back to the field on it.
+    ///         target.stepping = EditorGUILayout.FloatField(
+    ///             m_SteppingLabel, target.stepping);
+    ///     }
+    ///
+    ///     private GUIContent m_SteppingLabel = new GUIContent("Stepping",
+    ///         "Discrete stepping with which input values will be quantized.");
+    /// }
+    /// </code>
+    /// </example>
+    ///
+    /// Note that a parameter editor takes over the entire editing UI for the object and
+    /// not just the editing of specific parameters.
+    ///
+    /// The default parameter editor will derive names from the names of the respective
+    /// fields just like the Unity inspector does. Also, it will respect tooltips applied
+    /// to these fields with Unity's <c>TooltipAttribute</c>.
+    ///
+    /// So, let's say that <c>QuantizeProcessor</c> from our example was defined like
+    /// below. In that case, the result would be equivalent to the custom parameter editor
+    /// UI defined above.
+    ///
+    /// <example>
+    /// <code>
+    /// public class QuantizeProcessor : InputProcessor&lt;float&gt;
+    /// {
+    ///     [Tooltip("Discrete stepping with which input values will be quantized.")]
+    ///     public float stepping;
+    ///
+    ///     public override float Process(float value, InputControl control)
+    ///     {
+    ///         return value - value % stepping;
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     /// </remarks>
     public abstract class InputParameterEditor<TObject> : InputParameterEditor
         where TObject : class
@@ -121,7 +177,8 @@ namespace UnityEngine.InputSystem.Editor
         internal struct CustomOrDefaultSetting
         {
             public void Initialize(string label, string tooltip, string defaultName, Func<float> getValue,
-                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true)
+                Action<float> setValue, Func<float> getDefaultValue, bool defaultComesFromInputSettings = true,
+                float defaultInitializedValue = default)
             {
                 m_GetValue = getValue;
                 m_SetValue = setValue;
@@ -133,7 +190,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
                 if (defaultComesFromInputSettings)
                     m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
-                m_UseDefaultValue = Mathf.Approximately(getValue(), 0);
+                m_DefaultInitializedValue = defaultInitializedValue;
+                m_UseDefaultValue = Mathf.Approximately(getValue(), defaultInitializedValue);
                 m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
                 m_HelpBoxText =
                     EditorGUIUtility.TrTextContent(
@@ -158,7 +216,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (!newUseDefault)
                         m_SetValue(m_GetDefaultValue());
                     else
-                        m_SetValue(0);
+                        m_SetValue(m_DefaultInitializedValue);
                 }
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
@@ -181,6 +239,7 @@ namespace UnityEngine.InputSystem.Editor
             private Func<float> m_GetDefaultValue;
             private bool m_UseDefaultValue;
             private bool m_DefaultComesFromInputSettings;
+            private float m_DefaultInitializedValue;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;

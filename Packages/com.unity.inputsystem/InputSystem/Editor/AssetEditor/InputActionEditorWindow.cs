@@ -210,7 +210,12 @@ namespace UnityEngine.InputSystem.Editor
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
             {
-                m_ActionAssetManager.Initialize();
+                if (!m_ActionAssetManager.Initialize())
+                {
+                    // The asset we want to edit no longer exists.
+                    Close();
+                    return;
+                }
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();

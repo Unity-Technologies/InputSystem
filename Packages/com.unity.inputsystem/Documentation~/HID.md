@@ -1,49 +1,49 @@
 # HID Support
 
-HID ("Human interface device") is a [specification](https://www.usb.org/hid) to describe peripheral user input devices connected to computers via USB or Bluetooth. HID is commonly used to implement devices such as Gamepads, Joysticks, Racing Wheels, etc.
+Human Interface Device (HID) is a [specification](https://www.usb.org/hid) to describe peripheral user input devices connected to computers via USB or Bluetooth. HID is commonly used to implement devices such as gamepads, joysticks, or racing wheels.
 
-HIDs (both via USB and via Bluetooth) are directly supported by the input system on Windows, MacOS, and UWP. On other platforms, HIDs may be supported but not delivered through HID-specific APIs (example: on Linux, gamepad and joystick HIDs are supported through SDL; other HIDs are not supported).
+The Input System directly supports HIDs (connected via both USB and Bluetooth) on Windows, MacOS, and UWP. The system might support HIDs on other platforms, but not deliver input through HID-specific APIs. For example, on Linux, the system supports gamepad and joystick HIDs through SDL, but doesn't support other HIDs.
 
-Every HID comes with a descriptor that describes the device. The descriptor of a HID can be browsed through from the input debugger by pressing the "HID Descriptor" button in the device debugger window. The HID descriptor specifies the type of the device (by reporting entry numbers in the [HID usage tables](https://www.usb.org/document-library/hid-usage-tables-112)), and a list of all controls on the device, along with their data ranges and usages.
+Every HID comes with a device descriptor. You can browse through the descriptor of an HID from the Input Debugger by pressing the __HID Descriptor__ button in the device debugger window. The HID descriptor specifies the type of the device by reporting entry numbers in the [HID usage tables](https://www.usb.org/document-library/hid-usage-tables-112)), and a list of all controls on the device, along with their data ranges and usages.
 
 ![HID Descriptor](Images/HIDDescriptor.png)
 
-HIDs are handled in one of two ways:
+The Input System handles HIDs in one of two ways:
 
 1. The system has a known layout for the specific HID.
 2. A layout is auto-generated for the HID on the fly.
 
 ## Auto-generated layouts
 
-By default, the input system will create layouts and device representations for any HID which reports it's usage as `GenericDesktop/Joystick`, `GenericDesktop/Gamepad` or `GenericDesktop/MultiAxisController` (see the [HID usage table specifications](https://www.usb.org/document-library/hid-usage-tables-112) for more info). You can change the list of supported usages by setting [`HIDSupport.supportedHIDUsages`](../api/UnityEngine.InputSystem.HID.HIDSupport.html#UnityEngine_InputSystem_HID_HIDSupport_supportedHIDUsages).
+By default, the Input System creates layouts and Device representations for any HID which reports its usage as `GenericDesktop/Joystick`, `GenericDesktop/Gamepad` or `GenericDesktop/MultiAxisController` (see the [HID usage table specifications](https://www.usb.org/document-library/hid-usage-tables-112) for more information). You can change the list of supported usages by setting [`HIDSupport.supportedHIDUsages`](../api/UnityEngine.InputSystem.HID.HIDSupport.html#UnityEngine_InputSystem_HID_HIDSupport_supportedHIDUsages).
 
-Nor when the input system automatically create a layouts for a HID, these devices are currently always reported as [`Joysticks`](Joystick.md), represented by the [`Joystick` device class]((../api/UnityEngine.InputSystem.Joystick.html). The first elements with a reported HID usage of `GenericDesktop/X` and `GenericDesktop/Y` together form the joystick's [`stick`](../api/UnityEngine.InputSystem.Joystick.html#UnityEngine_InputSystem_Joystick_stick) control. Then controls are added for all further HID axis or button elements, using the control names reported by the HID specification (which tend to be rather generic). The first control with a HID usage of `Button/Button 1` will be assigned to the joystick's [`trigger`](../api/UnityEngine.InputSystem.Joystick.html#UnityEngine_InputSystem_Joystick_trigger) control.
+When the Input System automatically creates a layouts for a HID, it always reports these Devices as [`Joysticks`](Joystick.md), represented by the [`Joystick` device class](../api/UnityEngine.InputSystem.Joystick.html). The first elements with a reported HID usage of `GenericDesktop/X` and `GenericDesktop/Y` together form the joystick's [`stick`](../api/UnityEngine.InputSystem.Joystick.html#UnityEngine_InputSystem_Joystick_stick) Control. The system then adds Controls for all further HID axis or button elements, using the Control names reported by the HID specification. The Input System assigns the first control with an HID usage of  `Button/Button 1` to the joystick's [`trigger`](../api/UnityEngine.InputSystem.Joystick.html#UnityEngine_InputSystem_Joystick_trigger) Control.
 
-The auto-generated layouts represent a "best effort" on the part of the input system. As the way HIDs describe themselves as per standard is too ambiguous in practice, generated layouts may lead to controls that do not work the way they should. For example, while the layout builder can identify hat switches and D-Pads, it can often only make guesses as to which direction represents which. The same goes for individual buttons which generally are not assigned any meaning in HID.
+The auto-generated layouts represent a "best effort" on the part of the Input System. As the way HIDs describe themselves as per standard is too ambiguous in practice, generated layouts may lead to Controls that do not work the way they should. For example, while the layout builder can identify hat switches and D-pads, it can often only make guesses as to which direction represents which. The same goes for individual buttons which generally are not assigned any meaning in HID.
 
-The best way to resolve the situation of HIDs not working as expected is to add a custom layout and thus by-pass auto-generation altogether. See [Overriding the HID Fallback](#overriding-the-hid-fallback) for details.
+The best way to resolve the situation of HIDs not working as expected is to add a custom layout, bypassing auto-generation altogether. See [Overriding the HID fallback](#overriding-the-hid-fallback) for details.
 
-## HID Output
+## HID output
 
-HIDs can support output, for instance to toggle lights or force feedback motors on a gamepad. Output is controlled by sending commands known as "HID Output Reports" to a device. Output reports use device-specific data formats. You can send a HID Output Reports to a device by calling [`InputDevice.ExecuteCommand`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__) to send a command struct with the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#properties) property set as `"HIDO""`. The command struct will then contain the device-specific data sent out to the HID.
+HIDs can support output, for instance to toggle lights or force feedback motors on a gamepad. Unity controls output by sending HID Output Report commands to a Device. Output reports use Device-specific data formats. You can use HID Output Reports by calling [`InputDevice.ExecuteCommand`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__) to send a command struct with the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#properties) property set as `"HIDO"` to a Device. The command struct contains the Device-specific data sent out to the HID.
 
-## Overriding the HID Fallback
+## Overriding the HID fallback
 
-Often, when using the layouts auto-generated for HIDs, the result will be suboptimal. Controls will not receive proper names specific to the device, some controls may not work as expected, and some controls that use vendor-specific formats may not appear altogether.
+Often, when using the layouts auto-generated for HIDs, the result isn't ideal. Controls don't receive proper names specific to the Device, some Controls might not work as expected, and some Controls that use vendor-specific formats might not appear altogether.
 
-The best way to deal with this is to set up a custom device layout specifically for your device. This will override the default auto-generation and give you full control over how the device is exposed.
+The best way to deal with this is to set up a custom Device layout specifically for your Device. This overrides the default auto-generation and gives you full control over how the Device is exposed.
 
-For this demonstration, we pretend that the input system does not already have a custom layout for the PS4 DualShock controller and that we want to add such a layout.
+The following example assumes that the Input System didn't already have a custom layout for the PS4 DualShock controller, and that you would want to add such a layout.
 
-We know that we want to expose the controller as a [`Gamepad`](Gamepad.md) and we roughly know the HID data format from various sources on the web. So, let's take it step by step from here.
+You want to expose the controller as a [`Gamepad`](Gamepad.md) and you roughly know the HID data format used by the Device.
 
->NOTE: In case you do __not__ know the format of a given HID you want to support, a good strategy can be to just open the input debugger with the device plugged in and pop up both the debugger view for the device as well as the window showing the HID descriptor. Then you can go through the controls one by one, see what happens in the debug view and correlate that to the controls in the HID descriptor. It can also be useful to double-click individual events and compare the raw data coming in from the device. If you select two events in the event trace, you can then right-click and choose "Compare" to get a view that shows only the differences between the two events.
+>__Tip__: If you don't know the format of a given HID you want to support, you can open the Input Debugger with the Device plugged in and pop up both the debugger view for the Device and the window showing the HID descriptor. Then, you can go through the Controls one by one, see what happens in the debug view, and correlate that to the Controls in the HID descriptor. You can also double-click individual events and compare the raw data coming in from the Device. If you select two events in the event trace, you can then right-click them and choose __Compare__ to open a window that shows only the differences between the two events.
 
-### Step 1: The State Struct
+### Step 1: The state struct
 
-First step is describing to the input system in detail the format that input data for the device comes in as well as describing the [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) instances that should read out individual pieces of information from that data.
+The first step is describing in detail what format that input data for the Device comes in, as well as the [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) instances that should read out individual pieces of information from that data.
 
-We know that the HID input reports we get from the PS4 controller roughly look like this:
+The HID input reports you get from the PS4 controller roughly look like this:
 
 ```C++
 struct PS4InputReport
@@ -74,7 +74,7 @@ struct PS4InputReport
 }
 ```
 
-Based on this, we can quite straightforwardly translate this into a C# struct:
+You can translate this into a C# struct:
 
 ```CSharp
 // We receive data as raw HID input reports. Thus this struct
@@ -161,18 +161,16 @@ struct DualShock4HIDInputReport : IInputStateTypeInfo
 }
 ```
 
-Assembling that struct was quite involved. Luckily, this concludes the hard part. The rest is just some easy setup code.
-
 ### Step 2: The InputDevice
 
-Next, we need an `InputDevice` to represent our device. Given that we are dealing with a gamepad, we do so by creating a new subclass of `Gamepad`.
+Next, you need an `InputDevice` to represent your device. Since you are dealing with a gamepad, you must create a new subclass of `Gamepad`.
 
->For simplicity's sake we ignore the fact here that there is a class `DualShockGamepad` that the actual `DualShockGamepadHID` is based on.
+For simplicity's sake, this example ignores the fact here that there is a class `DualShockGamepad` that the actual `DualShockGamepadHID` is based on.
 
 ```CSharp
 // Using InputControlLayoutAttribute, we tell the system about the state
 // struct we created and thus also about where to find all the InputControl
-// attributes that we placed on there. This is how the input system knows
+// attributes that we placed on there. This is how the Input System knows
 // what controls to create and how to configure them.
 [InputControlLayout(stateType = typeof(DualShock4HIDInputReport)]
 public DualShock4GamepadHID : Gamepad
@@ -182,11 +180,11 @@ public DualShock4GamepadHID : Gamepad
 
 ### Step 3: Registering the Device
 
-The last step is to register our new type of device with the system and set things up such that when a PS4 controller is connected, it will get picked up by our custom device and not by the default HID fallback.
+The last step is to register your new type of Device and set up the Input System so that when a PS4 controller is connected, it will generate your custom Device instead of using the default HID fallback.
 
-In essence, all this requires is a call to [`InputSystem.RegisterLayout<T>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout__1_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__) and giving it an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) that matches the description for a PS4 DualShock HID. We can theoretically place this call anywhere but the best point for registering layouts is generally during startup. Doing so ensures that our custom layout is visible to the Unity editor and thus can be seen, for example, in the input control picker.
+This only requires a call to [`InputSystem.RegisterLayout<T>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout__1_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__), giving it an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) that matches the description for a PS4 DualShock HID. In theory, you can place this call anywhere but the best point for registering layouts is generally during startup. Doing so ensures that your custom layout is visible to the Unity Editor and therefore exposed, for example, in the Input Control picker.
 
-We can do insert our registration into the startup sequence by modifying the code for our `DualShock4GamepadHID` device slightly.
+You can insert your registration into the startup sequence by modifying the code for your `DualShock4GamepadHID` Device slightly.
 
 ```CSharp
 [InputControlLayout(stateType = typeof(DualShock4HIDInputReport)]
@@ -197,7 +195,7 @@ public DualShock4GamepadHID : Gamepad
 {
     static DualShock4GamepadHID()
     {
-        // This is one way to match the device.
+        // This is one way to match the Device.
         InputSystem.RegisterLayout<DualShock4GamepadHID>(
             new InputDeviceMatcher()
                 .WithInterface("HID")
@@ -215,9 +213,9 @@ public DualShock4GamepadHID : Gamepad
 
     // In the player, trigger the calling of our static constructor
     // by having an empty method annotated with RuntimeInitializeOnLoadMethod.
-    [RuntimeInitializeOnLoad]
+    [RuntimeInitializeOnLoadMethod]
     static void Init() {}
 }
 ```
 
-Now, any device matching the manufacturer and product name strings or the vendor and product IDs in its HID descriptor will be picked up by our custom layout, and be represented in the system as a `DualShock4GamepadHID` device instance. Also check the documentation about [device matching](Devices.md#matching).
+Your custom layout now picks up any Device matching the manufacturer and product name strings or the vendor and product IDs in its HID descriptor, and the Input System represents as a `DualShock4GamepadHID` Device instance. For more information, you can also read the documentation on [Device matching](Devices.md#matching).

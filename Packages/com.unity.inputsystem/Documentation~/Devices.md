@@ -1,48 +1,48 @@
 # Devices
 
-* [Device Descriptions](#device-descriptions)
-    * [Hijacking the Matching Process](#hijacking-the-matching-process)
+* [Device descriptions](#device-descriptions)
+    * [Hijacking the matching process](#hijacking-the-matching-process)
 * [Native Devices](#native-devices)
     * [Disconnected Devices](#disconnected-devices)
 * [Device IDs](#device-ids)
-* [Device Usages](#device-usages)
-* [Device Commands](#device-commands)
+* [Device usages](#device-usages)
+* [Device commands](#device-commands)
 * [Working with Devices](#working-with-devices)
     * [Monitoring Devices](#monitoring-devices)
-    * [Adding and Removing Devices](#adding-and-removing-devices)
-    * [Creating Custom Devices](#creating-custom-devices)
+    * [Adding and removing Devices](#adding-and-removing-devices)
+    * [Creating custom Devices](#creating-custom-devices)
 
-Logically, devices are the top-level container for [controls](Controls.md). An [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is itself a specialization of [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html). Physically, devices represent input devices attached to the computer, which can be used to control the content. See [supported devices](SupportedDevices.md) to see what kind of devices the input system currently supports.
+Logically, Input Devices are the top-level container for [Controls](Controls.md). The [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) class is itself a specialization of [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html). Physically, Input Devices represent devices attached to the computer, which can be used to control the app. See [supported Devices](SupportedDevices.md) to see what kind of Devices the Input System currently supports.
 
-The set of all currently present devices can be queried through [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices).
+You can query the set of all currently present Devices using [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices).
 
-## Device Descriptions
+## Device descriptions
 
-An [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) describes a device. This is primarily used during the device discovery process. When a new device is reported present (by the runtime or by the user), it is reported along with a device description. Based on the description, the system will then attempt to find a device [layout](Layouts.md) that matches the description. This process is based on ["device matchers"](#matching).
+An [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) describes a Device. The Input System uses this primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the report contains a Device description. Based on the description, the system then attempts to find a Device [layout](Layouts.md) that matches the description. This process is based on [Device matchers](#matching).
 
-After a device has been created, the description it was created from can be retrieved through the [`InputDevice.description`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_description) property.
+After a Device has been created, you can retrieve the description it was created from through the [`InputDevice.description`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_description) property.
 
 Every description has a set of standard fields:
 
 |Field|Description|
 |-----|-----------|
-|[`interfaceName`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_interfaceName)|Identifier for the interface/API that is making the device available. In many cases, this corresponds to the name of the platform but there are several more specific interfaces that are commonly used:<br><dl><dt><a href="https://www.usb.org/hid">HID</a></dt><dd>bar</dd><dt><a href="https://docs.microsoft.com/en-us/windows/desktop/inputdev/raw-input">RawInput</a></dt><dd></dd><dt><a href="https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-game-controller-apis-portal">XInput</a></dt><dd></dd><dl>This field is required.|
-|[`deviceClass`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_deviceClass)|A broad categorization of the device. For example, "Gamepad" or "Keyboard".|
-|[`product`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_product)|Name of the product as reported by the device/driver itself.|
-|[`manufacturer`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_manufacturer)|Name of the manufacturer as reported by the device/driver itself.|
-|[`version`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_version)|If available, provides the version of the driver or hardware for the device.|
-|[`serial`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_serial)|If available, provides the serial number for the device.|
-|[`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities)|A string in JSON format describing device/interface-specific capabilities. See the [section on capabililities](#capabilities).|
+|[`interfaceName`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_interfaceName)|Identifier for the interface/API that is making the Device available. In many cases, this corresponds to the name of the platform, but there are several more specific interfaces that are commonly used: [HID](https://www.usb.org/hid), [RawInput](https://docs.microsoft.com/en-us/windows/desktop/inputdev/raw-input), [XInput](https://docs.microsoft.com/en-us/windows/desktop/xinput/xinput-game-controller-apis-portal).<br>This field is required.|
+|[`deviceClass`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_deviceClass)|A broad categorization of the Device. For example, "Gamepad" or "Keyboard".|
+|[`product`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_product)|Name of the product as reported by the Device/driver itself.|
+|[`manufacturer`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_manufacturer)|Name of the manufacturer as reported by the Device/driver itself.|
+|[`version`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_version)|If available, provides the version of the driver or hardware for the Device.|
+|[`serial`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_serial)|If available, provides the serial number for the Device.|
+|[`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities)|A string in JSON format describing Device/interface-specific capabilities. See the [section on capabililities](#capabilities).|
 
 ### Capabilities
 
-Aside from a number of standardized fields, such as `product` and `manufacturer`, a device description may contain a [`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities) string in JSON format. This string is used to describe characteristics which help the input system with interpreting the data coming from a device and with mapping it to control representations. Not all device interfaces will report device capabilities. Examples of interface-specific device capabilities are [HID descriptors](HID.md). WebGL, Android and Linux use similar mechanisms to report available controls on connected gamepads.
+Aside from a number of standardized fields, such as `product` and `manufacturer`, a Device description can contain a [`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities) string in JSON format. This string describes characteristics which help the Input System with interpreting the data coming from a Device, and mapping it to Control representations. Not all Device interfaces will report Device capabilities. Examples of interface-specific Device capabilities are [HID descriptors](HID.md). WebGL, Android and Linux use similar mechanisms to report available Controls on connected gamepads.
 
 ### Matching
 
-Matching an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) to a registered layout is facilitated by [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html). Each matcher loosely functions as a kind of regular expression. Each field can be independently matched with either a plain string or regular expression. Matching is case-insensitive. For a matcher to apply, all its individual expressions have to match.
+[`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html)  instances handle matching an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is case-insensitive. For a matcher to apply, all its individual expressions have to match.
 
-Matchers can be added to any layout by calling [`InputSystem.RegisterLayoutMatcher`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayoutMatcher_System_String_UnityEngine_InputSystem_Layouts_InputDeviceMatcher_) or supplied when registering a layout.
+Matchers can be added to any layout by calling [`InputSystem.RegisterLayoutMatcher`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayoutMatcher_System_String_UnityEngine_InputSystem_Layouts_InputDeviceMatcher_). You can also supply them when registering a layout.
 
 ```CSharp
 // Register a new layout and supply a matcher for it.
@@ -59,75 +59,73 @@ InputSystem.RegisterLayoutMatcher<MyDevice>(
 
 ```
 
-If multiple matchers are matching the same [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html), the matcher that has the larger number of properties to match against will be chosen to pick the layout for the device.
+If multiple matchers are matching the same [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html), the Input System chooses the matcher that has the larger number of properties to match against.
 
-### Hijacking the Matching Process
+### Hijacking the matching process
 
-It is possible to overrule the internal matching process from outside and thus select a different layout for a device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then this layout will be used.
+You can overrule the internal matching process from outside and thus select a different layout for a Device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System will use this layout.
 
 ## Native Devices
 
-Devices that are reported by the runtime are considered "native". These devices come in through the `IInputRuntime.onDeviceDiscovered` callback which is handled internally by the input system. Externally, devices created this way can be told apart from others by them having their [`InputDevice.native`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_native) property be true.
+Devices that the [native backend](Architecture.md#native-backend) reports are considered native (as opposed to Devices created from script code). You can identify these Devices by checking the [`InputDevice.native`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_native) property.
 
-A native device will be remembered by the input system. This means that, for example, if at the time the device was reported the system has no matching layout but a layout is registered later which matches the device, the device will be re-created using this layout.
+The Input System remembers native Devices. For example, if the system has no matching layout when the Device is first reported, but a layout which matches the device is registered later, the system recreates the Device using this layout.
 
 ### Disconnected Devices
 
-If you want to get notified when input devices get disconnected, subscribe to the [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event, and look for events of type [`InputDeviceChange.Disconnected`](../api/UnityEngine.InputSystem.InputDeviceChange.html).
+If you want to get notified when Input Devices get disconnected, subscribe to the [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event, and look for events of type [`InputDeviceChange.Disconnected`](../api/UnityEngine.InputSystem.InputDeviceChange.html).
 
-The input system keeps track of disconnected devices in [`InputSystem.disconnectedDevices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_disconnectedDevices). If one of these devices gets reconnected later, the input system can detect that the device was connected before, and will reuse it's [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance. This allows things like the [`PlayerInputManager`](Components.md) knowing to reassigning the device to the same [user](UserManagement.md) again.
+The Input System keeps track of disconnected Devices in [`InputSystem.disconnectedDevices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_disconnectedDevices). If one of these Devices gets reconnected later, the Input System can detect that the Device was connected before, and will reuse its [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance. This allows the [`PlayerInputManager`](Components.md) to reassign the Device to the same [user](UserManagement.md) again.
 
 ## Device IDs
 
-Each device that is created will receive a unique, numeric ID. The ID can be accessed through [`InputDevice.id`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_id).
+Each Device that is created will receive a unique numeric ID. You can access this ID through [`InputDevice.deviceId`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
 
-The IDs are managed by the runtime and allocated through `IInputRuntime.AllocateDeviceId`. The runtime itself does not keep a record about which ID corresponds to which device.
+All IDs are only used once per Unity session.
 
-During a session of Unity, no ID will get used a second time.
+## Device usages
 
-## Device Usages
+Like any [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), a Device can have usages associated with it. You can query usages with the [`usages`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_usages) property, and set them using [`InputSystem.SetDeviceUsage()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_SetDeviceUsage_UnityEngine_InputSystem_InputDevice_System_String_). Usages can be arbitrary strings with arbitrary meanings. One common case where the Input System assigns Devices usages is the handedness of XR controllers, which are tagged with the "LeftHand" or "RightHand" usages.
 
-Like any [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), a device may have one or more usages associated with it. Usages can be queried with the [`usages`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_usages) property, and they can be set using [`InputSystem.SetDeviceUsage()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_SetDeviceUsage_UnityEngine_InputSystem_InputDevice_System_String_). Usages can be arbitrary strings with arbitrary meanings. One common case where the input system assigns devices usages is the handedness of XR Controllers, which are tagged with the "LeftHand" or "RightHand" usages.
+## Device commands
 
-## Device Commands
+While input [events](Events.md) deliver data coming from a Device, commands send data back to the Device. This is used for retrieving specific information from the Device, for triggering functions on the Device (such as rumble effects), or for a variety of other needs.
 
-While input [events](Events.md) deliver data coming __from__ a device, commands are used to communicate in the opposite direction, i.e. to talk back at the device. This can be used for retrieving specific information from the device, for triggering functions on the device (such as rumble effects), or for a variety of other needs.
+### Sending commands to Devices
 
-### Sending Commands to Devices
+A command is send to a Device through [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__). To monitor Device commands, use [`InputSystem.onDeviceCommand`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceCommand).
 
-A command is send to a device through [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__) which, for native devices, will relay the command to `IInputRuntime.DeviceCommand`. It is possible to intercept/monitor device commands through [`InputSystem.onDeviceCommand`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceCommand).
+Each Device command implements the [`IInputDeviceCommandInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html) interface, which only requires implementing the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#UnityEngine_InputSystem_LowLevel_IInputDeviceCommandInfo_typeStatic) property to identify the type of the command. The native implementation of the Device should then understand how to handle that command. One common case is the `"HIDO"` command type which is used to send [HID output reports](HID.md#hid-output) to HIDs.
 
-Each device command implements the [`IInputDeviceCommandInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html) interface, which only requires implementing the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#UnityEngine_InputSystem_LowLevel_IInputDeviceCommandInfo_typeStatic) property, which identifies the type of the command. The native implementation of the device should then understand how to handle that command. One common case is they `"HIDO"` command type which is used to send [HID output reports](HID.md#hid-output) to HIDs.
+### Adding custom device Comands
 
-### Adding Custom Device Comands
+To create custom Device commands (for instance to support some functionality for a specific HID), create a `struct` containing all the data to be sent to the Device, and make that struct implement the [`IInputDeviceCommandInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html) interface by adding a [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#UnityEngine_InputSystem_LowLevel_IInputDeviceCommandInfo_typeStatic) property. To send data to a HID, this property should return `"HIDO"`.
 
-To create custom device commands (for instance to support some functionality for a specific HID), create a `struct` containing all the data to be sent to the device, and make that struct implement the [`IInputDeviceCommandInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html) interface by adding a [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#UnityEngine_InputSystem_LowLevel_IInputDeviceCommandInfo_typeStatic) property (which should return `"HIDO"` to send data to a HID).
+You can then create an instance of this struct and populate all its fields, and send it to the Device using [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__). The data layout of the struct must match the native representation of the data as the device interprets it.
 
-You can then create an instance of this struct and populate all it's fields, and send it to the device using [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__). The data layout of the struct must match the native representation of the data understood by the device.
+## Device state
 
-## Device State
+Like any other type of [Control](Controls.md#control-state), each Device has a block of memory allocated to it which stores the state of all the Controls associated with the Device.
 
-Like any other type of [control](Controls.md#control-state), each device has a block of memory allocated to it which stores the state of all the controls associated with the device.
+### State changes
 
-### State Changes
+State changes are usually initiated through [state events](Events.md#state-events) coming from the native backend, but you can manually overwrite the state of any Control using [`InputControl<>.WriteValueIntoState()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_WriteValueIntoState__0_System_Void__).
 
-State changes are usually initiated through [state events](Events.md#state-events) coming from the native backend, but you can overwrite the state of any control manually using [`InputControl<>.WriteValueIntoState()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_WriteValueIntoState__0_System_Void__).
+#### Monitoring state changes
 
-#### Monitoring State Changes
+You can use [`InputState.AddChangeMonitor()`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_AddChangeMonitor_UnityEngine_InputSystem_InputControl_System_Action_UnityEngine_InputSystem_InputControl_System_Double_UnityEngine_InputSystem_LowLevel_InputEventPtr_System_Int64__System_Int32_System_Action_UnityEngine_InputSystem_InputControl_System_Double_System_Int64_System_Int32__) to register a callback to be called whenever the state of a Control changes. The Input System uses the same mechanism to implement [input Actions](Actions.md).
 
-You can use [`InputState.AddChangeMonitor()`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_AddChangeMonitor_UnityEngine_InputSystem_InputControl_System_Action_UnityEngine_InputSystem_InputControl_System_Double_UnityEngine_InputSystem_LowLevel_InputEventPtr_System_Int64__System_Int32_System_Action_UnityEngine_InputSystem_InputControl_System_Double_System_Int64_System_Int32__) to register a callback to be called whenever the state of a control changes. The input system uses the same mechanism to implement [input actions](Actions.md).
+#### Synthesizing state
 
-#### Synthesizing State
+The Input System can synthesize new state from existing state. An example of such synthesized state is the [`press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press) button  Control that [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) inherits from [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html). Unlike a mouse, which has a physical button, for [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) this is a [synthetic Control](Controls.md#synthetic-controls) that doesn't correspond to actual data coming in from the Device backend. Instead, the Input System considers the button to be pressed if any touch is currently ongoing, and released otherwise.
 
-It can be desirable to make up new state from existing state. An example of such a use case is the [`press`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_press) control that [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) inherits from [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html). Unlike for the mouse where this is a real button, for [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) this is a [synthetic control](Controls.md#synthetic-controls) that does not correspond to actual data coming in from the device backend. Instead, the button is considered press if any touch is currently ongoing and released otherwise.
-
-This can be achieved by using [`InputState.Change`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_Change__1_UnityEngine_InputSystem_InputControl___0_UnityEngine_InputSystem_LowLevel_InputUpdateType_UnityEngine_InputSystem_LowLevel_InputEventPtr_) which allows feeding arbitrary state changes into the system without having to run them through the input event queue. The state changes will be directly and synchronously incorporated. State change [monitors](#monitoring-state-changes), however, will still trigger as expected.
+This is achieved by using [`InputState.Change`](../api/UnityEngine.InputSystem.LowLevel.InputState.html#UnityEngine_InputSystem_LowLevel_InputState_Change__1_UnityEngine_InputSystem_InputControl___0_UnityEngine_InputSystem_LowLevel_InputUpdateType_UnityEngine_InputSystem_LowLevel_InputEventPtr_), which allows feeding arbitrary state changes into the system without having to run them through the input event queue. The Input System incorporates state changes directly and synchronously. State change [monitors](#monitoring-state-changes), still trigger as expected.
 
 ## Working With Devices
 
 ### Monitoring Devices
 
-In many situations, it is useful to know when new devices are added or when existing devices are removed. To be notified of such changes, use [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
+In many situations, it is useful to know when new Devices are added or existing Devices are removed. To be notified of such changes, use [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
 
 ```CSharp
 InputSystem.onDeviceChange +=
@@ -146,33 +144,33 @@ InputSystem.onDeviceChange +=
     };
 ```
 
-Notifications through [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) are always delivered for a host of other device-related changes. See the [`InputDeviceChange` enum](../api/UnityEngine.InputSystem.InputDeviceChange.html) for more details.
+[`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) delivers notifications for other device-related changes as well. See the [`InputDeviceChange` enum](../api/UnityEngine.InputSystem.InputDeviceChange.html) for more information.
 
-### Adding and Removing Devices
+### Adding and removing Devices
 
-Devices can be manually added and removed through the API, using [`InputSystem.AddDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice_UnityEngine_InputSystem_InputDevice_) and [`InputSystem.RemoveDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RemoveDevice_UnityEngine_InputSystem_InputDevice_).
+You can manually add and remove Devices through the API, using [`InputSystem.AddDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice_UnityEngine_InputSystem_InputDevice_) and [`InputSystem.RemoveDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RemoveDevice_UnityEngine_InputSystem_InputDevice_).
 
-This allows you to create your own devices, which can be useful for testing purposes, or for creating virtual input devices which synthesize input from other events. An example for this are the [on-screen controls](OnScreen.md) offered by the input system (while these are provided by the input system, the input devices used for on-screen controls are completely created in code and have no [native representation](#native-devices)).
+This allows you to create your own Devices, which can be useful for testing purposes, or for creating virtual Input Devices which synthesize input from other events. An example for this are the [on-screen Controls](OnScreen.md) provided by the Input System. The Input Devices used for on-screen Controls are created entirely in code and have no [native representation](#native-devices).
 
-### Creating Custom Devices
+### Creating custom Devices
 
->NOTE: Here we will deal only with devices that have fixed layouts, i.e. with the case where we know exactly the specific model or models that we are dealing with. This is different from an interface such as HID where devices can describe themselves through the interface and may thus take a wide variety of forms. In this case, no fixed device layout will likely suffice. This more complicated case requires what in the input system is called a [Layout Builder](Layouts.md#layout-builders) which can build device layouts on the fly from information obtained at runtime.
+>__Note__: This example deals only with Devices that have fixed layouts,that is, you know the specific model or models that you want to implement. This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](Layouts.md#layout-builders) to build Device layouts on the fly from information you obtain at run time.
 
-The need to create a custom device generally arises in one of two ways:
+There are two main situations in which you might need to create a custom Device:
 
-1. You have an existing API that generates input and that you want to reflect into the input system.
-2. You have a HID that is either ignored entirely by the input system or gets an auto-generated layout that does not work well enough for your needs.
+1. You have an existing API that generates input and that you want to reflect into the Input System.
+2. You have a HID that is either ignored entirely by the Input System, or gets an auto-generated layout that does not work well enough for your needs.
 
-In case 2), see [Overriding the HID Fallback](HID.md#overriding-the-hid-fallback) for details.
+For the second scenario, see [Overriding the HID Fallback](HID.md#overriding-the-hid-fallback).
 
-Here we will deal with case 1) where we want to create a new input device entirely from scratch and feed it input that we receive from a third-party API.
+The steps below deal with the first scenario, where you want to create a new Input Device entirely from scratch and feed it input from a third-party API.
 
-#### Step 1: The State Struct
+#### Step 1: The state struct
 
-The first step is to create a C# `struct` that represents the form in which input is received and stored and also describes the `InputControl` instances that should be created for the device in order to retrieve said state.
+The first step is to create a C# `struct` that represents the form in which the system receives and stores input, and also describes the `InputControl` instances that should be created for the Device in order to retrieve said state.
 
 ```CSharp
-// A "state struct" describes the memory format used a device. Each device can
+// A "state struct" describes the memory format used by a Device. Each Device can
 // receive and store memory in its custom format. InputControls are then connected
 // the individual pieces of memory and read out values from them.
 //
@@ -184,10 +182,10 @@ public struct MyDeviceState : IInputStateTypeInfo
 {
     // Every state format is tagged with a FourCC code that is used for type
     // checking. The characters can be anything. Choose something that allows
-    // you do easily recognize memory belonging to your own device.
+    // you do easily recognize memory belonging to your own Device.
     public FourCC format => return new FourCC('M', 'Y', 'D', 'V');
 
-    // InputControlAttributes on fields tell the input system to create controls
+    // InputControlAttributes on fields tell the Input System to create Controls
     // for the public fields found in the struct.
 
     // Assume a 16bit field of buttons. Create one button that is tied to
@@ -206,62 +204,60 @@ public struct MyDeviceState : IInputStateTypeInfo
 }
 ```
 
-The [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) annotations are used by the input system's layout mechanism to add controls to the layout of your device. For details, see the [documentation of the layout system](Layouts.md).
+The Input System's layout mechanism uses [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) annotations to add Controls to the layout of your Device. For details, see the [layout system](Layouts.md) documentation.
 
-With the state struct in place, we now have a way to send input data to the input system and to store it there. The next thing we need is an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) that uses our custom state struct and represents our custom device.
+With the state struct in place, you now have a way to send input data to the Input System and to store it there. The next thing you need is an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) that uses your custom state struct and represents your custom Device.
 
-#### Step 2: The Device Class
+#### Step 2: The Device class
 
-Next, we need a class derived from one of the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) base classes. We can either base our device directly on [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) or we can go and pick one of the more specific types of devices like [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html), for example.
+Next, you need a class derived from one of the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) base classes. You can either base your Device directly on [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) or you can pick a more specific Device types like [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html).
 
-Let's assume that our device isn't really like any of the existing device classes and thus derive directly from [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html).
+Let's assume that your Device doesn't fit into any of the existing Device classes and thus derive directly from [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html).
 
 ```CSharp
 // InputControlLayoutAttribute attribute is only necessary if you want
-// to override default behavior that occurs when registering your device
+// to override default behavior that occurs when registering your Device
 // as a layout.
 // The most common use of InputControlLayoutAttribute is to direct the system
 // to a custom "state struct" through the `stateType` property. See below for details.
 [InputControlLayout(displayName = "My Device", stateType = typeof(MyDeviceState))]
 public class MyDevice : InputDevice
 {
-    // In the state struct, we added two controls that we now want to
-    // surface on the device. This is for convenience only. The controls will
-    // get added to the device either way. Exposing them as properties will
-    // simply make it easier to get to the controls in code.
+    // In the state struct, we added two Controls that we now want to
+    // surface on the Device. This is for convenience only. The Controls will
+    // get added to the Device either way. Exposing them as properties will
+    // simply make it easier to get to the Controls in code.
 
     public ButtonControl button { get; private set; }
     public AxisControl axis { get; private set; }
 
-    // This method is called by the input system after the device has been
+    // This method is called by the Input System after the Device has been
     // constructed but before it is added to the system. Here you can do
     // any last minute setup.
     protected override void FinishSetup()
     {
         base.FinishSetup();
 
-        // NOTE: The controls are *created* by the input system automatically.
+        // NOTE: The Controls are *created* by the Input System automatically.
         //       This is why don't do `new` here but rather just look
-        //       the controls up.
+        //       the Controls up.
         button = GetChildControl<ButtonControl>("button");
         axis = GetChildControl<AxisControl>("axis");
     }
 }
 ```
 
-#### Step 3: The Update Method
+#### Step 3: The Update method
 
-By now, we have a device in place along with its associated state format, but if we now create the device like so
+You now have a Device in place along with its associated state format. You can call the following method to create a fully set up Device with your two Controls on it:
 
 ```CSharp
 InputSystem.AddDevice<MyDevice>();
 ```
 
-While this creates a fully set up device with our two controls on it, the device will simply sit there and not do anything. It will not receive input as right now, we don't yet have code that actually generates input. So, let's take care of that next.
+However, this Device doesn't receive input yet, because you haven't added any code that actually generates input. To do that, you can use [`InputSystem.QueueStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueStateEvent__1_UnityEngine_InputSystem_InputDevice___0_System_Double_) or [`InputSystem.QueueDeltaStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueDeltaStateEvent__1_UnityEngine_InputSystem_InputControl___0_System_Double_) from virtually anywhere, including from a thread. The following example uses [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html) which, when implemented by any [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), adds an [`OnUpdate()`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html#UnityEngine_InputSystem_LowLevel_IInputUpdateCallbackReceiver_OnUpdate) method that automatically gets called during [`InputSystem.onBeforeUpdate`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onBeforeUpdate) and feeds input events into the current input update.
 
-Queuing input is easy. We can do that from pretty much anywhere (even from a thread) using [`InputSystem.QueueStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueStateEvent__1_UnityEngine_InputSystem_InputDevice___0_System_Double_) or [`InputSystem.QueueDeltaStateEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_QueueDeltaStateEvent__1_UnityEngine_InputSystem_InputControl___0_System_Double_). For this demonstration, we will make use of [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html) which, when implemented by any [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), will add an [`OnUpdate()`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html#UnityEngine_InputSystem_IInputUpdateCallbackReceiver_OnUpdate) method that automatically gets called during [`InputSystem.onBeforeUpdate`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onBeforeUpdate) and thus can feed input events into the current input update.
-
->NOTE: To reemphasize, you don't need to do it this way. If you already have a place where input for your device becomes available, you can simply queue input events from there instead of using [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.IInputUpdateCallbackReceiver.html).
+>__Note__: If you already have a place where input for your device becomes available, you can skip this step and queue input events from there instead of using [`IInputUpdateCallbackReceiver`](../api/UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver.html).
 
 ```CSharp
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
@@ -278,11 +274,11 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 }
 ```
 
-#### Step 4: Registration and Creation
+#### Step 4: Device registration and creation
 
-Now we have a functioning device but there is not yet a place where the device will actually get added to the system. Also, because we are not yet registering our new type of device, we won't see it in the editor when, for example, creating bindings in the [action editor](ActionAssets.md#editing-input-action-assets).
+You now have a functioning device, but you haven't added it to the system yet. Also, because the device hasn't been registered, you won't see it in the editor when, for example, you create bindings in the [action editor](ActionAssets.md#editing-input-action-assets).
 
-One way to register out type of device with the system is to do some from within code that runs automatically as part of Unity starting up. To do so, we can modify the definition of `MyDevice` like so.
+You can register your device type with the system from within the code that runs automatically as part of Unity's startup. To do so, modify the definition of `MyDevice` like so:
 
 ```CSharp
 // Add the InitializeOnLoad attribute to automatically run the static
@@ -296,10 +292,10 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
     static MyDevice()
     {
-        // RegisterLayout() adds a "control layout" to the system.
-        // These can be layouts for individual controls (like sticks)
-        // or layouts for entire devices (which are themselves
-        // control) like in our case.
+        // RegisterLayout() adds a "Control layout" to the system.
+        // These can be layouts for individual Controls (like sticks)
+        // or layouts for entire Devices (which are themselves
+        // Control) like in our case.
         InputSystem.RegisterLayout<MyDevice>();
     }
 
@@ -311,9 +307,9 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 }
 ```
 
-This registers the device type with the system and we will see it in the control picker, for example. However, we still need a way to actually add an instance of the device when it is connected.
+This registers the Device type with the system and makes it available in the Control picker. However, you still need a way to actually add an instance of the Device when it is connected.
 
-We could just call [`InputSystem.AddDevice<MyDevice>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) somewhere but in a real-world setup, you will likely have to correlate the InputDevices you create with their identities in the third-party API. It may be tempting to do something like this
+In theory, you could call [`InputSystem.AddDevice<MyDevice>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) somewhere but in a real-world setup you likely have to correlate the Input Devices you create with their identities in the third-party API. Itmight be tempting to do something like this
 
 ```CSharp
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
@@ -325,11 +321,9 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 }
 ```
 
-and then set that on the device after calling [`AddDevice<MyDevice>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) but this will not work as expected. At least not in the editor.
+and then set that on the Device after calling [`AddDevice<MyDevice>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) but this doesn't work as expected in the editor.
 
-The reason for this is rather technical in nature. The input system requires that devices can be created solely from their [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) in combination with the chosen layout (and layout variant). In addition to that, a fixed set of mutable per-device properties are supported such as device usages (i.e. [`InputSystem.SetDeviceUsage()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_SetDeviceUsage_UnityEngine_InputSystem_InputDevice_System_String_) and related methods). This is what allows the system to easily re-create devices after domain reloads in the editor as well as to create replicas of remote devices when connecting to a player.
-
-To comply with this requirement is actually rather simple. We simply cast that information provided by the third-party API into an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) and then use what's referred to as an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) to match the description to our custom `MyDevice` layout.
+This is because the Input System requires Devices to be created solely from their [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) in combination with the chosen layout (and layout variant). In addition, the system supports a fixed set of mutable per-device properties such as device usages (that is, [`InputSystem.SetDeviceUsage()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_SetDeviceUsage_UnityEngine_InputSystem_InputDevice_System_String_) and related methods). This allows the system to easily recreate Devices after domain reloads in the Editor, as well as to create replicas of remote Devices when connecting to a Player. To comply with this requirement, you must cast that information provided by the third-party API into an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) and then use an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) to match the description to our custom `MyDevice` layout.
 
 Let's assume that the third-party API has two callbacks like this:
 
@@ -337,14 +331,14 @@ Let's assume that the third-party API has two callbacks like this:
 public static ThirdPartyAPI
 {
     // Let's assume that the argument is a string that contains the
-    // name of the device and no two devices will have the
+    // name of the Device and no two Devices will have the
     // same name in the external API.
     public static Action<string> deviceAdded;
     public static Action<string> deviceRemoved;
 }
 ```
 
-Now we can hook into those callbacks and create and destroy devices in response.
+You can hook into those callbacks and create and destroy devices in response.
 
 ```CSharp
 // For this demonstration, we use a MonoBehaviour with [ExecuteInEditMode]
@@ -366,8 +360,8 @@ public class MyDeviceSupport : MonoBehaviour
 
     private void OnDeviceAdded(string name)
     {
-        // Feed a description of the device into the system. In response, the
-        // system will match it to the layouts it has and create a device.
+        // Feed a description of the Device into the system. In response, the
+        // system will match it to the layouts it has and create a Device.
         InputSystem.AddDevice(
             new InputDeviceDescription
             {
@@ -394,7 +388,7 @@ public class MyDeviceSupport : MonoBehaviour
     // we change the registration to also supply a matcher.
     protected void Awake()
     {
-        // Add a match that catches any input device that reports its
+        // Add a match that catches any Input Device that reports its
         // interface as being "ThirdPartyAPI".
         InputSystem.RegisterLayout<MyDevice>(
             matches: new InputDeviceMatcher()
@@ -403,9 +397,9 @@ public class MyDeviceSupport : MonoBehaviour
 }
 ```
 
-#### Step 5: `current` and `all` (Optional)
+#### Step 5: `current` and `all` (optional)
 
-It can be very convenient to quickly access the last used device of a given type or to quickly list all devices of a specific type. We can do this by simply adding support for a `current` and for an `all` getter to the API of `MyDevice`.
+For convenience, you can quickly access the last used device of a given type, or list all devices of a specific type. To do this, add support for a `current` and for an `all` getter to the API of `MyDevice`.
 
 ```CSharp
 public class MyDevice : InputDevice, IInputCallbackReceiver
@@ -437,5 +431,5 @@ public class MyDevice : InputDevice, IInputCallbackReceiver
 }
 ```
 [//]: # (#### Step 6: Device Commands (Optional))
-[//]: # (A final, but optional, step is to add support for device commands. A "device command" is that opposite of input, i.e. it is data traveling __to__ the input device &ndash; and which may optionally also return data as part of the operation (much like a function call). This can be used to communicate with the backend of the device to query configuration or initiate effects such as haptics.)
+[//]: # (A final, but optional, step is to add support for Device commands. A "device command" is that opposite of input, i.e. it is data traveling __to__ the input device &ndash; and which may optionally also return data as part of the operation (much like a function call). This can be used to communicate with the backend of the device to query configuration or initiate effects such as haptics.)
 [//]: # (TODO: ATM we're missing an overridable method to make this work)

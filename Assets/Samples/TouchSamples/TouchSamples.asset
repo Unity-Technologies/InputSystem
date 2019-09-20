@@ -10,6 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9858d4c8055fd45539a2e86388f7c5ba, type: 3}
-  m_Name: TanksDemo
+  m_Name: TouchSamples
   m_EditorClassIdentifier: 
-  url: https://github.com/Unity-Technologies/InputSystem/releases/download/%VERSION%/TanksDemo-%VERSION%.unitypackage
+  url: https://github.com/Unity-Technologies/InputSystem/releases/download/%VERSION%/TouchSamples-%VERSION%.unitypackage
+  packageDeps:
+  - com.unity.inputsystem
+  - com.unity.cinemachine
+  - com.unity.probuilder

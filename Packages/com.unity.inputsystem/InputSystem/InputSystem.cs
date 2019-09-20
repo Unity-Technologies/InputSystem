@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
@@ -75,7 +74,6 @@ namespace UnityEngine.InputSystem
     {
         #region Layouts
 
-        ////REVIEW: should we move this out of the way; e.g. InputControlLayout.onChange? it's a fairly uncommon callback
         /// <summary>
         /// Event that is signalled when the layout setup in the system changes.
         /// </summary>
@@ -124,14 +122,17 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type (<see cref="Type.Name"/>) will be used.</param>
-        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
         ///
         /// The type can be annotated with <see cref="InputControlLayoutAttribute"/> for additional options
-        /// but the attribute is not necessary for a type to be usable as a control layout.
+        /// but the attribute is not necessary for a type to be usable as a control layout. Note that if the type
+        /// does have <see cref="InputControlLayoutAttribute"/> and has set <see cref="InputControlLayoutAttribute.stateType"/>,
+        /// the system will <em>not</em> reflect on properties and fields in the type but do that on the given
+        /// state type instead.
         ///
         /// <example>
         /// <code>
@@ -181,7 +182,7 @@ namespace UnityEngine.InputSystem
         ///     }
         /// }
         ///
-        /// // A "state struct" describes the memory format used a device. Each device can
+        /// // A "state struct" describes the memory format used by a device. Each device can
         /// // receive and store memory in its custom format. InputControls are then connected
         /// // the individual pieces of memory and read out values from them.
         /// [StructLayout(LayoutKind.Explicit, Size = 32)]
@@ -211,14 +212,18 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         ///
-        /// Note that if <paramref name="matches"/> is supplied and there are devices that could not
-        /// have been recognized yet, the matcher will be immediately matched against these devices
-        /// and any match will result in an input device being created (except if the layout happens
-        /// to be suppressed via <see cref="InputSettings.supportedDevices"/>).
+        /// Note that if <paramref name="matches"/> is supplied, it will immediately be matched
+        /// against the descriptions (<see cref="InputDeviceDescription"/>) of all available devices.
+        /// If it matches any description where no layout matched before, a new device will immediately
+        /// be created (except if suppressed by <see cref="InputSettings.supportedDevices"/>). If it
+        /// matches a description better (see <see cref="InputDeviceMatcher.MatchPercentage"/>) than
+        /// the currently used layout, the existing device will be a removed and a new device with
+        /// the newly registered layout will be created.
         ///
         /// See <see cref="Controls.StickControl"/> or <see cref="Gamepad"/> for examples of layouts.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
+        /// <seealso cref="InputControlLayout"/>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
             if (type == null)
@@ -238,11 +243,11 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <typeparam name="T">Type to derive a control layout from.</typeparam>
         /// <param name="name">Name to use for the layout. If null or empty, the short name of the type will be used.</param>
-        /// <param name="matches">Optional device description. If this is supplied, the layout will automatically
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
         /// <remarks>
         /// This method is equivalent to calling <see cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/> with
-        /// <c>typeof(T)</c>.
+        /// <c>typeof(T)</c>. See that method for details of the layout registration process.
         /// </remarks>
         /// <seealso cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/>
         public static void RegisterLayout<T>(string name = null, InputDeviceMatcher? matches = null)
@@ -258,7 +263,8 @@ namespace UnityEngine.InputSystem
         /// <param name="name">Optional name of the layout. If null or empty, the name is taken from the "name"
         /// property of the JSON data. If it is supplied, it will override the "name" property if present. If neither
         /// is supplied, an <see cref="ArgumentException"/> is thrown.</param>
-        /// <param name="matches"></param>
+        /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
+        /// be instantiated for newly discovered devices that match the description.</param>
         /// <exception cref="ArgumentNullException"><paramref name="json"/> is null or empty.</exception>
         /// <exception cref="ArgumentException">No name has been supplied either through <paramref name="name"/>
         /// or the "name" JSON property.</exception>
@@ -310,11 +316,33 @@ namespace UnityEngine.InputSystem
         /// by merging the derived layout and the base layout, the overrides are merged
         /// directly into the base layout.
         ///
+        /// The layout merging logic used for overrides, is the same as the one used for
+        /// derived layouts, i.e. <see cref="InputControlLayout.MergeLayout"/>.
+        ///
         /// Layouts used as overrides look the same as normal layouts and have the same format.
         /// The only difference is that they are explicitly registered as overrides.
         ///
         /// Note that unlike "normal" layouts, layout overrides have the ability to extend
-        /// multiple base layouts.
+        /// multiple base layouts. The changes from the override will simply be merged into
+        /// each of the layouts it extends. Use the <c>extendMultiple</c> rather than the
+        /// <c>extend</c> property in JSON to give a list of base layouts instead of a single
+        /// one.
+        ///
+        /// <example>
+        /// <code>
+        /// // Override default button press points on the gamepad triggers.
+        /// InputSystem.RegisterLayoutOverride(@"
+        ///     {
+        ///         ""name"" : ""CustomTriggerPressPoints"",
+        ///         ""extend"" : ""Gamepad"",
+        ///         ""controls"" : [
+        ///             { ""name"" : ""leftTrigger"", ""parameters"" : ""pressPoint=0.25"" },
+        ///             { ""name"" : ""rightTrigger"", ""parameters"" : ""pressPoint=0.25"" }
+        ///         ]
+        ///     }
+        /// ");
+        /// </code>
+        /// </example>
         /// </remarks>
         public static void RegisterLayoutOverride(string json, string name = null)
         {
@@ -329,16 +357,30 @@ namespace UnityEngine.InputSystem
         /// <param name="matcher">Specification to match against <see cref="InputDeviceDescription"/> instances.</param>
         /// <remarks>
         /// Each device layout can have zero or more matchers associated with it. If any one of the
-        /// matchers matches a given <see cref="InputDeviceDescription"/> (<see cref="InputDeviceMatcher.MatchPercentage"/>)
+        /// matchers matches a given <see cref="InputDeviceDescription"/> (see <see cref="InputDeviceMatcher.MatchPercentage"/>)
         /// better than any other matcher (for the same or any other layout), then the given layout
         /// will be used for the discovered device.
         /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="layoutName"/> is <c>null</c> or empty/</exception>
+        /// <exception cref="ArgumentException"><paramref name="matcher"/> is empty (<see cref="InputDeviceMatcher.empty"/>).</exception>
         /// <seealso cref="RegisterLayout(Type,string,InputDeviceMatcher?)"/>
+        /// <seealso cref="TryFindMatchingLayout"/>
         public static void RegisterLayoutMatcher(string layoutName, InputDeviceMatcher matcher)
         {
             s_Manager.RegisterControlLayoutMatcher(layoutName, matcher);
         }
 
+        /// <summary>
+        /// Add an additional device matcher to the layout registered for <typeparamref name="TDevice"/>.
+        /// </summary>
+        /// <param name="matcher">A device matcher.</param>
+        /// <typeparam name="TDevice">Type that has been registered as a layout. See <see cref="RegisterLayout{T}"/>.</typeparam>
+        /// <remarks>
+        /// Calling this method is equivalent to calling <see cref="RegisterLayoutMatcher(string,InputDeviceMatcher)"/>
+        /// with the name under which <typeparamref name="TDevice"/> has been registered.
+        /// </remarks>
+        /// <exception cref="ArgumentException"><paramref name="matcher"/> is empty (<see cref="InputDeviceMatcher.empty"/>)
+        /// -or- <typeparamref name="TDevice"/> has not been registered as a layout.</exception>
         public static void RegisterLayoutMatcher<TDevice>(InputDeviceMatcher matcher)
             where TDevice : InputDevice
         {
@@ -348,103 +390,62 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Register a builder that delivers an <see cref="InputControlLayout"/> instance on demand.
         /// </summary>
-        /// <param name="builderExpression"></param>
-        /// <param name="name"></param>
-        /// <param name="baseLayout"></param>
-        /// <param name="matches"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="buildMethod">Method to invoke to generate a layout when the layout is chosen.
+        /// Should not cache the layout but rather return a fresh instance every time.</param>
+        /// <param name="name">Name under which to register the layout. If a layout with the same
+        /// name is already registered, the call to this method will replace the existing layout.</param>
+        /// <param name="baseLayout">Name of the layout that the layout returned from <paramref name="buildMethod"/>
+        /// will be based on. The system needs to know this in advance in order to update devices
+        /// correctly if layout registrations in the system are changed.</param>
+        /// <param name="matches">Optional matcher for an <see cref="InputDeviceDescription"/>. If supplied,
+        /// it is equivalent to calling <see cref="RegisterLayoutMatcher"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="buildMethod"/> is <c>null</c> -or-
+        /// <paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <remarks>
-        /// The given expression must be a lambda expression solely comprised of a method call with
-        /// no arguments. Can be static or instance method call. If it is an instance method, the
-        /// instance object must be serializable.
+        /// Layout builders are most useful for procedurally building device layouts from metadata
+        /// supplied by external systems. A good example is <see cref="HID"/> where the "HID" standard
+        /// includes a way for input devices to describe their various inputs and outputs in the form
+        /// of a <see cref="HID.HIDDeviceDescriptor"/>. While not sufficient to build a perfectly robust
+        /// <see cref="InputDevice"/>, these descriptions are usually enough to at least make the device
+        /// work out-of-the-box to some extent.
         ///
-        /// The reason for these restrictions and for not taking an arbitrary delegate is that we
-        /// need to be able to persist the layout builder between domain reloads.
+        /// The builder method would usually use <see cref="InputControlLayout.Builder"/> to build the
+        /// actual layout.
         ///
-        /// Note that the layout that is being constructed must not vary over time (except between
-        /// domain reloads).
-        /// </remarks>
         /// <example>
         /// <code>
-        /// [Serializable]
-        /// class MyLayoutBuilder
-        /// {
-        ///     public InputControlLayout Build()
+        /// InputSystem.RegisterLayoutBuilder(
+        ///     () =>
         ///     {
         ///         var builder = new InputControlLayout.Builder()
         ///             .WithType&lt;MyDevice&gt;();
         ///         builder.AddControl("button1").WithLayout("Button");
         ///         return builder.Build();
-        ///     }
+        ///     }, "MyCustomLayout"
         /// }
-        ///
-        /// var builder = new MyLayoutBuilder();
-        /// InputSystem.RegisterLayoutBuilder(() => builder.Build(), "MyLayout");
         /// </code>
         /// </example>
-        public static void RegisterLayoutBuilder(Expression<Func<InputControlLayout>> builderExpression, string name,
+        ///
+        /// Layout builders can be used in combination with <see cref="onFindLayoutForDevice"/> to
+        /// build layouts dynamically for devices as they are connected to the system.
+        ///
+        /// Be aware that the same builder <em>must</em> not build different layouts. Each
+        /// layout registered in the system is considered to be immutable for as long as it
+        /// is registered. So, if a layout builder is registered under the name "Custom", for
+        /// example, then every time the builder is invoked, it must return the same identical
+        /// <see cref="InputControlLayout"/>.
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.Builder"/>
+        /// <seealso cref="onFindLayoutForDevice"/>
+        public static void RegisterLayoutBuilder(Func<InputControlLayout> buildMethod, string name,
             string baseLayout = null, InputDeviceMatcher? matches = null)
         {
-            if (builderExpression == null)
-                throw new ArgumentNullException(nameof(builderExpression));
+            if (buildMethod == null)
+                throw new ArgumentNullException(nameof(buildMethod));
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentException("Name is null or empty", nameof(name));
+                throw new ArgumentNullException(nameof(name));
 
-            // Grab method and (optional) instance from lambda expression.
-            var methodCall = builderExpression.Body as MethodCallExpression;
-            if (methodCall == null)
-                throw new ArgumentException(
-                    $"Body of layout builder function must be a method call (is a {builderExpression.Body.NodeType} instead)",
-                    nameof(builderExpression));
-
-            var method = methodCall.Method;
-
-            object instance = null;
-            if (methodCall.Object != null)
-            {
-                // NOTE: We can't compile expressions on the fly here to invoke them as that
-                //       won't work on AOT. So we have to perform a little bit of manual
-                //       interpretation of the expression tree.
-
-                switch (methodCall.Object.NodeType)
-                {
-                    // Method call on value referenced as constant.
-                    case ExpressionType.Constant:
-                        instance = ((ConstantExpression)methodCall.Object).Value;
-                        break;
-
-                    // Method call on variable being closed over (comes out as a field access).
-                    case ExpressionType.MemberAccess:
-                        // Get object that has the field.
-                        var expr = ((MemberExpression)methodCall.Object).Expression;
-                        var constantExpr = expr as ConstantExpression;
-                        if (constantExpr == null)
-                            throw new ArgumentException(
-                                $"Body of layout builder function must be a method call on a constant or variable expression (accesses member of {expr.NodeType} instead)",
-                                nameof(builderExpression));
-
-                        // Get field.
-                        var member = ((MemberExpression)methodCall.Object).Member;
-                        var field = member as FieldInfo;
-                        if (field == null)
-                            throw new ArgumentException(
-                                $"Body of layout builder function must be a method call on a constant or variable expression (member access does not access field but rather {member.GetType().Name} {member.Name})",
-                                nameof(builderExpression));
-
-                        // Read value.
-                        instance = field.GetValue(constantExpr.Value);
-                        break;
-
-                    default:
-                        throw new ArgumentException(
-                            $"Expression nodes of type {methodCall.Object.NodeType} are not supported as the target of the method call in a builder expression",
-                            nameof(builderExpression));
-                }
-            }
-
-            // Register.
-            s_Manager.RegisterControlLayoutBuilder(method, instance, name, baseLayout: baseLayout);
+            s_Manager.RegisterControlLayoutBuilder(buildMethod, name, baseLayout: baseLayout);
             if (matches != null)
                 s_Manager.RegisterControlLayoutMatcher(name, matches.Value);
         }
@@ -471,21 +472,26 @@ namespace UnityEngine.InputSystem
         /// <returns>Name of the layout that has been matched to the given description or null if no
         /// matching layout was found.</returns>
         /// <remarks>
-        /// Layouts are matched by the <see cref="InputDeviceDescription"/> they were registered with (if any).
-        /// The fields in a layout's device description are considered regular expressions which are matched
-        /// against the values supplied in the given <paramref name="deviceDescription"/>.
-        /// </remarks>
+        /// This method performs the same matching process that is invoked if a device is reported
+        /// by the Unity runtime or using <see cref="AddDevice(InputDeviceDescription)"/>. The result
+        /// depends on the matches (<see cref="InputDeviceMatcher"/>) registered for the device
+        /// layout in the system.
+        ///
         /// <example>
         /// <code>
         /// var layoutName = InputSystem.TryFindMatchingLayout(
         ///     new InputDeviceDescription
         ///     {
+        ///         interface = "XInput",
         ///         product = "Xbox Wired Controller",
         ///         manufacturer = "Microsoft"
         ///     }
         /// );
         /// </code>
         /// </example>
+        /// </remarks>
+        /// <seealso cref="RegisterLayoutMatcher{TDevice}"/>
+        /// <seealso cref="RegisterLayoutMatcher(string,InputDeviceMatcher)"/>
         public static string TryFindMatchingLayout(InputDeviceDescription deviceDescription)
         {
             return s_Manager.TryFindMatchingControlLayout(ref deviceDescription);
@@ -495,50 +501,115 @@ namespace UnityEngine.InputSystem
         /// Return a list with the names of all layouts that have been registered.
         /// </summary>
         /// <returns>A list of layout names.</returns>
-        /// <seealso cref="ListLayouts(List{string})"/>
-        public static List<string> ListLayouts()
+        /// <seealso cref="LoadLayout"/>
+        /// <seealso cref="ListLayoutsBasedOn"/>
+        /// <seealso cref="RegisterLayout(System.Type,string,Nullable{InputDeviceMatcher})"/>
+        public static IEnumerable<string> ListLayouts()
         {
-            var list = new List<string>();
-            s_Manager.ListControlLayouts(list);
-            return list;
+            return s_Manager.ListControlLayouts();
         }
 
         /// <summary>
-        /// Add the names of all layouts that have been registered to the given list.
+        /// List all the layouts that are based on the given layout.
         /// </summary>
-        /// <param name="list">List to add the layout names to.</param>
-        /// <returns>The number of names added to <paramref name="list"/>.</returns>
+        /// <param name="baseLayout">Name of a registered layout.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="baseLayout"/> is <c>null</c> or empty.</exception>
+        /// <returns>The names of all registered layouts based on <paramref name="baseLayout"/>.</returns>
         /// <remarks>
-        /// If the capacity of the given list is large enough, this method will not allocate.
+        /// The list will not include layout overrides (see <see cref="RegisterLayoutOverride"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// // List all gamepad layouts in the system.
+        /// Debug.Log(string.Join("\n", InputSystem.ListLayoutsBasedOn("Gamepad"));
+        /// </code>
+        /// </example>
         /// </remarks>
-        public static int ListLayouts(List<string> list)
+        public static IEnumerable<string> ListLayoutsBasedOn(string baseLayout)
         {
-            return s_Manager.ListControlLayouts(list);
-        }
-
-        public static List<string> ListLayoutsBasedOn(string baseLayout)
-        {
-            var result = new List<string>();
-            ListLayoutsBasedOn(baseLayout, result);
-            return result;
-        }
-
-        public static int ListLayoutsBasedOn(string baseLayout, List<string> list)
-        {
-            return s_Manager.ListControlLayouts(list, basedOn: baseLayout);
+            if (string.IsNullOrEmpty(baseLayout))
+                throw new ArgumentNullException(nameof(baseLayout));
+            return s_Manager.ListControlLayouts(basedOn: baseLayout);
         }
 
         /// <summary>
-        /// Try to load a layout instance.
+        /// Load a registered layout.
         /// </summary>
         /// <param name="name">Name of the layout to load. Note that layout names are case-insensitive.</param>
-        /// <returns>The constructed layout instance or null if no layout of the given name could be found.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c> or empty.</exception>
+        /// <returns>The constructed layout instance or <c>null</c> if no layout of the given name could be found.</returns>
+        /// <remarks>
+        /// The result of this method is what's called a "fully merged" layout, i.e. a layout with
+        /// the information of all the base layouts as well as from all overrides merged into it. See
+        /// <see cref="InputControlLayout.MergeLayout"/> for details.
+        ///
+        /// What this means in practice is that all inherited controls and settings will be present
+        /// on the layout.
+        ///
+        /// <example>
+        /// // List all controls defined for gamepads.
+        /// var gamepadLayout = InputSystem.LoadLayout("Gamepad");
+        /// foreach (var control in gamepadLayout.controls)
+        /// {
+        ///     // There may be control elements that are not introducing new controls but rather
+        ///     // change settings on controls added indirectly by other layouts referenced from
+        ///     // Gamepad. These are not adding new controls so we skip them here.
+        ///     if (control.isModifyingExistingControl)
+        ///         continue;
+        ///
+        ///     Debug.Log($"Control: {control.name} ({control.layout])");
+        /// }
+        /// </example>
+        ///
+        /// However, note that controls which are added from other layouts referenced by the loaded layout
+        /// will not necessarily be visible on it (they will only if referenced by a <see cref="InputControlLayout.ControlItem"/>
+        /// where <see cref="InputControlLayout.ControlItem.isModifyingExistingControl"/> is <c>true</c>).
+        /// For example, let's assume we have the following layout which adds a device with a single stick.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterLayout(@"
+        ///     {
+        ///         ""name"" : ""DeviceWithStick"",
+        ///         ""controls"" : [
+        ///             { ""name"" : ""stick"", ""layout"" : ""Stick"" }
+        ///         ]
+        ///     }
+        /// ");
+        /// </code>
+        /// </example>
+        ///
+        /// If we load this layout, the <c>"stick"</c> control will be visible on the layout but the
+        /// X and Y (as well as up/down/left/right) controls added by the <c>"Stick"</c> layout will
+        /// not be.
+        /// </remarks>
+        /// <seealso cref="RegisterLayout(Type,string,Nullable{InputDeviceMatcher})"/>
         public static InputControlLayout LoadLayout(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
             ////FIXME: this will intern the name even if the operation fails
             return s_Manager.TryLoadControlLayout(new InternedString(name));
         }
 
+        /// <summary>
+        /// Load the layout registered for the given type.
+        /// </summary>
+        /// <typeparam name="TControl">An InputControl type.</typeparam>
+        /// <returns>The layout registered for <typeparamref name="TControl"/> or <c>null</c> if no
+        /// such layout exists.</returns>
+        /// <remarks>
+        /// This method is equivalent to calling <see cref="LoadLayout(string)"/> with the name
+        /// of the layout under which <typeparamref name="TControl"/> has been registered.
+        ///
+        /// <example>
+        /// <code>
+        /// // Load the InputControlLayout generated from StickControl.
+        /// var stickLayout = InputSystem.LoadLayout&lt;StickControl&gt;();
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="LoadLayout(string)"/>
         public static InputControlLayout LoadLayout<TControl>()
             where TControl : InputControl
         {
@@ -552,17 +623,107 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Register an <see cref="InputProcessor{TValue}"/> with the system.
         /// </summary>
-        /// <param name="type">Type that implements <see cref="InputProcessor{TValue}"/>.</param>
-        /// <param name="name">Name to use for the processor. If null or empty, name will be taken from short name
-        /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name).</param>
+        /// <param name="type">Type that implements <see cref="InputProcessor"/>.</param>
+        /// <param name="name">Name to use for the processor. If <c>null</c> or empty, name will be taken from the short name
+        /// of <paramref name="type"/> (if it ends in "Processor", that suffix will be clipped from the name). Names
+        /// are case-insensitive.</param>
         /// <remarks>
         /// Processors are used by both bindings (see <see cref="InputBinding"/>) and by controls
         /// (see <see cref="InputControl"/>) to post-process input values as they are being requested
         /// from calls such as <see cref="InputAction.ReadValue{TValue}"/> or <see
         /// cref="InputControl{T}.ReadValue"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Let's say that we want to define a processor that adds some random jitter to its input.
+        /// // We have to pick a value type to operate on if we want to derive from InputProcessor&lt;T&gt;
+        /// // so we go with float here.
+        /// //
+        /// // Also, as we will need to place our call to RegisterProcessor somewhere, we add attributes
+        /// // to hook into Unity's initialization. This works differently in the editor and in the player,
+        /// // so we use both [InitializeOnLoad] and [RuntimeInitializeOnLoadMethod].
+        /// #if UNITY_EDITOR
+        /// [InitializeOnLoad]
+        /// #endif
+        /// public class JitterProcessor : InputProcessor&lt;float&gt;
+        /// {
+        ///     // Add a parameter that defines the amount of jitter we apply.
+        ///     // This will be editable in the Unity editor UI and can be set
+        ///     // programmatically in code. For example:
+        ///     //
+        ///     //    myAction.AddBinding("&lt;Gamepad&gt;/rightTrigger",
+        ///     //        processors: "jitter(amount=0.1)");
+        ///     //
+        ///     [Tooltip("Amount of jitter to apply. Will add a random value in the range [-amount..amount] "
+        ///              + "to each input value.)]
+        ///     public float amount;
+        ///
+        ///     // Process is called when an input value is read from a control. This is
+        ///     // where we perform our jitter.
+        ///     public override float Process(float value, InputControl control)
+        ///     {
+        ///         return float + Random.Range(-amount, amount);
+        ///     }
+        ///
+        ///     // [InitializeOnLoad] will call the static class constructor which
+        ///     // we use to call Register.
+        ///     #if UNITY_EDITOR
+        ///     static JitterProcessor()
+        ///     {
+        ///         Register();
+        ///     }
+        ///     #endif
+        ///
+        ///     // [RuntimeInitializeOnLoadMethod] will make sure that Register gets called
+        ///     // in the player on startup.
+        ///     // NOTE: This will also get called when going into play mode in the editor. In that
+        ///     //       case we get two calls to Register instead of one. We don't bother with that
+        ///     //       here. Calling RegisterProcessor twice here doesn't do any harm.
+        ///     [RuntimeInitializeOnLoadMethod]
+        ///     static void Register()
+        ///     {
+        ///         // We don't supply a name here. The input system will take "JitterProcessor"
+        ///         // and automatically snip off the "Processor" suffix thus leaving us with
+        ///         // a name of "Jitter" (all this is case-insensitive).
+        ///         InputSystem.RegisterProcessor&lt;JitterProcessor&gt;();
+        ///     }
+        /// }
+        ///
+        /// // It doesn't really make sense in our case as the default parameter editor is just
+        /// // fine (it will pick up the tooltip we defined above) but let's say we want to replace
+        /// // the default float edit field we get on the "amount" parameter with a slider. We can
+        /// // do so by defining a custom parameter editor.
+        /// //
+        /// // NOTE: We don't need to have a registration call here. The input system will automatically
+        /// //       find our parameter editor based on the JitterProcessor type parameter we give to
+        /// //       InputParameterEditor&lt;T&gt;.
+        /// #if UNITY_EDITOR
+        /// public class JitterProcessorEditor : InputParameterEditor&lt;JitterProcessor&gt;
+        /// {
+        ///     public override void OnGUI()
+        ///     {
+        ///         target.amount = EditorGUILayout.Slider(m_AmountLabel, target.amount, 0, 0.25f);
+        ///     }
+        ///
+        ///     private GUIContent m_AmountLabel = new GUIContent("Amount",
+        ///         "Amount of jitter to apply. Will add a random value in the range [-amount..amount] "
+        ///             + "to each input value.);
+        /// }
+        /// #endif
+        /// </code>
+        /// </example>
+        ///
+        /// Note that it is allowed to register the same processor type multiple types with
+        /// different names. When doing so, the first registration is considered as the "proper"
+        /// name for the processor and all subsequent registrations will be considered aliases.
+        ///
+        /// See the <a href="../manual/Processors.html">manual</a> for more details.
         /// </remarks>
+        /// <seealso cref="InputProcessor{T}"/>
         /// <seealso cref="InputBinding.processors"/>
+        /// <seealso cref="InputAction.processors"/>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
+        /// <seealso cref="InputParameterEditor{TObject}"/>
         public static void RegisterProcessor(Type type, string name = null)
         {
             if (type == null)
@@ -578,14 +739,144 @@ namespace UnityEngine.InputSystem
             s_Manager.processors.AddTypeRegistration(name, type);
         }
 
+        /// <summary>
+        /// Register an <see cref="InputProcessor{TValue}"/> with the system.
+        /// </summary>
+        /// <typeparam name="T">Type that implements <see cref="InputProcessor"/>.</typeparam>
+        /// <param name="name">Name to use for the processor. If <c>null</c> or empty, name will be taken from the short name
+        /// of <typeparamref name="T"/> (if it ends in "Processor", that suffix will be clipped from the name). Names
+        /// are case-insensitive.</param>
+        /// <remarks>
+        /// Processors are used by both bindings (see <see cref="InputBinding"/>) and by controls
+        /// (see <see cref="InputControl"/>) to post-process input values as they are being requested
+        /// from calls such as <see cref="InputAction.ReadValue{TValue}"/> or <see
+        /// cref="InputControl{T}.ReadValue"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Let's say that we want to define a processor that adds some random jitter to its input.
+        /// // We have to pick a value type to operate on if we want to derive from InputProcessor&lt;T&gt;
+        /// // so we go with float here.
+        /// //
+        /// // Also, as we will need to place our call to RegisterProcessor somewhere, we add attributes
+        /// // to hook into Unity's initialization. This works differently in the editor and in the player,
+        /// // so we use both [InitializeOnLoad] and [RuntimeInitializeOnLoadMethod].
+        /// #if UNITY_EDITOR
+        /// [InitializeOnLoad]
+        /// #endif
+        /// public class JitterProcessor : InputProcessor&lt;float&gt;
+        /// {
+        ///     // Add a parameter that defines the amount of jitter we apply.
+        ///     // This will be editable in the Unity editor UI and can be set
+        ///     // programmatically in code. For example:
+        ///     //
+        ///     //    myAction.AddBinding("&lt;Gamepad&gt;/rightTrigger",
+        ///     //        processors: "jitter(amount=0.1)");
+        ///     //
+        ///     [Tooltip("Amount of jitter to apply. Will add a random value in the range [-amount..amount] "
+        ///              + "to each input value.)]
+        ///     public float amount;
+        ///
+        ///     // Process is called when an input value is read from a control. This is
+        ///     // where we perform our jitter.
+        ///     public override float Process(float value, InputControl control)
+        ///     {
+        ///         return float + Random.Range(-amount, amount);
+        ///     }
+        ///
+        ///     // [InitializeOnLoad] will call the static class constructor which
+        ///     // we use to call Register.
+        ///     #if UNITY_EDITOR
+        ///     static JitterProcessor()
+        ///     {
+        ///         Register();
+        ///     }
+        ///     #endif
+        ///
+        ///     // [RuntimeInitializeOnLoadMethod] will make sure that Register gets called
+        ///     // in the player on startup.
+        ///     // NOTE: This will also get called when going into play mode in the editor. In that
+        ///     //       case we get two calls to Register instead of one. We don't bother with that
+        ///     //       here. Calling RegisterProcessor twice here doesn't do any harm.
+        ///     [RuntimeInitializeOnLoadMethod]
+        ///     static void Register()
+        ///     {
+        ///         // We don't supply a name here. The input system will take "JitterProcessor"
+        ///         // and automatically snip off the "Processor" suffix thus leaving us with
+        ///         // a name of "Jitter" (all this is case-insensitive).
+        ///         InputSystem.RegisterProcessor&lt;JitterProcessor&gt;();
+        ///     }
+        /// }
+        ///
+        /// // It doesn't really make sense in our case as the default parameter editor is just
+        /// // fine (it will pick up the tooltip we defined above) but let's say we want to replace
+        /// // the default float edit field we get on the "amount" parameter with a slider. We can
+        /// // do so by defining a custom parameter editor.
+        /// //
+        /// // NOTE: We don't need to have a registration call here. The input system will automatically
+        /// //       find our parameter editor based on the JitterProcessor type parameter we give to
+        /// //       InputParameterEditor&lt;T&gt;.
+        /// #if UNITY_EDITOR
+        /// public class JitterProcessorEditor : InputParameterEditor&lt;JitterProcessor&gt;
+        /// {
+        ///     public override void OnGUI()
+        ///     {
+        ///         target.amount = EditorGUILayout.Slider(m_AmountLabel, target.amount, 0, 0.25f);
+        ///     }
+        ///
+        ///     private GUIContent m_AmountLabel = new GUIContent("Amount",
+        ///         "Amount of jitter to apply. Will add a random value in the range [-amount..amount] "
+        ///             + "to each input value.);
+        /// }
+        /// #endif
+        /// </code>
+        /// </example>
+        ///
+        /// Note that it is allowed to register the same processor type multiple types with
+        /// different names. When doing so, the first registration is considered as the "proper"
+        /// name for the processor and all subsequent registrations will be considered aliases.
+        ///
+        /// See the <a href="../manual/Processors.html">manual</a> for more details.
+        /// </remarks>
+        /// <seealso cref="InputProcessor{T}"/>
+        /// <seealso cref="InputBinding.processors"/>
+        /// <seealso cref="InputAction.processors"/>
+        /// <seealso cref="InputControlLayout.ControlItem.processors"/>
+        /// <seealso cref="InputParameterEditor{TObject}"/>
         public static void RegisterProcessor<T>(string name = null)
         {
             RegisterProcessor(typeof(T), name);
         }
 
+        /// <summary>
+        /// Return the processor type registered under the given name. If no such processor
+        /// has been registered, return <c>null</c>.
+        /// </summary>
+        /// <param name="name">Name of processor. Case-insensitive.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is <c>null</c> or empty.</exception>
+        /// <returns>The given processor type or <c>null</c> if not found.</returns>
+        /// <seealso cref="RegisterProcessor{T}"/>
         public static Type TryGetProcessor(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
             return s_Manager.processors.LookupTypeRegistration(name);
+        }
+
+        /// <summary>
+        /// List the names of all processors have been registered.
+        /// </summary>
+        /// <returns>List of registered processors.</returns>
+        /// <remarks>
+        /// Note that the result will include both "proper" names and aliases registered
+        /// for processors. If, for example, a given type <c>JitterProcessor</c> has been registered
+        /// under both "Jitter" and "Randomize", it will appear in the list with both those names.
+        /// </remarks>
+        /// <seealso cref="TryGetProcessor"/>
+        /// <seealso cref="RegisterProcessor{T}"/>
+        public static IEnumerable<string> ListProcessors()
+        {
+            return s_Manager.processors.names;
         }
 
         #endregion
@@ -595,6 +886,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The list of currently connected devices.
         /// </summary>
+        /// <value>Currently connected devices.</value>
         /// <remarks>
         /// Note that accessing this property does not allocate. It gives read-only access
         /// directly to the system's internal array of devices.
@@ -603,12 +895,16 @@ namespace UnityEngine.InputSystem
         /// setup in the system changes, any value previously returned by this property
         /// may become invalid. Query the property directly whenever you need it.
         /// </remarks>
+        /// <seealso cref="AddDevice{TDevice}"/>
+        /// <seealso cref="RemoveDevice"/>
         public static ReadOnlyArray<InputDevice> devices => s_Manager.devices;
 
         /// <summary>
         /// Devices that have been disconnected but are retained by the input system in case
         /// they are plugged back in.
         /// </summary>
+        /// <value>Devices that have been retained by the input system in case they are plugged
+        /// back in.</value>
         /// <remarks>
         /// During gameplay it is undesirable to have the system allocate and release managed memory
         /// as devices are unplugged and plugged back in as it would ultimately lead to GC spikes
@@ -634,7 +930,7 @@ namespace UnityEngine.InputSystem
         /// For devices that do relay their <see cref="InputDeviceDescription.serial">serials</see> the matching
         /// is reliable.
         ///
-        /// The list can be purged by calling <see cref="RemoveDisconnetedDevices"/>. Doing so, will release
+        /// The list can be purged by calling <see cref="FlushDisconnectedDevices"/>. Doing so, will release
         /// all reference we hold to the devices or any controls inside of them and allow the devices to be
         /// reclaimed by the garbage collector.
         ///
@@ -644,7 +940,7 @@ namespace UnityEngine.InputSystem
         /// Also note that devices on this list will be lost when domain reloads happen in the editor (i.e. on
         /// script recompilation and when entering play mode).
         /// </remarks>
-        /// <seealso cref="RemoveDisconnectedDevices"/>
+        /// <seealso cref="FlushDisconnectedDevices"/>
         public static ReadOnlyArray<InputDevice> disconnectedDevices =>
             new ReadOnlyArray<InputDevice>(s_Manager.m_DisconnectedDevices, 0,
                 s_Manager.m_DisconnectedDevicesCount);
@@ -652,10 +948,11 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Event that is signalled when the device setup in the system changes.
         /// </summary>
+        /// <value>Callback when device setup ni system changes.</value>
         /// <remarks>
         /// This can be used to detect when devices are added or removed as well as
         /// detecting when existing devices change their configuration.
-        /// </remarks>
+        ///
         /// <example>
         /// <code>
         /// InputSystem.onDeviceChange +=
@@ -676,6 +973,10 @@ namespace UnityEngine.InputSystem
         ///     };
         /// </code>
         /// </example>
+        /// </remarks>
+        /// <seealso cref="devices"/>
+        /// <seealso cref="AddDevice{TDevice}"/>
+        /// <seealso cref="RemoveDevice"/>
         public static event Action<InputDevice, InputDeviceChange> onDeviceChange
         {
             add
@@ -690,10 +991,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: this one isn't really well-designed and the means of intercepting communication
+        ////        with the backend should be revisited >1.0
         /// <summary>
-        /// Event that is signalled when a <see cref="InputDeviceCommand"/> is sent to
+        /// Event that is signalled when an <see cref="InputDeviceCommand"/> is sent to
         /// an <see cref="InputDevice"/>.
         /// </summary>
+        /// <value>Event that gets signalled on <see cref="InputDeviceCommand"/>s.</value>
         /// <remarks>
         /// This can be used to intercept commands and optionally handle them without them reaching
         /// the <see cref="IInputRuntime"/>.
@@ -724,35 +1028,134 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// This event allows customizing the layout discovery process and to generate
-        /// layouts on the fly, if need be. The system will invoke callbacks with the
-        /// name of the layout it has matched (or <c>null</c> if it couldn't find any
-        /// matching layout to the device based on the current layout setup. If all
-        /// the callbacks return <c>null</c>, that layout will be instantiated. If,
-        /// however, any of the callbacks returns a new name instead, the system will use that
-        /// layout instead.
+        /// layouts on the fly, if need be. When a device is reported from the Unity
+        /// runtime or through <see cref="AddDevice(InputDeviceDescription)"/>, it is
+        /// reported in the form of an <see cref="InputDeviceDescription"/>. The system
+        /// will take that description and run it through all the <see cref="InputDeviceMatcher"/>s
+        /// that have been registered for layouts (<see cref="RegisterLayoutMatcher{TDevice}"/>).
+        /// Based on that, it will come up with either no matching layout or with a single
+        /// layout that has the highest matching score according to <see
+        /// cref="InputDeviceMatcher.MatchPercentage"/> (or, in case multiple layouts have
+        /// the same score, the first one to achieve that score -- which is quasi-non-deterministic).
         ///
-        /// To generate layouts on the fly, register them with the system in the callback and
-        /// then return the name of the newly generated layout from the callback.
+        /// It will then take this layout name (which, again, may be empty) and invoke this
+        /// event here passing it not only the layout name but also information such as the
+        /// <see cref="InputDeviceDescription"/> for the device. Each of the callbacks hooked
+        /// into the event will be run in turn. The <em>first</em> one to return a string
+        /// that is not <c>null</c> and not empty will cause a switch from the layout the
+        /// system has chosen to the layout that has been returned by the callback. The remaining
+        /// layouts after that will then be invoked with that newly selected name but will not
+        /// be able to change the name anymore.
         ///
-        /// Note that this callback will also be invoked if the system could not match any
-        /// existing layout to the device. In that case, the <c>matchedLayout</c> argument
-        /// to the callback will be <c>null</c>.
+        /// If none of the callbacks returns a string that is not <c>null</c> or empty,
+        /// the system will stick with the layout that it had initially selected.
         ///
-        /// Callbacks also receive a device ID and reference to the input runtime. For devices
-        /// where more information has to be fetched from the runtime in order to generate a
-        /// layout, this allows issuing <see cref="IInputRuntime.DeviceCommand"/> calls for the device.
-        /// Note that for devices that are not coming from the runtime (i.e. devices created
-        /// directly in script code), the device ID will be <see cref="InputDevice.InvalidDeviceId"/>.
-        /// </remarks>
+        /// Once all callbacks have been run, the system will either have a final layout
+        /// name or not. If it does, a device is created using that layout. If it does not,
+        /// no device is created.
+        ///
+        /// One thing this allows is to generate callbacks on the fly. Let's say that if
+        /// an input device is reported with the "Custom" interface, we want to generate
+        /// a layout for it on the fly. For details about how to build layouts dynamically
+        /// from code, see <see cref="InputControlLayout.Builder"/> and <see cref="RegisterLayoutBuilder"/>.
+        ///
         /// <example>
         /// <code>
         /// InputSystem.onFindLayoutForDevice +=
         ///     (deviceId, description, matchedLayout, runtime) =>
         ///     {
-        ///         ////TODO: complete example
+        ///         // If the system does have a matching layout, we do nothing.
+        ///         // This could be the case, for example, if we already generated
+        ///         // a layout for the device or if someone explicitly registered
+        ///         // a layout.
+        ///         if (!string.IsNullOrEmpty(matchedLayout))
+        ///             return null; // Tell system we did nothing.
+        ///
+        ///         // See if the reported device uses the "Custom" interface. We
+        ///         // are only interested in those.
+        ///         if (description.interfaceName != "Custom")
+        ///             return null; // Tell system we did nothing.
+        ///
+        ///         // So now we know that we want to build a layout on the fly
+        ///         // for this device. What we do is to register what's called a
+        ///         // layout builder. These can use C# code to build an InputControlLayout
+        ///         // on the fly.
+        ///
+        ///         // First we need to come up with a sufficiently unique name for the layout
+        ///         // under which we register the builder. This will usually involve some
+        ///         // information from the InputDeviceDescription we have been supplied with.
+        ///         // Let's say we can sufficiently tell devices on our interface apart by
+        ///         // product name alone. So we just do this:
+        ///         var layoutName = "Custom" + description.product;
+        ///
+        ///         // We also need an InputDeviceMatcher that in the future will automatically
+        ///         // select our newly registered layout whenever a new device of the same type
+        ///         // is connected. We can get one simply like so:
+        ///         var matcher = InputDeviceMatcher.FromDescription(description);
+        ///
+        ///         // With these pieces in place, we can register our builder which
+        ///         // mainly consists of a delegate that will get invoked when an instance
+        ///         // of InputControlLayout is needed for the layout.
+        ///         InputSystem.RegisterLayoutBuilder(
+        ///             () =>
+        ///             {
+        ///                 // Here is where we do the actual building. In practice,
+        ///                 // this would probably look at the 'capabilities' property
+        ///                 // of the InputDeviceDescription we got and create a tailor-made
+        ///                 // layout. But what you put in the layout here really depends on
+        ///                 // the specific use case you have.
+        ///                 //
+        ///                 // We just add some preset things here which should still sufficiently
+        ///                 // serve as a demonstration.
+        ///                 //
+        ///                 // Note that we can base our layout here on whatever other layout
+        ///                 // in the system. We could extend Gamepad, for example. If we don't
+        ///                 // choose a base layout, the system automatically implies InputDevice.
+        ///
+        ///                 var builder = new InputControlLayout.Builder()
+        ///                     .WithDisplayName(description.product);
+        ///
+        ///                 // Add controls.
+        ///                 builder.AddControl("stick")
+        ///                     .WithLayout("Stick");
+        ///
+        ///                 return builder.Build();
+        ///             },
+        ///             layoutName,
+        ///             matches: matcher);
+        ///
+        ///         // So, we want the system to use our layout for the device that has just
+        ///         // been connected. We return it from this callback to do that.
+        ///         return layoutName;
         ///     };
         /// </code>
         /// </example>
+        ///
+        /// Note that it may appear like one could simply use <see cref="RegisterLayoutBuilder"/>
+        /// like below instead of going through <c>onFindLayoutForDevice</c>.
+        ///
+        /// <example>
+        /// <code>
+        /// InputSystem.RegisterLayoutBuilder(
+        ///     () =>
+        ///     {
+        ///         // Layout building code from above...
+        ///     },
+        ///     "CustomLayout",
+        ///     matches: new InputDeviceMatcher().WithInterface("Custom"));
+        /// </code>
+        /// </example>
+        ///
+        /// However, the difference here is that all devices using the "Custom" interface will
+        /// end up with the same single layout -- which has to be identical. By hooking into
+        /// <c>onFindLayoutForDevice</c>, it is possible to register a new layout for every new
+        /// type of device that is discovered and thus build a multitude of different layouts.
+        ///
+        /// It is best to register for this callback during startup. One way to do it is to
+        /// use <c>InitializeOnLoadAttribute</c> and <c>RuntimeInitializeOnLoadMethod</c>.
+        /// </remarks>
+        /// <seealso cref="RegisterLayoutBuilder"/>
+        /// <seealso cref="InputControlLayout"/>
         public static event InputDeviceFindControlLayoutDelegate onFindLayoutForDevice
         {
             add
@@ -768,20 +1171,25 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: should this be disambiguated more to separate it more from sensor sampling frequency?
+        ////REVIEW: this should probably be exposed as an input setting
         /// <summary>
         /// Frequency at which devices that need polling are being queried in the background.
         /// </summary>
+        /// <value>Polled device sampling frequency in Hertz.</value>
         /// <remarks>
         /// Input data is gathered from platform APIs either as events or polled periodically.
         ///
         /// In the former case, where we get input as events, the platform is responsible for monitoring
-        /// input devices and accumulating their state changes which the input runtime then periodically
-        /// queries and sends off as <see cref="InputEvent">input events</see>.
+        /// input devices and sending their state changes which the Unity runtime receives
+        /// and queues as <see cref="InputEvent"/>s. This form of input collection usually happens on a
+        /// system-specific thread (which may be Unity's main thread) as part of how the Unity player
+        /// loop operates. In most cases, this means that this form of input will invariably get picked up
+        /// once per frame.
         ///
-        /// In the latter case, where input has to be explicitly polled from the system, the input runtime
+        /// In the latter case, where input has to be explicitly polled from the system, the Unity runtime
         /// will periodically sample the state of input devices and send it off as input events. Wherever
-        /// possible, this happens in the background at a fixed frequency. The <see cref="pollingFrequency"/>
-        /// property controls the rate at which the sampling happens.
+        /// possible, this happens in the background at a fixed frequency on a dedicated thread. The
+        /// <c>pollingFrequency</c> property controls the rate at which this sampling happens.
         ///
         /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
@@ -789,8 +1197,8 @@ namespace UnityEngine.InputSystem
         /// The default polling frequency is 60 Hz.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
-        /// <see cref="InputEvent.time">timestamp</see> patterns. At 60 Hz, for example, timestamps for
-        /// a specific, polled device will be spaced at roughly 1/60th of a second apart.
+        /// <see cref="InputEvent.time"/> patterns. At 60 Hz, for example, timestamps for a specific,
+        /// polled device will be spaced at roughly 1/60th of a second apart.
         ///
         /// Note that it depends on the platform which devices are polled (if any). On Win32, for example,
         /// only XInput gamepads are polled.
@@ -809,37 +1217,59 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="layout">Name of the layout to instantiate. Must be a device layout. Note that
         /// layout names are case-insensitive.</param>
-        /// <param name="name">Name to assign to the device. If null, the layout name is used instead. Note that
-        /// device names are made unique automatically by the system by appending numbers to them (e.g. "gamepad",
-        /// "gamepad1", "gamepad2", etc.).</param>
+        /// <param name="name">Name to assign to the device. If null, the layout's display name (<see
+        /// cref="InputControlLayout.displayName"/> is used instead. Note that device names are made
+        /// unique automatically by the system by appending numbers to them (e.g. "gamepad", "gamepad1",
+        /// "gamepad2", etc.).</param>
         /// <param name="variants">Semicolon-separated list of layout variants to use for the device.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="layout"/> is <c>null</c> or empty.</exception>
         /// <returns>The newly created input device.</returns>
         /// <remarks>
+        /// The device will be added to the <see cref="devices"/> list and a notification on
+        /// <see cref="onDeviceChange"/> will be triggered.
+        ///
         /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
-        /// </remarks>
+        ///
         /// <example>
         /// <code>
+        /// // This is one way to instantiate the "Gamepad" layout.
         /// InputSystem.AddDevice("Gamepad");
+        ///
+        /// // In this case, because the "Gamepad" layout is based on the Gamepad
+        /// // class, we can also do this instead:
+        /// InputSystem.AddDevice&lt;Gamepad&gt;();
         /// </code>
         /// </example>
+        /// </remarks>
+        /// <seealso cref="AddDevice{T}"/>
+        /// <seealso cref="RemoveDevice"/>
+        /// <seealso cref="onDeviceChange"/>
+        /// <seealso cref="InputDeviceChange.Added"/>
+        /// <seealso cref="devices"/>
+        /// <seealso cref="RegisterLayout(Type,string,Nullable{InputDeviceMatcher})"/>
         public static InputDevice AddDevice(string layout, string name = null, string variants = null)
         {
+            if (string.IsNullOrEmpty(layout))
+                throw new ArgumentNullException(nameof(layout));
             return s_Manager.AddDevice(layout, name, new InternedString(variants));
         }
 
         /// <summary>
         /// Add a new device by instantiating the layout registered for type <typeparamref name="TDevice"/>.
         /// </summary>
-        /// <param name="name">Name to give to the device. If null, a default name will be given to the
-        /// device (usually based on the name of its layout). Note that if a device with the same name
-        /// already exists, a number will be appended to the name.</param>
+        /// <param name="name">Name to assign to the device. If null, the layout's display name (<see
+        /// cref="InputControlLayout.displayName"/> is used instead. Note that device names are made
+        /// unique automatically by the system by appending numbers to them (e.g. "gamepad", "gamepad1",
+        /// "gamepad2", etc.).</param>
         /// <typeparam name="TDevice">Type of device to add.</typeparam>
         /// <returns>The newly added device.</returns>
         /// <exception cref="InvalidOperationException">Instantiating the layout for <typeparamref name="TDevice"/>
-        /// did not produce a device of type <typeparamref name="TDevice"/>. This can happen, for exam</exception>
+        /// did not produce a device of type <typeparamref name="TDevice"/>.</exception>
         /// <remarks>
         /// The device will be added to the <see cref="devices"/> list and a notification on
         /// <see cref="onDeviceChange"/> will be triggered.
+        ///
+        /// Note that adding a device to the system will allocate and also create garbage on the GC heap.
         ///
         /// <example>
         /// <code>
@@ -848,6 +1278,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="RemoveDevice"/>
+        /// <seealso cref="onDeviceChange"/>
+        /// <seealso cref="InputDeviceChange.Added"/>
+        /// <seealso cref="devices"/>
         public static TDevice AddDevice<TDevice>(string name = null)
             where TDevice : InputDevice
         {
@@ -864,25 +1298,74 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        ///
+        /// Tell the input system that a new device has become available.
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="description">Description of the input device.</param>
+        /// <returns>The newly created device that has been added to <see cref="devices"/>.</returns>
+        /// <exception cref="ArgumentException">The given <paramref name="description"/> is empty -or-
+        /// no layout can be found that matches the given device <paramref name="description"/>.</exception>
         /// <remarks>
+        /// This method is different from methods such as <see cref="AddDevice(string,string,string)"/>
+        /// or <see cref="AddDevice{TDevice}"/> in that it employs the usual matching process the
+        /// same way that it happens when the Unity runtime reports an input device.
         ///
+        /// In particular, the same procedure described in the documentation for <see cref="onFindLayoutForDevice"/>
+        /// is employed where all registered <see cref="InputDeviceMatcher"/>s are matched against the
+        /// supplied device description and the most suitable match determines the layout to use. This in
+        /// turn is run through <see cref="onFindLayoutForDevice"/> to determine the final layout to use.
+        ///
+        /// If no suitable layout can be found, the method throws <c>ArgumentException</c>.
         /// <example>
         /// <code>
+        /// InputSystem.AddDevice(
+        ///     new InputDeviceDescription
+        ///     {
+        ///         interfaceName = "Custom",
+        ///         product = "Product"
+        ///     });
         /// </code>
         /// </example>
         /// </remarks>
-        /// <returns>The newly created device that has been added to <see cref="devices"/>.</returns>
-        /// <exception cref="ArgumentException">No layout can be found that matches the given device <paramref name="description"/>.</exception>
         public static InputDevice AddDevice(InputDeviceDescription description)
         {
+            if (description.empty)
+                throw new ArgumentException("Description must not be empty", nameof(description));
             return s_Manager.AddDevice(description);
         }
 
+        /// <summary>
+        /// Add the given device back to the system.
+        /// </summary>
+        /// <param name="device">An input device. If the device is currently already added to
+        /// the system (i.e. is in <see cref="devices"/>), the method will do nothing.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <remarks>
+        /// This can be used when a device has been manually removed with <see cref="RemoveDevice"/>.
+        ///
+        /// The device will be added to the <see cref="devices"/> list and a notification on
+        /// <see cref="onDeviceChange"/> will be triggered.
+        ///
+        /// It may be tempting to do the following but this will not work:
+        ///
+        /// <example>
+        /// <code>
+        /// // This will *NOT* work.
+        /// var device = new Gamepad();
+        /// InputSystem.AddDevice(device);
+        /// </code>
+        /// </example>
+        ///
+        /// <see cref="InputDevice"/>s, like <see cref="InputControl"/>s in general, cannot
+        /// simply be instantiated with <c>new</c> but must be created by the input system
+        /// instead.
+        /// </remarks>
+        /// <seealso cref="RemoveDevice"/>
+        /// <seealso cref="AddDevice{TDevice}"/>
+        /// <seealso cref="devices"/>
         public static void AddDevice(InputDevice device)
         {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
             s_Manager.AddDevice(device);
         }
 
@@ -915,9 +1398,9 @@ namespace UnityEngine.InputSystem
         /// allow the devices to be reclaimed by the garbage collector.
         /// </remarks>
         /// <seealso cref="disconnectedDevices"/>
-        public static void RemoveDisconnectedDevices()
+        public static void FlushDisconnectedDevices()
         {
-            throw new NotImplementedException();
+            s_Manager.FlushDisconnectedDevices();
         }
 
         public static InputDevice GetDevice(string nameOrLayout)
@@ -1010,7 +1493,7 @@ namespace UnityEngine.InputSystem
         /// Device IDs are not reused in a given session of the application (or Unity editor).
         /// </remarks>
         /// <seealso cref="InputEvent.deviceId"/>
-        /// <seealso cref="InputDevice.id"/>
+        /// <seealso cref="InputDevice.deviceId"/>
         /// <seealso cref="IInputRuntime.AllocateDeviceId"/>
         public static InputDevice GetDeviceById(int deviceId)
         {
@@ -1041,7 +1524,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Re-enable the given device.
+        /// (Re-)enable the given device.
         /// </summary>
         /// <param name="device">Device to enable. If already enabled, the method will do nothing.</param>
         /// <remarks>
@@ -1452,11 +1935,11 @@ namespace UnityEngine.InputSystem
         #region Events
 
         /// <summary>
-        /// Called during <see cref="InputSystem.Update"/> for each event that is processed.
+        /// Called during <see cref="Update"/> for each event that is processed.
         /// </summary>
         /// <remarks>
         /// Every time the input system updates (see <see cref="InputSettings.updateMode"/>
-        /// or <see cref="InputSystem.Update"/> for details about when and how this happens),
+        /// or <see cref="Update"/> for details about when and how this happens),
         /// it flushes all events from the internal event buffer that are due in the current
         /// update (<see cref="InputSettings.timesliceEvents"/> for details about when events
         /// may be postponed to a subsequent frame).
@@ -1502,7 +1985,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="QueueEvent(InputEventPtr)"/>
         /// <seealso cref="InputEvent"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="Update"/>
         /// <seealso cref="InputSettings.updateMode"/>
         public static event Action<InputEventPtr, InputDevice> onEvent
         {
@@ -1529,10 +2012,15 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The event will be copied in full to the internal event buffer meaning that
         /// you can release memory for the event after it has been queued. The internal event
-        /// buffer is flushed on the next input system update (see <see cref="Update()"/>).
+        /// buffer is flushed on the next input system update (see <see cref="Update"/>).
         /// Note that if timeslicing is in effect (see <see cref="InputSettings.timesliceEvents"/>),
         /// then the event may not get processed until its <see cref="InputEvent.time"/> timestamp
         /// is within the update window of the input system.
+        ///
+        /// As part of queuing, the event will receive its own unique ID (see <see cref="InputEvent.eventId"/>).
+        /// Note that this ID will be written into the memory buffer referenced by <see cref="eventPtr"/>
+        /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
+        /// was queued.
         ///
         /// <example>
         /// <code>
@@ -1650,7 +2138,7 @@ namespace UnityEngine.InputSystem
             eventBuffer.stateEvent =
                 new StateEvent
             {
-                baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.id, time),
+                baseEvent = new InputEvent(StateEvent.Type, (int)eventSize, device.deviceId, time),
                 stateFormat = state.format
             };
 
@@ -1716,7 +2204,7 @@ namespace UnityEngine.InputSystem
             eventBuffer.stateEvent =
                 new DeltaStateEvent
             {
-                baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.id, time),
+                baseEvent = new InputEvent(DeltaStateEvent.Type, (int)eventSize, device.deviceId, time),
                 stateFormat = device.stateBlock.format,
                 stateOffset = control.m_StateBlock.byteOffset - device.m_StateBlock.byteOffset
             };
@@ -1753,7 +2241,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.InvalidDeviceId)
+            if (device.deviceId == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1761,7 +2249,7 @@ namespace UnityEngine.InputSystem
             else
                 time += InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-            var inputEvent = DeviceConfigurationEvent.Create(device.id, time);
+            var inputEvent = DeviceConfigurationEvent.Create(device.deviceId, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
 
@@ -1787,7 +2275,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (device.id == InputDevice.InvalidDeviceId)
+            if (device.deviceId == InputDevice.InvalidDeviceId)
                 throw new InvalidOperationException("Device has not been added");
 
             if (time < 0)
@@ -1795,7 +2283,7 @@ namespace UnityEngine.InputSystem
             else
                 time += InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
-            var inputEvent = TextEvent.Create(device.id, character, time);
+            var inputEvent = TextEvent.Create(device.deviceId, character, time);
             s_Manager.QueueEvent(ref inputEvent);
         }
 
@@ -1807,13 +2295,12 @@ namespace UnityEngine.InputSystem
         /// Except in tests and when using <see cref="InputSettings.UpdateMode.ProcessEventsManually"/>, this method should not
         /// normally be called. The input system will automatically update as part of the player loop as
         /// determined by <see cref="InputSettings.updateMode"/>. Calling this method is equivalent to
-        /// inserting extra frames.
-        ///
-        /// When using <see cref="InputSettings.UpdateMode.ProcessEventsInDynamicUpdate"/> TODO
+        /// inserting extra frames, i.e. it will advance the entire state of the input system by one complete
+        /// frame.
         ///
         /// When using <see cref="InputUpdateType.Manual"/>, this method MUST be called for input to update in the
         /// player. Not calling the method as part of the player loop may result in excessive memory
-        /// consumption and potential loss of input.
+        /// consumption and/or potential loss of input.
         ///
         /// Each update will flush out buffered input events and cause them to be processed. This in turn
         /// will update the state of input devices (<see cref="InputDevice"/>) and trigger actions (<see cref="InputAction"/>)
@@ -1848,7 +2335,7 @@ namespace UnityEngine.InputSystem
         /// be fed right into the upcoming update.
         /// </remarks>
         /// <seealso cref="onAfterUpdate"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="Update"/>
         public static event Action onBeforeUpdate
         {
             add
@@ -1867,7 +2354,7 @@ namespace UnityEngine.InputSystem
         /// Event that is fired after the input system has completed an update and processed all pending events.
         /// </summary>
         /// <seealso cref="onBeforeUpdate"/>
-        /// <seealso cref="Update()"/>
+        /// <seealso cref="Update"/>
         public static event Action onAfterUpdate
         {
             add
@@ -1889,6 +2376,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The current configuration of the input system.
         /// </summary>
+        /// <value>Global configuration object for the input system.</value>
         /// <remarks>
         /// The input system can be configured on a per-project basis. Settings can either be created and
         /// installed on the fly or persisted as assets in the project.
@@ -1951,8 +2439,8 @@ namespace UnityEngine.InputSystem
         ///         if (change == InputActionChange.ActionPerformed)
         ///         {
         ///             var action = (InputAction)obj;
-        ///             var control = action.lastTriggerControl; TODO this is missing now
-        ///             ....
+        ///             var control = action.activeControl;
+        ///             //...
         ///         }
         ///     };
         /// </code>
@@ -2019,6 +2507,8 @@ namespace UnityEngine.InputSystem
 
         public static Type TryGetInteraction(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
             return s_Manager.interactions.LookupTypeRegistration(name);
         }
 
@@ -2027,15 +2517,10 @@ namespace UnityEngine.InputSystem
             return s_Manager.interactions.names;
         }
 
-        public static IEnumerable<string> ListProcessors()
-        {
-            return s_Manager.processors.names;
-        }
-
         public static void RegisterBindingComposite(Type type, string name)
         {
             if (type == null)
-                throw new System.ArgumentNullException(nameof(type));
+                throw new ArgumentNullException(nameof(type));
 
             if (string.IsNullOrEmpty(name))
             {
@@ -2054,6 +2539,8 @@ namespace UnityEngine.InputSystem
 
         public static Type TryGetBindingComposite(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
             return s_Manager.composites.LookupTypeRegistration(name);
         }
 
@@ -2117,10 +2604,14 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
+        /// <value>Current version of the input system.</value>
         public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
 
         ////REVIEW: restrict metrics to editor and development builds?
-
+        /// <summary>
+        /// Get various up-to-date metrics about the input system.
+        /// </summary>
+        /// <value>Up-to-date metrics on input system activity.</value>
         public static InputMetrics metrics => s_Manager.metrics;
 
         internal static InputManager s_Manager;
@@ -2404,7 +2895,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_LUMIN) && UNITY_INPUT_SYSTEM_ENABLE_XR
             XR.XRSupport.Initialize();
             #endif
 

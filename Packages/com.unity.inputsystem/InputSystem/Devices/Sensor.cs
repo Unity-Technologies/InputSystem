@@ -4,10 +4,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: gyro and accelerometer (and potentially other sensors) need adjusting for screen orientation
-
-////TODO: hook up all sensor controls to noise suppression (actually... for sensors we probably do NOT want that)
-
 ////REVIEW: Is there a better way than having all the sensor classes?
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -69,12 +65,44 @@ namespace UnityEngine.InputSystem
     /// Base class representing any sensor kind of input device.
     /// </summary>
     /// <remarks>
-    /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s, <see cref="GravitySensor"/>s and others.
+    /// Sensors represent device environmental sensors, such as <see cref="Accelerometer"/>s, <see cref="Gyroscope"/>s,
+    /// <see cref="GravitySensor"/>s and others.
+    ///
+    /// Unlike other devices, sensor devices usually start out in a disabled state in order to reduce energy
+    /// consumption (i.e. preserve battery life) when the sensors are not in fact used. To enable a specific sensor,
+    /// call <see cref="InputSystem.EnableDevice"/> on the device instance.
+    ///
+    /// <example>
+    /// <code>
+    /// // Enable the gyroscope.
+    /// InputSystem.EnableDevice(Gyroscope.current);
+    /// </code>
+    /// </example>
+    ///
+    /// Sensors are usually sampled automatically by the platform at regular intervals. For example, if a sensor
+    /// is sampled at 50Hz, the platform will queue an event with an update at a rate of roughly 50 events per
+    /// second. The default sampling rate for a sensor is usually platform-specific. A custom sampling frequency
+    /// can be set through <see cref="samplingFrequency"/> but be aware that there may be limitations for how fast
+    /// a given sensor can be sampled.
     /// </remarks>
     [InputControlLayout(isGenericTypeOfDevice = true)]
     [Scripting.Preserve]
     public class Sensor : InputDevice
     {
+        /// <summary>
+        /// The frequency (in Hertz) at which the underlying sensor will be refreshed and at which update
+        /// events for it will be queued.
+        /// </summary>
+        /// <value>Times per second at which the sensor is refreshed.</value>
+        /// <remarks>
+        /// Note that when setting sampling frequencies, there may be limits on the range of frequencies
+        /// supported by the underlying hardware/platform.
+        ///
+        /// To support querying sampling frequencies, a sensor device must implement <see cref="QuerySamplingFrequencyCommand"/>.
+        /// To support setting frequencies, it must implemenet <see cref="SetSamplingFrequencyCommand"/>.
+        /// </remarks>
+        /// <exception cref="NotSupportedException">Thrown when reading the property and the underlying
+        /// sensor does not support querying of sampling frequencies.</exception>
         public float samplingFrequency
         {
             get
@@ -86,6 +114,7 @@ namespace UnityEngine.InputSystem
             }
             set
             {
+                ////REVIEW: should this throw NotSupportedException, too?
                 var command = SetSamplingFrequencyCommand.Create(value);
                 ExecuteCommand(ref command);
             }
@@ -131,14 +160,20 @@ namespace UnityEngine.InputSystem
     {
         public Vector3Control acceleration { get; private set; }
 
+        /// <summary>
+        /// The accelerometer that was last added or had activity last.
+        /// </summary>
+        /// <value>Current accelerometer or <c>null</c>.</value>
         public static Accelerometer current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -146,6 +181,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             acceleration = GetChildControl<Vector3Control>("acceleration");
@@ -165,14 +201,20 @@ namespace UnityEngine.InputSystem
     {
         public Vector3Control angularVelocity { get; private set; }
 
+        /// <summary>
+        /// The gyroscope that was last added or had activity last.
+        /// </summary>
+        /// <value>Current gyroscope or <c>null</c>.</value>
         public static Gyroscope current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -180,6 +222,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             angularVelocity = GetChildControl<Vector3Control>("angularVelocity");
@@ -200,20 +243,27 @@ namespace UnityEngine.InputSystem
     {
         public Vector3Control gravity { get; private set; }
 
+        /// <summary>
+        /// The gravity sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current gravity sensor or <c>null</c>.</value>
+        public static GravitySensor current { get; private set; }
+
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             gravity = GetChildControl<Vector3Control>("gravity");
             base.FinishSetup();
         }
 
-        public static GravitySensor current { get; private set; }
-
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -236,14 +286,20 @@ namespace UnityEngine.InputSystem
     {
         public QuaternionControl attitude { get; private set; }
 
+        /// <summary>
+        /// The attitude sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current attitude sensor or <c>null</c>.</value>
         public static AttitudeSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -251,6 +307,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             attitude = GetChildControl<QuaternionControl>("attitude");
@@ -272,14 +329,20 @@ namespace UnityEngine.InputSystem
     {
         public Vector3Control acceleration { get; private set; }
 
+        /// <summary>
+        /// The linear acceleration sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current linear acceleration sensor or <c>null</c>.</value>
         public static LinearAccelerationSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -287,6 +350,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             acceleration = GetChildControl<Vector3Control>("acceleration");
@@ -302,22 +366,29 @@ namespace UnityEngine.InputSystem
     public class MagneticFieldSensor : Sensor
     {
         /// <summary>
-        /// TODO
+        /// Strength of the magnetic field reported by the sensor.
         /// </summary>
+        /// <value>Control representing the strength of the magnetic field.</value>
         /// <remarks>
         /// Values are in micro-Tesla (uT) and measure the ambient magnetic field in the X, Y and Z axis.
         /// </remarks>
         [InputControl(displayName = "Magnetic Field", noisy = true)]
         public Vector3Control magneticField { get; private set; }
 
+        /// <summary>
+        /// The linear acceleration sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current linear acceleration sensor or <c>null</c>.</value>
         public static MagneticFieldSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -325,6 +396,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             magneticField = GetChildControl<Vector3Control>("magneticField");
@@ -345,14 +417,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Light Level", noisy = true)]
         public AxisControl lightLevel { get; private set; }
 
+        /// <summary>
+        /// The light sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current light sensor or <c>null</c>.</value>
         public static LightSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -360,6 +438,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             lightLevel = GetChildControl<AxisControl>("lightLevel");
@@ -380,14 +459,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Atmospheric Pressure", noisy = true)]
         public AxisControl atmosphericPressure { get; private set; }
 
+        /// <summary>
+        /// The pressure sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current pressure sensor or <c>null</c>.</value>
         public static PressureSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -395,6 +480,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             atmosphericPressure = GetChildControl<AxisControl>("atmosphericPressure");
@@ -418,14 +504,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Distance", noisy = true)]
         public AxisControl distance { get; private set; }
 
+        /// <summary>
+        /// The proximity sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current proximity sensor or <c>null</c>.</value>
         public static ProximitySensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -433,6 +525,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             distance = GetChildControl<AxisControl>("distance");
@@ -453,14 +546,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Relative Humidity", noisy = true)]
         public AxisControl relativeHumidity { get; private set; }
 
+        /// <summary>
+        /// The humidity sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current humidity sensor or <c>null</c>.</value>
         public static HumiditySensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -468,6 +567,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             relativeHumidity = GetChildControl<AxisControl>("relativeHumidity");
@@ -488,14 +588,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Ambient Temperature", noisy = true)]
         public AxisControl ambientTemperature { get; private set; }
 
+        /// <summary>
+        /// The ambient temperature sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current ambient temperature sensor or <c>null</c>.</value>
         public static AmbientTemperatureSensor current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -503,6 +609,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             ambientTemperature = GetChildControl<AxisControl>("ambientTemperature");
@@ -523,14 +630,20 @@ namespace UnityEngine.InputSystem
         [InputControl(displayName = "Step Counter", noisy = true)]
         public IntegerControl stepCounter { get; private set; }
 
+        /// <summary>
+        /// The step counter that was last added or had activity last.
+        /// </summary>
+        /// <value>Current step counter or <c>null</c>.</value>
         public static StepCounter current { get; private set; }
 
+        /// <inheritdoc />
         public override void MakeCurrent()
         {
             base.MakeCurrent();
             current = this;
         }
 
+        /// <inheritdoc />
         protected override void OnRemoved()
         {
             base.OnRemoved();
@@ -538,6 +651,7 @@ namespace UnityEngine.InputSystem
                 current = null;
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             stepCounter = GetChildControl<IntegerControl>("stepCounter");
