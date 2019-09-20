@@ -524,14 +524,14 @@ namespace UnityEngine.InputSystem.LowLevel
             }
             else if (format == FormatInt)
             {
-                Debug.Assert(sizeInBits == 32, "SHRT state must have sizeInBits=16");
-                Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
+                Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
                 return (int)(value * 2147483647.0f);
             }
             else if (format == FormatUInt)
             {
-                Debug.Assert(sizeInBits == 32, "SHRT state must have sizeInBits=16");
-                Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
+                Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
                 return (uint)(value * 4294967295.0f);
             }
             else if (format == FormatShort)
