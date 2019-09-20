@@ -502,6 +502,74 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        internal PrimitiveValue FloatToPrimitiveValue(float value)
+        {
+            if (format == FormatFloat)
+            {
+                Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "FLT state must be byte-aligned");
+                return value;
+            }
+            else if (format == FormatBit)
+            {
+                if (sizeInBits == 1)
+                {
+                    return value >= 0.5f;
+                }
+                else
+                {
+                    var maxValue = (1 << (int)sizeInBits) - 1;
+                    return (int)(value * maxValue);
+                }
+            }
+            else if (format == FormatInt)
+            {
+                Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
+                return (int)(value * 2147483647.0f);
+            }
+            else if (format == FormatUInt)
+            {
+                Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
+                Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
+                return (uint)(value * 4294967295.0f);
+            }
+            else if (format == FormatShort)
+            {
+                Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
+                Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
+                return (short)(value * 32768.0f);
+            }
+            else if (format == FormatUShort)
+            {
+                Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
+                Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
+                return (ushort)(value * 65535.0f);
+            }
+            else if (format == FormatByte)
+            {
+                Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
+                Debug.Assert(bitOffset == 0, "BYTE state must be byte-aligned");
+                return (byte)(value * 255.0f);
+            }
+            else if (format == FormatSByte)
+            {
+                Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
+                Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
+                return (sbyte)(value * 128.0f);
+            }
+            else if (format == FormatDouble)
+            {
+                Debug.Assert(sizeInBits == 64, "DBL state must have sizeInBits=64");
+                Debug.Assert(bitOffset == 0, "DBL state must be byte-aligned");
+                return value;
+            }
+            else
+            {
+                throw new Exception($"State format '{format}' is not supported as floating-point format");
+            }
+        }
+
         ////REVIEW: This is some bad code duplication here between Read/WriteFloat&Double but given that there's no
         ////        way to use a type argument here, not sure how to get rid of it.
 
