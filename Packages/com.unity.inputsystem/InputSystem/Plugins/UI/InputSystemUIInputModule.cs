@@ -34,6 +34,16 @@ namespace UnityEngine.InputSystem.UI
             eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
         }
 
+        public override bool IsPointerOverGameObject(int pointerId)
+        {
+            foreach (var state in mouseStates)
+            {
+                if (state.touchId == pointerId)
+                    return state.pointerTarget != null;
+            }
+            return false;
+        }
+
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
@@ -705,7 +715,7 @@ namespace UnityEngine.InputSystem.UI
         int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
             Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
-            var touchId = 0;
+            var touchId = PointerInputModule.kMouseLeftId;
             if (context.control.parent is TouchControl)
                 touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
 
