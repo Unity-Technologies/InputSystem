@@ -497,8 +497,8 @@ namespace UnityEngine.InputSystem
                     }
                     Debug.Assert(bindingStartIndexForAction < ushort.MaxValue, "Binding start index on action exceeds limit");
                     Debug.Assert(bindingCountForAction < ushort.MaxValue, "Binding count on action exceeds limit");
-                    newMemory.actionBindingIndicesAndCounts[i * 2] = (ushort)bindingStartIndexForAction;
-                    newMemory.actionBindingIndicesAndCounts[i * 2 + 1] = (ushort)bindingCountForAction;
+                    newMemory.actionBindingIndicesAndCounts[actionIndex * 2] = (ushort)bindingStartIndexForAction;
+                    newMemory.actionBindingIndicesAndCounts[actionIndex * 2 + 1] = (ushort)bindingCountForAction;
 
                     // See if we may need conflict resolution on this action. Never needed for pass-through actions.
                     // Otherwise, if we have more than one bound control or have several bindings and one of them
