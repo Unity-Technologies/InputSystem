@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview1] - 2999-9-20
+## [1.0.0-preview.1] - 2999-9-20
+
+### Fixed
+
+- Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
 
 ### Changed
 
