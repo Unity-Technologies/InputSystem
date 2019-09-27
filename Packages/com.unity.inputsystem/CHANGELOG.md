@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
+- Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
 
 ## [1.0.0-preview] - 2019-9-20
 
