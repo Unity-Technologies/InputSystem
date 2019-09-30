@@ -66,6 +66,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"// GENERATED AUTOMATICALLY FROM '{options.sourceAssetPath}'\n");
 
             // Usings.
+            writer.WriteLine("using System;");
             writer.WriteLine("using System.Collections;");
             writer.WriteLine("using System.Collections.Generic;");
             writer.WriteLine("using UnityEngine.InputSystem;");
@@ -81,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public class {options.className} : IInputActionCollection");
+            writer.WriteLine($"public class {options.className} : IInputActionCollection, IDisposable");
             writer.BeginBlock();
 
             writer.WriteLine($"private InputActionAsset asset;");
@@ -108,7 +109,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.EndBlock();
             writer.WriteLine();
 
-            writer.WriteLine($"~{options.className}()");
+            writer.WriteLine("public void Dispose()");
             writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
             writer.EndBlock();

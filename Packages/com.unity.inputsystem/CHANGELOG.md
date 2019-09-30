@@ -18,6 +18,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
 
+### Changed
+
+- Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+
 ## [1.0.0-preview] - 2019-9-20
 
 ### Fixed
