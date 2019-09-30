@@ -19,7 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
 - The text on the "Listen" button is no longer clipped off on 2019.3.
-- Controls bound to actions through composites no longer as duplicates in the input debugger.
+- Controls bound to actions through composites no longer show up as duplicates in the input debugger.
 
 ### Changed
 
