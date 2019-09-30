@@ -126,7 +126,7 @@ namespace UnityEngine.InputSystem.Editor
             // Add devices that are marked as generic types of devices directly to the parent.
             // E.g. adds "Gamepad" and then underneath all the more specific types of gamepads.
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
-                     .Where(x => x.isDeviceLayout && x.isGenericTypeOfDevice && !x.hideInUI).OrderBy(a => a.displayName))
+                     .Where(x => x.isDeviceLayout && !x.isOverride && x.isGenericTypeOfDevice && !x.hideInUI).OrderBy(a => a.displayName))
                 AddDeviceTreeItemRecursive(deviceLayout, parent);
 
             // We have devices that are based directly on InputDevice but are not marked as generic types
@@ -134,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor
             // all of them in a group called "Other" at the end of the list.
             var otherGroup = new AdvancedDropdownItem("Other");
             foreach (var deviceLayout in EditorInputControlLayoutCache.allLayouts
-                     .Where(x => x.isDeviceLayout && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
+                     .Where(x => x.isDeviceLayout && !x.isOverride && !x.isGenericTypeOfDevice && x.type.BaseType == typeof(InputDevice) &&
                          !x.hideInUI && !x.baseLayouts.Any()).OrderBy(a => a.displayName))
                 AddDeviceTreeItemRecursive(deviceLayout, otherGroup);
 
@@ -144,9 +144,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void AddDeviceTreeItemRecursive(InputControlLayout layout, AdvancedDropdownItem parent, bool searchable = true)
         {
-            // Find all layouts directly based on this one.
+            // Find all layouts directly based on this one (ignoring overrides).
             var childLayouts = EditorInputControlLayoutCache.allLayouts
-                .Where(x => x.isDeviceLayout && !x.hideInUI && x.baseLayouts.Contains(layout.name)).OrderBy(x => x.displayName);
+                .Where(x => x.isDeviceLayout && !x.isOverride && !x.hideInUI && x.baseLayouts.Contains(layout.name)).OrderBy(x => x.displayName);
 
             // See if the entire tree should be excluded.
             var shouldIncludeDeviceLayout = ShouldIncludeDeviceLayout(layout);
@@ -197,6 +197,10 @@ namespace UnityEngine.InputSystem.Editor
 
                     AddCharacterKeyBindingsTo(byCharacterGroup, keyboard);
                     AddPhysicalKeyBindingsTo(byLocationGroup, keyboard, searchable);
+
+                    // AnyKey won't appear in either group. Add it explicitly.
+                    AddControlItem(deviceItem, null,
+                        layout.FindControl(new InternedString("anyKey")).Value, layout.name, null, searchable);
                 }
                 else
                 {

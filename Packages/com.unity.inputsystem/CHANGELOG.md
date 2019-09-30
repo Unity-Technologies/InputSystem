@@ -13,6 +13,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
 - Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
+- Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
+  * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 
 ### Actions
 

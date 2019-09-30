@@ -235,6 +235,9 @@ namespace UnityEngine.InputSystem.Editor
                 var layout = InputControlLayout.cache.FindOrLoadLayout(layoutName);
                 ScanLayout(layout);
 
+                if (layout.isOverride)
+                    continue;
+
                 if (layout.isControlLayout)
                     s_ControlLayouts.Add(layout.name);
                 else if (s_DeviceMatchers.ContainsKey(layout.name))

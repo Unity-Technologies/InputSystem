@@ -377,6 +377,24 @@ namespace UnityEngine.InputSystem.Layouts
 
         public bool isControlLayout => !isDeviceLayout;
 
+        /// <summary>
+        /// Whether the layout is applies overrides to other layouts instead of
+        /// defining a layout by itself.
+        /// </summary>
+        /// <value>True if the layout acts as an override.</value>
+        /// <seealso cref="InputSystem.RegisterLayoutOverride"/>
+        public bool isOverride
+        {
+            get => (m_Flags & Flags.IsOverride) != 0;
+            internal set
+            {
+                if (value)
+                    m_Flags |= Flags.IsOverride;
+                else
+                    m_Flags &= ~Flags.IsOverride;
+            }
+        }
+
         public bool isGenericTypeOfDevice
         {
             get => (m_Flags & Flags.IsGenericTypeOfDevice) != 0;
@@ -892,6 +910,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             IsGenericTypeOfDevice = 1 << 0,
             HideInUI = 1 << 1,
+            IsOverride = 1 << 2,
         }
 
         private InputControlLayout(string name, Type type)
@@ -1736,6 +1755,7 @@ namespace UnityEngine.InputSystem.Layouts
             public Dictionary<InternedString, Func<InputControlLayout>> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InternedString[]> layoutOverrides;
+            public HashSet<InternedString> layoutOverrideNames;
             ////TODO: find a smarter approach that doesn't require linearly scanning through all matchers
             ////  (also ideally shouldn't be a List but with Collection being a struct and given how it's
             ////  stored by InputManager.m_Layouts and in s_Layouts; we can't make it a plain array)
@@ -1748,6 +1768,7 @@ namespace UnityEngine.InputSystem.Layouts
                 layoutBuilders = new Dictionary<InternedString, Func<InputControlLayout>>();
                 baseLayoutTable = new Dictionary<InternedString, InternedString>();
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
+                layoutOverrideNames = new HashSet<InternedString>();
                 layoutMatchers = new List<LayoutMatcher>();
             }
 
@@ -1819,12 +1840,17 @@ namespace UnityEngine.InputSystem.Layouts
 
             public InputControlLayout TryLoadLayout(InternedString name, Dictionary<InternedString, InputControlLayout> table = null)
             {
-                var layout = TryLoadLayoutInternal(name);
+                // See if we have it cached.
+                if (table != null && table.TryGetValue(name, out var layout))
+                    return layout;
+
+                layout = TryLoadLayoutInternal(name);
                 if (layout != null)
                 {
                     layout.m_Name = name;
-                    if (table != null)
-                        table[name] = layout;
+
+                    if (layoutOverrideNames.Contains(name))
+                        layout.isOverride = true;
 
                     // If the layout extends another layout, we need to merge the
                     // base layout into the final layout.
@@ -1832,7 +1858,7 @@ namespace UnityEngine.InputSystem.Layouts
                     //       the baseLayouts property so as to make this work for all types
                     //       of layouts (FromType() does not set the property, for example).
                     var baseLayoutName = new InternedString();
-                    if (baseLayoutTable.TryGetValue(name, out baseLayoutName))
+                    if (!layout.isOverride && baseLayoutTable.TryGetValue(name, out baseLayoutName))
                     {
                         Debug.Assert(!baseLayoutName.IsEmpty());
 
@@ -1853,12 +1879,29 @@ namespace UnityEngine.InputSystem.Layouts
                         for (var i = 0; i < overrides.Length; ++i)
                         {
                             var overrideName = overrides[i];
-                            var overrideLayout = TryLoadLayout(overrideName, table);
+                            // NOTE: We do *NOT* pass `table` into TryLoadLayout here so that
+                            //       the override we load will not get cached. The reason is that
+                            //       we use MergeLayout which is destructive and thus should not
+                            //       end up in the table.
+                            var overrideLayout = TryLoadLayout(overrideName);
                             overrideLayout.MergeLayout(layout);
+
+                            // We're switching the layout we initially to the layout with
+                            // the overrides applied. Make sure we get rid of information here
+                            // from the override that we don't want to come through once the
+                            // override is applied.
+                            overrideLayout.m_BaseLayouts.Clear();
+                            overrideLayout.isOverride = false;
+                            overrideLayout.isGenericTypeOfDevice = layout.isGenericTypeOfDevice;
+                            overrideLayout.m_Name = layout.name;
+
                             layout = overrideLayout;
                             layout.m_AppliedOverrides.Append(overrideName);
                         }
                     }
+
+                    if (table != null)
+                        table[name] = layout;
                 }
 
                 return layout;
@@ -2013,14 +2056,10 @@ namespace UnityEngine.InputSystem.Layouts
             {
                 var internedName = new InternedString(name);
 
-                // See if we have it cached.
-                if (table != null && table.TryGetValue(internedName, out var layout))
-                    return layout;
-
                 if (table == null)
                     table = new Dictionary<InternedString, InputControlLayout>();
 
-                layout = s_Layouts.TryLoadLayout(internedName, table);
+                var layout = s_Layouts.TryLoadLayout(internedName, table);
                 if (layout != null)
                     return layout;
 
