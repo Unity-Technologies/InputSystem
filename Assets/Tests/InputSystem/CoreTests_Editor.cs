@@ -39,8 +39,8 @@ partial class CoreTests
 
         // Snip -preview off the end. System.Version doesn't support semantic versioning.
         var versionString = packageJson.version;
-        if (versionString.EndsWith("-preview"))
-            versionString = versionString.Substring(0, versionString.Length - "-preview".Length);
+        if (versionString.Contains("-preview"))
+            versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
         var version = new Version(versionString);
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));

@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UIElements;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
@@ -33,8 +34,18 @@ namespace UnityEngine.InputSystem.Editor
         {
             label = "Input System Package";
             s_Instance = this;
+        }
 
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            base.OnActivate(searchContext, rootElement);
             InputSystem.onSettingsChange += OnSettingsChange;
+        }
+
+        public override void OnDeactivate()
+        {
+            base.OnDeactivate();
+            InputSystem.onSettingsChange -= OnSettingsChange;
         }
 
         public void Dispose()

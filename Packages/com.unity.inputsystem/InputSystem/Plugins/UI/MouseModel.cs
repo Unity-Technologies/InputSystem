@@ -354,6 +354,8 @@ namespace UnityEngine.InputSystem.UI
         private MouseButtonModel m_RightButton;
         private MouseButtonModel m_MiddleButton;
 
+        internal GameObject pointerTarget => m_InternalData.pointerTarget;
+
         private InternalData m_InternalData;
     }
 }
