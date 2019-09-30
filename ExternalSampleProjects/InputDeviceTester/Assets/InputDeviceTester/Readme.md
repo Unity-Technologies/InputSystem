@@ -19,11 +19,6 @@ Q: How to use this?
    When using both, either/or would work.
    *The setting can be changed at: Player Settings -> Other Settings -> Active Input Handling
 
-Q: How to setup the Old Input Manager?
-   You can find a InputManager.asset file in [project folder]->Assets->QA->Input_Test folder.
-   Go to [project folder]->ProjectSettings folder and find the file with the same name. You should make a backup just in case.
-   Now copy the one in Input_Test folder to replace the one in the ProjectSettings folder.
-
 Q: Why are there so many scripts for Old Input Manager?
    Because the goal is to test both old and new input together at the same time.
 
