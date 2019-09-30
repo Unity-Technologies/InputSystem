@@ -1,0 +1,69 @@
+{
+    "name": "TwoPlayerControls",
+    "maps": [
+        {
+            "name": "TwoPlayers",
+            "id": "0e22eb1c-8c6e-4cec-8364-2a9f0e3ef769",
+            "actions": [
+                {
+                    "name": "Move",
+                    "type": "Button",
+                    "id": "d35725fa-073a-4e1c-9052-2c45b8ef0b4c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "Look",
+                    "type": "Button",
+                    "id": "249187b5-59c4-459f-84d0-731cb510c536",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3e67c7ae-ca6c-4345-8f61-8df16fb87fec",
+                    "path": "<Gamepad>{Player1}/leftStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "TwoPlayers",
+                    "action": "Move",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "46cadfba-140f-4895-8d9b-184da46b6010",
+                    "path": "<Gamepad>{Player2}/rightStick",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "TwoPlayers",
+                    "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "TwoPlayers",
+            "bindingGroup": "TwoPlayers",
+            "devices": [
+                {
+                    "devicePath": "<Gamepad>{Player1}",
+                    "isOptional": false,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<Gamepad>{Player2}",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        }
+    ]
+}
