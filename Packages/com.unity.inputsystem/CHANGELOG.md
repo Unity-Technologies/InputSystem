@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Actions
 
 - Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
+- Fixed `anyKey` not appearing in control picker for `Keyboard`.
 
 ### Changed
 
