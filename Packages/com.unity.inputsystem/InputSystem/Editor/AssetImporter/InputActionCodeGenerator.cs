@@ -172,7 +172,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 // Caching field for action map.
                 writer.WriteLine($"private readonly InputActionMap m_{mapName};");
-                writer.WriteLine(string.Format("private I{0} m_{0}CallbackInterface;", mapTypeName));
+                writer.WriteLine(string.Format("private List<I{0}> m_{0}CallbackInterfaces = new List<I{0}>();", mapTypeName));
 
                 // Caching fields for all actions.
                 foreach (var action in map.actions)
@@ -216,21 +216,9 @@ namespace UnityEngine.InputSystem.Editor
                 ////REVIEW: this would benefit from having a single callback on InputActions rather than three different endpoints
 
                 // Uninitialize existing interface.
-                writer.WriteLine($"if (m_Wrapper.m_{mapTypeName}CallbackInterface != null)");
-                writer.BeginBlock();
-                foreach (var action in map.actions)
-                {
-                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
-
-                    writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                }
-                writer.EndBlock();
+                writer.WriteLine("ClearCallbacks(instance);");
 
                 // Initialize new interface.
-                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterface = instance;");
                 writer.WriteLine("if (instance != null)");
                 writer.BeginBlock();
                 foreach (var action in map.actions)
@@ -242,8 +230,30 @@ namespace UnityEngine.InputSystem.Editor
                     writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
                     writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
                 }
+                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterfaces.Add(instance);");
                 writer.EndBlock();
                 writer.EndBlock();
+
+                writer.WriteLine($"public void ClearCallbacks(I{mapTypeName} instance)");
+                writer.BeginBlock();
+
+                writer.WriteLine($"if (instance != null && m_Wrapper.m_{mapTypeName}CallbackInterfaces.Contains(instance))");
+                writer.BeginBlock();
+                foreach (var action in map.actions)
+                {
+                    var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
+                    var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
+
+                    writer.WriteLine($"{actionName}.started -= instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.performed -= instance.On{actionTypeName};");
+                    writer.WriteLine($"{actionName}.canceled -= instance.On{actionTypeName};");
+                }
+                writer.WriteLine($"m_Wrapper.m_{mapTypeName}CallbackInterfaces.Remove(instance);");
+
+                writer.EndBlock();
+
+                writer.EndBlock(); // ClearCallbacks().
+
                 writer.EndBlock();
 
                 // Getter for instance of struct.
