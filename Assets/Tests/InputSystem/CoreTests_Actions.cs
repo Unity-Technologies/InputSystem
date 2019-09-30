@@ -5075,6 +5075,69 @@ partial class CoreTests
         LogAssert.NoUnexpectedReceived();
     }
 
+    [Test]
+    [Category("Actions")]
+    // Test for case 1183314
+    public void Actions_CompositesInDifferentMapsTiedToSameControlsWork()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<LogInteraction>();
+
+        var map1 = new InputActionMap("map1");
+        var action1 = map1.AddAction("action");
+        action1.AddBinding("<Gamepad>/leftStick");
+        action1.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        var map2 = new InputActionMap("map2");
+        var action2 = map2.AddAction("action");
+        action2.AddBinding("<Gamepad>/leftStick");
+        action2.AddCompositeBinding("Dpad")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+        asset.Enable();
+
+
+        InputControl performedControl1 = null;
+        InputControl performedControl2 = null;
+        action1.performed += ctx => performedControl1 = ctx.control;
+        action2.performed += ctx => performedControl2 = ctx.control;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        Assert.That(performedControl1, Is.EqualTo(keyboard.aKey));
+        performedControl1 = null;
+        Assert.That(performedControl2, Is.EqualTo(keyboard.aKey));
+        performedControl2 = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A, Key.W));
+        InputSystem.Update();
+
+        Assert.That(performedControl1, Is.EqualTo(keyboard.wKey));
+        performedControl1 = null;
+        Assert.That(performedControl2, Is.EqualTo(keyboard.wKey));
+        performedControl2 = null;
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState());
+        InputSystem.Update();
+
+        LogAssert.NoUnexpectedReceived();
+    }
+
     [Preserve]
     private class CompositeWithVector2Part : InputBindingComposite<Vector2>
     {

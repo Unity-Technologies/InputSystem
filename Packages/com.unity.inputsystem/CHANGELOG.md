@@ -14,6 +14,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
 - Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
 
+### Actions
+
+- Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
+
 ## [1.0.0-preview] - 2019-9-20
 
 ### Fixed
