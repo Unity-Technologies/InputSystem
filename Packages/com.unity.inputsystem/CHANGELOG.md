@@ -15,11 +15,14 @@ however, it has to be formatted properly to pass verification tests.
 - Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
 - Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
   * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
+- Selecting a layout in the input debugger no longer selects its first child item, too.
 
 ### Actions
 
 - Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
 - Fixed `anyKey` not appearing in control picker for `Keyboard`.
+- The text on the "Listen" button is no longer clipped off on 2019.3.
+- Controls bound to actions through composites no longer show up as duplicates in the input debugger.
 
 ### Changed
 
@@ -33,7 +36,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
--Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
 - Fixed an issue where Stick Controls could not be created in Players built with medium or high code stripping level enabled.
 - Fixed incorrect default state for axes on some controllers.
 

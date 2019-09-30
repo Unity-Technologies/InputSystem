@@ -515,12 +515,12 @@ namespace UnityEngine.InputSystem.Editor
                     // When picking controls, have a "Listen" button that allows listening for input.
                     if (m_Owner.m_Mode == InputControlPicker.Mode.PickControl)
                     {
-                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(42)))
+                        using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(50)))
                         {
                             GUILayout.Space(4);
                             var isListeningOld = m_Owner.isListening;
                             var isListeningNew = GUILayout.Toggle(isListeningOld, "Listen",
-                                EditorStyles.miniButton, GUILayout.MaxWidth(45));
+                                EditorStyles.miniButton, GUILayout.MaxWidth(50));
 
                             if (isListeningOld != isListeningNew)
                             {
