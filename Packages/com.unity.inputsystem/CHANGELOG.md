@@ -25,6 +25,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
 
+### Added
+
+- Will now recognize Xbox One and PS4 controllers connected to iOS devices correctly as Xbox One and PS4 controllers.
+
 ## [1.0.0-preview] - 2019-9-20
 
 ### Fixed
