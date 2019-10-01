@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.iOS.LowLevel;
@@ -108,6 +109,18 @@ namespace UnityEngine.InputSystem.iOS
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Gamepad")]
     [Scripting.Preserve]
     public class iOSGameController : Gamepad
+    {
+    }
+
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
+    [Scripting.Preserve]
+    public class XboxOneGampadiOS : UnityEngine.InputSystem.XInput.XInputController
+    {
+    }
+
+    [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS DualShock 4 Gamepad")]
+    [Scripting.Preserve]
+    public class DualShock4GampadiOS : DualShockGamepad
     {
     }
 }
