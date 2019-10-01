@@ -7,11 +7,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview.1] - 2999-9-20
+
+### Fixed
+
+- Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
+- Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
+- Selecting a layout in the input debugger no longer selects its first child item, too.
+
+### Actions
+
+- Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
+- The text on the "Listen" button is no longer clipped off on 2019.3.
+- Controls bound to actions through composites no longer show up as duplicates in the input debugger.
+
+### Changed
+
+- Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+
 ## [1.0.0-preview] - 2019-9-20
 
 ### Fixed
 
--Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
 - Fixed an issue where Stick Controls could not be created in Players built with medium or high code stripping level enabled.
 - Fixed incorrect default state for axes on some controllers.
 
