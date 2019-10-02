@@ -720,7 +720,15 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     AddChild(item,
                         "Common Usages: " +
-                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
+                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()),
+                        ref id);
+                }
+                if (layout.appliedOverrides.Count() > 0)
+                {
+                    AddChild(item,
+                        "Applied Overrides: " +
+                        string.Join(", ", layout.appliedOverrides),
+                        ref id);
                 }
 
                 ////TODO: find a more elegant solution than multiple "Matching Devices" parents when having multiple

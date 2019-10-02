@@ -13,11 +13,14 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
 - Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
+- Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
+  * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 - Selecting a layout in the input debugger no longer selects its first child item, too.
 
 ### Actions
 
 - Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
+- Fixed `anyKey` not appearing in control picker for `Keyboard`.
 - The text on the "Listen" button is no longer clipped off on 2019.3.
 - Controls bound to actions through composites no longer show up as duplicates in the input debugger.
 
@@ -28,6 +31,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Will now recognize Xbox One and PS4 controllers connected to iOS devices correctly as Xbox One and PS4 controllers.
+- Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
 
 ## [1.0.0-preview] - 2019-9-20
 
