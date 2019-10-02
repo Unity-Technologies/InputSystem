@@ -371,7 +371,6 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
 #endif
-            type.FullName == typeof(UnityEngine.InputSystem.iOS.iOSGameController).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock3GamepadHID).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock4GamepadHID).FullName ||
             type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidAccelerometer).FullName ||

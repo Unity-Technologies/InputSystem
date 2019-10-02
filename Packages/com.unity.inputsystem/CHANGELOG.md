@@ -30,6 +30,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
+- Will now recognize Xbox One and PS4 controllers connected to iOS devices correctly as Xbox One and PS4 controllers.
 - Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
 
 ## [1.0.0-preview] - 2019-9-20

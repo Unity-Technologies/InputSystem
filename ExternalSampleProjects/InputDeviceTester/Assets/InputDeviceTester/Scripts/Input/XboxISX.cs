@@ -14,16 +14,16 @@ public class XboxISX : GamepadISX
     {
         //m_stickMaxMove = 0.25f;
 
-        m_buttonAction = new InputAction(name: "XboxButtonAction", InputActionType.PassThrough, binding: "XInputController*/<button>");
+        m_buttonAction = new InputAction(name: "XboxButtonAction", InputActionType.PassThrough, binding: "<XInputController>/<button>");
         m_buttonAction.performed += callbackContext => OnControllerButtonPress(callbackContext.control as ButtonControl, isXbox: true);
         m_buttonAction.Enable();
 
-        m_dPadAction = new InputAction(name: "XboxDpadAction", InputActionType.PassThrough, binding: "XInputController*/<dpad>");
+        m_dPadAction = new InputAction(name: "XboxDpadAction", InputActionType.PassThrough, binding: "<XInputController>/<dpad>");
         m_dPadAction.performed += callbackContext => OnDpadPress(callbackContext.control as DpadControl);
         m_dPadAction.Enable();
 
         m_stickMoveAction = new InputAction(name: "XboxStickMoveAction", InputActionType.PassThrough,
-            binding: "XInputController*/<stick>");
+            binding: "<XInputController>/<stick>");
         m_stickMoveAction.performed += callbackContext => StickMove(callbackContext.control as StickControl);
         m_stickMoveAction.Enable();
     }

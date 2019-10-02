@@ -2867,11 +2867,11 @@ namespace UnityEngine.InputSystem
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         private static void PerformDefaultPluginInitialization()
         {
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WSA || UNITY_IOS
             XInputSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_PS4 || UNITY_WSA || UNITY_IOS
             DualShockSupport.Initialize();
             #endif
 
