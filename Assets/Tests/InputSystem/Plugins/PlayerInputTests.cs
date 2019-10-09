@@ -809,6 +809,64 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener), true)]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerInputCSharpEventListener), true)]
+    public void PlayerInput_CanReceiveNotificationWhenActionIsTriggered(PlayerNotifications notificationBehavior, Type listenerType, bool receivesAllPhases = false)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        go.SetActive(false);
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            var child = new GameObject();
+            child.transform.parent = go.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)go.AddComponent(listenerType);
+        }
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        playerInput.notificationBehavior = notificationBehavior;
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        go.SetActive(true);
+
+        Press(gamepad.buttonSouth);
+
+        if (receivesAllPhases)
+        {
+            Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("Fire Started", 1f), new Message("Fire Performed", 1f) }));
+        }
+        else
+        {
+            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+        }
+
+        listener.messages.Clear();
+
+        Release(gamepad.buttonSouth);
+
+        if (receivesAllPhases)
+        {
+            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("Fire Canceled", 0f)}));
+        }
+        else
+        {
+            // 'Fire' is a button action. Unlike with value actions, PlayerInput should not
+            // send a message on button release (i.e. when the action cancels).
+            Assert.That(listener.messages, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanReceiveMessageWhenActionIsTriggered()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -836,7 +894,7 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveMessageWhenContinuousActionIsCanceled()
+    public void PlayerInput_CanReceiveMessageWhenValueActionIsCanceled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -865,26 +923,6 @@ internal class PlayerInputTests : InputTestFixture
             {
                 new Message("OnMove", Vector2.zero)
             }));
-    }
-
-    [Test]
-    [Category("PlayerInput")]
-    public void PlayerInput_CanReceiveEventWhenActionIsTriggered()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var go = new GameObject();
-        var listener = go.AddComponent<MessageListener>();
-        var playerInput = go.AddComponent<PlayerInput>();
-        playerInput.notificationBehavior = PlayerNotifications.InvokeUnityEvents;
-        playerInput.defaultActionMap = "gameplay";
-        playerInput.actions = InputActionAsset.FromJson(kActions);
-        listener.SetUpEvents(playerInput);
-
-        Press(gamepad.buttonSouth);
-
-        Assert.That(listener.messages,
-            Is.EquivalentTo(new[] {new Message("gameplay/fire Started", 1f), new Message("gameplay/fire Performed", 1f)}));
     }
 
     [Test]
@@ -1411,9 +1449,9 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""gameplay"",
                     ""actions"" : [
-                        { ""name"" : ""fire"", ""type"" : ""button"" },
-                        { ""name"" : ""look"", ""type"" : ""value"" },
-                        { ""name"" : ""move"", ""type"" : ""value"" }
+                        { ""name"" : ""Fire"", ""type"" : ""button"" },
+                        { ""name"" : ""Look"", ""type"" : ""value"" },
+                        { ""name"" : ""Move"", ""type"" : ""value"" }
                     ],
                     ""bindings"" : [
                         { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" },
@@ -1516,43 +1554,6 @@ internal class PlayerInputTests : InputTestFixture
     {
         public List<Message> messages { get; } = new List<Message>();
 
-        public void SetUpEvents(PlayerInput player)
-        {
-            var fireAction = player.actions.FindAction("gameplay/fire");
-            var lookAction = player.actions.FindAction("gameplay/look");
-            var moveAction = player.actions.FindAction("gameplay/move");
-
-            var fireEvent = new PlayerInput.ActionEvent(fireAction);
-            var lookEvent = new PlayerInput.ActionEvent(lookAction);
-            var moveEvent = new PlayerInput.ActionEvent(moveAction);
-
-            fireEvent.AddListener(OnFireEvent);
-            lookEvent.AddListener(OnLookEvent);
-            moveEvent.AddListener(OnMoveEvent);
-
-            player.actionEvents = new[]
-            {
-                fireEvent,
-                lookEvent,
-                moveEvent,
-            };
-        }
-
-        private void OnFireEvent(InputAction.CallbackContext context)
-        {
-            messages.Add(new Message { name = "gameplay/fire " + context.phase, value = context.ReadValue<float>() });
-        }
-
-        private void OnLookEvent(InputAction.CallbackContext context)
-        {
-            messages.Add(new Message { name = "gameplay/look " + context.phase, value = context.ReadValue<Vector2>() });
-        }
-
-        private void OnMoveEvent(InputAction.CallbackContext context)
-        {
-            messages.Add(new Message { name = "gameplay/move" + context.phase, value = context.ReadValue<Vector2>() });
-        }
-
         // ReSharper disable once UnusedMember.Local
         public void OnFire(InputValue value)
         {
@@ -1614,16 +1615,50 @@ internal class PlayerInputTests : InputTestFixture
             var playerInput = GetComponent<PlayerInput>();
             Debug.Assert(playerInput != null, "Must have PlayerInput component");
 
-            foreach (var item in playerInput.actionEvents)
-                item.AddListener(OnAction);
+            SetUpActionEvents(playerInput);
 
             playerInput.deviceLostEvent.AddListener(OnDeviceLost);
             playerInput.deviceRegainedEvent.AddListener(OnDeviceRegained);
         }
 
-        private void OnAction(InputAction.CallbackContext context)
+        private void SetUpActionEvents(PlayerInput player)
         {
-            messages.Add(new Message(context.action.ToString()));
+            var fireAction = player.actions.FindAction("gameplay/fire");
+            var lookAction = player.actions.FindAction("gameplay/look");
+            var moveAction = player.actions.FindAction("gameplay/move");
+
+            var fireEvent = new PlayerInput.ActionEvent(fireAction);
+            var lookEvent = new PlayerInput.ActionEvent(lookAction);
+            var moveEvent = new PlayerInput.ActionEvent(moveAction);
+
+            fireEvent.AddListener(OnFireEvent);
+            lookEvent.AddListener(OnLookEvent);
+            moveEvent.AddListener(OnMoveEvent);
+
+            player.actionEvents = new[]
+            {
+                fireEvent,
+                lookEvent,
+                moveEvent,
+            };
+        }
+
+        // We have separate methods for these rather than one that we reuse for each listener in order to
+        // guarantee that PlayerInput is indeed calling the right method.
+
+        private void OnFireEvent(InputAction.CallbackContext context)
+        {
+            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
+        }
+
+        private void OnLookEvent(InputAction.CallbackContext context)
+        {
+            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
+        }
+
+        private void OnMoveEvent(InputAction.CallbackContext context)
+        {
+            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
         }
 
         private void OnDeviceLost(PlayerInput player)
@@ -1648,7 +1683,6 @@ internal class PlayerInputTests : InputTestFixture
             var playerInput = GetComponent<PlayerInput>();
             Debug.Assert(playerInput != null, "Must have PlayerInput component");
 
-
             playerInput.onActionTriggered += OnAction;
             playerInput.onDeviceLost += OnDeviceLost;
             playerInput.onDeviceRegained += OnDeviceRegained;
@@ -1656,7 +1690,7 @@ internal class PlayerInputTests : InputTestFixture
 
         private void OnAction(InputAction.CallbackContext context)
         {
-            messages.Add(new Message(context.action.ToString()));
+            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
         }
 
         private void OnDeviceLost(PlayerInput player)

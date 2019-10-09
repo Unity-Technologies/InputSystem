@@ -1,6 +1,8 @@
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
+////REVIEW: generalize this to AnyButton and add to more devices?
+
 namespace UnityEngine.InputSystem.Controls
 {
     /// <summary>
