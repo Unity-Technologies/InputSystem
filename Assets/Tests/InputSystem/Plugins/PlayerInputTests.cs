@@ -1648,17 +1648,17 @@ internal class PlayerInputTests : InputTestFixture
 
         private void OnFireEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
+            messages.Add(new Message($"Fire {context.phase}", context.ReadValueAsObject()));
         }
 
         private void OnLookEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
+            messages.Add(new Message($"Look {context.phase}", context.ReadValueAsObject()));
         }
 
         private void OnMoveEvent(InputAction.CallbackContext context)
         {
-            messages.Add(new Message($"{context.action.name} {context.phase}", context.ReadValueAsObject()));
+            messages.Add(new Message($"Move {context.phase}", context.ReadValueAsObject()));
         }
 
         private void OnDeviceLost(PlayerInput player)
