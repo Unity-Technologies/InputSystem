@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `anyKey` not appearing in control picker for `Keyboard`.
 - The text on the "Listen" button is no longer clipped off on 2019.3.
 - Controls bound to actions through composites no longer show up as duplicates in the input debugger.
+- Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
 
 ### Changed
 
