@@ -199,7 +199,7 @@
                 {
                     "name": "",
                     "id": "886e731e-7071-4ae4-95c0-e61739dad6fd",
-                    "path": "<Touchscreen>/tap",
+                    "path": "<Touchscreen>/primaryTouch/tap",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Touch",
@@ -584,7 +584,6 @@
     "controlSchemes": [
         {
             "name": "Keyboard&Mouse",
-            "basedOn": "",
             "bindingGroup": "Keyboard&Mouse",
             "devices": [
                 {
@@ -601,7 +600,6 @@
         },
         {
             "name": "Gamepad",
-            "basedOn": "",
             "bindingGroup": "Gamepad",
             "devices": [
                 {
@@ -613,7 +611,6 @@
         },
         {
             "name": "Touch",
-            "basedOn": "",
             "bindingGroup": "Touch",
             "devices": [
                 {
@@ -625,7 +622,6 @@
         },
         {
             "name": "Joystick",
-            "basedOn": "",
             "bindingGroup": "Joystick",
             "devices": [
                 {
