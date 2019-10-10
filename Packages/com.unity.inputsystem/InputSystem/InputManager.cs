@@ -1502,6 +1502,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
+            RegisterControlLayout("Tracked Device", typeof(TrackedDevice));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
