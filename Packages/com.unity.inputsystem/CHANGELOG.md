@@ -16,6 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 - Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
   * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 - Selecting a layout in the input debugger no longer selects its first child item, too.
+- Fixed tap/swipe gesture detection in touch samples.
 
 ### Actions
 
