@@ -10,15 +10,15 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(displayName = "Tracked Device", isGenericTypeOfDevice = true)]
     public class TrackedDevice : InputDevice
     {
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public IntegerControl trackingState { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public ButtonControl isTracked { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control devicePosition { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public QuaternionControl deviceRotation { get; private set; }
 
