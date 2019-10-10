@@ -11,28 +11,28 @@ namespace Unity.XR.OpenVR
     [Preserve]
     public class OpenVRHMD : XRHMD
     {
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control leftEyeVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control rightEyeVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control centerEyeVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
 
@@ -55,10 +55,10 @@ namespace Unity.XR.OpenVR
     [Preserve]
     public class OpenVRControllerWMR : XRController
     {
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
@@ -144,10 +144,10 @@ namespace Unity.XR.OpenVR
         [Preserve]
         public ButtonControl triggerPressed { get; private set; }
 
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
@@ -184,10 +184,10 @@ namespace Unity.XR.OpenVR
     [Preserve]
     public class ViveTracker : TrackedDevice
     {
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
@@ -271,10 +271,10 @@ namespace Unity.XR.OpenVR
         [Preserve]
         public ButtonControl thumbstickTouched { get; private set; }
 
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 

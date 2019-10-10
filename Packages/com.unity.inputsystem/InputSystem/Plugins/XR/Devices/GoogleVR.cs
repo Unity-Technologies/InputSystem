@@ -49,10 +49,10 @@ namespace Unity.XR.GoogleVr
         [InputControl]
         [Preserve]
         public ButtonControl touchpadTouched { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceVelocity { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control deviceAcceleration { get; private set; }
 

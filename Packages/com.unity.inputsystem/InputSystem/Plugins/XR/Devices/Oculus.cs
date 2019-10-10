@@ -14,45 +14,45 @@ namespace Unity.XR.Oculus.Input
     public class OculusHMD : XRHMD
     {
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         [InputControl(name = "trackingState", layout = "Integer", aliases = new[] { "devicetrackingstate" })]
         [InputControl(name = "isTracked", layout = "Button", aliases = new[] { "deviceistracked" })]
         public ButtonControl userPresence { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAngularAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control leftEyeAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control leftEyeAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control leftEyeAngularAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control rightEyeAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control rightEyeAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control rightEyeAngularAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control centerEyeAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control centerEyeAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control centerEyeAngularAcceleration { get; private set; }
 
 
@@ -129,16 +129,16 @@ namespace Unity.XR.Oculus.Input
         [InputControl(name = "deviceRotation", layout = "Quaternion", aliases = new[] { "controllerRotation" })]
         public ButtonControl thumbstickTouched { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "controllerVelocity" })]
+        [InputControl(noisy = true, aliases = new[] { "controllerVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "controllerAngularVelocity" })]
+        [InputControl(noisy = true, aliases = new[] { "controllerAngularVelocity" })]
         public Vector3Control deviceAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "controllerAcceleration" })]
+        [InputControl(noisy = true, aliases = new[] { "controllerAcceleration" })]
         public Vector3Control deviceAcceleration { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "controllerAngularAcceleration" })]
+        [InputControl(noisy = true, aliases = new[] { "controllerAngularAcceleration" })]
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
         protected override void FinishSetup()
@@ -260,13 +260,13 @@ namespace Unity.XR.Oculus.Input
         [InputControl]
         public ButtonControl touchpadTouched { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAngularVelocity { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAcceleration { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control deviceAngularAcceleration { get; private set; }
 
         protected override void FinishSetup()

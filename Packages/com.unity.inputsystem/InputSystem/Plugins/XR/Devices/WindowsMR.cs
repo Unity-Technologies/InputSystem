@@ -13,7 +13,7 @@ namespace UnityEngine.XR.WindowsMR.Input
     public class WMRHMD : XRHMD
     {
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         [InputControl(name = "devicePosition", layout = "Vector3", aliases = new[] { "HeadPosition" })]
         [InputControl(name = "deviceRotation", layout = "Quaternion", aliases = new[] { "HeadRotation" })]
         public ButtonControl userPresence { get; private set; }
@@ -34,16 +34,16 @@ namespace UnityEngine.XR.WindowsMR.Input
     public class HololensHand : XRController
     {
         [Preserve]
-        [InputControl(aliases = new[] { "gripVelocity" })]
+        [InputControl(noisy = true, aliases = new[] { "gripVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
         [Preserve]
         [InputControl(aliases = new[] { "triggerbutton" })]
         public ButtonControl airTap { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public AxisControl sourceLossRisk { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
 
         protected override void FinishSetup()
@@ -92,26 +92,26 @@ namespace UnityEngine.XR.WindowsMR.Input
         [InputControl(aliases = new[] { "joystickorpadtouched", "touchpadtouched" })]
         public ButtonControl touchpadTouched { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "gripVelocity" })]
+        [InputControl(noisy = true, aliases = new[] { "gripVelocity" })]
         public Vector3Control deviceVelocity { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "gripAngularVelocity" })]
+        [InputControl(noisy = true, aliases = new[] { "gripAngularVelocity" })]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public AxisControl batteryLevel { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public AxisControl sourceLossRisk { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control sourceLossMitigationDirection { get; private set; }
         [Preserve]
-        [InputControl]
+        [InputControl(noisy = true)]
         public Vector3Control pointerPosition { get; private set; }
         [Preserve]
-        [InputControl(aliases = new[] { "PointerOrientation" })]
+        [InputControl(noisy = true, aliases = new[] { "PointerOrientation" })]
         public QuaternionControl pointerRotation { get; private set; }
 
         protected override void FinishSetup()

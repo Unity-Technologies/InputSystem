@@ -14,23 +14,22 @@ namespace UnityEngine.InputSystem.XR
     [Preserve]
     public class XRHMD : TrackedDevice
     {
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control leftEyePosition { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public QuaternionControl leftEyeRotation { get; private set; }
-
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control rightEyePosition { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public QuaternionControl rightEyeRotation { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public Vector3Control centerEyePosition { get; private set; }
-        [InputControl]
+        [InputControl(noisy = true)]
         [Preserve]
         public QuaternionControl centerEyeRotation { get; private set; }
 
