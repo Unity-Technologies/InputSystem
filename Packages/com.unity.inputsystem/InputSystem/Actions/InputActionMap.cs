@@ -325,6 +325,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: inconsistent naming; elsewhere we use "onActionTriggered" (which in turn is inconsistent with InputAction.started etc)
         /// <summary>
         /// Add or remove a callback that is triggered when an action in the map changes its <see cref="InputActionPhase">
         /// phase</see>.
