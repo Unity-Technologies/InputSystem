@@ -12,6 +12,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+- Added back XR layouts (except for Magic Leap) that were removed for `1.0-preview`.
+  * We removed these layouts under the assumption that they would almost concurrently become available in the respective device-specific XR packages. However, this did not work out as expected and the gap here turned out to be more than what we anticipated.
+  * To deal with this gap, we have moved the bulk of the XR layouts back and will transition things gradually as support in device-specific packages becomes publicly available.
 
 ### Fixed
 
