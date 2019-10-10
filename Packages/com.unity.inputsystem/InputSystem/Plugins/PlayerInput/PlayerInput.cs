@@ -17,6 +17,9 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: handle case of control scheme not having any devices in its requirements
 
+////TODO: add method to pass an object implementing a generated action interface (IXXXActions) and have it hooked up automatically
+////      (or maybe look for implementation on components in same object?)
+
 ////FIXME: why can't I join with a mouse left click?
 
 namespace UnityEngine.InputSystem
@@ -465,6 +468,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// If <see cref="notificationBehavior"/> is set to <see cref="PlayerNotifications.InvokeCSharpEvents"/>, this
+        /// event is triggered when an action fires.
+        /// </summary>
+        /// <value>Callbacks that get called when an action triggers.</value>
+        /// <remarks>
+        /// If <see cref="notificationBehavior"/> is not set to <see cref="PlayerNotifications.InvokeCSharpEvents"/>, the
+        /// value of this property is ignored.
+        ///
+        /// The callbacks are called in sync (and with the same argument) with <see cref="InputAction.started"/>,
+        /// <see cref="InputAction.performed"/>, and <see cref="InputAction.canceled"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.actionTriggered"/>
+        /// <seealso cref="InputAction.started"/>
+        /// <seealso cref="InputAction.performed"/>
+        /// <seealso cref="InputAction.canceled"/>
+        /// <seealso cref="actions"/>
         public event Action<InputAction.CallbackContext> onActionTriggered
         {
             add
@@ -483,6 +503,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// If <see cref="notificationBehavior"/> is <see cref="PlayerNotifications.InvokeCSharpEvents"/>, this event
+        /// is triggered when a device paired to the player is disconnected.
+        /// </summary>
+        /// <value>Callbacks that get called when the player loses a device.</value>
+        /// <remarks>
+        /// If <see cref="notificationBehavior"/> is not <see cref="PlayerNotifications.InvokeCSharpEvents"/>, the value
+        /// of this property is ignored.
+        ///
+        /// The argument is the player that lost its device (i.e. the player on which the callback is installed).
+        /// </remarks>
+        /// <seealso cref="onDeviceRegained"/>
+        /// <seealso cref="InputUserChange.DeviceLost"/>
         public event Action<PlayerInput> onDeviceLost
         {
             add
@@ -501,6 +534,19 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// If <see cref="notificationBehavior"/> is <see cref="PlayerNotifications.InvokeCSharpEvents"/>, this event
+        /// is triggered when the player previously lost a device and has now regained it or an equivalent device.
+        /// </summary>
+        /// <value>Callbacks that get called when the player regains a device.</value>
+        /// <remarks>
+        /// If <see cref="notificationBehavior"/> is not <see cref="PlayerNotifications.InvokeCSharpEvents"/>, the value
+        /// of this property is ignored.
+        ///
+        /// The argument is the player that regained a device (i.e. the player on which the callback is installed).
+        /// </remarks>
+        /// <seealso cref="onDeviceLost"/>
+        /// <seealso cref="InputUserChange.DeviceRegained"/>
         public event Action<PlayerInput> onDeviceRegained
         {
             add
@@ -519,13 +565,15 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////TODO: clarify the relationship to raycasting in the UI input module
         /// <summary>
-        /// The camera associated with the player.
+        /// Optional camera associated with the player.
         /// </summary>
+        /// <value>Camera specific to the player or <c>null</c>.</value>
         /// <remarks>
-        /// This is null by default.
+        /// This is <c>null</c> by default.
         ///
-        /// Associating a camera with a player is necessary when using split-screen.
+        /// Associating a camera with a player is necessary only when using split-screen (see <see cref="PlayerInputManager.splitScreen"/>).
         /// </remarks>
         public new Camera camera
         {
@@ -882,12 +930,13 @@ namespace UnityEngine.InputSystem
             {
                 case PlayerNotifications.SendMessages:
                 case PlayerNotifications.BroadcastMessages:
-                    if (m_ActionTriggeredDelegate == null)
-                        m_ActionTriggeredDelegate = OnActionTriggered;
-                    foreach (var actionMap in m_Actions.actionMaps)
-                        actionMap.actionTriggered += m_ActionTriggeredDelegate;
+                    InstallOnActionTriggeredHook();
                     if (m_ActionMessageNames == null)
                         CacheMessageNames();
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    InstallOnActionTriggeredHook();
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
@@ -940,9 +989,7 @@ namespace UnityEngine.InputSystem
             if (m_Actions == null)
                 return;
 
-            if (m_ActionTriggeredDelegate != null)
-                foreach (var actionMap in m_Actions.actionMaps)
-                    actionMap.actionTriggered -= m_ActionTriggeredDelegate;
+            UninstallOnActionTriggeredHook();
 
             if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents && m_ActionEvents != null)
             {
@@ -967,6 +1014,21 @@ namespace UnityEngine.InputSystem
             m_CurrentActionMap = null;
         }
 
+        private void InstallOnActionTriggeredHook()
+        {
+            if (m_ActionTriggeredDelegate == null)
+                m_ActionTriggeredDelegate = OnActionTriggered;
+            foreach (var actionMap in m_Actions.actionMaps)
+                actionMap.actionTriggered += m_ActionTriggeredDelegate;
+        }
+
+        private void UninstallOnActionTriggeredHook()
+        {
+            if (m_ActionTriggeredDelegate != null)
+                foreach (var actionMap in m_Actions.actionMaps)
+                    actionMap.actionTriggered -= m_ActionTriggeredDelegate;
+        }
+
         ////REVIEW: should this take the action *type* into account? e.g. have different behavior when the type is "Button"?
         private void OnActionTriggered(InputAction.CallbackContext context)
         {
@@ -975,33 +1037,42 @@ namespace UnityEngine.InputSystem
 
             // We shouldn't go through this method when using UnityEvents. With events,
             // the callbacks should be wired up directly rather than going all to this method.
-            Debug.Assert(m_NotificationBehavior != PlayerNotifications.InvokeUnityEvents);
-            if (m_NotificationBehavior == PlayerNotifications.InvokeUnityEvents)
-                return;
+            Debug.Assert(m_NotificationBehavior != PlayerNotifications.InvokeUnityEvents,
+                "OnActionTriggered callback should not be installed if notification behavior is set to InvokeUnityEvents");
 
-            // ATM we only care about `performed` and, in the case of value actions, `canceled`.
-            var action = context.action;
-            if (!(context.performed || (context.canceled && action.type == InputActionType.Value)))
-                return;
+            switch (m_NotificationBehavior)
+            {
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_ActionTriggeredCallbacks, context, "PlayerInput.onActionTriggered");
+                    break;
 
-            // Find message name for action.
-            if (m_ActionMessageNames == null)
-                CacheMessageNames();
-            var messageName = m_ActionMessageNames[action.m_Id];
+                case PlayerNotifications.BroadcastMessages:
+                case PlayerNotifications.SendMessages:
+                    // ATM we only care about `performed` and, in the case of value actions, `canceled`.
+                    var action = context.action;
+                    if (!(context.performed || (context.canceled && action.type == InputActionType.Value)))
+                        return;
 
-            // Cache value.
-            if (m_InputValueObject == null)
-                m_InputValueObject = new InputValue();
-            m_InputValueObject.m_Context = context;
+                    // Find message name for action.
+                    if (m_ActionMessageNames == null)
+                        CacheMessageNames();
+                    var messageName = m_ActionMessageNames[action.m_Id];
 
-            // Send message.
-            if (m_NotificationBehavior == PlayerNotifications.BroadcastMessages)
-                BroadcastMessage(messageName, m_InputValueObject, SendMessageOptions.DontRequireReceiver);
-            else
-                SendMessage(messageName, m_InputValueObject, SendMessageOptions.DontRequireReceiver);
+                    // Cache value.
+                    if (m_InputValueObject == null)
+                        m_InputValueObject = new InputValue();
+                    m_InputValueObject.m_Context = context;
 
-            // Reset context so calling Get() will result in an exception.
-            m_InputValueObject.m_Context = null;
+                    // Send message.
+                    if (m_NotificationBehavior == PlayerNotifications.BroadcastMessages)
+                        BroadcastMessage(messageName, m_InputValueObject, SendMessageOptions.DontRequireReceiver);
+                    else
+                        SendMessage(messageName, m_InputValueObject, SendMessageOptions.DontRequireReceiver);
+
+                    // Reset context so calling Get() will result in an exception.
+                    m_InputValueObject.m_Context = null;
+                    break;
+            }
         }
 
         private void CacheMessageNames()

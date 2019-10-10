@@ -5,7 +5,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     public enum PlayerNotifications
     {
-        ////TODO: add a "None" behavior; for actions, users may want to poll
+        ////TODO: add a "None" behavior; for actions, users may want to poll (or use the generated interfaces)
 
         /// <summary>
         /// Use <see cref="GameObject.SendMessage(string,object)"/> to send a message to the <see cref="GameObject"/>
