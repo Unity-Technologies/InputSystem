@@ -1,9 +1,9 @@
-using UnityEngine.Scripting;
 #if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;
+using UnityEngine.Scripting;
 
 namespace Unity.XR.OpenVR
 {

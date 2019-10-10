@@ -1,8 +1,8 @@
-using UnityEngine.Scripting;
 #if ENABLE_VR
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.Scripting;
 using UnityEngine.XR;
 
 namespace UnityEngine.InputSystem.XR
