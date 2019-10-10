@@ -1,6 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
-#if ENABLE_VR && UNITY_INPUT_SYSTEM_ENABLE_XR
+#if ENABLE_VR
 using UnityEngine.XR;
 #endif
 

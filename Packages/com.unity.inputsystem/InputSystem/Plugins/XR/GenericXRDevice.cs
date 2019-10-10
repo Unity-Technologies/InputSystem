@@ -1,9 +1,9 @@
+using UnityEngine.Scripting;
+#if ENABLE_VR
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
-using UnityEngine.InputSystem.Haptics;
 using UnityEngine.InputSystem.Layouts;
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using UnityEngine.XR;
-#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -11,17 +11,48 @@ namespace UnityEngine.InputSystem.XR
     /// The base type of all XR head mounted displays.  This can help organize shared behaviour across all HMDs.
     /// </summary>
     [InputControlLayout(isGenericTypeOfDevice = true, displayName = "XR HMD")]
-    [Scripting.Preserve]
-    public class XRHMD : InputDevice
+    [Preserve]
+    public class XRHMD : TrackedDevice
     {
+        [InputControl]
+        [Preserve]
+        public Vector3Control leftEyePosition { get; private set; }
+        [InputControl]
+        [Preserve]
+        public QuaternionControl leftEyeRotation { get; private set; }
+
+        [InputControl]
+        [Preserve]
+        public Vector3Control rightEyePosition { get; private set; }
+        [InputControl]
+        [Preserve]
+        public QuaternionControl rightEyeRotation { get; private set; }
+        [InputControl]
+        [Preserve]
+        public Vector3Control centerEyePosition { get; private set; }
+        [InputControl]
+        [Preserve]
+        public QuaternionControl centerEyeRotation { get; private set; }
+
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            centerEyePosition = GetChildControl<Vector3Control>("centerEyePosition");
+            centerEyeRotation = GetChildControl<QuaternionControl>("centerEyeRotation");
+            leftEyePosition = GetChildControl<Vector3Control>("leftEyePosition");
+            leftEyeRotation = GetChildControl<QuaternionControl>("leftEyeRotation");
+            rightEyePosition = GetChildControl<Vector3Control>("rightEyePosition");
+            rightEyeRotation = GetChildControl<QuaternionControl>("rightEyeRotation");
+        }
     }
 
     /// <summary>
     /// The base type for all XR handed controllers.
     /// </summary>
     [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true)]
-    [Scripting.Preserve]
-    public class XRController : InputDevice
+    [Preserve]
+    public class XRController : TrackedDevice
     {
         /// <summary>
         /// A quick accessor for the currently active left handed device.
@@ -29,7 +60,7 @@ namespace UnityEngine.InputSystem.XR
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'LeftHand' device usage.</remarks>
         public static XRController leftHand => InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
 
-        //// <summary>
+        /// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
@@ -39,7 +70,6 @@ namespace UnityEngine.InputSystem.XR
         {
             base.FinishSetup();
 
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
             var capabilities = description.capabilities;
             var deviceDescriptor = XRDeviceDescriptor.FromJson(capabilities);
 
@@ -57,7 +87,6 @@ namespace UnityEngine.InputSystem.XR
                     InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
 #endif //UNITY_2019_3_OR_NEWER
             }
-#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
         }
     }
 
@@ -74,3 +103,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
+#endif
