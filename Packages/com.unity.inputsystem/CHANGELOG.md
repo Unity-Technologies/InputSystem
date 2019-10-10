@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Create Actions..." on `PlayerInput` creating an asset with an incorrect binding for taps on Touchscreens. \
   __NOTE: If you have already created an .inputactions asset with this mechanism, update "tap [Touchscreen]" to "Primary Touch/Tap" to fix the problem manually.__
 - Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
+- Fixed duplicating multiple items at the same time in the action editor duplicating them repeatedly.
 
 ### Changed
 
