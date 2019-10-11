@@ -1,4 +1,4 @@
-#if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
+#if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem.XR;

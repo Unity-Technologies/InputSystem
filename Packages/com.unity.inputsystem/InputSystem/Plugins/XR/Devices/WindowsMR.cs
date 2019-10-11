@@ -1,4 +1,4 @@
-#if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
+#if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;

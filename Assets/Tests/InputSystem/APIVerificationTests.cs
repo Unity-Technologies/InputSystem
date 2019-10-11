@@ -404,6 +404,8 @@ class APIVerificationTests
             type.FullName == typeof(UnityEngine.InputSystem.Processors.EditorWindowSpaceProcessor).FullName ||
             // All our XR stuff completely lacks docs. Get XR team to fix this.
             type.Namespace.StartsWith("UnityEngine.InputSystem.XR") ||
+            type.Namespace.StartsWith("UnityEngine.XR") ||
+            type.Namespace.StartsWith("Unity.XR") ||
             false;
     }
 
