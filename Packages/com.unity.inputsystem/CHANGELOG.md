@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
   * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 - Selecting a layout in the input debugger no longer selects its first child item, too.
 - Fixed XR devices reporting noise as valid user input (should fix problem of control schemes involving VR devices always activating when using `PlayerInput`).
+- Fixed tap/swipe gesture detection in touch samples.
 
 ### Actions
 
@@ -31,6 +32,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `anyKey` not appearing in control picker for `Keyboard`.
 - The text on the "Listen" button is no longer clipped off on 2019.3.
 - Controls bound to actions through composites no longer show up as duplicates in the input debugger.
+- Fixed "Create Actions..." on `PlayerInput` creating an asset with an incorrect binding for taps on Touchscreens. \
+  __NOTE: If you have already created an .inputactions asset with this mechanism, update "tap [Touchscreen]" to "Primary Touch/Tap" to fix the problem manually.__
+- Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
+- Fixed duplicating multiple items at the same time in the action editor duplicating them repeatedly.
 
 ### Added
 

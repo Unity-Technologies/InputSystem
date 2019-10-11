@@ -78,7 +78,7 @@ namespace InputSamples.Gestures
         private bool IsValidSwipe(ref ActiveGesture gesture)
         {
             return gesture.TravelDistance >= minSwipeDistance &&
-                (gesture.StartTime - gesture.EndTime) <= maxSwipeDuration &&
+                (gesture.EndTime - gesture.StartTime) <= maxSwipeDuration &&
                 gesture.SwipeDirectionSameness >= swipeDirectionSamenessThreshold;
         }
 
@@ -88,7 +88,7 @@ namespace InputSamples.Gestures
         private bool IsValidTap(ref ActiveGesture gesture)
         {
             return gesture.TravelDistance <= maxTapDrift &&
-                (gesture.StartTime - gesture.EndTime) <= maxTapDuration;
+                (gesture.EndTime - gesture.StartTime) <= maxTapDuration;
         }
 
         private void OnPressed(PointerInput input, double time)
