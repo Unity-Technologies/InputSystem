@@ -322,16 +322,17 @@ namespace UnityEngine.InputSystem
 
         private static string FindControlLayoutRecursive(ref PathParser parser, string layoutName)
         {
-            ////TODO: add a static InputControlLayout.Cache instance that we look up layouts from and flush the cache every frame
+            using (InputControlLayout.CacheRef())
+            {
+                // Load layout.
+                var layout = InputControlLayout.cache.FindOrLoadLayout(new InternedString(layoutName));
+                if (layout == null)
+                    return null;
 
-            // Load layout.
-            var layout = InputControlLayout.s_Layouts.TryLoadLayout(new InternedString(layoutName));
-            if (layout == null)
-                return null;
-
-            // Search for control layout. May have to jump to other layouts
-            // and search in them.
-            return FindControlLayoutRecursive(ref parser, layout);
+                // Search for control layout. May have to jump to other layouts
+                // and search in them.
+                return FindControlLayoutRecursive(ref parser, layout);
+            }
         }
 
         private static string FindControlLayoutRecursive(ref PathParser parser, InputControlLayout layout)

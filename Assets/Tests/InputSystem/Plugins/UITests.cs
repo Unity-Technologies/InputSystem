@@ -163,6 +163,7 @@ internal class UITests : InputTestFixture
         // Reset initial selection
         leftChildReceiver.Reset();
 
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
         // Move mouse over left child.
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100) });
         InputSystem.Update();
@@ -172,6 +173,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
         leftChildReceiver.Reset();
         Assert.That(rightChildReceiver.events, Is.Empty);
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
 
         // Check basic down/up
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
@@ -248,6 +250,7 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Scroll));
         rightChildReceiver.Reset();
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
     }
 
     unsafe void SetTouchState(TouchscreenState state, int index, TouchState touch)
@@ -311,6 +314,11 @@ internal class UITests : InputTestFixture
         leftChildReceiver.Reset();
         Assert.That(rightChildReceiver.events, Is.Empty);
 
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+
         InputSystem.QueueDeltaStateEvent(touchScreen.touches[0], new TouchState()
         {
             touchId = 1,
@@ -343,6 +351,11 @@ internal class UITests : InputTestFixture
         Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
         rightChildReceiver.Reset();
         Assert.That(leftChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
 
         InputSystem.QueueDeltaStateEvent(touchScreen.touches[1], new TouchState()
         {
@@ -392,6 +405,11 @@ internal class UITests : InputTestFixture
         leftChildReceiver.Reset();
         Assert.That(rightChildReceiver.events, Is.Empty);
 
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+
         // release right button
         // NOTE: The UI behavior is a bit funky here, as it cannot properly handle selection state for multiple
         // objects. As a result, only releasing the left button will receive a click in this setup.
@@ -420,6 +438,11 @@ internal class UITests : InputTestFixture
         Assert.That((rightChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
         rightChildReceiver.Reset();
         Assert.That(leftChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
     }
 
     [UnityTest]

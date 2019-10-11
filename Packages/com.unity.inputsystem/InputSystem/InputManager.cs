@@ -368,6 +368,7 @@ namespace UnityEngine.InputSystem
             m_Layouts.layoutStrings[internedLayoutName] = json;
             if (isOverride)
             {
+                m_Layouts.layoutOverrideNames.Add(internedLayoutName);
                 for (var i = 0; i < baseLayouts.length; ++i)
                 {
                     var baseLayoutName = baseLayouts[i];
@@ -411,7 +412,7 @@ namespace UnityEngine.InputSystem
             // Force-clear layout cache. Don't clear reference count so that
             // the cache gets cleared out properly when released in case someone
             // is using it ATM.
-            InputControlLayout.s_CacheInstance = default;
+            InputControlLayout.s_CacheInstance.Clear();
 
             // For layouts that aren't overrides, add the name of the base
             // layout to the lookup table.
@@ -1501,6 +1502,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
+            RegisterControlLayout("Tracked Device", typeof(TrackedDevice));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));

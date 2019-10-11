@@ -34,6 +34,16 @@ namespace UnityEngine.InputSystem.UI
             eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
         }
 
+        public override bool IsPointerOverGameObject(int pointerId)
+        {
+            foreach (var state in mouseStates)
+            {
+                if (state.touchId == pointerId)
+                    return state.pointerTarget != null;
+            }
+            return false;
+        }
+
         private RaycastResult PerformRaycast(PointerEventData eventData)
         {
             if (eventData == null)
@@ -705,7 +715,7 @@ namespace UnityEngine.InputSystem.UI
         int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
             Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
-            var touchId = 0;
+            var touchId = PointerInputModule.kMouseLeftId;
             if (context.control.parent is TouchControl)
                 touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
 
@@ -851,82 +861,17 @@ namespace UnityEngine.InputSystem.UI
             if (m_OnActionDelegate == null)
                 m_OnActionDelegate = OnAction;
 
-            var pointAction = m_PointAction?.action;
-            if (pointAction != null)
-            {
-                pointAction.performed += m_OnActionDelegate;
-                pointAction.canceled += m_OnActionDelegate;
-            }
-
-            var moveAction = m_MoveAction?.action;
-            if (moveAction != null)
-            {
-                moveAction.performed += m_OnActionDelegate;
-                moveAction.canceled += m_OnActionDelegate;
-            }
-
-            var leftClickAction = m_LeftClickAction?.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed += m_OnActionDelegate;
-                leftClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var rightClickAction = m_RightClickAction?.action;
-            if (rightClickAction != null)
-            {
-                rightClickAction.performed += m_OnActionDelegate;
-                rightClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var middleClickAction = m_MiddleClickAction?.action;
-            if (middleClickAction != null)
-            {
-                middleClickAction.performed += m_OnActionDelegate;
-                middleClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction?.action;
-            if (submitAction != null)
-            {
-                submitAction.performed += m_OnActionDelegate;
-                submitAction.canceled += m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction?.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed += m_OnActionDelegate;
-                cancelAction.canceled += m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction?.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed += m_OnActionDelegate;
-                scrollAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDeviceOrientationAction.performed += m_OnActionDelegate;
-                trackedDeviceOrientationAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDevicePositionAction.performed += m_OnActionDelegate;
-                trackedDevicePositionAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
-            if (trackedDeviceSelectAction != null)
-            {
-                trackedDeviceSelectAction.performed += m_OnActionDelegate;
-                trackedDeviceSelectAction.canceled += m_OnActionDelegate;
-            }
+            SetActionCallback(m_PointAction, true);
+            SetActionCallback(m_MoveAction, true);
+            SetActionCallback(m_LeftClickAction, true);
+            SetActionCallback(m_RightClickAction, true);
+            SetActionCallback(m_MiddleClickAction, true);
+            SetActionCallback(m_SubmitAction, true);
+            SetActionCallback(m_CancelAction, true);
+            SetActionCallback(m_ScrollWheelAction, true);
+            SetActionCallback(m_TrackedDeviceOrientationAction, true);
+            SetActionCallback(m_TrackedDevicePositionAction, true);
+            SetActionCallback(m_TrackedDeviceSelectAction, true);
         }
 
         private void UnhookActions()
@@ -936,81 +881,37 @@ namespace UnityEngine.InputSystem.UI
 
             m_ActionsHooked = false;
 
-            var pointAction = m_PointAction?.action;
-            if (pointAction != null)
-            {
-                pointAction.performed -= m_OnActionDelegate;
-                pointAction.canceled -= m_OnActionDelegate;
-            }
+            SetActionCallback(m_PointAction, false);
+            SetActionCallback(m_MoveAction, false);
+            SetActionCallback(m_LeftClickAction, false);
+            SetActionCallback(m_RightClickAction, false);
+            SetActionCallback(m_MiddleClickAction, false);
+            SetActionCallback(m_SubmitAction, false);
+            SetActionCallback(m_CancelAction, false);
+            SetActionCallback(m_ScrollWheelAction, false);
+            SetActionCallback(m_TrackedDeviceOrientationAction, false);
+            SetActionCallback(m_TrackedDevicePositionAction, false);
+            SetActionCallback(m_TrackedDeviceSelectAction, false);
+        }
 
-            var moveAction = m_MoveAction?.action;
-            if (moveAction != null)
-            {
-                moveAction.performed -= m_OnActionDelegate;
-                moveAction.canceled -= m_OnActionDelegate;
-            }
+        private void SetActionCallback(InputActionReference actionReference, bool install)
+        {
+            if (actionReference == null)
+                return;
 
-            var leftClickAction = m_LeftClickAction?.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed -= m_OnActionDelegate;
-                leftClickAction.canceled -= m_OnActionDelegate;
-            }
+            var action = actionReference.action;
+            if (action == null)
+                return;
 
-            var rightClickAction = m_RightClickAction?.action;
-            if (rightClickAction != null)
+            if (install)
             {
-                rightClickAction.performed -= m_OnActionDelegate;
-                rightClickAction.canceled -= m_OnActionDelegate;
+                action.performed += m_OnActionDelegate;
+                action.canceled += m_OnActionDelegate;
             }
-
-            var middleClickAction = m_MiddleClickAction?.action;
-            if (middleClickAction != null)
+            else
             {
-                middleClickAction.performed -= m_OnActionDelegate;
-                middleClickAction.canceled -= m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction?.action;
-            if (submitAction != null)
-            {
-                submitAction.performed -= m_OnActionDelegate;
-                submitAction.canceled -= m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction?.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed -= m_OnActionDelegate;
-                cancelAction.canceled -= m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction?.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed -= m_OnActionDelegate;
-                scrollAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDeviceOrientationAction.performed -= m_OnActionDelegate;
-                trackedDeviceOrientationAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDevicePositionAction.performed -= m_OnActionDelegate;
-                trackedDevicePositionAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
-            if (trackedDeviceSelectAction != null)
-            {
-                trackedDeviceSelectAction.performed -= m_OnActionDelegate;
-                trackedDeviceSelectAction.canceled -= m_OnActionDelegate;
+                action.performed -= m_OnActionDelegate;
+                action.canceled -= m_OnActionDelegate;
             }
         }
 

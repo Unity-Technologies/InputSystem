@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XInput.LowLevel
 {
@@ -169,10 +170,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(14)]
         public uint buttons;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         public XInputControllerWirelessOSXState WithButton(Button button)
         {
@@ -197,8 +195,6 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 }
 namespace UnityEngine.InputSystem.XInput
 {
-    [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
-    [Scripting.Preserve]
     /// <summary>
     /// A wired Xbox Gamepad connected to a macOS computer.
     /// </summary>
@@ -207,12 +203,12 @@ namespace UnityEngine.InputSystem.XInput
     /// These controllers don't work on a mac out of the box, but require a driver like https://github.com/360Controller/
     /// to work.
     /// </remarks>
+    [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
+    [Preserve]
     public class XboxGamepadMacOS : XInputController
     {
     }
 
-    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
-    [Scripting.Preserve]
     /// <summary>
     /// A wireless Xbox One Gamepad connected to a macOS computer.
     /// </summary>
@@ -222,6 +218,8 @@ namespace UnityEngine.InputSystem.XInput
     /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
     /// </remarks>
+    [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
+    [Preserve]
     public class XboxOneGampadMacOSWireless : XInputController
     {
     }

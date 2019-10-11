@@ -7,11 +7,47 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview.1] - 2019-10-11
+
+### Changed
+
+- Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+- Added back XR layouts (except for Magic Leap) that were removed for `1.0-preview`.
+  * We removed these layouts under the assumption that they would almost concurrently become available in the respective device-specific XR packages. However, this did not work out as expected and the gap here turned out to be more than what we anticipated.
+  * To deal with this gap, we have moved the bulk of the XR layouts back and will transition things gradually as support in device-specific packages becomes publicly available.
+
+### Fixed
+
+- Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
+- Correctly implemented `IsPointerOverGameObject` method for `InputSystemUIInputModule`.
+- Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
+  * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
+- Selecting a layout in the input debugger no longer selects its first child item, too.
+- Fixed XR devices reporting noise as valid user input (should fix problem of control schemes involving VR devices always activating when using `PlayerInput`).
+- Fixed tap/swipe gesture detection in touch samples.
+
+### Actions
+
+- Fixed a bug where multiple composite bindings for the same controls but on different action maps would throw exceptions.
+- Fixed `anyKey` not appearing in control picker for `Keyboard`.
+- The text on the "Listen" button is no longer clipped off on 2019.3.
+- Controls bound to actions through composites no longer show up as duplicates in the input debugger.
+- Fixed "Create Actions..." on `PlayerInput` creating an asset with an incorrect binding for taps on Touchscreens. \
+  __NOTE: If you have already created an .inputactions asset with this mechanism, update "tap [Touchscreen]" to "Primary Touch/Tap" to fix the problem manually.__
+- Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
+- Fixed duplicating multiple items at the same time in the action editor duplicating them repeatedly.
+
+### Added
+
+- Will now recognize Xbox One and PS4 controllers connected to iOS devices correctly as Xbox One and PS4 controllers.
+- Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
+- Added abstract `TrackedDevice` input device class as the basis for various kinds of tracked devices.
+
 ## [1.0.0-preview] - 2019-9-20
 
 ### Fixed
 
--Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
+- Will now close Input Action Asset Editor windows from previous sessions when the corresponding action was deleted.
 - Fixed an issue where Stick Controls could not be created in Players built with medium or high code stripping level enabled.
 - Fixed incorrect default state for axes on some controllers.
 

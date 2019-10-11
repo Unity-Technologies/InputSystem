@@ -695,7 +695,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     parent = parent,
                     depth = parent.depth + 1,
-                    id = ++id,
+                    id = id++,
                     displayName = layout.displayName ?? layout.name,
                     layoutName = layout.name,
                 };
@@ -720,7 +720,15 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     AddChild(item,
                         "Common Usages: " +
-                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()), ref id);
+                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()),
+                        ref id);
+                }
+                if (layout.appliedOverrides.Count() > 0)
+                {
+                    AddChild(item,
+                        "Applied Overrides: " +
+                        string.Join(", ", layout.appliedOverrides),
+                        ref id);
                 }
 
                 ////TODO: find a more elegant solution than multiple "Matching Devices" parents when having multiple
@@ -879,6 +887,8 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     ref var bindingState = ref state.bindingStates[i];
                     if (bindingState.actionIndex != actionIndex)
+                        continue;
+                    if (bindingState.isComposite)
                         continue;
 
                     var binding = state.GetBinding(i);

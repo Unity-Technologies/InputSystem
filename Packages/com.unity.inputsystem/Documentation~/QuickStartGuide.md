@@ -11,7 +11,7 @@ The quickest way to get started in script is to read the current state directly 
 
 ```CSharp
 using UnityEngine;
-using UnityEngine.Experimental.Input;
+using UnityEngine.InputSystem;
 
 public class MyPlayerScript : MonoBehaviour
 {

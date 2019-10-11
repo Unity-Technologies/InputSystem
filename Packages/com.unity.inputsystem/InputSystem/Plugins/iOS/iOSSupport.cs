@@ -16,6 +16,18 @@ namespace UnityEngine.InputSystem.iOS
                 matches: new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("iOSGameController"));
+
+            InputSystem.RegisterLayout<XboxOneGampadiOS>("XboxOneGampadiOS",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("iOSGameController")
+                    .WithProduct("Xbox Wireless Controller"));
+
+            InputSystem.RegisterLayout<DualShock4GampadiOS>("DualShock4GampadiOS",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("iOSGameController")
+                    .WithProduct("DUALSHOCK 4 Wireless Controller"));
         }
     }
 }

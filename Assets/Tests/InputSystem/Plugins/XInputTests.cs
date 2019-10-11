@@ -210,6 +210,25 @@ internal class XInputTests : InputTestFixture
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Start), gamepad.startButton);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.view);
         AssertButtonPress(gamepad, XInputControllerWirelessOSXState.defaultState.WithButton(XInputControllerWirelessOSXState.Button.Select), gamepad.selectButton);
+
+        // Test to make sure that the default state is not set to input values of 0, but to the center of the sticks
+        InputSystem.QueueStateEvent(gamepad,
+            new XInputControllerWirelessOSXState
+            {
+                leftStickX = 0,
+                leftStickY = 0,
+                rightStickX = 0,
+                rightStickY = 0,
+                leftTrigger = 0,
+                rightTrigger = 0,
+            });
+        InputSystem.Update();
+        Assert.That(gamepad.leftStick.IsActuated());
+        Assert.That(gamepad.leftStick.x.IsActuated());
+        Assert.That(gamepad.leftStick.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.leftStick.x.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.leftTrigger.IsActuated(), Is.False);
+        Assert.That(gamepad.leftTrigger.CheckStateIsAtDefault());
     }
 
 #endif

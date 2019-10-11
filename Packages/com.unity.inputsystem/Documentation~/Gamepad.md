@@ -101,6 +101,9 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 
 * [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface. Supported on macOS, Windows, UWP, and Linux.
 
+*
+[`DualShock4GampadiOS`](../api/UnityEngine.InputSystem.iOS.DualShock4GampadiOS.html): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
+
 [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
 
 * [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller.
@@ -118,6 +121,9 @@ On other platforms Unity uses derived classes to represent Xbox controllers:
 * [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.
+
+*
+[`XboxOneGampadiOS`](../api/UnityEngine.InputSystem.iOS.XboxOneGampadiOS.html): An Xbox One controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
 
 >__Note__:
 >* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). Only USB connections are supported by this driver, no wireless dongles. However, the latest generation of Xbox One controllers natively supported Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.

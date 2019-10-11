@@ -1,11 +1,12 @@
 // GENERATED AUTOMATICALLY FROM 'Assets/Samples/SimpleDemo/SimpleControls.inputactions'
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public class SimpleControls : IInputActionCollection
+public class SimpleControls : IInputActionCollection, IDisposable
 {
     private InputActionAsset asset;
     public SimpleControls()
@@ -154,7 +155,7 @@ public class SimpleControls : IInputActionCollection
         m_gameplay_look = m_gameplay.FindAction("look", throwIfNotFound: true);
     }
 
-    ~SimpleControls()
+    public void Dispose()
     {
         UnityEngine.Object.Destroy(asset);
     }
