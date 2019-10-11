@@ -133,9 +133,9 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout(createdDevice.layout);
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(1));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 1));
 
-        var childControl = generatedLayout.controls[0];
+        var childControl = generatedLayout["SimpleFeature1"];
         Assert.That(childControl.name, Is.EqualTo(new InternedString("SimpleFeature1")));
     }
 
@@ -226,44 +226,44 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
 
-        var binaryControl = generatedLayout.controls[0];
+        var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
         Assert.That(binaryControl.offset, Is.EqualTo(0));
         Assert.That(binaryControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(binaryControl.usages.Count, Is.EqualTo(1));
         Assert.That(binaryControl.usages[0], Is.EqualTo(new InternedString("ButtonUsage")));
 
-        var discreteControl = generatedLayout.controls[1];
+        var discreteControl = generatedLayout["DiscreteState"];
         Assert.That(discreteControl.name, Is.EqualTo(new InternedString("DiscreteState")));
         Assert.That(discreteControl.offset, Is.EqualTo(4));
         Assert.That(discreteControl.layout, Is.EqualTo(new InternedString("Integer")));
         Assert.That(discreteControl.usages.Count, Is.EqualTo(1));
         Assert.That(discreteControl.usages[0], Is.EqualTo(new InternedString("DiscreteStateUsage")));
 
-        var axisControl = generatedLayout.controls[2];
+        var axisControl = generatedLayout["Axis"];
         Assert.That(axisControl.name, Is.EqualTo(new InternedString("Axis")));
         Assert.That(axisControl.offset, Is.EqualTo(8));
         Assert.That(axisControl.layout, Is.EqualTo(new InternedString("Analog")));
         Assert.That(axisControl.usages.Count, Is.EqualTo(1));
         Assert.That(axisControl.usages[0], Is.EqualTo(new InternedString("Axis1DUsage")));
 
-        var vec2Control = generatedLayout.controls[3];
+        var vec2Control = generatedLayout["Vector2"];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.offset, Is.EqualTo(12));
         Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
-        var vec3Control = generatedLayout.controls[4];
+        var vec3Control = generatedLayout["Vector3"];
         Assert.That(vec3Control.name, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.offset, Is.EqualTo(20));
         Assert.That(vec3Control.layout, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec3Control.usages[0], Is.EqualTo(new InternedString("Axis3DUsage")));
 
-        var rotationControl = generatedLayout.controls[5];
+        var rotationControl = generatedLayout["Rotation"];
         Assert.That(rotationControl.name, Is.EqualTo(new InternedString("Rotation")));
         Assert.That(rotationControl.offset, Is.EqualTo(32));
         Assert.That(rotationControl.layout, Is.EqualTo(new InternedString("Quaternion")));
@@ -272,7 +272,7 @@ internal class XRTests : InputTestFixture
 
         // Custom element is skipped, but occupies 256 bytes
 
-        var lastControl = generatedLayout.controls[6];
+        var lastControl = generatedLayout["Last"];
         Assert.That(lastControl.name, Is.EqualTo(new InternedString("Last")));
         Assert.That(lastControl.offset, Is.EqualTo(304));
         Assert.That(lastControl.layout, Is.EqualTo(new InternedString("Button")));
@@ -291,37 +291,37 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(8));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 8));
 
-        var currentControl = generatedLayout.controls[0];
+        var currentControl = generatedLayout["Button1"];
         Assert.That(currentControl.offset, Is.EqualTo(0));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[1];
+        currentControl = generatedLayout["Button2"];
         Assert.That(currentControl.offset, Is.EqualTo(1));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[2];
+        currentControl = generatedLayout["Button3"];
         Assert.That(currentControl.offset, Is.EqualTo(2));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[3];
+        currentControl = generatedLayout["Button4"];
         Assert.That(currentControl.offset, Is.EqualTo(3));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[4];
+        currentControl = generatedLayout["Button5"];
         Assert.That(currentControl.offset, Is.EqualTo(4));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[5];
+        currentControl = generatedLayout["Button6"];
         Assert.That(currentControl.offset, Is.EqualTo(5));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[6];
+        currentControl = generatedLayout["Axis1"];
         Assert.That(currentControl.offset, Is.EqualTo(8));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Analog")));
 
-        currentControl = generatedLayout.controls[7];
+        currentControl = generatedLayout["Button7"];
         Assert.That(currentControl.offset, Is.EqualTo(12));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
@@ -429,6 +429,8 @@ internal class XRTests : InputTestFixture
             Assert.That(tpd.gameObject.transform.rotation.Equals(rotation));
         }
     }
+
+    private const int kNumBaseHMDControls = 10;
 
     private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {
@@ -550,10 +552,7 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC format
-        {
-            get { return new FourCC('X', 'R', 'S', '0'); }
-        }
+        public FourCC format => new FourCC('X', 'R', 'S', '0');
     }
 
     [StructLayout(LayoutKind.Explicit)]

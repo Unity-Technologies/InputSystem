@@ -2895,7 +2895,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_LUMIN) && UNITY_INPUT_SYSTEM_ENABLE_XR
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && ENABLE_VR
             XR.XRSupport.Initialize();
             #endif
 

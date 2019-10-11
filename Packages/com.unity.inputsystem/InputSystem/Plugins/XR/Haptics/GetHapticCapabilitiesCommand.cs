@@ -1,3 +1,4 @@
+#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;
@@ -21,14 +22,11 @@ namespace UnityEngine.InputSystem.XR.Haptics
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct GetHapticCapabilitiesCommand : IInputDeviceCommandInfo
     {
-        static FourCC Type { get { return new FourCC('X', 'H', 'C', '0'); } }
+        static FourCC Type => new FourCC('X', 'H', 'C', '0');
 
         const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(uint) * 3;
 
-        public FourCC typeStatic
-        {
-            get { return Type; }
-        }
+        public FourCC typeStatic => Type;
 
         [FieldOffset(0)]
         InputDeviceCommand baseCommand;
@@ -42,13 +40,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
         [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(uint) * 2))]
         public uint maxBufferSize;
 
-        public HapticCapabilities capabilities
-        {
-            get
-            {
-                return new HapticCapabilities(numChannels, frequencyHz, maxBufferSize);
-            }
-        }
+        public HapticCapabilities capabilities => new HapticCapabilities(numChannels, frequencyHz, maxBufferSize);
 
         public static GetHapticCapabilitiesCommand Create()
         {
@@ -59,3 +51,4 @@ namespace UnityEngine.InputSystem.XR.Haptics
         }
     }
 }
+#endif // ENABLE_VR

@@ -1,9 +1,10 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -141,21 +142,18 @@ namespace UnityEngine.InputSystem.XR
         public float rightEyeOpenAmount { get; set; }
     }
 
-    [Scripting.Preserve]
+    [Preserve]
     public class BoneControl : InputControl<Bone>
     {
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
         public IntegerControl parentBoneIndex { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 4, displayName = "Position")]
         public Vector3Control position { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
-
-        public BoneControl()
-        {}
 
         protected override void FinishSetup()
         {
@@ -184,33 +182,30 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
-    [Scripting.Preserve]
+    [Preserve]
     public class EyesControl : InputControl<Eyes>
     {
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
         public Vector3Control leftEyePosition { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
         public QuaternionControl leftEyeRotation { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 28, displayName = "RightEyePosition")]
         public Vector3Control rightEyePosition { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
         public QuaternionControl rightEyeRotation { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 56, displayName = "FixationPoint")]
         public Vector3Control fixationPoint { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
         public AxisControl leftEyeOpenAmount { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
         public AxisControl rightEyeOpenAmount { get; private set; }
-
-        public EyesControl()
-        {}
 
         protected override void FinishSetup()
         {
@@ -274,7 +269,109 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<XRController>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
+
+            #if !DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR
+            InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRHMD>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("(Windows Mixed Reality HMD)|(Microsoft HoloLens)|(^(WindowsMR Headset))")
+            );
+            InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRSpatialController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
+            );
+            InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.HololensHand>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct(@"(^(Hand -))")
+            );
+            #endif
+
+            #if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMD>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("^(Oculus Rift)|^(Oculus Quest)|^(Oculus Go)"));
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusTouchController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct(@"(^(Oculus Touch Controller))|(^(Oculus Quest Controller))"));
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusRemote>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct(@"Oculus Remote"));
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusTrackingReference>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct(@"((Tracking Reference)|(^(Oculus Rift [a-zA-Z0-9]* \(Camera)))"));
+
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMDExtended>(
+                name: "GearVR",
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("Oculus HMD"));
+            InputSystem.RegisterLayout<Unity.XR.Oculus.Input.GearVRTrackedController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("^(Oculus Tracked Remote)"));
+            #endif
+
+            #if !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR
+            InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamHMD>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("Daydream HMD"));
+            InputSystem.RegisterLayout<Unity.XR.GoogleVr.DaydreamController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("^(Daydream Controller)"));
+            #endif
+
+            #if !DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("^(OpenVR Headset)")
+            );
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRControllerWMR>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithProduct("^(OpenVR Controller\\(WindowsMR)")
+            );
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.ViveWand>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithManufacturer("HTC")
+                    .WithProduct(@"^(OpenVR Controller\(((Vive. Controller)|(VIVE. Controller)|(Vive Controller)))")
+            );
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVROculusTouchController>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithManufacturer("HTC")
+                    .WithProduct(@"^(OpenVR Controller\(Oculus)")
+            );
+
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.ViveTracker>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithManufacturer("HTC")
+                    .WithProduct(@"^(VIVE Tracker)")
+            );
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.HandedViveTracker>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithManufacturer("HTC")
+                    .WithProduct(@"^(OpenVR Controller\(VIVE Tracker)")
+            );
+            InputSystem.RegisterLayout<Unity.XR.OpenVR.ViveLighthouse>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
+                    .WithManufacturer("HTC")
+                    .WithProduct(@"^(HTC V2-XD/XE)")
+            );
+            #endif
         }
     }
 }
-#endif //UNITY_INPUT_SYSTEM_ENABLE_XR
+#endif // ENABLE_VR

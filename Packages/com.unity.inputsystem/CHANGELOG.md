@@ -9,6 +9,13 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.1] - 2999-9-20
 
+### Changed
+
+- Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+- Added back XR layouts (except for Magic Leap) that were removed for `1.0-preview`.
+  * We removed these layouts under the assumption that they would almost concurrently become available in the respective device-specific XR packages. However, this did not work out as expected and the gap here turned out to be more than what we anticipated.
+  * To deal with this gap, we have moved the bulk of the XR layouts back and will transition things gradually as support in device-specific packages becomes publicly available.
+
 ### Fixed
 
 - Fixed a bug where the Input Settings Window might throw exceptions after assembly reload.
@@ -16,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Several bugs with layout overrides registered with (`InputSystem.RegisterLayoutOverrides`).
   * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 - Selecting a layout in the input debugger no longer selects its first child item, too.
+- Fixed XR devices reporting noise as valid user input (should fix problem of control schemes involving VR devices always activating when using `PlayerInput`).
 - Fixed tap/swipe gesture detection in touch samples.
 
 ### Actions
@@ -29,14 +37,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
 - Fixed duplicating multiple items at the same time in the action editor duplicating them repeatedly.
 
-### Changed
-
-- Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
-
 ### Added
 
 - Will now recognize Xbox One and PS4 controllers connected to iOS devices correctly as Xbox One and PS4 controllers.
 - Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
+- Added abstract `TrackedDevice` input device class as the basis for various kinds of tracked devices.
 
 ## [1.0.0-preview] - 2019-9-20
 
