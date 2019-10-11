@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.XR;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -141,21 +142,18 @@ namespace UnityEngine.InputSystem.XR
         public float rightEyeOpenAmount { get; set; }
     }
 
-    [Scripting.Preserve]
+    [Preserve]
     public class BoneControl : InputControl<Bone>
     {
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 0, displayName = "parentBoneIndex")]
         public IntegerControl parentBoneIndex { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 4, displayName = "Position")]
         public Vector3Control position { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 16, displayName = "Rotation")]
         public QuaternionControl rotation { get; private set; }
-
-        public BoneControl()
-        {}
 
         protected override void FinishSetup()
         {
@@ -184,33 +182,30 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
-    [Scripting.Preserve]
+    [Preserve]
     public class EyesControl : InputControl<Eyes>
     {
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 0, displayName = "LeftEyePosition")]
         public Vector3Control leftEyePosition { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 12, displayName = "LeftEyeRotation")]
         public QuaternionControl leftEyeRotation { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 28, displayName = "RightEyePosition")]
         public Vector3Control rightEyePosition { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 40, displayName = "RightEyeRotation")]
         public QuaternionControl rightEyeRotation { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 56, displayName = "FixationPoint")]
         public Vector3Control fixationPoint { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 68, displayName = "LeftEyeOpenAmount")]
         public AxisControl leftEyeOpenAmount { get; private set; }
-        [Scripting.Preserve]
+        [Preserve]
         [InputControl(offset = 72, displayName = "RightEyeOpenAmount")]
         public AxisControl rightEyeOpenAmount { get; private set; }
-
-        public EyesControl()
-        {}
 
         protected override void FinishSetup()
         {

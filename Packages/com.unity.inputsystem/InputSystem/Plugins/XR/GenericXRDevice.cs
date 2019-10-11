@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
-    [Scripting.Preserve]
+    [Preserve]
     public class XRControllerWithRumble : XRController
     {
         public void SendImpulse(float amplitude, float duration)

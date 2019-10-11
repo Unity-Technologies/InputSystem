@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem
         [Preserve]
         public ButtonControl isTracked { get; private set; }
         [InputControl(noisy = true)]
+        [Preserve]
         public Vector3Control devicePosition { get; private set; }
         [InputControl(noisy = true)]
         [Preserve]
