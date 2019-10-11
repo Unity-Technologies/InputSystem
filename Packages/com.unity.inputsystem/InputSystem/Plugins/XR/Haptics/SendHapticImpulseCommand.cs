@@ -1,4 +1,4 @@
-#if ENABLE_VR
+#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.LowLevel;

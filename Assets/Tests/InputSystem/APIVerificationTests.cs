@@ -19,6 +19,12 @@ class APIVerificationTests
 
     private bool TypeHasValidNamespace(TypeReference type)
     {
+        // The XR stuff is putting some things in Unity.XR. While we still have
+        // these in the input system itself, accept that namespace. Remove it when
+        // the XR layouts are removed.
+        if (type.Name.StartsWith("Unity.XR"))
+            return true;
+
         // The compiler generates a <Module> type which we want to ignore
         return type.Namespace.StartsWith("UnityEngine.InputSystem") || type.Name == "<Module>";
     }
