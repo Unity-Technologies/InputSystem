@@ -683,6 +683,29 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanLoadLayoutOverride()
+    {
+        const string json = @"
+            {
+                ""name"" : ""Overrides"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayoutOverride(json);
+
+        var layout = InputSystem.LoadLayout("Overrides");
+
+        Assert.That(layout, Is.Not.Null);
+        Assert.That(layout.isOverride, Is.True);
+        Assert.That(layout.controls, Has.Count.EqualTo(1)); // Should not have merged base layout.
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanApplyOverridesToExistingLayouts()
     {
         // Add a control to mice.
@@ -750,6 +773,37 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanApplyOverridesToOverrides()
+    {
+        const string json1 = @"
+            {
+                ""name"" : ""Overrides1"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        const string json2 = @"
+            {
+                ""name"" : ""Overrides2"",
+                ""extend"" : ""Overrides1"",
+                ""controls"" : [
+                    { ""name"" : ""extraControl"", ""layout"" : ""Axis"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayoutOverride(json1);
+        InputSystem.RegisterLayoutOverride(json2);
+
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(device["extraControl"].layout, Is.EqualTo("Axis"));
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
     {
         // Change all Gamepads to have the common usages "A", "B", and "C".
@@ -765,10 +819,14 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("Gamepad");
 
+        Assert.That(layout.appliedOverrides, Is.EquivalentTo(new[] {new InternedString("Overrides")}));
         Assert.That(layout.commonUsages.Count, Is.EqualTo(3));
         Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("A")));
         Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("B")));
         Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("C")));
+
+        // Applying the override should not have created a cycle.
+        Assert.That(layout.baseLayouts, Does.Not.Contains(new InternedString("Gamepad")));
     }
 
     [Test]

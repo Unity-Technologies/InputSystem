@@ -550,9 +550,7 @@ namespace UnityEngine.InputSystem.Editor
                         DeleteDataOfSelectedItems();
                         break;
                     case k_DuplicateCommand:
-                        var buffer = new StringBuilder();
-                        CopySelectedItemsTo(buffer);
-                        PasteDataFrom(buffer.ToString());
+                        DuplicateSelection();
                         break;
                     case k_DeleteCommand:
                         DeleteDataOfSelectedItems();
@@ -562,6 +560,38 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 uiEvent.Use();
             }
+        }
+
+        private void DuplicateSelection()
+        {
+            var buffer = new StringBuilder();
+
+            // If we have a multi-selection, we want to perform the duplication as if each item
+            // was duplicated individually. Meaning we paste each duplicate right after the item
+            // it was duplicated from. So if, say, an action is selected at the beginning of the
+            // tree and one is selected from the end of it, we still paste the copies into the
+            // two separate locations correctly.
+            //
+            // Technically, if both parents and children are selected, we're order dependent here
+            // but not sure we really need to care.
+
+            var selection = GetSelection();
+            ClearSelection();
+
+            // Copy-paste each selected item in turn.
+            var newItemIds = new List<int>();
+            foreach (var id in selection)
+            {
+                SetSelection(new[] { id });
+
+                buffer.Length = 0;
+                CopySelectedItemsTo(buffer);
+                PasteDataFrom(buffer.ToString());
+
+                newItemIds.AddRange(GetSelection());
+            }
+
+            SetSelection(newItemIds);
         }
 
         internal const string k_CopyPasteMarker = "INPUTASSET ";
@@ -865,11 +895,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menu.AddDisabledItem(s_RenameLabel);
             }
-            menu.AddItem(s_DuplicateLabel, false, () =>
-            {
-                CopySelectedItemsToClipboard();
-                PasteDataFromClipboard();
-            });
+            menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
             menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
         }
 

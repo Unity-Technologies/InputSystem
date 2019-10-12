@@ -1,5 +1,7 @@
 using UnityEngine.InputSystem.Layouts;
 
+////TODO: generalize the WithModifier composites so that they work with any kind of control, not just buttons
+
 namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
