@@ -1865,16 +1865,16 @@ namespace UnityEngine.InputSystem
         /// <param name="key">Key code of key control to return.</param>
         /// <exception cref="ArgumentOutOfRangeException">The given <see cref="key"/> is not valid.</exception>
         /// <remarks>
-        /// This is equivalent to <c>allKeys[(int)key]</c>.
+        /// This is equivalent to <c>allKeys[(int)key - 1]</c>.
         /// </remarks>
         public KeyControl this[Key key]
         {
             get
             {
-                var index = (int)key;
-                if (index <= 0 || index >= m_Keys.Length)
+                var index = (int)key - 1;
+                if (index < 0 || index >= m_Keys.Length)
                     throw new ArgumentOutOfRangeException(nameof(key));
-                return m_Keys[(int)key - 1];
+                return m_Keys[index];
             }
         }
 
