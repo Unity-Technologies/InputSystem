@@ -201,7 +201,7 @@ public class SimpleControls : IInputActionCollection, IDisposable
 
     // gameplay
     private readonly InputActionMap m_gameplay;
-    private IGameplayActions m_GameplayActionsCallbackInterface;
+    private List<IGameplayActions> m_GameplayActionsCallbackInterfaces = new List<IGameplayActions>();
     private readonly InputAction m_gameplay_fire;
     private readonly InputAction m_gameplay_move;
     private readonly InputAction m_gameplay_look;
@@ -219,19 +219,7 @@ public class SimpleControls : IInputActionCollection, IDisposable
         public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
         public void SetCallbacks(IGameplayActions instance)
         {
-            if (m_Wrapper.m_GameplayActionsCallbackInterface != null)
-            {
-                fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-            }
-            m_Wrapper.m_GameplayActionsCallbackInterface = instance;
+            ClearCallbacks(instance);
             if (instance != null)
             {
                 fire.started += instance.OnFire;
@@ -243,6 +231,23 @@ public class SimpleControls : IInputActionCollection, IDisposable
                 look.started += instance.OnLook;
                 look.performed += instance.OnLook;
                 look.canceled += instance.OnLook;
+                m_Wrapper.m_GameplayActionsCallbackInterfaces.Add(instance);
+            }
+        }
+        public void ClearCallbacks(IGameplayActions instance)
+        {
+            if (instance != null && m_Wrapper.m_GameplayActionsCallbackInterfaces.Contains(instance))
+            {
+                fire.started -= instance.OnFire;
+                fire.performed -= instance.OnFire;
+                fire.canceled -= instance.OnFire;
+                move.started -= instance.OnMove;
+                move.performed -= instance.OnMove;
+                move.canceled -= instance.OnMove;
+                look.started -= instance.OnLook;
+                look.performed -= instance.OnLook;
+                look.canceled -= instance.OnLook;
+                m_Wrapper.m_GameplayActionsCallbackInterfaces.Remove(instance);
             }
         }
     }

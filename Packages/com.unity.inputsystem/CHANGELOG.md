@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview.2] - 9999-12-31
+
+### Actions
+
+- Added support for having multiple interfaces subscribed to a generated action map at once;
+- Added a `ClearCallbacks` method to generated action wrappers, which, as implied, does the exact opposite of the existing `SetCallbacks` method.
+
 ## [1.0.0-preview.1] - 2019-10-11
 
 ### Changed
