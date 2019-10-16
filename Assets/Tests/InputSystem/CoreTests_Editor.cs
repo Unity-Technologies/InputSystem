@@ -1756,6 +1756,8 @@ partial class CoreTests
         map1.AddAction("action2", binding: "/gamepad/rightStick");
         var map2 = new InputActionMap("set2");
         map2.AddAction("action1", binding: "/gamepad/buttonSouth");
+        // Add an action that has a C# reserved keyword name.
+        map2.AddAction("return");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);

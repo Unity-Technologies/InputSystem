@@ -223,9 +223,9 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
                 writer.EndBlock();
 
@@ -238,9 +238,9 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled += instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
                 writer.EndBlock();
