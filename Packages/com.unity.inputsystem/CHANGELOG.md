@@ -11,6 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed touch taps triggering when they shouldn't on Android.
+
 #### Actions
 
 - Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
