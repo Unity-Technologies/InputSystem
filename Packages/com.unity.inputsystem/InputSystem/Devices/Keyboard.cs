@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", sizeInBits = kSizeInBits - 1, synthetic = true)] // Exclude IMESelected.
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", displayName = "Space", layout = "Key", bit = (int)Key.Space)]
-        [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
+        [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Submit", bit = (int)Key.Enter)]
         [InputControl(name = "tab", displayName = "Tab", layout = "Key", bit = (int)Key.Tab)]
         [InputControl(name = "backquote", displayName = "`", layout = "Key", bit = (int)Key.Backquote)]
         [InputControl(name = "quote", displayName = "'", layout = "Key", bit = (int)Key.Quote)]

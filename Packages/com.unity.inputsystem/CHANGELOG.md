@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview.2] - 2999-11-11
+
+### Fixed
+
+#### Actions
+
+- Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
+
 ## [1.0.0-preview.1] - 2019-10-11
 
 ### Changed

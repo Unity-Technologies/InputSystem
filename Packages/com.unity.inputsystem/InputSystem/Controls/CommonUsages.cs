@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Button to confirm the current choice.
         /// </summary>
-        public static readonly InternedString Accept = new InternedString("Accept");
+        public static readonly InternedString Submit = new InternedString("Submit");
 
         ////REVIEW: isn't this the same as "Back"?
         /// <summary>
