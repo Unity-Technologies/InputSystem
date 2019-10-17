@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
+- Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
 
 ## [1.0.0-preview.1] - 2019-10-11
 
