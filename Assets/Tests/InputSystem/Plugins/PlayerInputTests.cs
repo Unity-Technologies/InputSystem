@@ -145,6 +145,61 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanHaveActionWithNoBindingsInOneControlScheme()
+    {
+        const string kActions = @"
+            {
+                ""maps"" : [
+                    {
+                        ""name"" : ""gameplay"",
+                        ""actions"" : [
+                            { ""name"" : ""Fire"", ""type"" : ""button"" }
+                        ],
+                        ""bindings"" : [
+                            { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" }
+                        ]
+                    }
+                ],
+                ""controlSchemes"" : [
+                    {
+                        ""name"" : ""Gamepad"",
+                        ""bindingGroup"" : ""Gamepad"",
+                        ""devices"" : [
+                            { ""devicePath"" : ""<Gamepad>"" }
+                        ]
+                    },
+                    {
+                        ""name"" : ""Keyboard&Mouse"",
+                        ""bindingGroup"" : ""Keyboard&Mouse"",
+                        ""devices"" : [
+                            { ""devicePath"" : ""<Keyboard>"" },
+                            { ""devicePath"" : ""<Mouse>"" }
+                        ]
+                    }
+                ]
+            }
+        ";
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        prefab.AddComponent<PlayerInput>();
+        prefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+        prefab.GetComponent<PlayerInput>().defaultActionMap = "gameplay";
+        prefab.AddComponent<MessageListener>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: new InputDevice[] { keyboard, mouse });
+        var listener = instance.GetComponent<MessageListener>();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanBeUsedWithoutControlSchemes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
