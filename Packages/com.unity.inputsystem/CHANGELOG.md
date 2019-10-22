@@ -14,6 +14,8 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
+- Assigning a new `InputActionAsset` to a `InputSystemUIInputModule` will no longer look up action names globally but rather only look for actions that are located in action maps with the same name.
+  * Previously, if you e.g. switched from one asset where the `point` action was bound to `UI/Point` to an asset that had no `UI` action map but did have an action called `Point` somewhere else, it would erroneously pick the most likely unrelated `Point` action for use by the UI.
 
 ## [1.0.0-preview.1] - 2019-10-11
 
