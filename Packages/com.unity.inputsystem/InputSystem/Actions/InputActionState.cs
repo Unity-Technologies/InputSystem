@@ -242,11 +242,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        /// <summary>
-        /// Check if the state would use a control from the given device.
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
+        // Check if the state would use a control from the given device.
         private bool CanUseDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
@@ -278,7 +274,11 @@ namespace UnityEngine.InputSystem
                 var bindingCount = bindings.Length;
                 for (var n = 0; n < bindingCount; ++n)
                 {
-                    if (InputControlPath.TryFindControl(device, bindings[n].effectivePath) != null)
+                    var effectivePath = bindings[n].effectivePath;
+                    if (string.IsNullOrEmpty(effectivePath))
+                        continue;
+
+                    if (InputControlPath.TryFindControl(device, effectivePath) != null)
                         return true;
                 }
             }

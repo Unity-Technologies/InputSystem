@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
 - Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
 - Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
+- Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
 
 ## [1.0.0-preview.1] - 2019-10-11
 

@@ -20,6 +20,8 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: add method to pass an object implementing a generated action interface (IXXXActions) and have it hooked up automatically
 ////      (or maybe look for implementation on components in same object?)
 
+////TODO: warn if control schemes have no device requirements
+
 ////FIXME: why can't I join with a mouse left click?
 
 namespace UnityEngine.InputSystem

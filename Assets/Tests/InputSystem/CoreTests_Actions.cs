@@ -5545,9 +5545,9 @@ partial class CoreTests
     public void Actions_ApplyingEmptyStringOverride_IsSameAsDisablingBinding()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
 
-        bool performed = false;
+        var performed = false;
         action.performed += _ => performed = true;
 
         action.Enable();
@@ -5564,6 +5564,11 @@ partial class CoreTests
         Press(gamepad.leftTrigger);
 
         Assert.That(performed, Is.False);
+
+        // We had a bug (case 1187163) where InputActionState would cause an exception by not
+        // respecting the empty path when checking if a newly added device is affecting the state.
+        // Just add a device here to make sure that's handled correctly.
+        Assert.That(() => InputSystem.AddDevice<Gamepad>(), Throws.Nothing);
     }
 
     [Test]
