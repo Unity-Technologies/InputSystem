@@ -274,11 +274,7 @@ namespace UnityEngine.InputSystem
                 var bindingCount = bindings.Length;
                 for (var n = 0; n < bindingCount; ++n)
                 {
-                    var effectivePath = bindings[n].effectivePath;
-                    if (string.IsNullOrEmpty(effectivePath))
-                        continue;
-
-                    if (InputControlPath.TryFindControl(device, effectivePath) != null)
+                    if (InputControlPath.TryFindControl(device, bindings[n].effectivePath) != null)
                         return true;
                 }
             }
