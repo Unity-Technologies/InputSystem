@@ -242,11 +242,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        /// <summary>
-        /// Check if the state would use a control from the given device.
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
+        // Check if the state would use a control from the given device.
         private bool CanUseDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
