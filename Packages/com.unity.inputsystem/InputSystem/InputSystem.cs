@@ -974,6 +974,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="devices"/>
         /// <seealso cref="AddDevice{TDevice}"/>
         /// <seealso cref="RemoveDevice"/>
@@ -981,11 +982,15 @@ namespace UnityEngine.InputSystem
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceChange += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceChange -= value;
             }
@@ -1006,17 +1011,22 @@ namespace UnityEngine.InputSystem
         /// to have handled the command. If a command is handled by a delegate in the list, it will
         /// not be sent on to the runtime.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         /// <seealso cref="IInputRuntime.DeviceCommand"/>
         public static event InputDeviceCommandDelegate onDeviceCommand
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceCommand += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceCommand -= value;
             }
@@ -1983,6 +1993,7 @@ namespace UnityEngine.InputSystem
         /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
         /// are usually a more efficient and convenient way to set this up.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="QueueEvent(InputEventPtr)"/>
         /// <seealso cref="InputEvent"/>
         /// <seealso cref="Update"/>
@@ -1991,11 +2002,15 @@ namespace UnityEngine.InputSystem
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onEvent += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onEvent -= value;
             }
