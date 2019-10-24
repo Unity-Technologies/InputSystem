@@ -402,6 +402,8 @@ namespace UnityEngine.InputSystem.Editor
             if (m_RebindingOperation == null)
                 m_RebindingOperation = new InputActionRebindingExtensions.RebindingOperation();
 
+            ////TODO: for keyboard, generate both possible paths (physical and by display name)
+
             m_RebindingOperation.Reset();
             m_RebindingOperation
                 .WithExpectedControlType(m_ExpectedControlLayout)

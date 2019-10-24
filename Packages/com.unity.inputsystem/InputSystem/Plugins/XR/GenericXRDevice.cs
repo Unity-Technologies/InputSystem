@@ -1,4 +1,4 @@
-#if ENABLE_VR
+#if ENABLE_VR || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;
@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
-    [Scripting.Preserve]
+    [Preserve]
     public class XRControllerWithRumble : XRController
     {
         public void SendImpulse(float amplitude, float duration)

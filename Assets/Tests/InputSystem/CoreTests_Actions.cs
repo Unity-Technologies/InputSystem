@@ -4389,6 +4389,54 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [TestCase("", "<Gamepad>/buttonSouth", "<Gamepad>/buttonWest", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "", "<Gamepad>/buttonWest", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "<Gamepad>/buttonSouth", "", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "<Gamepad>/buttonSouth", "<Gamepad>/buttonWest", "")]
+    public void Actions_CanHaveCompositesWithPartsThatAreNotBound(string up, string down, string left, string right)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector")
+            .With("Up", up)
+            .With("Down", down)
+            .With("Left", left)
+            .With("Right", right);
+
+        action.Enable();
+
+        if (!string.IsNullOrEmpty(up))
+        {
+            Press(gamepad.buttonNorth);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonNorth);
+        }
+
+        if (!string.IsNullOrEmpty(down))
+        {
+            Press(gamepad.buttonSouth);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonSouth);
+        }
+
+        if (!string.IsNullOrEmpty(left))
+        {
+            Press(gamepad.buttonWest);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonWest);
+        }
+
+        if (!string.IsNullOrEmpty(right))
+        {
+            Press(gamepad.buttonEast);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonEast);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CompositesWithMissingBindings_ThrowExceptions()
     {
@@ -5497,9 +5545,9 @@ partial class CoreTests
     public void Actions_ApplyingEmptyStringOverride_IsSameAsDisablingBinding()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
 
-        bool performed = false;
+        var performed = false;
         action.performed += _ => performed = true;
 
         action.Enable();
@@ -5516,6 +5564,11 @@ partial class CoreTests
         Press(gamepad.leftTrigger);
 
         Assert.That(performed, Is.False);
+
+        // We had a bug (case 1187163) where InputActionState would cause an exception by not
+        // respecting the empty path when checking if a newly added device is affecting the state.
+        // Just add a device here to make sure that's handled correctly.
+        Assert.That(() => InputSystem.AddDevice<Gamepad>(), Throws.Nothing);
     }
 
     [Test]

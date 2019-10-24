@@ -7,11 +7,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.1] - 2999-9-20
+## [1.0.0-preview.2] - 2999-11-11
+
+### Fixed
+
+- Fixed touch taps triggering when they shouldn't on Android.
+
+#### Actions
+
+- Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
+- Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
+- Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
+- Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
+- Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
+
+## [1.0.0-preview.1] - 2019-10-11
 
 ### Changed
 
 - Generated action wrappers now won't `Destroy` the generated Asset in a finalizer, but instead implement `IDisposable`.
+- Added back XR layouts (except for Magic Leap) that were removed for `1.0-preview`.
+  * We removed these layouts under the assumption that they would almost concurrently become available in the respective device-specific XR packages. However, this did not work out as expected and the gap here turned out to be more than what we anticipated.
+  * To deal with this gap, we have moved the bulk of the XR layouts back and will transition things gradually as support in device-specific packages becomes publicly available.
 
 ### Fixed
 
@@ -21,6 +38,7 @@ however, it has to be formatted properly to pass verification tests.
   * In `1.0-preview`, layout overrides could lead to corruption of the layout state and would also not be handled correctly by the various editor UIs.
 - Selecting a layout in the input debugger no longer selects its first child item, too.
 - Fixed XR devices reporting noise as valid user input (should fix problem of control schemes involving VR devices always activating when using `PlayerInput`).
+- Fixed tap/swipe gesture detection in touch samples.
 
 ### Actions
 
@@ -28,6 +46,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `anyKey` not appearing in control picker for `Keyboard`.
 - The text on the "Listen" button is no longer clipped off on 2019.3.
 - Controls bound to actions through composites no longer show up as duplicates in the input debugger.
+- Fixed "Create Actions..." on `PlayerInput` creating an asset with an incorrect binding for taps on Touchscreens. \
+  __NOTE: If you have already created an .inputactions asset with this mechanism, update "tap [Touchscreen]" to "Primary Touch/Tap" to fix the problem manually.__
+- Fixed `Invoke CSharp Events` when selected in `PlayerInput` not triggering `PlayerInput.onActionTriggered`.
+- Fixed duplicating multiple items at the same time in the action editor duplicating them repeatedly.
 
 ### Added
 

@@ -498,23 +498,40 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return the first control that matches the given path.
+        /// Return the first child control that matches the given path.
         /// </summary>
-        /// <param name="control"></param>
-        /// <param name="path"></param>
-        /// <param name="indexInPath"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <param name="control">Control root at which to start the search.</param>
+        /// <param name="path">Path of the control to find. Can be <c>null</c> or empty, in which case <c>null</c>
+        /// is returned.</param>
+        /// <param name="indexInPath">Index in <paramref name="path"/> at which to start parsing. Defaults to
+        /// 0, i.e. parsing starts at the first character in the path.</param>
+        /// <returns>The first (direct or indirect) child control of <paramref name="control"/> that matches
+        /// <paramref name="path"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
         /// <remarks>
         /// Does not allocate.
+        ///
+        /// Note that if multiple child controls match the given path, which one is returned depends on the
+        /// ordering of controls. The result should be considered indeterministic in this case.
+        ///
+        /// <example>
+        /// <code>
+        /// // Find X control of left stick on current gamepad.
+        /// InputControlPath.TryFindControl(Gamepad.current, "leftStick/x");
+        ///
+        /// // Find control with PrimaryAction usage on current mouse.
+        /// InputControlPath.TryFindControl(Mouse.current, "{PrimaryAction}");
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputControl.this[string]"/>
         public static TControl TryFindControl<TControl>(InputControl control, string path, int indexInPath = 0)
             where TControl : InputControl
         {
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
             if (string.IsNullOrEmpty(path))
-                throw new ArgumentNullException(nameof(path));
+                return null;
 
             if (indexInPath == 0 && path[0] == '/')
                 ++indexInPath;

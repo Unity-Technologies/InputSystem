@@ -242,11 +242,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        /// <summary>
-        /// Check if the state would use a control from the given device.
-        /// </summary>
-        /// <param name="device"></param>
-        /// <returns></returns>
+        // Check if the state would use a control from the given device.
         private bool CanUseDevice(InputDevice device)
         {
             Debug.Assert(device != null, "Device is null");
@@ -462,7 +458,7 @@ namespace UnityEngine.InputSystem
 
             // Put all actions into waiting state.
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
             var actionCount = mapIndices[mapIndex].actionCount;
             var actionStartIndex = mapIndices[mapIndex].actionStartIndex;
             for (var i = 0; i < actionCount; ++i)
@@ -489,7 +485,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
             var mapIndex = map.m_MapIndexInState;
-            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount);
+            Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
 
             // Install state monitors for all controls.
             var controlCount = mapIndices[mapIndex].controlCount;
@@ -1762,13 +1758,13 @@ namespace UnityEngine.InputSystem
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
-                Debug.Assert(compositeObject != null);
+                Debug.Assert(compositeObject != null, "Composite object on composite state is null");
 
                 return compositeObject.valueSizeInBytes;
             }
 
             var control = controls[controlIndex];
-            Debug.Assert(control != null);
+            Debug.Assert(control != null, "Control at given index is null");
             return control.valueSizeInBytes;
         }
 
@@ -1895,7 +1891,7 @@ namespace UnityEngine.InputSystem
             if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite)
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
-                Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount);
+                Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount, "Composite binding index is out of range");
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
                 var compositeObject = composites[compositeIndex];
                 Debug.Assert(compositeObject != null, "Composite object is null");
@@ -2105,7 +2101,7 @@ namespace UnityEngine.InputSystem
                 get => m_TriggerControlIndex;
                 set
                 {
-                    Debug.Assert(value >= 0 && value <= ushort.MaxValue);
+                    Debug.Assert(value >= 0 && value <= ushort.MaxValue, "Trigger control index is out of range");
                     if (value < 0 || value > ushort.MaxValue)
                         throw new NotSupportedException("Cannot have more than ushort.MaxValue controls in a single InputActionState");
                     m_TriggerControlIndex = (ushort)value;
@@ -2191,7 +2187,7 @@ namespace UnityEngine.InputSystem
                 get => m_ControlStartIndex;
                 set
                 {
-                    Debug.Assert(value != kInvalidIndex);
+                    Debug.Assert(value != kInvalidIndex, "Control state index is invalid");
                     if (value >= ushort.MaxValue)
                         throw new NotSupportedException("Total control count in state cannot exceed byte.MaxValue=" + ushort.MaxValue);
                     m_ControlStartIndex = (ushort)value;
@@ -2319,7 +2315,7 @@ namespace UnityEngine.InputSystem
                 get => m_MapIndex;
                 set
                 {
-                    Debug.Assert(value != kInvalidIndex);
+                    Debug.Assert(value != kInvalidIndex, "Map index is invalid");
                     if (value >= byte.MaxValue)
                         throw new NotSupportedException("Map count cannot exceed byte.MaxValue=" + byte.MaxValue);
                     m_MapIndex = (byte)value;
@@ -3165,7 +3161,7 @@ namespace UnityEngine.InputSystem
                 for (var n = 0; n < mapCount; ++n)
                 {
                     maps[n].Disable();
-                    Debug.Assert(!maps[n].enabled);
+                    Debug.Assert(!maps[n].enabled, "Map is still enabled after calling Disable");
                 }
             }
         }

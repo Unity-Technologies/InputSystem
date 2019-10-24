@@ -8,6 +8,7 @@ namespace UnityEngine.InputSystem
     /// An input device that has its orientation and position in space tracked.
     /// </summary>
     [InputControlLayout(displayName = "Tracked Device", isGenericTypeOfDevice = true)]
+    [Preserve]
     public class TrackedDevice : InputDevice
     {
         [InputControl(noisy = true)]
@@ -17,6 +18,7 @@ namespace UnityEngine.InputSystem
         [Preserve]
         public ButtonControl isTracked { get; private set; }
         [InputControl(noisy = true)]
+        [Preserve]
         public Vector3Control devicePosition { get; private set; }
         [InputControl(noisy = true)]
         [Preserve]
