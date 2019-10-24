@@ -438,6 +438,29 @@ namespace UnityEngine.InputSystem
                 RecreateDevicesUsingLayout(layoutName, isKnownToBeDeviceLayout: isKnownToBeDeviceLayout);
             }
 
+            // In the editor, layouts may become available successively after a domain reload so
+            // we may end up retaining device information all the way until we run the first full
+            // player update. For every layout we register, we check here whether we have a saved
+            // device state using a layout with the same name. If so, we retry re-creating the
+            // device.
+            #if UNITY_EDITOR
+            if (m_SavedDeviceStates != null)
+            {
+                for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
+                {
+                    ref var deviceState = ref m_SavedDeviceStates[i];
+                    if (layoutName != deviceState.layout)
+                        continue;
+
+                    if (RestoreDeviceFromSavedState(ref deviceState))
+                    {
+                        ArrayHelpers.EraseAt(ref m_SavedDeviceStates, i);
+                        --i;
+                    }
+                }
+            }
+            #endif
+
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
@@ -2068,6 +2091,27 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+        private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
+        {
+            // If we still have any saved device states, we have devices that we couldn't figure
+            // out how to recreate after a domain reload. Log a warning for each of them and
+            // let go of them.
+            #if UNITY_EDITOR
+            if (m_SavedDeviceStates == null)
+                return;
+
+            for (var i = 0; i < m_SavedDeviceStates.Length; ++i)
+            {
+                ref var state = ref m_SavedDeviceStates[i];
+                Debug.LogWarning($"Could not recreate device '{state.name}' with layout '{state.layout}' after domain reload");
+            }
+
+            // At this point, we throw the device states away and forget about
+            // what we had before the domain reload.
+            m_SavedDeviceStates = null;
+            #endif
+        }
+
         private void OnBeforeUpdate(InputUpdateType updateType)
         {
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
@@ -2270,6 +2314,8 @@ namespace UnityEngine.InputSystem
                 Profiler.EndSample();
                 return;
             }
+
+            WarnAboutDevicesFailingToRecreateAfterDomainReload();
 
             // First update sends out startup analytics.
             #if UNITY_ANALYTICS || UNITY_EDITOR
@@ -3092,55 +3138,12 @@ namespace UnityEngine.InputSystem
 
             using (InputDeviceBuilder.Ref())
             {
+                DeviceState[] retainedDeviceStates = null;
                 var deviceCount = m_SavedDeviceStates.Length;
                 for (var i = 0; i < deviceCount; ++i)
                 {
-                    var deviceState = m_SavedDeviceStates[i];
-
-                    InputDevice device;
-                    try
-                    {
-                        // If the device has a description, we have it go through the normal matching
-                        // process so that it comes out as whatever corresponds to the current layout
-                        // registration state (which may be different from before the domain reload).
-                        // Only if it's a device added with AddDevice(string) directly do we just try
-                        // to create a device with the same layout.
-                        if (!deviceState.description.empty)
-                        {
-                            device = AddDevice(deviceState.description,
-                                deviceName: deviceState.name,
-                                throwIfNoLayoutFound: true,
-                                deviceId: deviceState.deviceId, deviceFlags: deviceState.flags);
-                        }
-                        else
-                        {
-                            // See if we still have the layout that the device used. Might have
-                            // come from a type that was removed in the meantime. If so, just
-                            // don't re-add the device.
-                            var layout = new InternedString(deviceState.layout);
-                            if (!m_Layouts.HasLayout(layout))
-                            {
-                                Debug.Log(
-                                    $"Removing input device '{deviceState.name}' with layout '{deviceState.layout}' which has been removed");
-                                continue;
-                            }
-
-                            device = AddDevice(layout,
-                                deviceId: deviceState.deviceId,
-                                deviceName: deviceState.name,
-                                deviceFlags: deviceState.flags,
-                                variants: new InternedString(deviceState.variants));
-                        }
-                    }
-                    catch (Exception exception)
-                    {
-                        Debug.LogError(
-                            $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
-                        Debug.LogException(exception);
-                        continue;
-                    }
-
-                    deviceState.Restore(device);
+                    if (!RestoreDeviceFromSavedState(ref m_SavedDeviceStates[i]))
+                        ArrayHelpers.Append(ref retainedDeviceStates, m_SavedDeviceStates[i]);
                 }
 
                 // See if we can make sense of an available device now that we couldn't make sense of
@@ -3175,11 +3178,63 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Done. Discard saved arrays.
-                m_SavedDeviceStates = null;
+                m_SavedDeviceStates = retainedDeviceStates;
                 m_SavedAvailableDevices = null;
             }
 
             Profiler.EndSample();
+        }
+
+        private bool RestoreDeviceFromSavedState(ref DeviceState deviceState)
+        {
+            // We assign the same device IDs here to newly created devices that they had
+            // before the domain reload. This is safe as device ID allocation is under the
+            // control of the runtime and not expected to be affected by a domain reload.
+
+            InputDevice device;
+            try
+            {
+                // If the device has a description, we have it go through the normal matching
+                // process so that it comes out as whatever corresponds to the current layout
+                // registration state (which may be different from before the domain reload).
+                // Only if it's a device added with AddDevice(string) directly do we just try
+                // to create a device with the same layout.
+
+                InternedString layout;
+                if (!deviceState.description.empty)
+                {
+                    layout = TryFindMatchingControlLayout(ref deviceState.description);
+                    if (layout.IsEmpty())
+                        return false;
+                }
+                else
+                {
+                    layout = new InternedString(deviceState.layout);
+
+                    // If we can't find the layout, it *may* be because there's a RegisterLayout
+                    // call coming later in the initialization sequence. Retain the device state
+                    // so we can retry whenever new layouts become available.
+                    if (!m_Layouts.HasLayout(layout))
+                        return false;
+                }
+
+                device = AddDevice(layout,
+                    deviceDescription: deviceState.description,
+                    deviceId: deviceState.deviceId,
+                    deviceName: deviceState.name,
+                    deviceFlags: deviceState.flags,
+                    variants: new InternedString(deviceState.variants));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
+                Debug.LogException(exception);
+                return true; // Don't try again.
+            }
+
+            deviceState.Restore(device);
+            return true;
         }
 
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD

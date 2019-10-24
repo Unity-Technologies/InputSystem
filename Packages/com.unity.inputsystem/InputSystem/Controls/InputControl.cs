@@ -323,10 +323,6 @@ namespace UnityEngine.InputSystem
         ///
         /// The primary effect of being noise is on <see cref="InputDevice.MakeCurrent"/> and
         /// on interactive rebinding (see <see cref="InputActionRebindingExtensions.RebindingOperation"/>).
-        ///
-        /// If noise filtering on <c>.current</c> is enabled (see <see cref="InputSettings.filterNoiseOnCurrent"/>),
-        /// when seeing input for a potentially noisy device (i.e. any device with any control
-        /// marked as noisy), the system will perform a check
         /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
         /// <seealso cref="InputControlAttribute.noisy"/>
