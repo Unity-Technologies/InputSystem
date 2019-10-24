@@ -62,10 +62,10 @@ namespace Unity.XR.OpenVR
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
-        [InputControl(aliases = new[] { "primary2DAxisClick" })]
+        [InputControl(aliases = new[] { "primary2DAxisClick", "JoystickOrPadPressed" })]
         [Preserve]
         public ButtonControl touchpadClick { get; private set; }
-        [InputControl(aliases = new[] { "primary2DAxisTouch" })]
+        [InputControl(aliases = new[] { "primary2DAxisTouch", "JoystickOrPadTouched" })]
         [Preserve]
         public ButtonControl touchpadTouch { get; private set; }
         [InputControl]
@@ -128,10 +128,10 @@ namespace Unity.XR.OpenVR
         [InputControl]
         [Preserve]
         public ButtonControl primary { get; private set; }
-        [InputControl(aliases = new[] { "primary2DAxisClick" })]
+        [InputControl(aliases = new[] { "primary2DAxisClick", "JoystickOrPadPressed" })]
         [Preserve]
         public ButtonControl trackpadPressed { get; private set; }
-        [InputControl(aliases = new[] { "primary2DAxisTouch" })]
+        [InputControl(aliases = new[] { "primary2DAxisTouch", "JoystickOrPadTouched" })]
         [Preserve]
         public ButtonControl trackpadTouched { get; private set; }
         [InputControl(aliases = new[] { "Primary2DAxis" })]
@@ -246,6 +246,7 @@ namespace Unity.XR.OpenVR
         [InputControl]
         [Preserve]
         public AxisControl trigger { get; private set; }
+
         [InputControl]
         [Preserve]
         public AxisControl grip { get; private set; }

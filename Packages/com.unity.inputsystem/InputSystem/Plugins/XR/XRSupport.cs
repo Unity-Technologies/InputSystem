@@ -26,6 +26,10 @@ namespace UnityEngine.InputSystem.XR
         /// The current interface code sent with devices to identify as XRInput devices.
         /// </summary>
         public const string InterfaceCurrent = "XRInputV1";
+
+        public const string LeftHandUsage = "LeftHand";
+        public const string RightHandUsage = "RightHand";
+        public const string HeadMountedUsage = "Head-Mounted";
     }
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
@@ -291,9 +295,9 @@ namespace UnityEngine.InputSystem.XR
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
                     .WithProduct(@"(^(Hand -))")
             );
-            #endif
+#endif
 
-            #if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
+#if !DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS
             InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
@@ -337,7 +341,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct("^(OpenVR Headset)")
+                    .WithProduct("^(OpenVR Headset)|^(Vive Pro)")
             );
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRControllerWMR>(
                 matches: new InputDeviceMatcher()
