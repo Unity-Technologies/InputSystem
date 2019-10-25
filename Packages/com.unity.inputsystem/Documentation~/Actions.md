@@ -302,7 +302,7 @@ Instead of using callbacks, it might be simpler sometimes to poll the value of a
     }
 ```
 
-For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) which will true if at any time in the current frame, the action was performed.
+For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) which will be true if the action was performed at any time in the current frame.
 
 ```
     private InputAction buttonAction;
