@@ -4132,8 +4132,9 @@ partial class CoreTests
 
         action.bindingMask = new InputBinding {groups = "gamepad"};
 
-        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
         Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
 
         action.bindingMask = null;
@@ -4206,8 +4207,9 @@ partial class CoreTests
         map.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
-        Assert.That(action2.controls, Has.Count.Zero);
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
     }
 
     [Test]
