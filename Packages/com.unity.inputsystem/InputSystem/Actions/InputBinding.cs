@@ -615,7 +615,7 @@ namespace UnityEngine.InputSystem
         }
 
         // Internally we pass by reference to not unnecessarily copy the struct.
-        internal bool Matches(ref InputBinding binding)
+        internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
             if (path != null)
             {
@@ -638,9 +638,11 @@ namespace UnityEngine.InputSystem
 
             if (groups != null)
             {
-                // We consider bindings that are not assigned to any group to be a match
-                // for any group.
-                if (!string.IsNullOrEmpty(binding.groups)
+                var haveGroupsOnBinding = !string.IsNullOrEmpty(binding.groups);
+                if (!haveGroupsOnBinding && (options & MatchOptions.EmptyGroupMatchesAny) == 0)
+                    return false;
+
+                if (haveGroupsOnBinding
                     && !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
                     return false;
             }
@@ -652,6 +654,12 @@ namespace UnityEngine.InputSystem
             }
 
             return true;
+        }
+
+        [Flags]
+        internal enum MatchOptions
+        {
+            EmptyGroupMatchesAny = 1 << 0,
         }
 
         [Flags]
