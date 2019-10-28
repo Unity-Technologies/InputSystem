@@ -638,8 +638,10 @@ namespace UnityEngine.InputSystem
 
             if (groups != null)
             {
-                if (binding.groups == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
+                // We consider bindings that are not assigned to any group to be a match
+                // for any group.
+                if (!string.IsNullOrEmpty(binding.groups)
+                    && !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
                     return false;
             }
 

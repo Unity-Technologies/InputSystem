@@ -4254,6 +4254,26 @@ partial class CoreTests
         Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenMaskingByGroup_BindingsNotInAnyGroupWillBeActive()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard&Mouse");
+        action.AddBinding("<Pointer>/press");
+
+        action.bindingMask = InputBinding.MaskByGroup("Gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.press));
+    }
+
     // When we have an .inputactions asset, at runtime we should end up with a single array of resolved
     // controls, single array of trigger states, and so on. The expectation is that users won't generally
     // go and configure each map in an asset in a wildly different way. Rather, the maps will usually perform
