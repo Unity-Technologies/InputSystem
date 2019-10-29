@@ -224,15 +224,17 @@ namespace UnityEngine.InputSystem
                         var bindingIsDisabled = string.IsNullOrEmpty(path);
 
                         // Also, disabled if binding doesn't match with our binding mask (might be empty).
-                        bindingIsDisabled |= !isComposite && bindingMask != null && !bindingMask.Value.Matches(ref unresolvedBinding);
+                        bindingIsDisabled |= !isComposite && bindingMask != null &&
+                            !bindingMask.Value.Matches(ref unresolvedBinding,
+                            InputBinding.MatchOptions.EmptyGroupMatchesAny);
 
                         // Also, disabled if binding doesn't match the binding mask on the map (might be empty).
                         bindingIsDisabled |= !isComposite && bindingMaskOnThisMap != null &&
-                            !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding);
+                            !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
 
                         // Finally, also disabled if binding doesn't match the binding mask on the action (might be empty).
                         bindingIsDisabled |= !isComposite && action?.m_BindingMask != null &&
-                            !action.m_BindingMask.Value.Matches(ref unresolvedBinding);
+                            !action.m_BindingMask.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
 
                         // If the binding isn't disabled, resolve its controls, processors, and interactions.
                         if (!bindingIsDisabled)
