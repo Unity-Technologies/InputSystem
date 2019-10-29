@@ -65,7 +65,7 @@ namespace Unity.XR.OpenVR
         [InputControl(aliases = new[] { "primary2DAxisClick", "JoystickOrPadPressed" })]
         [Preserve]
         public ButtonControl touchpadClick { get; private set; }
-        [InputControl(aliases = new[] { "primary2DAxisTouch", "joystickOrPadPressed" })]
+        [InputControl(aliases = new[] { "primary2DAxisTouch", "joystickOrPadTouched" })]
         [Preserve]
         public ButtonControl touchpadTouch { get; private set; }
         [InputControl]
