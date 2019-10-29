@@ -62,7 +62,7 @@ namespace Unity.XR.OpenVR
         [Preserve]
         public Vector3Control deviceAngularVelocity { get; private set; }
 
-        [InputControl(aliases = new[] { "primary2DAxisClick", "JoystickOrPadPressed" })]
+        [InputControl(aliases = new[] { "primary2DAxisClick", "joystickOrPadPressed" })]
         [Preserve]
         public ButtonControl touchpadClick { get; private set; }
         [InputControl(aliases = new[] { "primary2DAxisTouch", "joystickOrPadTouched" })]
