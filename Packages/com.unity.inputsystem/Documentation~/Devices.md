@@ -74,7 +74,7 @@ Once a [layout](Layouts.md) has been chosen for a device, it is used to instanti
 
 >__Note__: Valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) cannot be created by manually instantiating them with `new`. To guide the creation process, [layouts](Layouts.md) must be used.
 
-When the Input System has finished putting an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) together, it will call [`FinishSetup`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. This can be used to finalize the setup of controls.
+When the Input System has finished putting an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) together, it will call [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. This can be used to finalize the setup of controls.
 
 After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, it will be added to the system. As part of this process, [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) will be called on the device and [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) will be signaled on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
 
