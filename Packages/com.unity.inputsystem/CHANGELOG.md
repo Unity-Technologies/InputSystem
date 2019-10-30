@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed touch taps triggering when they shouldn't on Android.
+- OpenVR Touchpad actions (touchpadClicked & touchpadPressed) now report accurate data.
 
 #### Actions
 
