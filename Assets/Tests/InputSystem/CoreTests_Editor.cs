@@ -141,13 +141,31 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        SimulateDomainReload();
 
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+        var newDevice = InputSystem.devices[0];
 
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+    }
+
+    // We have code that will automatically query the enabled state of devices on creation
+    // but if the IOCTL is not implemented, we still need to be able to maintain a device's
+    // enabled state.
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_PreservesEnabledState()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.DisableDevice(device);
+
+        Assert.That(device.enabled, Is.False);
+
+        SimulateDomainReload();
+
+        var newDevice = InputSystem.devices[0];
+
+        Assert.That(newDevice.enabled, Is.False);
     }
 
     [Test]

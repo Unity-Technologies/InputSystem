@@ -20,6 +20,8 @@ using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: how do we do stuff like smoothing over time?
 
+////TODO: allow easier access to the default state such that you can easily create a state event containing only default state
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>

@@ -200,7 +200,19 @@ namespace UnityEngine.InputSystem
         ////REVIEW: would be great to have a way to sort out precedence between two callbacks
         public event InputDeviceFindControlLayoutDelegate onFindControlLayoutForDevice
         {
-            add => m_DeviceFindLayoutCallbacks.AppendWithCapacity(value);
+            add
+            {
+                m_DeviceFindLayoutCallbacks.AppendWithCapacity(value);
+
+                // Having a new callback on this event can change the set of devices we recognize.
+                // See if there's anything in the list of available devices that we can now turn
+                // into an InputDevice whereas we couldn't before.
+                //
+                // NOTE: A callback could also impact already existing devices and theoretically alter
+                //       what layout we would have used for those. We do *NOT* retroactively apply
+                //       those changes.
+                AddAvailableDevicesThatAreNowRecognized();
+            }
             remove
             {
                 var index = m_DeviceFindLayoutCallbacks.IndexOf(value);
@@ -441,22 +453,21 @@ namespace UnityEngine.InputSystem
             // In the editor, layouts may become available successively after a domain reload so
             // we may end up retaining device information all the way until we run the first full
             // player update. For every layout we register, we check here whether we have a saved
-            // device state using a layout with the same name. If so, we retry re-creating the
-            // device.
+            // device state using a layout with the same name but not having a device description
+            // (the latter is important as in that case, we should go through the normal matching
+            // process and not just rely on the name of the layout). If so, we try here to recreate
+            // the device with the just registered layout.
             #if UNITY_EDITOR
-            if (m_SavedDeviceStates != null)
+            for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
             {
-                for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
-                {
-                    ref var deviceState = ref m_SavedDeviceStates[i];
-                    if (layoutName != deviceState.layout)
-                        continue;
+                ref var deviceState = ref m_SavedDeviceStates[i];
+                if (layoutName != deviceState.layout || !deviceState.description.empty)
+                    continue;
 
-                    if (RestoreDeviceFromSavedState(ref deviceState))
-                    {
-                        ArrayHelpers.EraseAt(ref m_SavedDeviceStates, i);
-                        --i;
-                    }
+                if (RestoreDeviceFromSavedState(ref deviceState, layoutName))
+                {
+                    ArrayHelpers.EraseAt(ref m_SavedDeviceStates, i);
+                    --i;
                 }
             }
             #endif
@@ -634,6 +645,21 @@ namespace UnityEngine.InputSystem
 
         private void AddAvailableDevicesMatchingDescription(InputDeviceMatcher matcher, InternedString layout)
         {
+            #if UNITY_EDITOR
+            // If we still have some devices saved from the last domain reload, see
+            // if they are matched by the given matcher. If so, turn them into devices.
+            for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
+            {
+                ref var deviceState = ref m_SavedDeviceStates[i];
+                if (matcher.MatchPercentage(deviceState.description) > 0)
+                {
+                    RestoreDeviceFromSavedState(ref deviceState, layout);
+                    ArrayHelpers.EraseAt(ref m_SavedDeviceStates, i);
+                    --i;
+                }
+            }
+            #endif
+
             // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
@@ -1091,6 +1117,7 @@ namespace UnityEngine.InputSystem
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
         }
 
+        ////TODO: this path should really put the device on the list of available devices
         public InputDevice AddDevice(InputDeviceDescription description)
         {
             ////REVIEW: is throwing here really such a useful thing?
@@ -2192,20 +2219,7 @@ namespace UnityEngine.InputSystem
 
             // Check if there's any native device we aren't using ATM which now fits
             // the set of supported devices.
-            for (var i = 0; i < m_AvailableDeviceCount; ++i)
-            {
-                var id = m_AvailableDevices[i].deviceId;
-                if (TryGetDeviceById(id) != null)
-                    continue;
-
-                var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
-                if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
-                {
-                    AddDevice(m_AvailableDevices[i].description, false,
-                        deviceId: id,
-                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
-                }
-            }
+            AddAvailableDevicesThatAreNowRecognized();
 
             // If the settings restrict the set of supported devices, demote any native
             // device we currently have that doesn't fit the requirements.
@@ -2249,6 +2263,24 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
                 m_SettingsChangedListeners[i]();
+        }
+
+        private void AddAvailableDevicesThatAreNowRecognized()
+        {
+            for (var i = 0; i < m_AvailableDeviceCount; ++i)
+            {
+                var id = m_AvailableDevices[i].deviceId;
+                if (TryGetDeviceById(id) != null)
+                    continue;
+
+                var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
+                if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
+                {
+                    AddDevice(m_AvailableDevices[i].description, false,
+                        deviceId: id,
+                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                }
+            }
         }
 
         private void OnFocusChanged(bool focus)
@@ -3133,46 +3165,62 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
-            Debug.Assert(m_SavedDeviceStates != null);
             Profiler.BeginSample("InputManager.RestoreDevicesAfterDomainReload");
 
             using (InputDeviceBuilder.Ref())
             {
                 DeviceState[] retainedDeviceStates = null;
-                var deviceCount = m_SavedDeviceStates.Length;
+                var deviceCount = m_SavedDeviceStates.LengthSafe();
                 for (var i = 0; i < deviceCount; ++i)
                 {
-                    if (!RestoreDeviceFromSavedState(ref m_SavedDeviceStates[i]))
-                        ArrayHelpers.Append(ref retainedDeviceStates, m_SavedDeviceStates[i]);
+                    ref var deviceState = ref m_SavedDeviceStates[i];
+
+                    var device = TryGetDeviceById(deviceState.deviceId);
+                    if (device != null)
+                        continue;
+
+                    var layout = TryFindMatchingControlLayout(ref deviceState.description,
+                        deviceState.deviceId);
+                    if (layout.IsEmpty())
+                    {
+                        var previousLayout = new InternedString(deviceState.layout);
+                        if (m_Layouts.HasLayout(previousLayout))
+                            layout = previousLayout;
+                    }
+                    if (layout.IsEmpty() || !RestoreDeviceFromSavedState(ref deviceState, layout))
+                        ArrayHelpers.Append(ref retainedDeviceStates, deviceState);
                 }
 
                 // See if we can make sense of an available device now that we couldn't make sense of
                 // before. This can be the case if there's new layout information that wasn't available
                 // before.
-                m_AvailableDevices = m_SavedAvailableDevices;
-                m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
-                for (var i = 0; i < m_AvailableDeviceCount; ++i)
+                if (m_SavedAvailableDevices != null)
                 {
-                    var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
-                    if (device != null)
-                        continue;
-
-                    if (m_AvailableDevices[i].isRemoved)
-                        continue;
-
-                    var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
-                        m_AvailableDevices[i].deviceId);
-                    if (!layout.IsEmpty())
+                    m_AvailableDevices = m_SavedAvailableDevices;
+                    m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
+                    for (var i = 0; i < m_AvailableDeviceCount; ++i)
                     {
-                        try
+                        var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
+                        if (device != null)
+                            continue;
+
+                        if (m_AvailableDevices[i].isRemoved)
+                            continue;
+
+                        var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
+                            m_AvailableDevices[i].deviceId);
+                        if (!layout.IsEmpty())
                         {
-                            AddDevice(layout, m_AvailableDevices[i].deviceId,
-                                deviceDescription: m_AvailableDevices[i].description,
-                                deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
-                        }
-                        catch (Exception)
-                        {
-                            // Just ignore. Simply means we still can't really turn the device into something useful.
+                            try
+                            {
+                                AddDevice(layout, m_AvailableDevices[i].deviceId,
+                                    deviceDescription: m_AvailableDevices[i].description,
+                                    deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                            }
+                            catch (Exception)
+                            {
+                                // Just ignore. Simply means we still can't really turn the device into something useful.
+                            }
                         }
                     }
                 }
@@ -3185,7 +3233,31 @@ namespace UnityEngine.InputSystem
             Profiler.EndSample();
         }
 
-        private bool RestoreDeviceFromSavedState(ref DeviceState deviceState)
+        // We have two general types of devices we need to care about when recreating devices
+        // after domain reloads:
+        //
+        // A) device with InputDeviceDescription
+        // B) device created directly from specific layout
+        //
+        // A) should go through the normal matching process whereas B) should get recreated with
+        // layout of same name (if still available).
+        //
+        // So we kick device recreation off from two points:
+        //
+        // 1) From RegisterControlLayoutMatcher to catch A)
+        // 2) From RegisterControlLayout to catch B)
+        //
+        // Additionally, we have the complication that a layout a device was using was something
+        // dynamically registered from onFindLayoutForDevice. We don't do anything special about that.
+        // The first full input update will flush out the list of saved device states and at that
+        // point, any onFindLayoutForDevice hooks simply have to be in place. If they are, devices
+        // will get recreated appropriately.
+        //
+        // It would be much simpler to recreate all devices as the first thing in the first full input
+        // update but that would mean that devices would become available only very late. They would
+        // not, for example, be available when MonoBehaviour.Start methods are invoked.
+
+        private bool RestoreDeviceFromSavedState(ref DeviceState deviceState, InternedString layout)
         {
             // We assign the same device IDs here to newly created devices that they had
             // before the domain reload. This is safe as device ID allocation is under the
@@ -3194,30 +3266,6 @@ namespace UnityEngine.InputSystem
             InputDevice device;
             try
             {
-                // If the device has a description, we have it go through the normal matching
-                // process so that it comes out as whatever corresponds to the current layout
-                // registration state (which may be different from before the domain reload).
-                // Only if it's a device added with AddDevice(string) directly do we just try
-                // to create a device with the same layout.
-
-                InternedString layout;
-                if (!deviceState.description.empty)
-                {
-                    layout = TryFindMatchingControlLayout(ref deviceState.description);
-                    if (layout.IsEmpty())
-                        return false;
-                }
-                else
-                {
-                    layout = new InternedString(deviceState.layout);
-
-                    // If we can't find the layout, it *may* be because there's a RegisterLayout
-                    // call coming later in the initialization sequence. Retain the device state
-                    // so we can retry whenever new layouts become available.
-                    if (!m_Layouts.HasLayout(layout))
-                        return false;
-                }
-
                 device = AddDevice(layout,
                     deviceDescription: deviceState.description,
                     deviceId: deviceState.deviceId,

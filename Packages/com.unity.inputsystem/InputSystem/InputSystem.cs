@@ -360,6 +360,13 @@ namespace UnityEngine.InputSystem
         /// matchers matches a given <see cref="InputDeviceDescription"/> (see <see cref="InputDeviceMatcher.MatchPercentage"/>)
         /// better than any other matcher (for the same or any other layout), then the given layout
         /// will be used for the discovered device.
+        ///
+        /// Note that registering a matcher may immediately lead to devices being created or recreated.
+        /// If <paramref name="matcher"/> matches any devices currently on the list of unsupported devices
+        /// (see <see cref="GetUnsupportedDevices()"/>), new <see cref="InputDevice"/>s will be created
+        /// using the layout called <paramref name="layoutName"/>. Also, if <paramref name="matcher"/>
+        /// matches the description of a device better than the matcher (if any) for the device's currently
+        /// used layout, the device will be recreated using the given layout.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="layoutName"/> is <c>null</c> or empty/</exception>
         /// <exception cref="ArgumentException"><paramref name="matcher"/> is empty (<see cref="InputDeviceMatcher.empty"/>).</exception>

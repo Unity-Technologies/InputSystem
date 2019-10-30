@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.Scripting;
 
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
@@ -34,7 +35,7 @@ namespace UnityEngine.InputSystem.HID
     /// construct more specific device representations such as Gamepad.
     /// </remarks>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
-    [Scripting.Preserve]
+    [Preserve]
     public class HID : InputDevice
     {
         internal const string kHIDInterface = "HID";
