@@ -1808,6 +1808,7 @@ partial class CoreTests
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
     [TestCase("MyControls (2)", "MyNamespace", "MyClassName", "MyNamespace.MyClassName")]
     [TestCase("MyControls", "", "MyClassName", "MyClassName")]
+    [TestCase("interface", "", "class", "class")] // Make sure we can deal with C# reserved keywords.
     public void Editor_CanGenerateCodeWrapperForInputAsset(string assetName, string namespaceName, string className, string typeName)
     {
         var map1 = new InputActionMap("set1");
@@ -1815,6 +1816,8 @@ partial class CoreTests
         map1.AddAction("action2", binding: "/gamepad/rightStick");
         var map2 = new InputActionMap("set2");
         map2.AddAction("action1", binding: "/gamepad/buttonSouth");
+        // Add an action that has a C# reserved keyword name.
+        map2.AddAction("return");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
