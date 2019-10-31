@@ -577,6 +577,35 @@ partial class CoreTests
         Assert.That(device.description.product, Is.EqualTo("Test"));
     }
 
+    // By the time someone adds a callback to onFindLayoutForDevice, we may already
+    // have devices that have been reported that we didn't recognize but which would
+    // now be recognizable. The system should use any new hook added to the callback
+    // to find out if that is the case.
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanRetroactivelyFindLayoutForAlreadyReportedDevice()
+    {
+        var deviceDescription = new InputDeviceDescription
+        {
+            interfaceName = "TestInterface",
+            product = "TestProduct"
+        };
+
+        var deviceId = runtime.ReportNewInputDevice(deviceDescription);
+
+        InputSystem.Update();
+
+        Assert.That(InputSystem.GetUnsupportedDevices(), Is.EquivalentTo(new[] {deviceDescription}));
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        InputSystem.onFindLayoutForDevice +=
+            (ref InputDeviceDescription description, string layoutMatch, InputDeviceExecuteCommandDelegate executeCommandDelegate) =>
+                "Keyboard";
+
+        Assert.That(InputSystem.GetUnsupportedDevices(), Is.Empty);
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>().With.Property("deviceId").EqualTo(deviceId));
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanRegisterMultipleMatchersForSingleLayout()

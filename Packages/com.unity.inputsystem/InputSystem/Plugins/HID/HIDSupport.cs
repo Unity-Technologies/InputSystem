@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem.HID
             /// </summary>
             public HIDPageUsage(HID.GenericDesktop usage)
             {
-                this.page = HID.UsagePage.GenericDesktop;
+                page = HID.UsagePage.GenericDesktop;
                 this.usage = (int)usage;
             }
         }

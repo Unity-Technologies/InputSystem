@@ -12,7 +12,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed touch taps triggering when they shouldn't on Android.
-- OpenVR Touchpad actions (touchpadClicked & touchpadPressed) now report accurate data.
+- Fixed custom devices registered from `[InitializeOnLoad]` code being lost on domain reload (case 1192379).
+  * This happened when there were multiple pieces of `[InitializeOnLoad]` code that accessed the input system in the project and the `RegisterLayout` for the custom device happened to not be the first in sequence.
+- OpenVR touchpad controls (`touchpadClicked` & `touchpadPressed`) now report accurate data.
 
 #### Actions
 
