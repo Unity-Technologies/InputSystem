@@ -25,6 +25,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
 - Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
 - Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
+- Fixed `PlayerInput` not pairing devices added after it was enabled when not having control schemes.
+  * This problem would also show in the `SimpleDemo` sample when having the `CustomDeviceUsages` sample installed as well. Gamepads would not get picked up in that case.
 - Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
 - Fixed bindings that are not associated with any control scheme not getting enabled with other control schemes as they should.
 

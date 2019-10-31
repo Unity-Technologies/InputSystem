@@ -257,6 +257,32 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.devices, Has.Count.EqualTo(2));
         Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
         Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        // Make sure that we restore pairing even if the device goes
+        // away temporarily.
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(1));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        // Also, if we add another device now, it should get picked up, too. Note that
+        // this is special about the case of not using control schemes. When having control
+        // schemes, we switch in single-player entirely based on control schemes. When *not*
+        // having control schemes, we greedily grab everything that is compatible with the
+        // bindings we have.
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(3));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
     }
 
     [Test]
