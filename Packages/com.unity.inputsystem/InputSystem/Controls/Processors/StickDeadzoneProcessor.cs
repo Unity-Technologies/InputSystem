@@ -1,3 +1,9 @@
+using UnityEngine.Scripting;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
+
 ////REVIEW: rename to RadialDeadzone
 
 ////TODO: add different deadzone shapes and/or option to min/max X and Y separately
@@ -8,7 +14,7 @@ namespace UnityEngine.InputSystem.Processors
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
-    [Scripting.Preserve]
+    [Preserve]
     public class StickDeadzoneProcessor : InputProcessor<Vector2>
     {
         /// <summary>
@@ -49,4 +55,32 @@ namespace UnityEngine.InputSystem.Processors
             return Mathf.Sign(value) * ((absValue - min) / (max - min));
         }
     }
+
+    #if UNITY_EDITOR
+    internal class StickDeadzoneProcessorEditor : InputParameterEditor<StickDeadzoneProcessor>
+    {
+        protected override void OnEnable()
+        {
+            m_MinSetting.Initialize("Min",
+                "Vector length  below which input values will be clamped. After clamping, vector lengths will be renormalized to [0..1] between min and max.",
+                "Default Deadzone Min",
+                () => target.min, v => target.min = v,
+                () => InputSystem.settings.defaultDeadzoneMin);
+            m_MaxSetting.Initialize("Max",
+                "Vector length above which input values will be clamped. After clamping, vector lengths will be renormalized to [0..1] between min and max.",
+                "Default Deadzone Max",
+                () => target.max, v => target.max = v,
+                () => InputSystem.settings.defaultDeadzoneMax);
+        }
+
+        public override void OnGUI()
+        {
+            m_MinSetting.OnGUI();
+            m_MaxSetting.OnGUI();
+        }
+
+        private CustomOrDefaultSetting m_MinSetting;
+        private CustomOrDefaultSetting m_MaxSetting;
+    }
+    #endif
 }

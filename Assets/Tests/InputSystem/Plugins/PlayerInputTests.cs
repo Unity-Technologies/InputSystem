@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -117,6 +118,40 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanUseSameActionsForUIInputModule()
+    {
+        var actions = InputActionAsset.FromJson(kActions);
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.SetActive(false);
+        eventSystemGO.AddComponent<EventSystem>();
+        var uiModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.actionsAsset = actions;
+        uiModule.move = InputActionReference.Create(actions["UI/Navigate"]);
+        uiModule.point = InputActionReference.Create(actions["UI/Point"]);
+        uiModule.leftClick = InputActionReference.Create(actions["UI/Click"]);
+
+        var playerGO = new GameObject();
+        playerGO.SetActive(false);
+        var player = playerGO.AddComponent<PlayerInput>();
+        player.actions = actions;
+        player.defaultActionMap = "Gameplay";
+        player.defaultControlScheme = "Keyboard&Mouse";
+
+        eventSystemGO.SetActive(true);
+        playerGO.SetActive(true);
+
+        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
+        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
+        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanInstantiatePlayer_WithSpecificDevice_AndAutomaticallyChooseControlScheme()
     {
         var prefab = new GameObject();
@@ -141,6 +176,61 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.sKey));
         Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.aKey));
         Assert.That(instance.actions["gameplay/move"].controls, Has.Exactly(1).SameAs(keyboard.dKey));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanHaveActionWithNoBindingsInOneControlScheme()
+    {
+        const string kActions = @"
+            {
+                ""maps"" : [
+                    {
+                        ""name"" : ""gameplay"",
+                        ""actions"" : [
+                            { ""name"" : ""Fire"", ""type"" : ""button"" }
+                        ],
+                        ""bindings"" : [
+                            { ""path"" : ""<Gamepad>/buttonSouth"", ""action"" : ""fire"", ""groups"" : ""Gamepad"" }
+                        ]
+                    }
+                ],
+                ""controlSchemes"" : [
+                    {
+                        ""name"" : ""Gamepad"",
+                        ""bindingGroup"" : ""Gamepad"",
+                        ""devices"" : [
+                            { ""devicePath"" : ""<Gamepad>"" }
+                        ]
+                    },
+                    {
+                        ""name"" : ""Keyboard&Mouse"",
+                        ""bindingGroup"" : ""Keyboard&Mouse"",
+                        ""devices"" : [
+                            { ""devicePath"" : ""<Keyboard>"" },
+                            { ""devicePath"" : ""<Mouse>"" }
+                        ]
+                    }
+                ]
+            }
+        ";
+        var prefab = new GameObject();
+        prefab.SetActive(false);
+        prefab.AddComponent<PlayerInput>();
+        prefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+        prefab.GetComponent<PlayerInput>().defaultActionMap = "gameplay";
+        prefab.AddComponent<MessageListener>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var instance = PlayerInput.Instantiate(prefab, pairWithDevices: new InputDevice[] { keyboard, mouse });
+        var listener = instance.GetComponent<MessageListener>();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
     }
 
     [Test]
@@ -1470,10 +1560,14 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""ui"",
                     ""actions"" : [
-                        { ""name"" : ""navigate"" }
+                        { ""name"" : ""navigate"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""point"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""click"", ""type"" : ""PassThrough"" }
                     ],
                     ""bindings"" : [
-                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" }
+                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Mouse>/position"", ""action"" : ""point"", ""groups"" : ""Keyboard&Mouse"" },
+                        { ""path"" : ""<Mouse>/leftButton"", ""action"" : ""click"", ""groups"" : ""Keyboard&Mouse"" }
                     ]
                 },
                 {

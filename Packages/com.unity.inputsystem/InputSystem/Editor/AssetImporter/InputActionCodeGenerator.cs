@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             public string sourceAssetPath { get; set; }
         }
 
-        public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
+        public static string GenerateWrapperCode(InputActionAsset asset, Options options = default)
         {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));

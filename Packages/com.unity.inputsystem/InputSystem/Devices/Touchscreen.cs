@@ -626,6 +626,11 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(UnsafeUtility.AddressOf(ref newTouchState), stateEventPtr->state, stateEventPtr->stateSizeInBytes);
             }
 
+            // Make sure we're not getting thrown off by noise on fields that we don't want to
+            // pick up from input.
+            newTouchState.tapCount = 0;
+            newTouchState.isTap = false;
+
             ////REVIEW: The logic in here makes us inherently susceptible to the ordering of the touch events in the event
             ////        stream. I believe we have platforms (Android?) that send us touch events finger-by-finger (or touch-by-touch?)
             ////        rather than sorted by time. This will probably screw up the logic in here.

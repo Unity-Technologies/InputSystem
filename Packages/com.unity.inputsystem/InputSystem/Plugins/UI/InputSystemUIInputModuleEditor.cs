@@ -1,9 +1,7 @@
 #if UNITY_EDITOR
-
 using System;
 using System.Linq;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.UI.Editor
 {
@@ -16,7 +14,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             {
                 foreach (var action in actions)
                 {
-                    if (string.Compare(action.action.name, actionName, true) == 0)
+                    if (string.Compare(action.action.name, actionName, StringComparison.InvariantCultureIgnoreCase) == 0)
                         return action;
                 }
             }
@@ -34,7 +32,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             return null;
         }
 
-        static private readonly string[] s_ActionNames = new[]
+        private static readonly string[] s_ActionNames =
         {
             "Point",
             "LeftClick",
@@ -46,23 +44,23 @@ namespace UnityEngine.InputSystem.UI.Editor
             "Cancel",
             "TrackedDevicePosition",
             "TrackedDeviceOrientation",
-            "TrackedDeviceSelect",
+            "TrackedDeviceSelect"
         };
 
-        string MakeNiceUIName(string name)
+        private static readonly string[] s_ActionNiceNames =
         {
-            string result = "";
-
-            for (var i = 0; i < name.Length; i++)
-            {
-                char ch = name[i];
-                if (char.IsUpper(ch) && i > 0)
-                    result += ' ';
-                result += ch;
-            }
-
-            return result;
-        }
+            "Point",
+            "Left Click",
+            "Middle Click",
+            "Right Click",
+            "Scroll Wheel",
+            "Move",
+            "Submit",
+            "Cancel",
+            "Tracked Position",
+            "Tracked Orientation",
+            "Tracked Select"
+        };
 
         private SerializedProperty[] m_ReferenceProperties;
         private SerializedProperty m_ActionsAsset;
@@ -78,7 +76,7 @@ namespace UnityEngine.InputSystem.UI.Editor
 
             m_ActionsAsset = serializedObject.FindProperty("m_ActionsAsset");
             m_AvailableActionsInAsset = GetAllActionsFromAsset(m_ActionsAsset.objectReferenceValue as InputActionAsset);
-            // Ugly hack: GenericMenu iterprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
+            // Ugly hack: GenericMenu interprets "/" as a submenu path. But luckily, "/" is not the only slash we have in Unicode.
             m_AvailableActionsInAssetNames = new[] { "None" }.Concat(m_AvailableActionsInAsset?.Select(x => x.name.Replace("/", "\uFF0F")) ?? new string[0]).ToArray();
         }
 
@@ -131,7 +129,7 @@ namespace UnityEngine.InputSystem.UI.Editor
                 {
                     int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
                     EditorGUI.BeginChangeCheck();
-                    index = EditorGUILayout.Popup(MakeNiceUIName(s_ActionNames[i]), index, m_AvailableActionsInAssetNames);
+                    index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
 
                     if (EditorGUI.EndChangeCheck())
                         m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
