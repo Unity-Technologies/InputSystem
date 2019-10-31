@@ -14,6 +14,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed touch taps triggering when they shouldn't on Android.
 - Fixed custom devices registered from `[InitializeOnLoad]` code being lost on domain reload (case 1192379).
   * This happened when there were multiple pieces of `[InitializeOnLoad]` code that accessed the input system in the project and the `RegisterLayout` for the custom device happened to not be the first in sequence.
+- OpenVR touchpad controls (`touchpadClicked` & `touchpadPressed`) now report accurate data.
 
 #### Actions
 
@@ -22,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
 - Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
 - Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
+- Fixed bindings that are not associated with any control scheme not getting enabled with other control schemes as they should.
 
 ## [1.0.0-preview.1] - 2019-10-11
 

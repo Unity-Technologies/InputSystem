@@ -332,7 +332,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct("^(OpenVR Headset)")
+                    .WithProduct("^(OpenVR Headset)|^(Vive Pro)")
             );
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVRControllerWMR>(
                 matches: new InputDeviceMatcher()
