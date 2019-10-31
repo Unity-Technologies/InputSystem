@@ -27,11 +27,6 @@ namespace UnityEngine.InputSystem.Processors
             if (control == null)
                 throw new System.ArgumentNullException(nameof(control));
 
-            // Don't convert to EditorWindowSpace if input is going to game view.
-            if (InputEditorUserSettings.lockInputToGameView ||
-                (EditorApplication.isPlaying && Application.isFocused))
-                return value;
-
             if (Mouse.s_PlatformMouseDevice != null)
             {
                 var command = QueryEditorWindowCoordinatesCommand.Create(value);

@@ -9,6 +9,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.2] - 2999-11-11
 
+### Changed
+
+- Automatic conversion of window coordinates in `EditorWindow` code is now performed regardless of focus or the setting of `Lock Input to Game View` in the input debugger.
+
 ### Fixed
 
 - Fixed touch taps triggering when they shouldn't on Android.
@@ -29,6 +33,10 @@ however, it has to be formatted properly to pass verification tests.
   * This problem would also show in the `SimpleDemo` sample when having the `CustomDeviceUsages` sample installed as well. Gamepads would not get picked up in that case.
 - Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
 - Fixed bindings that are not associated with any control scheme not getting enabled with other control schemes as they should.
+
+### Added
+
+- Added a new `EditorWindow Demo` sample that illustrates how to use the input system in editor UI code.
 
 ## [1.0.0-preview.1] - 2019-10-11
 
