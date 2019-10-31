@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public void StartWithArraysFrom(InputActionState state)
         {
-            Debug.Assert(state != null);
+            Debug.Assert(state != null, "Received null state");
 
             maps = state.maps;
             interactions = state.interactions;
@@ -113,7 +113,7 @@ namespace UnityEngine.InputSystem
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         public unsafe void AddActionMap(InputActionMap map)
         {
-            Debug.Assert(map != null);
+            Debug.Assert(map != null, "Received null map");
 
             var actionsInThisMap = map.m_Actions;
             var bindingsInThisMap = map.m_Bindings;
@@ -174,29 +174,20 @@ namespace UnityEngine.InputSystem
                     {
                         ////TODO: if it's a composite, check if any of the children matches our binding masks (if any) and skip composite if none do
 
-                        // Set binding state to defaults.
-                        bindingState->mapIndex = totalMapCount;
-                        bindingState->compositeOrCompositeBindingIndex = InputActionState.kInvalidIndex;
-                        bindingState->actionIndex = InputActionState.kInvalidIndex;
+                        var firstControlIndex = 0; // numControls dictates whether this is a valid index or not.
+                        var firstInteractionIndex = InputActionState.kInvalidIndex;
+                        var firstProcessorIndex = InputActionState.kInvalidIndex;
+                        var actionIndexForBinding = InputActionState.kInvalidIndex;
+                        var partIndex = InputActionState.kInvalidIndex;
+
+                        var numControls = 0;
+                        var numInteractions = 0;
+                        var numProcessors = 0;
 
                         // Make sure that if it's part of a composite, we are actually part of a composite.
                         if (isPartOfComposite && currentCompositeBindingIndex == InputActionState.kInvalidIndex)
                             throw new InvalidOperationException(
                                 $"Binding '{unresolvedBinding}' is marked as being part of a composite but the preceding binding is not a composite");
-
-                        // Skip binding if it is disabled (path is empty string).
-                        var path = unresolvedBinding.effectivePath;
-                        if (string.IsNullOrEmpty(path))
-                            continue;
-
-                        // Skip binding if it doesn't match with our binding mask (might be empty).
-                        if (!isComposite && bindingMask != null && !bindingMask.Value.Matches(ref unresolvedBinding))
-                            continue;
-
-                        // Skip binding if it doesn't match the binding mask on the map (might be empty).
-                        if (!isComposite && bindingMaskOnThisMap != null &&
-                            !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding))
-                            continue;
 
                         // Try to find action.
                         //
@@ -227,132 +218,142 @@ namespace UnityEngine.InputSystem
                             action = currentCompositeAction;
                         }
 
-                        // Skip binding if it doesn't match the binding mask on the action (might be empty).
-                        if (!isComposite && action?.m_BindingMask != null &&
-                            !action.m_BindingMask.Value.Matches(ref unresolvedBinding))
-                            continue;
+                        // Determine if the binding is disabled.
+                        // Disabled if path is empty.
+                        var path = unresolvedBinding.effectivePath;
+                        var bindingIsDisabled = string.IsNullOrEmpty(path);
 
-                        // Instantiate processors.
-                        var firstProcessorIndex = InputActionState.kInvalidIndex;
-                        var numProcessors = 0;
-                        var processorString = unresolvedBinding.effectiveProcessors;
-                        if (!string.IsNullOrEmpty(processorString))
+                        // Also, disabled if binding doesn't match with our binding mask (might be empty).
+                        bindingIsDisabled |= !isComposite && bindingMask != null &&
+                            !bindingMask.Value.Matches(ref unresolvedBinding,
+                            InputBinding.MatchOptions.EmptyGroupMatchesAny);
+
+                        // Also, disabled if binding doesn't match the binding mask on the map (might be empty).
+                        bindingIsDisabled |= !isComposite && bindingMaskOnThisMap != null &&
+                            !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
+
+                        // Finally, also disabled if binding doesn't match the binding mask on the action (might be empty).
+                        bindingIsDisabled |= !isComposite && action?.m_BindingMask != null &&
+                            !action.m_BindingMask.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
+
+                        // If the binding isn't disabled, resolve its controls, processors, and interactions.
+                        if (!bindingIsDisabled)
                         {
-                            // Add processors from binding.
-                            firstProcessorIndex = ResolveProcessors(processorString);
-                            if (firstProcessorIndex != InputActionState.kInvalidIndex)
-                                numProcessors = totalProcessorCount - firstProcessorIndex;
-                        }
-                        if (action != null && !string.IsNullOrEmpty(action.m_Processors))
-                        {
-                            // Add processors from action.
-                            var index = ResolveProcessors(action.m_Processors);
-                            if (index != InputActionState.kInvalidIndex)
+                            // Instantiate processors.
+                            var processorString = unresolvedBinding.effectiveProcessors;
+                            if (!string.IsNullOrEmpty(processorString))
                             {
-                                if (firstProcessorIndex == InputActionState.kInvalidIndex)
-                                    firstProcessorIndex = index;
-                                numProcessors += totalProcessorCount - index;
+                                // Add processors from binding.
+                                firstProcessorIndex = ResolveProcessors(processorString);
+                                if (firstProcessorIndex != InputActionState.kInvalidIndex)
+                                    numProcessors = totalProcessorCount - firstProcessorIndex;
                             }
-                        }
-
-                        // Instantiate interactions.
-                        var firstInteractionIndex = InputActionState.kInvalidIndex;
-                        var numInteractions = 0;
-                        var interactionString = unresolvedBinding.effectiveInteractions;
-                        if (!string.IsNullOrEmpty(interactionString))
-                        {
-                            // Add interactions from binding.
-                            firstInteractionIndex = ResolveInteractions(interactionString);
-                            if (firstInteractionIndex != InputActionState.kInvalidIndex)
-                                numInteractions = totalInteractionCount - firstInteractionIndex;
-                        }
-                        if (action != null && !string.IsNullOrEmpty(action.m_Interactions))
-                        {
-                            // Add interactions from action.
-                            var index = ResolveInteractions(action.m_Interactions);
-                            if (index != InputActionState.kInvalidIndex)
+                            if (action != null && !string.IsNullOrEmpty(action.m_Processors))
                             {
-                                if (firstInteractionIndex == InputActionState.kInvalidIndex)
-                                    firstInteractionIndex = index;
-                                numInteractions += totalInteractionCount - index;
+                                // Add processors from action.
+                                var index = ResolveProcessors(action.m_Processors);
+                                if (index != InputActionState.kInvalidIndex)
+                                {
+                                    if (firstProcessorIndex == InputActionState.kInvalidIndex)
+                                        firstProcessorIndex = index;
+                                    numProcessors += totalProcessorCount - index;
+                                }
                             }
-                        }
 
-                        // If it's the start of a composite chain, create the composite.
-                        if (isComposite)
-                        {
-                            var actionIndexForComposite = actionIndexInMap != InputActionState.kInvalidIndex
-                                ? actionStartIndex + actionIndexInMap
-                                : InputActionState.kInvalidIndex;
-
-                            // Instantiate. For composites, the path is the name of the composite.
-                            var composite = InstantiateBindingComposite(unresolvedBinding.path);
-                            currentCompositeIndex =
-                                ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
-                            currentCompositeBindingIndex = bindingIndex;
-                            currentCompositeAction = action;
-                            currentCompositeActionIndexInMap = actionIndexInMap;
-
-                            *bindingState = new InputActionState.BindingState
+                            // Instantiate interactions.
+                            var interactionString = unresolvedBinding.effectiveInteractions;
+                            if (!string.IsNullOrEmpty(interactionString))
                             {
-                                actionIndex = actionIndexForComposite,
-                                compositeOrCompositeBindingIndex = currentCompositeIndex,
-                                processorStartIndex = firstProcessorIndex,
-                                processorCount = numProcessors,
-                                interactionCount = numInteractions,
-                                interactionStartIndex = firstInteractionIndex,
-                                mapIndex = totalMapCount,
-                                isComposite = true,
-                                // Record where the controls for parts of the composite start.
-                                controlStartIndex = memory.controlCount + resolvedControls.Count,
-                            };
-
-                            // The composite binding entry itself does not resolve to any controls.
-                            // It creates a composite binding object which is then populated from
-                            // subsequent bindings.
-                            continue;
-                        }
-
-                        // If we've reached the end of a composite chain, finish
-                        // off the current composite.
-                        if (!isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex)
-                        {
-                            currentCompositePartCount = 0;
-                            currentCompositeBindingIndex = InputActionState.kInvalidIndex;
-                            currentCompositeIndex = InputActionState.kInvalidIndex;
-                            currentCompositeAction = null;
-                            currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
-                        }
-
-                        // Look up controls.
-                        //
-                        // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
-                        //       pass over the bindings in the map, `resolvedControls` will have all the controls for
-                        //       the current map.
-                        var firstControlIndex = memory.controlCount + resolvedControls.Count;
-                        var numControls = 0;
-                        if (devicesForThisMap != null)
-                        {
-                            // Search in devices for only this map.
-                            var list = devicesForThisMap.Value;
-                            for (var i = 0; i < list.Count; ++i)
-                            {
-                                var device = list[i];
-                                if (!device.added)
-                                    continue; // Skip devices that have been removed.
-                                numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
+                                // Add interactions from binding.
+                                firstInteractionIndex = ResolveInteractions(interactionString);
+                                if (firstInteractionIndex != InputActionState.kInvalidIndex)
+                                    numInteractions = totalInteractionCount - firstInteractionIndex;
                             }
-                        }
-                        else
-                        {
-                            // Search globally.
-                            numControls = InputSystem.FindControls(path, ref resolvedControls);
+                            if (action != null && !string.IsNullOrEmpty(action.m_Interactions))
+                            {
+                                // Add interactions from action.
+                                var index = ResolveInteractions(action.m_Interactions);
+                                if (index != InputActionState.kInvalidIndex)
+                                {
+                                    if (firstInteractionIndex == InputActionState.kInvalidIndex)
+                                        firstInteractionIndex = index;
+                                    numInteractions += totalInteractionCount - index;
+                                }
+                            }
+
+                            // If it's the start of a composite chain, create the composite.
+                            if (isComposite)
+                            {
+                                var actionIndexForComposite = actionIndexInMap != InputActionState.kInvalidIndex
+                                    ? actionStartIndex + actionIndexInMap
+                                    : InputActionState.kInvalidIndex;
+
+                                // Instantiate. For composites, the path is the name of the composite.
+                                var composite = InstantiateBindingComposite(unresolvedBinding.path);
+                                currentCompositeIndex =
+                                    ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
+                                currentCompositeBindingIndex = bindingIndex;
+                                currentCompositeAction = action;
+                                currentCompositeActionIndexInMap = actionIndexInMap;
+
+                                *bindingState = new InputActionState.BindingState
+                                {
+                                    actionIndex = actionIndexForComposite,
+                                    compositeOrCompositeBindingIndex = currentCompositeIndex,
+                                    processorStartIndex = firstProcessorIndex,
+                                    processorCount = numProcessors,
+                                    interactionCount = numInteractions,
+                                    interactionStartIndex = firstInteractionIndex,
+                                    mapIndex = totalMapCount,
+                                    isComposite = true,
+                                    // Record where the controls for parts of the composite start.
+                                    controlStartIndex = memory.controlCount + resolvedControls.Count,
+                                };
+
+                                // The composite binding entry itself does not resolve to any controls.
+                                // It creates a composite binding object which is then populated from
+                                // subsequent bindings.
+                                continue;
+                            }
+
+                            // If we've reached the end of a composite chain, finish
+                            // off the current composite.
+                            if (!isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex)
+                            {
+                                currentCompositePartCount = 0;
+                                currentCompositeBindingIndex = InputActionState.kInvalidIndex;
+                                currentCompositeIndex = InputActionState.kInvalidIndex;
+                                currentCompositeAction = null;
+                                currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
+                            }
+
+                            // Look up controls.
+                            //
+                            // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
+                            //       pass over the bindings in the map, `resolvedControls` will have all the controls for
+                            //       the current map.
+                            firstControlIndex = memory.controlCount + resolvedControls.Count;
+                            if (devicesForThisMap != null)
+                            {
+                                // Search in devices for only this map.
+                                var list = devicesForThisMap.Value;
+                                for (var i = 0; i < list.Count; ++i)
+                                {
+                                    var device = list[i];
+                                    if (!device.added)
+                                        continue; // Skip devices that have been removed.
+                                    numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
+                                }
+                            }
+                            else
+                            {
+                                // Search globally.
+                                numControls = InputSystem.FindControls(path, ref resolvedControls);
+                            }
                         }
 
                         // If the binding is part of a composite, pass the resolved controls
                         // on to the composite.
-                        var partIndex = InputActionState.kInvalidIndex;
-                        var actionIndexForBinding = InputActionState.kInvalidIndex;
                         if (isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex && numControls > 0)
                         {
                             // Make sure the binding is named. The name determines what in the composite
@@ -376,7 +377,7 @@ namespace UnityEngine.InputSystem
                             actionIndexForBinding = actionStartIndex + actionIndexInMap;
                         }
 
-                        // Add entry for resolved binding.
+                        // Store resolved binding.
                         *bindingState = new InputActionState.BindingState
                         {
                             controlStartIndex = firstControlIndex,

@@ -61,7 +61,7 @@ When you click the __Create Actions…__ button, Unity asks you where to create 
 
 You can edit the default set to fit the needs of your Project. See the in-depth documentation for the [Action editor](ActionAssets.md#editing-input-action-assets) for instructions on how to use this window.
 
-## Step 3: Setting Up Action Responses
+### Step 3: Setting Up Action Responses
 
 Once the component has its Actions, you must set up a response for each Action. [`PlayerInput`](Components.md) allows you to set up responses in several ways, using the __Behavior__ property in the Inspector window:
 

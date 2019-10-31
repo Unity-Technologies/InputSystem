@@ -20,6 +20,8 @@ using UnityEngine.InputSystem.Layouts;
 
 ////REVIEW: how do we do stuff like smoothing over time?
 
+////TODO: allow easier access to the default state such that you can easily create a state event containing only default state
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -323,10 +325,6 @@ namespace UnityEngine.InputSystem
         ///
         /// The primary effect of being noise is on <see cref="InputDevice.MakeCurrent"/> and
         /// on interactive rebinding (see <see cref="InputActionRebindingExtensions.RebindingOperation"/>).
-        ///
-        /// If noise filtering on <c>.current</c> is enabled (see <see cref="InputSettings.filterNoiseOnCurrent"/>),
-        /// when seeing input for a potentially noisy device (i.e. any device with any control
-        /// marked as noisy), the system will perform a check
         /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
         /// <seealso cref="InputControlAttribute.noisy"/>

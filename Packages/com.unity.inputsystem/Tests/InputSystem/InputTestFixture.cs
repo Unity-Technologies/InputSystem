@@ -530,5 +530,19 @@ namespace UnityEngine.InputSystem
                 return this;
             }
         }
+
+        #if UNITY_EDITOR
+        internal void SimulateDomainReload()
+        {
+            // This quite invasively goes into InputSystem internals. Unfortunately, we
+            // have no proper way of simulating domain reloads ATM. So we directly call various
+            // internal methods here in a sequence similar to what we'd get during a domain reload.
+
+            InputSystem.s_SystemObject.OnBeforeSerialize();
+            InputSystem.s_SystemObject = null;
+            InputSystem.InitializeInEditor(runtime);
+        }
+
+        #endif
     }
 }

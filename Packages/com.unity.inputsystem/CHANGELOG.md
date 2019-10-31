@@ -11,11 +11,21 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed touch taps triggering when they shouldn't on Android.
+- Fixed custom devices registered from `[InitializeOnLoad]` code being lost on domain reload (case 1192379).
+  * This happened when there were multiple pieces of `[InitializeOnLoad]` code that accessed the input system in the project and the `RegisterLayout` for the custom device happened to not be the first in sequence.
+- OpenVR touchpad controls (`touchpadClicked` & `touchpadPressed`) now report accurate data.
+
 #### Actions
 
 - Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
 - Assigning a new `InputActionAsset` to a `InputSystemUIInputModule` will no longer look up action names globally but rather only look for actions that are located in action maps with the same name.
   * Previously, if you e.g. switched from one asset where the `point` action was bound to `UI/Point` to an asset that had no `UI` action map but did have an action called `Point` somewhere else, it would erroneously pick the most likely unrelated `Point` action for use by the UI.
+- Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
+- Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
+- Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
+- Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
+- Fixed bindings that are not associated with any control scheme not getting enabled with other control schemes as they should.
 
 ## [1.0.0-preview.1] - 2019-10-11
 

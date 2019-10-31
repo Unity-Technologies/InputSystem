@@ -283,7 +283,7 @@ InputSystem.onActionChange +=
 
 #### Polling Actions
 
-Instead of using callbacks, it might be simpler sometimes to poll the value of an Action where you need it in your code. You can poll the value of an Action using[`InputAction.ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1):
+Instead of using callbacks, it might be simpler sometimes to poll the value of an Action where you need it in your code. You can poll the current value of an Action using [`InputAction.ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1):
 
 ```CSharp
     public InputAction moveAction;
@@ -295,12 +295,38 @@ Instead of using callbacks, it might be simpler sometimes to poll the value of a
         moveAction.Enable();
     }
 
-    void OnUpdate()
+    void Update()
     {
         var moveDirection = moveAction.ReadValue<Vector2>();
         position += moveDirection * moveSpeed * Time.deltaTime;
     }
 ```
+
+For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) which will be true if the action was performed at any time in the current frame.
+
+```
+    private InputAction buttonAction;
+
+    void Start()
+    {
+        // Set up an action that triggers when the A button on
+        // the gamepad is released.
+        buttonAction = new InputAction(
+            type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth",
+            interactions: "press(behavior=1)");
+
+        buttonAction.Enable();
+    }
+
+    void Update()
+    {
+        if (buttonAction.triggered)
+            Debug.Log("A button on gamepad was released this frame");
+    }
+```
+
+[`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) is most useful with button-type actions but can be used with any action.
 
 #### `InputActionTrace`
 
