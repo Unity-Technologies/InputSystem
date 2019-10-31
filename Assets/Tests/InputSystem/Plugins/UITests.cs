@@ -754,7 +754,8 @@ internal class UITests : InputTestFixture
                     {
                         ""name"" : ""Gameplay"",
                         ""actions"" : [
-                            { ""name"" : ""Point"" }
+                            { ""name"" : ""Point"" },
+                            { ""name"" : ""Navigate"" }
                         ]
                     },
                     {
