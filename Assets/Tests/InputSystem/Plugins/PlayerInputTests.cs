@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -113,6 +114,40 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(instance.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(ui.actionsAsset.devices, Is.EquivalentTo(new[] { gamepad }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanUseSameActionsForUIInputModule()
+    {
+        var actions = InputActionAsset.FromJson(kActions);
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.SetActive(false);
+        eventSystemGO.AddComponent<EventSystem>();
+        var uiModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.actionsAsset = actions;
+        uiModule.move = InputActionReference.Create(actions["UI/Navigate"]);
+        uiModule.point = InputActionReference.Create(actions["UI/Point"]);
+        uiModule.leftClick = InputActionReference.Create(actions["UI/Click"]);
+
+        var playerGO = new GameObject();
+        playerGO.SetActive(false);
+        var player = playerGO.AddComponent<PlayerInput>();
+        player.actions = actions;
+        player.defaultActionMap = "Gameplay";
+        player.defaultControlScheme = "Keyboard&Mouse";
+
+        eventSystemGO.SetActive(true);
+        playerGO.SetActive(true);
+
+        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
+        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
+        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
     }
 
     [Test]
@@ -1551,10 +1586,14 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""ui"",
                     ""actions"" : [
-                        { ""name"" : ""navigate"" }
+                        { ""name"" : ""navigate"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""point"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""click"", ""type"" : ""PassThrough"" }
                     ],
                     ""bindings"" : [
-                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" }
+                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Mouse>/position"", ""action"" : ""point"", ""groups"" : ""Keyboard&Mouse"" },
+                        { ""path"" : ""<Mouse>/leftButton"", ""action"" : ""click"", ""groups"" : ""Keyboard&Mouse"" }
                     ]
                 },
                 {

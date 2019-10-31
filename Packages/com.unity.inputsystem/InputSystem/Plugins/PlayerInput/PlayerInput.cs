@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+////TODO: allow PlayerInput to be set up in a way where it's in an unpaired/non-functional state and expects additional configuration
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
@@ -19,6 +20,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add method to pass an object implementing a generated action interface (IXXXActions) and have it hooked up automatically
 ////      (or maybe look for implementation on components in same object?)
+
+////TODO: warn if control schemes have no device requirements
 
 ////FIXME: why can't I join with a mouse left click?
 

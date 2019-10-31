@@ -114,7 +114,7 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator MouseActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromMouse()
     {
         // Create devices.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -253,14 +253,9 @@ internal class UITests : InputTestFixture
         Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
     }
 
-    unsafe void SetTouchState(TouchscreenState state, int index, TouchState touch)
-    {
-        state.touches[index] = touch;
-    }
-
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator TouchActions_CanDriveUIAndDistinguishMultipleTouches()
+    public IEnumerator Actions_TouchActionsCanDriveUIAndDistinguishMultipleTouches()
     {
         // Create devices.
         var touchScreen = InputSystem.AddDevice<Touchscreen>();
@@ -447,11 +442,10 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    // Check that two players can have separate UI, and that both selections will stay active when clicking on UI with the mouse,
-    // using MultiPlayerEventSystem.playerRoot to match UI to the players.
-    public IEnumerator MouseActions_MultiplayerEventSystemKeepsPerPlayerSelection()
+    // Check that two players can have separate UI, and that both selections will stay active when
+    // clicking on UI with the mouse, using MultiPlayerEventSystem.playerRoot to match UI to the players.
+    public IEnumerator Actions_CanOperateMultiplayerUIGloballyUsingMouse()
     {
-        // Create devices.
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var players = new[] { CreateScene(0, 240), CreateScene(240, 480) };
@@ -530,8 +524,9 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    // Check that two players can have separate UI and control it using separate gamepads, using MultiplayerEventSystem.
-    public IEnumerator JoystickActions_MultiplayerEventSystemKeepsPerPlayerSelection()
+    // Check that two players can have separate UI and control it using separate gamepads, using
+    // MultiplayerEventSystem.
+    public IEnumerator Actions_CanOperateMultiplayerUILocallyUsingGamepads()
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
@@ -644,7 +639,7 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator JoystickActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromGamepad()
     {
         // Create devices.
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -745,13 +740,60 @@ internal class UITests : InputTestFixture
         rightChildReceiver.Reset();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReassignUIActions()
+    {
+        var go = new GameObject();
+        go.AddComponent<EventSystem>();
+        var uiModule = go.AddComponent<InputSystemUIInputModule>();
+
+        const string kActions = @"
+            {
+                ""maps"" : [
+                    {
+                        ""name"" : ""Gameplay"",
+                        ""actions"" : [
+                            { ""name"" : ""Point"" },
+                            { ""name"" : ""Navigate"" }
+                        ]
+                    },
+                    {
+                        ""name"" : ""UI"",
+                        ""actions"" : [
+                            { ""name"" : ""Navigate"" },
+                            { ""name"" : ""Point"" }
+                        ]
+                    }
+                ]
+            }
+        ";
+
+        var actions1 = InputActionAsset.FromJson(kActions);
+
+        uiModule.actionsAsset = actions1;
+        uiModule.move = InputActionReference.Create(actions1["ui/navigate"]);
+        uiModule.point = InputActionReference.Create(actions1["ui/point"]);
+
+        Assert.That(uiModule.actionsAsset, Is.SameAs(actions1));
+        Assert.That(uiModule.move.action, Is.SameAs(actions1["ui/navigate"]));
+        Assert.That(uiModule.point.action, Is.SameAs(actions1["ui/point"]));
+
+        var actions2 = ScriptableObject.Instantiate(actions1);
+        actions2["ui/point"].RemoveAction();
+
+        uiModule.actionsAsset = actions2;
+
+        Assert.That(uiModule.actionsAsset, Is.SameAs(actions2));
+        Assert.That(uiModule.move.action, Is.SameAs(actions2["ui/navigate"]));
+        Assert.That(uiModule.point?.action, Is.Null);
+    }
+
 // The tracked device tests fail with NullReferenceException in the windows editor on yamato. I cannot reproduce this locally, so will disable them on windows for now.
 #if !UNITY_EDITOR_WIN
 
     private struct TestTrackedDeviceLayout : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 29;
-
         [InputControl(name = "position", layout = "Vector3")]
         public Vector3 position;
         [InputControl(name = "orientation", layout = "Quaternion", offset = 12)]
@@ -762,6 +804,7 @@ internal class UITests : InputTestFixture
         public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
+    ////TODO: switch this to an actual TrackedDevice
     [InputControlLayout(stateType = typeof(TestTrackedDeviceLayout))]
     [Preserve]
     class TestTrackedDevice : InputDevice
@@ -782,7 +825,7 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator TrackedDeviceActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromTrackedDevice()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -916,8 +959,7 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    // Check that we can track multiple tracked devices separately, with different pointer ids.
-    public IEnumerator TrackedDeviceActions_CanDriveUIMultipleTrackers()
+    public IEnumerator Actions_CanDriveUIFromMultipleTrackedDevices()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -1071,60 +1113,6 @@ internal class UITests : InputTestFixture
     }
 
 #endif
-
-    private struct TestTouchLayout : IInputStateTypeInfo
-    {
-        [InputControl(name = "touch", layout = "Touch")]
-        public TouchState touch;
-
-        public FourCC format => new FourCC('T', 'T', 'L', ' ');
-    }
-
-    [InputControlLayout(stateType = typeof(TestTouchLayout))]
-    [Preserve]
-    class TestTouchDevice : InputDevice
-    {
-        public TouchControl touch { get; private set; }
-
-        protected override void FinishSetup()
-        {
-            base.FinishSetup();
-
-            touch = GetChildControl<TouchControl>("touch");
-        }
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromGamepads()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromJoysticks()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromTouches()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromMouseAndKeyboard()
-    {
-        Assert.Fail();
-    }
 
     private enum EventType
     {

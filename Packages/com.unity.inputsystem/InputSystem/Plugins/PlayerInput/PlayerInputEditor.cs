@@ -489,6 +489,8 @@ namespace UnityEngine.InputSystem.Editor
             }
             if (m_SelectedDefaultActionMap <= 0)
                 playerInput.defaultActionMap = null;
+            else
+                playerInput.defaultActionMap = m_ActionMapOptions[m_SelectedDefaultActionMap].text;
 
             serializedObject.Update();
         }

@@ -506,5 +506,12 @@ namespace UnityEngine.InputSystem.Utilities
                     buffer.Append(ch);
             return buffer.ToString();
         }
+
+        public static bool InvariantEqualsIgnoreCase(this string left, string right)
+        {
+            if (string.IsNullOrEmpty(left))
+                return string.IsNullOrEmpty(right);
+            return string.Equals(left, right, StringComparison.InvariantCultureIgnoreCase);
+        }
     }
 }

@@ -1,7 +1,10 @@
 # Devices
 
 * [Device descriptions](#device-descriptions)
+    * [Capabilities](#capabilities)
+    * [Matching](#matching)
     * [Hijacking the matching process](#hijacking-the-matching-process)
+* [Device creation](#device-creation)
 * [Native Devices](#native-devices)
     * [Disconnected Devices](#disconnected-devices)
 * [Device IDs](#device-ids)
@@ -32,7 +35,7 @@ Every description has a set of standard fields:
 |[`manufacturer`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_manufacturer)|Name of the manufacturer as reported by the Device/driver itself.|
 |[`version`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_version)|If available, provides the version of the driver or hardware for the Device.|
 |[`serial`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_serial)|If available, provides the serial number for the Device.|
-|[`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities)|A string in JSON format describing Device/interface-specific capabilities. See the [section on capabililities](#capabilities).|
+|[`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities)|A string in JSON format describing Device/interface-specific capabilities. See the [section on capabilities](#capabilities).|
 
 ### Capabilities
 
@@ -61,9 +64,25 @@ InputSystem.RegisterLayoutMatcher<MyDevice>(
 
 If multiple matchers are matching the same [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html), the Input System chooses the matcher that has the larger number of properties to match against.
 
-### Hijacking the matching process
+#### Hijacking the matching process
 
 You can overrule the internal matching process from outside and thus select a different layout for a Device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System will use this layout.
+
+### Device creation
+
+Once a [layout](Layouts.md) has been chosen for a device, it is used to instantiate an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populate it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as dictated by the layout. This process is performed automatically and internally.
+
+>__Note__: Valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) cannot be created by manually instantiating them with `new`. To guide the creation process, [layouts](Layouts.md) must be used.
+
+When the Input System has finished putting an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) together, it will call [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. This can be used to finalize the setup of controls.
+
+After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, it will be added to the system. As part of this process, [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) will be called on the device and [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) will be signaled on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
+
+#### Domain reloads in the Editor
+
+In the Editor, the C# application domain will be reloaded whenever scripts are recompiled and reloaded or when going into play mode. This requires the Input System to reinitialize itself after each domain reload. During this process, it will attempt to recreate devices that had been instantiated before the domain reload. It will, however, not take the state of each such Device across. This means that Devices will reset to default state on domain reloads.
+
+Note that layout registrations are __not__ persisted across domain reloads. Instead, the Input System relies on all registrations to become available as part of the initialization process (e.g. by using `[InitializeOnLoad]` to run registration as part of the domain startup code in the Editor). This allows registrations and layouts to be changed in script and the change to immediately take effect after a domain reload.
 
 ## Native Devices
 

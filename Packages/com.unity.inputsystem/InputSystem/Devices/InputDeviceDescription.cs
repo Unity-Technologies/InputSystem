@@ -225,13 +225,14 @@ namespace UnityEngine.InputSystem.Layouts
         /// </remarks>
         public bool Equals(InputDeviceDescription other)
         {
-            return string.Equals(m_InterfaceName, other.m_InterfaceName, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_DeviceClass, other.m_DeviceClass, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_Manufacturer, other.m_Manufacturer, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_Product, other.m_Product, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_Serial, other.m_Serial, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_Version, other.m_Version, StringComparison.InvariantCultureIgnoreCase) &&
-                string.Equals(m_Capabilities, other.m_Capabilities, StringComparison.InvariantCultureIgnoreCase);
+            return m_InterfaceName.InvariantEqualsIgnoreCase(other.m_InterfaceName) &&
+                m_DeviceClass.InvariantEqualsIgnoreCase(other.m_DeviceClass) &&
+                m_Manufacturer.InvariantEqualsIgnoreCase(other.m_Manufacturer) &&
+                m_Product.InvariantEqualsIgnoreCase(other.m_Product) &&
+                m_Serial.InvariantEqualsIgnoreCase(other.m_Serial) &&
+                m_Version.InvariantEqualsIgnoreCase(other.m_Version) &&
+                ////REVIEW: this would ideally compare JSON contents not just the raw string
+                m_Capabilities.InvariantEqualsIgnoreCase(other.m_Capabilities);
         }
 
         /// <summary>
@@ -245,7 +246,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             if (ReferenceEquals(null, obj))
                 return false;
-            return obj is InputDeviceDescription && Equals((InputDeviceDescription)obj);
+            return obj is InputDeviceDescription description && Equals(description);
         }
 
         /// <summary>
@@ -256,7 +257,7 @@ namespace UnityEngine.InputSystem.Layouts
         {
             unchecked
             {
-                var hashCode = (m_InterfaceName != null ? m_InterfaceName.GetHashCode() : 0);
+                var hashCode = m_InterfaceName != null ? m_InterfaceName.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (m_DeviceClass != null ? m_DeviceClass.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_Manufacturer != null ? m_Manufacturer.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (m_Product != null ? m_Product.GetHashCode() : 0);
