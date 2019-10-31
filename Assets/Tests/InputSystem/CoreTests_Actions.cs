@@ -3725,6 +3725,36 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanRemoveActionFromMap()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action3 = map.AddAction("action3", binding: "<Gamepad>/buttonWest");
+
+        asset.RemoveAction("action2");
+
+        Assert.That(action2.actionMap, Is.Null);
+        Assert.That(asset.FindAction("action2"), Is.Null);
+        Assert.That(map.actions, Has.Count.EqualTo(2));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action1));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action3));
+        Assert.That(action1.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonSouth", action: "action1")}));
+        Assert.That(action2.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonNorth", action: "action2")}));
+        Assert.That(action3.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonWest", action: "action3")}));
+        Assert.That(map.bindings, Is.EquivalentTo(new[]
+        {
+            new InputBinding("<Gamepad>/buttonSouth", action: "action1"),
+            new InputBinding("<Gamepad>/buttonWest", action: "action3")
+        }));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
