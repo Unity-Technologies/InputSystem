@@ -1749,6 +1749,7 @@ partial class CoreTests
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
     [TestCase("MyControls (2)", "MyNamespace", "MyClassName", "MyNamespace.MyClassName")]
     [TestCase("MyControls", "", "MyClassName", "MyClassName")]
+    [TestCase("interface", "", "class", "class")] // Make sure we can deal with C# reserved keywords.
     public void Editor_CanGenerateCodeWrapperForInputAsset(string assetName, string namespaceName, string className, string typeName)
     {
         var map1 = new InputActionMap("set1");

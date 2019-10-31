@@ -40,10 +40,11 @@ namespace UnityEngine.InputSystem.Utilities
             return name.Split('.').All(IsProperIdentifier);
         }
 
+        ////TODO: this one should add the @escape automatically so no other code has to worry
         public static string MakeIdentifier(string name, string suffix = "")
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             if (char.IsDigit(name[0]))
                 name = "_" + name;
