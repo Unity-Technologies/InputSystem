@@ -12,6 +12,8 @@ using UnityEngine.InputSystem.Utilities;
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
 ////        and only temporarily disable them
 
+////TODO: add ability to name players
+
 ////TODO: refresh caches when asset is modified at runtime
 
 ////TODO: handle required actions ahead of time so that we catch it if a device matches by type but doesn't otherwise

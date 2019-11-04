@@ -2274,9 +2274,15 @@ namespace UnityEngine.InputSystem
                 var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description, id);
                 if (IsDeviceLayoutMarkedAsSupportedInSettings(layout))
                 {
-                    AddDevice(m_AvailableDevices[i].description, false,
-                        deviceId: id,
-                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    try
+                    {
+                        AddDevice(m_AvailableDevices[i].description, false,
+                            deviceId: id,
+                            deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
             }
         }

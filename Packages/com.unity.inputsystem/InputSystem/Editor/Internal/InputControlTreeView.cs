@@ -7,6 +7,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Profiling;
 
+////TODO: switch to ReadValueFromState (the current value reading code dates back to very early versions of the input system)
+////      (note that doing so will have an impact on mouse coordinates which then will go through EditorWindowSpaceProcessor)
+
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
 ////TODO: show processors attached to controls
@@ -228,7 +231,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (stateBuffer != null)
                 {
-                    ////TODO: switch to ReadValueFromState
                     var text = ReadRawValueAsString(control, stateBuffer);
                     if (text != null)
                         value = new GUIContent(text);
