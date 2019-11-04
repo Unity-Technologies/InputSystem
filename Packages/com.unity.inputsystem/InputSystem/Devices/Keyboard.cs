@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", sizeInBits = kSizeInBits - 1, synthetic = true)] // Exclude IMESelected.
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", displayName = "Space", layout = "Key", bit = (int)Key.Space)]
-        [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Accept", bit = (int)Key.Enter)]
+        [InputControl(name = "enter", displayName = "Enter", layout = "Key", usage = "Submit", bit = (int)Key.Enter)]
         [InputControl(name = "tab", displayName = "Tab", layout = "Key", bit = (int)Key.Tab)]
         [InputControl(name = "backquote", displayName = "`", layout = "Key", bit = (int)Key.Backquote)]
         [InputControl(name = "quote", displayName = "'", layout = "Key", bit = (int)Key.Quote)]
@@ -1865,16 +1865,16 @@ namespace UnityEngine.InputSystem
         /// <param name="key">Key code of key control to return.</param>
         /// <exception cref="ArgumentOutOfRangeException">The given <see cref="key"/> is not valid.</exception>
         /// <remarks>
-        /// This is equivalent to <c>allKeys[(int)key]</c>.
+        /// This is equivalent to <c>allKeys[(int)key - 1]</c>.
         /// </remarks>
         public KeyControl this[Key key]
         {
             get
             {
-                var index = (int)key;
-                if (index <= 0 || index >= m_Keys.Length)
+                var index = (int)key - 1;
+                if (index < 0 || index >= m_Keys.Length)
                     throw new ArgumentOutOfRangeException(nameof(key));
-                return m_Keys[(int)key - 1];
+                return m_Keys[index];
             }
         }
 

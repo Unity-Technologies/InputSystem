@@ -6,10 +6,10 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public class SimpleControls : IInputActionCollection, IDisposable
+public class @SimpleControls: IInputActionCollection, IDisposable
 {
     private InputActionAsset asset;
-    public SimpleControls()
+    public @SimpleControls()
     {
         asset = InputActionAsset.FromJson(@"{
     ""name"": ""SimpleControls"",
@@ -207,8 +207,8 @@ public class SimpleControls : IInputActionCollection, IDisposable
     private readonly InputAction m_gameplay_look;
     public struct GameplayActions
     {
-        private SimpleControls m_Wrapper;
-        public GameplayActions(SimpleControls wrapper) { m_Wrapper = wrapper; }
+        private @SimpleControls m_Wrapper;
+        public GameplayActions(@SimpleControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @fire => m_Wrapper.m_gameplay_fire;
         public InputAction @move => m_Wrapper.m_gameplay_move;
         public InputAction @look => m_Wrapper.m_gameplay_look;
@@ -221,28 +221,28 @@ public class SimpleControls : IInputActionCollection, IDisposable
         {
             if (m_Wrapper.m_GameplayActionsCallbackInterface != null)
             {
-                fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
-                move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
-                look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
-                look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                @fire.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                @fire.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                @fire.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnFire;
+                @move.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                @move.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                @move.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnMove;
+                @look.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                @look.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
+                @look.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnLook;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
             {
-                fire.started += instance.OnFire;
-                fire.performed += instance.OnFire;
-                fire.canceled += instance.OnFire;
-                move.started += instance.OnMove;
-                move.performed += instance.OnMove;
-                move.canceled += instance.OnMove;
-                look.started += instance.OnLook;
-                look.performed += instance.OnLook;
-                look.canceled += instance.OnLook;
+                @fire.started += instance.OnFire;
+                @fire.performed += instance.OnFire;
+                @fire.canceled += instance.OnFire;
+                @move.started += instance.OnMove;
+                @move.performed += instance.OnMove;
+                @move.canceled += instance.OnMove;
+                @look.started += instance.OnLook;
+                @look.performed += instance.OnLook;
+                @look.canceled += instance.OnLook;
             }
         }
     }

@@ -3725,6 +3725,36 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanRemoveActionFromMap()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action3 = map.AddAction("action3", binding: "<Gamepad>/buttonWest");
+
+        asset.RemoveAction("action2");
+
+        Assert.That(action2.actionMap, Is.Null);
+        Assert.That(asset.FindAction("action2"), Is.Null);
+        Assert.That(map.actions, Has.Count.EqualTo(2));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action1));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action3));
+        Assert.That(action1.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonSouth", action: "action1")}));
+        Assert.That(action2.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonNorth", action: "action2")}));
+        Assert.That(action3.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonWest", action: "action3")}));
+        Assert.That(map.bindings, Is.EquivalentTo(new[]
+        {
+            new InputBinding("<Gamepad>/buttonSouth", action: "action1"),
+            new InputBinding("<Gamepad>/buttonWest", action: "action3")
+        }));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -4132,8 +4162,9 @@ partial class CoreTests
 
         action.bindingMask = new InputBinding {groups = "gamepad"};
 
-        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
         Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
 
         action.bindingMask = null;
@@ -4206,8 +4237,9 @@ partial class CoreTests
         map.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
-        Assert.That(action2.controls, Has.Count.Zero);
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
     }
 
     [Test]
@@ -4252,6 +4284,26 @@ partial class CoreTests
         Assert.That(action2.controls, Has.Count.EqualTo(2));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenMaskingByGroup_BindingsNotInAnyGroupWillBeActive()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard&Mouse");
+        action.AddBinding("<Pointer>/press");
+
+        action.bindingMask = InputBinding.MaskByGroup("Gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.press));
     }
 
     // When we have an .inputactions asset, at runtime we should end up with a single array of resolved
@@ -4385,6 +4437,54 @@ partial class CoreTests
         Assert.That(CompositeWithParameters.s_Instance.boolParameter, Is.True);
         Assert.That(CompositeWithParameters.s_Instance.enumParameter,
             Is.EqualTo(CompositeWithParameters.EnumParameter.B));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [TestCase("", "<Gamepad>/buttonSouth", "<Gamepad>/buttonWest", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "", "<Gamepad>/buttonWest", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "<Gamepad>/buttonSouth", "", "<Gamepad>/buttonEast")]
+    [TestCase("<Gamepad>/buttonNorth", "<Gamepad>/buttonSouth", "<Gamepad>/buttonWest", "")]
+    public void Actions_CanHaveCompositesWithPartsThatAreNotBound(string up, string down, string left, string right)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector")
+            .With("Up", up)
+            .With("Down", down)
+            .With("Left", left)
+            .With("Right", right);
+
+        action.Enable();
+
+        if (!string.IsNullOrEmpty(up))
+        {
+            Press(gamepad.buttonNorth);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.up).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonNorth);
+        }
+
+        if (!string.IsNullOrEmpty(down))
+        {
+            Press(gamepad.buttonSouth);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.down).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonSouth);
+        }
+
+        if (!string.IsNullOrEmpty(left))
+        {
+            Press(gamepad.buttonWest);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.left).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonWest);
+        }
+
+        if (!string.IsNullOrEmpty(right))
+        {
+            Press(gamepad.buttonEast);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+            Release(gamepad.buttonEast);
+        }
     }
 
     [Test]
@@ -5497,9 +5597,9 @@ partial class CoreTests
     public void Actions_ApplyingEmptyStringOverride_IsSameAsDisablingBinding()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var action = new InputAction(binding: "/gamepad/leftTrigger");
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
 
-        bool performed = false;
+        var performed = false;
         action.performed += _ => performed = true;
 
         action.Enable();
@@ -5516,6 +5616,11 @@ partial class CoreTests
         Press(gamepad.leftTrigger);
 
         Assert.That(performed, Is.False);
+
+        // We had a bug (case 1187163) where InputActionState would cause an exception by not
+        // respecting the empty path when checking if a newly added device is affecting the state.
+        // Just add a device here to make sure that's handled correctly.
+        Assert.That(() => InputSystem.AddDevice<Gamepad>(), Throws.Nothing);
     }
 
     [Test]

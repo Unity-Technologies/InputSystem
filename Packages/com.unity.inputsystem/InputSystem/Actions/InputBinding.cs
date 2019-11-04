@@ -350,6 +350,33 @@ namespace UnityEngine.InputSystem
             m_Id = m_Guid.ToString();
         }
 
+        /// <summary>
+        /// Initialize a new binding.
+        /// </summary>
+        /// <param name="path">Path for the binding.</param>
+        /// <param name="action">Action to trigger from the binding.</param>
+        /// <param name="groups">Semicolon-separated list of binding <see cref="InputBinding.groups"/> the binding is associated with.</param>
+        /// <param name="processors">Comma-separated list of <see cref="InputBinding.processors"/> to apply to the binding.</param>
+        /// <param name="interactions">Comma-separated list of <see cref="InputBinding.interactions"/> to apply to the
+        /// binding.</param>
+        /// <param name="name">Optional name for the binding.</param>
+        public InputBinding(string path, string action = null, string groups = null, string processors = null,
+                            string interactions = null, string name = null)
+        {
+            m_Path = path;
+            m_Action = action;
+            m_Groups = groups;
+            m_Processors = processors;
+            m_Interactions = interactions;
+            m_Name = name;
+            m_Guid = default;
+            m_Id = default;
+            m_Flags = default;
+            m_OverridePath = default;
+            m_OverrideInteractions = default;
+            m_OverrideProcessors = default;
+        }
+
         public static InputBinding MaskByGroup(string group)
         {
             if (string.IsNullOrEmpty(group))
@@ -615,7 +642,7 @@ namespace UnityEngine.InputSystem
         }
 
         // Internally we pass by reference to not unnecessarily copy the struct.
-        internal bool Matches(ref InputBinding binding)
+        internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
             if (path != null)
             {
@@ -638,8 +665,12 @@ namespace UnityEngine.InputSystem
 
             if (groups != null)
             {
-                if (binding.groups == null
-                    || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
+                var haveGroupsOnBinding = !string.IsNullOrEmpty(binding.groups);
+                if (!haveGroupsOnBinding && (options & MatchOptions.EmptyGroupMatchesAny) == 0)
+                    return false;
+
+                if (haveGroupsOnBinding
+                    && !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(groups, binding.groups, Separator))
                     return false;
             }
 
@@ -650,6 +681,12 @@ namespace UnityEngine.InputSystem
             }
 
             return true;
+        }
+
+        [Flags]
+        internal enum MatchOptions
+        {
+            EmptyGroupMatchesAny = 1 << 0,
         }
 
         [Flags]

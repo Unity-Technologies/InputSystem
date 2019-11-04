@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
             public string sourceAssetPath { get; set; }
         }
 
-        public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
+        public static string GenerateWrapperCode(InputActionAsset asset, Options options = default)
         {
             if (asset == null)
                 throw new ArgumentNullException(nameof(asset));
@@ -82,13 +82,13 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public class {options.className} : IInputActionCollection, IDisposable");
+            writer.WriteLine($"public class @{options.className} : IInputActionCollection, IDisposable");
             writer.BeginBlock();
 
             writer.WriteLine($"private InputActionAsset asset;");
 
             // Default constructor.
-            writer.WriteLine($"public {options.className}()");
+            writer.WriteLine($"public @{options.className}()");
             writer.BeginBlock();
             writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
 
@@ -186,8 +186,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.BeginBlock();
 
                 // Constructor.
-                writer.WriteLine($"private {options.className} m_Wrapper;");
-                writer.WriteLine($"public {mapTypeName}({options.className} wrapper) {{ m_Wrapper = wrapper; }}");
+                writer.WriteLine($"private @{options.className} m_Wrapper;");
+                writer.WriteLine($"public {mapTypeName}(@{options.className} wrapper) {{ m_Wrapper = wrapper; }}");
 
                 // Getter for each action.
                 foreach (var action in map.actions)
@@ -223,9 +223,9 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
                 writer.EndBlock();
 
@@ -238,9 +238,9 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled += instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
                 writer.EndBlock();

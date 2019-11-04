@@ -360,6 +360,13 @@ namespace UnityEngine.InputSystem
         /// matchers matches a given <see cref="InputDeviceDescription"/> (see <see cref="InputDeviceMatcher.MatchPercentage"/>)
         /// better than any other matcher (for the same or any other layout), then the given layout
         /// will be used for the discovered device.
+        ///
+        /// Note that registering a matcher may immediately lead to devices being created or recreated.
+        /// If <paramref name="matcher"/> matches any devices currently on the list of unsupported devices
+        /// (see <see cref="GetUnsupportedDevices()"/>), new <see cref="InputDevice"/>s will be created
+        /// using the layout called <paramref name="layoutName"/>. Also, if <paramref name="matcher"/>
+        /// matches the description of a device better than the matcher (if any) for the device's currently
+        /// used layout, the device will be recreated using the given layout.
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="layoutName"/> is <c>null</c> or empty/</exception>
         /// <exception cref="ArgumentException"><paramref name="matcher"/> is empty (<see cref="InputDeviceMatcher.empty"/>).</exception>
@@ -974,6 +981,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="devices"/>
         /// <seealso cref="AddDevice{TDevice}"/>
         /// <seealso cref="RemoveDevice"/>
@@ -981,11 +989,15 @@ namespace UnityEngine.InputSystem
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceChange += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceChange -= value;
             }
@@ -1006,17 +1018,22 @@ namespace UnityEngine.InputSystem
         /// to have handled the command. If a command is handled by a delegate in the list, it will
         /// not be sent on to the runtime.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         /// <seealso cref="IInputRuntime.DeviceCommand"/>
         public static event InputDeviceCommandDelegate onDeviceCommand
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceCommand += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onDeviceCommand -= value;
             }
@@ -1983,6 +2000,7 @@ namespace UnityEngine.InputSystem
         /// (see <see cref="InputState.AddChangeMonitor(InputControl,IInputStateChangeMonitor,long)"/>
         /// are usually a more efficient and convenient way to set this up.
         /// </remarks>
+        /// <exception cref="ArgumentNullException">Delegate reference is <c>null</c>.</exception>
         /// <seealso cref="QueueEvent(InputEventPtr)"/>
         /// <seealso cref="InputEvent"/>
         /// <seealso cref="Update"/>
@@ -1991,11 +2009,15 @@ namespace UnityEngine.InputSystem
         {
             add
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onEvent += value;
             }
             remove
             {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
                     s_Manager.onEvent -= value;
             }

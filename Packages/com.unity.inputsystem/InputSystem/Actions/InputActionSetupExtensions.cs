@@ -120,6 +120,8 @@ namespace UnityEngine.InputSystem
                 asset.RemoveActionMap(map);
         }
 
+        ////TODO: add method to add an existing InputAction to a map
+
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
@@ -163,6 +165,82 @@ namespace UnityEngine.InputSystem
             }
 
             return action;
+        }
+
+        /// <summary>
+        /// Remove the given action from its <see cref="InputActionMap"/>.
+        /// </summary>
+        /// <param name="action">An input action that is part of an <see cref="InputActionMap"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="action"/> is part of an <see cref="InputActionMap"/>
+        /// that has at least one enabled action -or- <paramref name="action"/> is a standalone action
+        /// that is not part of an <see cref="InputActionMap"/> and thus cannot be removed from anything.</exception>
+        /// <remarks>
+        /// After removal, the action's <see cref="InputAction.actionMap"/> will be set to <c>null</c>
+        /// and the action will effectively become a standalone action that is not associated with
+        /// any action map. Bindings on the action will be preserved. On the action map, the bindings
+        /// for the action will be removed.
+        /// </remarks>
+        /// <seealso cref="AddAction"/>
+        public static void RemoveAction(this InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var actionMap = action.actionMap;
+            if (actionMap == null)
+                throw new ArgumentException(
+                    $"Action '{action}' does not belong to an action map; nowhere to remove from", nameof(action));
+            if (actionMap.enabled)
+                throw new ArgumentException($"Cannot remove action '{action}' while its action map is enabled");
+
+            var bindingsForAction = action.bindings.ToArray();
+
+            var index = ArrayHelpers.IndexOfReference(actionMap.m_Actions, action);
+            Debug.Assert(index != -1, "Could not find action in map");
+            ArrayHelpers.EraseAt(ref actionMap.m_Actions, index);
+
+            action.m_ActionMap = null;
+            action.m_SingletonActionBindings = bindingsForAction;
+
+            actionMap.ClearPerActionCachedBindingData();
+
+            // Remove bindings to action from map.
+            var newActionMapBindingCount = actionMap.m_Bindings.Length - bindingsForAction.Length;
+            if (newActionMapBindingCount == 0)
+                actionMap.m_Bindings = null;
+            else
+            {
+                var newActionMapBindings = new InputBinding[newActionMapBindingCount];
+                var oldActionMapBindings = actionMap.m_Bindings;
+                var bindingIndex = 0;
+                for (var i = 0; i < oldActionMapBindings.Length; ++i)
+                {
+                    var binding = oldActionMapBindings[i];
+                    if (bindingsForAction.IndexOf(b => b == binding) == -1)
+                        newActionMapBindings[bindingIndex++] = binding;
+                }
+                actionMap.m_Bindings = newActionMapBindings;
+            }
+        }
+
+        /// <summary>
+        /// Remove the action with the given name from the asset.
+        /// </summary>
+        /// <param name="asset">Asset to remove the action from.</param>
+        /// <param name="nameOrId">Name or ID of the action. See <see cref="InputActionAsset.FindAction(string,bool)"/> for
+        /// details.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="nameOrId"/>
+        /// is <c>null</c> or empty.</exception>
+        /// <seealso cref="RemoveAction(InputAction)"/>
+        public static void RemoveAction(this InputActionAsset asset, string nameOrId)
+        {
+            if (asset == null)
+                throw new ArgumentNullException(nameof(asset));
+            if (nameOrId == null)
+                throw new ArgumentNullException(nameof(nameOrId));
+            var action = asset.FindAction(nameOrId);
+            action?.RemoveAction();
         }
 
         /// <summary>

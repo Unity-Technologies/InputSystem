@@ -474,7 +474,7 @@ namespace UnityEngine.InputSystem.Editor
             var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
                 ? asset.FindActionMap(playerInput.defaultActionMap)
                 : null;
-            m_SelectedDefaultActionMap = 0;
+            m_SelectedDefaultActionMap = asset.actionMaps.Count > 0 ? 1 : 0;
             var actionMaps = asset.actionMaps;
             m_ActionMapOptions = new GUIContent[actionMaps.Count + 1];
             m_ActionMapOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
@@ -489,6 +489,8 @@ namespace UnityEngine.InputSystem.Editor
             }
             if (m_SelectedDefaultActionMap <= 0)
                 playerInput.defaultActionMap = null;
+            else
+                playerInput.defaultActionMap = m_ActionMapOptions[m_SelectedDefaultActionMap].text;
 
             serializedObject.Update();
         }

@@ -842,17 +842,17 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="UnpairDevicesAndRemoveUser"/>
         /// <seealso cref="InputUserChange.DevicePaired"/>
         public static InputUser PerformPairingWithDevice(InputDevice device,
-            InputUser user = default(InputUser),
+            InputUser user = default,
             InputUserPairingOptions options = InputUserPairingOptions.None)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (user != default(InputUser) && !user.valid)
+            if (user != default && !user.valid)
                 throw new ArgumentException("Invalid user", nameof(user));
 
             // Create new user, if needed.
             int userIndex;
-            if (user == default(InputUser))
+            if (user == default)
             {
                 userIndex = AddUser();
             }

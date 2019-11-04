@@ -437,9 +437,6 @@ namespace UnityEngine.InputSystem.Layouts
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "False positive.")]
         public bool Equals(InputDeviceMatcher other)
         {
-            if (other == null)
-                return false;
-
             if (m_Patterns == other.m_Patterns)
                 return true;
 
