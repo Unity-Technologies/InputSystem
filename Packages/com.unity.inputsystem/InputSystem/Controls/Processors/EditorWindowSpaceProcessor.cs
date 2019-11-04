@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
-using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Processors
 {
@@ -26,6 +25,13 @@ namespace UnityEngine.InputSystem.Processors
         {
             if (control == null)
                 throw new System.ArgumentNullException(nameof(control));
+
+            // We go and fire trigger QueryEditorWindowCoordinatesCommand regardless
+            // of whether we are currently in EditorWindow code or not. The expectation
+            // here is that the underlying editor code is in a better position than us
+            // to judge whether the conversion should be performed or not. In native code,
+            // the IOCTL implementations will early out if they detect that the current
+            // EditorWindow is in fact a game view.
 
             if (Mouse.s_PlatformMouseDevice != null)
             {
