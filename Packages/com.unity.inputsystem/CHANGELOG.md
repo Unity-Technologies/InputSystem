@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0] - 2019-12-12
+
+>__NOTE__: This is the first release of the input system to no longer have the `preview` label and part of the input system becoming a verified package in Unity 2020.1. Bugfixing and documentation improvements will however continue throughout the Unity 2020.1 pre-release cycle and updated packages with those changes will be released.
+
+### Fixed
+
+- Fixed wrong event handlers getting removed when having three or more handlers on an event (case 1196143).
+  * This was an bug in an internal data structure that impacted a number of code paths that were using the data structure.
+
 ## [1.0.0-preview.2] - 2019-11-4
 
 ### Changed

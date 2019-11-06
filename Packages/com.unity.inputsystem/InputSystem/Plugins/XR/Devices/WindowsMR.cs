@@ -13,7 +13,7 @@ namespace UnityEngine.XR.WindowsMR.Input
     public class WMRHMD : XRHMD
     {
         [Preserve]
-        [InputControl(noisy = true)]
+        [InputControl]
         [InputControl(name = "devicePosition", layout = "Vector3", aliases = new[] { "HeadPosition" })]
         [InputControl(name = "deviceRotation", layout = "Quaternion", aliases = new[] { "HeadRotation" })]
         public ButtonControl userPresence { get; private set; }

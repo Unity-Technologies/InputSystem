@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 
+////TODO: API to get the control and device from the internal context
+
 ////TODO: ToString()
 
 namespace UnityEngine.InputSystem

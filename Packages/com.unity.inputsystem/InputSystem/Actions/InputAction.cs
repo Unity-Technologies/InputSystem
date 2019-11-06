@@ -4,6 +4,8 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
 
+////TODO: add way to retrieve the currently ongoing interaction and also add way to know how long it's been going on
+
 ////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
 ////       action based on what action the *composite* references.
@@ -1090,6 +1092,8 @@ namespace UnityEngine.InputSystem
             throw new ArgumentOutOfRangeException(nameof(indexOfBindingOnAction),
                 $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings");
         }
+
+        ////TODO: make current event available in some form
 
         /// <summary>
         /// Information provided to action callbacks about what triggered an action.

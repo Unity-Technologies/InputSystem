@@ -14,7 +14,7 @@ namespace Unity.XR.Oculus.Input
     public class OculusHMD : XRHMD
     {
         [Preserve]
-        [InputControl(noisy = true)]
+        [InputControl]
         [InputControl(name = "trackingState", layout = "Integer", aliases = new[] { "devicetrackingstate" })]
         [InputControl(name = "isTracked", layout = "Button", aliases = new[] { "deviceistracked" })]
         public ButtonControl userPresence { get; private set; }
