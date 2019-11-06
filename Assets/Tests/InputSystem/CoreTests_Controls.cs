@@ -1021,6 +1021,21 @@ partial class CoreTests
                 InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("PrimaryAction"));
     }
 
+    private class DeviceWithoutAnyControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanTurnControlPathIntoHumanReadableText_EvenIfLayoutCannotBeFoundOrHasErrors()
+    {
+        // This one will throw as the layout will result in a zero-size memory block.
+        InputSystem.RegisterLayout<DeviceWithoutAnyControls>();
+
+        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"), Is.EqualTo("leftStick [UnknownGamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"), Is.EqualTo("control [DeviceWithoutAnyControls]"));
+    }
+
     [Test]
     [Category("Controls")]
     public void Controls_CanCheckIfControlMatchesGivenPath()

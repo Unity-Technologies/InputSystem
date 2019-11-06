@@ -2052,7 +2052,7 @@ namespace UnityEngine.InputSystem.Layouts
                 table = null;
             }
 
-            public InputControlLayout FindOrLoadLayout(string name)
+            public InputControlLayout FindOrLoadLayout(string name, bool throwIfNotFound = true)
             {
                 var internedName = new InternedString(name);
 
@@ -2064,7 +2064,9 @@ namespace UnityEngine.InputSystem.Layouts
                     return layout;
 
                 // Nothing.
-                throw new LayoutNotFoundException(name);
+                if (throwIfNotFound)
+                    throw new LayoutNotFoundException(name);
+                return null;
             }
         }
 
