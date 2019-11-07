@@ -39,13 +39,13 @@ Every description has a set of standard fields:
 
 ### Capabilities
 
-Aside from a number of standardized fields, such as `product` and `manufacturer`, a Device description can contain a [`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities) string in JSON format. This string describes characteristics which help the Input System with interpreting the data coming from a Device, and mapping it to Control representations. Not all Device interfaces will report Device capabilities. Examples of interface-specific Device capabilities are [HID descriptors](HID.md). WebGL, Android and Linux use similar mechanisms to report available Controls on connected gamepads.
+Aside from a number of standardized fields, such as `product` and `manufacturer`, a Device description can contain a [`capabilities`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html#UnityEngine_InputSystem_Layouts_InputDeviceDescription_capabilities) string in JSON format. This string describes characteristics which help the Input System to interpret the data coming from a Device, and map it to Control representations. Not all Device interfaces will report Device capabilities. Examples of interface-specific Device capabilities are [HID descriptors](HID.md). WebGL, Android, and Linux use similar mechanisms to report available Controls on connected gamepads.
 
 ### Matching
 
-[`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html)  instances handle matching an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is case-insensitive. For a matcher to apply, all its individual expressions have to match.
+[`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) instances handle matching an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is case-insensitive. For a matcher to apply, all of its individual expressions have to match.
 
-Matchers can be added to any layout by calling [`InputSystem.RegisterLayoutMatcher`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayoutMatcher_System_String_UnityEngine_InputSystem_Layouts_InputDeviceMatcher_). You can also supply them when registering a layout.
+You can add matchers to any layout by calling [`InputSystem.RegisterLayoutMatcher`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayoutMatcher_System_String_UnityEngine_InputSystem_Layouts_InputDeviceMatcher_). You can also supply them when registering a layout.
 
 ```CSharp
 // Register a new layout and supply a matcher for it.
@@ -66,23 +66,23 @@ If multiple matchers are matching the same [`InputDeviceDescription`](../api/Uni
 
 #### Hijacking the matching process
 
-You can overrule the internal matching process from outside and thus select a different layout for a Device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System will use this layout.
+You can overrule the internal matching process from outside to select a different layout for a Device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System will use this layout.
 
 ### Device creation
 
-Once a [layout](Layouts.md) has been chosen for a device, it is used to instantiate an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populate it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as dictated by the layout. This process is performed automatically and internally.
+Once a [layout](Layouts.md) has been chosen for a device, the system uses it to instantiate an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populate it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as the layout ditates. This process is internal and happens automatically.
 
->__Note__: Valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) cannot be created by manually instantiating them with `new`. To guide the creation process, [layouts](Layouts.md) must be used.
+>__Note__: You can't create valid [`InputDevices`](../api/UnityEngine.InputSystem.InputDevice.html) and [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) by manually instantiating them with `new`. To guide the creation process, you must use [layouts](Layouts.md).
 
-When the Input System has finished putting an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) together, it will call [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. This can be used to finalize the setup of controls.
+After the Input System assembles the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), it calls [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. Use this to finalize the setup of the Controls.
 
-After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, it will be added to the system. As part of this process, [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) will be called on the device and [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) will be signaled on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
+After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, the Input System adds it to the system. As part of this process, the Input System calls [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) on the Device, and signals  [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
 
 #### Domain reloads in the Editor
 
-In the Editor, the C# application domain will be reloaded whenever scripts are recompiled and reloaded or when going into play mode. This requires the Input System to reinitialize itself after each domain reload. During this process, it will attempt to recreate devices that had been instantiated before the domain reload. It will, however, not take the state of each such Device across. This means that Devices will reset to default state on domain reloads.
+The Editor reloads the C# application domain whenever it reloads and recompiles scripts, or when the Editor goes into Play mode. This requires the Input System to reinitialize itself after each domain reload. During this process, the Input System attempts to recreate devices that were instantiated before the domain reload. However, the state of each Device doesn't carry across, hwich means that Devices reset to their default state on domain reloads.
 
-Note that layout registrations are __not__ persisted across domain reloads. Instead, the Input System relies on all registrations to become available as part of the initialization process (e.g. by using `[InitializeOnLoad]` to run registration as part of the domain startup code in the Editor). This allows registrations and layouts to be changed in script and the change to immediately take effect after a domain reload.
+Note that layout registrations do __not__ persist across domain reloads. Instead, the Input System relies on all registrations to become available as part of the initialization process (for example, by using `[InitializeOnLoad]` to run registration as part of the domain startup code in the Editor). This allows you to change registrations and layouts in script, and the change to immediately take effect after a domain reload.
 
 ## Native Devices
 
@@ -92,13 +92,13 @@ The Input System remembers native Devices. For example, if the system has no mat
 
 ### Disconnected Devices
 
-If you want to get notified when Input Devices get disconnected, subscribe to the [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event, and look for events of type [`InputDeviceChange.Disconnected`](../api/UnityEngine.InputSystem.InputDeviceChange.html).
+If you want to get notified when Input Devices disconnect, subscribe to the [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) event, and look for events of type [`InputDeviceChange.Disconnected`](../api/UnityEngine.InputSystem.InputDeviceChange.html).
 
-The Input System keeps track of disconnected Devices in [`InputSystem.disconnectedDevices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_disconnectedDevices). If one of these Devices gets reconnected later, the Input System can detect that the Device was connected before, and will reuse its [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance. This allows the [`PlayerInputManager`](Components.md) to reassign the Device to the same [user](UserManagement.md) again.
+The Input System keeps track of disconnected Devices in [`InputSystem.disconnectedDevices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_disconnectedDevices). If one of these Devices reconnects later, the Input System can detect that the Device was connected before, and reuses its [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance. This allows the [`PlayerInputManager`](Components.md) to reassign the Device to the same [user](UserManagement.md) again.
 
 ## Device IDs
 
-Each Device that is created will receive a unique numeric ID. You can access this ID through [`InputDevice.deviceId`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
+Each Device that is created receives a unique numeric ID. You can access this ID through [`InputDevice.deviceId`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId).
 
 All IDs are only used once per Unity session.
 
@@ -108,11 +108,11 @@ Like any [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), a D
 
 ## Device commands
 
-While input [events](Events.md) deliver data coming from a Device, commands send data back to the Device. This is used for retrieving specific information from the Device, for triggering functions on the Device (such as rumble effects), or for a variety of other needs.
+While input [events](Events.md) deliver data coming from a Device, commands send data back to the Device. The Input System uses these for retrieving specific information from the Device, for triggering functions on the Device (such as rumble effects), and for a variety of other needs.
 
 ### Sending commands to Devices
 
-A command is send to a Device through [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__). To monitor Device commands, use [`InputSystem.onDeviceCommand`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceCommand).
+The Input System sends a command to the through [`InputDevice.ExecuteCommand<TCommand>`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__). To monitor Device commands, use [`InputSystem.onDeviceCommand`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceCommand).
 
 Each Device command implements the [`IInputDeviceCommandInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html) interface, which only requires implementing the [`typeStatic`](../api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#UnityEngine_InputSystem_LowLevel_IInputDeviceCommandInfo_typeStatic) property to identify the type of the command. The native implementation of the Device should then understand how to handle that command. One common case is the `"HIDO"` command type which is used to send [HID output reports](HID.md#hid-output) to HIDs.
 
