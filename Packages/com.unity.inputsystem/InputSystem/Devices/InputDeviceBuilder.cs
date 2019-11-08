@@ -57,26 +57,20 @@ namespace UnityEngine.InputSystem.Layouts
             m_Device.CallFinishSetupRecursive();
         }
 
-        // TODO: John fix this up.
-        // internal void Setup(InputControlLayout layout, InternedString variants,
-        //                     InputDeviceDescription deviceDescription = default)
-        // {
-        //     m_LayoutCacheRef = InputControlLayout.CacheRef();
-        //
-        //     InstantiateLayout(layout, variants, new InternedString(), null);
-        //     FinalizeControlHierarchy();
-        //
-        //     m_Device.m_Description = deviceDescription;
-        //     m_Device.CallFinishSetupRecursive();
-        // }
-        //
-        // public InputDeviceBuilder(InputControlLayout layout, string variants = null,
-        //                           InputDeviceDescription deviceDescription = default)
-        // {
-        //     Setup(layout, new InternedString(variants), deviceDescription);
-        // }
-
-
+        // ASG
+        /// <summary> Setup a device builder directly from a control layout, rather than a layout name.</summary>
+        public void Setup(InputControlLayout layout, InternedString variants,
+                            InputDeviceDescription deviceDescription = default)
+        {
+            m_LayoutCacheRef = InputControlLayout.CacheRef();
+        
+            InstantiateLayout(layout, variants, new InternedString(), null);
+            FinalizeControlHierarchy();
+        
+            m_Device.m_Description = deviceDescription;
+            m_Device.CallFinishSetupRecursive();
+        }
+        
 
 
         // Complete the setup and return the full control hierarchy setup

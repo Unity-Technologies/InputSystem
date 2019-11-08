@@ -1386,6 +1386,26 @@ namespace UnityEngine.InputSystem
             s_Manager.AddDevice(device);
         }
 
+        // ASG
+        /// <summary>
+        /// Adds a device with the given a json string layout. This is potentially a costly operation as constructing
+        /// a layout from JSON heavily allocates.
+        /// </summary>
+        public static InputDevice AddDeviceFromJson(string layoutJson, string name = null,
+                                     InternedString variants = new InternedString())
+        {
+            // Instantiate the layout.
+            InputControlLayout layout = InputControlLayout.FromJson(layoutJson);
+
+            // Create the device
+            using (InputDeviceBuilder.Ref())
+            {
+                InputDeviceBuilder.instance.Setup(layout, variants);
+                var device = InputDeviceBuilder.instance.Finish();
+                return device;
+            }
+        }
+
         /// <summary>
         /// Remove a device from the system such that it no longer receives input and is no longer part of the
         /// set of devices in <see cref="devices"/>.
