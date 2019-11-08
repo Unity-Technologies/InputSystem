@@ -4,7 +4,7 @@ The Input System has built-in support for writing automated input tests. You can
 
 ## Setting up test assemblies
 
-Using test support requires setting up a test assembly for your tests. To set up a test assembly, follow these steps:
+To use test support, you must first set up a test assembly. To set up a test assembly, follow these steps:
 
 1. Create a new assembly definition (menu: __Create > Assembly Definition__).
 2. Add references to `nunit.framework.dll`, `UnityEngine.TestRunner`, and `UnityEditor.TestRunner` (as described in [How to create a new test assembly](https://docs.unity3d.com/Packages/com.unity.test-framework@1.0/manual/workflow-create-test-assembly.html)), as well as `UnityEngine.Input.dll` and `UnityEngine.Input.TestFramework.dll` for the Input System.
@@ -173,4 +173,4 @@ Alternatively, you can use code to feed arbitrary input events into the system, 
     }
 ```
 
->__Note__: For reference, the tests for the Input System itself can be found in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
+>__Note__: For reference, you can find the tests for the Input System itself in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
