@@ -536,7 +536,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
+                    var maxValue = ((long)1 << reportSizeInBits) - 1;
                     if (isSigned)
                         return logicalMin / (float)((maxValue + 1) / 2);
                     return logicalMin / (float)maxValue;
@@ -547,7 +547,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
+                    var maxValue = ((long)1 << reportSizeInBits) - 1;
                     if (isSigned)
                         return logicalMax / (float)((maxValue + 1) / 2);
                     return logicalMax / (float)maxValue;
@@ -797,7 +797,7 @@ namespace UnityEngine.InputSystem.HID
 
                                     // Test upper bound.
                                     var maxPlusOne = logicalMax + 1;
-                                    if (maxPlusOne <= (1 << reportSizeInBits) - 1)
+                                    if (maxPlusOne <= ((long)1 << reportSizeInBits) - 1)
                                         return new PrimitiveValue(maxPlusOne);
                                 }
                                 break;

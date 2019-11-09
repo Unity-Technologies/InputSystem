@@ -368,9 +368,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     value = MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (format == FormatSBit ? -1.0f : 0.0f);
                 }
-                else if (sizeInBits <= 31)
+                else if (sizeInBits <= 32)
                 {
-                    var maxValue = (float)(1 << (int)sizeInBits);
+                    var maxValue = (float)((long)1 << (int)sizeInBits);
                     var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
                     if (format == FormatSBit)
                     {

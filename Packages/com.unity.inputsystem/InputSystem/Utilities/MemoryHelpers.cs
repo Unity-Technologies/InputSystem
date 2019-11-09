@@ -232,7 +232,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));
-            if (bitCount >= sizeof(int) * 8)
+            if (bitCount > sizeof(int) * 8)
                 throw new ArgumentException("Trying to read more than 32 bits as int", nameof(bitCount));
 
             // Shift the pointer up on larger bitmasks and retry.
@@ -278,8 +278,8 @@ namespace UnityEngine.InputSystem.Utilities
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));
-            if (bitCount >= sizeof(int) * 8)
-                throw new ArgumentException("Trying to write more than 32 bits as int", nameof(bitCount));
+            if (bitCount > sizeof(int) * 8)
+                throw new ArgumentException("Trying to write more than 32 bits as int - " + bitCount, nameof(bitCount));
 
             // Bits out of byte.
             if (bitOffset + bitCount <= 8)
