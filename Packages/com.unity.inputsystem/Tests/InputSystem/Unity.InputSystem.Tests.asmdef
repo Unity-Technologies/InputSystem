@@ -8,13 +8,15 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
         "Mono.Cecil.dll",
-        "nunit.framework.dll",
         "HtmlAgilityPack.dll"
     ],
     "autoReferenced": false,
