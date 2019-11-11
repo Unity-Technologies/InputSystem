@@ -2,7 +2,7 @@ using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
-internal class IntegrationTests
+public class IntegrationTests
 {
     [Test]
     public void CanSendAndReceiveEvents()
