@@ -1388,10 +1388,10 @@ namespace UnityEngine.InputSystem
 
         // ASG
         /// <summary>
-        /// Adds a device with the given a json string layout. This is potentially a costly operation as constructing
+        /// Creates a device with the given a json string layout. This is potentially a costly operation as constructing
         /// a layout from JSON heavily allocates.
         /// </summary>
-        public static InputDevice AddDeviceFromJson(string layoutJson, string name = null,
+        public static InputDevice CreateDeviceFromJson(string layoutJson, string name = null,
                                      InternedString variants = new InternedString())
         {
             // Instantiate the layout.
