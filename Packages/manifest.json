@@ -43,8 +43,5 @@
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
   },
-  "registry": "https://staging-packages.unity.com",
-  "testables": [
-    "com.unity.inputsystem"
-  ]
+  "registry": "https://staging-packages.unity.com"
 }
