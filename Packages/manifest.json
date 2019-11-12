@@ -44,7 +44,7 @@
     "com.unity.modules.xr": "1.0.0"
   },
   "registry": "https://staging-packages.unity.com",
-  "testabables" : [
+  "testables": [
     "com.unity.inputsystem"
   ]
 }
