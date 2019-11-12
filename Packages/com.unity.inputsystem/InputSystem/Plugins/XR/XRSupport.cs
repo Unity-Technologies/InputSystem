@@ -292,7 +292,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusHMD>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct("^(Oculus Rift)|^(Oculus Quest)|^(Oculus Go)"));
+                    .WithProduct("^(Oculus Rift)|^(Oculus Quest$)|^(Oculus Go)"));
             InputSystem.RegisterLayout<Unity.XR.Oculus.Input.OculusTouchController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
