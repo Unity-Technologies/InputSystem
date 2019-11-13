@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed wrong event handlers getting removed when having three or more handlers on an event (case 1196143).
   * This was an bug in an internal data structure that impacted a number of code paths that were using the data structure.
+- Fixed `LayoutNotFoundException` being thrown when `InputControlPath.ToHumanReadableString` referenced a layout that could not be found.
 
 ## [1.0.0-preview.2] - 2019-11-4
 
