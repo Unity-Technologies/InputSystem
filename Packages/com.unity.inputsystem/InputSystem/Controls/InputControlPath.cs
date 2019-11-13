@@ -325,7 +325,7 @@ namespace UnityEngine.InputSystem
             using (InputControlLayout.CacheRef())
             {
                 // Load layout.
-                var layout = InputControlLayout.cache.FindOrLoadLayout(new InternedString(layoutName));
+                var layout = InputControlLayout.cache.FindOrLoadLayout(new InternedString(layoutName), throwIfNotFound: false);
                 if (layout == null)
                     return null;
 
@@ -1062,7 +1062,7 @@ namespace UnityEngine.InputSystem
                     // Where possible, use the displayName of the given layout rather than
                     // just the internal layout name.
                     string layoutString;
-                    var referencedLayout = InputControlLayout.cache.FindOrLoadLayout(referencedLayoutName);
+                    var referencedLayout = InputControlLayout.cache.FindOrLoadLayout(referencedLayoutName, throwIfNotFound: false);
                     if (referencedLayout != null && !string.IsNullOrEmpty(referencedLayout.m_DisplayName))
                         layoutString = referencedLayout.m_DisplayName;
                     else
@@ -1084,7 +1084,8 @@ namespace UnityEngine.InputSystem
                     {
                         // NOTE: This produces a fully merged layout. We should thus pick up display names
                         //       from base layouts automatically wherever applicable.
-                        var parentLayout = InputControlLayout.cache.FindOrLoadLayout(new InternedString(parentLayoutName));
+                        var parentLayout =
+                            InputControlLayout.cache.FindOrLoadLayout(new InternedString(parentLayoutName), throwIfNotFound: false);
                         if (parentLayout != null)
                         {
                             var controlName = new InternedString(name.ToString());

@@ -13,7 +13,7 @@ The Input System provides two `MonoBehaviour` components that simplify setting u
 
 ![PlayerInput](Images/PlayerInput.png)
 
-Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player in the game. Multiple [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instances can coexist at the same time (though not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses excplusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
+Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player in the game. Multiple [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instances can coexist at the same time (though not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses exclusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
 Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) corresponds to one [`InputUser`](UserManagement.md). You can query the [`InputUser`](UserManagement.md) from the component using [`PlayerInput.user`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_user).
 

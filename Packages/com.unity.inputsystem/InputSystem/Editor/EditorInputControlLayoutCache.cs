@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.Editor
                 throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
 
             Refresh();
-            return InputControlLayout.cache.FindOrLoadLayout(layoutName);
+            return InputControlLayout.cache.FindOrLoadLayout(layoutName, throwIfNotFound: false);
         }
 
         public static Type GetValueType(string layoutName)
@@ -232,7 +232,10 @@ namespace UnityEngine.InputSystem.Editor
             // Load and store all layouts.
             foreach (var layoutName in layoutNames)
             {
-                var layout = InputControlLayout.cache.FindOrLoadLayout(layoutName);
+                var layout = InputControlLayout.cache.FindOrLoadLayout(layoutName, throwIfNotFound: false);
+                if (layout == null)
+                    continue;
+
                 ScanLayout(layout);
 
                 if (layout.isOverride)
@@ -264,7 +267,9 @@ namespace UnityEngine.InputSystem.Editor
                         break;
                     }
 
-                    var baseLayout = InputControlLayout.cache.FindOrLoadLayout(baseLayoutName);
+                    var baseLayout = InputControlLayout.cache.FindOrLoadLayout(baseLayoutName, throwIfNotFound: false);
+                    if (baseLayout == null)
+                        continue;
                     if (baseLayout.m_BaseLayouts.length > 1)
                         throw new NotImplementedException();
                     baseLayoutName = baseLayout.baseLayouts.FirstOrDefault();
