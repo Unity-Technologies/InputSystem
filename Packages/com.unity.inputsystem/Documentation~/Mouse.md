@@ -1,6 +1,6 @@
 # Mouse support
 
-Mice are represented by the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
+Mice are represented by the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
 
 You can query the last used or last added mouse with [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
 

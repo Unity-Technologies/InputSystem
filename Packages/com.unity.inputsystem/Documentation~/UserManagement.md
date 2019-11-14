@@ -4,9 +4,9 @@ The Input System supports multi-user management through the [`InputUser`](../api
 
 >__Note__: The user management API is quite low-level in nature. If the stock functionality provided by [`PlayerInputManager`](Components.md#playerinputmanager-component) (see [Components](./Components.md)) is sufficient, this provides an easier way to set up user management. The API described here is useful when you want more control over user management.
 
-In the input system, a user is represented by the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. Each [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) represents a human interacting with the application. You can have multiple users playing a game together on a single computer or device (local multiplayer), where each user has one or more [paired Input Devices](#device-pairing). A user may be associated with a platform [user account](#user-account-management), if supported by the platform and the Devices used.
+In the Input System, a user is represented by the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. Each [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) represents a human interacting with the application. For example, you can have multiple users playing a game together on a single computer or device (local multiplayer), where each user has one or more [paired Input Devices](#device-pairing). A user might be associated with a platform [user account](#user-account-management), if the platform and Devices used support it.
 
-The [`PlayerInputManager`](Components.md#playerinputmanager-component) class uses [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) internally for it's user handling.
+The [`PlayerInputManager`](Components.md#playerinputmanager-component) class uses [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) internally to handle users.
 
 ## Device pairing
 
@@ -16,7 +16,7 @@ You can query the Devices paired to a specific [`InputUser`](../api/UnityEngine.
 
 ### Initial engagement
 
-Once you have created a user, you can associate [Input Actions](Actions.md) to it using [`InputUser.AssociateActionsWithUser`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_AssociateActionsWithUser_UnityEngine_InputSystem_IInputActionCollection_), and pick a [Control Scheme](ActionBindings.md#control-schemes) to use by using [`InputUser.ActivateControlScheme`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_ActivateControlScheme_System_String_). You can use [`InputControlScheme.FindControlSchemeForDevice`](../api/UnityEngine.InputSystem.InputControlScheme.html#UnityEngine_InputSystem_InputControlScheme_FindControlSchemeForDevice__1_UnityEngine_InputSystem_InputDevice___0_) to pick a control scheme matching the selected Actions and Device:
+After you created a user, you can associate [Input Actions](Actions.md) to it using [`InputUser.AssociateActionsWithUser`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_AssociateActionsWithUser_UnityEngine_InputSystem_IInputActionCollection_), and a [Control Scheme](ActionBindings.md#control-schemes) by using [`InputUser.ActivateControlScheme`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_ActivateControlScheme_System_String_). You can use [`InputControlScheme.FindControlSchemeForDevice`](../api/UnityEngine.InputSystem.InputControlScheme.html#UnityEngine_InputSystem_InputControlScheme_FindControlSchemeForDevice__1_UnityEngine_InputSystem_InputDevice___0_) to pick a control scheme that matches the selected Actions and Device:
 
 ```
 var scheme = InputControlScheme.FindControlSchemeForDevice(user.pairedDevices[0], user.actions.controlsSchemes);
@@ -28,15 +28,15 @@ Activating a Control Scheme automatically switches the active Binding mask for t
 
 ### Loss of Device
 
-If Input Devices which are paired to a user get disconnected during the session, the system notifies the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. It still keeps track of the Device, and automatically re-pairs the Device if it becomes available again.
+If Input Devices which are paired to a user disconnect during the session, the system notifies the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. It still keeps track of the Device, and automatically re-pairs the Device if it becomes available again.
 
 You can get notified of any such changes by subscribing to the [`InputUser.onChange`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_onChange) event.
 
 ## User account management
 
-A user can be associated with a platform user account, if the platform and the Devices used both support this. Consoles commonly support this functionality. You can query the associated user account for an [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) using the [`platformUserAccountHandle`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_platformUserAccountHandle) property. This property gets determined when the user is first [paired to a Device](#device-pairing), and the Device has any platform user information the Input System can query.
+A user can be associated with a platform user account, if both the platform and the Devices used support this. Consoles commonly support this functionality. You can query the associated user account for an [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) using the [`platformUserAccountHandle`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_platformUserAccountHandle) property. This property gets determined when the user is first [paired to a Device](#device-pairing), and the Device has any platform user information the Input System can query.
 
-Note that the account associated with an InputUser may change if the player uses the platform's facilities to switch to a different account ([`InputUser.onChange`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_onChange) receives an `InputUserChange.AccountChanged` notification).
+The account associated with an InputUser might change if the player uses the platform's facilities to switch to a different account ([`InputUser.onChange`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_onChange) receives an `InputUserChange.AccountChanged` notification).
 
 Platforms that support user account association are Xbox One, PlayStation 4, Nintendo Switch, and UWP. Note that for WSA/UWP apps, the *User Account Information* capability must be enabled for the app in order for user information to come through on input devices.
 

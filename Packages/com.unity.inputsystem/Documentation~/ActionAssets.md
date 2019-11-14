@@ -8,11 +8,11 @@ An Input Action Asset is an Asset containing [Input Actions](Actions.md) as well
 
 ## Creating Input Action Assets
 
-To create an Asset containing [Input Acions](Actions.md) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ in Unity's main menu.
+To create an Asset containing [Input Actions](Actions.md) in Unity, right-click in the __Project__ window or go to __Assets > Create > Input Actions__ from Unity's main menu.
 
 ## Editing Input Action Assets
 
-To bring up the Action editor, double-click an `.inputactions` asset in the Project Browser or click the __Edit Asset__ button in the inspector for that Asset. You can have more than one editor window open at the same time, but not for the same Asset.
+To bring up the Action editor, double-click an `.inputactions` Asset in the Project Browser, or click the __Edit Asset__ button in the inspector for that Asset. You can have more than one editor window open at the same time, but not for the same Asset.
 
 ![Action Editor Window](Images/MyGameActions.png)
 
@@ -24,7 +24,7 @@ By default, Unity doesn't save edits you make in the Action Asset window when yo
 
 >__Note__: This setting affects all `.inputactions` Assets, and persists across Unity Editor sessions.
 
-The editor window is divided into three panes.
+The editor window is divided into three panes:
 
 1. The left pane lists the Action Maps in the Asset. Each Map is a collection of Actions that you can enable or disable in bulk.
 2. The middle pane contains the Actions in the currently selected Action Map, and the bindings associated with each Action.
@@ -34,16 +34,16 @@ Use the following keyboard shortcuts to quickly trigger common operations:
 
 |Shortcut (Mac)|Shortcut (Windows)|Description|
 |--------------|------------------|-----------|
-|⌘X, ⌘C, ⌘V|Ctrl-X, Ctrl-C, Ctrl-V|Cut, Copy and Paste. Can be used on Actions, Action Maps and Bindings.|
-|⌘D|Ctrl-D|Duplicate. Can be used on Actions, Action Maps and Bindings.|
-|⌘⌫|Del|Delete. Can be used on Actions, Action Maps and Bindings.|
+|⌘X, ⌘C, ⌘V|Ctrl-X, Ctrl-C, Ctrl-V|Cut, Copy, and Paste. Can be used on Actions, Action Maps, and Bindings.|
+|⌘D|Ctrl-D|Duplicate. Can be used on Actions, Action Maps, and Bindings.|
+|⌘⌫|Del|Delete. Can be used on Actions, Action Maps, and Bindings.|
 |⌥S|Alt-S|Save.|
 |⌥M|Alt-M|Add Action Map.|
 |⌥A|Alt-A|Add Action.|
 |⌥B|Alt-B|Add Binding.|
 
 
->__Tip__: You can search for Devices and/or Control Schemes directly from the search box. For example, "d:gamepad" filters for bindings to gamepad Devices, whereas "g:gamepad" filters for bindings in the "gamepad" Control Scheme. Matching is case-insensitive and will match any partial name.
+>__Tip__: You can search for Devices and/or Control Schemes directly from the search box. For example, "d:gamepad" filters for bindings to gamepad Devices, whereas "g:gamepad" filters for bindings in the "gamepad" Control Scheme. Matching is case-insensitive and matches any partial name.
 
 ### Editing Action Maps
 
@@ -52,7 +52,7 @@ Use the following keyboard shortcuts to quickly trigger common operations:
 >__Note__: Action Map names can't contain slashes  (`/`).
 
 * To add a new Action Map, click the plus icon in the header of the Action Map column.
-* To rename an existing Action Map, either long-click the name, or right-click the action map and select __Rename__ from the context menu.
+* To rename an existing Action Map, either long-click the name, or right-click the Action Map and select __Rename__ from the context menu.
 * To delete an existing Action Map, either right-click it and select __Delete__ from the context menu, or use the Delete key (Windows) / ⌘⌫ (Mac).
 * To duplicate an existing Action Map, either right-click it and select __Duplicate__ from the context menu, or use Ctrl-D (Windows) / ⌘D (Mac).
 
@@ -81,7 +81,7 @@ If you select a Binding, you can edit its properties in the right-hand pane of t
 
 #### Picking Controls
 
-The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ drop-down list. This will pop up a Control picker window.
+The most important property of any Binding is the [control path](Controls.md#control-paths) it's bound to. To edit it, open the __Path__ drop-down list. This pops up a Control picker window.
 
 ![Control Picker](Images/InputControlPicker.png)
 
@@ -131,8 +131,8 @@ using UnityEngine.InputSystem;
 // checkbox.
 public class MyPlayerScript : MonoBehaviour, IGameplayActions
 {
-    // MyPlayerControls is the C# class that has been generated for us.
-    // It encapsulates the data  from the .inputactions asset we created
+    // MyPlayerControls is the C# class that Unity generated.
+    // It encapsulates the data from the .inputactions asset we created
     // and automatically looks up all the maps and actions for us.
     MyPlayerControls controls;
 
@@ -168,6 +168,6 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 
 ### Using Action Assets with `PlayerInput`
 
-The [`PlayerInput`](Components.md#playerinput-component) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in an Input Action Asset, which you can then assign to the [`PlayerInput`](Components.md#playerinput-component) component. [`PlayerInput`](Components.md#playerinput-component) can then automatically handle activating Action Maps and selecting Control Schemes for you. Check the documentation on [GameObject Components for Input](Components.md) to learn more.
+The [`PlayerInput`](Components.md#playerinput-component) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in an Input Action Asset, which you can then assign to the [`PlayerInput`](Components.md#playerinput-component) component. [`PlayerInput`](Components.md#playerinput-component) can then automatically handle activating Action Maps and selecting Control Schemes for you. To learn more, see the documentation on [GameObject Components for Input](Components.md).
 
 ![PlayerInput](Images/PlayerInput.png)

@@ -2,9 +2,9 @@
 
 A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined as a Device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 
-A gamepad may have additional Controls, such as a gyro, which are exposed from the Device. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.
+A gamepad can have additional Controls, such as a gyro, which the Device can expose. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.
 
-Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. A PS4 DualShock controller, for example, is meant to look identical regardless of which platform it is supported on. A gamepad's south face button is meant to be expected to always be the lowermost face button.
+Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. A PS4 DualShock controller, for example, is meant to look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
 
 ## Controls
 
@@ -25,8 +25,8 @@ Every gamepad has the following Controls:
 |[`rightTrigger`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightTrigger)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right trigger button.|
 |[`startButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_startButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The start button.|
 |[`selectButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_selectButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The select button.|
-|[`leftStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the left stick.|
-|[`rightStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed by pressing down the right stick.|
+|[`leftStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed when the user presses down the left stick.|
+|[`rightStickButton`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStickButton)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The button pressed when the user presses down the right stick.|
 
 >__Note__: Buttons are also full floating-point axes. For example, the left and right triggers can function as buttons as well as full floating-point axes.
 
@@ -47,7 +47,7 @@ Gamepad.current["Triangle"]
 
 ## Polling
 
-On Windows (XInput controllers only), UWP and Switch, Unity polls gamepads explicitly rather than deliver updates as events.
+On Windows (XInput controllers only), Universal Windows Platform (UWP), and Switch, Unity polls gamepads explicitly rather than deliver updates as events.
 
 You can control polling frequency manually. The default polling frequency is 60 Hz. Use [`InputSystem.pollingFrequency`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_pollingFrequency) to get or set the frequency.
 
@@ -56,11 +56,11 @@ You can control polling frequency manually. The default polling frequency is 60 
 InputSystem.pollingFrequency = 120;
 ```
 
-Increased frequency should lead to an increased number of events on the respective Devices. The timestamps provided on the events should roughly following the spacing dicated by the polling frequency. Note, however, that the asynchronous background polling depends on OS thread scheduling and can vary.
+Increased frequency should lead to an increased number of events on the respective Devices. The timestamps provided on the events should roughly follow the spacing dictated by the polling frequency. Note, however, that the asynchronous background polling depends on OS thread scheduling and can vary.
 
 ## Rumble
 
-The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implements the [`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) interface to allow you to control the left and right motor speeds. In most common gamepads, the left motor emits a low-frequency rumble, and the right motor emits a high frequency rumble.
+The [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class implements the [`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) interface that allows you to control the left and right motor speeds. In most common gamepads, the left motor emits a low-frequency rumble, and the right motor emits a high-frequency rumble.
 
 ```CSharp
 // Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
@@ -69,16 +69,16 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 ```
 
 >__Note__: Only the following combinations of Devices/OSes currently support rumble:
->* PS4, Xbox and Switch controllers when connected to their respective consoles. Only supported if you install console-specific input packages in your project.
->* PS4 controllers when connected to Mac or Windows/UWP computers.
->* Xbox controllers on windows.
+>* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
+>* PS4 controllers, when connected to Mac or Windows/UWP computers.
+>* Xbox controllers on Windows.
 [//]: # (TODO: are we missing any supported configs?)
 
 ### Pausing, resuming, and stopping haptics
 
-[`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) is based on [`IHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html), which is the base interface for any haptics support on any Device. This allows you to pause, resume and reset haptic feedback, using the [`PauseHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_PauseHaptics), [`ResumeHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResumeHaptics) and [`ResetHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResetHaptics) methods respectively.
+[`IDualMotorRumble`](../api/UnityEngine.InputSystem.Haptics.IDualMotorRumble.html) is based on [`IHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html), which is the base interface for any haptics support on any Device. You can pause, resume, and reset haptic feedback using the [`PauseHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_PauseHaptics), [`ResumeHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResumeHaptics), and [`ResetHaptics`](../api/UnityEngine.InputSystem.Haptics.IHaptics.html#UnityEngine_InputSystem_Haptics_IHaptics_ResetHaptics) methods respectively.
 
-In certain situations, you might want to globally pause or stop haptics for all Devices. For example, if the player enters the in-game menu, you can pause haptics while the player is in the menu, and then resume haptics once the player resumes the game. You can use the corresponding methods on [`InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html) to achieve this result. These methods work the same way as Device-specific methods, but affect all Devices:
+In certain situations, you might want to globally pause or stop haptics for all Devices. For example, if the player enters an in-game menu, you can pause haptics while the player is in the menu, and then resume haptics once the player resumes the game. You can use the corresponding methods on [`InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html) to achieve this result. These methods work the same way as Device-specific methods, but affect all Devices:
 
 ```CSharp
 // Pause haptics globally.
@@ -91,7 +91,7 @@ InputSystem.ResumeHaptics();
 InputSystem.ResetHaptics();
 ```
 
-The difference between [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) and [`ResetHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetHaptics) is that the latter will reset haptics playback state on each Device to its initial state whereas [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) will preserve playback state in memory and only stop playback on the hardware.
+The difference between [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) and [`ResetHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetHaptics) is that the latter resets haptics playback state on each Device to its initial state, whereas [`PauseHaptics`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_PauseHaptics) preserves playback state in memory and only stops playback on the hardware.
 
 ## PlayStation controllers
 
@@ -101,33 +101,31 @@ PlayStation controllers are well supported on different Devices. The Input Syste
 
 * [`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html): A DualShock 4 controller connected to a desktop computer using the HID interface. Supported on macOS, Windows, UWP, and Linux.
 
-*
-[`DualShock4GampadiOS`](../api/UnityEngine.InputSystem.iOS.DualShock4GampadiOS.html): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
+* [`DualShock4GampadiOS`](../api/UnityEngine.InputSystem.iOS.DualShock4GampadiOS.html): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
 
-[`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class:
+[`DualShock4GamepadHID`](../api/UnityEngine.InputSystem.DualShock.DualShock4GamepadHID.html) implements additional, DualShock-specific functionality on top the general support in the [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) class.
 
-* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Lets you set the color of the light bar on the controller.
+* [`SetLightBarColor(Color)`](../api/UnityEngine.InputSystem.DualShock.DualShockGamepad.html#UnityEngine_InputSystem_DualShock_DualShockGamepad_SetLightBarColor_Color_): Used to set the color of the light bar on the controller.
 
 >__Note__:
->* Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support Rumble or any other DualShock-specific functionality.
+>* Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other DualShock-specific functionality.
 >* Unity doesn't support connecting a PlayStation controller to a desktop machine using the DualShock 4 USB Wireless Adaptor. Use USB or Bluetooth to connect it.
 
 ## Xbox
 
-Xbox controllers are well supported on different Devices. The Input System implements these using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, which derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html). On Windows and UWP, Unity connects to any type of supported XInput controller, including all Xbox One or Xbox 360-compatible controllers, using the XInput API. These controllers are represented as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (for example, a wheel or a gamepad).
+Xbox controllers are well supported on different Devices. The Input System implements these using the [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) class, which derives from [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html). On Windows and UWP, Unity uses the XInput API to connect to any type of supported XInput controller, including all Xbox One or Xbox 360-compatible controllers. These controllers are represented as an [`XInputController`](../api/UnityEngine.InputSystem.XInput.XInputController.html) instance. You can query the [`XInputController.subType`](../api/UnityEngine.InputSystem.XInput.XInputController.html#UnityEngine_InputSystem_XInput_XInputController_subType) property to get information about the type of controller (for example, a wheel or a gamepad).
 
-On other platforms Unity uses derived classes to represent Xbox controllers:
+On other platforms Unity, uses derived classes to represent Xbox controllers:
 
 * [`XboxGamepadMacOS`](../api/UnityEngine.InputSystem.XInput.XboxGamepadMacOS.html): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).
 
 * [`XboxOneGampadMacOSWireless`](../api/UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless.html): An Xbox One controller connected to a Mac via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.
 
-*
-[`XboxOneGampadiOS`](../api/UnityEngine.InputSystem.iOS.XboxOneGampadiOS.html): An Xbox One controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
+* [`XboxOneGampadiOS`](../api/UnityEngine.InputSystem.iOS.XboxOneGampadiOS.html): An Xbox One controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.
 
 >__Note__:
->* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). Only USB connections are supported by this driver, no wireless dongles. However, the latest generation of Xbox One controllers natively supported Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
->* Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support Rumble or any other Xbox-specific functionality.
+>* XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. Macs natively support these controllers as HIDs without any additional drivers when connected via Bluetooth.
+>* Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) or [`Joystick`](../api/UnityEngine.InputSystem.Joystick.html) Devices, and doesn't support rumble or any other Xbox-specific functionality.
 
 ## Switch
 

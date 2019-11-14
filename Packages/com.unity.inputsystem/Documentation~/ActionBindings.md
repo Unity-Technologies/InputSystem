@@ -1,23 +1,23 @@
 # Input Bindings
 
-An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). An Action have an arbitrary number of Bindings pointed at it. Multiple Bindings can reference the same Control.
+An [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) represents a connection between an [Action](Actions.md) and one or more [Controls](Controls.md) identified by a [Control path](Controls.md#control-paths). An Action can have an arbitrary number of Bindings pointed at it. Multiple Bindings can reference the same Control.
 
 Each Binding has the following properties:
 
 |Property|Description|
 |--------|-----------|
 |[`path`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_path)|[Control path](Controls.md#control-paths) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
-|[`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath)|[Control path](Controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, meaning that it can be used to non-destructively override the path on a Binding. If it is set to something other than null, it will take effect and override `path`.  If you want to get the path which is currently being used (that is either `path` or `overridePath`), you can query the [`effectivePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_effectivePath) property.|
+|[`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath)|[Control path](Controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a Binding. If it's set to something other than null, it will take effect and override `path`.  If you want to get the path which is currently being used (that is either `path` or `overridePath`), you can query the [`effectivePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_effectivePath) property.|
 |[`action`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_action)|The name or ID of the Action that the Binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Case-insensitive.<br><br>Example: `"fire"`|
 |[`groups`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_groups)|A semicolon-separated list of Binding groups that the Binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Case-insensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
 |[`interactions`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_interactions)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this Binding. Note that Unity appends Interactions applied to the [Action](Actions.md) itself (if any) to this list. Case-insensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
-|[`processors`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_processors)|A semicolon-separated list of [Processors](Processors.md) to apply to input on this Binding. Note that Unity appends Processors applied to the [Action](Actions.md) itself (if any) to this list. Case-insensitive.<br><br>Processors applied to Bindings apply in addition to Processors applied to Controls that are providing values. If, for example, you put a `stickDeadzone` Processor on a Binding and then bind it to `<Gamepad>/leftStick`, you will get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control and once from the Binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
+|[`processors`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_processors)|A semicolon-separated list of [Processors](Processors.md) to apply to input on this Binding. Note that Unity appends Processors applied to the [Action](Actions.md) itself (if any) to this list. Case-insensitive.<br><br>Processors applied to Bindings apply in addition to Processors applied to Controls that are providing values. If, for example, you put a `stickDeadzone` Processor on a Binding and then bind it to `<Gamepad>/leftStick`, you will get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the Binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
 |[`id`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_id)|Unique ID of the Binding. You can use it to identify the Binding when storing Binding overrides in user settings, for example.|
 |[`name`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_name)|Optional name of the Binding. Most importantly used to identify part names inside [Composites](#composite-bindings).<br><br>Example: `"Positive"`|
 |[`isComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isComposite)|Whether the Binding acts as a [Composite](#composite-bindings).|
 |[`isPartOfComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isPartOfComposite)|Whether the Binding is part of a [Composite](#composite-bindings).|
 
-You can query the Bindings to a particular Action using [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings). You can also query a flat list of Nindings for all Actions in an Action Map using [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings).
+You can query the Bindings to a particular Action using [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings). You can also query a flat list of Bindings for all Actions in an Action Map using [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings).
 
 ## Composite Bindings
 
@@ -107,11 +107,11 @@ In addition, you can set the following parameters on a 2D vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`normalize`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_normalize)|Whether the resulting vector should be normalized or not. If this is disabled, then, for example, pressing both [`up`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_up) and [`right`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_right) will yield a vector `(1,1)` which has a length greater than 1. This can be undesirable in situations where the vector's magnitude matters (for example, when scaling running speed by the length of the input vector).<br><br>This is true by default.|
+|[`normalize`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_normalize)|Whether the resulting vector should be normalized or not. If this is disabled, then, for example, pressing both [`up`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_up) and [`right`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_right)  yields a vector `(1,1)` which has a length greater than 1. This can be undesirable in situations where the vector's magnitude matters (for example, when scaling running speed by the length of the input vector).<br><br>This is true by default.|
 
 ### Button with one modifier
 
-A Composite that requires another button to be held when pressing the button that triggers the Action. Implemented in the [`ButtonWithOneModifier`](../api/UnityEngine.InputSystem.Composites.ButtonWithOneModifier.html) class. This is useful, for example, to represent keyboard shortcuts such as Ctrl+1 but isn't restricted to keyboard controls. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Composite that requires another button to be held when pressing the button that triggers the Action. Implemented in the [`ButtonWithOneModifier`](../api/UnityEngine.InputSystem.Composites.ButtonWithOneModifier.html) class. This is useful, for example, to represent keyboard shortcuts such as Ctrl+1, but isn't restricted to keyboard controls. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
 The result is a `float`.
 
@@ -133,7 +133,7 @@ This Composite has no parameters.
 
 ### Button with two modifiers
 
-A Composite that requires two other buttons to be held when pressing the button that triggers the Action. Implemented in the [`ButtonWithTwoModifiers`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html) class. This is useful, for example, to represent keyboard shortcuts such as "Ctrl+Shift+1" but isn't restricted to keyboard controls. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Composite that requires two other buttons to be held when pressing the button that triggers the Action. Implemented in the [`ButtonWithTwoModifiers`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html) class. This is useful, for example, to represent keyboard shortcuts such as  Ctrl+Shift+1, but isn't restricted to keyboard controls. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
 The result is a `float`.
 
@@ -173,7 +173,7 @@ To define a new type of Composite, create a class based on [`InputBindingComposi
 public class CustomComposite : InputBindingComposite<float>
 {
     // Each part binding is represented as a field of type int and annotated with
-    // InputControlAttribute. Setting "layout" allows to restrict the controls that
+    // InputControlAttribute. Setting "layout" restricts the controls that
     // are made available for picking in the UI.
     //
     // On creation, the int value will be set to an integer identifier for the binding
@@ -285,7 +285,7 @@ If multiple Controls are bound to an Action, the Input System monitors input fro
 
 Unity decides which Control is currently driving the Action in a process called disambiguation. During the disambiguation process, the Input System looks at the value of each Control bound to an Action. If the [magnitude](Controls.md#control-actuation) of the input from any Control is higher then the magnitude of the Control currently driving the Action, then the Control with the higher magnitude becomes the new Control driving the Action. In the above example of `<Gamepad>/leftStick` binding to multiple gamepads, the Control driving the Action is the left stick which is actuated the furthest of all the gamepads. You can query which Control is currently driving the Action by checking the [`InputAction.CallbackContext.control`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_control) property in an [Action callback](Actions.md#started-performed-and-canceled-callbacks).
 
-If you don't want your Action to perform disambiguation, you can set your Action type to [Pass-Through](Actions.md#pass-through). Pass-Through Actions skip disambiguation, changes to any bound Control trigger them. The value of a Pass-Through Action is the value of whichever bound Control changed most recently.
+If you don't want your Action to perform disambiguation, you can set your Action type to [Pass-Through](Actions.md#pass-through). Pass-Through Actions skip disambiguation, and changes to any bound Control trigger them. The value of a Pass-Through Action is the value of whichever bound Control changed most recently.
 
 ## Initial state check
 
