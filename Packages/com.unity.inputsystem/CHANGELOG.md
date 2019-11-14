@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.3] - 2019-12-12
+## [1.0.0-preview.3] - 2019-11-14
 
 ### Fixed
 
