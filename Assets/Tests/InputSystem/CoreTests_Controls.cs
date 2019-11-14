@@ -9,6 +9,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
 
@@ -1019,6 +1020,22 @@ partial class CoreTests
         Assert.That(
             InputControlPath.ToHumanReadableString("*/{PrimaryAction}",
                 InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("PrimaryAction"));
+    }
+
+    [Preserve]
+    private class DeviceWithoutAnyControls : InputDevice
+    {
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanTurnControlPathIntoHumanReadableText_EvenIfLayoutCannotBeFoundOrHasErrors()
+    {
+        // This one will throw as the layout will result in a zero-size memory block.
+        InputSystem.RegisterLayout<DeviceWithoutAnyControls>();
+
+        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"), Is.EqualTo("leftStick [UnknownGamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"), Is.EqualTo("control [DeviceWithoutAnyControls]"));
     }
 
     [Test]

@@ -1,11 +1,11 @@
 # GameObject components for input
 
-The Input System provides two `MonoBehaviour` components that simplify setting up and working with input.
+The Input System provides two `MonoBehaviour` components that simplify how you set up and work with input.
 
 |Component|Description|
 |---------|-----------|
 |[`PlayerInput`](#playerinput-component)|Represents a single player along with the player's associated [Input Actions](Actions.md).|
-|[`PlayerInputManager`](#playerinputmanager-component)|Handles setups that allow for several players, including player lobbies and split-screen gameplay.|
+|[`PlayerInputManager`](#playerinputmanager-component)|Handles setups that allow for several concurrent users (for example, player lobbies and split-screen gameplay in a game).|
 
 >__Note__: These components are built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.
 
@@ -13,7 +13,7 @@ The Input System provides two `MonoBehaviour` components that simplify setting u
 
 ![PlayerInput](Images/PlayerInput.png)
 
-Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player in the game. Multiple [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instances can coexist at the same time (though not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses excplusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
+Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instance represents a separate player or user. Multiple [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) instances can coexist at the same time (though not on the same `GameObject`) to represent local multiplayer setups. The Input System pairs each player to a unique set of Devices that the player uses excplusively, but you can also manually pair Devices in a way that enables two or more players to share a Device (for example, left/right keyboard splits or hot seat use).
 
 Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) corresponds to one [`InputUser`](UserManagement.md). You can query the [`InputUser`](UserManagement.md) from the component using [`PlayerInput.user`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_user).
 
@@ -35,7 +35,7 @@ To receive input, each player must have an associated set of Input Actions. When
 
 When first enabled, [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) enables all Actions from the the [`Default Action Map`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultActionMap). If no default Action Map exists, [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) will not enable any Actions. To manually enable Actions, you can call [`Enable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Enable) and [`Disable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Disable) on the Action Maps or Actions like you would do [without `PlayerInput`](Actions.md#using-actions). You can check which Action Map is currently enabled or switch to a different one by using the  [`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap) property. To switch Action Maps using an Action Map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_SwitchCurrentActionMap_System_String_).
 
-To disable a player's input, call [`PlayerInput.PassivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_PassivateInput). To re-enable it, call [`PlayerInput.ActivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_ActivateInput). The latter enables the default action map, if it exists.
+To disable a player's input, call [`PlayerInput.PassivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_PassivateInput). To re-enable it, call [`PlayerInput.ActivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_ActivateInput). The latter enables the default Action Map, if it exists.
 
 When [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) is disabled, it automatically disables the currently active Action Map ([`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap)) and disassociate any Devices paired to the player.
 
@@ -49,7 +49,7 @@ When the [notification behavior](#notification-behaviors) of [`PlayerInput`](../
 public class MyPlayerScript : MonoBehaviour
 {
     // "fire" action becomes "OnFire" method. If you're not interested in the
-    // value from the control that triggers the action, simply have a method
+    // value from the control that triggers the action, use a method
     // without arguments.
     public void OnFire()
     {
@@ -59,7 +59,7 @@ public class MyPlayerScript : MonoBehaviour
     // you can declare a parameter of type InputValue.
     public void OnMove(InputValue value)
     {
-        // Read value from control. The type depends on what type of controls
+        // Read value from control. The type depends on what type of controls.
         // the action is bound to.
         var v = value.Get<Vector2>();
 
@@ -101,8 +101,7 @@ The following options are available:
 |[`Send Messages`](../api/UnityEngine.InputSystem.PlayerNotifications.html)|Uses [`GameObject.SendMessage`](https://docs.unity3d.com/ScriptReference/GameObject.SendMessage.html) on the `GameObject` that the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component belongs to.|
 |[`Broadcast Messages`](../api/UnityEngine.InputSystem.PlayerNotifications.html)|Like `Send Message` but instead of [`GameObject.SendMessage`](https://docs.unity3d.com/ScriptReference/GameObject.SendMessage.html) uses [`GameObject.BroadcastMessage`](https://docs.unity3d.com/ScriptReference/GameObject.BroadcastMessage.html). This broadcasts the message down the `GameObject` hierarchy.|
 |[`Invoke Unity Events`](../api/UnityEngine.InputSystem.PlayerNotifications.html)|Uses a separate [`UnityEvent`](https://docs.unity3d.com/ScriptReference/Events.UnityEvent.html) for each individual type of message. When this is selected, the events that are available on the given [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) are accessible from the __Events__ foldout. The argument received by events triggered for Actions is the same as the one received by [`started`, `performed`, and `canceled` callbacks](Actions.md#started-performed-and-canceled-callbacks).<br><br>![PlayerInput UnityEvents](Images/MyPlayerActionEvents.png)|
-|[`Invoke CSharp Events`](../api/UnityEngine.InputSystem.PlayerNotifications.html)|Similar to `Invoke Unity Events` except that the events are plain C# events available on the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) API. You cannot configure these from the inspector. Instead, you have to register callbacks for the events in your scripts.
-<br><br>The following events are available:<br><br><ul><li>[`onActionTriggered`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onActionTriggered) (collective event for all actions on the player)</li><li>[`onDeviceLost`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onDeviceLost)</li><li>[`onDeviceRegained`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onDeviceRegained)</li></ul>|
+|[`Invoke CSharp Events`](../api/UnityEngine.InputSystem.PlayerNotifications.html)|Similar to `Invoke Unity Events` except that the events are plain C# events available on the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) API. You cannot configure these from the inspector. Instead, you have to register callbacks for the events in your scripts.<br><br>The following events are available:<br><br><ul><li>[`onActionTriggered`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onActionTriggered) (collective event for all actions on the player)</li><li>[`onDeviceLost`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onDeviceLost)</li><li>[`onDeviceRegained`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_onDeviceRegained)</li></ul>|
 
 In addition to per-action notifications, [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) sends the following general notifications:
 
@@ -115,11 +114,11 @@ In addition to per-action notifications, [`PlayerInput`](../api/UnityEngine.Inpu
 
 Each [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) can be assigned one or more Devices. By default, no two [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) components are assigned the same Devices, but you can force this by manually assigning Devices to a player when calling [`PlayerInput.Instantiate`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_Instantiate_GameObject_System_Int32_System_String_System_Int32_UnityEngine_InputSystem_InputDevice_), or by calling [`InputUser.PerformPairingWithDevice`](../api/UnityEngine.InputSystem.Users.InputUser.html#UnityEngine_InputSystem_Users_InputUser_PerformPairingWithDevice_UnityEngine_InputSystem_InputDevice_UnityEngine_InputSystem_Users_InputUser_UnityEngine_InputSystem_Users_InputUserPairingOptions_) on the [`InputUser`](UserManagement.md) of a [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html).
 
-If the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component has any Devices assigned, it matches these to the [Control Schemes](ActionBindings.md#control-schemes) in the associated Action Asset, and will only enables Control Schemes which match its Input Devices.
+If the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component has any Devices assigned, it matches these to the [Control Schemes](ActionBindings.md#control-schemes) in the associated Action Asset, and only enables Control Schemes which match its Input Devices.
 
 ### UI input
 
-The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component can work together with a [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) to drive the [UI system](UISupport.md).
+The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component can work together with an [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) to drive the [UI system](UISupport.md).
 
 To set this up, assign a reference to a [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) component in the [`UI Input Module`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_uiInputModule) field of the [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) component. The [`PlayerInput`](../api/UnityEngine.InputSystem.PlayerInput.html) and [`InputSystemUIInputModule`](UISupport.md#inputsystemuiinputmodule-component) components should be configured to work with the same [`InputActionAsset`](Actions.md) for this to work.
 
@@ -140,7 +139,7 @@ The [`PlayerInput`](#playerinput-component) system facilitates setting up local 
 |[`Player Prefab`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_playerPrefab)|A prefab that represents a player in the game. The [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component creates an instance of this prefab whenever a new player joins. This prefab must have one [`PlayerInput`](#playerinput-component) component in its hierarchy.|
 |[`Joining Enabled By Default`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_joiningEnabled)|While this is enabled, new players can join via the mechanism determined by [`Join Behavior`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_joinBehavior).|
 |[`Limit Number of Players`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_maxPlayerCount)|Enable this if you want to limit the number of players who can join the game.|
-|[`Max Player Cou nt`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_maxPlayerCount)(Only shown when `Limit number of Players` is enabled.)|The maximum number of players allowed to join the game.|
+|[`Max Player Count`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_maxPlayerCount)(Only shown when `Limit number of Players` is enabled.)|The maximum number of players allowed to join the game.|
 |[`Enable Split-Screen`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_splitScreen)|If enabled, each player is automatically assigned a portion of the available screen area. See documentation on [split-screen](#split-screen) multiplayer.|
 
 ### Join behaviors
@@ -150,8 +149,8 @@ You can use the [`Join Behavior`](../api/UnityEngine.InputSystem.PlayerInputMana
 |Behavior|Description|
 |--------|-----------|
 |[`Join Players When Button IsPressed`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Listen for button presses on Devices that are not paired to any player. If a player presses a button and joining is allowed, join the new player using the Device they pressed the button on.|
-|[`Join Players When Join Action Is Triggered`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Similar to `Join Players When Button IsPressed`, but this will only join a player if the control they triggered matches a specific action you define. For example, you can set up players to join when pressing a specific gamepad button.|
-|[`Join Players Manually`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Don't join players automatically. Call [`JoinPlayerFromUI`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromUI) or [`JoinPlayerFromAction`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromAction_UnityEngine_InputSystem_InputAction_CallbackContext_) explicitly in order to join new players. Alternatively, create GameObjects with [`PlayerInput`](#playerinput-component) components directly and the Input System will automatically join them.|
+|[`Join Players When Join Action Is Triggered`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Similar to `Join Players When Button IsPressed`, but this only joins a player if the control they triggered matches a specific action you define. For example, you can set up players to join when pressing a specific gamepad button.|
+|[`Join Players Manually`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Don't join players automatically. Call [`JoinPlayerFromUI`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromUI) or [`JoinPlayerFromAction`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromAction_UnityEngine_InputSystem_InputAction_CallbackContext_) explicitly to join new players. Alternatively, create GameObjects with [`PlayerInput`](#playerinput-component) components directly and the Input System will automatically join them.|
 
 ### Split-screen
 
@@ -175,5 +174,5 @@ Your game can listen to the following notifications:
 
 |Notification|Description|
 |------------|-----------|
-|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player has joined the game. Passes the [`PlayerInput`](#playerinput-component) instance of the player who has joined.<br><br>__Note__: If there are already active [`PlayerInput`](#playerinput-component) components present when `PlayerInputManager` is enabled, the `PlayerInputManager` will send a `Player Joined` notification for each of these.|
-|[`PlayerLeftMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerLeftMessage)|A player left the game. Passes the [`PlayerInput`](#playerinput-component) instance of the player who has left.|
+|[`PlayerJoinedMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerJoinedMessage)|A new player joined the game. Passes the [`PlayerInput`](#playerinput-component) instance of the player who joined.<br><br>__Note__: If there are already active [`PlayerInput`](#playerinput-component) components present when `PlayerInputManager` is enabled, the `PlayerInputManager` sends a `Player Joined` notification for each of these.|
+|[`PlayerLeftMessage`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_PlayerLeftMessage)|A player left the game. Passes the [`PlayerInput`](#playerinput-component) instance of the player who left.|

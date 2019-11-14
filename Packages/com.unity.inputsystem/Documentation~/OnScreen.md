@@ -2,11 +2,11 @@
 
 You can use on-screen Controls to simulate Input Devices using UI widgets that the user interacts with on the screen. The most prominent example is the use of stick and button widgets on touchscreens to emulate a joystick or gamepad.
 
-There are currently two Control types implemented out of the box: [buttons](#on-screen-buttons) and [sticks](#on-screen-sticks). You can implement custom Controls by extending the the base [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html) class (see documentation on [writing custom on screen Controls](#writing-custom-on-screen-controls) to learn more).
+There are currently two Control types implemented out of the box: [buttons](#on-screen-buttons) and [sticks](#on-screen-sticks). You can implement custom Controls by extending the base [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html) class (see documentation on [writing custom on screen Controls](#writing-custom-on-screen-controls) to learn more).
 
 >__Note__: On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control, for example by adding a sprite or UI component to the GameObject. On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
 
-Each on-screen Control references the Control that it should report input as using a [Control path](Controls.md#control-paths). For example, the following on-screen button will report input as the right shoulder button of a gamepad:
+Each on-screen Control uses a [Control path](Controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
@@ -32,7 +32,7 @@ In-between, the stick moves according to the pointer being dragged (`IDragHandle
 
 ## Writing custom on-screen Controls
 
-You can add support for new types of [Input Controls](Controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) itself.
+You can add support for new types of [Input Controls](Controls.md) by extending [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html). An easy example to follow is [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html).
 
 ```
     [AddComponentMenu("Input/On-Screen Button")]
