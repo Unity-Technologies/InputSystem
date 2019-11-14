@@ -4,7 +4,7 @@ Devices:
 
 * […check if the space key has been pressed this frame?](#check-if-the-space-key-has-been-pressed-this-frame)
 * […find all connected gamepads?](#find-all-connected-gamepads)
-* […find the gamepad currently used by the player?](#find-the-gamepad-currently-used-by-the-player)
+* […find the gamepad that the player is currently using?](#find-the-gamepad-that-the-player-is-currently-using)
 * […know when a new device has been plugged in?](#know-when-a-new-device-has-been-plugged-in)
 
 Actions:
@@ -51,7 +51,7 @@ Alternatively, you can use more generic Device queries using LINQ expressions or
     InputSystem.FindControls("<gamepad>");
 ```
 
-## …find the gamepad currently used by the player?
+## …find the gamepad that the player is currently using?
 
 Use this code:
 
@@ -74,16 +74,16 @@ Use this code:
             switch (change)
             {
                 case InputDeviceChange.Added:
-                    // New Device
+                    // New Device.
                     break;
                 case InputDeviceChange.Disconnected:
-                    // Device got unplugged
+                    // Device got unplugged.
                     break;
                 case InputDeviceChange.Connected:
-                    // Plugged back in
+                    // Plugged back in.
                     break;
                 case InputDeviceChange.Removed:
-                    // Remove from Input System entirely; by default, devices stay in the system once discovered
+                    // Remove from Input System entirely; by default, Devices stay in the system once discovered.
                     break;
                 default:
                     // See InputDeviceChange reference for other event types.
@@ -99,10 +99,10 @@ For more details, see documentation on ["Monitoring Devices"](Devices.md#monitor
 Use this code:
 
 ```C#
-    // Create action that binds to the primary action control on all devices.
+    // Create an Action that binds to the primary action control on all devices.
     var action = new InputAction(binding: "*/{primaryAction}");
 
-    // Have it run your code when action is triggered.
+    // Have it run your code when the Action is triggered.
     action.performed += _ => Fire();
 
     // Start listening for control changes.
@@ -123,7 +123,7 @@ public class MyControllerComponent : MonoBehaviour
 
 The Editor lets you add and edit Bindings for the Actions in the Inspector window.
 
->__Note__: You still need to enable the action in code and hook up your response. You can do so in the `Awake` method of your component:
+>__Note__: You still need to enable the Action in code and hook up your response. You can do so in the `Awake` method of your component:
 
 ```C#
 
@@ -157,7 +157,7 @@ The Editor lets you add and edit Bindings for the Actions in the Inspector windo
 
 ```
 
-If you are worried about allocations from the delegates, you can use a polling approach rather than a callback-driven approach.
+If you're worried about allocations from the delegates, you can use a polling approach rather than a callback-driven approach.
 
 ```C#
 
@@ -193,11 +193,11 @@ If you are worried about allocations from the delegates, you can use a polling a
 
 ```
 
-Typically, you need to deal with more than one action. In this case, you might want to put these into an Input Actions Asset file. To create an Input Actions Asset, follow these steps:
+Typically, you need to deal with more than one Action. In this case, you might want to put these into an Input Actions Asset file. To create an Input Actions Asset, follow these steps:
 
-1. In the Project view, click __Create__
-2. Select __Input Actions__
-3. Double click the Asset to create and edit one or multiple Input Action Maps containing Input Actions.
+1. In the Project view, click __Create__.
+2. Select __Input Actions__.
+3. Double-click the Asset to create and edit one or multiple Input Action Maps containing Input Actions.
 
 If you then click __Generate C# Class__ in the Inspector for that Asset, Unity generates a wrapper class for your Actions which you can use like this:
 
@@ -212,11 +212,11 @@ If you then click __Generate C# Class__ in the Inspector for that Asset, Unity g
     }
 ```
 
-For more details, see documentation on ["Actions"](Actions.md).
+For more details, see documentation on [Actions](Actions.md).
 
 # …require a button to be held for 0.4 seconds before triggering an Action?
 
-Put a [hold Interaction](Interactions.md#hold) on the action, like this:
+Put a [hold Interaction](Interactions.md#hold) on the Action, like this:
 
 ```C#
 
@@ -263,7 +263,7 @@ Create a UI with a button to trigger rebinding. If the user clicks the button to
 
 You can install the Tanks Demo sample for the Input System package using the Package Manager, which has an example of an interactive rebinding UI.
 
-# …set up an action to specifically target the left-hand XR controller?
+# …set up an Action to specifically target the left-hand XR controller?
 
 Use this code:
 
@@ -285,7 +285,7 @@ Use this code:
     myAction.Enable();
 ```
 
->__Note__: This is inefficient and resource-intensive. The amount of processing an Action has to do is directly correlated with the amount of Controls it targets. Targeting every single button of every single Device yields a large number of Controls and result in a high processing overhead. For example, the keyboard alone contributes many buttons, each of which has to be processed individually.
+>__Note__: This is inefficient and resource-intensive. The amount of processing an Action has to do is directly correlated with the amount of Controls it targets. Targeting every single button of every single Device yields a large number of Controls and results in a high processing overhead. For example, the keyboard alone contributes many buttons, each of which has to be processed individually.
 
 [//]: # (TODO: A more efficient way is to just listen for any activity on any device and when there was activity, find out whether it came from a button.)
 
@@ -383,7 +383,7 @@ Alternatively, you can create your own [`InputDevice`](../api/UnityEngine.InputS
 ```C#
     public struct MyDeviceState : IInputStateTypeInfo
     {
-        // FourCC type codes are used identify the memory layouts of state blocks.
+        // FourCC type codes are used to identify the memory layouts of state blocks.
         public FourCC format => new FourCC('M', 'D', 'E', 'V');
 
         [InputControl(name = "firstButton", template = "Button", bit = 0)]
@@ -417,7 +417,7 @@ To create an instance of your Device, register it as a template and then instant
     InputSystem.AddDevice("MyDevice");
 ```
 
-See the documentation on [HID](HID.md#overriding-the-hid-fallback) for more information.
+For more information, see documentation on [HID](HID.md#overriding-the-hid-fallback).
 
 [//]: # (TODO: need a way to give devices an opportunity to feed events; ATM you have to make that happen yourself and events will only go in the next update this way)
 
@@ -425,7 +425,7 @@ See the documentation on [HID](HID.md#overriding-the-hid-fallback) for more info
 
 Extend the "Gamepad" template and customize its Controls.
 
-A real-world example of this is the Xbox Controller on macOS which is supported through HID. Its template looks like this:
+A real-world example of this is the Xbox Controller on macOS, which is supported through HID. Its template looks like this:
 
 ```JSON
 {
@@ -462,7 +462,7 @@ A real-world example of this is the Xbox Controller on macOS which is supported 
 }
 ```
 
-The same principle applies if some buttons on your Device are swapped, for example. In this case you can remap their offsets.
+The same principle applies if some buttons on your Device are swapped, for example. In this case, you can remap their offsets.
 
 # …force the Input System to use my own template when the native backend discovers a specific Device?
 
@@ -480,7 +480,7 @@ Describe the Device in the template, like this:
      }
 ```
 
-Note that you don't have to restart Unity in order for changes in your template to take affect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a template and your Device is recreated with the most up-to-date version every time scripts are recompiled.
+Note that you don't have to restart Unity in order for changes in your template to take effect on native Devices. The Input System applies changes automatically on every domain reload, so you can just keep refining a template and your Device is recreated with the most up-to-date version every time scripts are recompiled.
 
 [//]: # (# …deal with my device being both a keyboard and a mouse?)
 [//]: # (////TODO: working on allowing templates to create more than one device which can share state)
@@ -524,7 +524,7 @@ The gamepad template already adds stick deadzone processors which take their min
 
 # …give my head tracking an extra update before rendering?
 
-First enable before render updates on your Device.
+First, enable before render updates on your Device.
 
 ```JSON
     {
@@ -534,7 +534,7 @@ First enable before render updates on your Device.
     }
 ```
 
-And then make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
+Then, make sure you put extra `StateEvents` for your HMD on the queue right in time before rendering. Also, if your HMD is a combination of non-tracking and tracking controls, you can update just the tracking by sending a delta event instead of a full state event.
 
 [//]: # (TODO: What is the "right queue"?)
 
@@ -569,7 +569,7 @@ Use this code:
 
 ```
 
-# …see events as they are processed?
+# …see events as they're processed?
 
 Use this code:
 
@@ -588,7 +588,7 @@ Use this code:
 [//]: # (TODO:# …create an initial-engagement kind of screen?)
 
 
-# …see what Devices I have and what state they are in?
+# …see what Devices I have and what state they're in?
 
 Go to __Windows > Analysis > Input Debugger__(Debugging.md), then double click on a Device to see its Controls. You can also click the __Remote Devices…__ button to remotely see Devices from Unity Players deployed to any connected computers or devices.
 

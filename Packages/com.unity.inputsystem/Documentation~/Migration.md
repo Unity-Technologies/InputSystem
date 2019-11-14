@@ -16,7 +16,7 @@ See next section.
 
 ### <a name="accelerationEvents"></a>[`UnityEngine.Input.accelerationEvents`](https://docs.unity3d.com/ScriptReference/Input-accelerationEvents.html)
 
-Acceleration events are not made available separately from other input events. The following code traces all input events on the [`Accelerometer.current`](../api/UnityEngine.InputSystem.Accelerometer.html) device.
+Acceleration events aren't made available separately from other input events. The following code traces all input events on the [`Accelerometer.current`](../api/UnityEngine.InputSystem.Accelerometer.html) device.
 
 ```
     private InputEventTrace trace;
@@ -100,10 +100,10 @@ Use [`AttitudeSensor.current.orientation.ReadValue()`](../api/UnityEngine.InputS
 ### [`UnityEngine.Input.gyro.enabled`](https://docs.unity3d.com/ScriptReference/Gyroscope-enabled.html)
 
 ```
-// Get.
+// Get:
 Gyroscope.current.enabled
 
-// Set.
+// Set:
 InputSystem.EnableDevice(Gyroscope.current);
 InputSystem.DisableDevice(Gyroscope.current);
 ```
@@ -169,7 +169,7 @@ No corresponding API yet.
 
 Use [`Mouse.current.position.ReadValue()`](../api/UnityEngine.InputSystem.Mouse.html).
 
->__Note__: Mouse simulation from touch is not implemented yet.
+>__Note__: Mouse simulation from touch isn't implemented yet.
 
 ### [`UnityEngine.Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)
 
@@ -259,15 +259,15 @@ For example, if you want to recreate the following axis configuration:
            }
    ```
 
-#### Option B: Create Input Action Asset
+#### Option B: Create an Input Action Asset
 
 1. Create an Input Action Asset by right-clicking in the Project browser and selecting __Create > Input Actions__. Give a name to the Asset.
 2. Double-click the Asset to open the Input Actions editor window.
-3. In the __Action Maps__ column click the plus sign to add a new Action Map.
+3. In the __Action Maps__ column, click the plus sign to add a new Action Map.
 4. Double-click the __New Action Map__ name to rename the set. Use a descriptive name, such as *gameplay*.
-5. In the __Actions__ column click the plus sign to add a new Action.
-6. Double-click the aAtion to give it a name.
-7. Add Bindings to the action by clicking the plus sign on the Action and choosing a Binding type from the list.
+5. In the __Actions__ column, click the plus sign to add a new Action.
+6. Double-click the Action to give it a name.
+7. Add Bindings to the Action by clicking the plus sign on the Action and choosing a Binding type from the list.
 8. Select the Binding and click on the __Path__ button in the right column to pick Controls to bind to.
 9. Click __Save Asset__. Your Input Action editor should now look like this:
 
@@ -309,7 +309,7 @@ For example, if you want to recreate the following axis configuration:
 #### Hints
 
 - To force button-like behavior on the control referenced in a Binding, add a [press Interaction](Interactions.md#press) to it.
-- You can access the control that triggered an action from the callback. Through it, you can also query its current value.
+- You can access the Control that triggered an Action from the callback. Through it, you can also query its current value.
    ```
    fireAction.performed +=
        ctx =>
@@ -353,10 +353,10 @@ There is no API that corresponds to this exactly.
 Here are various ways to discover connected Devices:
 
 ```
-// Query a list of all connected Devices (does not allocate; read-only access)
+// Query a list of all connected Devices (does not allocate; read-only access).
 InputSystem.devices
 
-// Get notified when a Device is added or removed
+// Get notified when a Device is added or removed.
 InputSystem.onDeviceChange +=
     (device, change) =>
     {
@@ -441,7 +441,7 @@ Mouse.current.leftButton.isPressed
 Mouse.current.rightButton.isPressed
 Mouse.current.middleButton.isPressed
 
-// You can also go through all buttons on the mouse (does not allocate)
+// You can also go through all buttons on the mouse (does not allocate).
 var controls = Mouse.current.allControls;
 for (var i = 0; i < controls.Count; ++i)
 {
@@ -450,7 +450,7 @@ for (var i = 0; i < controls.Count; ++i)
         /* ... */;
 }
 
-// Or look up controls by name
+// Or look up controls by name.
 ((ButtonControl)Mouse.current["leftButton"]).isPressed
 ```
 

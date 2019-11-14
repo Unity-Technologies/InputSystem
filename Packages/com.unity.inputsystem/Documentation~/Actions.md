@@ -143,7 +143,7 @@ public class MyBehavior : MonoBehaviour
 
 ### Loading Actions from JSON
 
-You can load Actions as JSON in the form of a set of Action Maps or as a full [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). This also works at run time in the player.
+You can load Actions as JSON in the form of a set of Action Maps or as a full [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). This also works at run time in the Player.
 
 ```CSharp
 // Load a set of action maps from JSON.
@@ -158,7 +158,7 @@ var asset = InputActionAsset.FromJson(json);
 You can manually create and configure Actions. This also works at run time in the Player.
 
 ```CSharp
-// Create a free-standing actions.
+// Create free-standing Actions.
 var lookAction = new InputAction("look", binding: "<Gamepad>/leftStick");
 var moveAction = new InputAction("move", binding: "<Gamepad>/rightStick");
 
@@ -169,12 +169,12 @@ moveAction.AddCompositeBinding("Dpad")
     .With("Left", "<Keyboard>/a")
     .With("Right", "<Keyboard>/d");
 
-// Create an action map with actions.
+// Create an Action Map with Actions.
 var map = new InputActionMap("Gameplay");
 var lookAction = map.AddAction("look");
 lookAction.AddBinding("<Gamepad>/leftStick");
 
-// Create an action asset.
+// Create an Action Asset.
 var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 var gameplayMap = new InputActionMap("gameplay");
 asset.AddActionMap(gameplayMap);
@@ -193,20 +193,20 @@ lookAction.Enable();
 gameplayActions.Enable();
 ```
 
-When you enable an action, the Input System resolves its bindings, if this hasn't happened already or if the set of devices usable by the action has changed. For more details about this process, see the documentation on [binding resolution](ActionBindings.md#binding-resolution).
+When you enable an Action, the Input System resolves its bindings, if this hasn't happened already or if the set of devices that the Action can use has changed. For more details about this process, see the documentation on [binding resolution](ActionBindings.md#binding-resolution).
 
 You can't change certain aspects of the configuration, such Action Bindings, while an Action is enabled. To stop Actions or Action Maps from responding to input, call  [`Disable`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_Disable).
 
-While enabled, an Action actively monitors the [Control(s)](Controls.md) it is bound to. If a bound Control changes state, the Action processes the change and creates a response if the state change represents an [Interaction](Interactions.md) change. All of this happens during the Input System update logic. Depending on the [update mode](Settings.md#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.
+While enabled, an Action actively monitors the [Control(s)](Controls.md) it's bound to. If a bound Control changes state, the Action processes the change and creates a response if the state change represents an [Interaction](Interactions.md) change. All of this happens during the Input System update logic. Depending on the [update mode](Settings.md#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.
 
 ### Responding to Actions
 
 An Action doesn't represent an actual response to input by itself. Instead, an Action informs your code that a certain kind of input has occurred. Your code then responds to this information.
 
-There are several ways in which this can be done.
+There are several ways to do this:
 
 1. Each Action has a [`started`, `performed`, and `canceled` callback](#started-performed-and-canceled-callbacks).
-2. Each Action map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
+2. Each Action Map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
 3. The Input System has a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
 4. You can poll the current state of an Action whenever you need it using [`InputAction.ReadValue<>()`](#polling-actions).
 5. [`InputActionTrace`](#inputactiontrace) can record changes happening on Actions.
@@ -241,7 +241,7 @@ Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.Inp
 
 >__Note__: The contents of the structure are only valid for the duration of the callback. In particular, it isn't safe to store the received context and later access its properties from outside the callback.
 
-When and how the callbacks are triggered depends on the [Interactions](Interactions.md) present on the respective Bindings. If the bindings have no Interactions that apply to them, the [default Interaction](Interactions.md#default-interaction) applies.
+When and how the callbacks are triggered depends on the [Interactions](Interactions.md) present on the respective Bindings. If the Bindings have no Interactions that apply to them, the [default Interaction](Interactions.md#default-interaction) applies.
 
 #### `InputActionMap.actionTriggered` callback
 
@@ -302,7 +302,7 @@ Instead of using callbacks, it might be simpler sometimes to poll the value of a
     }
 ```
 
-For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) which will be true if the action was performed at any time in the current frame.
+For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered), which is true if the action was performed at any time in the current frame.
 
 ```
     private InputAction buttonAction;
@@ -337,18 +337,18 @@ You can trace Actions in order to generate a log of all activity that happened o
 ```CSharp
 var trace = new InputActionTrace();
 
-// Subscribe trace to single action.
+// Subscribe trace to single Action.
 // (Use UnsubscribeFrom to unsubscribe)
 trace.SubscribeTo(myAction);
 
-// Subscribe trace to entire action map.
+// Subscribe trace to entire Action Map.
 // (Use UnsubscribeFrom to unsubscribe)
 trace.SubscribeTo(myActionMap);
 
-// Subscribe trace to all actions in the system.
+// Subscribe trace to all Actions in the system.
 trace.SubscribeToAll();
 
-// Record a single triggering of an action.
+// Record a single triggering of an Action.
 myAction.performed +=
     ctx =>
     {
@@ -359,13 +359,13 @@ myAction.performed +=
 // Output trace to console.
 Debug.Log(string.Join(",\n", trace));
 
-// Walk through all recorded actions and then clear trace.
+// Walk through all recorded Actions and then clear trace.
 foreach (var record in trace)
 {
     Debug.Log($"{record.action} was {record.phase} by control {record.control}");
 
     // To read out the value, you either have to know the value type or read the
-    // value out as a generic byte buffer. Here we assume that the value type is
+    // value out as a generic byte buffer. Here, we assume that the value type is
     // float.
 
     Debug.Log("Value: " + record.ReadValue<float>());
@@ -423,7 +423,7 @@ The Input Action system uses the following terms and concepts:
 |Concept|Description|
 |-------|-----------|
 |[__Action__](Actions.md)|A logical input such as "Jump" or "Fire". That is, an input action that a player can trigger through one or more input devices and runs a piece of game logic in response.|
-|[__Binding__](ActionBindings.md)|A connection between an Action and one or more Controls represented by a [control path](Controls.md#control-paths). At run time, a binding is resolved to yield zero or more Controls, which the Input System then connects to the Action.|
+|[__Binding__](ActionBindings.md)|A connection between an Action and one or more Controls represented by a [control path](Controls.md#control-paths). At run time, a Binding is resolved to yield zero or more Controls, which the Input System then connects to the Action.|
 |[__Interaction__](Interactions.md)|A distinct input pattern that can be recognized on a Control. An Interaction only triggers an Action when the Input System recognizes the pattern.<br><br>For example, a "hold" Interaction requires a Control to be actuated and then held for a certain time before it triggers the associated Action.|
 |[__Processor__](Processors.md)|An operation that the Input System applies to an input value. For example, an "invert" Processor inverts a floating-point value.|
 |[__Phase__](Interactions.md#operation)|An enum describing the current state of an Interaction.|
