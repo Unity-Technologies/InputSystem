@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
@@ -7,7 +8,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Networking.PlayerConnection;
-using Property = NUnit.Framework.PropertyAttribute;
 
 ////TODO: have to decide what to do if a layout is removed
 
@@ -31,7 +31,6 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
-    [Property("TimesliceEvents", "Off")]
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -61,8 +60,7 @@ partial class CoreTests
             InputSystem.RegisterLayout(@"{ ""name"" : ""MyGamepad"", ""extend"" : ""Gamepad"" }");
             InputSystem.AddDevice("MyGamepad");
 
-            var layouts = new List<string>();
-            remote.manager.ListControlLayouts(layouts);
+            var layouts = remote.manager.ListControlLayouts().ToList();
 
             Assert.That(layouts, Has.Exactly(1).EqualTo("MyGamepad"));
             Assert.That(remote.manager.devices, Has.Exactly(1).With.Property("layout").EqualTo("MyGamepad").And.TypeOf<Gamepad>());
@@ -234,6 +232,16 @@ partial class CoreTests
             m_DisconnectionListeners.AddListener(callback);
         }
 
+        public void UnregisterConnection(UnityAction<int> callback)
+        {
+            m_ConnectionListeners.RemoveListener(callback);
+        }
+
+        public void UnregisterDisconnection(UnityAction<int> callback)
+        {
+            m_DisconnectionListeners.RemoveListener(callback);
+        }
+
         public void Receive(Guid messageId, byte[] data)
         {
             MessageEvent msgEvent;
@@ -244,6 +252,12 @@ partial class CoreTests
         public void Send(Guid messageId, byte[] data)
         {
             otherEnd.Receive(messageId, data);
+        }
+
+        public bool TrySend(Guid messageId, byte[] data)
+        {
+            Send(messageId, data);
+            return true;
         }
 
         private Dictionary<Guid, MessageEvent> m_MessageListeners = new Dictionary<Guid, MessageEvent>();
@@ -290,7 +304,6 @@ partial class CoreTests
             runtime = new InputTestRuntime();
             manager = new InputManager();
             manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.m_Settings.timesliceEvents = false;
             manager.InstallRuntime(runtime);
             manager.InitializeData();
             manager.ApplySettings();

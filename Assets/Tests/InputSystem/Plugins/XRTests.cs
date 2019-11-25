@@ -4,25 +4,33 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Plugins.XR;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.XR;
+
+using Usages = UnityEngine.InputSystem.CommonUsages;
+
+using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
+
+using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
 internal class XRTests : InputTestFixture
 {
     [Test]
     [Category("Devices")]
-    [TestCase(DeviceRole.Generic, "XRHMD", typeof(XRHMD))]
-    [TestCase(DeviceRole.LeftHanded, "XRController", typeof(XRController))]
-    [TestCase(DeviceRole.RightHanded, "XRController", typeof(XRController))]
-    [TestCase(DeviceRole.HardwareTracker, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.TrackingReference, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.GameController, null, typeof(InputDevice))]
-    [TestCase(DeviceRole.Unknown, null, typeof(InputDevice))]
-    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(DeviceRole role, string baseLayoutName, Type expectedType)
+    [TestCase(InputDeviceRole.Generic, "XRHMD", typeof(XRHMD))]
+    [TestCase(InputDeviceRole.LeftHanded, "XRController", typeof(XRController))]
+    [TestCase(InputDeviceRole.RightHanded, "XRController", typeof(XRController))]
+    [TestCase(InputDeviceRole.HardwareTracker, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.TrackingReference, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.GameController, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    [TestCase(InputDeviceRole.Unknown, null, typeof(UnityEngine.InputSystem.InputDevice))]
+    public void Devices_XRDeviceRoleDeterminesTypeOfDevice(InputDeviceRole role, string baseLayoutName, Type expectedType)
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByRole(role);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
@@ -35,7 +43,7 @@ internal class XRTests : InputTestFixture
         Assert.That(createdDevice, Is.TypeOf(expectedType));
 
         var generatedLayout = InputSystem.LoadLayout(
-            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
+            $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
         Assert.That(generatedLayout, Is.Not.Null);
         Assert.That(generatedLayout.baseLayouts, Is.EquivalentTo(new[] { new InternedString(baseLayoutName) }));
     }
@@ -44,22 +52,22 @@ internal class XRTests : InputTestFixture
     [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.LeftHanded);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.LeftHanded);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
 
         var controller = InputSystem.devices[0];
 
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.RightHand));
+        Assert.That(controller.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
+        Assert.That(controller.usages, Has.Exactly(0).EqualTo(Usages.RightHand));
         Assert.That(XRController.rightHand, Is.Null);
         Assert.That(XRController.leftHand, Is.EqualTo(controller));
 
-        InputSystem.SetDeviceUsage(controller, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(controller, Usages.RightHand);
 
-        Assert.That(controller.usages, Has.Exactly(0).EqualTo(CommonUsages.LeftHand));
-        Assert.That(controller.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+        Assert.That(controller.usages, Has.Exactly(0).EqualTo(Usages.LeftHand));
+        Assert.That(controller.usages, Has.Exactly(1).EqualTo(Usages.RightHand));
         Assert.That(XRController.rightHand, Is.EqualTo(controller));
         Assert.That(XRController.leftHand, Is.Null);
     }
@@ -68,7 +76,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutIsNamespacedAsInterfaceManufacturerDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
         InputSystem.Update();
@@ -77,7 +85,7 @@ internal class XRTests : InputTestFixture
         var createdDevice = InputSystem.devices[0];
 
         var expectedLayoutName =
-            $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}";
+            $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}";
         Assert.AreEqual(createdDevice.layout, expectedLayoutName);
     }
 
@@ -85,7 +93,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRLayoutWithoutManufacturer_IsNamespacedAsInterfaceDevice()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         deviceDescription.manufacturer = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -94,7 +102,7 @@ internal class XRTests : InputTestFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        var expectedLayoutName = $"{XRUtilities.kXRInterfaceCurrent}::{deviceDescription.product}";
+        var expectedLayoutName = $"{XRUtilities.InterfaceCurrent}::{deviceDescription.product}";
         Assert.AreEqual(expectedLayoutName, createdDevice.layout);
     }
 
@@ -125,9 +133,9 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout(createdDevice.layout);
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(1));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 1));
 
-        var childControl = generatedLayout.controls[0];
+        var childControl = generatedLayout["SimpleFeature1"];
         Assert.That(childControl.name, Is.EqualTo(new InternedString("SimpleFeature1")));
     }
 
@@ -135,7 +143,7 @@ internal class XRTests : InputTestFixture
     [Category("Layouts")]
     public void Layouts_XRDevicesWithNoOrInvalidCapabilities_DoNotCreateLayouts()
     {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
+        var deviceDescription = CreateSimpleDeviceDescriptionByRole(InputDeviceRole.Generic);
         deviceDescription.capabilities = null;
         runtime.ReportNewInputDevice(deviceDescription.ToJson());
 
@@ -153,42 +161,6 @@ internal class XRTests : InputTestFixture
         generatedLayout = InputSystem.LoadLayout("XRInput::XRManufacturer::Device");
         Assert.That(generatedLayout, Is.Null);
         Assert.That(InputSystem.devices, Is.Empty);
-    }
-
-    [Test]
-    [Category("Devices")]
-    [TestCase("Windows Mixed Reality HMD", "Microsoft", typeof(WMRHMD))]
-    [TestCase("Spatial Controller", "Microsoft", typeof(WMRSpatialController))]
-    [TestCase("Oculus Rift", "Oculus", typeof(OculusHMD))]
-    [TestCase("Oculus Touch Controller", "Oculus", typeof(OculusTouchController))]
-    [TestCase("Tracking Reference", "Oculus", typeof(OculusTrackingReference))]
-    [TestCase("Oculus Remote", "Oculus", typeof(OculusRemote))]
-    [TestCase("Oculus Go", "Samsung", typeof(OculusStandaloneHMDBase))]
-    [TestCase("Oculus HMD", "Samsung", typeof(OculusStandaloneHMDExtended))]
-    [TestCase("Oculus Tracked Remote", "Samsung", typeof(GearVRTrackedController))]
-    [TestCase("Daydream HMD", null, typeof(DaydreamHMD))]
-    [TestCase("Daydream Controller Left", null, typeof(DaydreamController))]
-    [TestCase("Vive MV.", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive. MV", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive DVT", "HTC", typeof(ViveHMD))]
-    [TestCase("Vive Pro", "HTC", typeof(ViveHMD))]
-    [TestCase("OpenVR Controller(Vive Controller)", "HTC", typeof(ViveWand))]
-    [TestCase("OpenVR Controller(Vive. Controller MV) - Left", "HTC", typeof(ViveWand))]
-    [TestCase("VIVE Tracker Pro PVT S/N LHR-OBDAA26C", "HTC", typeof(ViveTracker))]
-    [TestCase("OPenVR Controller(VIVE Tracker Pro PVT)", "HTC", typeof(HandedViveTracker))]
-    [TestCase("HTC V2-XD/XE", "HTC", typeof(ViveLighthouse))]
-    public void Devices_KnownDevice_UsesSpecializedDeviceType(string name, string manufacturer, Type expectedDeviceType)
-    {
-        var deviceDescription = CreateSimpleDeviceDescriptionByRole(DeviceRole.Generic);
-        deviceDescription.product = name;
-        deviceDescription.manufacturer = manufacturer;
-        runtime.ReportNewInputDevice(deviceDescription.ToJson());
-
-        InputSystem.Update();
-
-        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
-        var createdDevice = InputSystem.devices[0];
-        Assert.That(createdDevice, Is.TypeOf(expectedDeviceType));
     }
 
     [Test]
@@ -254,44 +226,44 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
 
-        var binaryControl = generatedLayout.controls[0];
+        var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
         Assert.That(binaryControl.offset, Is.EqualTo(0));
         Assert.That(binaryControl.layout, Is.EqualTo(new InternedString("Button")));
         Assert.That(binaryControl.usages.Count, Is.EqualTo(1));
         Assert.That(binaryControl.usages[0], Is.EqualTo(new InternedString("ButtonUsage")));
 
-        var discreteControl = generatedLayout.controls[1];
+        var discreteControl = generatedLayout["DiscreteState"];
         Assert.That(discreteControl.name, Is.EqualTo(new InternedString("DiscreteState")));
         Assert.That(discreteControl.offset, Is.EqualTo(4));
         Assert.That(discreteControl.layout, Is.EqualTo(new InternedString("Integer")));
         Assert.That(discreteControl.usages.Count, Is.EqualTo(1));
         Assert.That(discreteControl.usages[0], Is.EqualTo(new InternedString("DiscreteStateUsage")));
 
-        var axisControl = generatedLayout.controls[2];
+        var axisControl = generatedLayout["Axis"];
         Assert.That(axisControl.name, Is.EqualTo(new InternedString("Axis")));
         Assert.That(axisControl.offset, Is.EqualTo(8));
         Assert.That(axisControl.layout, Is.EqualTo(new InternedString("Analog")));
         Assert.That(axisControl.usages.Count, Is.EqualTo(1));
         Assert.That(axisControl.usages[0], Is.EqualTo(new InternedString("Axis1DUsage")));
 
-        var vec2Control = generatedLayout.controls[3];
+        var vec2Control = generatedLayout["Vector2"];
         Assert.That(vec2Control.name, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.offset, Is.EqualTo(12));
         Assert.That(vec2Control.layout, Is.EqualTo(new InternedString("Vector2")));
         Assert.That(vec2Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec2Control.usages[0], Is.EqualTo(new InternedString("Axis2DUsage")));
 
-        var vec3Control = generatedLayout.controls[4];
+        var vec3Control = generatedLayout["Vector3"];
         Assert.That(vec3Control.name, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.offset, Is.EqualTo(20));
         Assert.That(vec3Control.layout, Is.EqualTo(new InternedString("Vector3")));
         Assert.That(vec3Control.usages.Count, Is.EqualTo(1));
         Assert.That(vec3Control.usages[0], Is.EqualTo(new InternedString("Axis3DUsage")));
 
-        var rotationControl = generatedLayout.controls[5];
+        var rotationControl = generatedLayout["Rotation"];
         Assert.That(rotationControl.name, Is.EqualTo(new InternedString("Rotation")));
         Assert.That(rotationControl.offset, Is.EqualTo(32));
         Assert.That(rotationControl.layout, Is.EqualTo(new InternedString("Quaternion")));
@@ -300,7 +272,7 @@ internal class XRTests : InputTestFixture
 
         // Custom element is skipped, but occupies 256 bytes
 
-        var lastControl = generatedLayout.controls[6];
+        var lastControl = generatedLayout["Last"];
         Assert.That(lastControl.name, Is.EqualTo(new InternedString("Last")));
         Assert.That(lastControl.offset, Is.EqualTo(304));
         Assert.That(lastControl.layout, Is.EqualTo(new InternedString("Button")));
@@ -319,51 +291,54 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(8));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 8));
 
-        var currentControl = generatedLayout.controls[0];
+        var currentControl = generatedLayout["Button1"];
         Assert.That(currentControl.offset, Is.EqualTo(0));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[1];
+        currentControl = generatedLayout["Button2"];
         Assert.That(currentControl.offset, Is.EqualTo(1));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[2];
+        currentControl = generatedLayout["Button3"];
         Assert.That(currentControl.offset, Is.EqualTo(2));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[3];
+        currentControl = generatedLayout["Button4"];
         Assert.That(currentControl.offset, Is.EqualTo(3));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[4];
+        currentControl = generatedLayout["Button5"];
         Assert.That(currentControl.offset, Is.EqualTo(4));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[5];
+        currentControl = generatedLayout["Button6"];
         Assert.That(currentControl.offset, Is.EqualTo(5));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
 
-        currentControl = generatedLayout.controls[6];
+        currentControl = generatedLayout["Axis1"];
         Assert.That(currentControl.offset, Is.EqualTo(8));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Analog")));
 
-        currentControl = generatedLayout.controls[7];
+        currentControl = generatedLayout["Button7"];
         Assert.That(currentControl.offset, Is.EqualTo(12));
         Assert.That(currentControl.layout, Is.EqualTo(new InternedString("Button")));
     }
 
-    [InputControlLayout(beforeRender = true)]
-    private class TestHMD : InputDevice
+    [InputControlLayout(updateBeforeRender = true)]
+    [Preserve]
+    private class TestHMD : UnityEngine.InputSystem.InputDevice
     {
+        [InputControl]
         public QuaternionControl quaternion { get; private set; }
+        [InputControl]
         public Vector3Control vector3 { get; private set; }
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
-            quaternion = builder.GetControl<QuaternionControl>("quaternion");
-            vector3 = builder.GetControl<Vector3Control>("vector3");
+            base.FinishSetup();
+            quaternion = GetChildControl<QuaternionControl>("quaternion");
+            vector3 = GetChildControl<Vector3Control>("vector3");
         }
     }
 
@@ -455,16 +430,20 @@ internal class XRTests : InputTestFixture
         }
     }
 
-    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(DeviceRole role)
+    private const int kNumBaseHMDControls = 10;
+
+    private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            interfaceName = XRUtilities.InterfaceCurrent,
             product = "Device",
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
+#if !UNITY_2019_3_OR_NEWER
                 deviceRole = role,
+#endif
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -481,12 +460,15 @@ internal class XRTests : InputTestFixture
     {
         return new InputDeviceDescription
         {
-            interfaceName = XRUtilities.kXRInterfaceCurrent,
+            interfaceName = XRUtilities.InterfaceCurrent,
             product = "XR_This.Layout/Should have 1 Valid::Name",
             manufacturer = "__Manufacturer::",
             capabilities = new XRDeviceDescriptor
             {
-                deviceRole = DeviceRole.Generic,
+#if !UNITY_2019_3_OR_NEWER
+                deviceRole = InputDeviceRole.Generic,
+#endif
+
                 inputFeatures = new List<XRFeatureDescriptor>()
                 {
                     new XRFeatureDescriptor()
@@ -515,12 +497,14 @@ internal class XRTests : InputTestFixture
         {
             return new InputDeviceDescription
             {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                interfaceName = XRUtilities.InterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-                    deviceRole = DeviceRole.Generic,
+#if !UNITY_2019_3_OR_NEWER
+                    deviceRole = InputDeviceRole.Generic,
+#endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -568,10 +552,7 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
-        {
-            return new FourCC('X', 'R', 'S', '0');
-        }
+        public FourCC format => new FourCC('X', 'R', 'S', '0');
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -590,12 +571,14 @@ internal class XRTests : InputTestFixture
         {
             return new InputDeviceDescription()
             {
-                interfaceName = XRUtilities.kXRInterfaceCurrent,
+                interfaceName = XRUtilities.InterfaceCurrent,
                 product = "XRDevice",
                 manufacturer = "XRManufacturer",
                 capabilities = new XRDeviceDescriptor
                 {
-                    deviceRole = DeviceRole.Generic,
+#if !UNITY_2019_3_OR_NEWER
+                    deviceRole = InputDeviceRole.Generic,
+#endif
                     inputFeatures = new List<XRFeatureDescriptor>()
                     {
                         new XRFeatureDescriptor()
@@ -704,9 +687,9 @@ internal class XRTests : InputTestFixture
             };
         }
 
-        public FourCC GetFormat()
+        public FourCC format
         {
-            return new FourCC('X', 'R', 'S', '0');
+            get { return new FourCC('X', 'R', 'S', '0'); }
         }
     }
 }

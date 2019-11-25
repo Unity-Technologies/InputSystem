@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: use two columns for treeview and separate name and value
 
-namespace UnityEngine.InputSystem.Plugins.HID.Editor
+namespace UnityEngine.InputSystem.HID.Editor
 {
     /// <summary>
     /// A window that dumps a raw HID descriptor in a tree view.
@@ -74,15 +74,16 @@ namespace UnityEngine.InputSystem.Plugins.HID.Editor
             m_DeviceDescription = deviceDescription;
             m_Initialized = true;
 
-            // Set up tree view for HID desctiptor.
-            var hidDescriptor = HID.ReadHIDDeviceDescriptor(deviceId, ref m_DeviceDescription, InputRuntime.s_Instance);
+            // Set up tree view for HID descriptor.
+            var hidDescriptor = HID.ReadHIDDeviceDescriptor(ref m_DeviceDescription,
+                (ref InputDeviceCommand command) => InputRuntime.s_Instance.DeviceCommand(m_DeviceId, ref command));
             if (m_TreeViewState == null)
                 m_TreeViewState = new TreeViewState();
             m_TreeView = new HIDDescriptorTreeView(m_TreeViewState, hidDescriptor);
             m_TreeView.SetExpanded(1, true);
 
-            m_Label = new GUIContent(string.Format("HID Descriptor for '{0} {1}'", deviceDescription.manufacturer,
-                deviceDescription.product));
+            m_Label = new GUIContent(
+                $"HID Descriptor for '{deviceDescription.manufacturer} {deviceDescription.product}'");
         }
 
         [NonSerialized] private bool m_Initialized;
@@ -156,11 +157,10 @@ namespace UnityEngine.InputSystem.Plugins.HID.Editor
                 // Elements.
                 if (device.elements != null)
                 {
-                    var currentReportType = HID.HIDReportType.Unknown;
                     var elementCount = device.elements.Length;
                     var elements = AddChild(item, elementCount + " Elements", ref id);
                     for (var i = 0; i < elementCount; ++i)
-                        BuildElementItem(i, elements, device.elements[i], ref id, ref currentReportType);
+                        BuildElementItem(i, elements, device.elements[i], ref id);
                 }
                 else
                     AddChild(item, "0 Elements", ref id);
@@ -170,13 +170,12 @@ namespace UnityEngine.InputSystem.Plugins.HID.Editor
                 return item;
             }
 
-            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id, ref HID.HIDReportType currentReportType)
+            private TreeViewItem BuildElementItem(int index, TreeViewItem parent, HID.HIDElementDescriptor element, ref int id)
             {
                 var item = AddChild(parent, string.Format("Element {0} ({1})", index, element.reportType), ref id);
 
-                string usagePageString;
-                string usageString;
-                HID.UsageToString(element.usagePage, element.usage, out usagePageString, out usageString);
+                string usagePageString = HID.UsagePageToString(element.usagePage);
+                string usageString = HID.UsageToString(element.usagePage, element.usage);
 
                 AddChild(item, string.Format("Usage Page: 0x{0:X} ({1})", (uint)element.usagePage, usagePageString), ref id);
                 if (usageString != null)

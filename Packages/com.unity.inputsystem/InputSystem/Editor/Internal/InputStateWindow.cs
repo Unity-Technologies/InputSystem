@@ -133,29 +133,21 @@ namespace UnityEngine.InputSystem.Editor
 
             switch (selector)
             {
-                case BufferSelector.DynamicUpdateFrontBuffer:
-                    if (manager.m_StateBuffers.m_DynamicUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_DynamicUpdateBuffers.GetFrontBuffer(deviceIndex);
+                case BufferSelector.PlayerUpdateFrontBuffer:
+                    if (manager.m_StateBuffers.m_PlayerStateBuffers.valid)
+                        return manager.m_StateBuffers.m_PlayerStateBuffers.GetFrontBuffer(deviceIndex);
                     break;
-                case BufferSelector.DynamicUpdateBackBuffer:
-                    if (manager.m_StateBuffers.m_DynamicUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_DynamicUpdateBuffers.GetBackBuffer(deviceIndex);
-                    break;
-                case BufferSelector.FixedUpdateFrontBuffer:
-                    if (manager.m_StateBuffers.m_FixedUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_FixedUpdateBuffers.GetFrontBuffer(deviceIndex);
-                    break;
-                case BufferSelector.FixedUpdateBackBuffer:
-                    if (manager.m_StateBuffers.m_FixedUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_FixedUpdateBuffers.GetBackBuffer(deviceIndex);
+                case BufferSelector.PlayerUpdateBackBuffer:
+                    if (manager.m_StateBuffers.m_PlayerStateBuffers.valid)
+                        return manager.m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex);
                     break;
                 case BufferSelector.EditorUpdateFrontBuffer:
-                    if (manager.m_StateBuffers.m_EditorUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_EditorUpdateBuffers.GetFrontBuffer(deviceIndex);
+                    if (manager.m_StateBuffers.m_EditorStateBuffers.valid)
+                        return manager.m_StateBuffers.m_EditorStateBuffers.GetFrontBuffer(deviceIndex);
                     break;
                 case BufferSelector.EditorUpdateBackBuffer:
-                    if (manager.m_StateBuffers.m_EditorUpdateBuffers.valid)
-                        return manager.m_StateBuffers.m_EditorUpdateBuffers.GetBackBuffer(deviceIndex);
+                    if (manager.m_StateBuffers.m_EditorStateBuffers.valid)
+                        return manager.m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex);
                     break;
             }
 
@@ -166,6 +158,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_Control == null)
                 m_ShowRawBytes = true;
+
+            // If our state is no longer valid, just close the window.
+            if (m_StateBuffers == null)
+            {
+                Close();
+                return;
+            }
 
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
@@ -307,14 +306,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private enum BufferSelector
         {
-            DynamicUpdateFrontBuffer,
-            DynamicUpdateBackBuffer,
-            FixedUpdateFrontBuffer,
-            FixedUpdateBackBuffer,
+            PlayerUpdateFrontBuffer,
+            PlayerUpdateBackBuffer,
             EditorUpdateFrontBuffer,
             EditorUpdateBackBuffer,
             COUNT,
-            Default = DynamicUpdateFrontBuffer
+            Default = PlayerUpdateFrontBuffer
         }
 
         private static class Styles
@@ -335,10 +332,8 @@ namespace UnityEngine.InputSystem.Editor
             public static GUIContent showDifferentOnly = new GUIContent("Show Only Differences");
             public static GUIContent[] bufferChoices =
             {
-                new GUIContent("Dynamic Update (Current)"),
-                new GUIContent("Dynamic Update (Previous)"),
-                new GUIContent("Fixed Update (Current)"),
-                new GUIContent("Fixed Update (Previous)"),
+                new GUIContent("Player (Current)"),
+                new GUIContent("Player (Previous)"),
                 new GUIContent("Editor (Current)"),
                 new GUIContent("Editor (Previous)")
             };

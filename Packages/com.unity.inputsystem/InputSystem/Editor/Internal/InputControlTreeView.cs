@@ -7,6 +7,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Profiling;
 
+////TODO: switch to ReadValueFromState (the current value reading code dates back to very early versions of the input system)
+////      (note that doing so will have an impact on mouse coordinates which then will go through EditorWindowSpaceProcessor)
+
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
 ////TODO: show processors attached to controls
@@ -40,18 +43,9 @@ namespace UnityEngine.InputSystem.Editor
 
         public void RefreshControlValues()
         {
-            if (rootItem != null)
-                RefreshControlValuesRecursive(rootItem);
-        }
-
-        private void RefreshControlValuesRecursive(TreeViewItem item)
-        {
-            if (item is ControlItem controlItem)
-                ReadState(controlItem.control, out controlItem.value, out controlItem.values);
-
-            if (item.children != null)
-                foreach (var child in item.children)
-                    RefreshControlValuesRecursive(child);
+            foreach (var item in GetRows())
+                if (item is ControlItem controlItem)
+                    ReadState(controlItem.control, out controlItem.value, out controlItem.values);
         }
 
         private const float kRowHeight = 20f;
@@ -233,25 +227,33 @@ namespace UnityEngine.InputSystem.Editor
             value = null;
             values = null;
 
-            if (stateBuffer != null)
+            try
             {
-                ////TODO: switch to ReadValueFromState
-                var text = ReadRawValueAsString(control, stateBuffer);
-                if (text != null)
-                    value = new GUIContent(text);
+                if (stateBuffer != null)
+                {
+                    var text = ReadRawValueAsString(control, stateBuffer);
+                    if (text != null)
+                        value = new GUIContent(text);
+                }
+                else if (multipleStateBuffers != null)
+                {
+                    var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
+                    if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
+                        return false;
+                    values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
+                }
+                else
+                {
+                    var valueObject = control.ReadValueAsObject();
+                    if (valueObject != null)
+                        value = new GUIContent(valueObject.ToString());
+                }
             }
-            else if (multipleStateBuffers != null)
+            catch (Exception exception)
             {
-                var valueStrings = multipleStateBuffers.Select(x => ReadRawValueAsString(control, x));
-                if (showDifferentOnly && control.children.Count == 0 && valueStrings.Distinct().Count() == 1)
-                    return false;
-                values = valueStrings.Select(x => x != null ? new GUIContent(x) : null).ToArray();
-            }
-            else
-            {
-                var valueObject = control.ReadValueAsObject();
-                if (valueObject != null)
-                    value = new GUIContent(valueObject.ToString());
+                // If we fail to read a value, swallow it so we don't fail completely
+                // showing anything from the device.
+                value = new GUIContent(exception.ToString());
             }
 
             return true;
@@ -321,7 +323,7 @@ namespace UnityEngine.InputSystem.Editor
                 var format = control.m_StateBlock.format;
 
                 object value = null;
-                if (format == InputStateBlock.kTypeBit)
+                if (format == InputStateBlock.FormatBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -332,7 +334,7 @@ namespace UnityEngine.InputSystem.Editor
                         value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
                     }
                 }
-                else if (format == InputStateBlock.kTypeSBit)
+                else if (format == InputStateBlock.FormatSBit)
                 {
                     if (control.valueSizeInBytes == 1)
                     {
@@ -345,36 +347,36 @@ namespace UnityEngine.InputSystem.Editor
                         value = fullValue - halfMaxValue;
                     }
                 }
-                else if (format == InputStateBlock.kTypeByte || format == InputStateBlock.kTypeSByte)
+                else if (format == InputStateBlock.FormatByte || format == InputStateBlock.FormatSByte)
                 {
                     value = *ptr;
                 }
-                else if (format == InputStateBlock.kTypeShort)
+                else if (format == InputStateBlock.FormatShort)
                 {
                     value = *(short*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUShort)
+                else if (format == InputStateBlock.FormatUShort)
                 {
                     value = *(ushort*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeInt)
+                else if (format == InputStateBlock.FormatInt)
                 {
                     value = *(int*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeUInt)
+                else if (format == InputStateBlock.FormatUInt)
                 {
                     value = *(uint*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeFloat)
+                else if (format == InputStateBlock.FormatFloat)
                 {
                     value = *(float*)ptr;
                 }
-                else if (format == InputStateBlock.kTypeDouble)
+                else if (format == InputStateBlock.FormatDouble)
                 {
                     value = *(double*)ptr;
                 }
 
-                // Stringify enum values, for. ex., PointerPhase
+                // Stringify enum values, for. ex., TouchPhase
                 if (value != null && control.valueType.IsEnum)
                 {
                     var intValue = Convert.ToInt32(value);

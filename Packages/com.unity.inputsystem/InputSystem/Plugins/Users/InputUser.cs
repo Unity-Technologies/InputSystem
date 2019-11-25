@@ -13,8 +13,7 @@ using UnityEngine.Profiling;
 
 ////TODO: the account selection stuff needs cleanup; the current flow is too convoluted
 
-
-namespace UnityEngine.InputSystem.Plugins.Users
+namespace UnityEngine.InputSystem.Users
 {
     /// <summary>
     /// Represents a specific user/player interacting with one or more devices and input actions.
@@ -215,27 +214,6 @@ namespace UnityEngine.InputSystem.Plugins.Users
             }
         }
 
-        /// <summary>
-        /// By default, bindings on the user's <see cref="actions"/> are restricted to the devices paired
-        /// to the user (<see cref="pairedDevices"/>). If this property is set to true, then actions are not
-        /// restricted to <see cref="pairedDevices"/> but will instead bind to whatever devices in <see cref="InputSystem.devices"/>
-        /// match their bindings.
-        /// </summary>
-        /// <remarks>
-        /// This defaults to false.
-        ///
-        /// Enabling this behavior is useful for implementing automatic control scheme switching that does not
-        /// rely on <see cref="onUnpairedDeviceUsed"/>. Instead of listening for unpaired device activity (which
-        /// can be costly), one can instead hook into <see cref="InputSystem.onActionChange"/> and use
-        /// <see cref="InputActionChange.ActionPerformed"/> to detect when an action was triggered from a device
-        /// not currently paired to the user, in which case <see cref="ActivateControlScheme(InputControlScheme)"/>
-        /// can be used to automatically switch to a different control scheme.
-        /// </remarks>
-        public bool bindToAllDevices
-        {
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         /// <summary>
         /// Actions associated with the user.
@@ -248,9 +226,6 @@ namespace UnityEngine.InputSystem.Plugins.Users
         ///
         /// Note that is generally does not make sense for users to share actions. Instead, each user should
         /// receive a set of actions private to the user.
-        ///
-        /// If <see cref="settings"/> are applied with customized bindings (<see cref="InputUserSettings.customBindings"/>),
-        /// these are applied automatically to the actions.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
         /// <seealso cref="InputActionMap"/>
@@ -300,17 +275,6 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         public bool hasMissingRequiredDevices => s_AllUserData[index].controlSchemeMatch.hasMissingRequiredDevices;
-
-        /// <summary>
-        /// Profile settings associated with the user or <c>null</c> if the user has no associated
-        /// profile settings.
-        /// </summary>
-        public InputUserSettings settings
-        {
-            //on get, refresh profile (such as custom bindings); keep dirty flag?
-            get { throw new NotImplementedException(); }
-            set { throw new NotImplementedException(); }
-        }
 
         /// <summary>
         /// List of all current users.
@@ -371,14 +335,26 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// To enable detection of the use of unpaired devices, set <see cref="listenForUnpairedDeviceActivity"/> to true.
         /// It is disabled by default.
         ///
-        /// The control passed to the callback is the first control that activity was detected on. The device can be accessed
-        /// through <see cref="InputControl.device"/>. If multiple controls on a device have been actuated, this will simply
-        /// be the first control in <see cref="InputDevice.allControls"/> that is actuated. The system does not spend time
-        /// trying to find the control that has been actuated the strongest. If desired, this can be done manually in the callback.
+        /// The callback is invoked for each non-leaf, non-synthetic, non-noisy control that has been actuated on the device.
+        /// It being restricted to non-leaf controls means that if, say, the stick on a gamepad is actuated in both X and Y
+        /// direction, you will see two calls: one with stick/x and one with stick/y.
+        ///
+        /// The reason that the callback is invoked for each individual control is that pairing often relies on checking
+        /// for specific kinds of interactions. For example, a pairing callback may listen exclusively for button presses.
         ///
         /// Note that whether the use of unpaired devices leads to them getting paired is under the control of the application.
-        /// If the device should be paired, invoke <see cref="PerformPairingWithDevice"/> from the callback. This can also be used
-        /// to further filter the activity, e.g. to only join users when pressing a button.
+        /// If the device should be paired, invoke <see cref="PerformPairingWithDevice"/> from the callback. If you do so,
+        /// no further callbacks will get triggered for other controls that may have been actuated in the same event.
+        ///
+        /// Be aware that the callback is fired <em>before</em> input is actually incorporated into the device (it is
+        /// indirectly triggered from <see cref="InputSystem.onEvent"/>). This means at the time the callback is run,
+        /// the state of the given device does not yet have the input that triggered the callback. For this reason, the
+        /// callback receives a second argument that references the event from which the use of an unpaired device was
+        /// detected.
+        ///
+        /// What this sequence allows is to make changes to the system before the input is processed. For example, an
+        /// action that is enabled as part of the callback will subsequently respond to the input that triggered the
+        /// callback.
         ///
         /// <example>
         /// <code>
@@ -410,14 +386,15 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// the user can, for example, switch from keyboard&amp;mouse to gamepad seamlessly by simply picking up the gamepad
         /// and starting to play.
         /// </remarks>
-        public static event Action<InputControl> onUnpairedDeviceUsed
+        public static event Action<InputControl, InputEventPtr> onUnpairedDeviceUsed
         {
             add
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 s_OnUnpairedDeviceUsed.AppendWithCapacity(value);
-                HookIntoDeviceChange();
+                if (s_ListenForUnpairedDeviceActivity > 0)
+                    HookIntoEvents();
             }
             remove
             {
@@ -426,8 +403,8 @@ namespace UnityEngine.InputSystem.Plugins.Users
                 var index = s_OnUnpairedDeviceUsed.IndexOf(value);
                 if (index != -1)
                     s_OnUnpairedDeviceUsed.RemoveAtWithCapacity(index);
-                if (s_OnUnpairedDeviceUsed.length == 0 && s_ListenForUnpairedDeviceActivity == 0)
-                    UnhookFromDeviceChange();
+                if (s_OnUnpairedDeviceUsed.length == 0)
+                    UnhookFromDeviceStateChange();
             }
         }
 
@@ -453,17 +430,13 @@ namespace UnityEngine.InputSystem.Plugins.Users
             get => s_ListenForUnpairedDeviceActivity;
             set
             {
-                if (value > 0)
-                {
-                    HookIntoDeviceChange();
-                }
-                else if (s_OnUnpairedDeviceUsed.length == 0 && s_AllUserCount == 0)
-                {
-                    UnhookFromDeviceChange();
-                }
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), "Cannot be negative");
+                if (value > 0 && s_OnUnpairedDeviceUsed.length > 0)
+                    HookIntoEvents();
+                else if (value == 0)
+                    UnhookFromDeviceStateChange();
                 s_ListenForUnpairedDeviceActivity = value;
-                if (s_ListenForUnpairedDeviceActivity < 0)
-                    s_ListenForUnpairedDeviceActivity = 0;
             }
         }
 
@@ -493,7 +466,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
             {
                 actions.devices = pairedDevices;
                 if (s_AllUserData[userIndex].controlScheme != null)
-                    ActivateControlScheme(s_AllUserData[userIndex].controlScheme.Value);
+                    ActivateControlSchemeInternal(userIndex, s_AllUserData[userIndex].controlScheme.Value);
             }
         }
 
@@ -532,49 +505,40 @@ namespace UnityEngine.InputSystem.Plugins.Users
         public ControlSchemeChangeSyntax ActivateControlScheme(InputControlScheme scheme)
         {
             var userIndex = index; // Throws if user is invalid.
-            var isEmpty = scheme == default;
 
-            if (s_AllUserData[userIndex].controlScheme != scheme || (isEmpty && s_AllUserData[userIndex].controlScheme != null))
+            if (s_AllUserData[userIndex].controlScheme != scheme ||
+                (scheme == default && s_AllUserData[userIndex].controlScheme != null))
             {
-                if (isEmpty)
-                    s_AllUserData[userIndex].controlScheme = null;
-                else
-                    s_AllUserData[userIndex].controlScheme = scheme;
-
-                if (s_AllUserData[userIndex].actions != null)
-                {
-                    if (isEmpty)
-                    {
-                        s_AllUserData[userIndex].actions.bindingMask = null;
-                        s_AllUserData[userIndex].controlSchemeMatch.Dispose();
-                        s_AllUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
-                    }
-                    else
-                    {
-                        s_AllUserData[userIndex].actions.bindingMask = new InputBinding {groups = scheme.bindingGroup};
-                        UpdateControlSchemeMatch(userIndex);
-                    }
-                }
-
+                ActivateControlSchemeInternal(userIndex, scheme);
                 Notify(userIndex, InputUserChange.ControlSchemeChanged, null);
             }
 
             return new ControlSchemeChangeSyntax {m_UserIndex = userIndex};
         }
 
-        public void PauseHaptics()
+        private void ActivateControlSchemeInternal(int userIndex, InputControlScheme scheme)
         {
-            ////TODO
-        }
+            var isEmpty = scheme == default;
 
-        public void ResumeHaptics()
-        {
-            ////TODO
-        }
+            if (isEmpty)
+                s_AllUserData[userIndex].controlScheme = null;
+            else
+                s_AllUserData[userIndex].controlScheme = scheme;
 
-        public void ResetHaptics()
-        {
-            ////TODO
+            if (s_AllUserData[userIndex].actions != null)
+            {
+                if (isEmpty)
+                {
+                    s_AllUserData[userIndex].actions.bindingMask = null;
+                    s_AllUserData[userIndex].controlSchemeMatch.Dispose();
+                    s_AllUserData[userIndex].controlSchemeMatch = new InputControlScheme.MatchResult();
+                }
+                else
+                {
+                    s_AllUserData[userIndex].actions.bindingMask = new InputBinding {groups = scheme.bindingGroup};
+                    UpdateControlSchemeMatch(userIndex);
+                }
+            }
         }
 
         /// <summary>
@@ -816,7 +780,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// to the user. Instead, pairing is deferred to until after an account selection has been made by the user.
         /// In this case, <see cref="InputUserChange.AccountSelectionInProgress"/> will be signalled through <see cref="onChange"/>
         /// and <see cref="InputUserChange.AccountChanged"/> will be signalled once the user has selected an account or
-        /// <see cref="InputUserChange.AccountSelectionCancelled"/> will be signalled if the user cancels account
+        /// <see cref="InputUserChange.AccountSelectionCanceled"/> will be signalled if the user cancels account
         /// selection. The device will be paired to the user once account selection is complete.
         ///
         /// This behavior is most useful on Xbox and Switch to require the user to choose which account to play with. Note that
@@ -878,17 +842,17 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// <seealso cref="UnpairDevicesAndRemoveUser"/>
         /// <seealso cref="InputUserChange.DevicePaired"/>
         public static InputUser PerformPairingWithDevice(InputDevice device,
-            InputUser user = default(InputUser),
+            InputUser user = default,
             InputUserPairingOptions options = InputUserPairingOptions.None)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            if (user != default(InputUser) && !user.valid)
+            if (user != default && !user.valid)
                 throw new ArgumentException("Invalid user", nameof(user));
 
             // Create new user, if needed.
             int userIndex;
-            if (user == default(InputUser))
+            if (user == default)
             {
                 userIndex = AddUser();
             }
@@ -936,8 +900,8 @@ namespace UnityEngine.InputSystem.Plugins.Users
             // If the device supports user account selection but we didn't get one,
             // try to initiate account selection.
             if ((options & InputUserPairingOptions.ForcePlatformUserAccountSelection) != 0 ||
-                (queryUserAccountResult != QueryPairedUserAccountCommand.Result.NotSupported &&
-                 (queryUserAccountResult & QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) == 0 &&
+                (queryUserAccountResult != InputDeviceCommand.GenericFailure &&
+                 (queryUserAccountResult & (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) == 0 &&
                  (options & InputUserPairingOptions.ForceNoPlatformUserAccountSelection) == 0))
             {
                 if (InitiateUserAccountSelectionAtPlatformLevel(device))
@@ -1064,7 +1028,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
             ArrayHelpers.EraseAtWithCapacity(s_AllUserData, ref s_AllUserCount, userIndex);
 
             // Remove our hook if we no longer need it.
-            if (s_AllUserCount == 0 && s_ListenForUnpairedDeviceActivity == 0)
+            if (s_AllUserCount == 0)
                 UnhookFromDeviceChange();
         }
 
@@ -1359,7 +1323,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
             }
         }
 
-        private static QueryPairedUserAccountCommand.Result UpdatePlatformUserAccount(int userIndex, InputDevice device)
+        private static long UpdatePlatformUserAccount(int userIndex, InputDevice device)
         {
             Debug.Assert(userIndex >= 0 && userIndex < s_AllUserCount);
 
@@ -1368,13 +1332,13 @@ namespace UnityEngine.InputSystem.Plugins.Users
                 out var platformUserAccountName, out var platformUserAccountId);
 
             // Nothing much to do if not supported by device.
-            if ((queryResult & QueryPairedUserAccountCommand.Result.NotSupported) != 0)
+            if (queryResult == InputDeviceCommand.GenericFailure)
             {
                 // Check if there's an account selection in progress. There shouldn't be as it's
                 // weird for the device to no signal it does not support querying user account, but
                 // just to be safe, we check.
                 if ((s_AllUserData[userIndex].flags & UserFlags.UserAccountSelectionInProgress) != 0)
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, null);
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, null);
 
                 s_AllUserData[userIndex].platformUserAccountHandle = null;
                 s_AllUserData[userIndex].platformUserAccountName = null;
@@ -1388,14 +1352,14 @@ namespace UnityEngine.InputSystem.Plugins.Users
             {
                 // Yes, there is. See if it is complete.
 
-                if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) != 0)
+                if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) != 0)
                 {
                     // No, still in progress.
                 }
-                else if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionCancelled) != 0)
+                else if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionCanceled) != 0)
                 {
-                    // Got cancelled.
-                    Notify(userIndex, InputUserChange.AccountSelectionCancelled, device);
+                    // Got canceled.
+                    Notify(userIndex, InputUserChange.AccountSelectionCanceled, device);
                 }
                 else
                 {
@@ -1442,27 +1406,27 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// <seealso cref="QueryPairedUserAccountCommand.handle"/>
         /// <seealso cref="QueryPairedUserAccountCommand.name"/>
         /// <seealso cref="QueryPairedUserAccountCommand.id"/>
-        private static QueryPairedUserAccountCommand.Result QueryPairedPlatformUserAccount(InputDevice device,
+        private static long QueryPairedPlatformUserAccount(InputDevice device,
             out InputUserAccountHandle? platformAccountHandle, out string platformAccountName, out string platformAccountId)
         {
             Debug.Assert(device != null);
 
             // Query user account info from backend.
             var queryPairedUser = QueryPairedUserAccountCommand.Create();
-            var result = (QueryPairedUserAccountCommand.Result)device.ExecuteCommand(ref queryPairedUser);
-            if (result == QueryPairedUserAccountCommand.Result.NotSupported)
+            var result = device.ExecuteCommand(ref queryPairedUser);
+            if (result == InputDeviceCommand.GenericFailure)
             {
                 // Not currently paired to user account in backend.
                 platformAccountHandle = null;
                 platformAccountName = null;
                 platformAccountId = null;
-                return QueryPairedUserAccountCommand.Result.NotSupported;
+                return InputDeviceCommand.GenericFailure;
             }
 
             // Success. There is a user account currently paired to the device and we now have the
             // platform's user account details.
 
-            if ((result & QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) != 0)
+            if ((result & (long)QueryPairedUserAccountCommand.Result.DevicePairedToUserAccount) != 0)
             {
                 platformAccountHandle =
                     new InputUserAccountHandle(device.description.interfaceName ?? "<Unknown>", queryPairedUser.handle);
@@ -1512,7 +1476,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         /// <remarks>
         /// We monitor the device setup in the system for activity that impacts the user setup.
         /// </remarks>
-        internal static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             switch (change)
             {
@@ -1590,86 +1554,6 @@ namespace UnityEngine.InputSystem.Plugins.Users
                     break;
                 }
 
-                // Device had activity.
-                case InputDeviceChange.StateChanged:
-                {
-                    // Ignore if we're not listening that kind of activity ATM.
-                    if (s_ListenForUnpairedDeviceActivity == 0)
-                        return;
-
-                    // See if it's a device not belonging to any user.
-                    if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
-                    {
-                        // No, it's a device already paired to a player so do nothing.
-                        return;
-                    }
-
-                    Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
-
-                    ////TODO: allow filtering (e.g. by device requirements on user actions)
-
-                    // Yes, it is so let's find out whether there was actual user activity
-                    // on the device. As a first level, we run the noise mask over the state
-                    // while concurrently comparing whatever bits make it through to the default
-                    // state buffer.
-                    if (device.CheckStateIsAtDefaultIgnoringNoise())
-                    {
-                        Profiler.EndSample();
-                        return; // No activity at all.
-                    }
-
-                    // Go through controls and for any one that isn't noisy or synthetic, find out
-                    // if we have a magnitude greater than zero.
-                    var controls = device.allControls;
-                    for (var i = 0; i < controls.Count; ++i)
-                    {
-                        var control = controls[i];
-                        if (control.noisy || control.synthetic)
-                            continue;
-
-                        ////REVIEW: is this safe?
-                        // Ignore non-leaf controls.
-                        if (control.children.Count > 0)
-                            continue;
-
-                        // Check for default state. Cheaper check than magnitude evaluation
-                        // which may involve several virtual method calls.
-                        if (control.CheckStateIsAtDefault())
-                            continue;
-
-                        // Ending up here is costly. We now do per-control work that may involve
-                        // walking all over the place in the InputControl machinery.
-                        var magnitude = control.EvaluateMagnitude();
-                        if (magnitude > 0)
-                        {
-                            // Yes, something was actuated on the device.
-                            var deviceHasBeenPaired = false;
-                            for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
-                            {
-                                var pairingStateVersionBefore = s_PairingStateVersion;
-
-                                s_OnUnpairedDeviceUsed[n](control);
-
-                                if (pairingStateVersionBefore != s_PairingStateVersion
-                                    && FindUserPairedToDevice(device) != null)
-                                {
-                                    deviceHasBeenPaired = true;
-                                    break;
-                                }
-                            }
-
-                            // If the device was paired in one of the callbacks, stop processing
-                            // changes on it.
-                            if (deviceHasBeenPaired)
-                                break;
-                        }
-                    }
-
-                    Profiler.EndSample();
-
-                    break;
-                }
-
                 // Device had its configuration changed which may mean we have a different user account paired
                 // to the device now.
                 case InputDeviceChange.ConfigurationChanged:
@@ -1684,7 +1568,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
 
                         var userIndex = new InputUser { m_Id = s_OngoingAccountSelections[i].userId }.index;
                         var queryResult = UpdatePlatformUserAccount(userIndex, device);
-                        if ((queryResult & QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) == 0)
+                        if ((queryResult & (long)QueryPairedUserAccountCommand.Result.UserAccountSelectionInProgress) == 0)
                         {
                             wasOngoingAccountSelection = true;
                             s_OngoingAccountSelections.RemoveAtByMovingTailWithCapacity(i);
@@ -1729,6 +1613,94 @@ namespace UnityEngine.InputSystem.Plugins.Users
             }
         }
 
+        // We hook this into InputSystem.onEvent when listening for activity on unpaired devices.
+        // What this means is that we get to run *before* state reaches the device. This in turn
+        // means that should the device get paired as a result, actions that are enabled as part
+        // of the pairing will immediately get triggered. This would not be the case if we hook
+        // into InputState.onDeviceChange instead which only triggers once state has been altered.
+        //
+        // NOTE: This also means that unpaired device activity will *only* be detected from events,
+        //       NOT from state changes applied directly through InputState.Change.
+        private static unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
+        {
+            Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
+                "This should only be called while listening for unpaired device activity");
+            if (s_ListenForUnpairedDeviceActivity == 0)
+                return;
+
+            // Ignore any state change not triggered from a state event.
+            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                return;
+
+            // See if it's a device not belonging to any user.
+            if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
+            {
+                // No, it's a device already paired to a player so do nothing.
+                return;
+            }
+
+            Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
+
+            ////TODO: allow filtering (e.g. by device requirements on user actions)
+
+            // Go through controls and for any one that isn't noisy or synthetic, find out
+            // if we have a magnitude greater than zero.
+            var controls = device.allControls;
+            for (var i = 0; i < controls.Count; ++i)
+            {
+                var control = controls[i];
+                if (control.noisy || control.synthetic)
+                    continue;
+
+                // Ignore non-leaf controls.
+                if (control.children.Count > 0)
+                    continue;
+
+                // Ignore controls that aren't part of the event.
+                var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
+                if (statePtr == null)
+                    continue;
+
+                // Check for default state. Cheaper check than magnitude evaluation
+                // which may involve several virtual method calls.
+                if (control.CheckStateIsAtDefault(statePtr))
+                    continue;
+
+                // Ending up here is costly. We now do per-control work that may involve
+                // walking all over the place in the InputControl machinery.
+                //
+                // NOTE: We already know the control has moved away from its default state
+                //       so in case it does not support magnitudes, we assume that the
+                //       control has changed value, too.
+                var magnitude = control.EvaluateMagnitude(statePtr);
+                if (magnitude > 0 || magnitude == -1)
+                {
+                    // Yes, something was actuated on the device.
+                    var deviceHasBeenPaired = false;
+                    for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
+                    {
+                        var pairingStateVersionBefore = s_PairingStateVersion;
+
+                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
+
+                        if (pairingStateVersionBefore != s_PairingStateVersion
+                            && FindUserPairedToDevice(device) != null)
+                        {
+                            deviceHasBeenPaired = true;
+                            break;
+                        }
+                    }
+
+                    // If the device was paired in one of the callbacks, stop processing
+                    // changes on it.
+                    if (deviceHasBeenPaired)
+                        break;
+                }
+            }
+
+            Profiler.EndSample();
+        }
+
         /// <summary>
         /// Syntax for configuring a control scheme on a user.
         /// </summary>
@@ -1755,7 +1727,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
         private uint m_Id;
 
         [Flags]
-        public enum UserFlags
+        internal enum UserFlags
         {
             BindToAllDevices = 1 << 0,
 
@@ -1823,7 +1795,8 @@ namespace UnityEngine.InputSystem.Plugins.Users
 
             public int lostDeviceStartIndex;
 
-            public InputUserSettings settings;
+            ////TODO
+            //public InputUserSettings settings;
 
             public UserFlags flags;
         }
@@ -1853,6 +1826,7 @@ namespace UnityEngine.InputSystem.Plugins.Users
                 return 0;
             }
 
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "device", Justification = "Keep this for future implementation")]
             private static InputUserAccountHandle? GetUserAccountHandleForDevice(InputDevice device)
             {
                 ////TODO (need to cache this)
@@ -1877,9 +1851,11 @@ namespace UnityEngine.InputSystem.Plugins.Users
         private static InputDevice[] s_AllLostDevices;
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
-        private static InlinedArray<Action<InputControl>> s_OnUnpairedDeviceUsed;
+        private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
+        private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;
         private static bool s_OnDeviceChangeHooked;
+        private static bool s_OnEventHooked;
         private static int s_ListenForUnpairedDeviceActivity;
 
         private static void HookIntoDeviceChange()
@@ -1900,6 +1876,24 @@ namespace UnityEngine.InputSystem.Plugins.Users
             s_OnDeviceChangeHooked = false;
         }
 
+        private static void HookIntoEvents()
+        {
+            if (s_OnEventHooked)
+                return;
+            if (s_OnEventDelegate == null)
+                s_OnEventDelegate = OnEvent;
+            InputSystem.onEvent += s_OnEventDelegate;
+            s_OnEventHooked = true;
+        }
+
+        private static void UnhookFromDeviceStateChange()
+        {
+            if (!s_OnEventHooked)
+                return;
+            InputSystem.onEvent -= s_OnEventDelegate;
+            s_OnEventHooked = false;
+        }
+
         internal static void ResetGlobals()
         {
             // Release native memory held by control scheme match results.
@@ -1917,9 +1911,11 @@ namespace UnityEngine.InputSystem.Plugins.Users
             s_AllPairedDevices = null;
             s_OngoingAccountSelections = new InlinedArray<OngoingAccountSelection>();
             s_OnChange = new InlinedArray<Action<InputUser, InputUserChange, InputDevice>>();
-            s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl>>();
+            s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl, InputEventPtr>>();
             s_OnDeviceChangeDelegate = null;
+            s_OnEventDelegate = null;
             s_OnDeviceChangeHooked = false;
+            s_OnEventHooked = false;
             s_ListenForUnpairedDeviceActivity = 0;
         }
     }

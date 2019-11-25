@@ -26,12 +26,13 @@ namespace UnityEngine.InputSystem.Editor
     /// The .inputactions editor code does not really separate between model and view. Selection state is contained
     /// in the tree views and persistent across domain reloads via <see cref="TreeViewState"/>.
     /// </remarks>
-    internal class InputActionEditorWindow : EditorWindow
+    internal class InputActionEditorWindow : EditorWindow, IDisposable
     {
         /// <summary>
         /// Open window if someone clicks on an .inputactions asset or an action inside of it or
         /// if someone hits the "Edit Asset" button in the importer inspector.
         /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "line", Justification = "line parameter required by OnOpenAsset attribute")]
         [OnOpenAsset]
         public static bool OnOpenAsset(int instanceId, int line)
         {
@@ -202,12 +203,19 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.onSelectedDeviceChanged = OnControlSchemeSelectionChanged;
             m_Toolbar.onSave = SaveChangesToAsset;
             m_Toolbar.onControlSchemesChanged = OnControlSchemesModified;
+            m_Toolbar.onControlSchemeRenamed = OnControlSchemeRenamed;
+            m_Toolbar.onControlSchemeDeleted = OnControlSchemeDeleted;
             EditorApplication.wantsToQuit += EditorWantsToQuit;
 
             // Initialize after assembly reload.
             if (m_ActionAssetManager != null)
             {
-                m_ActionAssetManager.Initialize();
+                if (!m_ActionAssetManager.Initialize())
+                {
+                    // The asset we want to edit no longer exists.
+                    Close();
+                    return;
+                }
                 m_ActionAssetManager.onDirtyChanged = OnDirtyChanged;
 
                 InitializeTrees();
@@ -285,6 +293,43 @@ namespace UnityEngine.InputSystem.Editor
         private void OnControlSchemesModified()
         {
             TransferControlSchemes(save: true);
+
+            // Control scheme changes may affect the search filter.
+            OnToolbarSearchChanged();
+
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeRenamed(string oldBindingGroup, string newBindingGroup)
+        {
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject,
+                oldBindingGroup, newBindingGroup);
+            ApplyAndReloadTrees();
+        }
+
+        private void OnControlSchemeDeleted(string name, string bindingGroup)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(name), "Control scheme name should not be empty");
+            Debug.Assert(!string.IsNullOrEmpty(bindingGroup), "Binding group should not be empty");
+
+            var asset = m_ActionAssetManager.m_AssetObjectForEditing;
+
+            var bindingMask = InputBinding.MaskByGroup(bindingGroup);
+            var schemeHasBindings = asset.actionMaps.Any(m => m.bindings.Any(b => bindingMask.Matches(ref b)));
+            if (!schemeHasBindings)
+                return;
+
+            ////REVIEW: offer to do nothing and leave all bindings as is?
+            var deleteBindings =
+                EditorUtility.DisplayDialog("Delete Bindings?",
+                    $"Delete bindings for '{name}' as well? If you select 'No', the bindings will only "
+                    + $"be unassigned from the '{name}' control scheme but otherwise left as is. Note that bindings "
+                    + $"that are assigned to '{name}' but also to other control schemes will be left in place either way.",
+                    "Yes", "No");
+
+            InputActionSerializationHelpers.ReplaceBindingGroup(m_ActionAssetManager.serializedObject, bindingGroup, "",
+                deleteOrphanedBindings: deleteBindings);
+
             ApplyAndReloadTrees();
         }
 
@@ -440,7 +485,6 @@ namespace UnityEngine.InputSystem.Editor
                 // Grab the action for the binding and see if we have an expected control layout
                 // set on it. Pass that on to the control picking machinery.
                 var isCompositePartBinding = item is PartOfCompositeBindingTreeItem;
-                var isCompositeBinding = item is CompositeBindingTreeItem;
                 var actionItem = (isCompositePartBinding ? item.parent.parent : item.parent) as ActionTreeItem;
                 Debug.Assert(actionItem != null);
 
@@ -450,7 +494,7 @@ namespace UnityEngine.InputSystem.Editor
                 // The toolbar may constrain the set of devices we're currently interested in by either
                 // having one specific device selected from the current scheme or having at least a control
                 // scheme selected.
-                var controlPathsToMatch = (IEnumerable<string>)null;
+                IEnumerable<string> controlPathsToMatch;
                 if (m_Toolbar.selectedDeviceRequirement != null)
                 {
                     // Single device selected from set of devices in control scheme.
@@ -477,7 +521,8 @@ namespace UnityEngine.InputSystem.Editor
                         {
                             if (change == InputBindingPropertiesView.k_PathChanged ||
                                 change == InputBindingPropertiesView.k_CompositePartAssignmentChanged ||
-                                change == InputBindingPropertiesView.k_CompositeTypeChanged)
+                                change == InputBindingPropertiesView.k_CompositeTypeChanged ||
+                                change == InputBindingPropertiesView.k_GroupsChanged)
                             {
                                 ApplyAndReloadTrees();
                             }
@@ -542,6 +587,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnGUI()
         {
+            // If the actions tree has lost the filters (because they would not match an item it tried to highlight),
+            // update the Toolbar UI to remove them.
+            if (!m_ActionsTree.hasFilter)
+                m_Toolbar.ResetSearchFilters();
+
             // Allow switching between action map tree and action tree using arrow keys.
             ToggleFocusUsingKeyboard(KeyCode.RightArrow, m_ActionMapsTree, m_ActionsTree);
             ToggleFocusUsingKeyboard(KeyCode.LeftArrow, m_ActionsTree, m_ActionMapsTree);
@@ -714,6 +764,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Toolbar.isDirty = dirty;
         }
 
+        public void Dispose()
+        {
+            m_BindingPropertyView?.Dispose();
+        }
+
         [SerializeField] private TreeViewState m_ActionMapsTreeState;
         [SerializeField] private TreeViewState m_ActionsTreeState;
         [SerializeField] private InputControlPickerState m_ControlPickerViewState;
@@ -733,10 +788,12 @@ namespace UnityEngine.InputSystem.Editor
         private Vector2 m_PropertiesScroll;
         private bool m_ForceQuit;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Justification = "Intantiated through reflection by Unity")]
         private class ProcessAssetModifications : UnityEditor.AssetModificationProcessor
         {
             // Handle .inputactions asset being deleted.
             // ReSharper disable once UnusedMember.Local
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "options", Justification = "options parameter required by Unity API")]
             public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
             {
                 if (!path.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
@@ -755,7 +812,7 @@ namespace UnityEngine.InputSystem.Editor
                             "Yes, Delete", "No, Cancel");
                         if (!result)
                         {
-                            // User cancelled. Stop the deletion.
+                            // User canceled. Stop the deletion.
                             return AssetDeleteResult.FailedDelete;
                         }
 

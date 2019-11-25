@@ -1,8 +1,12 @@
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Interface for <see cref="InputDevice">devices</see> that can receive text input events.
+    /// Interface for <see cref="InputDevice"/> classes that can receive text input events.
     /// </summary>
+    /// <remarks>
+    /// This interface should be implemented by devices that are meant to receive text
+    /// input through <see cref="TextEvent"/>.
+    /// </remarks>
     /// <seealso cref="TextEvent"/>
     /// <seealso cref="IMECompositionEvent"/>
     public interface ITextInputReceiver
@@ -13,6 +17,15 @@ namespace UnityEngine.InputSystem
         /// <param name="character">Character that was typed. Note that in case the character is part of
         /// a surrogate pair, this method is called first with the high surrogate and then with the
         /// low surrogate character.</param>
+        /// <remarks>
+        /// This method is called on a device when a <see cref="TextEvent"/> is received
+        /// for the device. <paramref name="character"/> is the <see cref="TextEvent.character"/>
+        /// from the event.
+        ///
+        /// Note that this method will be called *twice* for a single <see cref="TextEvent"/>
+        /// in case the given UTF-32 (encoding in the event) needs to be represented as UTF-16
+        /// (encoding of <c>char</c> in C#) surrogate.
+        /// </remarks>
         void OnTextInput(char character);
 
         /// <summary>

@@ -82,6 +82,9 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static NamedValue[] ParseMultiple(string parameterString)
         {
+            if (parameterString == null)
+                throw new ArgumentNullException(nameof(parameterString));
+
             parameterString = parameterString.Trim();
             if (string.IsNullOrEmpty(parameterString))
                 return null;
@@ -162,14 +165,17 @@ namespace UnityEngine.InputSystem.Utilities
 
         public void ApplyToObject(object instance)
         {
+            if (instance == null)
+                throw new System.ArgumentNullException(nameof(instance));
+
             var instanceType = instance.GetType();
 
             ////REVIEW: what about properties?
             var field = instanceType.GetField(name,
                 BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == null)
-                throw new Exception(
-                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)");
+                throw new ArgumentException(
+                    $"Cannot find public field '{name}' in '{instanceType.Name}' (while trying to apply parameter)", nameof(instance));
 
             ////REVIEW: would be awesome to be able to do this without boxing
             var fieldTypeCode = Type.GetTypeCode(field.FieldType);

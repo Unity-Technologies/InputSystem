@@ -48,7 +48,8 @@ namespace UnityEngine.InputSystem.Editor
                     title = property.displayName,
                     // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
                     // really know where this is coming from. This works around it by adding an arbitrary offset...
-                    foldoutOffset = 14
+                    foldoutOffset = 14,
+                    drawActionPropertiesButton = true
                 };
                 m_TreeView.Reload();
             }

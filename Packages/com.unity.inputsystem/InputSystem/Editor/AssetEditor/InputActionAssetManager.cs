@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     /// around for editing.
     /// </summary>
     [Serializable]
-    internal class InputActionAssetManager
+    internal class InputActionAssetManager : IDisposable
     {
         [SerializeField] internal InputActionAsset m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_ImportedAssetObject;
@@ -46,7 +46,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ImportedAssetObject == null)
                     LoadImportedObjectFromGuid();
 
-                Debug.Assert(m_ImportedAssetObject != null);
                 return m_ImportedAssetObject;
             }
         }
@@ -64,16 +63,27 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool dirty => m_IsDirty;
 
-        public void Initialize()
+        public bool Initialize()
         {
             if (m_AssetObjectForEditing == null)
             {
+                if (importedAsset == null)
+                    // The asset we want to edit no longer exists.
+                    return false;
+
                 CreateWorkingCopyAsset();
             }
             else
             {
                 m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
             }
+
+            return true;
+        }
+
+        public void Dispose()
+        {
+            m_SerializedObject?.Dispose();
         }
 
         public bool ReInitializeIfAssetHasChanged()
@@ -117,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_AssetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(m_AssetPath))
-                throw new Exception("Could not determine asset path for " + m_AssetGUID);
+                throw new InvalidOperationException("Could not determine asset path for " + m_AssetGUID);
 
             m_ImportedAssetObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_AssetPath);
         }

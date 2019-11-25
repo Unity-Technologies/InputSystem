@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
     /// greater control is required than is offered by the <see cref="PropertyDrawer"/> mechanism. In particular,
     /// it allows applying additional constraints such as requiring control paths to match ...
     /// </remarks>
-    public class InputControlPathEditor
+    public sealed class InputControlPathEditor : IDisposable
     {
         /// <summary>
         ///
@@ -34,6 +34,13 @@ namespace UnityEngine.InputSystem.Editor
 
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
+
+            m_PathLabel = new GUIContent(pathProperty.displayName, pathProperty.tooltip);
+        }
+
+        public void Dispose()
+        {
+            m_PickerDropdown?.Dispose();
         }
 
         public void SetControlPathsToMatch(IEnumerable<string> controlPaths)
@@ -88,16 +95,16 @@ namespace UnityEngine.InputSystem.Editor
             var lineRect = rect;
             var labelRect = lineRect;
             labelRect.width = EditorGUIUtility.labelWidth;
-            EditorGUI.LabelField(labelRect, s_PathLabel);
+            EditorGUI.LabelField(labelRect, m_PathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
 
             var bindingTextRect = lineRect;
             var editButtonRect = lineRect;
 
-            bindingTextRect.width -= 15;
+            bindingTextRect.width -= 20;
             editButtonRect.x += bindingTextRect.width;
-            editButtonRect.width = 15;
+            editButtonRect.width = 20;
             editButtonRect.height = 15;
 
             var path = pathProperty.stringValue;
@@ -161,6 +168,7 @@ namespace UnityEngine.InputSystem.Editor
         public SerializedProperty pathProperty { get; }
         public Action onModified { get; }
 
+        private GUIContent m_PathLabel;
         private string m_ExpectedControlLayout;
         private string[] m_ControlPathsToMatch;
         private InputControlScheme[] m_ControlSchemes;
@@ -169,8 +177,6 @@ namespace UnityEngine.InputSystem.Editor
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
         private InputActionRebindingExtensions.RebindingOperation m_RebindingOperation;
-
-        private static readonly GUIContent s_PathLabel = EditorGUIUtility.TrTextContent("Path", "Path of the controls that will be bound to the action at runtime.");
     }
 }
  #endif // UNITY_EDITOR

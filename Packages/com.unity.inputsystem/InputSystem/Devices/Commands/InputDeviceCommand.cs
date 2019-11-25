@@ -5,8 +5,19 @@ using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    ////TODO: pass IInputRuntime to this as well
+    ////REVIEW: why is this passing the command by pointer instead of by ref?
+    /// <summary>
+    /// Delegate used by <see cref="InputSystem.onDeviceCommand"/>.
+    /// </summary>
     public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
+
+    /// <summary>
+    /// Delegate for executing <see cref="InputDeviceCommand"/>s inside <see cref="InputSystem.onFindLayoutForDevice"/>.
+    /// </summary>
+    /// <param name="command">Command to execute.</param>
+    /// <seealso cref="InputSystem.onFindLayoutForDevice"/>
+    /// <seealso cref="Layouts.InputDeviceFindControlLayoutDelegate"/>
+    public delegate long InputDeviceExecuteCommandDelegate(ref InputDeviceCommand command);
 
     /// <summary>
     /// Data header for a command send to an <see cref="InputDevice"/>.
@@ -24,7 +35,9 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kBaseCommandSize)]
     public struct InputDeviceCommand : IInputDeviceCommandInfo
     {
+        ////TODO: Remove kBaseCommandSize
         internal const int kBaseCommandSize = 8;
+        public const int BaseCommandSize = 8;
 
         /// <summary>
         /// Generic failure code for <see cref="IOCTL"/> calls.
@@ -73,9 +86,9 @@ namespace UnityEngine.InputSystem.LowLevel
             return buffer;
         }
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return new FourCC();
+            get { return new FourCC(); }
         }
     }
 }

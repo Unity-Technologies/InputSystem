@@ -1,11 +1,12 @@
 namespace UnityEngine.InputSystem.Processors
 {
-    public class InvertVector2Processor : InputProcessor<Vector2>
+    [Scripting.Preserve]
+    internal class InvertVector2Processor : InputProcessor<Vector2>
     {
         public bool invertX = true;
         public bool invertY = true;
 
-        public override Vector2 Process(Vector2 value, InputControl<Vector2> control)
+        public override Vector2 Process(Vector2 value, InputControl control)
         {
             if (invertX)
                 value.x *= -1;

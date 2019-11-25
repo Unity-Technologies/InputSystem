@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Utilities
             get
             {
                 if (index < 0 || index >= length)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 if (index == 0)
                     return firstValue;
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Utilities
             set
             {
                 if (index < 0 || index >= length)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 if (index == 0)
                     firstValue = value;
@@ -228,7 +228,7 @@ namespace UnityEngine.InputSystem.Utilities
         public void RemoveAtWithCapacity(int index)
         {
             if (index < 0 || index >= length)
-                throw new IndexOutOfRangeException(nameof(index));
+                throw new ArgumentOutOfRangeException(nameof(index));
 
             if (index == 0)
             {
@@ -278,7 +278,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 else
                 {
-                    firstValue = default(TValue);
+                    firstValue = default;
                 }
             }
             else
@@ -300,17 +300,19 @@ namespace UnityEngine.InputSystem.Utilities
                 {
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
-                    var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
+                    var newAdditionalValues = new TValue[numAdditionalValues - 1];
                     if (index >= 2)
                     {
                         // Copy elements before entry.
-                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index - 1);
+                        Array.Copy(additionalValues, 0, newAdditionalValues, 0, index - 1);
                     }
 
                     // Copy elements after entry. We already know that we're not removing
                     // the last entry so there have to be entries.
-                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalProcessors, index - 1,
+                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalValues, index - 1,
                         length - index - 1);
+
+                    additionalValues = newAdditionalValues;
                 }
             }
 
@@ -322,12 +324,13 @@ namespace UnityEngine.InputSystem.Utilities
             if (index < 0 || index >= length)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
+            var numAdditionalValues = length - 1;
             if (index == 0)
             {
                 if (length > 1)
                 {
-                    firstValue = additionalValues[length - 1];
-                    additionalValues[length - 1] = default;
+                    firstValue = additionalValues[numAdditionalValues - 1];
+                    additionalValues[numAdditionalValues - 1] = default;
                 }
                 else
                 {
@@ -338,7 +341,6 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 Debug.Assert(additionalValues != null);
 
-                var numAdditionalValues = length - 1;
                 ArrayHelpers.EraseAtByMovingTail(additionalValues, ref numAdditionalValues, index - 1);
             }
 

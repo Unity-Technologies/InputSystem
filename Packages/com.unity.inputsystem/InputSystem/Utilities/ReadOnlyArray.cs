@@ -16,6 +16,15 @@ namespace UnityEngine.InputSystem.Utilities
     /// The purpose of this struct is to allow exposing internal arrays directly such that no
     /// boxing and no going through interfaces is required but at the same time not allowing
     /// the internal arrays to be modified.
+    ///
+    /// It differs from <c>ReadOnlySpan&lt;T&gt;</c> in that it can be stored on the heap and differs
+    /// from <c>ReadOnlyCollection&lt;T&gt;</c> in that it supports slices directly without needing
+    /// an intermediate object representing the slice.
+    ///
+    /// Note that in most cases, the ReadOnlyArray instance should be treated as a <em>temporary</em>.
+    /// The actual array referred to by a ReadOnlyArray instance is usually owned and probably mutated
+    /// by another piece of code. When that code makes changes to the array, the ReadOnlyArray
+    /// instance will not get updated.
     /// </remarks>
     public struct ReadOnlyArray<TValue> : IReadOnlyList<TValue>
     {
@@ -72,6 +81,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        /// <inheritdoc />
         public IEnumerator<TValue> GetEnumerator()
         {
             return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);
@@ -82,6 +92,7 @@ namespace UnityEngine.InputSystem.Utilities
             return GetEnumerator();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {
             return new ReadOnlyArray<TValue>(array);
@@ -103,7 +114,7 @@ namespace UnityEngine.InputSystem.Utilities
             get
             {
                 if (index < 0 || index >= m_Length)
-                    throw new IndexOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(index));
                 // We allow array to be null as we are patching up ReadOnlyArrays in a separate
                 // path in several places.
                 if (m_Array == null)
@@ -148,7 +159,7 @@ namespace UnityEngine.InputSystem.Utilities
                 get
                 {
                     if (m_Index == m_IndexEnd)
-                        throw new IndexOutOfRangeException();
+                        throw new InvalidOperationException("Iterated beyond end");
                     return m_Array[m_Index];
                 }
             }
@@ -157,6 +168,9 @@ namespace UnityEngine.InputSystem.Utilities
         }
     }
 
+    /// <summary>
+    /// Extension methods to help with <see cref="ReadOnlyArrayExtensions"/> contents.
+    /// </summary>
     public static class ReadOnlyArrayExtensions
     {
         public static bool Contains<TValue>(this ReadOnlyArray<TValue> array, TValue value)

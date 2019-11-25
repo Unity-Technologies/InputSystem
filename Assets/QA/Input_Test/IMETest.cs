@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
 ////FIXME: will not work properly when there are multiple keyboards
@@ -88,8 +89,8 @@ public class IMETest : MonoBehaviour
             m_AddedTextListeners = true;
         }
 
-        keyboard.imeEnabled = enableIME;
-        keyboard.imeCursorPosition = cursorPosition;
+        keyboard.SetIMEEnabled(enableIME);
+        keyboard.SetIMECursorPosition(cursorPosition);
 
         activeIME = keyboard.imeSelected.isPressed;
 
@@ -134,7 +135,8 @@ public class IMETest : MonoBehaviour
 
         if (validInput)
         {
-            keyboard.imeCursorPosition = cursorPosition = new Vector2(x, y);
+            cursorPosition = new Vector2(x, y);
+            keyboard.SetIMECursorPosition(cursorPosition);
         }
     }
 }

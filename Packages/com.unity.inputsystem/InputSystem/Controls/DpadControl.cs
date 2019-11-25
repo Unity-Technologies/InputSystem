@@ -15,16 +15,18 @@ namespace UnityEngine.InputSystem.Controls
     /// even if pressing diagonally, the vector will have a length of 1 (instead
     /// of reading something like <c>(1,1)</c> for example).
     /// </remarks>
+    [Scripting.Preserve]
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
+        [Scripting.Preserve]
         internal class DpadAxisControl : AxisControl
         {
             public int component;
 
-            protected override void FinishSetup(InputDeviceBuilder builder)
+            protected override void FinishSetup()
             {
-                base.FinishSetup(builder);
+                base.FinishSetup();
                 component = name == "x" ? 0 : 1;
 
                 // Set the state block to be the parent's state block. We don't use that to read
@@ -75,16 +77,16 @@ namespace UnityEngine.InputSystem.Controls
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
-            m_StateBlock.format = InputStateBlock.kTypeBit;
+            m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            up = builder.GetControl<ButtonControl>(this, "up");
-            down = builder.GetControl<ButtonControl>(this, "down");
-            left = builder.GetControl<ButtonControl>(this, "left");
-            right = builder.GetControl<ButtonControl>(this, "right");
-            base.FinishSetup(builder);
+            up = GetChildControl<ButtonControl>("up");
+            down = GetChildControl<ButtonControl>("down");
+            left = GetChildControl<ButtonControl>("left");
+            right = GetChildControl<ButtonControl>("right");
+            base.FinishSetup();
         }
 
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)

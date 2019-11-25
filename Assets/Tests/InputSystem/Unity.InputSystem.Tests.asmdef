@@ -2,19 +2,24 @@
     "name": "Unity.InputSystem.Tests",
     "references": [
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
-    ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
+        "Unity.InputSystem.TestFramework",
+        "Unity.ugui",
+        "Unity.PackageManagerDocTools.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
     "overrideReferences": true,
     "precompiledReferences": [
-        "Mono.Cecil.dll"
+        "Mono.Cecil.dll",
+        "nunit.framework.dll",
+        "HtmlAgilityPack.dll"
     ],
-    "autoReferenced": true,
-    "defineConstraints": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
     "versionDefines": []
 }

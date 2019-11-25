@@ -21,10 +21,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public unsafe InputEventPtr ToEventPtr()
         {

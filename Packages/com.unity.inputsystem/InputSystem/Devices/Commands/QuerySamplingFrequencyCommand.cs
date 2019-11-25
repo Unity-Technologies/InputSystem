@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QuerySamplingFrequencyCommand : IInputDeviceCommandInfo
+    internal struct QuerySamplingFrequencyCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type { get { return new FourCC('S', 'M', 'P', 'L'); } }
 
@@ -16,9 +16,9 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public float frequency;
 
-        public FourCC GetTypeStatic()
+        public FourCC typeStatic
         {
-            return Type;
+            get { return Type; }
         }
 
         public static QuerySamplingFrequencyCommand Create()

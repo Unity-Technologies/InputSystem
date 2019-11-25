@@ -29,22 +29,27 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Total number of events in the buffer.
         /// </summary>
+        /// <value>Number of events currently in the buffer.</value>
         public int eventCount => m_EventCount;
 
         /// <summary>
-        /// Size of the buffer in bytes.
+        /// Size of the used portion of the buffer in bytes. Use <see cref="capacityInBytes"/> to
+        /// get the total allocated size.
         /// </summary>
+        /// <value>Used size of buffer in bytes.</value>
         /// <remarks>
         /// If the size is not known, returns <see cref="BufferSizeUnknown"/>.
         ///
         /// Note that the size does not usually correspond to <see cref="eventCount"/> times <c>sizeof(InputEvent)</c>.
-        /// <see cref="InputEvent">Input events</see> are variable in size.
+        /// as <see cref="InputEvent"/> instances are variable in size.
         /// </remarks>
         public long sizeInBytes => m_SizeInBytes;
 
         /// <summary>
-        /// Amount of unused bytes in the currently allocated buffer.
+        /// Total size of allocated memory in bytes. This value minus <see cref="sizeInBytes"/> is the
+        /// spare capacity of the buffer. Will never be less than <see cref="sizeInBytes"/>.
         /// </summary>
+        /// <value>Size of allocated memory in bytes.</value>
         /// <remarks>
         /// A buffer's capacity determines how much event data can be written to the buffer before it has to be
         /// reallocated.
@@ -58,15 +63,18 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 return m_Buffer.Length;
             }
-            set => throw new NotImplementedException();
         }
 
-        public NativeArray<byte> data
-        {
-            get => m_Buffer;
-            set => throw new NotImplementedException();
-        }
+        /// <summary>
+        /// The raw underlying memory buffer.
+        /// </summary>
+        /// <value>Underlying buffer of unmanaged memory.</value>
+        public NativeArray<byte> data => m_Buffer;
 
+        /// <summary>
+        /// Pointer to the first event in the buffer.
+        /// </summary>
+        /// <value>Pointer to first event in buffer.</value>
         public InputEventPtr bufferPtr
         {
             // When using ConvertExistingDataToNativeArray, the NativeArray isn't getting a "safety handle" (seems like a bug)
@@ -140,7 +148,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"sizeInBytes must be >= sizeof(InputEvent) == {InputEvent.kBaseEventSize} (was {sizeInBytes})",
                     nameof(sizeInBytes));
 
-            var alignedSizeInBytes = NumberHelpers.AlignToMultiple(sizeInBytes, InputEvent.kAlignment);
+            var alignedSizeInBytes = sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
             // See if we need to enlarge our buffer.
             var currentCapacity = capacityInBytes;
@@ -228,9 +236,9 @@ namespace UnityEngine.InputSystem.LowLevel
             ref InputEvent* currentWritePos, ref int numEventsRetainedInBuffer,
             ref int numRemainingEvents, bool leaveEventInBuffer)
         {
-            Debug.Assert(Contains(currentReadPos));
-            Debug.Assert(Contains(currentWritePos));
-            Debug.Assert(currentReadPos >= currentWritePos);
+            Debug.Assert(Contains(currentReadPos), "Current read position should be contained in buffer");
+            Debug.Assert(Contains(currentWritePos), "Current write position should be contained in buffer");
+            Debug.Assert(currentReadPos >= currentWritePos, "Current write position is beyond read position");
 
             // Get new read position *before* potentially moving the current event so that we don't
             // end up overwriting the data we need to find the next event in memory.
@@ -245,7 +253,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 var numBytes = currentReadPos->sizeInBytes;
                 if (currentReadPos != currentWritePos)
                     UnsafeUtility.MemMove(currentWritePos, currentReadPos, numBytes);
-                currentWritePos = (InputEvent*)((byte*)currentWritePos + NumberHelpers.AlignToMultiple(numBytes, 4));
+                currentWritePos = (InputEvent*)((byte*)currentWritePos + numBytes.AlignToMultipleOf(4));
                 ++numEventsRetainedInBuffer;
             }
 
@@ -269,7 +277,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!m_WeOwnTheBuffer)
                 return;
 
-            Debug.Assert(m_Buffer.IsCreated);
+            Debug.Assert(m_Buffer.IsCreated, "Buffer has not been created");
 
             m_Buffer.Dispose();
             m_WeOwnTheBuffer = false;
@@ -327,7 +335,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     return m_CurrentEvent != null;
                 }
 
-                Debug.Assert(m_CurrentEvent != null);
+                Debug.Assert(m_CurrentEvent != null, "Current event must not be null");
 
                 ++m_CurrentIndex;
                 if (m_CurrentIndex == m_EventCount)
@@ -347,15 +355,9 @@ namespace UnityEngine.InputSystem.LowLevel
             {
             }
 
-            public InputEventPtr Current
-            {
-                get { return m_CurrentEvent; }
-            }
+            public InputEventPtr Current => m_CurrentEvent;
 
-            object IEnumerator.Current
-            {
-                get { return Current; }
-            }
+            object IEnumerator.Current => Current;
         }
     }
 }

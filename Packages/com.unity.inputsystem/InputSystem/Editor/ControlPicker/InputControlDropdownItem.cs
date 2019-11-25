@@ -10,8 +10,7 @@ namespace UnityEngine.InputSystem.Editor
         protected string m_ControlPath;
         protected string m_Device;
         protected string m_Usage;
-
-        private InputControlDropdownItem m_SearchableElement;
+        protected bool m_Searchable;
 
         public string controlPath => m_ControlPath;
 
@@ -28,25 +27,50 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public override string searchableName => m_SearchableName ?? string.Empty;
+        public override string searchableName
+        {
+            get
+            {
+                // ToHumanReadableString is expensive, especially given that we build the whole tree
+                // every time the control picker comes up. Build searchable names only on demand
+                // to save some time.
+                if (m_SearchableName == null)
+                {
+                    if (m_Searchable)
+                        m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+                    else
+                        m_SearchableName = string.Empty;
+                }
+                return m_SearchableName;
+            }
+        }
 
         protected InputControlDropdownItem(string name)
             : base(name) {}
     }
 
-    internal class OptionalControlDropdownItem : InputControlDropdownItem
+    // NOTE: Optional control items, unlike normal control items, are displayed with their internal control
+    //       names rather that their display names. The reason is that we're looking at controls that have
+    //       the same internal name in one or more derived layouts but each of those derived layouts may
+    //       give the control a different display name.
+    //
+    //       Also, if we generate a control path for an optional binding, InputControlPath.ToHumanReadableName()
+    //       not find the referenced control on the referenced device layout and will thus not be able to
+    //       find a display name for it either. So, in the binding UI, these paths will also show with their
+    //       internal control names rather than display names.
+    internal sealed class OptionalControlDropdownItem : InputControlDropdownItem
     {
-        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalLayout, string deviceControlId, string commonUsage)
-            : base(optionalLayout.name)
+        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalControl, string deviceControlId, string commonUsage)
+            : base(optionalControl.name)
         {
-            m_ControlPath = optionalLayout.name;
+            m_ControlPath = optionalControl.name;
             m_Device = deviceControlId;
             m_Usage = commonUsage;
             // Not searchable.
         }
     }
 
-    internal class UsageDropdownItem : InputControlDropdownItem
+    internal sealed class UsageDropdownItem : InputControlDropdownItem
     {
         public override string controlPathWithDevice => $"{m_Device}/{{{m_ControlPath}}}";
 
@@ -56,11 +80,11 @@ namespace UnityEngine.InputSystem.Editor
             m_Device = "*";
             m_ControlPath = usage;
             id = controlPathWithDevice.GetHashCode();
-            m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+            m_Searchable = true;
         }
     }
 
-    internal class DeviceDropdownItem : InputControlDropdownItem
+    internal sealed class DeviceDropdownItem : InputControlDropdownItem
     {
         public DeviceDropdownItem(InputControlLayout layout, string usage = null, bool searchable = true)
             : base(layout.m_DisplayName ?? ObjectNames.NicifyVariableName(layout.name))
@@ -70,18 +94,18 @@ namespace UnityEngine.InputSystem.Editor
             if (usage != null)
                 name += " (" + usage + ")";
             id = name.GetHashCode();
-            if (searchable)
-                m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
+            m_Searchable = searchable;
         }
     }
 
-    internal class ControlDropdownItem : InputControlDropdownItem
+    internal sealed class ControlDropdownItem : InputControlDropdownItem
     {
         public ControlDropdownItem(ControlDropdownItem parent, string controlName, string displayName, string device, string usage, bool searchable)
             : base("")
         {
             m_Device = device;
             m_Usage = usage;
+            m_Searchable = searchable;
 
             if (parent != null)
                 m_ControlPath = $"{parent.controlPath}/{controlName}";
@@ -92,9 +116,6 @@ namespace UnityEngine.InputSystem.Editor
 
             id = controlPathWithDevice.GetHashCode();
             indent = parent?.indent + 1 ?? 0;
-
-            if (searchable)
-                m_SearchableName = InputControlPath.ToHumanReadableString(controlPathWithDevice);
         }
     }
 }

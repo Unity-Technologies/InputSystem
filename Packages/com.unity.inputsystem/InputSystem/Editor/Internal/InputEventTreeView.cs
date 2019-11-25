@@ -242,11 +242,11 @@ namespace UnityEngine.InputSystem.Editor
             var columnCount = args.GetNumVisibleColumns();
             for (var i = 0; i < columnCount; ++i)
             {
-                ColumnGUI(args.GetCellRect(i), eventPtr, args.GetColumn(i), ref args);
+                ColumnGUI(args.GetCellRect(i), eventPtr, args.GetColumn(i));
             }
         }
 
-        private unsafe void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column, ref RowGUIArgs args)
+        private unsafe void ColumnGUI(Rect cellRect, InputEventPtr eventPtr, int column)
         {
             CenterRectUsingSingleLineHeight(ref cellRect);
 

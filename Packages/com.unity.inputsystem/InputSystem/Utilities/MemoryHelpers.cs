@@ -5,26 +5,52 @@ namespace UnityEngine.InputSystem.Utilities
 {
     internal static unsafe class MemoryHelpers
     {
+        public struct BitRegion
+        {
+            public uint bitOffset;
+            public uint sizeInBits;
+
+            public bool isEmpty => sizeInBits == 0;
+
+            public BitRegion(uint bitOffset, uint sizeInBits)
+            {
+                this.bitOffset = bitOffset;
+                this.sizeInBits = sizeInBits;
+            }
+
+            public BitRegion(uint byteOffset, uint bitOffset, uint sizeInBits)
+            {
+                this.bitOffset = byteOffset * 8 + bitOffset;
+                this.sizeInBits = sizeInBits;
+            }
+
+            public BitRegion Overlap(BitRegion other)
+            {
+                ////REVIEW: too many branches; this can probably be done much smarter
+
+                var thisEnd = bitOffset + sizeInBits;
+                var otherEnd = other.bitOffset + other.sizeInBits;
+
+                if (thisEnd <= other.bitOffset || otherEnd <= bitOffset)
+                    return default;
+
+                var end = Math.Min(thisEnd, otherEnd);
+                var start = Math.Max(bitOffset, other.bitOffset);
+
+                return new BitRegion(start, end - start);
+            }
+        }
+
+        public static bool Compare(void* ptr1, void* ptr2, BitRegion region)
+        {
+            if (region.sizeInBits == 1)
+                return ReadSingleBit(ptr1, region.bitOffset) == ReadSingleBit(ptr2, region.bitOffset);
+            return MemCmpBitRegion(ptr1, ptr2, region.bitOffset, region.sizeInBits);
+        }
+
         public static uint ComputeFollowingByteOffset(uint byteOffset, uint sizeInBits)
         {
             return (uint)(byteOffset + sizeInBits / 8 + (sizeInBits % 8 > 0 ? 1 : 0));
-        }
-
-        public static bool MemoryOverlapsBitRegion(uint byteOffset, uint bitOffset, uint sizeInBits, uint memoryOffset,
-            uint memorySizeInBytes)
-        {
-            if (sizeInBits % 8 == 0 && bitOffset == 0)
-            {
-                // Simple byte aligned case.
-                return byteOffset + sizeInBits / 8 > memoryOffset && memoryOffset + memorySizeInBytes > byteOffset;
-            }
-
-            // Bit aligned case.
-            if (memoryOffset > byteOffset)
-            {
-                return bitOffset + sizeInBits > ((ulong)(memoryOffset - byteOffset)) * 8;
-            }
-            return memorySizeInBytes * 8 > (ulong)(byteOffset - memoryOffset) * 8 + bitOffset;
         }
 
         public static void WriteSingleBit(void* ptr, uint bitOffset, bool value)
@@ -46,7 +72,7 @@ namespace UnityEngine.InputSystem.Utilities
             else
             {
                 var byteOffset = bitOffset / 8;
-                bitOffset = bitOffset % 8;
+                bitOffset %= 8;
 
                 if (value)
                     *((byte*)ptr + byteOffset) |= (byte)(1 << (int)bitOffset);
@@ -81,7 +107,7 @@ namespace UnityEngine.InputSystem.Utilities
                 // doesn't like much.
 
                 var byteOffset = bitOffset / 8;
-                bitOffset = bitOffset % 8;
+                bitOffset %= 8;
 
                 bits = *((byte*)ptr + byteOffset);
             }
@@ -205,15 +231,15 @@ namespace UnityEngine.InputSystem.Utilities
         public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)
         {
             if (ptr == null)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (bitCount >= sizeof(int) * 8)
-                throw new ArgumentException("Trying to read more than 32 bits as int", "bitCount");
+                throw new ArgumentException("Trying to read more than 32 bits as int", nameof(bitCount));
 
-            //Shift the pointer up on larger bitmasks and retry
+            // Shift the pointer up on larger bitmasks and retry.
             if (bitOffset > 32)
             {
-                int newBitOffset = (int)bitOffset % 32;
-                int intOffset = ((int)bitOffset - newBitOffset) / 32;
+                var newBitOffset = (int)bitOffset % 32;
+                var intOffset = ((int)bitOffset - newBitOffset) / 32;
                 ptr = (byte*)ptr + (intOffset * 4);
                 bitOffset = (uint)newBitOffset;
             }
@@ -251,17 +277,17 @@ namespace UnityEngine.InputSystem.Utilities
         public static void WriteIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
         {
             if (ptr == null)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (bitCount >= sizeof(int) * 8)
-                throw new ArgumentException("Trying to write more than 32 bits as int", "bitCount");
+                throw new ArgumentException("Trying to write more than 32 bits as int", nameof(bitCount));
 
             // Bits out of byte.
             if (bitOffset + bitCount <= 8)
             {
                 var byteValue = (byte)value;
-                byteValue >>= (int)bitOffset;
-                var mask = 0xFF >> (8 - (int)bitCount);
-                *(byte*)ptr |= (byte)(byteValue & mask);
+                byteValue <<= (int)bitOffset;
+                var mask = ~((0xFF >> (8 - (int)bitCount)) << (int)bitOffset);
+                *(byte*)ptr = (byte)((*(byte*)ptr & mask) | byteValue);
                 return;
             }
 
@@ -269,9 +295,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitOffset + bitCount <= 16)
             {
                 var shortValue = (ushort)value;
-                shortValue >>= (int)bitOffset;
-                var mask = 0xFFFF >> (16 - (int)bitCount);
-                *(ushort*)ptr |= (ushort)(shortValue & mask);
+                shortValue <<= (int)bitOffset;
+                var mask = ~((0xFFFF >> (16 - (int)bitCount)) << (int)bitOffset);
+                *(ushort*)ptr = (ushort)((*(ushort*)ptr & mask) | shortValue);
                 return;
             }
 
@@ -279,9 +305,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (bitOffset + bitCount <= 32)
             {
                 var intValue = (uint)value;
-                intValue >>= (int)bitOffset;
-                var mask = 0xFFFFFFFF >> (32 - (int)bitCount);
-                *(uint*)ptr |= intValue & mask;
+                intValue <<= (int)bitOffset;
+                var mask = ~((0xFFFFFFFF >> (32 - (int)bitCount)) << (int)bitOffset);
+                *(int*)ptr = (int)((*(int*)ptr & mask) | intValue);
                 return;
             }
 
@@ -291,13 +317,13 @@ namespace UnityEngine.InputSystem.Utilities
         public static void SetBitsInBuffer(void* buffer, int byteOffset, int bitOffset, int sizeInBits, bool value)
         {
             if (buffer == null)
-                throw new ArgumentException("A buffer must be provided to apply the bitmask on", "buffer");
+                throw new ArgumentException("A buffer must be provided to apply the bitmask on", nameof(buffer));
             if (sizeInBits < 0)
-                throw new ArgumentException("Negative sizeInBits", "sizeInBits");
+                throw new ArgumentException("Negative sizeInBits", nameof(sizeInBits));
             if (bitOffset < 0)
-                throw new ArgumentException("Negative bitOffset", "bitOffset");
+                throw new ArgumentException("Negative bitOffset", nameof(bitOffset));
             if (byteOffset < 0)
-                throw new ArgumentException("Negative byteOffset", "byteOffset");
+                throw new ArgumentException("Negative byteOffset", nameof(byteOffset));
 
             // If we're offset by more than a byte, adjust our pointers.
             if (bitOffset >= 8)

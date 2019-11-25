@@ -6,13 +6,18 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: show remote device IDs in the debugger
+
+////TODO: remote timestamps need to be translated to local timestamps; doesn't make sense for remote events getting
+////      processed on the local timeline as is when the originating timeline may be quite different
+
 ////TODO: support actions
 
 ////TODO: support input users
 
 ////TODO: text input events
 
-////TODO: remove remoting of layout information
+////REVIEW: it seems that the various XXXMsg struct should be public; ATM doesn't seem like working with the message interface is practical
 
 ////REVIEW: the namespacing mechanism for layouts which changes base layouts means that layouts can't be played
 ////        around with on the editor side but will only be changed once they're updated in the player
@@ -38,7 +43,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputSystem.remoting"/>
     /// \todo Reuse memory allocated for messages instead of allocating separately for each message.
     /// \todo Inteface to determine what to mirror from the local manager to the remote system.
-    public class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
+    public sealed class InputRemoting : IObservable<InputRemoting.Message>, IObserver<InputRemoting.Message>
     {
         /// <summary>
         /// Enumeration of possible types of messages exchanged between two InputRemoting instances.
@@ -73,7 +78,7 @@ namespace UnityEngine.InputSystem
 
         public bool sending
         {
-            get { return (m_Flags & Flags.Sending) == Flags.Sending; }
+            get => (m_Flags & Flags.Sending) == Flags.Sending;
             private set
             {
                 if (value)
@@ -134,7 +139,7 @@ namespace UnityEngine.InputSystem
             switch (msg.type)
             {
                 case MessageType.Connect:
-                    ConnectMsg.Process(this, msg);
+                    ConnectMsg.Process(this);
                     break;
                 case MessageType.Disconnect:
                     DisconnectMsg.Process(this, msg);
@@ -158,10 +163,10 @@ namespace UnityEngine.InputSystem
                     RemoveDeviceMsg.Process(this, msg);
                     break;
                 case MessageType.StartSending:
-                    StartSendingMsg.Process(this, msg);
+                    StartSendingMsg.Process(this);
                     break;
                 case MessageType.StopSending:
-                    StopSendingMsg.Process(this, msg);
+                    StopSendingMsg.Process(this);
                     break;
             }
         }
@@ -194,16 +199,14 @@ namespace UnityEngine.InputSystem
 
         private void SendDevice(InputDevice device)
         {
-            var message = NewDeviceMsg.Create(this, device);
+            var message = NewDeviceMsg.Create(device);
             Send(message);
         }
 
-        private unsafe void SendEvent(InputEventPtr eventPtr)
+        private unsafe void SendEvent(InputEventPtr eventPtr, InputDevice device)
         {
             if (m_Subscribers == null)
                 return;
-
-            var device = m_LocalManager.TryGetDeviceById(eventPtr.deviceId);
 
             ////REVIEW: we probably want to have better control over this and allow producing local events
             ////        against remote devices which *are* indeed sent across the wire
@@ -211,7 +214,7 @@ namespace UnityEngine.InputSystem
             if (device != null && device.remote)
                 return;
 
-            var message = NewEventsMsg.Create(this, eventPtr.data, 1);
+            var message = NewEventsMsg.Create(eventPtr.data, 1);
             Send(message);
         }
 
@@ -228,13 +231,13 @@ namespace UnityEngine.InputSystem
             switch (change)
             {
                 case InputDeviceChange.Added:
-                    msg = NewDeviceMsg.Create(this, device);
+                    msg = NewDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.Removed:
-                    msg = RemoveDeviceMsg.Create(this, device);
+                    msg = RemoveDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.UsageChanged:
-                    msg = ChangeUsageMsg.Create(this, device);
+                    msg = ChangeUsageMsg.Create(device);
                     break;
                 default:
                     return;
@@ -259,7 +262,7 @@ namespace UnityEngine.InputSystem
                     msg = message.Value;
                     break;
                 case InputControlLayoutChange.Removed:
-                    msg = RemoveLayoutMsg.Create(this, layout);
+                    msg = RemoveLayoutMsg.Create(layout);
                     break;
                 default:
                     return;
@@ -362,7 +365,7 @@ namespace UnityEngine.InputSystem
 
         private static class ConnectMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 if (receiver.sending)
                 {
@@ -375,7 +378,7 @@ namespace UnityEngine.InputSystem
 
         private static class StartSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StartSending();
             }
@@ -383,7 +386,7 @@ namespace UnityEngine.InputSystem
 
         private static class StopSendingMsg
         {
-            public static void Process(InputRemoting receiver, Message msg)
+            public static void Process(InputRemoting receiver)
             {
                 receiver.StopSending();
             }
@@ -470,7 +473,7 @@ namespace UnityEngine.InputSystem
 
         private static class RemoveLayoutMsg
         {
-            public static Message Create(InputRemoting sender, string layoutName)
+            public static Message Create(string layoutName)
             {
                 var bytes = Encoding.UTF8.GetBytes(layoutName);
                 return new Message
@@ -500,7 +503,7 @@ namespace UnityEngine.InputSystem
                 public InputDeviceDescription description;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 Debug.Assert(!device.remote, "Device being sent to remotes should be a local device, not a remote one");
 
@@ -508,7 +511,7 @@ namespace UnityEngine.InputSystem
                 {
                     name = device.name,
                     layout = device.layout,
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     description = device.description
                 };
 
@@ -563,7 +566,7 @@ namespace UnityEngine.InputSystem
                 var record = new RemoteInputDevice
                 {
                     remoteId = data.deviceId,
-                    localId = device.id,
+                    localId = device.deviceId,
                     description = data.description,
                     layoutName = data.layout
                 };
@@ -574,7 +577,7 @@ namespace UnityEngine.InputSystem
         // Tell remote system there's new input events.
         private static class NewEventsMsg
         {
-            public static unsafe Message Create(InputRemoting sender, InputEvent* events, int eventCount)
+            public static unsafe Message Create(InputEvent* events, int eventCount)
             {
                 // Find total size of event buffer we need.
                 var totalSize = 0u;
@@ -641,11 +644,11 @@ namespace UnityEngine.InputSystem
                 public string[] usages;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 var data = new Data
                 {
-                    deviceId = device.id,
+                    deviceId = device.deviceId,
                     usages = device.usages.Select(x => x.ToString()).ToArray()
                 };
 
@@ -667,19 +670,19 @@ namespace UnityEngine.InputSystem
                     ////TODO: clearing usages and setting multiple usages
 
                     if (data.usages.Length == 1)
-                        receiver.m_LocalManager.SetUsage(device, new InternedString(data.usages[0]));
+                        receiver.m_LocalManager.SetDeviceUsage(device, new InternedString(data.usages[0]));
                 }
             }
         }
 
         private static class RemoveDeviceMsg
         {
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 return new Message
                 {
                     type = MessageType.RemoveDevice,
-                    data = BitConverter.GetBytes(device.id)
+                    data = BitConverter.GetBytes(device.deviceId)
                 };
             }
 

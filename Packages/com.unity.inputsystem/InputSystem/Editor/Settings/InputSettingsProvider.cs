@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.UIElements;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
@@ -12,10 +13,10 @@ using UnityEngine.InputSystem.Utilities;
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
-    internal class InputSettingsProvider : SettingsProvider
+    internal class InputSettingsProvider : SettingsProvider, IDisposable
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
-        public const string kSettingsPath = "Project/Input (NEW)";
+        public const string kSettingsPath = "Project/Input System Package";
 
         public static void Open()
         {
@@ -31,17 +32,32 @@ namespace UnityEngine.InputSystem.Editor
         private InputSettingsProvider(string path, SettingsScope scopes)
             : base(path, scopes)
         {
-            label = "Input (NEW)";
+            label = "Input System Package";
             s_Instance = this;
+        }
 
+        public override void OnActivate(string searchContext, VisualElement rootElement)
+        {
+            base.OnActivate(searchContext, rootElement);
             InputSystem.onSettingsChange += OnSettingsChange;
+        }
+
+        public override void OnDeactivate()
+        {
+            base.OnDeactivate();
+            InputSystem.onSettingsChange -= OnSettingsChange;
+        }
+
+        public void Dispose()
+        {
+            m_SettingsObject?.Dispose();
         }
 
         public override void OnTitleBarGUI()
         {
             if (EditorGUILayout.DropdownButton(EditorGUIUtility.IconContent("_Popup"), FocusType.Passive, EditorStyles.label))
             {
-                GenericMenu menu = new GenericMenu();
+                var menu = new GenericMenu();
                 menu.AddDisabledItem(new GUIContent("Available Settings Assets:"));
                 menu.AddSeparator("");
                 for (var i = 0; i < m_AvailableSettingsAssetsOptions.Length; i++)
@@ -70,13 +86,8 @@ namespace UnityEngine.InputSystem.Editor
                 GUILayout.Space(20);
             }
 
-            using (var disabled = new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
             {
-                EditorGUILayout.HelpBox(
-                    "Please note that the new input system is still under development and not all features are fully functional or stable yet.\n\n"
-                    + "For more information, visit https://github.com/Unity-Technologies/InputSystem or https://forum.unity.com/forums/new-input-system.103/.",
-                    MessageType.Warning);
-
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
@@ -85,32 +96,23 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorGUI.BeginChangeCheck();
 
-                EditorGUILayout.PropertyField(m_UpdateMode);
-                var updateMode = (InputSettings.UpdateMode)m_UpdateMode.intValue;
-                if (updateMode == InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate)
-                {
-                    // Choosing action update mode only makes sense if we have an ambiguous situation, i.e.
-                    // when we have both dynamic and fixed updates in the picture.
-                    ////TODO: enable when action update mode is properly sorted
-                    //EditorGUILayout.PropertyField(m_ActionUpdateMode);
-                }
+                EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
 
-                ////TODO: enable when backported
-                //EditorGUILayout.PropertyField(m_TimesliceEvents);
-
-                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent);
-                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation);
+                EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
+                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
 
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin);
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax);
-                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint);
-                EditorGUILayout.PropertyField(m_DefaultTapTime);
-                EditorGUILayout.PropertyField(m_DefaultSlowTapTime);
-                EditorGUILayout.PropertyField(m_DefaultHoldTime);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
+                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
+                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
+                EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
+                EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
+                EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
+                EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
+                EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -220,8 +222,6 @@ namespace UnityEngine.InputSystem.Editor
             // Look up properties.
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
-            m_ActionUpdateMode = m_SettingsObject.FindProperty("m_ActionUpdateMode");
-            m_TimesliceEvents = m_SettingsObject.FindProperty("m_TimesliceEvents");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
@@ -230,6 +230,20 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultTapTime = m_SettingsObject.FindProperty("m_DefaultTapTime");
             m_DefaultSlowTapTime = m_SettingsObject.FindProperty("m_DefaultSlowTapTime");
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
+            m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
+            m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
+
+            m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
+            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
+            m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
+            m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
+            m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
+            m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
+            m_DefaultTapTimeContent = new GUIContent("Default Tap Time", "Default duration to be used for Tap and MultiTap interactions. Also used by by Touch screen devices to distinguish taps from to new touches.");
+            m_DefaultSlowTapTimeContent = new GUIContent("Default Slow Tap Time", "Default duration to be used for SlowTap interactions.");
+            m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
+            m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
+            m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -247,10 +261,17 @@ namespace UnityEngine.InputSystem.Editor
                         path =>
                         {
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
+                            var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
+                            if (existingIndex != -1)
+                            {
+                                m_SupportedDevices.index = existingIndex;
+                                return;
+                            }
                             var numDevices = supportedDevicesProperty.arraySize;
                             supportedDevicesProperty.InsertArrayElementAtIndex(numDevices);
                             supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
                                 .stringValue = layoutName;
+                            m_SupportedDevices.index = numDevices;
                             Apply();
                         },
                         mode: InputControlPicker.Mode.PickDevice);
@@ -290,10 +311,7 @@ namespace UnityEngine.InputSystem.Editor
                 InitializeWithCurrentSettings();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
-            ////FIXME: doesn't seem like there's a way to issue a repaint with the 2018.3 API
-            #if UNITY_2019_1_OR_NEWER
             Repaint();
-            #endif
         }
 
         /// <summary>
@@ -311,9 +329,6 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
-        [NonSerialized] private SerializedProperty m_ActionUpdateMode;
-        [NonSerialized] private SerializedProperty m_TimesliceEvents;
-        [NonSerialized] private SerializedProperty m_RunUpdatesManually;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
@@ -322,15 +337,28 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultTapTime;
         [NonSerialized] private SerializedProperty m_DefaultSlowTapTime;
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
+        [NonSerialized] private SerializedProperty m_TapRadius;
+        [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
         [NonSerialized] private GUIContent[] m_AvailableSettingsAssetsOptions;
         [NonSerialized] private int m_CurrentSelectedInputSettingsAsset;
 
-        [NonSerialized] private GUIContent m_NewAssetButtonText = EditorGUIUtility.TrTextContent("New");
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
+
+        GUIContent m_UpdateModeContent;
+        GUIContent m_FilterNoiseOnCurrentContent;
+        GUIContent m_CompensateForScreenOrientationContent;
+        GUIContent m_DefaultDeadzoneMinContent;
+        GUIContent m_DefaultDeadzoneMaxContent;
+        GUIContent m_DefaultButtonPressPointContent;
+        GUIContent m_DefaultTapTimeContent;
+        GUIContent m_DefaultSlowTapTimeContent;
+        GUIContent m_DefaultHoldTimeContent;
+        GUIContent m_TapRadiusContent;
+        GUIContent m_MultiTapDelayTimeContent;
 
         private static InputSettingsProvider s_Instance;
 
@@ -340,9 +368,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Force next OnGUI() to re-initialize.
                 s_Instance.m_Settings = null;
-                #if UNITY_2019_1_OR_NEWER
-                s_Instance.Repaint();
-                #endif
+
+                // Request repaint.
+                SettingsService.NotifySettingsProviderChanged();
             }
         }
     }

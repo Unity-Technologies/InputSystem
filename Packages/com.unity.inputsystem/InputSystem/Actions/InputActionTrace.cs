@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
 ////        the actions-update-when-not-expected problem; plus give us access to easy polling
@@ -18,7 +18,7 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
 
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>
     /// Records the triggering of actions into a sequence of events that can be replayed at will.
@@ -87,9 +87,9 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <seealso cref="InputAction.started"/>
     /// <seealso cref="InputAction.performed"/>
-    /// <seealso cref="InputAction.cancelled"/>
+    /// <seealso cref="InputAction.canceled"/>
     /// <seealso cref="InputSystem.onActionChange"/>
-    public class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
+    public sealed class InputActionTrace : IEnumerable<InputActionTrace.ActionEventPtr>, IDisposable
     {
         ////REVIEW: this is of limited use without having access to ActionEvent
         /// <summary>
@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem
 
             action.performed += m_CallbackDelegate;
             action.started += m_CallbackDelegate;
-            action.cancelled += m_CallbackDelegate;
+            action.canceled += m_CallbackDelegate;
 
             m_SubscribedActions.AppendWithCapacity(action);
         }
@@ -193,7 +193,7 @@ namespace UnityEngine.InputSystem
 
             action.performed -= m_CallbackDelegate;
             action.started -= m_CallbackDelegate;
-            action.cancelled -= m_CallbackDelegate;
+            action.canceled -= m_CallbackDelegate;
 
             var index = m_SubscribedActions.IndexOfReference(action);
             if (index != -1)
@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem
         /// <param name="context"></param>
         /// <see cref="InputAction.performed"/>
         /// <see cref="InputAction.started"/>
-        /// <see cref="InputAction.cancelled"/>
+        /// <see cref="InputAction.canceled"/>
         /// <see cref="InputActionMap.actionTriggered"/>
         public unsafe void RecordAction(InputAction.CallbackContext context)
         {
@@ -263,6 +263,25 @@ namespace UnityEngine.InputSystem
         ~InputActionTrace()
         {
             DisposeInternal();
+        }
+
+        public override string ToString()
+        {
+            if (count == 0)
+                return "[]";
+
+            var str = new StringBuilder();
+            str.Append('[');
+            var isFirst = true;
+            foreach (var eventPtr in this)
+            {
+                if (!isFirst)
+                    str.Append(",\n");
+                str.Append(eventPtr.ToString());
+                isFirst = false;
+            }
+            str.Append(']');
+            return str.ToString();
         }
 
         public void Dispose()
@@ -338,10 +357,10 @@ namespace UnityEngine.InputSystem
                 {
                     case InputActionChange.ActionStarted:
                     case InputActionChange.ActionPerformed:
-                    case InputActionChange.ActionCancelled:
+                    case InputActionChange.ActionCanceled:
                         Debug.Assert(actionOrMap is InputAction, "Expected an action");
                         var triggeredAction = (InputAction)actionOrMap;
-                        var actionIndex = triggeredAction.m_ActionIndex;
+                        var actionIndex = triggeredAction.m_ActionIndexInState;
                         var stateForAction = triggeredAction.m_ActionMap.m_State;
 
                         var context = new InputAction.CallbackContext
@@ -473,7 +492,8 @@ namespace UnityEngine.InputSystem
                 if (m_Ptr == null)
                     return "<null>";
 
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                var actionName = action.actionMap != null ? $"{action.actionMap.name}/{action.name}" : action.name;
+                return $"{{ action={actionName} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} duration={duration} }}";
             }
         }
 

@@ -19,19 +19,19 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal const int kStateDataSizeToSubtract = 1;
 
-        [FieldOffset(0)] public InputEvent baseEvent;
+        [FieldOffset(0)]
+        public InputEvent baseEvent;
 
         /// <summary>
         /// Type code for the state stored in the event.
         /// </summary>
-        [FieldOffset(InputEvent.kBaseEventSize)] public FourCC stateFormat;
+        [FieldOffset(InputEvent.kBaseEventSize)]
+        public FourCC stateFormat;
 
-        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))] public fixed byte stateData[kStateDataSizeToSubtract]; // Variable-sized.
+        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
+        internal fixed byte stateData[kStateDataSizeToSubtract]; // Variable-sized.
 
-        public uint stateSizeInBytes
-        {
-            get { return baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int)); }
-        }
+        public uint stateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int));
 
         public void* state
         {
@@ -52,10 +52,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC GetTypeStatic()
-        {
-            return Type;
-        }
+        public FourCC typeStatic => Type;
 
         public static int GetEventSizeWithPayload<TState>()
             where TState : struct
@@ -66,10 +63,9 @@ namespace UnityEngine.InputSystem.LowLevel
         public static StateEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
-                throw new ArgumentNullException("ptr");
+                throw new ArgumentNullException(nameof(ptr));
             if (!ptr.IsA<StateEvent>())
-                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into StateEvent",
-                    ptr.type));
+                throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into StateEvent");
 
             return (StateEvent*)ptr.data;
         }
@@ -86,13 +82,14 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>Buffer of unmanaged memory allocated for the event.</returns>
         /// <exception cref="ArgumentException"><paramref name="device"/> has not been added to the system.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "1#")]
         public static NativeArray<byte> From(InputDevice device, out InputEventPtr eventPtr,  Allocator allocator = Allocator.Temp)
         {
             if (device == null)
-                throw new ArgumentNullException("device");
+                throw new ArgumentNullException(nameof(device));
             if (!device.added)
-                throw new ArgumentException(string.Format("Device '{0}' has not been added to system", device),
-                    "device");
+                throw new ArgumentException($"Device '{device}' has not been added to system",
+                    nameof(device));
 
             var stateFormat = device.m_StateBlock.format;
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
@@ -103,7 +100,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();
 
-            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.id, InputRuntime.s_Instance.currentTime);
+            stateEventPtr->baseEvent = new InputEvent(Type, (int)eventSize, device.deviceId, InputRuntime.s_Instance.currentTime);
             stateEventPtr->stateFormat = stateFormat;
             UnsafeUtility.MemCpy(stateEventPtr->state, statePtr, stateSize);
 

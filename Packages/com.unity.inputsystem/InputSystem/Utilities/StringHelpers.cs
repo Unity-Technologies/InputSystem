@@ -173,6 +173,9 @@ namespace UnityEngine.InputSystem.Utilities
                 while (pos < length && char.IsWhiteSpace(str[pos]))
                     ++pos;
 
+                if (pos == length)
+                    break;
+
                 if (str[pos] == '"')
                 {
                     ++pos;
@@ -232,37 +235,48 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        public static string Join<TValue>(string separator, params TValue[] values)
+        {
+            return Join(values, separator);
+        }
+
         public static string Join<TValue>(IEnumerable<TValue> values, string separator)
         {
             // Optimize for there not being any values or only a single one
             // that needs no concatenation.
-            var firstValue = default(TValue);
+            var firstValue = default(string);
             var valueCount = 0;
             StringBuilder result = null;
 
             foreach (var value in values)
             {
+                if (value == null)
+                    continue;
+                var str = value.ToString();
+                if (string.IsNullOrEmpty(str))
+                    continue;
+
                 ++valueCount;
                 if (valueCount == 1)
                 {
-                    firstValue = value;
+                    firstValue = str;
                     continue;
                 }
 
                 if (valueCount == 2)
                 {
                     result = new StringBuilder();
-                    result.Append(firstValue.ToString());
+                    result.Append(firstValue);
                 }
 
                 result.Append(separator);
-                result.Append(value.ToString());
+                result.Append(str);
             }
 
             if (valueCount == 0)
                 return null;
             if (valueCount == 1)
-                return firstValue.ToString();
+                return firstValue;
 
             return result.ToString();
         }
@@ -331,6 +345,10 @@ namespace UnityEngine.InputSystem.Utilities
             var lengthOfSecond = secondList.Length;
             while (indexInFirst < lengthOfFirst)
             {
+                // Skip empty elements.
+                if (firstList[indexInFirst] == separator)
+                    ++indexInFirst;
+
                 // Find end of current element.
                 var endIndexInFirst = indexInFirst + 1;
                 while (endIndexInFirst < lengthOfFirst && firstList[endIndexInFirst] != separator)
@@ -342,6 +360,10 @@ namespace UnityEngine.InputSystem.Utilities
                 var indexInSecond = 0;
                 while (indexInSecond < lengthOfSecond)
                 {
+                    // Skip empty elements.
+                    if (secondList[indexInSecond] == separator)
+                        ++indexInSecond;
+
                     // Find end of current element.
                     var endIndexInSecond = indexInSecond + 1;
                     while (endIndexInSecond < lengthOfSecond && secondList[endIndexInSecond] != separator)
@@ -474,6 +496,22 @@ namespace UnityEngine.InputSystem.Utilities
         {
             // This is crude and far from how Unicode defines printable but it should serve as a good enough approximation.
             return !char.IsControl(ch) && !char.IsWhiteSpace(ch);
+        }
+
+        public static string WithAllWhitespaceStripped(this string str)
+        {
+            var buffer = new StringBuilder();
+            foreach (var ch in str)
+                if (!char.IsWhiteSpace(ch))
+                    buffer.Append(ch);
+            return buffer.ToString();
+        }
+
+        public static bool InvariantEqualsIgnoreCase(this string left, string right)
+        {
+            if (string.IsNullOrEmpty(left))
+                return string.IsNullOrEmpty(right);
+            return string.Equals(left, right, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

@@ -22,18 +22,26 @@ namespace UnityEngine.InputSystem.Editor
             m_ProcessorsProperty = bindingOrAction.FindPropertyRelative("m_Processors");
 
             m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, null);
-            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
+            UpdateProcessors(expectedControlLayout);
 
             m_OnChange = onChange;
             m_GeneralFoldoutLabel = EditorGUIUtility.TrTextContent(label);
+        }
+
+        protected void UpdateProcessors(string expectedControlLayout)
+        {
+            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
         }
 
         public void OnGUI()
         {
             EditorGUILayout.BeginVertical();
             DrawGeneralGroup();
-            EditorGUILayout.Space();
-            DrawInteractionsGroup();
+            if (!m_IsPartOfComposite)
+            {
+                EditorGUILayout.Space();
+                DrawInteractionsGroup();
+            }
             EditorGUILayout.Space();
             DrawProcessorsGroup();
             GUILayout.FlexibleSpace();
@@ -88,12 +96,14 @@ namespace UnityEngine.InputSystem.Editor
         private void OnProcessorsModified()
         {
             m_ProcessorsProperty.stringValue = m_ProcessorsList.ToSerializableString();
+            m_ProcessorsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_ProcessorsChanged);
         }
 
         private void OnInteractionsModified()
         {
             m_InteractionsProperty.stringValue = m_InteractionsList.ToSerializableString();
+            m_InteractionsProperty.serializedObject.ApplyModifiedProperties();
             m_OnChange(k_InteractionsChanged);
         }
 
@@ -102,11 +112,12 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
+        protected bool m_IsPartOfComposite;
 
         private readonly Action<FourCC> m_OnChange;
 
         private readonly InteractionsListView m_InteractionsList;
-        private readonly ProcessorsListView m_ProcessorsList;
+        private ProcessorsListView m_ProcessorsList;
 
         private readonly SerializedProperty m_InteractionsProperty;
         private readonly SerializedProperty m_ProcessorsProperty;
@@ -124,19 +135,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private static class Styles
         {
-            public static readonly GUIStyle s_FoldoutBackgroundStyle = new GUIStyle("Label");
+            public static readonly GUIStyle s_FoldoutBackgroundStyle = new GUIStyle("Label")
+                .WithNormalBackground(AssetDatabase.LoadAssetAtPath<Texture2D>(InputActionTreeView.ResourcesPath + "foldoutBackground.png"))
+                .WithBorder(new RectOffset(3, 3, 3, 3))
+                .WithMargin(new RectOffset(1, 1, 3, 3));
             public static readonly GUIStyle s_FoldoutStyle = new GUIStyle("foldout");
-
-            static Styles()
-            {
-                var darkGreyBackgroundWithBorderTexture =
-                    AssetDatabase.LoadAssetAtPath<Texture2D>(
-                        InputActionTreeView.ResourcesPath + "foldoutBackground.png");
-
-                s_FoldoutBackgroundStyle.normal.background = darkGreyBackgroundWithBorderTexture;
-                s_FoldoutBackgroundStyle.border = new RectOffset(3, 3, 3, 3);
-                s_FoldoutBackgroundStyle.margin = new RectOffset(1, 1, 3, 3);
-            }
         }
     }
 }

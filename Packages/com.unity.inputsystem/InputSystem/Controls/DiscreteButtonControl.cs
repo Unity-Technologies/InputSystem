@@ -1,4 +1,6 @@
 using System;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: hide in UI
@@ -15,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// the value 1 could indicate that the switch is moved to the left whereas 3 could indicate it is
     /// moved up.
     /// </remarks>
+    [Scripting.Preserve]
     public class DiscreteButtonControl : ButtonControl
     {
         /// <summary>
@@ -41,6 +44,15 @@ namespace UnityEngine.InputSystem.Controls
         public int wrapAtValue;
 
         public int nullValue;
+
+        protected override void FinishSetup()
+        {
+            base.FinishSetup();
+
+            if (!stateBlock.format.IsIntegerFormat())
+                throw new NotSupportedException(
+                    $"Non-integer format '{stateBlock.format}' is not supported for DiscreteButtonControl '{this}'");
+        }
 
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {

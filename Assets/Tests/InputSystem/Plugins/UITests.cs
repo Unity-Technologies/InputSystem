@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Plugins.UI;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -112,7 +114,7 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator MouseActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromMouse()
     {
         // Create devices.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -125,13 +127,17 @@ internal class UITests : InputTestFixture
         var rightChildGameObject = objects.rightGameObject;
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
-        var pointAction = map.AddAction("point");
-        var leftClickAction = map.AddAction("leftClick");
-        var rightClickAction = map.AddAction("rightClick");
-        var middleClickAction = map.AddAction("middleClick");
-        var scrollAction = map.AddAction("scroll");
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough);
+        var leftClickAction = map.AddAction("leftClick", type: InputActionType.PassThrough);
+        var rightClickAction = map.AddAction("rightClick", type: InputActionType.PassThrough);
+        var middleClickAction = map.AddAction("middleClick", type: InputActionType.PassThrough);
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough);
 
         // Create bindings.
         pointAction.AddBinding(mouse.position);
@@ -142,11 +148,11 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.point = new InputActionProperty(pointAction);
-        uiModule.leftClick = new InputActionProperty(leftClickAction);
-        uiModule.middleClick = new InputActionProperty(middleClickAction);
-        uiModule.rightClick = new InputActionProperty(rightClickAction);
-        uiModule.scrollWheel = new InputActionProperty(scrollAction);
+        uiModule.point = InputActionReference.Create(pointAction);
+        uiModule.leftClick = InputActionReference.Create(leftClickAction);
+        uiModule.middleClick = InputActionReference.Create(middleClickAction);
+        uiModule.rightClick = InputActionReference.Create(rightClickAction);
+        uiModule.scrollWheel = InputActionReference.Create(scrollAction);
 
         // Enable the whole thing.
         map.Enable();
@@ -157,6 +163,7 @@ internal class UITests : InputTestFixture
         // Reset initial selection
         leftChildReceiver.Reset();
 
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
         // Move mouse over left child.
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100) });
         InputSystem.Update();
@@ -165,7 +172,8 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
 
         // Check basic down/up
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
@@ -181,7 +189,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
         Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Check down and drag
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Right });
@@ -194,7 +202,7 @@ internal class UITests : InputTestFixture
         Assert.That((leftChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Right));
         Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Move to new location on left child
         InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(100, 200));
@@ -205,7 +213,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
         Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Move children
         InputSystem.QueueDeltaStateEvent(mouse.position, new Vector2(350, 200));
@@ -238,30 +246,221 @@ internal class UITests : InputTestFixture
         InputSystem.Update();
         eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(leftChildReceiver.events, Is.Empty);
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Scroll));
         rightChildReceiver.Reset();
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.True);
     }
 
     [UnityTest]
     [Category("Actions")]
-    // Check that two players can have separate UI, and that both selections will stay active when clicking on UI with the mouse,
-    // using MultiPlayerEventSystem.playerRoot to match UI to the players.
-    public IEnumerator MouseActions_MultiplayerEventSystemKeepsPerPlayerSelection()
+    public IEnumerator Actions_TouchActionsCanDriveUIAndDistinguishMultipleTouches()
     {
         // Create devices.
+        var touchScreen = InputSystem.AddDevice<Touchscreen>();
+
+        var objects = CreateScene();
+        var uiModule = objects.uiModule;
+        var eventSystem = objects.eventSystem;
+        var leftChildGameObject = objects.leftGameObject;
+        var leftChildReceiver = leftChildGameObject != null ? leftChildGameObject.GetComponent<UICallbackReceiver>() : null;
+        var rightChildGameObject = objects.rightGameObject;
+        var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
+
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // Create actions.
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough);
+        var leftClickAction = map.AddAction("leftClick", type: InputActionType.PassThrough);
+
+        // Create bindings.
+        pointAction.AddBinding("<Touchscreen>/touch*/position");
+        leftClickAction.AddBinding("<Touchscreen>/touch*/press");
+
+        // Wire up actions.
+        // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
+        uiModule.point = InputActionReference.Create(pointAction);
+        uiModule.leftClick = InputActionReference.Create(leftClickAction);
+
+        // Enable the whole thing.
+        map.Enable();
+
+        // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
+        yield return null;
+
+        // Reset initial selection
+        leftChildReceiver.Reset();
+
+        // Touch left button
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[0], new TouchState()
+        {
+            touchId = 1,
+            position = new Vector2(100, 100)
+        });
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+        leftChildReceiver.Reset();
+        Assert.That(rightChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[0], new TouchState()
+        {
+            touchId = 1,
+            position = new Vector2(100, 100),
+            phase = TouchPhase.Began
+        });
+
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
+        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+        Assert.That(leftChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
+        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+        leftChildReceiver.Reset();
+        Assert.That(rightChildReceiver.events, Is.Empty);
+
+        // Touch right button
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[1], new TouchState()
+        {
+            touchId = 2,
+            position = new Vector2(400, 100)
+        });
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+        rightChildReceiver.Reset();
+        Assert.That(leftChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[1], new TouchState()
+        {
+            touchId = 2,
+            position = new Vector2(400, 100),
+            phase = TouchPhase.Began
+        });
+
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(2));
+        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+        Assert.That(rightChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+        Assert.That((rightChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
+        Assert.That(rightChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+        rightChildReceiver.Reset();
+        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Deselect));
+        leftChildReceiver.Reset();
+
+        // release left button
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[0], new TouchState()
+        {
+            touchId = 1,
+            position = new Vector2(100, 100),
+            phase = TouchPhase.Stationary
+        });
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[0], new TouchState()
+        {
+            touchId = 1,
+            position = new Vector2(100, 100),
+            phase = TouchPhase.Ended
+        });
+
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(3));
+        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
+        Assert.That(leftChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+        Assert.That((leftChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
+        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Click));
+        Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Select));
+        leftChildReceiver.Reset();
+        Assert.That(rightChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+
+        // release right button
+        // NOTE: The UI behavior is a bit funky here, as it cannot properly handle selection state for multiple
+        // objects. As a result, only releasing the left button will receive a click in this setup.
+        // This is not great, but multi-touch UI is a corner case, not generally supported by UI systems on
+        // Touch OSes. This does however correctly handle multiple on screen controls, which is the use case we care about.
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[1], new TouchState()
+        {
+            touchId = 2,
+            position = new Vector2(400, 100),
+            phase = TouchPhase.Stationary
+        });
+        InputSystem.QueueDeltaStateEvent(touchScreen.touches[1], new TouchState()
+        {
+            touchId = 2,
+            position = new Vector2(400, 100),
+            phase = TouchPhase.Ended
+        });
+
+        InputSystem.Update();
+        eventSystem.InvokeUpdate();
+
+        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
+        Assert.That(rightChildReceiver.events[0].data, Is.TypeOf<PointerEventData>());
+        Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+        Assert.That((rightChildReceiver.events[0].data as PointerEventData).button, Is.EqualTo(PointerEventData.InputButton.Left));
+        rightChildReceiver.Reset();
+        Assert.That(leftChildReceiver.events, Is.Empty);
+
+        Assert.That(eventSystem.IsPointerOverGameObject(), Is.False);
+        Assert.That(eventSystem.IsPointerOverGameObject(1), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(2), Is.True);
+        Assert.That(eventSystem.IsPointerOverGameObject(3), Is.False);
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    // Check that two players can have separate UI, and that both selections will stay active when
+    // clicking on UI with the mouse, using MultiPlayerEventSystem.playerRoot to match UI to the players.
+    public IEnumerator Actions_CanOperateMultiplayerUIGloballyUsingMouse()
+    {
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var players = new[] { CreateScene(0, 240), CreateScene(240, 480) };
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
-        var pointAction = map.AddAction("point");
-        var leftClickAction = map.AddAction("leftClick");
-        var rightClickAction = map.AddAction("rightClick");
-        var middleClickAction = map.AddAction("middleClick");
-        var scrollAction = map.AddAction("scroll");
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough);
+        var leftClickAction = map.AddAction("leftClick", type: InputActionType.PassThrough);
+        var rightClickAction = map.AddAction("rightClick", type: InputActionType.PassThrough);
+        var middleClickAction = map.AddAction("middleClick", type: InputActionType.PassThrough);
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough);
 
         // Create bindings.
         pointAction.AddBinding(mouse.position);
@@ -274,11 +473,11 @@ internal class UITests : InputTestFixture
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
         foreach (var player in players)
         {
-            player.uiModule.point = new InputActionProperty(pointAction);
-            player.uiModule.leftClick = new InputActionProperty(leftClickAction);
-            player.uiModule.middleClick = new InputActionProperty(middleClickAction);
-            player.uiModule.rightClick = new InputActionProperty(rightClickAction);
-            player.uiModule.scrollWheel = new InputActionProperty(scrollAction);
+            player.uiModule.point = InputActionReference.Create(pointAction);
+            player.uiModule.leftClick = InputActionReference.Create(leftClickAction);
+            player.uiModule.middleClick = InputActionReference.Create(middleClickAction);
+            player.uiModule.rightClick = InputActionReference.Create(rightClickAction);
+            player.uiModule.scrollWheel = InputActionReference.Create(scrollAction);
             player.eventSystem.SetSelectedGameObject(null);
         }
 
@@ -325,8 +524,9 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("Actions")]
-    // Check that two players can have separate UI and control it using separate gamepads, using MultiplayerEventSystem.
-    public IEnumerator JoystickActions_MultiplayerEventSystemKeepsPerPlayerSelection()
+    // Check that two players can have separate UI and control it using separate gamepads, using
+    // MultiplayerEventSystem.
+    public IEnumerator Actions_CanOperateMultiplayerUILocallyUsingGamepads()
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
@@ -334,7 +534,12 @@ internal class UITests : InputTestFixture
 
         for (var i = 0; i < 2; i++)
         {
-            var map = new InputActionMap();
+            // Create asset
+            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+            // Create actions.
+            var map = new InputActionMap("map");
+            asset.AddActionMap(map);
             var moveAction = map.AddAction("move");
             var submitAction = map.AddAction("submit");
             var cancelAction = map.AddAction("cancel");
@@ -345,9 +550,9 @@ internal class UITests : InputTestFixture
             cancelAction.AddBinding(gamepads[i].buttonEast);
 
             // Wire up actions.
-            players[i].uiModule.move = new InputActionProperty(moveAction);
-            players[i].uiModule.submit = new InputActionProperty(submitAction);
-            players[i].uiModule.cancel = new InputActionProperty(cancelAction);
+            players[i].uiModule.move = InputActionReference.Create(moveAction);
+            players[i].uiModule.submit = InputActionReference.Create(submitAction);
+            players[i].uiModule.cancel = InputActionReference.Create(cancelAction);
 
             players[i].leftChildReceiver.moveTo = players[i].rightGameObject;
             players[i].rightChildReceiver.moveTo = players[i].leftGameObject;
@@ -372,8 +577,8 @@ internal class UITests : InputTestFixture
 
         foreach (var player in players)
         {
-            Assert.That(player.leftChildReceiver.events, Has.Count.EqualTo(0));
-            Assert.That(player.rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(player.leftChildReceiver.events, Is.Empty);
+            Assert.That(player.rightChildReceiver.events, Is.Empty);
             player.eventSystem.InvokeUpdate();
         }
 
@@ -391,8 +596,8 @@ internal class UITests : InputTestFixture
 
         foreach (var player in players)
         {
-            Assert.That(player.leftChildReceiver.events, Has.Count.EqualTo(0));
-            Assert.That(player.rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(player.leftChildReceiver.events, Is.Empty);
+            Assert.That(player.rightChildReceiver.events, Is.Empty);
             player.eventSystem.InvokeUpdate();
         }
 
@@ -402,8 +607,8 @@ internal class UITests : InputTestFixture
 
         foreach (var player in players)
         {
-            Assert.That(player.leftChildReceiver.events, Has.Count.EqualTo(0));
-            Assert.That(player.rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(player.leftChildReceiver.events, Is.Empty);
+            Assert.That(player.rightChildReceiver.events, Is.Empty);
             player.eventSystem.InvokeUpdate();
         }
 
@@ -417,8 +622,8 @@ internal class UITests : InputTestFixture
 
         foreach (var player in players)
         {
-            Assert.That(player.leftChildReceiver.events, Has.Count.EqualTo(0));
-            Assert.That(player.rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(player.leftChildReceiver.events, Is.Empty);
+            Assert.That(player.rightChildReceiver.events, Is.Empty);
             player.eventSystem.InvokeUpdate();
         }
         Assert.That(players[1].leftChildReceiver.events, Has.Count.EqualTo(1));
@@ -427,14 +632,14 @@ internal class UITests : InputTestFixture
 
         foreach (var player in players)
         {
-            Assert.That(player.leftChildReceiver.events, Has.Count.EqualTo(0));
-            Assert.That(player.rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(player.leftChildReceiver.events, Is.Empty);
+            Assert.That(player.rightChildReceiver.events, Is.Empty);
         }
     }
 
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator JoystickActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromGamepad()
     {
         // Create devices.
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -447,8 +652,12 @@ internal class UITests : InputTestFixture
         var rightChildGameObject = objects.rightGameObject;
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
+        // Create asset
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
         // Create actions.
-        var map = new InputActionMap();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
         var moveAction = map.AddAction("move");
         var submitAction = map.AddAction("submit");
         var cancelAction = map.AddAction("cancel");
@@ -460,9 +669,9 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.move = new InputActionProperty(moveAction);
-        uiModule.submit = new InputActionProperty(submitAction);
-        uiModule.cancel = new InputActionProperty(cancelAction);
+        uiModule.move = InputActionReference.Create(moveAction);
+        uiModule.submit = InputActionReference.Create(submitAction);
+        uiModule.cancel = InputActionReference.Create(cancelAction);
 
         // Enable the whole thing.
         map.Enable();
@@ -477,7 +686,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Select));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Check Move Axes
         // Fixme: replacing this with Set(gamepads[0].leftStick, new Vector2(1, 0)); throws a NRE.
@@ -488,7 +697,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Move));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Check Submit
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.South });
@@ -498,7 +707,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Submit));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Check Cancel
         InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.East });
@@ -508,7 +717,7 @@ internal class UITests : InputTestFixture
         Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Cancel));
         leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(rightChildReceiver.events, Is.Empty);
 
         // Check Selection Swap
         eventSystem.SetSelectedGameObject(rightChildGameObject);
@@ -525,16 +734,66 @@ internal class UITests : InputTestFixture
         eventSystem.SetSelectedGameObject(null);
         eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(0));
+        Assert.That(leftChildReceiver.events, Is.Empty);
         Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Deselect));
         rightChildReceiver.Reset();
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReassignUIActions()
+    {
+        var go = new GameObject();
+        go.AddComponent<EventSystem>();
+        var uiModule = go.AddComponent<InputSystemUIInputModule>();
+
+        const string kActions = @"
+            {
+                ""maps"" : [
+                    {
+                        ""name"" : ""Gameplay"",
+                        ""actions"" : [
+                            { ""name"" : ""Point"" },
+                            { ""name"" : ""Navigate"" }
+                        ]
+                    },
+                    {
+                        ""name"" : ""UI"",
+                        ""actions"" : [
+                            { ""name"" : ""Navigate"" },
+                            { ""name"" : ""Point"" }
+                        ]
+                    }
+                ]
+            }
+        ";
+
+        var actions1 = InputActionAsset.FromJson(kActions);
+
+        uiModule.actionsAsset = actions1;
+        uiModule.move = InputActionReference.Create(actions1["ui/navigate"]);
+        uiModule.point = InputActionReference.Create(actions1["ui/point"]);
+
+        Assert.That(uiModule.actionsAsset, Is.SameAs(actions1));
+        Assert.That(uiModule.move.action, Is.SameAs(actions1["ui/navigate"]));
+        Assert.That(uiModule.point.action, Is.SameAs(actions1["ui/point"]));
+
+        var actions2 = ScriptableObject.Instantiate(actions1);
+        actions2["ui/point"].RemoveAction();
+
+        uiModule.actionsAsset = actions2;
+
+        Assert.That(uiModule.actionsAsset, Is.SameAs(actions2));
+        Assert.That(uiModule.move.action, Is.SameAs(actions2["ui/navigate"]));
+        Assert.That(uiModule.point?.action, Is.Null);
+    }
+
+// The tracked device tests fail with NullReferenceException in the windows editor on yamato. I cannot reproduce this locally, so will disable them on windows for now.
+#if !UNITY_EDITOR_WIN
+
     private struct TestTrackedDeviceLayout : IInputStateTypeInfo
     {
-        public const int kSizeInBytes = 29;
-
         [InputControl(name = "position", layout = "Vector3")]
         public Vector3 position;
         [InputControl(name = "orientation", layout = "Quaternion", offset = 12)]
@@ -542,34 +801,31 @@ internal class UITests : InputTestFixture
         [InputControl(name = "select", layout = "Button", offset = 28, sizeInBits = 8)]
         public byte select;
 
-        public FourCC GetFormat()
-        {
-            return new FourCC('T', 'E', 'S', 'T');
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
+    ////TODO: switch this to an actual TrackedDevice
     [InputControlLayout(stateType = typeof(TestTrackedDeviceLayout))]
+    [Preserve]
     class TestTrackedDevice : InputDevice
     {
         public Vector3Control position { get; private set; }
         public QuaternionControl orientation { get; private set; }
         public ButtonControl select { get; private set; }
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
-            position = builder.GetControl<Vector3Control>("position");
-            orientation = builder.GetControl<QuaternionControl>("orientation");
-            select = builder.GetControl<ButtonControl>("select");
+            position = GetChildControl<Vector3Control>("position");
+            orientation = GetChildControl<QuaternionControl>("orientation");
+            select = GetChildControl<ButtonControl>("select");
         }
     }
 
-    ////FIXME: this is suffering from InputTestFixture's problem with running normal frame updates
     [UnityTest]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public IEnumerator TODO_TrackedDeviceActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromTrackedDevice()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -584,10 +840,14 @@ internal class UITests : InputTestFixture
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
         // Create actions.
-        var map = new InputActionMap();
-        var trackedPositionAction = map.AddAction("position");
-        var trackedOrientationAction = map.AddAction("orientation");
-        var trackedSelectAction = map.AddAction("selection");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // Create actions.
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough);
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough);
+        var trackedSelectAction = map.AddAction("selection", type: InputActionType.PassThrough);
 
         trackedPositionAction.AddBinding(trackedDevice.position);
         trackedOrientationAction.AddBinding(trackedDevice.orientation);
@@ -595,7 +855,9 @@ internal class UITests : InputTestFixture
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.AddTrackedDevice(new InputActionProperty(trackedPositionAction), new InputActionProperty(trackedOrientationAction), new InputActionProperty(trackedSelectAction));
+        uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        uiModule.trackedDeviceSelect = InputActionReference.Create(trackedSelectAction);
 
         // Enable the whole thing.
         map.Enable();
@@ -624,7 +886,7 @@ internal class UITests : InputTestFixture
             Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
             leftChildReceiver.Reset();
-            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
             // Check basic down/up
             trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
@@ -640,7 +902,7 @@ internal class UITests : InputTestFixture
             Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
             Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
             leftChildReceiver.Reset();
-            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
             // Check down and drag
             trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
@@ -652,7 +914,7 @@ internal class UITests : InputTestFixture
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
             Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
             leftChildReceiver.Reset();
-            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
             // Move to new location on left child
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -10.0f, 0.0f), stateEvent);
@@ -664,7 +926,7 @@ internal class UITests : InputTestFixture
             Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
             Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
             leftChildReceiver.Reset();
-            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
             // Move children
             trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
@@ -695,36 +957,14 @@ internal class UITests : InputTestFixture
         }
     }
 
-    private struct TestTouchLayout : IInputStateTypeInfo
-    {
-        [InputControl(name = "touch", layout = "Touch")]
-        public TouchState touch;
-
-        public FourCC GetFormat()
-        {
-            return new FourCC('T', 'T', 'L', ' ');
-        }
-    }
-
-    [InputControlLayout(stateType = typeof(TestTouchLayout))]
-    class TestTouchDevice : InputDevice
-    {
-        public TouchControl touch { get; private set; }
-
-        protected override void FinishSetup(InputDeviceBuilder builder)
-        {
-            base.FinishSetup(builder);
-
-            touch = builder.GetControl<TouchControl>("touch");
-        }
-    }
-
     [UnityTest]
     [Category("Actions")]
-    public IEnumerator TouchActions_CanDriveUI()
+    public IEnumerator Actions_CanDriveUIFromMultipleTrackedDevices()
     {
-        // Create devices.
-        var touchDevice = InputSystem.AddDevice<TestTouchDevice>();
+        // Create device.
+        InputSystem.RegisterLayout<TestTrackedDevice>();
+        var trackedDevice = InputSystem.AddDevice<TestTrackedDevice>();
+        var trackedDevice2 = InputSystem.AddDevice<TestTrackedDevice>();
 
         var objects = CreateScene();
         var uiModule = objects.uiModule;
@@ -735,17 +975,24 @@ internal class UITests : InputTestFixture
         var rightChildReceiver = rightChildGameObject != null ? rightChildGameObject.GetComponent<UICallbackReceiver>() : null;
 
         // Create actions.
-        var map = new InputActionMap();
-        var positionAction = map.AddAction("position");
-        var phaseAction = map.AddAction("phase");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        // Create bindings.
-        positionAction.AddBinding(touchDevice.touch.position);
-        phaseAction.AddBinding(touchDevice.touch.phase);
+        // Create actions.
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough);
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough);
+        var trackedSelectAction = map.AddAction("selection", type: InputActionType.PassThrough);
+
+        trackedPositionAction.AddBinding("*/position");
+        trackedOrientationAction.AddBinding("*/orientation");
+        trackedSelectAction.AddBinding("*/select");
 
         // Wire up actions.
         // NOTE: In a normal usage scenario, the user would wire these up in the inspector.
-        uiModule.AddTouch(new InputActionProperty(positionAction), new InputActionProperty(phaseAction));
+        uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        uiModule.trackedDeviceSelect = InputActionReference.Create(trackedSelectAction);
 
         // Enable the whole thing.
         map.Enable();
@@ -753,109 +1000,119 @@ internal class UITests : InputTestFixture
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
-        // Reset initial selection
-        leftChildReceiver.Reset();
+        using (StateEvent.From(trackedDevice, out var stateEvent))
+        using (StateEvent.From(trackedDevice2, out var stateEvent2))
+        {
+            // Reset to Defaults
+            trackedDevice.position.WriteValueIntoEvent(Vector3.zero, stateEvent);
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
 
-        // Move mouse over left child.
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(0, 0), phase = PointerPhase.Began });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 100), phase = PointerPhase.Moved });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            trackedDevice2.position.WriteValueIntoEvent(Vector3.zero, stateEvent2);
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -90.0f, 0.0f), stateEvent2);
+            trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(3));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-        Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Enter));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            leftChildReceiver.Reset();
+            rightChildReceiver.Reset();
 
-        //Drag to new location on left child
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(100, 200), phase = PointerPhase.Moved });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            // Move over left child.
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(0));
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
-        //Now move children
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Moved });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, -30.0f, 0.0f), stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.Dragging));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
-        rightChildReceiver.Reset();
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
+            // Check basic down/up
+            trackedDevice.select.WriteValueIntoEvent(1f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            trackedDevice.select.WriteValueIntoEvent(0f, stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        //And now release
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Ended });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            Assert.That((leftChildReceiver.events[1].data as PointerEventData).pointerId, Is.EqualTo(0));
+            Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
+            Assert.That((leftChildReceiver.events[2].data as PointerEventData).pointerId, Is.EqualTo(0));
+            Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
+            Assert.That((leftChildReceiver.events[3].data as PointerEventData).pointerId, Is.EqualTo(0));
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(2));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Up));
-        Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.EndDrag));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Drop));
-        rightChildReceiver.Reset();
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Is.Empty);
 
-        //Now check for a quick click
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Began });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Moved });
-        InputSystem.QueueDeltaStateEvent(touchDevice.touch, new TouchState { position = new Vector2(400, 200), phase = PointerPhase.Ended });
-        InputSystem.Update();
-        eventSystem.InvokeUpdate();
+            trackedDevice2.select.WriteValueIntoEvent(1f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            trackedDevice2.select.WriteValueIntoEvent(0f, stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
 
-        Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
-        Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Deselect));
-        leftChildReceiver.Reset();
-        Assert.That(rightChildReceiver.events, Has.Count.EqualTo(5));
-        Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
-        Assert.That(rightChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
-        Assert.That(rightChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
-        Assert.That(rightChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
-        Assert.That(rightChildReceiver.events[4].type, Is.EqualTo(EventType.Select));
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(4));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Down));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[1].type, Is.EqualTo(EventType.PotentialDrag));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[2].type, Is.EqualTo(EventType.Up));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            Assert.That(leftChildReceiver.events[3].type, Is.EqualTo(EventType.Click));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Is.Empty);
+
+            // Move to new location on right child
+            trackedDevice.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent);
+            InputSystem.QueueEvent(stateEvent);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(0));
+            rightChildReceiver.Reset();
+
+            trackedDevice2.orientation.WriteValueIntoEvent(Quaternion.Euler(0.0f, 30.0f, 0.0f), stateEvent2);
+            InputSystem.QueueEvent(stateEvent2);
+            InputSystem.Update();
+            eventSystem.InvokeUpdate();
+
+            Assert.That(leftChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(leftChildReceiver.events[0].type, Is.EqualTo(EventType.Exit));
+            Assert.That((leftChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            leftChildReceiver.Reset();
+            Assert.That(rightChildReceiver.events, Has.Count.EqualTo(1));
+            Assert.That(rightChildReceiver.events[0].type, Is.EqualTo(EventType.Enter));
+            Assert.That((rightChildReceiver.events[0].data as PointerEventData).pointerId, Is.EqualTo(1));
+            rightChildReceiver.Reset();
+        }
     }
 
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromGamepads()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromJoysticks()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromTouches()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanDriveUIFromMouseAndKeyboard()
-    {
-        Assert.Fail();
-    }
+#endif
 
     private enum EventType
     {
@@ -894,8 +1151,8 @@ internal class UITests : InputTestFixture
 
             public override string ToString()
             {
-                var dataString = data.ToString();
-                dataString = dataString.Replace("\n", "\n\t");
+                var dataString = data?.ToString();
+                dataString = dataString?.Replace("\n", "\n\t");
                 return $"{type}[\n\t{dataString}]";
             }
         }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
-using UnityEngine;
+using UnityEngine.InputSystem.Controls;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -11,7 +11,7 @@ using UnityEngine;
 
 ////TODO: touch vs mouse will need refinement in both the action and the device stuff
 
-namespace UnityEngine.InputSystem.Plugins.UI
+namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
     /// Input module that takes its input from <see cref="InputAction">input actions</see>.
@@ -21,14 +21,481 @@ namespace UnityEngine.InputSystem.Plugins.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class InputSystemUIInputModule : UIInputModule, ISerializationCallbackReceiver
+    public class InputSystemUIInputModule : BaseInputModule
     {
-        private static void SwapAction(ref InputActionProperty property, InputActionProperty newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        public override void ActivateModule()
+        {
+            base.ActivateModule();
+
+            var toSelect = eventSystem.currentSelectedGameObject;
+            if (toSelect == null)
+                toSelect = eventSystem.firstSelectedGameObject;
+
+            eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
+        }
+
+        public override bool IsPointerOverGameObject(int pointerId)
+        {
+            foreach (var state in mouseStates)
+            {
+                if (state.touchId == pointerId)
+                    return state.pointerTarget != null;
+            }
+            return false;
+        }
+
+        private RaycastResult PerformRaycast(PointerEventData eventData)
+        {
+            if (eventData == null)
+                throw new ArgumentNullException(nameof(eventData));
+
+            eventSystem.RaycastAll(eventData, m_RaycastResultCache);
+            var result = FindFirstRaycast(m_RaycastResultCache);
+            m_RaycastResultCache.Clear();
+            return result;
+        }
+
+        /// <summary>
+        /// Takes an existing MouseModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the MouseModel.
+        /// </summary>
+        /// <param name="mouseState">The mouse state you want to forward into the UI Event System</param>
+        internal void ProcessMouse(ref MouseModel mouseState)
+        {
+            if (!mouseState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            mouseState.CopyTo(eventData);
+
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            /// Left Mouse Button
+            // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
+            var buttonState = mouseState.leftButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Left;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+
+            ProcessMouseMovement(eventData);
+            ProcessMouseScroll(eventData);
+
+            mouseState.CopyFrom(eventData);
+
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.leftButton = buttonState;
+
+            /// Right Mouse Button
+            buttonState = mouseState.rightButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Right;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.rightButton = buttonState;
+
+            /// Middle Mouse Button
+            buttonState = mouseState.middleButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Middle;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.middleButton = buttonState;
+
+            mouseState.OnFrameFinished();
+        }
+
+        // if we are using a MultiplayerEventSystem, ignore any transforms
+        // not under the current MultiplayerEventSystem's root.
+        private bool PointerShouldIgnoreTransform(Transform t)
+        {
+            if (eventSystem is MultiplayerEventSystem)
+            {
+                var mes = eventSystem as MultiplayerEventSystem;
+
+                if (mes.playerRoot != null)
+                    if (!t.IsChildOf(mes.playerRoot.transform))
+                        return true;
+            }
+            return false;
+        }
+
+        private void ProcessMouseMovement(PointerEventData eventData)
+        {
+            var currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
+
+            // If we have no target or pointerEnter has been deleted,
+            // we just send exit events to anything we are tracking
+            // and then exit.
+            if (currentPointerTarget == null || eventData.pointerEnter == null)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
+
+                eventData.hovered.Clear();
+
+                if (currentPointerTarget == null)
+                {
+                    eventData.pointerEnter = null;
+                    return;
+                }
+            }
+
+            if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
+                return;
+
+            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
+
+            // We walk up the tree until a common root and the last entered and current entered object is found.
+            // Then send exit and enter events up to, but not including, the common root.
+            if (eventData.pointerEnter != null)
+            {
+                var t = eventData.pointerEnter.transform;
+
+                while (t != null)
+                {
+                    if (commonRoot != null && commonRoot.transform == t)
+                        break;
+
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerExitHandler);
+
+                    eventData.hovered.Remove(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+
+            eventData.pointerEnter = currentPointerTarget;
+            if (currentPointerTarget != null)
+            {
+                var t = currentPointerTarget.transform;
+
+                while (t != null && t.gameObject != commonRoot && !PointerShouldIgnoreTransform(t))
+                {
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+
+                    eventData.hovered.Add(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+        }
+
+        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
+        {
+            var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
+
+            if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
+                return;
+
+            if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
+            {
+                eventData.eligibleForClick = true;
+                eventData.delta = Vector2.zero;
+                eventData.dragging = false;
+                eventData.pressPosition = eventData.position;
+                eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
+
+                var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
+
+                // If we have clicked something new, deselect the old thing
+                // and leave 'selection handling' up to the press event.
+                if (selectHandlerGO != eventSystem.currentSelectedGameObject)
+                    eventSystem.SetSelectedGameObject(null, eventData);
+
+                // search for the control that will receive the press.
+                // if we can't find a press handler set the press
+                // handler to be what would receive a click.
+                var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
+
+                // We didn't find a press handler, so we search for a click handler.
+                if (newPressed == null)
+                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                var time = Time.unscaledTime;
+
+                if (!hasNativeClickCount)
+                {
+                    const float clickSpeed = 0.3f;
+                    if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
+                        ++eventData.clickCount;
+                    else
+                        eventData.clickCount = 1;
+                }
+
+                eventData.clickTime = time;
+
+                eventData.pointerPress = newPressed;
+                eventData.rawPointerPress = currentOverGo;
+
+                // Save the drag handler for drag events during this mouse down.
+                eventData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
+
+                if (eventData.pointerDrag != null)
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.initializePotentialDrag);
+            }
+
+            if ((mouseButtonChanges & ButtonDeltaState.Released) != 0)
+            {
+                ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
+                }
+                else if (eventData.dragging && eventData.pointerDrag != null)
+                {
+                    ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.endDragHandler);
+                }
+
+                eventData.eligibleForClick = eventData.dragging = false;
+                eventData.pointerPress = eventData.rawPointerPress = eventData.pointerDrag = null;
+            }
+        }
+
+        private void ProcessMouseButtonDrag(PointerEventData eventData, float pixelDragThresholdMultiplier = 1.0f)
+        {
+            if (!eventData.IsPointerMoving() ||
+                Cursor.lockState == CursorLockMode.Locked ||
+                eventData.pointerDrag == null)
+                return;
+
+            if (!eventData.dragging)
+            {
+                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= ((eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold) * pixelDragThresholdMultiplier))
+                {
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
+                    eventData.dragging = true;
+                }
+            }
+
+            if (eventData.dragging)
+            {
+                // If we moved from our initial press object, process an up for that object.
+                if (eventData.pointerPress != eventData.pointerDrag)
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                    eventData.eligibleForClick = false;
+                    eventData.pointerPress = null;
+                    eventData.rawPointerPress = null;
+                }
+                ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
+            }
+        }
+
+        private void ProcessMouseScroll(PointerEventData eventData)
+        {
+            var scrollDelta = eventData.scrollDelta;
+            if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
+            {
+                var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(eventData.pointerEnter);
+                ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
+            }
+        }
+
+        internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
+        {
+            if (!deviceState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedTrackedPointerEvent();
+            eventData.Reset();
+            deviceState.CopyTo(eventData);
+
+            eventData.button = PointerEventData.InputButton.Left;
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            ProcessMouseButton(deviceState.selectDelta, eventData, false);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
+
+            deviceState.CopyFrom(eventData);
+
+            deviceState.OnFrameFinished();
+        }
+
+        /// <summary>
+        /// Takes an existing JoystickModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the JoystickModel.
+        /// </summary>
+        /// <param name="joystickState">The joystick state you want to forward into the UI Event System</param>
+        internal void ProcessJoystick(ref JoystickModel joystickState)
+        {
+            var internalJoystickState = joystickState.internalData;
+
+            var usedSelectionChange = false;
+            if (eventSystem.currentSelectedGameObject != null)
+            {
+                var data = GetBaseEventData();
+                ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.updateSelectedHandler);
+                usedSelectionChange = data.used;
+            }
+
+            // Don't send move events if disabled in the EventSystem.
+            if (!eventSystem.sendNavigationEvents)
+                return;
+
+            var movement = joystickState.move;
+            if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
+            {
+                var time = Time.unscaledTime;
+
+                var moveVector = joystickState.move;
+
+                var moveDirection = MoveDirection.None;
+                if (moveVector.sqrMagnitude > 0)
+                {
+                    if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
+                        moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
+                    else
+                        moveDirection = moveVector.y > 0 ? MoveDirection.Up : MoveDirection.Down;
+                }
+
+                if (moveDirection != internalJoystickState.lastMoveDirection)
+                {
+                    internalJoystickState.consecutiveMoveCount = 0;
+                }
+
+                if (moveDirection != MoveDirection.None)
+                {
+                    var allow = true;
+                    if (internalJoystickState.consecutiveMoveCount != 0)
+                    {
+                        if (internalJoystickState.consecutiveMoveCount > 1)
+                            allow = time > internalJoystickState.lastMoveTime + repeatRate;
+                        else
+                            allow = time > internalJoystickState.lastMoveTime + repeatDelay;
+                    }
+
+                    if (allow)
+                    {
+                        var eventData = GetOrCreateCachedAxisEvent();
+                        eventData.Reset();
+
+                        eventData.moveVector = moveVector;
+                        eventData.moveDir = moveDirection;
+
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        usedSelectionChange = eventData.used;
+
+                        internalJoystickState.consecutiveMoveCount = internalJoystickState.consecutiveMoveCount + 1;
+                        internalJoystickState.lastMoveTime = time;
+                        internalJoystickState.lastMoveDirection = moveDirection;
+                    }
+                }
+                else
+                    internalJoystickState.consecutiveMoveCount = 0;
+            }
+            else
+                internalJoystickState.consecutiveMoveCount = 0;
+
+            if (!usedSelectionChange)
+            {
+                if (eventSystem.currentSelectedGameObject != null)
+                {
+                    var data = GetBaseEventData();
+                    if ((joystickState.submitButtonDelta & ButtonDeltaState.Pressed) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+
+                    if (!data.used && (joystickState.cancelButtonDelta & ButtonDeltaState.Pressed) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                }
+            }
+
+            joystickState.internalData = internalJoystickState;
+            joystickState.OnFrameFinished();
+        }
+
+        private PointerEventData GetOrCreateCachedPointerEvent()
+        {
+            var result = m_CachedPointerEvent;
+            if (result == null)
+            {
+                result = new PointerEventData(eventSystem);
+                m_CachedPointerEvent = result;
+            }
+
+            return result;
+        }
+
+        private TrackedPointerEventData GetOrCreateCachedTrackedPointerEvent()
+        {
+            var result = m_CachedTrackedPointerEventData;
+            if (result == null)
+            {
+                result = new TrackedPointerEventData(eventSystem);
+                m_CachedTrackedPointerEventData = result;
+            }
+
+            return result;
+        }
+
+        private AxisEventData GetOrCreateCachedAxisEvent()
+        {
+            var result = m_CachedAxisEvent;
+            if (result == null)
+            {
+                result = new AxisEventData(eventSystem);
+                m_CachedAxisEvent = result;
+            }
+
+            return result;
+        }
+
+        [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
+        [SerializeField]
+        private float m_RepeatDelay = 0.5f;
+
+        [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
+        [SerializeField]
+        private float m_RepeatRate = 0.1f;
+
+        [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        // Hide this while we still have to figure out what to do with this.
+        private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
+
+        private AxisEventData m_CachedAxisEvent;
+        private PointerEventData m_CachedPointerEvent;
+        private TrackedPointerEventData m_CachedTrackedPointerEventData;
+
+        public float repeatDelay
+        {
+            get { return m_RepeatDelay; }
+            set { m_RepeatDelay = value; }
+        }
+
+        public float repeatRate
+        {
+            get { return m_RepeatRate; }
+            set { m_RepeatRate = value; }
+        }
+
+        public float trackedDeviceDragThresholdMultiplier
+        {
+            get { return m_TrackedDeviceDragThresholdMultiplier; }
+            set { m_TrackedDeviceDragThresholdMultiplier = value; }
+        }
+
+        private static void SwapAction(ref InputActionReference property, InputActionReference newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
             if (property != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
-                property.action.cancelled -= actionCallback;
+                property.action.canceled -= actionCallback;
             }
 
             property = newValue;
@@ -36,315 +503,115 @@ namespace UnityEngine.InputSystem.Plugins.UI
             if (newValue != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
-                property.action.cancelled += actionCallback;
+                property.action.canceled += actionCallback;
             }
-        }
-
-        [Serializable]
-        private struct TouchResponder
-        {
-            public TouchResponder(int pointerId, InputActionProperty position, InputActionProperty phase)
-            {
-                actionCallback = null;
-                m_ActionsHooked = false;
-                state = new TouchModel(pointerId);
-                m_Position = position;
-                m_Phase = phase;
-            }
-
-            [NonSerialized]
-            public TouchModel state;
-
-            [NonSerialized]
-            public Action<InputAction.CallbackContext> actionCallback;
-
-            public InputActionProperty position
-            {
-                get => m_Position;
-                set => SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback);
-            }
-
-            public InputActionProperty phase
-            {
-                get => m_Phase;
-                set => SwapAction(ref m_Phase, value, m_ActionsHooked, actionCallback);
-            }
-
-            public bool actionsHooked => m_ActionsHooked;
-
-            public void HookActions()
-            {
-                if (m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = true;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed += actionCallback;
-                    positionAction.cancelled += actionCallback;
-                }
-
-                var phaseAction = m_Phase.action;
-                if (phaseAction != null)
-                {
-                    phaseAction.performed += actionCallback;
-                    phaseAction.cancelled += actionCallback;
-                }
-            }
-
-            public void UnhookActions()
-            {
-                if (!m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = false;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed -= actionCallback;
-                    positionAction.cancelled -= actionCallback;
-                }
-
-                var phaseAction = m_Phase.action;
-                if (phaseAction != null)
-                {
-                    phaseAction.performed -= actionCallback;
-                    phaseAction.cancelled -= actionCallback;
-                }
-            }
-
-            private bool m_ActionsHooked;
-
-            [SerializeField] private InputActionProperty m_Position;
-            [SerializeField] private InputActionProperty m_Phase;
-        }
-
-        [Serializable]
-        private struct TrackedDeviceResponder
-        {
-            public TrackedDeviceResponder(int pointerId, InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
-            {
-                actionCallback = null;
-                m_ActionsHooked = false;
-                state = new TrackedDeviceModel(pointerId);
-                m_Position = position;
-                m_Orientation = orientation;
-                m_Select = select;
-            }
-
-            [NonSerialized]
-            public TrackedDeviceModel state;
-
-            [NonSerialized]
-            public Action<InputAction.CallbackContext> actionCallback;
-
-            public InputActionProperty position
-            {
-                get => m_Position;
-                set => SwapAction(ref m_Position, value, m_ActionsHooked, actionCallback);
-            }
-
-            public InputActionProperty orientation
-            {
-                get => m_Orientation;
-                set => SwapAction(ref m_Orientation, value, m_ActionsHooked, actionCallback);
-            }
-
-            public InputActionProperty select
-            {
-                get => m_Select;
-                set => SwapAction(ref m_Select, value, m_ActionsHooked, actionCallback);
-            }
-
-            public bool actionsHooked => m_ActionsHooked;
-
-            public void HookActions()
-            {
-                if (m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = true;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed += actionCallback;
-                    positionAction.cancelled += actionCallback;
-                }
-
-                var orientationAction = m_Orientation.action;
-                if (orientationAction != null)
-                {
-                    orientationAction.performed += actionCallback;
-                    orientationAction.cancelled += actionCallback;
-                }
-
-                var selectAction = m_Select.action;
-                if (selectAction != null)
-                {
-                    selectAction.performed += actionCallback;
-                    selectAction.cancelled += actionCallback;
-                }
-            }
-
-            public void UnhookActions()
-            {
-                if (!m_ActionsHooked)
-                    return;
-
-                m_ActionsHooked = false;
-
-                var positionAction = m_Position.action;
-                if (positionAction != null)
-                {
-                    positionAction.performed -= actionCallback;
-                    positionAction.cancelled -= actionCallback;
-                }
-
-                var orientationAction = m_Orientation.action;
-                if (orientationAction != null)
-                {
-                    orientationAction.performed -= actionCallback;
-                    orientationAction.cancelled -= actionCallback;
-                }
-
-                var selectAction = m_Orientation.action;
-                if (selectAction != null)
-                {
-                    selectAction.performed -= actionCallback;
-                    selectAction.cancelled -= actionCallback;
-                }
-            }
-
-            private bool m_ActionsHooked;
-
-            [SerializeField] private InputActionProperty m_Position;
-            [SerializeField] private InputActionProperty m_Orientation;
-            [SerializeField] private InputActionProperty m_Select;
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
-        /// </see> used as a cursor for pointing at UI elements.
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
+        /// used as a cursor for pointing at UI elements.
         /// </summary>
-        public InputActionProperty point
+        public InputActionReference point
         {
             get => m_PointAction;
             set => SwapAction(ref m_PointAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector.
-        /// </see> used for sending <see cref="AxisEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> 2D motion vector
+        /// used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        public InputActionProperty move
+        public InputActionReference move
         {
             get => m_MoveAction;
             set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"> scroll wheel value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> scroll wheel value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty scrollWheel
+        public InputActionReference scrollWheel
         {
             get => m_ScrollWheelAction;
             set => SwapAction(ref m_ScrollWheelAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty leftClick
+        public InputActionReference leftClick
         {
             get => m_LeftClickAction;
             set => SwapAction(ref m_LeftClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty middleClick
+        public InputActionReference middleClick
         {
             get => m_MiddleClickAction;
             set => SwapAction(ref m_MiddleClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool"</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
-        public InputActionProperty rightClick
+        public InputActionReference rightClick
         {
             get => m_RightClickAction;
             set => SwapAction(ref m_RightClickAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
-        public InputActionProperty submit
+        public InputActionReference submit
         {
             get => m_SubmitAction;
             set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, OnAction);
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
-        public InputActionProperty cancel
+        public InputActionReference cancel
         {
             get => m_CancelAction;
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
+
+        public InputActionReference trackedDeviceOrientation
+        {
+            get => m_TrackedDeviceOrientationAction;
+            set => SwapAction(ref m_TrackedDeviceOrientationAction, value, m_ActionsHooked, OnAction);
+        }
+
+        public InputActionReference trackedDevicePosition
+        {
+            get => m_TrackedDevicePositionAction;
+            set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, OnAction);
+        }
+
+        public InputActionReference trackedDeviceSelect
+        {
+            get => m_TrackedDeviceSelectAction;
+            set => SwapAction(ref m_TrackedDeviceSelectAction, value, m_ActionsHooked, OnAction);
+        }
+
 
         protected override void Awake()
         {
             base.Awake();
 
             m_RollingPointerId = 0;
-            mouseState = new MouseModel(m_RollingPointerId++);
             joystickState.Reset();
-
-            if (m_Touches == null)
-                m_Touches = new List<TouchResponder>();
-
-            for (var i = 0; i < m_Touches.Count; i++)
-            {
-                var responder = m_Touches[i];
-                responder.state = new TouchModel(m_RollingPointerId++);
-
-                var newIndex = i;
-                responder.actionCallback = delegate(InputAction.CallbackContext context)
-                {
-                    OnTouchAction(newIndex, context);
-                };
-                m_Touches[i] = responder;
-            }
-
-            if (m_TrackedDevices == null)
-                m_TrackedDevices = new List<TrackedDeviceResponder>();
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.state = new TrackedDeviceModel(m_RollingPointerId++);
-
-                var newIndex = i;
-                responder.actionCallback = delegate(InputAction.CallbackContext context)
-                {
-                    OnTrackedDeviceAction(newIndex, context);
-                };
-                m_TrackedDevices[i] = responder;
-            }
         }
 
         protected override void OnDestroy()
@@ -370,113 +637,42 @@ namespace UnityEngine.InputSystem.Plugins.UI
             UnhookActions();
         }
 
-        /// <summary>
-        /// Adds Touch UI responses based the Actions provided.
-        /// </summary>
-        /// <param name="position">A <see cref="Vector2"/> screen space value that represents the position of the touch.</param>
-        /// <param name="phase">A <see cref="PointerPhase"/> value that represents the current state of the touch event.</param>
-        /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
-        public int AddTouch(InputActionProperty position, InputActionProperty phase)
+        bool IsAnyActionEnabled()
         {
-            var id = m_RollingPointerId++;
-
-            var newResponder = new TouchResponder(id, position, phase);
-
-            var index = m_Touches.Count;
-            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
-            {
-                OnTouchAction(index, context);
-            };
-
-            m_Touches.Add(newResponder);
-
-            if (m_ActionsHooked)
-                newResponder.HookActions();
-
-            return id;
+            return (m_PointAction?.action?.enabled ?? true) &&
+                (m_LeftClickAction?.action?.enabled ?? true) &&
+                (m_RightClickAction?.action?.enabled ?? true) &&
+                (m_MiddleClickAction?.action?.enabled ?? true) &&
+                (m_MoveAction?.action?.enabled ?? true) &&
+                (m_SubmitAction?.action?.enabled ?? true) &&
+                (m_CancelAction?.action?.enabled ?? true) &&
+                (m_ScrollWheelAction?.action?.enabled ?? true) &&
+                (m_TrackedDeviceOrientationAction?.action?.enabled ?? true) &&
+                (m_TrackedDevicePositionAction?.action?.enabled ?? true) &&
+                (m_TrackedDeviceSelectAction?.action?.enabled ?? true);
         }
 
-        /// <summary>
-        /// Adds Tracked Device UI responses based the Actions provided.
-        /// </summary>
-        /// <param name="position">A <see cref="Vector3"/> unity world space position that represents the position in the world of the device.</param>
-        /// <param name="orientation">A <see cref="Quaternion"/> rotation value representing the orientation of the device.</param>
-        /// <param name="select">A <see cref="bool"/> selection value that represents whether the user wants to select objects or not.</param>
-        /// <returns>The Pointer Id that represents UI events from this Touch action set.</returns>
-        public int AddTrackedDevice(InputActionProperty position, InputActionProperty orientation, InputActionProperty select)
-        {
-            var id = m_RollingPointerId++;
-
-            var newResponder = new TrackedDeviceResponder(id, position, orientation, select);
-
-            var index = m_TrackedDevices.Count;
-            newResponder.actionCallback = delegate(InputAction.CallbackContext context)
-            {
-                OnTrackedDeviceAction(index, context);
-            };
-
-            m_TrackedDevices.Add(newResponder);
-
-            if (m_ActionsHooked)
-                newResponder.HookActions();
-
-            return id;
-        }
-
+        bool m_OwnsEnabledState;
         /// <summary>
         /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
         /// and we need a way to enable/disable inspector-set actions.
         /// </summary>
         public void EnableAllActions()
         {
-            var pointAction = m_PointAction.action;
-            pointAction?.Enable();
-
-            var leftClickAction = m_LeftClickAction.action;
-            leftClickAction?.Enable();
-
-            var rightClickAction = m_RightClickAction.action;
-            rightClickAction?.Enable();
-
-            var middleClickAction = m_MiddleClickAction.action;
-            middleClickAction?.Enable();
-
-            var moveAction = m_MoveAction.action;
-            moveAction?.Enable();
-
-            var submitAction = m_SubmitAction.action;
-            submitAction?.Enable();
-
-            var cancelAction = m_CancelAction.action;
-            cancelAction?.Enable();
-
-            var scrollAction = m_ScrollWheelAction.action;
-            scrollAction?.Enable();
-
-            for (var i = 0; i < m_Touches.Count; i++)
+            if (!IsAnyActionEnabled())
             {
-                var touch = m_Touches[i];
-
-                var positionAction = touch.position.action;
-                positionAction?.Enable();
-
-                var phaseAction = touch.phase.action;
-                if (phaseAction != null && !phaseAction.enabled)
-                    phaseAction.Enable();
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var trackedDevice = m_TrackedDevices[i];
-
-                var positionAction = trackedDevice.position.action;
-                positionAction?.Enable();
-
-                var orientationAction = trackedDevice.orientation.action;
-                orientationAction?.Enable();
-
-                var selectAction = trackedDevice.select.action;
-                selectAction?.Enable();
+                m_PointAction?.action?.Enable();
+                m_LeftClickAction?.action?.Enable();
+                m_RightClickAction?.action?.Enable();
+                m_MiddleClickAction?.action?.Enable();
+                m_MoveAction?.action?.Enable();
+                m_SubmitAction?.action?.Enable();
+                m_CancelAction?.action?.Enable();
+                m_ScrollWheelAction?.action?.Enable();
+                m_TrackedDeviceOrientationAction?.action?.Enable();
+                m_TrackedDevicePositionAction?.action?.Enable();
+                m_TrackedDeviceSelectAction?.action?.Enable();
+                m_OwnsEnabledState = true;
             }
         }
 
@@ -486,147 +682,136 @@ namespace UnityEngine.InputSystem.Plugins.UI
         /// </summary>
         public void DisableAllActions()
         {
-            var pointAction = m_PointAction.action;
-            pointAction?.Disable();
-
-            var leftClickAction = m_LeftClickAction.action;
-            leftClickAction?.Disable();
-
-            var rightClickAction = m_RightClickAction.action;
-            rightClickAction?.Disable();
-
-            var middleClickAction = m_MiddleClickAction.action;
-            middleClickAction?.Disable();
-
-            var moveAction = m_MoveAction.action;
-            moveAction?.Disable();
-
-            var submitAction = m_SubmitAction.action;
-            submitAction?.Disable();
-
-            var cancelAction = m_CancelAction.action;
-            cancelAction?.Disable();
-
-            var scrollAction = m_ScrollWheelAction.action;
-            scrollAction?.Disable();
-
-            for (var i = 0; i < m_Touches.Count; i++)
+            if (m_OwnsEnabledState)
             {
-                var touch = m_Touches[i];
-
-                var positionAction = touch.position.action;
-                positionAction?.Disable();
-
-                var phaseAction = touch.phase.action;
-                phaseAction?.Disable();
+                m_OwnsEnabledState = false;
+                m_PointAction?.action?.Disable();
+                m_LeftClickAction?.action?.Disable();
+                m_RightClickAction?.action?.Disable();
+                m_MiddleClickAction?.action?.Disable();
+                m_MoveAction?.action?.Disable();
+                m_SubmitAction?.action?.Disable();
+                m_CancelAction?.action?.Disable();
+                m_ScrollWheelAction?.action?.Disable();
+                m_TrackedDeviceOrientationAction?.action?.Disable();
+                m_TrackedDevicePositionAction?.action?.Disable();
+                m_TrackedDeviceSelectAction?.action?.Disable();
             }
+        }
 
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
+        int GetTrackedDeviceIndexForCallbackContext(InputAction.CallbackContext context)
+        {
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"XR actions should be pass-through actions, so the UI can properly distinguish multiple tracked devices. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
+            for (var i = 0; i < trackedDeviceStates.Count; i++)
             {
-                var trackedDevice = m_TrackedDevices[i];
-
-                var positionAction = trackedDevice.position.action;
-                positionAction?.Disable();
-
-                var orientationAction = trackedDevice.orientation.action;
-                orientationAction?.Disable();
-
-                var selectAction = trackedDevice.select.action;
-                if (selectAction != null)
-                    selectAction.Disable();
+                if (trackedDeviceStates[i].device == context.control.device)
+                    return i;
             }
+            trackedDeviceStates.Add(new TrackedDeviceModel(m_RollingPointerId++, context.control.device));
+            return trackedDeviceStates.Count - 1;
+        }
+
+        int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
+        {
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
+            var touchId = PointerInputModule.kMouseLeftId;
+            if (context.control.parent is TouchControl)
+                touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
+
+            for (var i = 0; i < mouseStates.Count; i++)
+            {
+                if (mouseStates[i].device == context.control.device && mouseStates[i].touchId == touchId)
+                    return i;
+            }
+            mouseStates.Add(new MouseModel(m_RollingPointerId++, context.control.device, touchId));
+            return mouseStates.Count - 1;
         }
 
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
-            if (action == m_PointAction)
+            if (action == m_PointAction?.action)
             {
-                mouseState.position = context.ReadValue<Vector2>();
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+                state.position = context.ReadValue<Vector2>();
+                mouseStates[index] = state;
             }
-            else if (action == m_ScrollWheelAction)
+            else if (action == m_ScrollWheelAction?.action)
             {
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
-                mouseState.scrollPosition = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                mouseStates[index] = state;
             }
-            else if (action == m_LeftClickAction)
+            else if (action == m_LeftClickAction?.action)
             {
-                var buttonState = mouseState.leftButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.leftButton = buttonState;
+                state.leftButton = buttonState;
+                mouseStates[index] = state;
             }
-            else if (action == m_RightClickAction)
+            else if (action == m_RightClickAction?.action)
             {
-                var buttonState = mouseState.rightButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.rightButton = buttonState;
+                state.rightButton = buttonState;
+                mouseStates[index] = state;
             }
-            else if (action == m_MiddleClickAction)
+            else if (action == m_MiddleClickAction?.action)
             {
-                var buttonState = mouseState.middleButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.middleButton = buttonState;
+                state.middleButton = buttonState;
+                mouseStates[index] = state;
             }
-            else if (action == m_MoveAction)
+            else if (action == m_MoveAction?.action)
             {
                 joystickState.move = context.ReadValue<Vector2>();
             }
-            else if (action == m_SubmitAction)
+            else if (action == m_SubmitAction?.action)
             {
                 joystickState.submitButtonDown = context.ReadValue<float>() > 0;
             }
-            else if (action == m_CancelAction)
+            else if (action == m_CancelAction?.action)
             {
                 joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }
-        }
-
-        void OnTouchAction(int touchIndex, InputAction.CallbackContext context)
-        {
-            if (touchIndex >= 0 && touchIndex < m_Touches.Count)
+            else if (action == m_TrackedDeviceOrientationAction?.action)
             {
-                var responder = m_Touches[touchIndex];
-
-                var action = context.action;
-                if (action == responder.position)
-                {
-                    responder.state.position = context.ReadValue<Vector2>();
-                }
-                if (action == responder.phase)
-                {
-                    responder.state.selectPhase = context.ReadValue<PointerPhase>();
-                }
-
-                m_Touches[touchIndex] = responder;
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.orientation = context.ReadValue<Quaternion>();
+                trackedDeviceStates[index] = state;
             }
-        }
-
-        void OnTrackedDeviceAction(int deviceIndex, InputAction.CallbackContext context)
-        {
-            if (deviceIndex >= 0 && deviceIndex < m_TrackedDevices.Count)
+            else if (action == m_TrackedDevicePositionAction?.action)
             {
-                var responder = m_TrackedDevices[deviceIndex];
-
-                var action = context.action;
-                if (action == responder.position)
-                {
-                    responder.state.position = context.ReadValue<Vector3>();
-                }
-                if (action == responder.orientation)
-                {
-                    responder.state.orientation = context.ReadValue<Quaternion>();
-                }
-                if (action == responder.select)
-                {
-                    responder.state.select = context.ReadValue<float>() > 0;
-                }
-
-                m_TrackedDevices[deviceIndex] = responder;
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.position = context.ReadValue<Vector3>();
+                trackedDeviceStates[index] = state;
+            }
+            else if (action == m_TrackedDeviceSelectAction?.action)
+            {
+                var index = GetTrackedDeviceIndexForCallbackContext(context);
+                var state = trackedDeviceStates[index];
+                state.select = context.ReadValue<float>() > 0;
+                trackedDeviceStates[index] = state;
             }
         }
 
@@ -641,31 +826,27 @@ namespace UnityEngine.InputSystem.Plugins.UI
             if (!eventSystem.isFocused)
             {
                 joystickState.OnFrameFinished();
-                mouseState.OnFrameFinished();
-
-                for (var i = 0; i < m_Touches.Count; i++)
-                    m_Touches[i].state.OnFrameFinished();
-
-                for (var i = 0; i < m_TrackedDevices.Count; i++)
-                    m_TrackedDevices[i].state.OnFrameFinished();
+                foreach (var mouseState in mouseStates)
+                    mouseState.OnFrameFinished();
+                foreach (var trackedDeviceState in trackedDeviceStates)
+                    trackedDeviceState.OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref joystickState);
-                ProcessMouse(ref mouseState);
 
-                for (var i = 0; i < m_Touches.Count; i++)
+                for (var i = 0; i < mouseStates.Count; i++)
                 {
-                    var responder = m_Touches[i];
-                    ProcessTouch(ref responder.state);
-                    m_Touches[i] = responder;
+                    var state = mouseStates[i];
+                    ProcessMouse(ref state);
+                    mouseStates[i] = state;
                 }
 
-                for (var i = 0; i < m_TrackedDevices.Count; i++)
+                for (var i = 0; i < trackedDeviceStates.Count; i++)
                 {
-                    var responder = m_TrackedDevices[i];
-                    ProcessTrackedDevice(ref responder.state);
-                    m_TrackedDevices[i] = responder;
+                    var state = trackedDeviceStates[i];
+                    ProcessTrackedDevice(ref state);
+                    trackedDeviceStates[i] = state;
                 }
             }
         }
@@ -679,75 +860,17 @@ namespace UnityEngine.InputSystem.Plugins.UI
             if (m_OnActionDelegate == null)
                 m_OnActionDelegate = OnAction;
 
-            var pointAction = m_PointAction.action;
-            if (pointAction != null)
-            {
-                pointAction.performed += m_OnActionDelegate;
-                pointAction.cancelled += m_OnActionDelegate;
-            }
-
-            var moveAction = m_MoveAction.action;
-            if (moveAction != null)
-            {
-                moveAction.performed += m_OnActionDelegate;
-                moveAction.cancelled += m_OnActionDelegate;
-            }
-
-            var leftClickAction = m_LeftClickAction.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed += m_OnActionDelegate;
-                leftClickAction.cancelled += m_OnActionDelegate;
-            }
-
-            var rightClickAction = m_RightClickAction.action;
-            if (rightClickAction != null)
-            {
-                rightClickAction.performed += m_OnActionDelegate;
-                rightClickAction.cancelled += m_OnActionDelegate;
-            }
-
-            var middleClickAction = m_MiddleClickAction.action;
-            if (middleClickAction != null)
-            {
-                middleClickAction.performed += m_OnActionDelegate;
-                middleClickAction.cancelled += m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction.action;
-            if (submitAction != null)
-            {
-                submitAction.performed += m_OnActionDelegate;
-                submitAction.cancelled += m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed += m_OnActionDelegate;
-                cancelAction.cancelled += m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed += m_OnActionDelegate;
-                scrollAction.cancelled += m_OnActionDelegate;
-            }
-
-            for (var i = 0; i < m_Touches.Count; i++)
-            {
-                var responder = m_Touches[i];
-                responder.HookActions();
-                m_Touches[i] = responder;
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.HookActions();
-                m_TrackedDevices[i] = responder;
-            }
+            SetActionCallback(m_PointAction, true);
+            SetActionCallback(m_MoveAction, true);
+            SetActionCallback(m_LeftClickAction, true);
+            SetActionCallback(m_RightClickAction, true);
+            SetActionCallback(m_MiddleClickAction, true);
+            SetActionCallback(m_SubmitAction, true);
+            SetActionCallback(m_CancelAction, true);
+            SetActionCallback(m_ScrollWheelAction, true);
+            SetActionCallback(m_TrackedDeviceOrientationAction, true);
+            SetActionCallback(m_TrackedDevicePositionAction, true);
+            SetActionCallback(m_TrackedDeviceSelectAction, true);
         }
 
         private void UnhookActions()
@@ -757,111 +880,85 @@ namespace UnityEngine.InputSystem.Plugins.UI
 
             m_ActionsHooked = false;
 
-            var pointAction = m_PointAction.action;
-            if (pointAction != null)
-            {
-                pointAction.performed -= m_OnActionDelegate;
-                pointAction.cancelled -= m_OnActionDelegate;
-            }
+            SetActionCallback(m_PointAction, false);
+            SetActionCallback(m_MoveAction, false);
+            SetActionCallback(m_LeftClickAction, false);
+            SetActionCallback(m_RightClickAction, false);
+            SetActionCallback(m_MiddleClickAction, false);
+            SetActionCallback(m_SubmitAction, false);
+            SetActionCallback(m_CancelAction, false);
+            SetActionCallback(m_ScrollWheelAction, false);
+            SetActionCallback(m_TrackedDeviceOrientationAction, false);
+            SetActionCallback(m_TrackedDevicePositionAction, false);
+            SetActionCallback(m_TrackedDeviceSelectAction, false);
+        }
 
-            var moveAction = m_MoveAction.action;
-            if (moveAction != null)
-            {
-                moveAction.performed -= m_OnActionDelegate;
-                moveAction.cancelled -= m_OnActionDelegate;
-            }
+        private void SetActionCallback(InputActionReference actionReference, bool install)
+        {
+            if (actionReference == null)
+                return;
 
-            var leftClickAction = m_LeftClickAction.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed -= m_OnActionDelegate;
-                leftClickAction.cancelled -= m_OnActionDelegate;
-            }
+            var action = actionReference.action;
+            if (action == null)
+                return;
 
-            var rightClickAction = m_RightClickAction.action;
-            if (rightClickAction != null)
+            if (install)
             {
-                rightClickAction.performed -= m_OnActionDelegate;
-                rightClickAction.cancelled -= m_OnActionDelegate;
+                action.performed += m_OnActionDelegate;
+                action.canceled += m_OnActionDelegate;
             }
-
-            var middleClickAction = m_MiddleClickAction.action;
-            if (middleClickAction != null)
+            else
             {
-                middleClickAction.performed -= m_OnActionDelegate;
-                middleClickAction.cancelled -= m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction.action;
-            if (submitAction != null)
-            {
-                submitAction.performed -= m_OnActionDelegate;
-                submitAction.cancelled -= m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed -= m_OnActionDelegate;
-                cancelAction.cancelled -= m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed += m_OnActionDelegate;
-                scrollAction.cancelled += m_OnActionDelegate;
-            }
-
-            for (var i = 0; i < m_Touches.Count; i++)
-            {
-                var responder = m_Touches[i];
-                responder.UnhookActions();
-                m_Touches[i] = responder;
-            }
-
-            for (var i = 0; i < m_TrackedDevices.Count; i++)
-            {
-                var responder = m_TrackedDevices[i];
-                responder.UnhookActions();
-                m_TrackedDevices[i] = responder;
+                action.performed -= m_OnActionDelegate;
+                action.canceled -= m_OnActionDelegate;
             }
         }
 
-        private void OnBeforeSerializeActionProperty(InputActionProperty prop, ref InputActionReference reference, ref InputAction data)
+        private InputActionReference UpdateReferenceForNewAsset(InputActionReference actionReference)
         {
-            if (prop.reference != null)
-                reference = prop.reference;
-            data = reference != null ? new InputAction() : prop.action;
+            var oldAction = actionReference?.action;
+            if (oldAction == null)
+                return null;
+
+            var oldActionMap = oldAction.actionMap;
+            Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
+
+            var newActionMap = m_ActionsAsset.FindActionMap(oldActionMap.name);
+            if (newActionMap == null)
+                return null;
+
+            var newAction = newActionMap.FindAction(oldAction.name);
+            if (newAction == null)
+                return null;
+
+            return InputActionReference.Create(newAction);
         }
 
-        private InputActionProperty OnAfterSerializeActionProperty(InputActionReference reference, InputAction data)
-        {
-            return reference != null ? new InputActionProperty(reference) : new InputActionProperty(data);
-        }
+        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
 
-        public void OnBeforeSerialize()
+        public InputActionAsset actionsAsset
         {
-            OnBeforeSerializeActionProperty(m_PointAction, ref m_PointActionReference, ref m_PointActionData);
-            OnBeforeSerializeActionProperty(m_MoveAction, ref m_MoveActionReference, ref m_MoveActionData);
-            OnBeforeSerializeActionProperty(m_SubmitAction, ref m_SubmitActionReference, ref m_SubmitActionData);
-            OnBeforeSerializeActionProperty(m_CancelAction, ref m_CancelActionReference, ref m_CancelActionData);
-            OnBeforeSerializeActionProperty(m_LeftClickAction, ref m_LeftClickActionReference, ref m_LeftClickActionData);
-            OnBeforeSerializeActionProperty(m_MiddleClickAction, ref m_MiddleClickActionReference, ref m_MiddleClickActionData);
-            OnBeforeSerializeActionProperty(m_RightClickAction, ref m_RightClickActionReference, ref m_RightClickActionData);
-            OnBeforeSerializeActionProperty(m_ScrollWheelAction, ref m_ScrollWheelActionReference, ref m_ScrollWheelActionData);
-        }
+            get => m_ActionsAsset;
+            set
+            {
+                if (value != m_ActionsAsset)
+                {
+                    var wasEnabled = IsAnyActionEnabled();
+                    DisableAllActions();
+                    m_ActionsAsset = value;
 
-        public void OnAfterDeserialize()
-        {
-            m_PointAction = OnAfterSerializeActionProperty(m_PointActionReference, m_PointActionData);
-            m_MoveAction = OnAfterSerializeActionProperty(m_MoveActionReference, m_MoveActionData);
-            m_SubmitAction = OnAfterSerializeActionProperty(m_SubmitActionReference, m_SubmitActionData);
-            m_CancelAction = OnAfterSerializeActionProperty(m_CancelActionReference, m_CancelActionData);
-            m_LeftClickAction = OnAfterSerializeActionProperty(m_LeftClickActionReference, m_LeftClickActionData);
-            m_MiddleClickAction = OnAfterSerializeActionProperty(m_MiddleClickActionReference, m_MiddleClickActionData);
-            m_RightClickAction = OnAfterSerializeActionProperty(m_RightClickActionReference, m_RightClickActionData);
-            m_ScrollWheelAction = OnAfterSerializeActionProperty(m_ScrollWheelActionReference, m_ScrollWheelActionData);
+                    point = UpdateReferenceForNewAsset(point);
+                    move = UpdateReferenceForNewAsset(move);
+                    leftClick = UpdateReferenceForNewAsset(leftClick);
+                    rightClick = UpdateReferenceForNewAsset(rightClick);
+                    middleClick = UpdateReferenceForNewAsset(middleClick);
+                    scrollWheel = UpdateReferenceForNewAsset(scrollWheel);
+                    submit = UpdateReferenceForNewAsset(submit);
+                    cancel = UpdateReferenceForNewAsset(cancel);
+                    if (wasEnabled)
+                        EnableAllActions();
+                }
+            }
         }
 
         /// <summary>
@@ -869,52 +966,30 @@ namespace UnityEngine.InputSystem.Plugins.UI
         /// </see> used as a cursor for pointing at UI elements.
         /// </summary>
 
-        private InputActionProperty m_PointAction;
-        [SerializeField, HideInInspector] private InputActionReference m_PointActionReference;
-        [SerializeField, HideInInspector] private InputAction m_PointActionData;
+        [SerializeField, HideInInspector] private InputActionReference m_PointAction;
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
         /// </see> used for sending <see cref="AxisEventData"/> events.
         /// </summary>
-        private InputActionProperty m_MoveAction;
-        [SerializeField, HideInInspector] private InputActionReference m_MoveActionReference;
-        [SerializeField, HideInInspector] private InputAction m_MoveActionData;
+        [SerializeField, HideInInspector] private InputActionReference m_MoveAction;
+        [SerializeField, HideInInspector] private InputActionReference m_SubmitAction;
+        [SerializeField, HideInInspector] private InputActionReference m_CancelAction;
+        [SerializeField, HideInInspector] private InputActionReference m_LeftClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_MiddleClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_RightClickAction;
+        [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelAction;
 
-        private InputActionProperty m_SubmitAction;
-        [SerializeField, HideInInspector] private InputActionReference m_SubmitActionReference;
-        [SerializeField, HideInInspector] private InputAction m_SubmitActionData;
-
-        private InputActionProperty m_CancelAction;
-        [SerializeField, HideInInspector] private InputActionReference m_CancelActionReference;
-        [SerializeField, HideInInspector] private InputAction m_CancelActionData;
-
-        private InputActionProperty m_LeftClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_LeftClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_LeftClickActionData = new InputAction();
-
-        private InputActionProperty m_MiddleClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_MiddleClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_MiddleClickActionData;
-
-        private InputActionProperty m_RightClickAction;
-        [SerializeField, HideInInspector] private InputActionReference m_RightClickActionReference;
-        [SerializeField, HideInInspector] private InputAction m_RightClickActionData;
-
-        private InputActionProperty m_ScrollWheelAction;
-        [SerializeField, HideInInspector] private InputActionReference m_ScrollWheelActionReference;
-        [SerializeField, HideInInspector] private InputAction m_ScrollWheelActionData;
-
-        // Hide these while we still have to figure out what to do with these.
-        [SerializeField, HideInInspector] private List<TouchResponder> m_Touches;
-        [SerializeField, HideInInspector] private List<TrackedDeviceResponder> m_TrackedDevices;
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDevicePositionAction;
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceOrientationAction;
+        [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceSelectAction;
 
         [NonSerialized] private int m_RollingPointerId;
         [NonSerialized] private bool m_ActionsHooked;
-        [NonSerialized] private bool m_ActionsEnabled;
         [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
-        [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
+        [NonSerialized] private List<TrackedDeviceModel> trackedDeviceStates = new List<TrackedDeviceModel>();
+        [NonSerialized] private List<MouseModel> mouseStates = new List<MouseModel>();
     }
 }
