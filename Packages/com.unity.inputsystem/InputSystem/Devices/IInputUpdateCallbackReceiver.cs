@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem
+namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Interface to allow custom input devices to receive callbacks when the input system is updated.
@@ -10,7 +10,6 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     public interface IInputUpdateCallbackReceiver
     {
-        ////REVIEW: omit update type arg?
-        void OnUpdate(InputUpdateType updateType);
+        void OnUpdate();
     }
 }

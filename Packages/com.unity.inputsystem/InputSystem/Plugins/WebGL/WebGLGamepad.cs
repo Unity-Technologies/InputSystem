@@ -147,6 +147,7 @@ namespace UnityEngine.InputSystem.WebGL
     ///
     /// <seealso href="https://w3c.github.io/gamepad/#remapping"/>
     [InputControlLayout(stateType = typeof(WebGLGamepadState), displayName = "WebGL Gamepad (\"standard\" mapping)")]
+    [Scripting.Preserve]
     public class WebGLGamepad : Gamepad
     {
     }

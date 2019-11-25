@@ -1,7 +1,5 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: allow to restrict state change monitors to specific updates?
@@ -24,14 +22,25 @@ namespace UnityEngine.InputSystem.LowLevel
         /// that queries input state will receive. For example, during editor updates, this will be
         /// <see cref="InputUpdateType.Editor"/> and the state buffers for the editor will be active.
         /// </remarks>
-        public static InputUpdateType currentUpdate => InputUpdate.s_LastUpdateType;
+        public static InputUpdateType currentUpdateType => InputUpdate.s_LastUpdateType;
+
+        ////FIXME: ATM this does not work for editor updates
+        /// <summary>
+        /// The number of times the current input state has been updated.
+        /// </summary>
+        public static uint updateCount => InputUpdate.s_UpdateStepCount;
 
         public static double currentTime => InputRuntime.s_Instance.currentTime + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         /// <summary>
         /// Callback that is triggered when the state of an input device changes.
         /// </summary>
-        public static event Action<InputDevice> onChange
+        /// <remarks>
+        /// The first parameter is the device whose state was changed the second parameter is the event
+        /// that triggered the change in state. Note that the latter may be <c>null</c> in case the
+        /// change was performed directly through <see cref="Change"/> rather than through an event.
+        /// </remarks>
+        public static event Action<InputDevice, InputEventPtr> onChange
         {
             add => InputSystem.s_Manager.onDeviceStateChange += value;
             remove => InputSystem.s_Manager.onDeviceStateChange -= value;
@@ -131,7 +140,9 @@ namespace UnityEngine.InputSystem.LowLevel
             InputSystem.s_Manager.AddStateChangeMonitor(control, monitor, monitorIndex);
         }
 
-        public static IInputStateChangeMonitor AddChangeMonitor(InputControl control, NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1, NotifyTimerExpiredAction timerExpiredCallback = null)
+        public static IInputStateChangeMonitor AddChangeMonitor(InputControl control,
+            NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1,
+            NotifyTimerExpiredAction timerExpiredCallback = null)
         {
             if (valueChangeCallback == null)
                 throw new ArgumentNullException(nameof(valueChangeCallback));

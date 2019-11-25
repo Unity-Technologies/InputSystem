@@ -29,10 +29,10 @@ internal class ParameterValueTests
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[1].name, Is.EqualTo("Bar"));
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[2].name, Is.EqualTo("blub"));
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[0].type, Is.EqualTo(TypeCode.Boolean));
-        Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[1].type, Is.EqualTo(TypeCode.Int32));
+        Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[1].type, Is.EqualTo(TypeCode.Int64));
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[2].type, Is.EqualTo(TypeCode.Double));
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[0].value.ToBoolean(), Is.EqualTo(true));
-        Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[1].value.ToInt32(), Is.EqualTo(123));
+        Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[1].value.ToInt64(), Is.EqualTo(123));
         Assert.That(NameAndParameters.Parse("Name(foo,Bar=123,blub=234.56)").parameters[2].value.ToDouble(), Is.EqualTo(234.56).Within(0.0001));
     }
 
@@ -70,12 +70,12 @@ internal class ParameterValueTests
     public void Utilities_CanConvertStringToPrimitiveValue()
     {
         // Int.
-        Assert.That(PrimitiveValue.FromString("123").type, Is.EqualTo(TypeCode.Int32));
-        Assert.That(PrimitiveValue.FromString("123").ToInt32(), Is.EqualTo(123));
-        Assert.That(PrimitiveValue.FromString("-123456").type, Is.EqualTo(TypeCode.Int32));
-        Assert.That(PrimitiveValue.FromString("-123456").ToInt32(), Is.EqualTo(-123456));
-        Assert.That(PrimitiveValue.FromString("0x1234ABC").type, Is.EqualTo(TypeCode.Int32));
-        Assert.That(PrimitiveValue.FromString("0x1234ABC").ToInt32(), Is.EqualTo(0x1234ABC));
+        Assert.That(PrimitiveValue.FromString("123").type, Is.EqualTo(TypeCode.Int64));
+        Assert.That(PrimitiveValue.FromString("123").ToInt64(), Is.EqualTo(123));
+        Assert.That(PrimitiveValue.FromString("-123456").type, Is.EqualTo(TypeCode.Int64));
+        Assert.That(PrimitiveValue.FromString("-123456").ToInt64(), Is.EqualTo(-123456));
+        Assert.That(PrimitiveValue.FromString("0x1234ABC").type, Is.EqualTo(TypeCode.Int64));
+        Assert.That(PrimitiveValue.FromString("0x1234ABC").ToInt64(), Is.EqualTo(0x1234ABC));
 
         // Double.
         Assert.That(PrimitiveValue.FromString("0.0").type, Is.EqualTo(TypeCode.Double));

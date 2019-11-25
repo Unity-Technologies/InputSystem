@@ -272,7 +272,7 @@ namespace UnityEngine.InputSystem.Editor
                     parser.ParseStringValue(out var propertyName);
                     parser.ParseToken(':');
 
-                    var childProperty = property.FindPropertyRelative(propertyName);
+                    var childProperty = property.FindPropertyRelative(propertyName.ToString());
                     if (childProperty == null)
                         throw new ArgumentException($"Cannot find property '{propertyName}' in {property}", nameof(property));
 
@@ -287,21 +287,21 @@ namespace UnityEngine.InputSystem.Editor
                     case SerializedPropertyType.Float:
                     {
                         parser.ParseNumber(out var num);
-                        property.floatValue = Convert.ToSingle(num);
+                        property.floatValue = (float)num.ToDouble();
                         break;
                     }
 
                     case SerializedPropertyType.String:
                     {
                         parser.ParseStringValue(out var str);
-                        property.stringValue = str;
+                        property.stringValue = str.ToString();
                         break;
                     }
 
                     case SerializedPropertyType.Boolean:
                     {
                         parser.ParseBooleanValue(out var b);
-                        property.boolValue = b;
+                        property.boolValue = b.ToBoolean();
                         break;
                     }
 
@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem.Editor
                     case SerializedPropertyType.Integer:
                     {
                         parser.ParseNumber(out var num);
-                        property.intValue = Convert.ToInt32(num);
+                        property.intValue = (int)num.ToInteger();
                         break;
                     }
 

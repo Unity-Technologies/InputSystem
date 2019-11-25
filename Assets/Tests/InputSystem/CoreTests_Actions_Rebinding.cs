@@ -12,8 +12,8 @@ internal partial class CoreTests
     public void Actions_CanApplyBindingOverridesToMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>(3)
         {
@@ -35,17 +35,24 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotApplyBindingOverridesToMap_WhenEnabled()
+    public void Actions_CanApplyBindingOverridesToMap_WhenEnabled()
     {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
         var map = new InputActionMap();
-        map.AddAction("action1", "/<keyboard>/enter").Enable();
+        var action = map.AddAction("action1", binding: "<Keyboard>/enter");
+        map.Enable();
 
-        var overrides = new List<InputBinding>
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.enterKey}));
+
+        map.ApplyBindingOverrides(new List<InputBinding>
         {
-            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
-        };
+            new InputBinding {action = "action1", overridePath = "<Gamepad>/leftTrigger"}
+        });
 
-        Assert.That(() => map.ApplyBindingOverrides(overrides), Throws.InvalidOperationException);
+        Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftTrigger}));
     }
 
     [Test]
@@ -53,8 +60,8 @@ internal partial class CoreTests
     public void Actions_CanRemoveBindingOverridesFromMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>
         {
@@ -72,21 +79,29 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CannotRemoveBindingOverridesFromMap_WhenEnabled()
+    public void Actions_CanRemoveBindingOverridesFromMap_WhenEnabled()
     {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
+        var action = map.AddAction("action1", binding: "<Keyboard>/enter");
 
         var overrides = new List<InputBinding>
         {
-            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
+            new InputBinding {action = "action1", overridePath = "<Gamepad>/leftTrigger"}
         };
 
         map.ApplyBindingOverrides(overrides);
 
-        action1.Enable();
+        map.Enable();
 
-        Assert.That(() => map.RemoveBindingOverrides(overrides), Throws.InvalidOperationException);
+        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftTrigger}));
+
+        map.RemoveBindingOverrides(overrides);
+
+        Assert.That(action.bindings[0].overridePath, Is.Null);
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.enterKey}));
     }
 
     [Test]
@@ -94,8 +109,8 @@ internal partial class CoreTests
     public void Actions_CanRemoveAllBindingOverridesFromMaps()
     {
         var map = new InputActionMap();
-        var action1 = map.AddAction("action1", "/<keyboard>/enter");
-        var action2 = map.AddAction("action2", "/<gamepad>/buttonSouth");
+        var action1 = map.AddAction("action1", binding: "/<keyboard>/enter");
+        var action2 = map.AddAction("action2", binding: "/<gamepad>/buttonSouth");
 
         var overrides = new List<InputBinding>
         {
@@ -110,25 +125,6 @@ internal partial class CoreTests
         Assert.That(action2.bindings[0].overridePath, Is.Null);
         Assert.That(action1.bindings[0].path, Is.Not.EqualTo("/gamepad/leftTrigger"));
         Assert.That(action2.bindings[0].path, Is.Not.EqualTo("/gamepad/rightTrigger"));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CannotRemoveAllBindingOverridesFromMap_WhenEnabled()
-    {
-        var map = new InputActionMap();
-        var action = map.AddAction("action1", "/<keyboard>/enter");
-
-        var overrides = new List<InputBinding>
-        {
-            new InputBinding {action = "action1", overridePath = "/gamepad/leftTrigger"}
-        };
-
-        map.ApplyBindingOverrides(overrides);
-
-        action.Enable();
-
-        Assert.That(() => map.RemoveAllBindingOverrides(), Throws.InvalidOperationException);
     }
 
     ////REVIEW: can we can this work with chained bindings and e.g. bind "Shift+W" successfully?
@@ -310,7 +306,7 @@ internal partial class CoreTests
 
         using (var rebind =
                    action.PerformInteractiveRebinding()
-                       .WithExpectedControlLayout("Stick")
+                       .WithExpectedControlType("Stick")
                        .Start())
         {
             InputSystem.QueueStateEvent(gamepad,
@@ -428,7 +424,7 @@ internal partial class CoreTests
     public void Actions_InteractiveRebinding_UsesSyntheticControlsOnlyWhenBestMatch()
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
-        action.expectedControlLayout = "Axis";
+        action.expectedControlType = "Axis";
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind = action.PerformInteractiveRebinding()
@@ -443,7 +439,7 @@ internal partial class CoreTests
         {
             // Actuate X axis on left stick. This makes both the leftStick/right button (buttons are axes)
             // a candidate as well as leftStick/x. However, leftStick/right is synthetic so X axis should
-            // win. Note that if we set expectedControlLayout to "Button", leftStick/x will get ignored
+            // win. Note that if we set expectedControlType to "Button", leftStick/x will get ignored
             // and leftStick/left will get picked.
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
             InputSystem.Update();
@@ -460,7 +456,7 @@ internal partial class CoreTests
             rebind.RemoveCandidate(gamepad.leftStick.right);
 
             // Switch to looking only for buttons. leftStick/x will no longer be a suitable pick.
-            rebind.WithExpectedControlLayout("Button");
+            rebind.WithExpectedControlType("Button");
 
             InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
             InputSystem.Update();
@@ -516,7 +512,7 @@ internal partial class CoreTests
         Assert.Fail();
     }
 
-    // InputAction.expectedControlLayout, if set, will guide the rebinding process as to which
+    // InputAction.expectedControlType, if set, will guide the rebinding process as to which
     // controls we are looking for.
     [Test]
     [Category("Actions")]
@@ -524,7 +520,7 @@ internal partial class CoreTests
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth")
         {
-            expectedControlLayout = "Button",
+            expectedControlType = "Button",
         };
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -742,7 +738,7 @@ internal partial class CoreTests
         using (var rebind =
                    action.PerformInteractiveRebinding()
                        .OnMatchWaitForAnother(1) // Wait one second for a better match.
-                       .WithExpectedControlLayout("Stick")
+                       .WithExpectedControlType("Stick")
                        .Start())
         {
             // Actuate leftStick above deadzone.
@@ -978,7 +974,7 @@ internal partial class CoreTests
             InputControl[] candidates = null;
 
             rebind
-                .WithExpectedControlLayout("Button")
+                .WithExpectedControlType("Button")
                 .OnPotentialMatch(ctx => candidates = ctx.candidates.ToArray())
                 .OnApplyBinding((operation, s) => {});
 
@@ -993,6 +989,27 @@ internal partial class CoreTests
             Press(gamepad.buttonNorth);
 
             Assert.That(candidates, Is.EquivalentTo(new[] { gamepad.buttonNorth }));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_IfDeviceHasMultipleUsages_UsagesAreAppliedToOverridePath()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        var rightHandVertical = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.SetDeviceUsage(rightHandVertical, CommonUsages.RightHand);
+        InputSystem.AddDeviceUsage(rightHandVertical, CommonUsages.Vertical);
+
+        using (var rebind = action.PerformInteractiveRebinding().Start())
+        {
+            InputSystem.QueueStateEvent(rightHandVertical, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.Update();
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>{RightHand}{Vertical}/buttonSouth"));
         }
     }
 }

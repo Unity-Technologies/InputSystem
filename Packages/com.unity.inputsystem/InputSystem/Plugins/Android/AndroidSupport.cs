@@ -34,10 +34,10 @@ namespace UnityEngine.InputSystem.Android
 
             const string kDpadHatSettings = @"
         { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clampToConstant,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
+        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
+        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
+        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
 ";
             InputSystem.RegisterLayout(@"
 {
@@ -85,8 +85,8 @@ namespace UnityEngine.InputSystem.Android
                 , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
                 , AndroidGameControllerState.kVariantGamepad));
 
-            InputSystem.RegisterControlProcessor<AndroidCompensateDirectionProcessor>();
-            InputSystem.RegisterControlProcessor<AndroidCompensateRotationProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
+            InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();
 
             // Add sensors
             InputSystem.RegisterLayout<AndroidAccelerometer>(
@@ -153,8 +153,8 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
 
-        internal static string OnFindLayoutForDevice(int deviceId, ref InputDeviceDescription description,
-            string matchedTemplate, IInputRuntime runtime)
+        internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
+            string matchedTemplate, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;

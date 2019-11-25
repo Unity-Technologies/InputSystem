@@ -1,8 +1,10 @@
-#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XInput.LowLevel
 {
@@ -76,8 +78,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [InputControl(name = "leftStick/left", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "leftStick/right", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "leftStick/y", offset = 2, format = "SHRT", parameters = "invert")]
-        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=0,invert=true")]
-        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=0,clampMax=1,invert=false")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=-1,clampMax=0,invert=true")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=0,clampMax=1,invert=false")]
         [FieldOffset(6)] public short leftStickX;
         [FieldOffset(8)] public short leftStickY;
 
@@ -86,15 +88,12 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [InputControl(name = "rightStick/left", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "rightStick/right", offset = 0, format = "SHRT", parameters = "")]
         [InputControl(name = "rightStick/y", offset = 2, format = "SHRT", parameters = "invert")]
-        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp,clampMin=-1,clampMax=0,invert=true")]
-        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp,clampMin=0,clampMax=1,invert=false")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=-1,clampMax=0,invert=true")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "SHRT", parameters = "clamp=1,clampMin=0,clampMax=1,invert=false")]
         [FieldOffset(10)] public short rightStickX;
         [FieldOffset(12)] public short rightStickY;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         public XInputControllerOSXState WithButton(Button button)
         {
@@ -106,10 +105,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit)]
     internal struct XInputControllerWirelessOSXState : IInputStateTypeInfo
     {
-        public static FourCC kFormat
-        {
-            get { return new FourCC('H', 'I', 'D'); }
-        }
+        public static FourCC kFormat => new FourCC('H', 'I', 'D');
 
         public enum Button
         {
@@ -129,21 +125,21 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "leftStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "leftStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
         [InputControl(name = "leftStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "leftStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "leftStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [InputControl(name = "leftStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "leftStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(1)] public ushort leftStickX;
         [FieldOffset(3)] public ushort leftStickY;
 
         [InputControl(name = "rightStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "rightStick/x", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1")]
+        [InputControl(name = "rightStick/left", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/right", offset = 0, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1")]
         [InputControl(name = "rightStick/y", offset = 2, format = "USHT", parameters = "invert,normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5")]
-        [InputControl(name = "rightStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0,clampMax=0.5,invert")]
-        [InputControl(name = "rightStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp,clampMin=0.5,clampMax=1,invert=false")]
+        [InputControl(name = "rightStick/up", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0,clampMax=0.5,invert")]
+        [InputControl(name = "rightStick/down", offset = 2, format = "USHT", parameters = "normalize,normalizeMin=0,normalizeMax=1,normalizeZero=0.5,clamp=1,clampMin=0.5,clampMax=1,invert=false")]
         [FieldOffset(5)] public ushort rightStickX;
         [FieldOffset(7)] public ushort rightStickY;
 
@@ -174,10 +170,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [FieldOffset(14)]
         public uint buttons;
 
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
+        public FourCC format => kFormat;
 
         public XInputControllerWirelessOSXState WithButton(Button button)
         {
@@ -202,7 +195,6 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 }
 namespace UnityEngine.InputSystem.XInput
 {
-    [InputControlLayout(stateType = typeof(XInputControllerOSXState), hideInUI = true)]
     /// <summary>
     /// A wired Xbox Gamepad connected to a macOS computer.
     /// </summary>
@@ -211,11 +203,12 @@ namespace UnityEngine.InputSystem.XInput
     /// These controllers don't work on a mac out of the box, but require a driver like https://github.com/360Controller/
     /// to work.
     /// </remarks>
+    [InputControlLayout(displayName = "Xbox Controller", stateType = typeof(XInputControllerOSXState), hideInUI = true)]
+    [Preserve]
     public class XboxGamepadMacOS : XInputController
     {
     }
 
-    [InputControlLayout(stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     /// <summary>
     /// A wireless Xbox One Gamepad connected to a macOS computer.
     /// </summary>
@@ -225,6 +218,8 @@ namespace UnityEngine.InputSystem.XInput
     /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on macOS.
     /// </remarks>
+    [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
+    [Preserve]
     public class XboxOneGampadMacOSWireless : XInputController
     {
     }

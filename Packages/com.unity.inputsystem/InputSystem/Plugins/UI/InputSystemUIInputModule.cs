@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.Controls;
 
 ////REVIEW: should each of the actions be *lists* of actions?
 
@@ -20,8 +21,475 @@ namespace UnityEngine.InputSystem.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
-    public class InputSystemUIInputModule : UIInputModule
+    public class InputSystemUIInputModule : BaseInputModule
     {
+        public override void ActivateModule()
+        {
+            base.ActivateModule();
+
+            var toSelect = eventSystem.currentSelectedGameObject;
+            if (toSelect == null)
+                toSelect = eventSystem.firstSelectedGameObject;
+
+            eventSystem.SetSelectedGameObject(toSelect, GetBaseEventData());
+        }
+
+        public override bool IsPointerOverGameObject(int pointerId)
+        {
+            foreach (var state in mouseStates)
+            {
+                if (state.touchId == pointerId)
+                    return state.pointerTarget != null;
+            }
+            return false;
+        }
+
+        private RaycastResult PerformRaycast(PointerEventData eventData)
+        {
+            if (eventData == null)
+                throw new ArgumentNullException(nameof(eventData));
+
+            eventSystem.RaycastAll(eventData, m_RaycastResultCache);
+            var result = FindFirstRaycast(m_RaycastResultCache);
+            m_RaycastResultCache.Clear();
+            return result;
+        }
+
+        /// <summary>
+        /// Takes an existing MouseModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the MouseModel.
+        /// </summary>
+        /// <param name="mouseState">The mouse state you want to forward into the UI Event System</param>
+        internal void ProcessMouse(ref MouseModel mouseState)
+        {
+            if (!mouseState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedPointerEvent();
+            eventData.Reset();
+
+            mouseState.CopyTo(eventData);
+
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            /// Left Mouse Button
+            // The left mouse button is 'dominant' and we want to also process hover and scroll events as if the occurred during the left click.
+            var buttonState = mouseState.leftButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Left;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+
+            ProcessMouseMovement(eventData);
+            ProcessMouseScroll(eventData);
+
+            mouseState.CopyFrom(eventData);
+
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.leftButton = buttonState;
+
+            /// Right Mouse Button
+            buttonState = mouseState.rightButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Right;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.rightButton = buttonState;
+
+            /// Middle Mouse Button
+            buttonState = mouseState.middleButton;
+            buttonState.CopyTo(eventData);
+            eventData.button = PointerEventData.InputButton.Middle;
+
+            ProcessMouseButton(buttonState.lastFrameDelta, eventData, buttonState.hasNativeClickCount);
+            ProcessMouseButtonDrag(eventData);
+
+            buttonState.CopyFrom(eventData);
+            mouseState.middleButton = buttonState;
+
+            mouseState.OnFrameFinished();
+        }
+
+        // if we are using a MultiplayerEventSystem, ignore any transforms
+        // not under the current MultiplayerEventSystem's root.
+        private bool PointerShouldIgnoreTransform(Transform t)
+        {
+            if (eventSystem is MultiplayerEventSystem)
+            {
+                var mes = eventSystem as MultiplayerEventSystem;
+
+                if (mes.playerRoot != null)
+                    if (!t.IsChildOf(mes.playerRoot.transform))
+                        return true;
+            }
+            return false;
+        }
+
+        private void ProcessMouseMovement(PointerEventData eventData)
+        {
+            var currentPointerTarget = eventData.pointerCurrentRaycast.gameObject;
+
+            // If we have no target or pointerEnter has been deleted,
+            // we just send exit events to anything we are tracking
+            // and then exit.
+            if (currentPointerTarget == null || eventData.pointerEnter == null)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
+
+                eventData.hovered.Clear();
+
+                if (currentPointerTarget == null)
+                {
+                    eventData.pointerEnter = null;
+                    return;
+                }
+            }
+
+            if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
+                return;
+
+            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget);
+
+            // We walk up the tree until a common root and the last entered and current entered object is found.
+            // Then send exit and enter events up to, but not including, the common root.
+            if (eventData.pointerEnter != null)
+            {
+                var t = eventData.pointerEnter.transform;
+
+                while (t != null)
+                {
+                    if (commonRoot != null && commonRoot.transform == t)
+                        break;
+
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerExitHandler);
+
+                    eventData.hovered.Remove(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+
+            eventData.pointerEnter = currentPointerTarget;
+            if (currentPointerTarget != null)
+            {
+                var t = currentPointerTarget.transform;
+
+                while (t != null && t.gameObject != commonRoot && !PointerShouldIgnoreTransform(t))
+                {
+                    ExecuteEvents.Execute(t.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+
+                    eventData.hovered.Add(t.gameObject);
+
+                    t = t.parent;
+                }
+            }
+        }
+
+        private void ProcessMouseButton(ButtonDeltaState mouseButtonChanges, PointerEventData eventData, bool hasNativeClickCount)
+        {
+            var currentOverGo = eventData.pointerCurrentRaycast.gameObject;
+
+            if (currentOverGo != null && PointerShouldIgnoreTransform(currentOverGo.transform))
+                return;
+
+            if ((mouseButtonChanges & ButtonDeltaState.Pressed) != 0)
+            {
+                eventData.eligibleForClick = true;
+                eventData.delta = Vector2.zero;
+                eventData.dragging = false;
+                eventData.pressPosition = eventData.position;
+                eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
+
+                var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
+
+                // If we have clicked something new, deselect the old thing
+                // and leave 'selection handling' up to the press event.
+                if (selectHandlerGO != eventSystem.currentSelectedGameObject)
+                    eventSystem.SetSelectedGameObject(null, eventData);
+
+                // search for the control that will receive the press.
+                // if we can't find a press handler set the press
+                // handler to be what would receive a click.
+                var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.pointerDownHandler);
+
+                // We didn't find a press handler, so we search for a click handler.
+                if (newPressed == null)
+                    newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                var time = Time.unscaledTime;
+
+                if (!hasNativeClickCount)
+                {
+                    const float clickSpeed = 0.3f;
+                    if (newPressed == eventData.lastPress && ((time - eventData.clickTime) < clickSpeed))
+                        ++eventData.clickCount;
+                    else
+                        eventData.clickCount = 1;
+                }
+
+                eventData.clickTime = time;
+
+                eventData.pointerPress = newPressed;
+                eventData.rawPointerPress = currentOverGo;
+
+                // Save the drag handler for drag events during this mouse down.
+                eventData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
+
+                if (eventData.pointerDrag != null)
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.initializePotentialDrag);
+            }
+
+            if ((mouseButtonChanges & ButtonDeltaState.Released) != 0)
+            {
+                ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                if (eventData.pointerPress == pointerUpHandler && eventData.eligibleForClick)
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerClickHandler);
+                }
+                else if (eventData.dragging && eventData.pointerDrag != null)
+                {
+                    ExecuteEvents.ExecuteHierarchy(currentOverGo, eventData, ExecuteEvents.dropHandler);
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.endDragHandler);
+                }
+
+                eventData.eligibleForClick = eventData.dragging = false;
+                eventData.pointerPress = eventData.rawPointerPress = eventData.pointerDrag = null;
+            }
+        }
+
+        private void ProcessMouseButtonDrag(PointerEventData eventData, float pixelDragThresholdMultiplier = 1.0f)
+        {
+            if (!eventData.IsPointerMoving() ||
+                Cursor.lockState == CursorLockMode.Locked ||
+                eventData.pointerDrag == null)
+                return;
+
+            if (!eventData.dragging)
+            {
+                if ((eventData.pressPosition - eventData.position).sqrMagnitude >= ((eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold) * pixelDragThresholdMultiplier))
+                {
+                    ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.beginDragHandler);
+                    eventData.dragging = true;
+                }
+            }
+
+            if (eventData.dragging)
+            {
+                // If we moved from our initial press object, process an up for that object.
+                if (eventData.pointerPress != eventData.pointerDrag)
+                {
+                    ExecuteEvents.Execute(eventData.pointerPress, eventData, ExecuteEvents.pointerUpHandler);
+
+                    eventData.eligibleForClick = false;
+                    eventData.pointerPress = null;
+                    eventData.rawPointerPress = null;
+                }
+                ExecuteEvents.Execute(eventData.pointerDrag, eventData, ExecuteEvents.dragHandler);
+            }
+        }
+
+        private void ProcessMouseScroll(PointerEventData eventData)
+        {
+            var scrollDelta = eventData.scrollDelta;
+            if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
+            {
+                var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(eventData.pointerEnter);
+                ExecuteEvents.ExecuteHierarchy(scrollHandler, eventData, ExecuteEvents.scrollHandler);
+            }
+        }
+
+        internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
+        {
+            if (!deviceState.changedThisFrame)
+                return;
+
+            var eventData = GetOrCreateCachedTrackedPointerEvent();
+            eventData.Reset();
+            deviceState.CopyTo(eventData);
+
+            eventData.button = PointerEventData.InputButton.Left;
+            eventData.pointerCurrentRaycast = PerformRaycast(eventData);
+
+            ProcessMouseButton(deviceState.selectDelta, eventData, false);
+            ProcessMouseMovement(eventData);
+            ProcessMouseButtonDrag(eventData, trackedDeviceDragThresholdMultiplier);
+
+            deviceState.CopyFrom(eventData);
+
+            deviceState.OnFrameFinished();
+        }
+
+        /// <summary>
+        /// Takes an existing JoystickModel and dispatches all relevant changes through the event system.
+        /// It also updates the internal data of the JoystickModel.
+        /// </summary>
+        /// <param name="joystickState">The joystick state you want to forward into the UI Event System</param>
+        internal void ProcessJoystick(ref JoystickModel joystickState)
+        {
+            var internalJoystickState = joystickState.internalData;
+
+            var usedSelectionChange = false;
+            if (eventSystem.currentSelectedGameObject != null)
+            {
+                var data = GetBaseEventData();
+                ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.updateSelectedHandler);
+                usedSelectionChange = data.used;
+            }
+
+            // Don't send move events if disabled in the EventSystem.
+            if (!eventSystem.sendNavigationEvents)
+                return;
+
+            var movement = joystickState.move;
+            if (!usedSelectionChange && (!Mathf.Approximately(movement.x, 0f) || !Mathf.Approximately(movement.y, 0f)))
+            {
+                var time = Time.unscaledTime;
+
+                var moveVector = joystickState.move;
+
+                var moveDirection = MoveDirection.None;
+                if (moveVector.sqrMagnitude > 0)
+                {
+                    if (Mathf.Abs(moveVector.x) > Mathf.Abs(moveVector.y))
+                        moveDirection = (moveVector.x > 0) ? MoveDirection.Right : MoveDirection.Left;
+                    else
+                        moveDirection = moveVector.y > 0 ? MoveDirection.Up : MoveDirection.Down;
+                }
+
+                if (moveDirection != internalJoystickState.lastMoveDirection)
+                {
+                    internalJoystickState.consecutiveMoveCount = 0;
+                }
+
+                if (moveDirection != MoveDirection.None)
+                {
+                    var allow = true;
+                    if (internalJoystickState.consecutiveMoveCount != 0)
+                    {
+                        if (internalJoystickState.consecutiveMoveCount > 1)
+                            allow = time > internalJoystickState.lastMoveTime + repeatRate;
+                        else
+                            allow = time > internalJoystickState.lastMoveTime + repeatDelay;
+                    }
+
+                    if (allow)
+                    {
+                        var eventData = GetOrCreateCachedAxisEvent();
+                        eventData.Reset();
+
+                        eventData.moveVector = moveVector;
+                        eventData.moveDir = moveDirection;
+
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, eventData, ExecuteEvents.moveHandler);
+                        usedSelectionChange = eventData.used;
+
+                        internalJoystickState.consecutiveMoveCount = internalJoystickState.consecutiveMoveCount + 1;
+                        internalJoystickState.lastMoveTime = time;
+                        internalJoystickState.lastMoveDirection = moveDirection;
+                    }
+                }
+                else
+                    internalJoystickState.consecutiveMoveCount = 0;
+            }
+            else
+                internalJoystickState.consecutiveMoveCount = 0;
+
+            if (!usedSelectionChange)
+            {
+                if (eventSystem.currentSelectedGameObject != null)
+                {
+                    var data = GetBaseEventData();
+                    if ((joystickState.submitButtonDelta & ButtonDeltaState.Pressed) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
+
+                    if (!data.used && (joystickState.cancelButtonDelta & ButtonDeltaState.Pressed) != 0)
+                        ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
+                }
+            }
+
+            joystickState.internalData = internalJoystickState;
+            joystickState.OnFrameFinished();
+        }
+
+        private PointerEventData GetOrCreateCachedPointerEvent()
+        {
+            var result = m_CachedPointerEvent;
+            if (result == null)
+            {
+                result = new PointerEventData(eventSystem);
+                m_CachedPointerEvent = result;
+            }
+
+            return result;
+        }
+
+        private TrackedPointerEventData GetOrCreateCachedTrackedPointerEvent()
+        {
+            var result = m_CachedTrackedPointerEventData;
+            if (result == null)
+            {
+                result = new TrackedPointerEventData(eventSystem);
+                m_CachedTrackedPointerEventData = result;
+            }
+
+            return result;
+        }
+
+        private AxisEventData GetOrCreateCachedAxisEvent()
+        {
+            var result = m_CachedAxisEvent;
+            if (result == null)
+            {
+                result = new AxisEventData(eventSystem);
+                m_CachedAxisEvent = result;
+            }
+
+            return result;
+        }
+
+        [Tooltip("The Initial delay (in seconds) between an initial move action and a repeated move action.")]
+        [SerializeField]
+        private float m_RepeatDelay = 0.5f;
+
+        [Tooltip("The speed (in seconds) that the move action repeats itself once repeating.")]
+        [SerializeField]
+        private float m_RepeatRate = 0.1f;
+
+        [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
+        // Hide this while we still have to figure out what to do with this.
+        private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
+
+        private AxisEventData m_CachedAxisEvent;
+        private PointerEventData m_CachedPointerEvent;
+        private TrackedPointerEventData m_CachedTrackedPointerEventData;
+
+        public float repeatDelay
+        {
+            get { return m_RepeatDelay; }
+            set { m_RepeatDelay = value; }
+        }
+
+        public float repeatRate
+        {
+            get { return m_RepeatRate; }
+            set { m_RepeatRate = value; }
+        }
+
+        public float trackedDeviceDragThresholdMultiplier
+        {
+            get { return m_TrackedDeviceDragThresholdMultiplier; }
+            set { m_TrackedDeviceDragThresholdMultiplier = value; }
+        }
+
         private static void SwapAction(ref InputActionReference property, InputActionReference newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
             if (property != null && actionsHooked)
@@ -40,8 +508,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
-        /// </see> used as a cursor for pointing at UI elements.
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
+        /// used as a cursor for pointing at UI elements.
         /// </summary>
         public InputActionReference point
         {
@@ -50,8 +518,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector.
-        /// </see> used for sending <see cref="AxisEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> 2D motion vector
+        /// used for sending <see cref="AxisEventData"/> events.
         /// </summary>
         public InputActionReference move
         {
@@ -60,8 +528,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"> scroll wheel value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> scroll wheel value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference scrollWheel
         {
@@ -70,8 +538,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference leftClick
         {
@@ -80,8 +548,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference middleClick
         {
@@ -90,8 +558,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool"</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference rightClick
         {
@@ -100,8 +568,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
         public InputActionReference submit
         {
@@ -110,15 +578,14 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
         public InputActionReference cancel
         {
             get => m_CancelAction;
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
-
 
         public InputActionReference trackedDeviceOrientation
         {
@@ -144,7 +611,6 @@ namespace UnityEngine.InputSystem.UI
             base.Awake();
 
             m_RollingPointerId = 0;
-            mouseState = new MouseModel(m_RollingPointerId++);
             joystickState.Reset();
         }
 
@@ -235,7 +701,7 @@ namespace UnityEngine.InputSystem.UI
 
         int GetTrackedDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
-            Debug.Assert(context.action.passThrough, $"XR actions should have the passThrough flag enabled, so the UI can properly distinguish multiple tracked devices. Please set passThrough on the '{context.action.name}' action.");
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"XR actions should be pass-through actions, so the UI can properly distinguish multiple tracked devices. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
             for (var i = 0; i < trackedDeviceStates.Count; i++)
             {
                 if (trackedDeviceStates[i].device == context.control.device)
@@ -245,40 +711,74 @@ namespace UnityEngine.InputSystem.UI
             return trackedDeviceStates.Count - 1;
         }
 
+        int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
+        {
+            Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
+            var touchId = PointerInputModule.kMouseLeftId;
+            if (context.control.parent is TouchControl)
+                touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
+
+            for (var i = 0; i < mouseStates.Count; i++)
+            {
+                if (mouseStates[i].device == context.control.device && mouseStates[i].touchId == touchId)
+                    return i;
+            }
+            mouseStates.Add(new MouseModel(m_RollingPointerId++, context.control.device, touchId));
+            return mouseStates.Count - 1;
+        }
+
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
             if (action == m_PointAction?.action)
             {
-                mouseState.position = context.ReadValue<Vector2>();
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+                state.position = context.ReadValue<Vector2>();
+                mouseStates[index] = state;
             }
             else if (action == m_ScrollWheelAction?.action)
             {
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
                 // The old input system reported scroll deltas in lines, we report pixels.
                 // Need to scale as the UI system expects lines.
                 const float kPixelPerLine = 20;
-                mouseState.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                mouseStates[index] = state;
             }
             else if (action == m_LeftClickAction?.action)
             {
-                var buttonState = mouseState.leftButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.leftButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.leftButton = buttonState;
+                state.leftButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_RightClickAction?.action)
             {
-                var buttonState = mouseState.rightButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.rightButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.rightButton = buttonState;
+                state.rightButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_MiddleClickAction?.action)
             {
-                var buttonState = mouseState.middleButton;
+                var index = GetMouseDeviceIndexForCallbackContext(context);
+                var state = mouseStates[index];
+
+                var buttonState = state.middleButton;
                 buttonState.isDown = context.ReadValue<float>() > 0;
                 buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                mouseState.middleButton = buttonState;
+                state.middleButton = buttonState;
+                mouseStates[index] = state;
             }
             else if (action == m_MoveAction?.action)
             {
@@ -326,14 +826,21 @@ namespace UnityEngine.InputSystem.UI
             if (!eventSystem.isFocused)
             {
                 joystickState.OnFrameFinished();
-                mouseState.OnFrameFinished();
+                foreach (var mouseState in mouseStates)
+                    mouseState.OnFrameFinished();
                 foreach (var trackedDeviceState in trackedDeviceStates)
                     trackedDeviceState.OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref joystickState);
-                ProcessMouse(ref mouseState);
+
+                for (var i = 0; i < mouseStates.Count; i++)
+                {
+                    var state = mouseStates[i];
+                    ProcessMouse(ref state);
+                    mouseStates[i] = state;
+                }
 
                 for (var i = 0; i < trackedDeviceStates.Count; i++)
                 {
@@ -353,82 +860,17 @@ namespace UnityEngine.InputSystem.UI
             if (m_OnActionDelegate == null)
                 m_OnActionDelegate = OnAction;
 
-            var pointAction = m_PointAction?.action;
-            if (pointAction != null)
-            {
-                pointAction.performed += m_OnActionDelegate;
-                pointAction.canceled += m_OnActionDelegate;
-            }
-
-            var moveAction = m_MoveAction?.action;
-            if (moveAction != null)
-            {
-                moveAction.performed += m_OnActionDelegate;
-                moveAction.canceled += m_OnActionDelegate;
-            }
-
-            var leftClickAction = m_LeftClickAction?.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed += m_OnActionDelegate;
-                leftClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var rightClickAction = m_RightClickAction?.action;
-            if (rightClickAction != null)
-            {
-                rightClickAction.performed += m_OnActionDelegate;
-                rightClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var middleClickAction = m_MiddleClickAction?.action;
-            if (middleClickAction != null)
-            {
-                middleClickAction.performed += m_OnActionDelegate;
-                middleClickAction.canceled += m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction?.action;
-            if (submitAction != null)
-            {
-                submitAction.performed += m_OnActionDelegate;
-                submitAction.canceled += m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction?.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed += m_OnActionDelegate;
-                cancelAction.canceled += m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction?.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed += m_OnActionDelegate;
-                scrollAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDeviceOrientationAction.performed += m_OnActionDelegate;
-                trackedDeviceOrientationAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDevicePositionAction.performed += m_OnActionDelegate;
-                trackedDevicePositionAction.canceled += m_OnActionDelegate;
-            }
-
-            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
-            if (trackedDeviceSelectAction != null)
-            {
-                trackedDeviceSelectAction.performed += m_OnActionDelegate;
-                trackedDeviceSelectAction.canceled += m_OnActionDelegate;
-            }
+            SetActionCallback(m_PointAction, true);
+            SetActionCallback(m_MoveAction, true);
+            SetActionCallback(m_LeftClickAction, true);
+            SetActionCallback(m_RightClickAction, true);
+            SetActionCallback(m_MiddleClickAction, true);
+            SetActionCallback(m_SubmitAction, true);
+            SetActionCallback(m_CancelAction, true);
+            SetActionCallback(m_ScrollWheelAction, true);
+            SetActionCallback(m_TrackedDeviceOrientationAction, true);
+            SetActionCallback(m_TrackedDevicePositionAction, true);
+            SetActionCallback(m_TrackedDeviceSelectAction, true);
         }
 
         private void UnhookActions()
@@ -438,90 +880,58 @@ namespace UnityEngine.InputSystem.UI
 
             m_ActionsHooked = false;
 
-            var pointAction = m_PointAction?.action;
-            if (pointAction != null)
-            {
-                pointAction.performed -= m_OnActionDelegate;
-                pointAction.canceled -= m_OnActionDelegate;
-            }
+            SetActionCallback(m_PointAction, false);
+            SetActionCallback(m_MoveAction, false);
+            SetActionCallback(m_LeftClickAction, false);
+            SetActionCallback(m_RightClickAction, false);
+            SetActionCallback(m_MiddleClickAction, false);
+            SetActionCallback(m_SubmitAction, false);
+            SetActionCallback(m_CancelAction, false);
+            SetActionCallback(m_ScrollWheelAction, false);
+            SetActionCallback(m_TrackedDeviceOrientationAction, false);
+            SetActionCallback(m_TrackedDevicePositionAction, false);
+            SetActionCallback(m_TrackedDeviceSelectAction, false);
+        }
 
-            var moveAction = m_MoveAction?.action;
-            if (moveAction != null)
-            {
-                moveAction.performed -= m_OnActionDelegate;
-                moveAction.canceled -= m_OnActionDelegate;
-            }
+        private void SetActionCallback(InputActionReference actionReference, bool install)
+        {
+            if (actionReference == null)
+                return;
 
-            var leftClickAction = m_LeftClickAction?.action;
-            if (leftClickAction != null)
-            {
-                leftClickAction.performed -= m_OnActionDelegate;
-                leftClickAction.canceled -= m_OnActionDelegate;
-            }
+            var action = actionReference.action;
+            if (action == null)
+                return;
 
-            var rightClickAction = m_RightClickAction?.action;
-            if (rightClickAction != null)
+            if (install)
             {
-                rightClickAction.performed -= m_OnActionDelegate;
-                rightClickAction.canceled -= m_OnActionDelegate;
+                action.performed += m_OnActionDelegate;
+                action.canceled += m_OnActionDelegate;
             }
-
-            var middleClickAction = m_MiddleClickAction?.action;
-            if (middleClickAction != null)
+            else
             {
-                middleClickAction.performed -= m_OnActionDelegate;
-                middleClickAction.canceled -= m_OnActionDelegate;
-            }
-
-            var submitAction = m_SubmitAction?.action;
-            if (submitAction != null)
-            {
-                submitAction.performed -= m_OnActionDelegate;
-                submitAction.canceled -= m_OnActionDelegate;
-            }
-
-            var cancelAction = m_CancelAction?.action;
-            if (cancelAction != null)
-            {
-                cancelAction.performed -= m_OnActionDelegate;
-                cancelAction.canceled -= m_OnActionDelegate;
-            }
-
-            var scrollAction = m_ScrollWheelAction?.action;
-            if (scrollAction != null)
-            {
-                scrollAction.performed -= m_OnActionDelegate;
-                scrollAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDeviceOrientationAction = m_TrackedDeviceOrientationAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDeviceOrientationAction.performed -= m_OnActionDelegate;
-                trackedDeviceOrientationAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDevicePositionAction = m_TrackedDevicePositionAction?.action;
-            if (trackedDeviceOrientationAction != null)
-            {
-                trackedDevicePositionAction.performed -= m_OnActionDelegate;
-                trackedDevicePositionAction.canceled -= m_OnActionDelegate;
-            }
-
-            var trackedDeviceSelectAction = m_TrackedDeviceSelectAction?.action;
-            if (trackedDeviceSelectAction != null)
-            {
-                trackedDeviceSelectAction.performed -= m_OnActionDelegate;
-                trackedDeviceSelectAction.canceled -= m_OnActionDelegate;
+                action.performed -= m_OnActionDelegate;
+                action.canceled -= m_OnActionDelegate;
             }
         }
 
         private InputActionReference UpdateReferenceForNewAsset(InputActionReference actionReference)
         {
-            if (actionReference?.action == null)
+            var oldAction = actionReference?.action;
+            if (oldAction == null)
                 return null;
 
-            return InputActionReference.Create(m_ActionsAsset.FindAction(actionReference.action.name));
+            var oldActionMap = oldAction.actionMap;
+            Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
+
+            var newActionMap = m_ActionsAsset.FindActionMap(oldActionMap.name);
+            if (newActionMap == null)
+                return null;
+
+            var newAction = newActionMap.FindAction(oldAction.name);
+            if (newAction == null)
+                return null;
+
+            return InputActionReference.Create(newAction);
         }
 
         [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
@@ -578,8 +988,8 @@ namespace UnityEngine.InputSystem.UI
         [NonSerialized] private bool m_ActionsHooked;
         [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
-        [NonSerialized] private MouseModel mouseState;
         [NonSerialized] private JoystickModel joystickState;
         [NonSerialized] private List<TrackedDeviceModel> trackedDeviceStates = new List<TrackedDeviceModel>();
+        [NonSerialized] private List<MouseModel> mouseStates = new List<MouseModel>();
     }
 }

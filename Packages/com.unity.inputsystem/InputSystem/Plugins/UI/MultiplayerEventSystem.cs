@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.UI
     /// each with it's own selection.
     /// </summary>
     /// <remarks>
-    /// You can use the `playerRoot` property on MultiPlayerEventSystem to specify a part of the hierarchy belonging to the current player.
+    /// You can use the <see cref="playerRoot"/> property to specify a part of the hierarchy belonging to the current player.
     /// Mouse selection will ignore any game objects not within this hierarchy. For gamepad/keyboard selection, you need to make sure that
     /// the navigation links stay within the player's hierarchy.
     /// </remarks>
@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.UI
 
         protected override void Update()
         {
-            EventSystem originalCurrent = EventSystem.current;
+            var originalCurrent = current;
             current = this; // in order to avoid reimplementing half of the EventSystem class, just temporarily assign this EventSystem to be the globally current one
             try
             {

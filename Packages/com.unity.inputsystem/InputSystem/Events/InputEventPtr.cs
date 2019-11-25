@@ -7,12 +7,12 @@ namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
     /// Pointer to an <see cref="InputEvent"/>. Makes it easier to work with InputEvents and hides
-    /// the unsafe operations necessary to work with events.
+    /// the unsafe operations necessary to work with them.
     /// </summary>
     /// <remarks>
     /// Note that event pointers generally refer to event buffers that are continually reused. This means
     /// that event pointers should not be held on to. Instead, to hold onto event data, manually copy
-    /// an event to a buffer using <see cref="CopyTo"/>.
+    /// an event to a buffer.
     /// </remarks>
     public unsafe struct InputEventPtr : IEquatable<InputEventPtr>
     {
@@ -22,13 +22,25 @@ namespace UnityEngine.InputSystem.LowLevel
         // a pointer to a specific type of event.
         private readonly InputEvent* m_EventPtr;
 
+        /// <summary>
+        /// Initialize the pointer to refer to the given event.
+        /// </summary>
+        /// <param name="eventPtr">Pointer to an event. Can be <c>null</c>.</param>
         public InputEventPtr(InputEvent* eventPtr)
         {
             m_EventPtr = eventPtr;
         }
 
+        /// <summary>
+        /// Whether the pointer is not <c>null</c>.
+        /// </summary>
+        /// <value>True if the struct refers to an event.</value>
         public bool valid => m_EventPtr != null;
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
         public bool handled
         {
             get
@@ -121,6 +133,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public InputEvent* data => m_EventPtr;
 
+        // The stateFormat, stateSizeInBytes, and stateOffset properties are very
+        // useful for debugging.
+
         internal FourCC stateFormat
         {
             get
@@ -145,14 +160,26 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        internal uint stateOffset
+        {
+            get
+            {
+                if (IsA<DeltaStateEvent>())
+                    return DeltaStateEvent.From(this)->stateOffset;
+                throw new InvalidOperationException("Event must be a DeltaStateEvent but is " + this);
+            }
+        }
+
         public bool IsA<TOtherEvent>()
             where TOtherEvent : struct, IInputEventTypeInfo
         {
             if (m_EventPtr == null)
                 return false;
 
-            var otherEventTypeCode = new TOtherEvent().typeStatic;
-            return m_EventPtr->type == otherEventTypeCode;
+            // NOTE: Important to say `default` instead of `new TOtherEvent()` here. The latter will result in a call to
+            //       `Activator.CreateInstance` on Mono and thus allocate GC memory.
+            TOtherEvent otherEvent = default;
+            return m_EventPtr->type == otherEvent.typeStatic;
         }
 
         // NOTE: It is your responsibility to know *if* there actually another event following this one in memory.
@@ -218,6 +245,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return eventPtr.data;
         }
 
+        // Make annoying Microsoft code analyzer happy.
         public static InputEvent* FromInputEventPtr(InputEventPtr eventPtr)
         {
             return eventPtr.data;

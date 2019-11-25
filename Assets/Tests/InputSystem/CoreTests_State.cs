@@ -6,14 +6,13 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
-using Property = NUnit.Framework.PropertyAttribute;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -23,10 +22,61 @@ partial class CoreTests
 {
     [Test]
     [Category("State")]
+    public void State_CanGetCurrentUpdateType()
+    {
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(default(InputUpdateType)));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Fixed));
+
+        InputSystem.Update();
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Manual));
+
+        #if UNITY_EDITOR
+        runtime.onShouldRunUpdate = _ => true;
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        #endif
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_CanGetUpdateCount()
+    {
+        Assert.That(InputState.updateCount, Is.Zero);
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+
+        InputSystem.Update();
+        Assert.That(InputState.updateCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
+    [Ignore("TODO")]
+    public void TODO_State_CanGetUpdateCount_ForEditorUpdates()
+    {
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(InputState.updateCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanComputeStateLayoutFromStateStructure()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var gamepad = (Gamepad)setup.Finish();
+        var gamepad = InputDevice.Build<Gamepad>();
 
         Assert.That(gamepad.stateBlock.sizeInBits, Is.EqualTo(UnsafeUtility.SizeOf<GamepadState>() * 8));
         Assert.That(gamepad.leftStick.stateBlock.byteOffset,
@@ -40,9 +90,9 @@ partial class CoreTests
     public void State_CanComputeStateLayoutForNestedStateStructures()
     {
         InputSystem.RegisterLayout<CustomDevice>();
-        var setup = new InputDeviceBuilder("CustomDevice");
-        var axis2 = setup.GetControl("axis2");
-        setup.Finish();
+
+        var device = InputDevice.Build<CustomDevice>();
+        var axis2 = device.GetChildControl("axis2");
 
         var nestedOffset = Marshal.OffsetOf(typeof(CustomDeviceState), "nested").ToInt32();
         var axis2Offset = nestedOffset + Marshal.OffsetOf(typeof(CustomNestedDeviceState), "axis2").ToInt32();
@@ -54,9 +104,8 @@ partial class CoreTests
     [Category("State")]
     public void State_CanComputeStateLayoutForMultiByteBitfieldWithFixedOffset()
     {
-        var setup = new InputDeviceBuilder("Keyboard");
-        var downArrow = setup.GetControl("DownArrow");
-        var keyboard = setup.Finish();
+        var keyboard = InputDevice.Build<Keyboard>();
+        var downArrow = keyboard.GetChildControl("DownArrow");
 
         Assert.That(downArrow.stateBlock.bitOffset, Is.EqualTo((int)Key.DownArrow));
         Assert.That(downArrow.stateBlock.byteOffset, Is.EqualTo(0));
@@ -67,8 +116,7 @@ partial class CoreTests
     [Category("State")]
     public void State_BeforeAddingDevice_OffsetsInStateLayoutsAreRelativeToRoot()
     {
-        var setup = new InputDeviceBuilder("Gamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>();
 
         var leftStickOffset = Marshal.OffsetOf(typeof(GamepadState), "leftStick").ToInt32();
         var leftStickXOffset = leftStickOffset;
@@ -198,10 +246,9 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(jsonLayout);
 
-        var setup = new InputDeviceBuilder("CustomGamepad");
-        Assert.That(setup.GetControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
+        var device = InputDevice.Build<Gamepad>("CustomGamepad");
 
-        var device = (Gamepad)setup.Finish();
+        Assert.That(device.GetChildControl("buttonSouth").stateBlock.byteOffset, Is.EqualTo(800));
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(801 * 8)); // Button bitfield adds one byte.
     }
 
@@ -259,8 +306,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(jsonLayout);
 
-        var setup = new InputDeviceBuilder("CustomGamepad");
-        var device = (Gamepad)setup.Finish();
+        var device = InputDevice.Build<Gamepad>("CustomGamepad");
 
         Assert.That(device.rightTrigger.stateBlock.format, Is.EqualTo(InputStateBlock.FormatShort));
     }
@@ -288,11 +334,9 @@ partial class CoreTests
         ";
 
         InputSystem.RegisterLayout(json);
-        var setup = new InputDeviceBuilder("MyDevice");
+        var device = InputDevice.Build<InputDevice>("MyDevice");
 
-        Assert.That(setup.GetControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
-
-        var device = setup.Finish();
+        Assert.That(device.GetChildControl("controlWithAutomaticOffset").stateBlock.byteOffset, Is.EqualTo(14));
         Assert.That(device.stateBlock.sizeInBits, Is.EqualTo(15 * 8));
     }
 
@@ -388,7 +432,7 @@ partial class CoreTests
     {
         // Turn buttonSouth into float and move to left/x offset (so we can use
         // GamepadState to set it).
-        var json = @"
+        const string json = @"
             {
                 ""name"" : ""CustomGamepad"",
                 ""extend"" : ""Gamepad"",
@@ -422,22 +466,18 @@ partial class CoreTests
         runtime.onShouldRunUpdate = _ => true;
 
         var receivedUpdate = false;
-        InputUpdateType? receivedUpdateType = null;
         InputSystem.onBeforeUpdate +=
-            type =>
+            () =>
         {
             Assert.That(receivedUpdate, Is.False);
             receivedUpdate = true;
-            receivedUpdateType = type;
         };
 
         InputSystem.Update();
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Dynamic));
 
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Before render. Disabled by default. Add a device that needs before-render updates
         // so that the update gets enabled.
@@ -453,17 +493,14 @@ partial class CoreTests
         InputSystem.Update(InputUpdateType.BeforeRender);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.BeforeRender));
 
 #if UNITY_EDITOR
         receivedUpdate = false;
-        receivedUpdateType = null;
 
         // Editor.
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(receivedUpdate, Is.True);
-        Assert.That(receivedUpdateType, Is.EqualTo(InputUpdateType.Editor));
 #endif
     }
 
@@ -474,8 +511,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var monitorFired = false;
@@ -500,7 +535,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.5).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -521,7 +556,7 @@ partial class CoreTests
         Assert.That(monitorFired, Is.True);
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.7).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         monitorFired = false;
         receivedControl = null;
@@ -543,7 +578,7 @@ partial class CoreTests
         ////REVIEW: do we want to be able to detect the child control that actually changed? could be multiple, though
         Assert.That(receivedControl, Is.SameAs(gamepad.leftStick));
         Assert.That(receivedTime.Value, Is.EqualTo(0.9).Within(0.000001));
-        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.id));
+        Assert.That(receivedEventPtr.Value.deviceId, Is.EqualTo(gamepad.deviceId));
 
         // Remove state monitor and change leftStick again.
         InputState.RemoveChangeMonitor(gamepad.leftStick, monitor);
@@ -564,7 +599,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputSystem.settings.timesliceEvents = false;
         InputEditorUserSettings.lockInputToGameView = false;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -617,6 +651,7 @@ partial class CoreTests
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
+    [Preserve]
     private class TestDeviceWithMultiBitControl : InputDevice
     {
     }
@@ -829,6 +864,38 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_StateChangeMonitorTimeout_CanBeAddedFromTimeoutCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var timeoutCount = 0;
+
+        IInputStateChangeMonitor monitor = null;
+        monitor = InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, time, eventPtr, monitorIndex) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                ++timeoutCount;
+                InputState.AddChangeMonitorTimeout(control, monitor, time + 1.5);
+            });
+
+        InputState.AddChangeMonitorTimeout(gamepad.buttonSouth, monitor, 1.5);
+
+        // Trigger first timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(1));
+
+        // Trigger second timeout.
+        runtime.currentTime += 2;
+        InputSystem.Update();
+
+        Assert.That(timeoutCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    [Category("State")]
     public void State_StateChangeMonitor_CanBeAddedFromMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -880,6 +947,25 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    public void State_RemovingMonitorRemovesTimeouts()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var monitor = InputState.AddChangeMonitor(gamepad.buttonWest,
+            (c, d, e, m) => {},
+            timerExpiredCallback: (control, time, monitorIndex, timerIndex) =>
+            {
+                Assert.Fail("Should not reach here");
+            });
+        InputState.AddChangeMonitorTimeout(gamepad.buttonWest, monitor, 2);
+        InputState.RemoveChangeMonitor(gamepad.buttonWest, monitor);
+
+        runtime.currentTime = 4;
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("State")]
     public void State_CanThrowExceptionFromStateChangeMonitorCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -900,7 +986,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.onEvent += eventPtr => Assert.Fail("No event should be triggered");
+        InputSystem.onEvent += (e, d) => Assert.Fail("No event should be triggered");
 
         InputState.Change(gamepad, new GamepadState {leftTrigger = 0.123f});
 
@@ -1004,6 +1090,9 @@ partial class CoreTests
             StateEvent.GetEventSizeWithPayload<GamepadState>() * 2 +
             StateEvent.GetEventSizeWithPayload<KeyboardState>();
 
+        // QueueEvent aligns to 4-byte boundaries.
+        eventByteCount = eventByteCount.AlignToMultipleOf(4);
+
         Assert.That(metrics.maxNumDevices, Is.EqualTo(3));
         Assert.That(metrics.maxStateSizeInBytes, Is.EqualTo(kDoubleBufferCount * sizePerBuffer + sizeOfSingleBuffer * 2));
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
@@ -1068,8 +1157,6 @@ partial class CoreTests
     [Category("State")]
     public void State_CanRecordHistory()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
 
@@ -1350,8 +1437,6 @@ partial class CoreTests
     [Category("State")]
     public unsafe void State_CanCopyRecordedHistory_FromOneHistoryToAnother()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history1 = new InputStateHistory<float>(gamepad.leftTrigger))
         using (var history2 = new InputStateHistory<float>())

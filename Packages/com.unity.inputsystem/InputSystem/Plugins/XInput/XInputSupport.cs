@@ -19,12 +19,6 @@ namespace UnityEngine.InputSystem.XInput
             // Base layout for Xbox-style gamepad.
             InputSystem.RegisterLayout<XInputController>();
 
-#if UNITY_EDITOR || UNITY_XBOXONE
-            InputSystem.RegisterLayout<XboxOneGamepad>(
-                matches: new InputDeviceMatcher()
-                    .WithDeviceClass("XboxOneGamepad")
-                    .WithInterface("Xbox"));
-#endif
             ////FIXME: layouts should always be available in the editor (mac/win/linux)
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(

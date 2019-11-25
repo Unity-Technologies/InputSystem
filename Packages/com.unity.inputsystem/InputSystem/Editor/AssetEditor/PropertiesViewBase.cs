@@ -22,18 +22,26 @@ namespace UnityEngine.InputSystem.Editor
             m_ProcessorsProperty = bindingOrAction.FindPropertyRelative("m_Processors");
 
             m_InteractionsList = new InteractionsListView(m_InteractionsProperty, OnInteractionsModified, null);
-            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
+            UpdateProcessors(expectedControlLayout);
 
             m_OnChange = onChange;
             m_GeneralFoldoutLabel = EditorGUIUtility.TrTextContent(label);
+        }
+
+        protected void UpdateProcessors(string expectedControlLayout)
+        {
+            m_ProcessorsList = new ProcessorsListView(m_ProcessorsProperty, OnProcessorsModified, expectedControlLayout);
         }
 
         public void OnGUI()
         {
             EditorGUILayout.BeginVertical();
             DrawGeneralGroup();
-            EditorGUILayout.Space();
-            DrawInteractionsGroup();
+            if (!m_IsPartOfComposite)
+            {
+                EditorGUILayout.Space();
+                DrawInteractionsGroup();
+            }
             EditorGUILayout.Space();
             DrawProcessorsGroup();
             GUILayout.FlexibleSpace();
@@ -104,11 +112,12 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_GeneralFoldout = true;
         private bool m_InteractionsFoldout = true;
         private bool m_ProcessorsFoldout = true;
+        protected bool m_IsPartOfComposite;
 
         private readonly Action<FourCC> m_OnChange;
 
         private readonly InteractionsListView m_InteractionsList;
-        private readonly ProcessorsListView m_ProcessorsList;
+        private ProcessorsListView m_ProcessorsList;
 
         private readonly SerializedProperty m_InteractionsProperty;
         private readonly SerializedProperty m_ProcessorsProperty;

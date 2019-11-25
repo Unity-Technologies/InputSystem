@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>
+    [Scripting.Preserve]
     public class SlowTapInteraction : IInputInteraction
     {
         /// <summary>
@@ -47,7 +48,7 @@ namespace UnityEngine.InputSystem.Interactions
             if (context.isStarted && !context.ControlIsActuated(pressPointOrDefault))
             {
                 if (context.time - m_SlowTapStartTime >= durationOrDefault)
-                    context.PerformedAndGoBackToWaiting();
+                    context.Performed();
                 else
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
                     context.Canceled();

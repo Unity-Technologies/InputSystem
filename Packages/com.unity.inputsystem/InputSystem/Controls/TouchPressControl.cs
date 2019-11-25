@@ -8,18 +8,29 @@ namespace UnityEngine.InputSystem.Controls
     /// <summary>
     /// A button that reads its pressed state from <see cref="TouchControl.phase"/>.
     /// </summary>
+    /// <remarks>
+    /// This control is used by <see cref="TouchControl"/> to link <see cref="TouchControl.press"/>
+    /// to <see cref="TouchControl.phase"/>. It will return 1 as long as the value of
+    /// phase is <see cref="TouchPhase.Began"/>, <see cref="TouchPhase.Stationary"/>, or
+    /// <see cref="TouchPhase.Moved"/>, i.e. as long as the touch is in progress. For
+    /// all other phases, it will return 0.
+    /// </remarks>
+    /// <seealso cref="TouchControl"/>
     [InputControlLayout(hideInUI = true)]
+    [Scripting.Preserve]
     public class TouchPressControl : ButtonControl
     {
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        /// <inheritdoc />
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             if (!stateBlock.format.IsIntegerFormat())
                 throw new NotSupportedException(
                     $"Non-integer format '{stateBlock.format}' is not supported for TouchButtonControl '{this}'");
         }
 
+        /// <inheritdoc />
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;

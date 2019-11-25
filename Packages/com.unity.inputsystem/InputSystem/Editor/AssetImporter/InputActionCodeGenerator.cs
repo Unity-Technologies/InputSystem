@@ -1,9 +1,7 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Linq;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
@@ -16,8 +14,6 @@ using UnityEditor;
 ////TODO: allow having an unnamed or default-named action set which spills actions directly into the toplevel wrapper
 
 ////TODO: add cleanup for ActionEvents
-
-////TODO: nuke Clone()
 
 ////TODO: protect generated wrapper against modifications made to asset
 
@@ -41,10 +37,10 @@ namespace UnityEngine.InputSystem.Editor
             public string sourceAssetPath { get; set; }
         }
 
-        public static string GenerateWrapperCode(InputActionAsset asset, Options options = new Options())
+        public static string GenerateWrapperCode(InputActionAsset asset, Options options = default)
         {
             if (asset == null)
-                throw new System.ArgumentNullException(nameof(asset));
+                throw new ArgumentNullException(nameof(asset));
 
             if (string.IsNullOrEmpty(options.sourceAssetPath))
                 options.sourceAssetPath = AssetDatabase.GetAssetPath(asset);
@@ -73,7 +69,6 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using System;");
             writer.WriteLine("using System.Collections;");
             writer.WriteLine("using System.Collections.Generic;");
-            writer.WriteLine("using UnityEngine;");
             writer.WriteLine("using UnityEngine.InputSystem;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
@@ -87,34 +82,34 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Begin class.
-            writer.WriteLine($"public class {options.className} : IInputActionCollection");
+            writer.WriteLine($"public class @{options.className} : IInputActionCollection, IDisposable");
             writer.BeginBlock();
 
             writer.WriteLine($"private InputActionAsset asset;");
 
             // Default constructor.
-            writer.WriteLine($"public {options.className}()");
+            writer.WriteLine($"public @{options.className}()");
             writer.BeginBlock();
             writer.WriteLine($"asset = InputActionAsset.FromJson(@\"{asset.ToJson().Replace("\"", "\"\"")}\");");
 
             var maps = asset.actionMaps;
             var schemes = asset.controlSchemes;
-            foreach (var set in maps)
+            foreach (var map in maps)
             {
-                var setName = CSharpCodeHelpers.MakeIdentifier(set.name);
-                writer.WriteLine($"// {set.name}");
-                writer.WriteLine($"m_{setName} = asset.GetActionMap(\"{set.name}\");");
+                var mapName = CSharpCodeHelpers.MakeIdentifier(map.name);
+                writer.WriteLine($"// {map.name}");
+                writer.WriteLine($"m_{mapName} = asset.FindActionMap(\"{map.name}\", throwIfNotFound: true);");
 
-                foreach (var action in set.actions)
+                foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"m_{setName}_{actionName} = m_{setName}.GetAction(\"{action.name}\");");
+                    writer.WriteLine($"m_{mapName}_{actionName} = m_{mapName}.FindAction(\"{action.name}\", throwIfNotFound: true);");
                 }
             }
             writer.EndBlock();
             writer.WriteLine();
 
-            writer.WriteLine($"~{options.className}()");
+            writer.WriteLine("public void Dispose()");
             writer.BeginBlock();
             writer.WriteLine("UnityEngine.Object.Destroy(asset);");
             writer.EndBlock();
@@ -134,10 +129,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.EndBlock();
             writer.WriteLine();
 
-            writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes");
-            writer.BeginBlock();
-            writer.WriteLine("get => asset.controlSchemes;");
-            writer.EndBlock();
+            writer.WriteLine("public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;");
             writer.WriteLine();
 
             writer.WriteLine("public bool Contains(InputAction action)");
@@ -179,14 +171,14 @@ namespace UnityEngine.InputSystem.Editor
                 var mapTypeName = CSharpCodeHelpers.MakeTypeName(mapName, "Actions");
 
                 // Caching field for action map.
-                writer.WriteLine($"private InputActionMap m_{mapName};");
+                writer.WriteLine($"private readonly InputActionMap m_{mapName};");
                 writer.WriteLine(string.Format("private I{0} m_{0}CallbackInterface;", mapTypeName));
 
                 // Caching fields for all actions.
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
-                    writer.WriteLine($"private InputAction m_{mapName}_{actionName};");
+                    writer.WriteLine($"private readonly InputAction m_{mapName}_{actionName};");
                 }
 
                 // Struct wrapping access to action set.
@@ -194,15 +186,15 @@ namespace UnityEngine.InputSystem.Editor
                 writer.BeginBlock();
 
                 // Constructor.
-                writer.WriteLine($"private {options.className} m_Wrapper;");
-                writer.WriteLine($"public {mapTypeName}({options.className} wrapper) {{ m_Wrapper = wrapper; }}");
+                writer.WriteLine($"private @{options.className} m_Wrapper;");
+                writer.WriteLine($"public {mapTypeName}(@{options.className} wrapper) {{ m_Wrapper = wrapper; }}");
 
                 // Getter for each action.
                 foreach (var action in map.actions)
                 {
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     writer.WriteLine(
-                        $"public InputAction @{actionName} {{ get {{ return m_Wrapper.m_{mapName}_{actionName}; }} }}");
+                        $"public InputAction @{actionName} => m_Wrapper.m_{mapName}_{actionName};");
                 }
 
                 // Action map getter.
@@ -211,10 +203,7 @@ namespace UnityEngine.InputSystem.Editor
                 // Enable/disable methods.
                 writer.WriteLine("public void Enable() { Get().Enable(); }");
                 writer.WriteLine("public void Disable() { Get().Disable(); }");
-                writer.WriteLine("public bool enabled { get { return Get().enabled; } }");
-
-                // Clone method.
-                writer.WriteLine("public InputActionMap Clone() { return Get().Clone(); }");
+                writer.WriteLine("public bool enabled => Get().enabled;");
 
                 // Implicit conversion operator.
                 writer.WriteLine(
@@ -234,9 +223,9 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled -= m_Wrapper.m_{mapTypeName}CallbackInterface.On{actionTypeName};");
                 }
                 writer.EndBlock();
 
@@ -249,24 +238,16 @@ namespace UnityEngine.InputSystem.Editor
                     var actionName = CSharpCodeHelpers.MakeIdentifier(action.name);
                     var actionTypeName = CSharpCodeHelpers.MakeTypeName(action.name);
 
-                    writer.WriteLine($"{actionName}.started += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.performed += instance.On{actionTypeName};");
-                    writer.WriteLine($"{actionName}.canceled += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.started += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.performed += instance.On{actionTypeName};");
+                    writer.WriteLine($"@{actionName}.canceled += instance.On{actionTypeName};");
                 }
                 writer.EndBlock();
                 writer.EndBlock();
                 writer.EndBlock();
 
                 // Getter for instance of struct.
-                writer.WriteLine($"public {mapTypeName} @{mapName}");
-                writer.BeginBlock();
-
-                writer.WriteLine("get");
-                writer.BeginBlock();
-                writer.WriteLine($"return new {mapTypeName}(this);");
-                writer.EndBlock();
-
-                writer.EndBlock();
+                writer.WriteLine($"public {mapTypeName} @{mapName} => new {mapTypeName}(this);");
             }
 
             // Control scheme accessors.
@@ -279,7 +260,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.BeginBlock();
                 writer.WriteLine("get");
                 writer.BeginBlock();
-                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.GetControlSchemeIndex(\"{scheme.name}\");");
+                writer.WriteLine($"if (m_{identifier}SchemeIndex == -1) m_{identifier}SchemeIndex = asset.FindControlSchemeIndex(\"{scheme.name}\");");
                 writer.WriteLine($"return asset.controlSchemes[m_{identifier}SchemeIndex];");
                 writer.EndBlock();
                 writer.EndBlock();
@@ -372,9 +353,7 @@ namespace UnityEngine.InputSystem.Editor
             if (File.Exists(filePath))
             {
                 var existingCode = File.ReadAllText(filePath);
-                ////TODO: strip whitespace before comparing so that we're not susceptible to the file getting altered
-                ////       by either our formatting tools or by git's auto-crlf conversion
-                if (existingCode == code)
+                if (existingCode == code || existingCode.WithAllWhitespaceStripped() == code.WithAllWhitespaceStripped())
                     return false;
             }
 

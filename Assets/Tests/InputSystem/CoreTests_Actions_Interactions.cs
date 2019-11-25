@@ -3,9 +3,41 @@ using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", InputActionType.Button, binding: "<Gamepad>/buttonSouth",
+            interactions: "tap(duration=1),slowTap");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Press(gamepad.buttonSouth);
+
+            Assert.That(trace,
+                Started<TapInteraction>(action, gamepad.buttonSouth, time: 0));
+
+            trace.Clear();
+
+            // Expire the tap. The system should transitioning from the tap to a slowtap.
+            // Note the starting time of the slowTap will be 0 not 2.
+            runtime.currentTime = 2;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Canceled<TapInteraction>(action, gamepad.buttonSouth)
+                    .AndThen(Started<SlowTapInteraction>(action, gamepad.buttonSouth, time: 0)));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanPerformPressInteraction()
@@ -32,120 +64,79 @@ internal partial class CoreTests
         {
             trace.SubscribeToAll();
 
+            runtime.currentTime = 1;
             Press(gamepad.buttonSouth);
 
             var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(3));
+            Assert.That(actions, Has.Length.EqualTo(5));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(0));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(0));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
 
             trace.Clear();
 
+            runtime.currentTime = 2;
             Release(gamepad.buttonSouth);
 
             actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
+            Assert.That(actions, Has.Length.EqualTo(3));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(1));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(0));
 
             trace.Clear();
 
+            runtime.currentTime = 5;
             Press(gamepad.buttonSouth);
 
             actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(3));
+            Assert.That(actions, Has.Length.EqualTo(5));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(0));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
+            Assert.That(actions,
+                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
+                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
+                    .EqualTo(0));
             Assert.That(actions,
                 Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started));
-        }
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanPerformContinuousPressInteraction()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        // we add a second input device (and bind to it), to test that the binding
-        // conflict resolution will not interfere with the interaction handling.
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        var pressAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
-        pressAction.AddBinding("<Keyboard>/a");
-        var releaseAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
-        pressAction.AddBinding("<Keyboard>/s");
-        var pressAndReleaseAction = new InputAction("PressAndRelease", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=2)");
-        pressAction.AddBinding("<Keyboard>/d");
-
-        pressAction.continuous = true;
-        releaseAction.continuous = true; // ReleaseOnly doesn't care about continuous.
-        pressAndReleaseAction.continuous = true;
-
-        pressAction.Enable();
-        releaseAction.Enable();
-        pressAndReleaseAction.Enable();
-
-        using (var trace = new InputActionTrace())
-        {
-            trace.SubscribeToAll();
-
-            Press(gamepad.buttonSouth);
-
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(3));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started));
-            trace.Clear();
-
-            InputSystem.Update();
-
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-
-            trace.Clear();
-
-            Release(gamepad.buttonSouth);
-
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed));
-
-            trace.Clear();
-
-            InputSystem.Update();
-
-            Assert.That(trace, Is.Empty);
+                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
+                    .EqualTo(0));
         }
     }
 
@@ -153,8 +144,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformHoldInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         const int timeOffset = 123;
         runtime.currentTimeOffsetToRealtimeSinceStartup = timeOffset;
         runtime.currentTime = 10 + timeOffset;
@@ -181,6 +170,7 @@ internal partial class CoreTests
             performedControl = ctx.control;
 
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(ctx.duration, Is.GreaterThanOrEqualTo(0.4));
         };
         action.started +=
             ctx =>
@@ -190,6 +180,7 @@ internal partial class CoreTests
             startedControl = ctx.control;
 
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(ctx.duration, Is.EqualTo(0.0));
         };
         action.canceled +=
             ctx =>
@@ -199,6 +190,8 @@ internal partial class CoreTests
             canceledControl = ctx.control;
 
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Canceled));
+            Assert.That(ctx.duration, Is.GreaterThan(0.0));
+            Assert.That(ctx.duration, Is.LessThan(0.4));
         };
         action.Enable();
 
@@ -262,8 +255,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformTapInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var performedReceivedCalls = 0;
@@ -321,8 +312,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformDoubleTapInteraction()
     {
-        InputSystem.settings.timesliceEvents = false;
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         runtime.advanceTimeEachDynamicUpdate = 0;
@@ -470,7 +459,7 @@ internal partial class CoreTests
 
             Set(gamepad.leftTrigger, 0.3f);
 
-            Assert.That(trace, Performed<PressInteraction>(pressAction));
+            Assert.That(trace, Started<PressInteraction>(pressAction).AndThen(Performed<PressInteraction>(pressAction)));
 
             trace.Clear();
 
@@ -496,5 +485,58 @@ internal partial class CoreTests
 
             Assert.That(trace, Started<HoldInteraction>(holdAction));
         }
+    }
+
+    [Preserve]
+    private class CancelingTestInteraction : IInputInteraction
+    {
+        public void Process(ref InputInteractionContext context)
+        {
+            if (context.ControlIsActuated())
+            {
+                context.Performed();
+                context.Canceled();
+            }
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueIsDefaultWhenActionIsCanceled()
+    {
+        InputSystem.RegisterInteraction<CancelingTestInteraction>();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction("test", binding: "<Gamepad>/leftTrigger", interactions: "CancelingTest");
+        int performedCount = 0;
+        float performedValue = -1;
+        action.performed += ctx =>
+        {
+            performedValue = ctx.ReadValue<float>();
+            performedCount++;
+        };
+
+        int canceledCount = 0;
+        float canceledValue = -1;
+        action.canceled += ctx =>
+        {
+            canceledValue = ctx.ReadValue<float>();
+            canceledCount++;
+        };
+
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 1.0f);
+
+        Assert.That(performedCount, Is.EqualTo(1));
+        Assert.That(performedValue, Is.EqualTo(1.0));
+
+        Assert.That(canceledCount, Is.EqualTo(1));
+        Assert.That(canceledValue, Is.EqualTo(0.0));
     }
 }

@@ -46,7 +46,6 @@ namespace UnityEngine.InputSystem.Editor
                 if (m_ImportedAssetObject == null)
                     LoadImportedObjectFromGuid();
 
-                Debug.Assert(m_ImportedAssetObject != null);
                 return m_ImportedAssetObject;
             }
         }
@@ -64,16 +63,22 @@ namespace UnityEngine.InputSystem.Editor
 
         public bool dirty => m_IsDirty;
 
-        public void Initialize()
+        public bool Initialize()
         {
             if (m_AssetObjectForEditing == null)
             {
+                if (importedAsset == null)
+                    // The asset we want to edit no longer exists.
+                    return false;
+
                 CreateWorkingCopyAsset();
             }
             else
             {
                 m_SerializedObject = new SerializedObject(m_AssetObjectForEditing);
             }
+
+            return true;
         }
 
         public void Dispose()

@@ -550,9 +550,7 @@ namespace UnityEngine.InputSystem.Editor
                         DeleteDataOfSelectedItems();
                         break;
                     case k_DuplicateCommand:
-                        var buffer = new StringBuilder();
-                        CopySelectedItemsTo(buffer);
-                        PasteDataFrom(buffer.ToString());
+                        DuplicateSelection();
                         break;
                     case k_DeleteCommand:
                         DeleteDataOfSelectedItems();
@@ -562,6 +560,38 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 uiEvent.Use();
             }
+        }
+
+        private void DuplicateSelection()
+        {
+            var buffer = new StringBuilder();
+
+            // If we have a multi-selection, we want to perform the duplication as if each item
+            // was duplicated individually. Meaning we paste each duplicate right after the item
+            // it was duplicated from. So if, say, an action is selected at the beginning of the
+            // tree and one is selected from the end of it, we still paste the copies into the
+            // two separate locations correctly.
+            //
+            // Technically, if both parents and children are selected, we're order dependent here
+            // but not sure we really need to care.
+
+            var selection = GetSelection();
+            ClearSelection();
+
+            // Copy-paste each selected item in turn.
+            var newItemIds = new List<int>();
+            foreach (var id in selection)
+            {
+                SetSelection(new[] { id });
+
+                buffer.Length = 0;
+                CopySelectedItemsTo(buffer);
+                PasteDataFrom(buffer.ToString());
+
+                newItemIds.AddRange(GetSelection());
+            }
+
+            SetSelection(newItemIds);
         }
 
         internal const string k_CopyPasteMarker = "INPUTASSET ";
@@ -865,11 +895,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 menu.AddDisabledItem(s_RenameLabel);
             }
-            menu.AddItem(s_DuplicateLabel, false, () =>
-            {
-                CopySelectedItemsToClipboard();
-                PasteDataFromClipboard();
-            });
+            menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
             menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
         }
 
@@ -886,9 +912,21 @@ namespace UnityEngine.InputSystem.Editor
                 });
 
             // Add one entry for each registered type of composite binding.
+            var expectedControlLayout = new InternedString(actionItem?.expectedControlLayout);
             foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
+                // If the action is expected a specific control layout, check
+                // whether the value type use by the composite matches that of
+                // the layout.
+                if (!expectedControlLayout.IsEmpty())
+                {
+                    var valueType = InputBindingComposite.GetValueType(compositeName);
+                    if (valueType != null &&
+                        !InputControlLayout.s_Layouts.ValueTypeIsAssignableFrom(expectedControlLayout, valueType))
+                        continue;
+                }
+
                 var niceName = ObjectNames.NicifyVariableName(compositeName);
                 menu.AddItem(new GUIContent($"Add {niceName} Composite"), false,
                     () =>
@@ -1099,7 +1137,16 @@ namespace UnityEngine.InputSystem.Editor
                             AddNewActionMap();
                         }
                     }
+
+                    buttonRect.x -= buttonRect.width + EditorGUIUtility.standardVerticalSpacing;
                 }
+            }
+
+            // Draw action properties button.
+            if (drawActionPropertiesButton && rootItem is ActionTreeItem item)
+            {
+                if (GUI.Button(buttonRect, s_ActionPropertiesIcon, GUIStyle.none))
+                    onDoubleClick?.Invoke(item);
             }
         }
 
@@ -1251,6 +1298,7 @@ namespace UnityEngine.InputSystem.Editor
         public bool drawHeader { get; set; }
         public bool drawPlusButton { get; set; }
         public bool drawMinusButton { get; set; }
+        public bool drawActionPropertiesButton { get; set; }
         public float foldoutOffset { get; set; }
 
         public Action<SerializedProperty> onHandleAddNewAction { get; set; }
@@ -1309,6 +1357,7 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_PlusActionIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action");
         private static readonly GUIContent s_PlusActionMapIcon = EditorGUIUtility.TrIconContent("Toolbar Plus", "Add Action Map");
         private static readonly GUIContent s_DeleteSectionIcon = EditorGUIUtility.TrIconContent("Toolbar Minus", "Delete Selection");
+        private static readonly GUIContent s_ActionPropertiesIcon = EditorGUIUtility.TrIconContent("Settings", "Action Properties");
 
         private static readonly GUIContent s_CutLabel = EditorGUIUtility.TrTextContent("Cut");
         private static readonly GUIContent s_CopyLabel = EditorGUIUtility.TrTextContent("Copy");
@@ -1403,7 +1452,7 @@ namespace UnityEngine.InputSystem.Editor
                                 return CheckChildrenFor(Match.Success, item) ? Match.Success : Match.Failure;
 
                             var deviceLayout = InputControlPath.TryGetDeviceLayout(bindingItem.path);
-                            return deviceLayout == text
+                            return string.Equals(deviceLayout, text, StringComparison.InvariantCultureIgnoreCase)
                                 || InputControlLayout.s_Layouts.IsBasedOn(new InternedString(deviceLayout), new InternedString(text))
                                 ? Match.Success
                                 : Match.Failure;

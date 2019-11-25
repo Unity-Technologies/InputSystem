@@ -159,6 +159,13 @@ namespace UnityEngine.InputSystem.Editor
             if (m_Control == null)
                 m_ShowRawBytes = true;
 
+            // If our state is no longer valid, just close the window.
+            if (m_StateBuffers == null)
+            {
+                Close();
+                return;
+            }
+
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             m_ShowRawBytes = GUILayout.Toggle(m_ShowRawBytes, Contents.showRawMemory, EditorStyles.toolbarButton,
                 GUILayout.Width(150));

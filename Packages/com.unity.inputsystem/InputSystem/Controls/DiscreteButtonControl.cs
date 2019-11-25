@@ -17,6 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// the value 1 could indicate that the switch is moved to the left whereas 3 could indicate it is
     /// moved up.
     /// </remarks>
+    [Scripting.Preserve]
     public class DiscreteButtonControl : ButtonControl
     {
         /// <summary>
@@ -44,9 +45,9 @@ namespace UnityEngine.InputSystem.Controls
 
         public int nullValue;
 
-        protected override void FinishSetup(InputDeviceBuilder builder)
+        protected override void FinishSetup()
         {
-            base.FinishSetup(builder);
+            base.FinishSetup();
 
             if (!stateBlock.format.IsIntegerFormat())
                 throw new NotSupportedException(
