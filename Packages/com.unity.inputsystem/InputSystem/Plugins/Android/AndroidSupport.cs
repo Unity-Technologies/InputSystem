@@ -152,7 +152,8 @@ namespace UnityEngine.InputSystem.Android
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
 
-            InputSystem.RegisterLayout<AndroidScreenKeyboard>();
+            //InputSystem.RegisterLayout<AndroidScreenKeyboard>();
+            InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
         }
 
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,

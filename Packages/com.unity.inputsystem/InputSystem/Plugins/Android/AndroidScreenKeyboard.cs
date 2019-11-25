@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Android
 {
@@ -16,6 +17,8 @@ namespace UnityEngine.InputSystem.Android
 
             void OnTextChanged(string text)
             {
+                var e = IMECompositionEvent.Create(m_Parent.deviceId, text, InputRuntime.s_Instance.currentTime);
+                InputSystem.QueueEvent(ref e);
                 m_Parent.ChangeInputField(new InputFieldEventArgs() { text = text });
             }
 
