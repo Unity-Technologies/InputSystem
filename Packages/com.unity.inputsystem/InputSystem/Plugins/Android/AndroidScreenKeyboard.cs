@@ -1,7 +1,7 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
 
-namespace UnityEngine.InputSystem.Plugins.Android
+namespace UnityEngine.InputSystem.Android
 {
     public class AndroidScreenKeyboard : ScreenKeyboard
     {

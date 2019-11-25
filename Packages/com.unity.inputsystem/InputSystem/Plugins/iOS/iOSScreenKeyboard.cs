@@ -3,7 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using AOT;
 
-namespace UnityEngine.InputSystem.Plugins.iOS
+namespace UnityEngine.InputSystem.iOS
 {
     public class iOSScreenKeyboard : ScreenKeyboard
     {

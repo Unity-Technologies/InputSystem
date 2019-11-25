@@ -6,9 +6,9 @@ using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
 #if UNITY_ANDROID
-using UnityEngine.InputSystem.Plugins.Android;
+using UnityEngine.InputSystem.Android;
 #elif UNITY_WSA
-using UnityEngine.InputSystem.Plugins.WSA;
+using UnityEngine.InputSystems.WSA;
 #endif
 
 public enum AutomaticOperation

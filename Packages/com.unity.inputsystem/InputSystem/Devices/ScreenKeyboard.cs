@@ -69,11 +69,11 @@ namespace UnityEngine.InputSystem
             if (m_ScreenKeyboard != null)
                 return m_ScreenKeyboard;
 #if UNITY_ANDROID
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.Android.AndroidScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Android.AndroidScreenKeyboard>();
 #elif UNITY_WSA
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.WSA.WSAScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.WSA.WSAScreenKeyboard>();
 #elif UNITY_IOS || UNITY_TVOS
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Plugins.iOS.iOSScreenKeyboard>();
+            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.iOS.iOSScreenKeyboard>();
 #elif UNITY_EDITOR
             // ToDo: Should we show something for Editor?
             m_ScreenKeyboard = new ScreenKeyboard();
