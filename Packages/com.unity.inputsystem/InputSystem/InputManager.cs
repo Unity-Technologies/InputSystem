@@ -1586,6 +1586,8 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
+
+            RegisterControlLayout("ScreenKeyboardStatus", typeof(ScreenKeyboardStatusControl));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
