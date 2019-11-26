@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-
+using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem
 {
@@ -19,7 +21,7 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardStatus
+    public enum ScreenKeyboardStatus : byte
     {
         Visible,
         Done,
@@ -27,6 +29,21 @@ namespace UnityEngine.InputSystem
         LostFocus
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal unsafe struct ScreenKeyboardState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat = new FourCC('S', 'K', 'S', ' ');
+
+        [InputControl(name = "status", displayName = "Screen Keyboard Status", layout = "ScreenKeyboardStatus")]
+        public ScreenKeyboardStatus status;
+
+        public Rect occludingArea;
+
+        public FourCC format
+        {
+            get { return kFormat; }
+        }
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
@@ -50,19 +67,13 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
-
-    public class InputFieldEventArgs
-    {
-        public string text { set; get; }
-    }
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
     public class ScreenKeyboard : Keyboard
     {
         private static ScreenKeyboard m_ScreenKeyboard;
-
-        internal ScreenKeyboardStatus m_Status;
         internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
-        internal InlinedArray<Action<InputFieldEventArgs>> m_InputFieldTextListeners;
+
+        public ScreenKeyboardStatusControl status { get; private set; }
 
         public static ScreenKeyboard GetInstance()
         {
@@ -85,14 +96,22 @@ namespace UnityEngine.InputSystem
 
         protected ScreenKeyboard()
         {
-            m_Status = ScreenKeyboardStatus.Done;
+            // TODO: initialize status done
         }
 
-        protected void ChangeStatus(ScreenKeyboardStatus newStatus)
+        protected override void FinishSetup()
         {
-            m_Status = newStatus;
+            status = GetChildControl<ScreenKeyboardStatusControl>("press");
+
+            base.FinishSetup();
+        }
+
+
+        protected void OnChangeStatus()
+        {
+            var temp = status.ReadValue();
             foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(newStatus);
+                statusListener(temp);
         }
 
         public event Action<ScreenKeyboardStatus> statusChanged
@@ -100,19 +119,6 @@ namespace UnityEngine.InputSystem
             add { m_StatusChangedListeners.Append(value); }
             remove { m_StatusChangedListeners.Remove(value); }
         }
-
-        protected void ChangeInputField(InputFieldEventArgs text)
-        {
-            foreach (var inputFieldTextListener in m_InputFieldTextListeners)
-                inputFieldTextListener(text);
-        }
-
-        public event Action<InputFieldEventArgs> inputFieldTextChanged
-        {
-            add { m_InputFieldTextListeners.Append(value); }
-            remove { m_InputFieldTextListeners.Remove(value); }
-        }
-
 
         public virtual void Show(ScreenKeyboardShowParams showParams)
         {
@@ -125,14 +131,6 @@ namespace UnityEngine.InputSystem
 
         public virtual void Hide()
         {
-        }
-
-        public ScreenKeyboardStatus status
-        {
-            get
-            {
-                return m_Status;
-            }
         }
 
         /// <summary>

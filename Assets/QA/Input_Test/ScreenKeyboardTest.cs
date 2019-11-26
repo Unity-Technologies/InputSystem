@@ -54,7 +54,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_AutomaticOperation.ClearOptions();
 
         m_ScreenKeyboard.statusChanged += StatusChangedCallback;
-        m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextChanged;
+        m_ScreenKeyboard.onIMECompositionChange += IMECompositionChange;
 
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
@@ -72,27 +72,28 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_LogText.text = "";
     }
 
-    private void InputFieldTextChanged(InputFieldEventArgs args)
+    private void IMECompositionChange(UnityEngine.InputSystem.LowLevel.IMECompositionString obj)
     {
-        var oldText = args.text;
+        var text = obj.ToString();
+        var oldText = text;
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)
         {
             case AutomaticOperation.CharacterLimit:
-                if (args.text.Length > 5)
-                    args.text = args.text.Substring(0, 5);
+                if (text.Length > 5)
+                    text = text.Substring(0, 5);
                 break;
             case AutomaticOperation.LetterReplacement:
-                args.text = args.text.Replace("a", "c");
+                text = text.Replace("a", "c");
                 break;
         }
 
-        if (args.text != oldText)
+        if (text != oldText)
         {
-            m_ScreenKeyboard.inputFieldText = args.text;
+            m_ScreenKeyboard.inputFieldText = text;
         }
-        m_LogText.text += "Input: " + args.text + Environment.NewLine;
-        m_InputField.text = args.text;
+        m_LogText.text += "IME:" + text + Environment.NewLine;
+        m_InputField.text = text;
     }
 
     private void StatusChangedCallback(ScreenKeyboardStatus status)
@@ -163,6 +164,11 @@ public class ScreenKeyboardTest : MonoBehaviour
     {
         m_Info.SetActive(false);
         m_Log.SetActive(true);
+    }
+
+    public void ClearLog()
+    {
+        m_LogText.text = "";
     }
 
     public void Hide()

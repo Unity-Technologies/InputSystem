@@ -2,6 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 using AOT;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.iOS
 {
@@ -30,7 +31,9 @@ namespace UnityEngine.InputSystem.iOS
             var screenKeyboard = (iOSScreenKeyboard)ScreenKeyboard.GetInstance();
             if (screenKeyboard == null)
                 throw new Exception("OnTextChangedCallback: Failed to get iOSScreenKeyboard instance");
-            screenKeyboard.ChangeInputField(new InputFieldEventArgs() { text = text });
+
+            var e = IMECompositionEvent.Create(screenKeyboard.deviceId, text, InputRuntime.s_Instance.currentTime);
+            InputSystem.QueueEvent(ref e);
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChanged))]
@@ -39,7 +42,8 @@ namespace UnityEngine.InputSystem.iOS
             var screenKeyboard = (iOSScreenKeyboard)ScreenKeyboard.GetInstance();
             if (screenKeyboard == null)
                 throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
-            screenKeyboard.ChangeStatus(status);
+            // TODO send event
+            screenKeyboard.OnChangeStatus();
         }
 
         public override void Show(ScreenKeyboardShowParams showParams)

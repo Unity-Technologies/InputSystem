@@ -17,14 +17,15 @@ namespace UnityEngine.InputSystem.Android
 
             void OnTextChanged(string text)
             {
+                // TODO: Use different event?
                 var e = IMECompositionEvent.Create(m_Parent.deviceId, text, InputRuntime.s_Instance.currentTime);
                 InputSystem.QueueEvent(ref e);
-                m_Parent.ChangeInputField(new InputFieldEventArgs() { text = text });
             }
 
             void OnStatusChanged(int status)
             {
-                m_Parent.ChangeStatus((ScreenKeyboardStatus)status);
+                // TODO:
+                //m_Parent.ChangeStatus((ScreenKeyboardStatus)status);
             }
         }
 

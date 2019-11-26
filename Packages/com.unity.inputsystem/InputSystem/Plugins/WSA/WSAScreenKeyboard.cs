@@ -65,17 +65,20 @@ namespace UnityEngine.InputSystem.Plugins.WSA
             m_CoreTextEditContext.NotifyFocusEnter();
             m_InputPane.TryShow();
 #endif
-            ChangeStatus(ScreenKeyboardStatus.Visible);
+            // TODO send event
+            //ChangeStatus(ScreenKeyboardStatus.Visible);
         }
 
         public override void Hide()
         {
-            if (m_Status != ScreenKeyboardStatus.Visible)
-                return;
+            // TODO send event
+            //if (m_Status != ScreenKeyboardStatus.Visible)
+            //    return;
 #if ENABLE_WINMD_SUPPORT
             m_InputPane.TryHide();
 #endif
-            ChangeStatus(ScreenKeyboardStatus.Done);
+            // TODO send event
+           // ChangeStatus(ScreenKeyboardStatus.Done);
         }
 
         public override string inputFieldText
