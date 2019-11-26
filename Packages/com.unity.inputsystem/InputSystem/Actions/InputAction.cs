@@ -1,8 +1,9 @@
 using System;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+
+////TODO: add way to retrieve the binding correspond to a control
 
 ////TODO: add way to retrieve the currently ongoing interaction and also add way to know how long it's been going on
 

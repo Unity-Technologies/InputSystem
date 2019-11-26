@@ -918,7 +918,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public unsafe void Events_CanDetectWhetherControlIsPartOfEvent()
+    public unsafe void Events_CanGetStatePointerFromEventThroughControl()
     {
         // We use a mouse here as it has several controls that are "parked" outside MouseState.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -948,12 +948,39 @@ partial class CoreTests
         InputSystem.Update();
     }
 
+    // For devices that implement IStateCallbackReceiver (such as Touchscreen), things get tricky. We may be looking
+    // at an event in a state format different from that of the device and with only the device knowing how it
+    // correlates to the state of an individual control.
+    [Test]
+    [Category("Events")]
+    public unsafe void Events_CanGetStatePointerFromEventThroughControl_EvenIfDeviceIsStateCallbackReceiver()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        using (var trace = new InputEventTrace(touchscreen))
+        {
+            trace.Enable();
+
+            BeginTouch(1, new Vector2(123, 234));
+
+            var statePtr = touchscreen.primaryTouch.position.GetStatePtrFromStateEvent(trace.ToArray()[0]);
+            Assert.That(statePtr != null);
+
+            // Attempt reading the position value from the touch event.
+            Assert.That(touchscreen.primaryTouch.position.ReadValueFromState(statePtr),
+                Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+
+            // It only works with primaryTouch. See Touchscreen.GetStateOffsetForEvent for details.
+            Assert.That(touchscreen.touches[1].position.GetStatePtrFromStateEvent(trace.ToArray()[0]) == null);
+        }
+    }
+
     [Test]
     [Category("Events")]
     public void Events_CanListenForWhenAllEventsHaveBeenProcessed()
     {
         var receivedCalls = 0;
-        Action callback = () => ++ receivedCalls;
+        void callback() => ++ receivedCalls;
 
         InputSystem.onAfterUpdate += callback;
 

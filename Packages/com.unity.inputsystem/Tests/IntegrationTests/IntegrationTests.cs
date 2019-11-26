@@ -20,7 +20,8 @@ using UnityEngine.InputSystem.LowLevel;
 public class IntegrationTests
 {
     [Test]
-    public void CanSendAndReceiveEvents()
+    [Category("Integration")]
+    public void Integration_CanSendAndReceiveEvents()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
