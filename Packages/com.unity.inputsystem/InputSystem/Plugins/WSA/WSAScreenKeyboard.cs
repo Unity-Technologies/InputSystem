@@ -66,19 +66,19 @@ namespace UnityEngine.InputSystem.Plugins.WSA
             m_InputPane.TryShow();
 #endif
             // TODO send event
-            //ChangeStatus(ScreenKeyboardStatus.Visible);
+            //ChangeStatus(ScreenKeyboardState.Visible);
         }
 
         public override void Hide()
         {
             // TODO send event
-            //if (m_Status != ScreenKeyboardStatus.Visible)
+            //if (m_Status != ScreenKeyboardState.Visible)
             //    return;
 #if ENABLE_WINMD_SUPPORT
             m_InputPane.TryHide();
 #endif
             // TODO send event
-           // ChangeStatus(ScreenKeyboardStatus.Done);
+           // ChangeStatus(ScreenKeyboardState.Done);
         }
 
         public override string inputFieldText

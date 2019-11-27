@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardStatus : uint
+    public enum ScreenKeyboardState : uint
     {
         Visible,
         Done,
@@ -55,18 +55,18 @@ namespace UnityEngine.InputSystem
     public class ScreenKeyboard : Keyboard, IScreenKeyboardCallbackReceiver
     {
         protected ScreenKeyboardProperties m_KeyboardProperties;
-        private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
+        private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
 
         protected ScreenKeyboard()
         {
             m_KeyboardProperties = new ScreenKeyboardProperties()
             {
-                Status = ScreenKeyboardStatus.Done,
+                State = ScreenKeyboardState.Done,
                 OccludingArea = Rect.zero
             };
         }
 
-        public event Action<ScreenKeyboardStatus> statusChanged
+        public event Action<ScreenKeyboardState> statusChanged
         {
             add { m_StatusChangedListeners.Append(value); }
             remove { m_StatusChangedListeners.Remove(value); }
@@ -100,10 +100,10 @@ namespace UnityEngine.InputSystem
 
         public void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties)
         {
-            var statusChanged = keyboardProperties.Status != m_KeyboardProperties.Status;
+            var statusChanged = keyboardProperties.State != m_KeyboardProperties.State;
             m_KeyboardProperties = keyboardProperties;
             foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(m_KeyboardProperties.Status);
+                statusListener(m_KeyboardProperties.State);
         }
 
         /// <summary>
@@ -126,11 +126,11 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Returns the state of the screen keyboard.
         /// </summary>
-        public ScreenKeyboardStatus status
+        public ScreenKeyboardState state
         {
             get
             {
-                return m_KeyboardProperties.Status;
+                return m_KeyboardProperties.State;
             }
         }
 

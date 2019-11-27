@@ -20,10 +20,10 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.OnChangeInputField(text);
             }
 
-            void OnStatusChanged(int status)
+            void OnStatusChanged(int state)
             {
                 var information = m_Parent.m_KeyboardProperties;
-                information.Status = (ScreenKeyboardStatus)status;
+                information.State = (ScreenKeyboardState)state;
                 m_Parent.OnScreenKeyboardPropertiesChanged(information);
             }
         }

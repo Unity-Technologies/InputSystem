@@ -31,10 +31,10 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = ScreenKeyboardProperties.Size)]
     public struct ScreenKeyboardProperties
     {
-        public const int Size = sizeof(ScreenKeyboardStatus) + sizeof(float) * 4;
+        public const int Size = sizeof(ScreenKeyboardState) + sizeof(float) * 4;
 
         [FieldOffset(0)]
-        public ScreenKeyboardStatus Status;
+        public ScreenKeyboardState State;
 
         [FieldOffset(4)]
         private Vector2 m_OccludingAreaPosition;

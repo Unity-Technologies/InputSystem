@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.iOS
     {
         internal delegate void OnTextChanged(int deviceId, string text);
 
-        internal delegate void OnStatusChanged(int deviceId, ScreenKeyboardStatus status);
+        internal delegate void OnStatusChanged(int deviceId, ScreenKeyboardState status);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct iOSScreenKeyboardCallbacks
@@ -37,14 +37,14 @@ namespace UnityEngine.InputSystem.iOS
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChanged))]
-        private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardStatus status)
+        private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardState state)
         {
             var screenKeyboard = (iOSScreenKeyboard)InputSystem.GetDeviceById(deviceId);
             if (screenKeyboard == null)
                 throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
 
             var props = screenKeyboard.m_KeyboardProperties;
-            props.Status = status;
+            props.State = state;
             screenKeyboard.OnScreenKeyboardPropertiesChanged(props);
         }
 
