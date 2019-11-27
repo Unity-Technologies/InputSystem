@@ -87,7 +87,8 @@ namespace UnityEngine.InputSystem
 
         protected void OnChangeInputField(string text)
         {
-            // TODO: Create our own event or reuse composition event
+            // TODO: Put this input field inside ScreenKeyboardEvent or reuse IMEComposition. 
+            //       Probably worth waiting for Rene's change for big events with string
             var e = IMECompositionEvent.Create(deviceId, text, -1);
             InputSystem.QueueEvent(ref e);
         }
