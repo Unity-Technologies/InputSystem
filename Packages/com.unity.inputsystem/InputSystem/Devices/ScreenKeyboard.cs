@@ -52,36 +52,14 @@ namespace UnityEngine.InputSystem
     }
 
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
-    public class ScreenKeyboard : Keyboard, IScreenKeyboardStateReceiver
+    public class ScreenKeyboard : Keyboard, IScreenKeyboardCallbackReceiver
     {
-        protected ScreenKeyboardState m_State;
-       // private static ScreenKeyboard m_ScreenKeyboard;
+        protected ScreenKeyboardProperties m_KeyboardProperties;
         private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
-
-        /*
-        public static ScreenKeyboard GetInstance()
-        {
-            if (m_ScreenKeyboard != null)
-                return m_ScreenKeyboard;
-#if UNITY_ANDROID
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Android.AndroidScreenKeyboard>();
-#elif UNITY_WSA
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.WSA.WSAScreenKeyboard>();
-#elif UNITY_IOS || UNITY_TVOS
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.iOS.iOSScreenKeyboard>();
-#elif UNITY_EDITOR
-            // ToDo: Should we show something for Editor?
-            m_ScreenKeyboard = new ScreenKeyboard();
-#else
-            throw new NotImplementedException("ScreenKeyboard is not implemented for this platform.");
-#endif
-            return m_ScreenKeyboard;
-        }
-        */
 
         protected ScreenKeyboard()
         {
-            m_State = new ScreenKeyboardState()
+            m_KeyboardProperties = new ScreenKeyboardProperties()
             {
                 Status = ScreenKeyboardStatus.Done,
                 OccludingArea = Rect.zero
@@ -109,22 +87,23 @@ namespace UnityEngine.InputSystem
 
         protected void OnChangeInputField(string text)
         {
+            // TODO: Create our own event or reuse composition event
             var e = IMECompositionEvent.Create(deviceId, text, -1);
             InputSystem.QueueEvent(ref e);
         }
 
-        protected void OnChangeState(ScreenKeyboardState newState)
+        protected void OnInformationChange(ScreenKeyboardProperties newState)
         {
             var e = ScreenKeyboardEvent.Create(deviceId, newState);
             InputSystem.QueueEvent(ref e);
         }
 
-        public void OnScreenKeyboardStateChanged(ScreenKeyboardState state)
+        public void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties)
         {
-            var statusChanged = state.Status != m_State.Status;
-            m_State = state;
+            var statusChanged = keyboardProperties.Status != m_KeyboardProperties.Status;
+            m_KeyboardProperties = keyboardProperties;
             foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(m_State.Status);
+                statusListener(m_KeyboardProperties.Status);
         }
 
         /// <summary>
@@ -140,7 +119,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                return m_State.OccludingArea;
+                return m_KeyboardProperties.OccludingArea;
             }
         }
 
@@ -151,7 +130,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                return m_State.Status;
+                return m_KeyboardProperties.Status;
             }
         }
 

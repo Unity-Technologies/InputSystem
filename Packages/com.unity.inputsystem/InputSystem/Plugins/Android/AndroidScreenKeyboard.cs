@@ -22,9 +22,9 @@ namespace UnityEngine.InputSystem.Android
 
             void OnStatusChanged(int status)
             {
-                var newState = m_Parent.m_State;
-                newState.Status = (ScreenKeyboardStatus)status;
-                m_Parent.OnChangeState(newState);
+                var information = m_Parent.m_KeyboardProperties;
+                information.Status = (ScreenKeyboardStatus)status;
+                m_Parent.OnScreenKeyboardPropertiesChanged(information);
             }
         }
 

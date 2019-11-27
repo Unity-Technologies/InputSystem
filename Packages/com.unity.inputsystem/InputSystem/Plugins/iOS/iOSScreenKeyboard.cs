@@ -43,9 +43,9 @@ namespace UnityEngine.InputSystem.iOS
             if (screenKeyboard == null)
                 throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
 
-            var newState = screenKeyboard.m_State;
-            newState.Status = status;
-            screenKeyboard.OnChangeState(newState);
+            var props = screenKeyboard.m_KeyboardProperties;
+            props.Status = status;
+            screenKeyboard.OnScreenKeyboardPropertiesChanged(props);
         }
 
         public override void Show(ScreenKeyboardShowParams showParams)
@@ -67,6 +67,7 @@ namespace UnityEngine.InputSystem.iOS
         {
             get
             {
+                // TODO
                 return string.Empty;
             }
             set
@@ -78,7 +79,7 @@ namespace UnityEngine.InputSystem.iOS
         {
             get 
             {
-                m_State.OccludingArea = _iOSScreenKeyboardOccludingArea();
+                m_KeyboardProperties.OccludingArea = _iOSScreenKeyboardOccludingArea();
                 return base.occludingArea;
             }
         }

@@ -2611,8 +2611,8 @@ namespace UnityEngine.InputSystem
                     case ScreenKeyboardEvent.Type:
                     {
                         var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
-                        var stateReceiver = device as IScreenKeyboardStateReceiver;
-                        stateReceiver?.OnScreenKeyboardStateChanged(screenKeyboardEventPtr->state);
+                        var callbackReceiver = device as IScreenKeyboardCallbackReceiver;
+                        callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
                         break;
                     }
                     case DeviceRemoveEvent.Type:

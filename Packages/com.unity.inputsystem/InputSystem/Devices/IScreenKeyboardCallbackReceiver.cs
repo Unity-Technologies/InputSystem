@@ -1,8 +1,8 @@
 namespace UnityEngine.InputSystem.LowLevel
 {
 
-    public interface IScreenKeyboardStateReceiver
+    public interface IScreenKeyboardCallbackReceiver
     {
-        void OnScreenKeyboardStateChanged(ScreenKeyboardInformation keyboardInformation);
+        void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties);
     }
 }

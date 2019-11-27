@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.LowLevel
 {
-    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + ScreenKeyboardState.Size)]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + ScreenKeyboardProperties.Size)]
     public struct ScreenKeyboardEvent : IInputEventTypeInfo
     {
         public const int Type = 0x53434b45; // SCKE
@@ -15,21 +15,21 @@ namespace UnityEngine.InputSystem.LowLevel
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public ScreenKeyboardState state;
+        public ScreenKeyboardProperties keyboardProperties;
 
         public FourCC typeStatic => Type;
 
-        public static ScreenKeyboardEvent Create(int deviceId, ScreenKeyboardState state, double time = -1)
+        public static ScreenKeyboardEvent Create(int deviceId, ScreenKeyboardProperties keyboardProperties, double time = -1)
         {
             var inputEvent = new ScreenKeyboardEvent();
-            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + ScreenKeyboardState.Size, deviceId, time);
-            inputEvent.state = state;
+            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + ScreenKeyboardProperties.Size, deviceId, time);
+            inputEvent.keyboardProperties = keyboardProperties;
             return inputEvent;
         }
     }
 
-    [StructLayout(LayoutKind.Explicit, Size = ScreenKeyboardState.Size)]
-    public struct ScreenKeyboardState
+    [StructLayout(LayoutKind.Explicit, Size = ScreenKeyboardProperties.Size)]
+    public struct ScreenKeyboardProperties
     {
         public const int Size = sizeof(ScreenKeyboardStatus) + sizeof(float) * 4;
 
