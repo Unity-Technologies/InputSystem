@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Plugins.WSA
         public static void Initialize()
         {
             InputSystem.RegisterLayout<WSAScreenKeyboard>();
+            InputSystem.AddDevice(InputDevice.Build<WSAScreenKeyboard>());
         }
     }
 }

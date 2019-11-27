@@ -1586,8 +1586,6 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
-
-            RegisterControlLayout("ScreenKeyboardStatus", typeof(ScreenKeyboardStatusControl));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2610,6 +2608,13 @@ namespace UnityEngine.InputSystem
                         break;
                     }
 
+                    case ScreenKeyboardEvent.Type:
+                    {
+                        var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
+                        var stateReceiver = device as IScreenKeyboardStateReceiver;
+                        stateReceiver?.OnScreenKeyboardStateChanged(screenKeyboardEventPtr->state);
+                        break;
+                    }
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device, keepOnListOfAvailableDevices: false);

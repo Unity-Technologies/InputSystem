@@ -152,6 +152,7 @@ namespace UnityEngine.InputSystem.Android
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
 
+            // Create an instance of screen keyboard
             InputSystem.RegisterLayout<AndroidScreenKeyboard>();
             InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
         }

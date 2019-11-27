@@ -29,6 +29,10 @@ namespace UnityEngine.InputSystem.iOS
                     .WithInterface("iOS")
                     .WithDeviceClass("iOSGameController")
                     .WithProduct("DUALSHOCK 4 Wireless Controller"));
+
+            // Create an instance of screen keyboard
+            InputSystem.RegisterLayout<iOSScreenKeyboard>();
+            InputSystem.AddDevice(InputDevice.Build<iOSScreenKeyboard>());
         }
     }
 }

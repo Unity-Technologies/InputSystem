@@ -21,28 +21,12 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardStatus : byte
+    public enum ScreenKeyboardStatus : uint
     {
         Visible,
         Done,
         Canceled,
         LostFocus
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct ScreenKeyboardState : IInputStateTypeInfo
-    {
-        public static FourCC kFormat = new FourCC('S', 'K', 'S', ' ');
-
-        [InputControl(name = "status", displayName = "Screen Keyboard Status", layout = "ScreenKeyboardStatus")]
-        public ScreenKeyboardStatus status;
-
-        public Rect occludingArea;
-
-        public FourCC format
-        {
-            get { return kFormat; }
-        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -68,13 +52,13 @@ namespace UnityEngine.InputSystem
     }
 
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
-    public class ScreenKeyboard : Keyboard
+    public class ScreenKeyboard : Keyboard, IScreenKeyboardStateReceiver
     {
-        private static ScreenKeyboard m_ScreenKeyboard;
-        internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
+        protected ScreenKeyboardState m_State;
+       // private static ScreenKeyboard m_ScreenKeyboard;
+        private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
 
-        public ScreenKeyboardStatusControl status { get; private set; }
-
+        /*
         public static ScreenKeyboard GetInstance()
         {
             if (m_ScreenKeyboard != null)
@@ -93,25 +77,15 @@ namespace UnityEngine.InputSystem
 #endif
             return m_ScreenKeyboard;
         }
+        */
 
         protected ScreenKeyboard()
         {
-            // TODO: initialize status done
-        }
-
-        protected override void FinishSetup()
-        {
-            status = GetChildControl<ScreenKeyboardStatusControl>("press");
-
-            base.FinishSetup();
-        }
-
-
-        protected void OnChangeStatus()
-        {
-            var temp = status.ReadValue();
-            foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(temp);
+            m_State = new ScreenKeyboardState()
+            {
+                Status = ScreenKeyboardStatus.Done,
+                OccludingArea = Rect.zero
+            };
         }
 
         public event Action<ScreenKeyboardStatus> statusChanged
@@ -133,6 +107,26 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        protected void OnChangeInputField(string text)
+        {
+            var e = IMECompositionEvent.Create(deviceId, text, -1);
+            InputSystem.QueueEvent(ref e);
+        }
+
+        protected void OnChangeState(ScreenKeyboardState newState)
+        {
+            var e = ScreenKeyboardEvent.Create(deviceId, newState);
+            InputSystem.QueueEvent(ref e);
+        }
+
+        public void OnScreenKeyboardStateChanged(ScreenKeyboardState state)
+        {
+            var statusChanged = state.Status != m_State.Status;
+            m_State = state;
+            foreach (var statusListener in m_StatusChangedListeners)
+                statusListener(m_State.Status);
+        }
+
         /// <summary>
         /// Modifies text in screen keyboard's input field.
         /// If screen keyboard doesn't have an input field, this property does nothing.
@@ -146,8 +140,20 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                return Rect.zero;
+                return m_State.OccludingArea;
             }
         }
+
+        /// <summary>
+        /// Returns the state of the screen keyboard.
+        /// </summary>
+        public ScreenKeyboardStatus status
+        {
+            get
+            {
+                return m_State.Status;
+            }
+        }
+
     }
 }

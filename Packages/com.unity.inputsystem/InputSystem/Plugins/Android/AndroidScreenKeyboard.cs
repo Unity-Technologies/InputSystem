@@ -17,15 +17,14 @@ namespace UnityEngine.InputSystem.Android
 
             void OnTextChanged(string text)
             {
-                // TODO: Use different event?
-                var e = IMECompositionEvent.Create(m_Parent.deviceId, text, InputRuntime.s_Instance.currentTime);
-                InputSystem.QueueEvent(ref e);
+                m_Parent.OnChangeInputField(text);
             }
 
             void OnStatusChanged(int status)
             {
-                // TODO:
-                //m_Parent.ChangeStatus((ScreenKeyboardStatus)status);
+                var newState = m_Parent.m_State;
+                newState.Status = (ScreenKeyboardStatus)status;
+                m_Parent.OnChangeState(newState);
             }
         }
 
@@ -67,16 +66,6 @@ namespace UnityEngine.InputSystem.Android
             {
                 if (m_KeyboardObject != null)
                     m_KeyboardObject.Call("setText", value);
-            }
-        }
-
-        public override Rect occludingArea
-        {
-            get
-            {
-                //if (m_KeyboardObject != null)
-                //    return m_KeyboardObject.Call<string>("getText");
-                return Rect.zero;
             }
         }
     }

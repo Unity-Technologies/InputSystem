@@ -98,7 +98,7 @@ enum iOSScreenKeyboardStatus
 - (void)textViewDidChange:(UITextView *)textView
 {
     if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback([textView.text UTF8String]);
+        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textView.text UTF8String]);
     else
         NSLog(@"textViewDidChange: Missing callback");
 }
@@ -106,7 +106,7 @@ enum iOSScreenKeyboardStatus
 - (void)textFieldDidChange:(UITextField*)textField
 {
     if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback([textField.text UTF8String]);
+        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
     else
         NSLog(@"textFieldDidChange: Missing callback");
 }
