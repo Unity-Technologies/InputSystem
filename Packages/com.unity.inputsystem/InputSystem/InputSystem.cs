@@ -2934,7 +2934,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             #if UNITY_EDITOR || UNITY_WSA
-            Plugins.WSA.WSASupport.Initialize();
+            WSA.WSASupport.Initialize();
             #endif
         }
 

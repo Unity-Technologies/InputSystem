@@ -6,7 +6,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Text.Core;
 #endif
 
-namespace UnityEngine.InputSystem.Plugins.WSA
+namespace UnityEngine.InputSystem.WSA
 {
     public class WSAScreenKeyboard : ScreenKeyboard
     {

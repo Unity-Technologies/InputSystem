@@ -4,7 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
 
-namespace UnityEngine.InputSystem.Plugins.WSA
+namespace UnityEngine.InputSystem.WSA
 {
     public static class WSASupport
     {
