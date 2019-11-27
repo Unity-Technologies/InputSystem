@@ -613,6 +613,29 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
+        /// <summary>
+        /// Check whether the given path matches <paramref name="control"/> or any of its parents.
+        /// </summary>
+        /// <param name="expected">A control path.</param>
+        /// <param name="control">An input control.</param>
+        /// <returns>True if the given path matches at least a partial path to <paramref name="control"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <c>null</c> or empty -or-
+        /// <paramref name="control"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // True as the path matches the Keyboard device itself, i.e. the parent of
+        /// // Keyboard.aKey.
+        /// InputControlPath.MatchesPrefix("&lt;Keyboard&gt;", Keyboard.current.aKey);
+        ///
+        /// // False as the path matches none of the controls leading to Keyboard.aKey.
+        /// InputControlPath.MatchesPrefix("&lt;Gamepad&gt;", Keyboard.current.aKey);
+        ///
+        /// // True as the path matches Keyboard.aKey itself.
+        /// InputControlPath.MatchesPrefix("&lt;Keyboard&gt;/a", Keyboard.current.aKey);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static bool MatchesPrefix(string expected, InputControl control)
         {
             if (string.IsNullOrEmpty(expected))

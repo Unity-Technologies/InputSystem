@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
-using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
@@ -851,6 +850,36 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedControls, Has.Count.EqualTo(2));
         Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.leftStick.x));
         Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.aButton));
+    }
+
+    // Touchscreens, because of the unusual TouchState events they receive, are trickier to handle than other
+    // types of devices. Make use that InputUser.listenForUnpairedDeviceActivity doesn't choke on such events.
+    // (case 1196522)
+    [Test]
+    [Category("Users")]
+    public void Users_CanDetectUseOfUnpairedDevice_WhenDeviceIsTouchscreen()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var activityWasDetected = false;
+
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed +=
+            (control, eventPtr) =>
+        {
+            // Because of Touchscreen's state trickery, there's no saying which actual TouchControl
+            // the event is for until Touchscreen has actually gone and done its thing and processed
+            // the event. So, all we can say here is that 'control' should be part of any of the
+            // TouchControls on our Touchscreen.
+            Assert.That(control.FindInParentChain<TouchControl>(), Is.Not.Null);
+            Assert.That(control.device, Is.SameAs(touchscreen));
+
+            activityWasDetected = true;
+        };
+
+        BeginTouch(1, new Vector2(123, 234));
+
+        Assert.That(activityWasDetected);
     }
 
     // Make sure that if we pair a device from InputUser.onUnpairedDeviceUsed, we don't get any further

@@ -594,6 +594,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal bool hasStateCallbacks
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) == DeviceFlags.HasStateCallbacks;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasStateCallbacks;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasStateCallbacks;
+            }
+        }
+
         internal void AddDeviceUsage(InternedString usage)
         {
             var controlUsageCount = m_UsageToControl.LengthSafe();

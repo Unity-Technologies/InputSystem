@@ -248,5 +248,10 @@ namespace UnityEngine.InputSystem
         {
             OnStateEvent(eventPtr);
         }
+
+        bool IInputStateCallbackReceiver.GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
+        }
     }
 }

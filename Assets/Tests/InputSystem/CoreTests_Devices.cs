@@ -981,6 +981,11 @@ partial class CoreTests
         {
             InputState.Change(this, eventPtr);
         }
+
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
+        }
     }
 
     [Test]
@@ -1073,6 +1078,11 @@ partial class CoreTests
                 }
 
             Assert.Fail();
+        }
+
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            return false;
         }
     }
 

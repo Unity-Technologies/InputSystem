@@ -2,6 +2,9 @@ using NUnit.Framework;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
+// Disable irrelevant warning about there not being underscores in method names.
+#pragma warning disable CA1707
+
 // These tests are the only ones that we put *in* the package. The rest of our tests live in Assets/Tests and run separately
 // from our CI and not through upm-ci. This also means that IntegrationTests is the only thing we put on trunk through our
 // verified package.
@@ -20,7 +23,8 @@ using UnityEngine.InputSystem.LowLevel;
 public class IntegrationTests
 {
     [Test]
-    public void CanSendAndReceiveEvents()
+    [Category("Integration")]
+    public void Integration_CanSendAndReceiveEvents()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
