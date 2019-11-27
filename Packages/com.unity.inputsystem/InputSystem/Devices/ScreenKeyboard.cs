@@ -134,6 +134,5 @@ namespace UnityEngine.InputSystem
                 return m_KeyboardProperties.State;
             }
         }
-
     }
 }
