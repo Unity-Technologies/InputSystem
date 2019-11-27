@@ -957,7 +957,7 @@ partial class CoreTests
     {
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
-        using (var trace = new InputEventTrace(touchscreen))
+        using (var trace = new InputEventTrace { deviceId = touchscreen.deviceId })
         {
             trace.Enable();
 
