@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - `Keyboard` now has a `FindKeyOnCurrentKeyboardLayout` method to look up key controls by their display names.
 - Keyboards now have synthetic controls that combine left and right variants of modifier keys.
-  * This means that you can binding to just "shift" now, for example, instead of having to bind to both "left shift" and "right shift".
+  * This means that you can bind to just "shift" now, for example, instead of having to bind to both "left shift" and "right shift".
     ```CSharp
     new InputAction(binding: "<Keyboard>/shift");
     ```
