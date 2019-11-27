@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 #if UNITY_ANDROID
 using UnityEngine.InputSystem.Android;
 #elif UNITY_WSA
-using UnityEngine.InputSystems.WSA;
+using UnityEngine.InputSystem.WSA;
 #endif
 
 public enum AutomaticOperation
@@ -96,16 +96,16 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_InputField.text = text;
     }
 
-    private void StatusChangedCallback(ScreenKeyboardStatus status)
+    private void StatusChangedCallback(ScreenKeyboardState state)
     {
-        m_LogText.text += "Status: " + status + Environment.NewLine;
+        m_LogText.text += "Status: " + state + Environment.NewLine;
     }
 
     // Update is called once per frame
     void Update()
     {
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
-        m_KeyboardStatus.text = m_ScreenKeyboard.status.ToString();
+        m_KeyboardStatus.text = m_ScreenKeyboard.state.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
 
         if (m_OldScreenKeyboard != null)
