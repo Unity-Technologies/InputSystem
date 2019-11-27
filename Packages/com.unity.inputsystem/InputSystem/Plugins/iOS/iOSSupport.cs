@@ -16,7 +16,6 @@ namespace UnityEngine.InputSystem.iOS
                 matches: new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("iOSGameController"));
-            InputSystem.RegisterLayout<iOSScreenKeyboard>();
 
             InputSystem.RegisterLayout<XboxOneGampadiOS>("XboxOneGampadiOS",
                 matches: new InputDeviceMatcher()
