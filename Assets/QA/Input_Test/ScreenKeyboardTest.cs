@@ -49,7 +49,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     void Start()
     {
-        m_ScreenKeyboard = ScreenKeyboard.GetInstance();
+        m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
 
