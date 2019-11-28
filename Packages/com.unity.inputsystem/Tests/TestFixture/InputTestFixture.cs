@@ -166,6 +166,55 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
+
+        /// <summary>
+        /// Set the <see cref="InputControl.displayName"/> of <paramref name="key"/> on the current
+        /// <see cref="Keyboard"/> to be <paramref name="displayName"/>.
+        /// </summary>
+        /// <param name="key">Key to set the display name for.</param>
+        /// <param name="displayName">Display name for the key.</param>
+        /// <param name="scanCode">Optional <see cref="KeyControl.scanCode"/> to report for the key.</param>
+        /// <remarks>
+        /// Automatically adds a <see cref="Keyboard"/> if none has been added yet.
+        /// </remarks>
+        public unsafe void SetKeyInfo(Key key, string displayName, int scanCode = 0)
+        {
+            if (Keyboard.current == null)
+                InputSystem.AddDevice<Keyboard>();
+
+            if (m_KeyInfos == null)
+            {
+                m_KeyInfos = new Dictionary<Key, Tuple<string, int>>();
+
+                runtime.SetDeviceCommandCallback(Keyboard.current,
+                    (id, commandPtr) =>
+                    {
+                        if (commandPtr->type == QueryKeyNameCommand.Type)
+                        {
+                            var keyNameCommand = (QueryKeyNameCommand*)commandPtr;
+
+                            if (m_KeyInfos.TryGetValue((Key)keyNameCommand->scanOrKeyCode, out var info))
+                            {
+                                keyNameCommand->scanOrKeyCode = info.Item2;
+                                StringHelpers.WriteStringToBuffer(info.Item1, (IntPtr)keyNameCommand->nameBuffer,
+                                    QueryKeyNameCommand.kMaxNameLength);
+                            }
+
+                            return QueryKeyNameCommand.kSize;
+                        }
+
+                        return InputDeviceCommand.GenericFailure;
+                    });
+            }
+
+            m_KeyInfos[key] = new Tuple<string, int>(displayName, scanCode);
+
+            // Make sure caches on keys are flushed.
+            InputSystem.QueueConfigChangeEvent(Keyboard.current);
+            InputSystem.Update();
+        }
+
         public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null)
         {
             return new ActionConstraint(InputActionPhase.Started, action, control, time: time);

@@ -2126,6 +2126,61 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanLookUpKeyFromKeyboardUsingDisplayName()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        SetKeyInfo(Key.A, "q");
+        SetKeyInfo(Key.Q, "a");
+
+        Assert.That(keyboard.FindKeyOnCurrentKeyboardLayout("a"), Is.SameAs(keyboard.qKey));
+        Assert.That(keyboard.FindKeyOnCurrentKeyboardLayout("q"), Is.SameAs(keyboard.aKey));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_KeyboardsHaveSyntheticCombinedModifierKeys()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(keyboard.shiftKey.synthetic, Is.True);
+        Assert.That(keyboard.ctrlKey.synthetic, Is.True);
+        Assert.That(keyboard.altKey.synthetic, Is.True);
+
+        Assert.That(keyboard.shiftKey.isPressed, Is.False);
+        Assert.That(keyboard.ctrlKey.isPressed, Is.False);
+        Assert.That(keyboard.altKey.isPressed, Is.False);
+
+        Press(keyboard.leftAltKey);
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.leftCtrlKey);
+
+        Assert.That(keyboard.shiftKey.isPressed, Is.True);
+        Assert.That(keyboard.ctrlKey.isPressed, Is.True);
+        Assert.That(keyboard.altKey.isPressed, Is.True);
+
+        Assert.That(keyboard.shiftKey.ReadValue(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(keyboard.ctrlKey.ReadValue(), Is.EqualTo(1).Within(0.00001));
+        Assert.That(keyboard.altKey.ReadValue(), Is.EqualTo(1).Within(0.00001));
+
+        Release(keyboard.leftAltKey);
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.leftCtrlKey);
+
+        Assert.That(keyboard.shiftKey.isPressed, Is.False);
+        Assert.That(keyboard.ctrlKey.isPressed, Is.False);
+        Assert.That(keyboard.altKey.isPressed, Is.False);
+
+        Press(keyboard.rightAltKey);
+        Press(keyboard.rightShiftKey);
+        Press(keyboard.rightCtrlKey);
+
+        Assert.That(keyboard.shiftKey.isPressed, Is.True);
+        Assert.That(keyboard.ctrlKey.isPressed, Is.True);
+        Assert.That(keyboard.altKey.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanPerformHorizontalAndVerticalScrollWithMouse()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
