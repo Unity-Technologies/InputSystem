@@ -161,7 +161,7 @@ enum iOSScreenKeyboardStatus
 
 #endif
 
-+ (iOSScreenKeyboardDelegate*)GetInstanceOrCreate
++ (iOSScreenKeyboardDelegate*)getInstanceOrCreate
 {
     if (!s_Keyboard)
     {
@@ -173,7 +173,7 @@ enum iOSScreenKeyboardStatus
     return s_Keyboard;
 }
 
-+ (iOSScreenKeyboardDelegate*)GetInstance
++ (iOSScreenKeyboardDelegate*)getInstance
 {
     return s_Keyboard;
 }

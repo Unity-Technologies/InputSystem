@@ -98,12 +98,12 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         *callbacks
     };
 
-    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] show:param withInitialTextCStr:showParams->initialText withPlaceholderTextCStr:showParams->placeholderText];
+    [[iOSScreenKeyboardDelegate getInstanceOrCreate] show:param withInitialTextCStr:showParams->initialText withPlaceholderTextCStr:showParams->placeholderText];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
     if (keyboard == NULL)
     {
         UnityRect zero = {0, 0, 0, 0};
@@ -116,7 +116,7 @@ extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 
 extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
     if (keyboard == NULL)
         return;
     NSString* convertedText = text ? [[NSString alloc] initWithUTF8String: text] : @"";
@@ -125,7 +125,7 @@ extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
 
 extern "C" const char* _iOSScreenKeyboardGetInputFieldText()
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
     if (keyboard == NULL)
         return NULL;
     

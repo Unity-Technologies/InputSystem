@@ -24,8 +24,8 @@ struct iOSScreenKeyboardShowParamsNative
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
 
-+ (iOSScreenKeyboardDelegate*)GetInstanceOrCreate;
-+ (iOSScreenKeyboardDelegate*)GetInstance;
++ (iOSScreenKeyboardDelegate*)getInstanceOrCreate;
++ (iOSScreenKeyboardDelegate*)getInstance;
 
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
 - (void)hide;
