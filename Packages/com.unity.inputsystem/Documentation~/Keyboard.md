@@ -11,7 +11,7 @@ You can look up keys based on the character they produce using [Control paths](C
 >__Note__
 >* Keyboards usually have hardware limitations on both the number of simultaneous keypresses they report, and the combinations of keys they support. This means that certain simultaneous keypresses may not register correctly. For example, a given keyboard may report a simultaneous press of the "QWERT" keys correctly but may not report "QWERA" correctly.
 >* At the moment, the new Input System doesn't support on-screen keyboards. For now, please Unity's existing API in `UnityEngine.TouchScreenKeyboard`.
->* At the moment, Unity platform backends generally do not support distinguishing between multiple keyboards. While the Input System supports having arbitray many [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) devices at any point, platform backends will generally only report a single keyboard and route input from all attached keyboards to the one keyboard device. Supporting multiple keyboards at the platform level is on the TODO list.
+>* At the moment, Unity platform backends generally do not support distinguishing between multiple keyboards. While the Input System supports having arbitray many [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) devices at any point, platform backends will generally only report a single keyboard and route input from all attached keyboards to the one keyboard device.
 
 ## Controls
 
