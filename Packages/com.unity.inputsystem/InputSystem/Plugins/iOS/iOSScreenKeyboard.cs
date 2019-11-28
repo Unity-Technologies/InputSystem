@@ -26,6 +26,12 @@ namespace UnityEngine.InputSystem.iOS
         [DllImport("__Internal")]
         private static extern Rect _iOSScreenKeyboardOccludingArea();
 
+        [DllImport("__Internal")]
+        private static extern void _iOSScreenKeyboardSetInputFieldText(string text);
+
+        [DllImport("__Internal")]
+        private static extern string _iOSScreenKeyboardGetInputFieldText();
+
         [MonoPInvokeCallback(typeof(OnTextChanged))]
         private static void OnTextChangedCallback(int deviceId, string text)
         {
@@ -67,11 +73,11 @@ namespace UnityEngine.InputSystem.iOS
         {
             get
             {
-                // TODO
-                return string.Empty;
+                return _iOSScreenKeyboardGetInputFieldText();
             }
             set
             {
+                _iOSScreenKeyboardSetInputFieldText(value);
             }
         }
 

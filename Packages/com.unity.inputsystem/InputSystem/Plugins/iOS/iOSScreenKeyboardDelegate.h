@@ -27,8 +27,8 @@ struct iOSScreenKeyboardShowParamsNative
 + (iOSScreenKeyboardDelegate*)GetInstanceOrCreate;
 + (iOSScreenKeyboardDelegate*)GetInstance;
 
-- (void)Show:(iOSScreenKeyboardShowParamsNative)param:(const char*)initialTextCStr:(const char*)placeholderTextCStr;
-- (void)Hide;
+- (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
+- (void)hide;
 
 // These are all privates
 /*
@@ -52,10 +52,9 @@ struct iOSScreenKeyboardShowParamsNative
 + (void)StartReorientation;
 + (void)FinishReorientation;
 
-
+*/
 - (NSString*)getText;
 - (void)setText:(NSString*)newText;
- */
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
 //@property (readonly, nonatomic)                                 BOOL            active;

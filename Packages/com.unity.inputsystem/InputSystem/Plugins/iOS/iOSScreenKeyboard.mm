@@ -28,6 +28,7 @@ struct iOSScreenKeyboardShowParams
     int multiline;
     int secure;
     int alert;
+    int inputFieldHidden;
 };
 
 struct UnityRect
@@ -97,7 +98,7 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         *callbacks
     };
 
-    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] Show: param: showParams->initialText: showParams->placeholderText];
+    [[iOSScreenKeyboardDelegate GetInstanceOrCreate] show:param withInitialTextCStr:showParams->initialText withPlaceholderTextCStr:showParams->placeholderText];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
@@ -112,3 +113,22 @@ extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
     UnityRect unityRC = {(float)rc.origin.x, (float)rc.origin.y, (float)rc.size.width, (float)rc.size.height};
     return unityRC;
 }
+
+extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
+{
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    if (keyboard == NULL)
+        return;
+    NSString* convertedText = text ? [[NSString alloc] initWithUTF8String: text] : @"";
+    [keyboard setText: convertedText];
+}
+
+extern "C" const char* _iOSScreenKeyboardGetInputFieldText()
+{
+    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate GetInstance];
+    if (keyboard == NULL)
+        return NULL;
+    
+    return strdup([[keyboard getText] UTF8String]);
+}
+
