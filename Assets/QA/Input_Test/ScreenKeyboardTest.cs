@@ -49,6 +49,10 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     void Start()
     {
+        var canvasScaler = GetComponent<CanvasScaler>();
+#if UNITY_WSA
+        canvasScaler.enabled = false;
+#endif
         m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
