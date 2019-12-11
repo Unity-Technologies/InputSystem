@@ -235,7 +235,11 @@ namespace UnityEngine.InputSystem
         ////TODO: introduce an alternative that consumes events in bulk
         public event EventListener onEvent
         {
-            add => m_EventListeners.AppendWithCapacity(value);
+            add
+            {
+                if (!m_EventListeners.ContainsReference(value))
+                    m_EventListeners.AppendWithCapacity(value);
+            }
             remove
             {
                 var index = m_EventListeners.IndexOf(value);
@@ -249,7 +253,8 @@ namespace UnityEngine.InputSystem
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                m_BeforeUpdateListeners.AppendWithCapacity(value);
+                if (!m_BeforeUpdateListeners.ContainsReference(value))
+                    m_BeforeUpdateListeners.AppendWithCapacity(value);
             }
             remove
             {
@@ -261,7 +266,11 @@ namespace UnityEngine.InputSystem
 
         public event UpdateListener onAfterUpdate
         {
-            add => m_AfterUpdateListeners.AppendWithCapacity(value);
+            add
+            {
+                if (!m_AfterUpdateListeners.ContainsReference(value))
+                    m_AfterUpdateListeners.AppendWithCapacity(value);
+            }
             remove
             {
                 var index = m_AfterUpdateListeners.IndexOf(value);
@@ -272,7 +281,11 @@ namespace UnityEngine.InputSystem
 
         public event Action onSettingsChange
         {
-            add => m_SettingsChangedListeners.AppendWithCapacity(value);
+            add
+            {
+                if (!m_SettingsChangedListeners.ContainsReference(value))
+                    m_SettingsChangedListeners.AppendWithCapacity(value);
+            }
             remove
             {
                 var index = m_SettingsChangedListeners.IndexOf(value);
@@ -1167,7 +1180,14 @@ namespace UnityEngine.InputSystem
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.deviceId;
+            if (deviceIndex < m_StateChangeMonitors.LengthSafe())
+            {
+                // m_StateChangeMonitors mirrors layout of m_Devices.
+                var count = m_DevicesCount;
+                ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors, ref count, deviceIndex);
+            }
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
+
             m_DevicesById.Remove(deviceId);
 
             if (m_Devices != null)
@@ -1803,6 +1823,7 @@ namespace UnityEngine.InputSystem
             {
                 // We don't actually release memory we've potentially allocated but rather just reset
                 // our count to zero.
+                listeners.Clear(count);
                 signalled.SetLength(0);
             }
         }
