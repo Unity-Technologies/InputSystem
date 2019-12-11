@@ -9,8 +9,6 @@ This sample demonstrates how to set this up with the input system.
 5) Note how `Cursor` is the last child of `Canvas` so that it draws on top of everything else.
 6) Note that `Raycast Target` on the `Image` component of the cursor is turned off to avoid raycasts from the mouse cursor hitting the cursor itself.
 
-/////////////demonstrate it both in screen and in world space
-
 # Licenses
 
 The [cursor](./crosshair.png) used in the example is from [game-icons.net](https://game-icons.net/1x1/delapouite/crosshair.html) and made by [Delapuite](https://delapouite.com/) and released under the [CC BY 3.0 license](https://creativecommons.org/licenses/by/3.0/). It is used without modifications.

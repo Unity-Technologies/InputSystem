@@ -53,4 +53,3 @@ The properties of the [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.
 You may want to use the gamepad, for example, to drive a mouse cursor in the UI and perform operations such as scrolling up and down. You can achieve this using the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component. Simply add a `GameObject` to represent the mouse cursor to your [`Canvas`](https://docs.unity3d.com/ScriptReference/Canvas.html), add the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component to it, and configure the actions on the component appropriate. Also, to correlate the mouse position to the transform of the cursor UI object, set the "Cursor Transform" property to the respective [`RectTransform`](https://docs.unity3d.com/ScriptReference/RectTransform.html) and "Canvas" to the canvas to which the cursor should be restricted.
 
 ![Virtual Mouse Input Component](./Images/VirtualMouseInput.png)
-
