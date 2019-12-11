@@ -2490,17 +2490,16 @@ namespace UnityEngine.InputSystem
                 //       play mode in the editor.
                 #if UNITY_EDITOR
                 if ((updateType & InputUpdateType.Editor) == 0 &&
-                    InputSystem.s_SystemObject.exitEditModeTime != 0 &&
+                    InputSystem.s_SystemObject.exitEditModeTime > 0 &&
                     currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
                     (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                      InputSystem.s_SystemObject.enterPlayModeTime == 0))
                 {
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
+                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
                     continue;
                 }
                 #endif
-
 
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventTimeInternal >= currentTime)

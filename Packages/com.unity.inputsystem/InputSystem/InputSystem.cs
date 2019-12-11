@@ -2808,7 +2808,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.ExitingEditMode:
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
                     s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
-                    s_SystemObject.enterPlayModeTime = -1;
+                    s_SystemObject.enterPlayModeTime = 0;
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
