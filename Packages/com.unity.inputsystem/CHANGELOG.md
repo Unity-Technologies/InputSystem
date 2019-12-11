@@ -34,6 +34,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
  * In a related change, `InputControlExtensions.GetStatePtrFromStateEvent` now works with touch events, too.
+- Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.
+  * This bug led to input being missed on a device once another device had been removed.
 
 ## [1.0.0-preview.3] - 2019-11-14
 
