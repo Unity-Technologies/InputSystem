@@ -743,6 +743,24 @@ partial class CoreTests
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
     }
 
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitorsStayIntactWhenOtherDevicesAreRemoved()
+    {
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var positionMonitorFired = false;
+        InputState.AddChangeMonitor(mouse.position, (control, d, arg3, arg4) => positionMonitorFired = true);
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Set(mouse.position, new Vector2(123, 234));
+
+        Assert.That(positionMonitorFired);
+    }
+
     // For certain actions, we want to be able to tell whether a specific input arrives in time.
     // For example, we may want to only trigger an action if a specific button was released within
     // a certain amount of time. To support this, the system allows putting timeouts on individual
