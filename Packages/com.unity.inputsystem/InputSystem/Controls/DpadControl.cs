@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Controls
                 // If press is diagonal, adjust coordinates to produce vector of length 1.
                 // pow(0.707107) is roughly 0.5 so sqrt(pow(0.707107)+pow(0.707107)) is ~1.
                 const float diagonal = 0.707107f;
-                if (Mathf.Approximately(0, result.x) && Mathf.Approximately(0, result.y))
+                if (!Mathf.Approximately(0, result.x) && !Mathf.Approximately(0, result.y))
                     result = new Vector2(result.x * diagonal, result.y * diagonal);
             }
 

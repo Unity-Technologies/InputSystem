@@ -4772,7 +4772,7 @@ partial class CoreTests
 
         // Set up classic WASD control.
         var action = new InputAction();
-        action.AddCompositeBinding("Dpad")
+        action.AddCompositeBinding("Dpad(analog=false)")
             .With("Up", "<Gamepad>/leftstick/up")
             .With("Down", "<Gamepad>/leftstick/down")
             .With("Left", "<Gamepad>/leftstick/left")
@@ -5048,7 +5048,7 @@ partial class CoreTests
         //       the WASD and arrow block can be mixed. An alternative setup would be to set up
         //       to separate Dpad composites, one for WASD and one for the arrow block. In that setup,
         //       the two will not mix but rather produce two independent 2D vectors. Which one gets
-        //       to drive the associated action is whichver had the last input event.
+        //       to drive the associated action is whichever had the last input event.
         var action = new InputAction();
         action.AddCompositeBinding("Dpad")
             .With("Up", "/<Keyboard>/w")
