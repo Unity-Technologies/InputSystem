@@ -9,6 +9,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.4] - 2019-12-12
 
+### Changed
+
+
+#### Actions
+
+- `Vector2Composite` will now treat controls bound in the composite as analog by default, i.e. the actual values of the controls will be reflected in the resulting vector.
+  * A new parameter called `analog` has been added that if set to `false` reverts to the previous behavior of treating controls as buttons.
+
 ### Added
 
 - `Keyboard` now has a `FindKeyOnCurrentKeyboardLayout` method to look up key controls by their display names.

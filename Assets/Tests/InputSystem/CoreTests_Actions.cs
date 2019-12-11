@@ -4728,6 +4728,39 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateVector2Composite_FromAnalogControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Get rid of deadzoning for simpler test.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMin = 1;
+
+        var analogAction = new InputAction("analog", type: InputActionType.Value);
+        var digitalAction = new InputAction("digital", type: InputActionType.Value);
+
+        analogAction.AddCompositeBinding("2DVector(analog=true,normalize=false)")
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+        digitalAction.AddCompositeBinding("2DVector(analog=false,normalize=false)")
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+
+        analogAction.Enable();
+        digitalAction.Enable();
+
+        Set(gamepad.leftStick, new Vector2(-0.234f, 0.345f));
+
+        Assert.That(analogAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(digitalAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-1, 1)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_Vector2Composite_RespectsButtonPressurePoint()
     {
         // The stick has deadzones on the up/down/left/right buttons to get rid of stick
