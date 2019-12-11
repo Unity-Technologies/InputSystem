@@ -57,7 +57,7 @@ namespace UnityEngine.InputSystem
 
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
-                if (type == InputUpdateType.Dynamic)
+                if (type == InputUpdateType.Dynamic && !dontAdvanceTimeNextDynamicUpdate)
                     currentTime += advanceTimeEachDynamicUpdate;
 
                 if (onUpdate != null)
@@ -79,6 +79,8 @@ namespace UnityEngine.InputSystem
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
+
+                dontAdvanceTimeNextDynamicUpdate = false;
             }
         }
 
@@ -319,6 +321,8 @@ namespace UnityEngine.InputSystem
         public double currentTimeForFixedUpdate { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
+
+        public bool dontAdvanceTimeNextDynamicUpdate { get; set; }
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 

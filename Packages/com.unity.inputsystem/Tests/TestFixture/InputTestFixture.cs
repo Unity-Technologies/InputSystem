@@ -475,8 +475,12 @@ namespace UnityEngine.InputSystem
         /// <value>Current time used by the input system.</value>
         public double currentTime
         {
-            get => runtime.currentTime = currentTime;
-            set => runtime.currentTime = value;
+            get => runtime.currentTime;
+            set
+            {
+                runtime.currentTime = value;
+                runtime.dontAdvanceTimeNextDynamicUpdate = true;
+            }
         }
 
         public class ActionConstraint : Constraint
