@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using UnityEditor;
 
+////TODO: add button to automatically set up gamepad mouse cursor support
+
 namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]

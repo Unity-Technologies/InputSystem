@@ -61,10 +61,18 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.IsNullOrEmpty(nameProperty.stringValue))
                 return;
 
-            var suffix = GetSuffixToRemoveFromPropertyDisplayName();
+            // Special case for InputActionProperty where we want to take the name not from
+            // the m_Action property embedded in it but rather from the InputActionProperty field
+            // itself.
             var name = actionProperty.displayName;
+            var parent = actionProperty.GetParentProperty();
+            if (parent != null && parent.type == "InputActionProperty")
+                name = parent.displayName;
+
+            var suffix = GetSuffixToRemoveFromPropertyDisplayName();
             if (name.EndsWith(suffix))
                 name = name.Substring(0, name.Length - suffix.Length);
+
             nameProperty.stringValue = name;
             nameProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }

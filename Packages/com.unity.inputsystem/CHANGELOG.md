@@ -25,6 +25,8 @@ however, it has to be formatted properly to pass verification tests.
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
+- We've added a `VirtualMouseInput` component that can be used to simulate a mouse based on gamepad input.
+  * Related to this, we've added a new sample called "Gamepad Mouse Cursor" that demonstrates how to set this up with uGUI.
 
 ### Changed
 

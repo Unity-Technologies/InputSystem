@@ -40,9 +40,19 @@ namespace UnityEngine.InputSystem.Editor
         public void SetExpectedControlLayout(string expectedControlLayout)
         {
             m_ExpectedControlLayout = expectedControlLayout;
-            m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
-                ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
-                : null;
+
+            if (string.Equals(expectedControlLayout, "InputDevice", StringComparison.InvariantCultureIgnoreCase))
+                m_ExpectedControlType = typeof(InputDevice);
+            else
+                m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
+                    ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
+                    : null;
+
+            // If the layout is for a device, automatically switch to device
+            // picking mode.
+            if (m_ExpectedControlType != null && typeof(InputDevice).IsAssignableFrom(m_ExpectedControlType))
+                m_Mode = InputControlPicker.Mode.PickDevice;
+
             Reload();
         }
 
@@ -482,7 +492,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         private readonly Action<string> m_OnPickCallback;
-        private readonly InputControlPicker.Mode m_Mode;
+        private InputControlPicker.Mode m_Mode;
         private string[] m_ControlPathsToMatch;
         private string m_ExpectedControlLayout;
         private Type m_ExpectedControlType;

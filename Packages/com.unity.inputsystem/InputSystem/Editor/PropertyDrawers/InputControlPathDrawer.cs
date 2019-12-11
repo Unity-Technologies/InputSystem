@@ -39,7 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             if (m_Editor == null)
             {
                 m_Editor = new InputControlPathEditor(property, m_PickerState,
-                    () => property.serializedObject.ApplyModifiedProperties());
+                    () => property.serializedObject.ApplyModifiedProperties(),
+                    label: label);
                 m_Editor.SetExpectedControlLayoutFromAttribute();
             }
 
