@@ -2490,6 +2490,7 @@ namespace UnityEngine.InputSystem
                 //       play mode in the editor.
                 #if UNITY_EDITOR
                 if ((updateType & InputUpdateType.Editor) == 0 &&
+                    InputSystem.s_SystemObject.exitEditModeTime != 0 &&
                     currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
                     (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                      InputSystem.s_SystemObject.enterPlayModeTime == 0))
