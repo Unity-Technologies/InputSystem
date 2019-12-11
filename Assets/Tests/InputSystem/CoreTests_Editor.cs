@@ -2165,13 +2165,19 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
+        // We need to actually pass time and have a non-zero start time for this to work.
+        currentTime = 1;
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(234, 345) });
+        currentTime = 2;
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         InputSystem.Update();
 
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Make sure the event was not left in the buffer.
+        Assert.That(runtime.m_EventCount, Is.EqualTo(0));
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
