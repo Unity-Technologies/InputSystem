@@ -2801,12 +2801,18 @@ namespace UnityEngine.InputSystem
             Profiling.Profiler.EndSample();
         }
 
-        private static void OnPlayModeChange(PlayModeStateChange change)
+        internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
+                    s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_SystemObject.enterPlayModeTime = -1;
+                    break;
+
+                case PlayModeStateChange.EnteredPlayMode:
+                    s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps

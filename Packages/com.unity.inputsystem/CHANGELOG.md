@@ -34,6 +34,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
  * In a related change, `InputControlExtensions.GetStatePtrFromStateEvent` now works with touch events, too.
+- Input that occurs in-between pressing the play button and the game starting no longer leaks into the game (case 1191342).
+  * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
 
 ## [1.0.0-preview.3] - 2019-11-14
 
