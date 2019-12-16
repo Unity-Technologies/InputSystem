@@ -3034,6 +3034,7 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputRemoting.SerializedState remotingState;
             #if UNITY_EDITOR
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            [SerializeField] public string systemObject;
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
         }
@@ -3070,6 +3071,7 @@ namespace UnityEngine.InputSystem
                 remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
+                systemObject = JsonUtility.ToJson(s_SystemObject),
                 #endif
             });
 
@@ -3100,6 +3102,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
+            JsonUtility.FromJsonOverwrite(state.systemObject, s_SystemObject);
             #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them
