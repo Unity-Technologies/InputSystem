@@ -8,6 +8,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make this survive domain reloads
 
+////TODO: allow feeding into more than one control
+
 namespace UnityEngine.InputSystem.OnScreen
 {
     /// <summary>

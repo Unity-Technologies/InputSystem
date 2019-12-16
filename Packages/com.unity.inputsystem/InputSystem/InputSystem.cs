@@ -2801,12 +2801,18 @@ namespace UnityEngine.InputSystem
             Profiling.Profiler.EndSample();
         }
 
-        private static void OnPlayModeChange(PlayModeStateChange change)
+        internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
+                    s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_SystemObject.enterPlayModeTime = 0;
+                    break;
+
+                case PlayModeStateChange.EnteredPlayMode:
+                    s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
@@ -3028,6 +3034,7 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputRemoting.SerializedState remotingState;
             #if UNITY_EDITOR
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            [SerializeField] public string systemObject;
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
         }
@@ -3064,6 +3071,7 @@ namespace UnityEngine.InputSystem
                 remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
+                systemObject = JsonUtility.ToJson(s_SystemObject),
                 #endif
             });
 
@@ -3094,6 +3102,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
+            JsonUtility.FromJsonOverwrite(state.systemObject, s_SystemObject);
             #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them

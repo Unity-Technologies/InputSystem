@@ -15,6 +15,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] public InputSystem.State systemState;
         [SerializeField] public bool newInputBackendsCheckedAsEnabled;
         [SerializeField] public string settings;
+        [SerializeField] public double exitEditModeTime;
+        [SerializeField] public double enterPlayModeTime;
 
         public void OnBeforeSerialize()
         {

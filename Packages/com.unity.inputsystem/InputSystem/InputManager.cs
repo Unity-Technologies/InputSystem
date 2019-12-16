@@ -2477,16 +2477,40 @@ namespace UnityEngine.InputSystem
                 if (remainingEventCount == 0)
                     break;
 
+                var currentEventTimeInternal = currentEventReadPtr->internalTime;
+
+                // In the editor, we discard all input events that occur in-between exiting edit mode and having
+                // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
+                // UI was sort of neither in this mode nor in that mode. This would usually lead to the game receiving
+                // an accumulation of spurious inputs right in one of its first updates.
+                //
+                // NOTE: There's a chance the solution here will prove inadequate on the long run. We may do things
+                //       here such as throwing partial touches away and then letting the rest of a touch go through.
+                //       Could be that ultimately we need to issue a full reset of all devices at the beginning of
+                //       play mode in the editor.
+                #if UNITY_EDITOR
+                if ((updateType & InputUpdateType.Editor) == 0 &&
+                    InputSystem.s_SystemObject.exitEditModeTime > 0 &&
+                    currentEventTimeInternal >= InputSystem.s_SystemObject.exitEditModeTime &&
+                    (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
+                     InputSystem.s_SystemObject.enterPlayModeTime == 0))
+                {
+                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
+                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                    continue;
+                }
+                #endif
+
                 // If we're timeslicing, check if the event time is within limits.
-                if (timesliceEvents && currentEventReadPtr->internalTime >= currentTime)
+                if (timesliceEvents && currentEventTimeInternal >= currentTime)
                 {
                     eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                         ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
                     continue;
                 }
 
-                if (currentEventReadPtr->internalTime <= currentTime)
-                    totalEventLag += currentTime - currentEventReadPtr->internalTime;
+                if (currentEventTimeInternal <= currentTime)
+                    totalEventLag += currentTime - currentEventTimeInternal;
 
                 // Grab device for event. In before-render updates, we already had to
                 // check the device.
@@ -2507,10 +2531,9 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Give listeners a shot at the event.
-                var listenerCount = m_EventListeners.length;
-                if (listenerCount > 0)
+                if (m_EventListeners.length > 0)
                 {
-                    for (var i = 0; i < listenerCount; ++i)
+                    for (var i = 0; i < m_EventListeners.length; ++i)
                         m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
 
                     // If a listener marks the event as handled, we don't process it further.
@@ -2524,7 +2547,6 @@ namespace UnityEngine.InputSystem
 
                 // Process.
                 var currentEventType = currentEventReadPtr->type;
-                var currentEventTimeInternal = currentEventReadPtr->internalTime;
                 switch (currentEventType)
                 {
                     case StateEvent.Type:
