@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.XR
             for (var i = 0; i < stringLength; i++)
             {
                 var letter = originalName[i];
-                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter))
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == '/')
                 {
                     sanitizedName.Append(letter);
                 }
