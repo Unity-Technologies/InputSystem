@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.XR
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
     /// <summary>
-    /// The type of data a <see cref="XRFeatureDescriptor>"/> exposes. 
+    /// The type of data a <see cref="XRFeatureDescriptor>"/> exposes.
     /// </summary>
     public enum FeatureType
     {
