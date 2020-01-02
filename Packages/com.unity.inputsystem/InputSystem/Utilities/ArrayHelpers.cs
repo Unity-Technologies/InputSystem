@@ -708,8 +708,6 @@ namespace UnityEngine.InputSystem.Utilities
             if (sourceIndex > destinationIndex)
                 Swap(ref sourceIndex, ref destinationIndex);
 
-            var length = array.Length;
-
             while (destinationIndex != sourceIndex)
             {
                 // Swap source and destination slice. Afterwards, the source slice is the right, final

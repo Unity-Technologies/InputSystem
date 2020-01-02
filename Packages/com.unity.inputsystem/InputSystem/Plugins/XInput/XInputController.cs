@@ -65,8 +65,8 @@ namespace UnityEngine.InputSystem.XInput
         [InputControl(name = "leftTrigger", shortDisplayName = "LT")]
         [InputControl(name = "rightTrigger", shortDisplayName = "RT")]
         // This follows Xbox One conventions; on Xbox 360, this is start=start and select=back.
-        [InputControl(name = "start", displayName = "Menu")]
-        [InputControl(name = "select", displayName = "View")]
+        [InputControl(name = "start", displayName = "Menu", alias = "menu")]
+        [InputControl(name = "select", displayName = "View", alias = "view")]
         public ButtonControl menu { get; private set; }
 
         /// <summary>

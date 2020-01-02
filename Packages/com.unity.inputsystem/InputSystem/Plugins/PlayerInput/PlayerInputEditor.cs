@@ -442,6 +442,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (oldActionEvents != null && oldActionEvents.Any(x => x.actionId == action.id.ToString()))
                         continue;
 
+                    ////FIXME: adds bindings to the name
                     AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));
                 }
 
@@ -489,6 +490,8 @@ namespace UnityEngine.InputSystem.Editor
             }
             if (m_SelectedDefaultActionMap <= 0)
                 playerInput.defaultActionMap = null;
+            else
+                playerInput.defaultActionMap = m_ActionMapOptions[m_SelectedDefaultActionMap].text;
 
             serializedObject.Update();
         }

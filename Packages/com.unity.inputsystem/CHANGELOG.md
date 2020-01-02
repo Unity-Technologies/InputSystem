@@ -7,20 +7,76 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.2] - 2999-11-11
+## [1.0.0-preview.4] - 2019-12-12
+
+### Added
+
+- `Keyboard` now has a `FindKeyOnCurrentKeyboardLayout` method to look up key controls by their display names.
+- Keyboards now have synthetic controls that combine left and right variants of modifier keys.
+  * This means that you can bind to just "shift" now, for example, instead of having to bind to both "left shift" and "right shift".
+    ```CSharp
+    new InputAction(binding: "<Keyboard>/shift");
+    ```
+  * The controls are also available as properties on `Keyboard`.
+    ```CSharp
+    if (Keyboard.current.shiftKey.isPressed) /* ... */;
+
+    // Is equivalent to:
+    if (Keyboard.current.leftShiftKey.isPressed ||
+        Keyboard.current.rightShiftKey.isPressed) /* ... */;
+    ```
+
+### Changed
+
+- `InputControlExtensions.GetStatePtrFromStateEvent` no longer throws `InvalidOperationException` when the state format for the event does not match that of the device. It simply returns `null` instead (same as when control is found in the event's state).
+
+### Fixed
+
+- `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
+ * In a related change, `InputControlExtensions.GetStatePtrFromStateEvent` now works with touch events, too.
+- Input that occurs in-between pressing the play button and the game starting no longer leaks into the game (case 1191342).
+  * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
+- Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.
+  * This bug led to input being missed on a device once another device had been removed.
+
+## [1.0.0-preview.3] - 2019-11-14
+
+### Fixed
+
+- Fixed wrong event handlers getting removed when having three or more handlers on an event (case 1196143).
+  * This was an bug in an internal data structure that impacted a number of code paths that were using the data structure.
+- Fixed `LayoutNotFoundException` being thrown when `InputControlPath.ToHumanReadableString` referenced a layout that could not be found.
+
+## [1.0.0-preview.2] - 2019-11-4
+
+### Changed
+
+- Automatic conversion of window coordinates in `EditorWindow` code is now performed regardless of focus or the setting of `Lock Input to Game View` in the input debugger.
 
 ### Fixed
 
 - Fixed touch taps triggering when they shouldn't on Android.
-- OpenVR Touchpad actions (touchpadClicked & touchpadPressed) now report accurate data.
+- Fixed custom devices registered from `[InitializeOnLoad]` code being lost on domain reload (case 1192379).
+  * This happened when there were multiple pieces of `[InitializeOnLoad]` code that accessed the input system in the project and the `RegisterLayout` for the custom device happened to not be the first in sequence.
+- OpenVR touchpad controls (`touchpadClicked` & `touchpadPressed`) now report accurate data.
 
 #### Actions
 
 - Fixed missing keyboard bindings in `DefaultInputActions.inputactions` for navigation in UI.
+- Fixed using C# reserved names in .inputactions assets leading to compile errors in generated C# classes (case 1189861).
+- Assigning a new `InputActionAsset` to a `InputSystemUIInputModule` will no longer look up action names globally but rather only look for actions that are located in action maps with the same name.
+  * Previously, if you e.g. switched from one asset where the `point` action was bound to `UI/Point` to an asset that had no `UI` action map but did have an action called `Point` somewhere else, it would erroneously pick the most likely unrelated `Point` action for use by the UI.
 - Fixed missing custom editors for `AxisDeadzoneProcessor` and `StickDeadzoneProcessor` that link `min` and `max` values to input settings.
 - Fixed actions ending up being disabled if switching to a control scheme that has no binding for the action (case 1187377).
 - Fixed part of composite not being bound leading to subsequent part bindings not being functional (case 1189867).
+- Fixed `PlayerInput` not pairing devices added after it was enabled when not having control schemes.
+  * This problem would also show in the `SimpleDemo` sample when having the `CustomDeviceUsages` sample installed as well. Gamepads would not get picked up in that case.
 - Fixed `ArgumentNullException` when adding a device and a binding in an action map had an empty path (case 1187163).
+- Fixed bindings that are not associated with any control scheme not getting enabled with other control schemes as they should.
+
+### Added
+
+- Added a new `EditorWindow Demo` sample that illustrates how to use the input system in editor UI code.
 
 ## [1.0.0-preview.1] - 2019-10-11
 

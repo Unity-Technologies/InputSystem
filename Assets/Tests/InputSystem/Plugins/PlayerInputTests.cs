@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -117,6 +118,40 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanUseSameActionsForUIInputModule()
+    {
+        var actions = InputActionAsset.FromJson(kActions);
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.SetActive(false);
+        eventSystemGO.AddComponent<EventSystem>();
+        var uiModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.actionsAsset = actions;
+        uiModule.move = InputActionReference.Create(actions["UI/Navigate"]);
+        uiModule.point = InputActionReference.Create(actions["UI/Point"]);
+        uiModule.leftClick = InputActionReference.Create(actions["UI/Click"]);
+
+        var playerGO = new GameObject();
+        playerGO.SetActive(false);
+        var player = playerGO.AddComponent<PlayerInput>();
+        player.actions = actions;
+        player.defaultActionMap = "Gameplay";
+        player.defaultControlScheme = "Keyboard&Mouse";
+
+        eventSystemGO.SetActive(true);
+        playerGO.SetActive(true);
+
+        Assert.That(actions.FindActionMap("Gameplay").enabled, Is.True);
+        Assert.That(actions.FindActionMap("UI").enabled, Is.True);
+        Assert.That(actions["UI/Navigate"].controls, Is.Empty);
+        Assert.That(actions["UI/Point"].controls, Is.EquivalentTo(new[] { mouse.position }));
+        Assert.That(actions["UI/Click"].controls, Is.EquivalentTo(new[] { mouse.leftButton }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     public void PlayerInput_CanInstantiatePlayer_WithSpecificDevice_AndAutomaticallyChooseControlScheme()
     {
         var prefab = new GameObject();
@@ -221,6 +256,32 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(playerInput.devices, Has.Count.EqualTo(2));
         Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        // Make sure that we restore pairing even if the device goes
+        // away temporarily.
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(1));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+
+        // Also, if we add another device now, it should get picked up, too. Note that
+        // this is special about the case of not using control schemes. When having control
+        // schemes, we switch in single-player entirely based on control schemes. When *not*
+        // having control schemes, we greedily grab everything that is compatible with the
+        // bindings we have.
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(playerInput.devices, Has.Count.EqualTo(3));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad2));
         Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
     }
 
@@ -1525,10 +1586,14 @@ internal class PlayerInputTests : InputTestFixture
                 {
                     ""name"" : ""ui"",
                     ""actions"" : [
-                        { ""name"" : ""navigate"" }
+                        { ""name"" : ""navigate"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""point"", ""type"" : ""PassThrough"" },
+                        { ""name"" : ""click"", ""type"" : ""PassThrough"" }
                     ],
                     ""bindings"" : [
-                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" }
+                        { ""path"" : ""<Gamepad>/dpad"", ""action"" : ""navigate"", ""groups"" : ""Gamepad"" },
+                        { ""path"" : ""<Mouse>/position"", ""action"" : ""point"", ""groups"" : ""Keyboard&Mouse"" },
+                        { ""path"" : ""<Mouse>/leftButton"", ""action"" : ""click"", ""groups"" : ""Keyboard&Mouse"" }
                     ]
                 },
                 {

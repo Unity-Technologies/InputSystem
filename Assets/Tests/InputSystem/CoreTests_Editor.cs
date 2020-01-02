@@ -141,49 +141,108 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        SimulateDomainReload();
 
-        var newDevice = InputSystem.devices.First(x => x is Gamepad);
+        var newDevice = InputSystem.devices[0];
 
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
         Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
     }
 
+    // We have code that will automatically query the enabled state of devices on creation
+    // but if the IOCTL is not implemented, we still need to be able to maintain a device's
+    // enabled state.
     [Test]
     [Category("Editor")]
-    public void Editor_DomainReload_FirstPlayerLoopUpdateCausesDevicesToBeRecreated()
+    public void Editor_DomainReload_PreservesEnabledState()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+        InputSystem.DisableDevice(device);
+
+        Assert.That(device.enabled, Is.False);
+
+        SimulateDomainReload();
+
+        var newDevice = InputSystem.devices[0];
+
+        Assert.That(newDevice.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_InputSystemInitializationCausesDevicesToBeRecreated()
     {
         InputSystem.AddDevice<Gamepad>();
 
-        // This test quite invasively goes into InputSystem internals. Unfortunately, we
-        // have no proper way of simulating domain reloads ATM. So we directly call various
-        // internal methods here in a sequence similar to what we'd get during a domain reload.
-
-        InputSystem.s_SystemObject.OnBeforeSerialize();
-        runtime.onPlayModeChanged(PlayModeStateChange.ExitingEditMode);
-        runtime.isInPlayMode = false;
-        InputSystem.s_SystemObject = null;
-        InputSystem.InitializeInEditor(runtime);
-        runtime.isInPlayMode = true;
-        runtime.onPlayModeChanged(PlayModeStateChange.EnteredPlayMode);
+        SimulateDomainReload();
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1192379/
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_CustomDevicesAreRestoredAsLayoutsBecomeAvailable()
+    {
+        ////REVIEW: Consider switching away from explicit registration and switch to implicit discovery
+        ////        through reflection. Explicit registration has proven surprisingly fickle and puts the
+        ////        burden squarely on users.
+
+        // We may have several [InitializeOnLoad] classes each registering a piece of data
+        // with the input system. The first [InitializeOnLoad] code that gets picked by the
+        // Unity runtime is the one that will trigger initialization of the input system.
+        //
+        // However, if we have a later one in the sequence registering a device layout, we
+        // cannot successfully recreate devices using that layout until that code has executed,
+        // too.
+        //
+        // What we do to solve this is to keep information on devices that we fail to restore
+        // after a domain around until the very first full input update. At that point, we
+        // warn about every
+
+        const string kLayout = @"
+            {
+                ""name"" : ""CustomDevice"",
+                ""extend"" : ""Gamepad""
+            }
+        ";
+
+        InputSystem.RegisterLayout(kLayout);
+        InputSystem.AddDevice("CustomDevice");
+
+        SimulateDomainReload();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+
+        InputSystem.RegisterLayout(kLayout);
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.devices[0].layout, Is.EqualTo("CustomDevice"));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_DomainReload_RetainsUnsupportedDevices()
+    {
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "SomethingUnknown",
+            product = "UnknownProduct"
+        });
+        InputSystem.Update();
+
+        SimulateDomainReload();
+
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].interfaceName, Is.EqualTo("SomethingUnknown"));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].product, Is.EqualTo("UnknownProduct"));
     }
 
     [Test]
     [Category("Editor")]
     [Ignore("TODO")]
     public void TODO_Editor_DomainReload_PreservesVariantsOnDevices()
-    {
-        Assert.Fail();
-    }
-
-    [Test]
-    [Category("Editor")]
-    [Ignore("TODO")]
-    public void TODO_Editor_DomainReload_PreservesCurrentStatusOfDevices()
     {
         Assert.Fail();
     }
@@ -1749,6 +1808,7 @@ partial class CoreTests
     [TestCase("MyControls (2)", "MyNamespace", "", "MyNamespace.MyControls2")]
     [TestCase("MyControls (2)", "MyNamespace", "MyClassName", "MyNamespace.MyClassName")]
     [TestCase("MyControls", "", "MyClassName", "MyClassName")]
+    [TestCase("interface", "", "class", "class")] // Make sure we can deal with C# reserved keywords.
     public void Editor_CanGenerateCodeWrapperForInputAsset(string assetName, string namespaceName, string className, string typeName)
     {
         var map1 = new InputActionMap("set1");
@@ -1756,6 +1816,8 @@ partial class CoreTests
         map1.AddAction("action2", binding: "/gamepad/rightStick");
         var map2 = new InputActionMap("set2");
         map2.AddAction("action1", binding: "/gamepad/buttonSouth");
+        // Add an action that has a C# reserved keyword name.
+        map2.AddAction("return");
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
@@ -2086,6 +2148,36 @@ partial class CoreTests
     public IEnumerator TODO_Editor_PlayerActionDoesNotTriggerWhenGameViewIsNotFocused()
     {
         throw new NotImplementedException();
+    }
+
+    // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
+    // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
+    // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,
+    // this will usually lead to the camera looking down at the ground because after clicking the play mode button at the
+    // top of the UI, the user will likely move the pointer down towards the game view area thus generating a large down
+    // motion delta.
+    //
+    // What we do to counter this is to record the time of when we enter play mode and then record the time again when
+    // we have fully entered play mode. All the events in-between we discard.
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputEventsOccurringWhileGoingIntoPlayMode_AreDiscarded()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // We need to actually pass time and have a non-zero start time for this to work.
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(234, 345) });
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Make sure the event was not left in the buffer.
+        Assert.That(runtime.m_EventCount, Is.EqualTo(0));
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

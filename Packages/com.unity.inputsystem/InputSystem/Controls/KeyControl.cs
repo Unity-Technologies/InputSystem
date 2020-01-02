@@ -1,4 +1,5 @@
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Controls
 {
@@ -14,7 +15,7 @@ namespace UnityEngine.InputSystem.Controls
     /// layout specific and does not need to be key-by-key. For general text input, see <see cref="Keyboard.onTextInput"/>.
     /// To find the text displayed on a key, use <see cref="KeyControl.displayName"/>.
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
     public class KeyControl : ButtonControl
     {
         /// <summary>

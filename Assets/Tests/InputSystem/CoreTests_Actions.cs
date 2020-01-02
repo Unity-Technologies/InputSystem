@@ -3725,6 +3725,36 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanRemoveActionFromMap()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
+
+        var action1 = map.AddAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = map.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action3 = map.AddAction("action3", binding: "<Gamepad>/buttonWest");
+
+        asset.RemoveAction("action2");
+
+        Assert.That(action2.actionMap, Is.Null);
+        Assert.That(asset.FindAction("action2"), Is.Null);
+        Assert.That(map.actions, Has.Count.EqualTo(2));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action1));
+        Assert.That(map.actions, Has.Exactly(1).SameAs(action3));
+        Assert.That(action1.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonSouth", action: "action1")}));
+        Assert.That(action2.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonNorth", action: "action2")}));
+        Assert.That(action3.bindings, Is.EquivalentTo(new[] {new InputBinding("<Gamepad>/buttonWest", action: "action3")}));
+        Assert.That(map.bindings, Is.EquivalentTo(new[]
+        {
+            new InputBinding("<Gamepad>/buttonSouth", action: "action1"),
+            new InputBinding("<Gamepad>/buttonWest", action: "action3")
+        }));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRemoveActionMapFromAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -4132,8 +4162,9 @@ partial class CoreTests
 
         action.bindingMask = new InputBinding {groups = "gamepad"};
 
-        Assert.That(action.controls, Has.Count.EqualTo(1));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.leftButton));
         Assert.That(action.bindingMask, Is.EqualTo(new InputBinding {groups = "gamepad"}));
 
         action.bindingMask = null;
@@ -4206,8 +4237,9 @@ partial class CoreTests
         map.bindingMask = new InputBinding {groups = "gamepad"};
 
         Assert.That(action1.controls, Has.Count.EqualTo(1));
-        Assert.That(action2.controls, Has.Count.Zero);
         Assert.That(action1.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action2.controls, Has.Count.EqualTo(1));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(mouse.leftButton));
     }
 
     [Test]
@@ -4252,6 +4284,26 @@ partial class CoreTests
         Assert.That(action2.controls, Has.Count.EqualTo(2));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
         Assert.That(action2.controls, Has.Exactly(1).SameAs(keyboard.bKey));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenMaskingByGroup_BindingsNotInAnyGroupWillBeActive()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard&Mouse");
+        action.AddBinding("<Pointer>/press");
+
+        action.bindingMask = InputBinding.MaskByGroup("Gamepad");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.press));
     }
 
     // When we have an .inputactions asset, at runtime we should end up with a single array of resolved

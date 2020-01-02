@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer")]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Current <see cref="TouchPhase"/>.</value>
         /// <seealso cref="phase"/>
-        [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase")]
+        [InputControl(name = "phase", displayName = "Touch Phase", layout = "TouchPhase", synthetic = true)]
         [InputControl(name = "press", displayName = "Touch Contact?", layout = "TouchPress", useStateFrom = "phase")]
         [FieldOffset(32)]
         public byte phaseId;
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(34)]
         byte displayIndex;
 
-        [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0)]
+        [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
         [FieldOffset(35)]
         public byte flags;
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         /// <seealso cref="InputEvent.time"/>
         /// <seealso cref="TouchControl.startTime"/>
-        [InputControl(displayName = "Start Time", layout  = "Double")]
+        [InputControl(displayName = "Start Time", layout  = "Double", synthetic = true)]
         [FieldOffset(40)]
         public double startTime; // In *external* time, i.e. currentTimeOffsetToRealtimeSinceStartup baked in.
 
@@ -182,7 +182,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// by events sent to the touchscreen.
         /// </remarks>
         /// <seealso cref="TouchControl.startPosition"/>
-        [InputControl(displayName = "Start Position")]
+        [InputControl(displayName = "Start Position", synthetic = true)]
         [FieldOffset(48)]
         public Vector2 startPosition;
 
@@ -826,6 +826,41 @@ namespace UnityEngine.InputSystem
         void IInputStateCallbackReceiver.OnStateEvent(InputEventPtr eventPtr)
         {
             OnStateEvent(eventPtr);
+        }
+
+        unsafe bool IInputStateCallbackReceiver.GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref uint offset)
+        {
+            // This code goes back to the trickery we perform in OnStateEvent. We consume events in TouchState format
+            // instead of in TouchscreenState format. This means that the input system does not know how the state in those
+            // events correlates to the controls we have.
+            //
+            // This method is used to give the input system an offset based on which the input system can compute relative
+            // offsets into the state of eventPtr for controls that are part of the control hierarchy rooted at 'control'.
+
+            if (!eventPtr.IsA<StateEvent>() || StateEvent.From(eventPtr)->stateFormat != TouchState.Format)
+                return false;
+
+            // The only controls we can read out from a TouchState event are those that are part of TouchControl
+            // (and part of this Touchscreen).
+            var touchControl = control.FindInParentChain<TouchControl>();
+            if (touchControl == null || touchControl.parent != this)
+                return false;
+
+            // We could allow *any* of the TouchControls on the Touchscreen here. We'd simply base the
+            // offset on the TouchControl of the 'control' we get as an argument.
+            //
+            // However, doing that would mean that all the TouchControls would map into the same input event.
+            // So when a piece of code like in InputUser goes and cycles through all controls to determine ones
+            // that have changed in an event, it would find that instead of a single touch position value changing,
+            // all of them would be changing from the same single event.
+            //
+            // For this reason, we lock things down to the primaryTouch control.
+
+            if (touchControl != primaryTouch)
+                return false;
+
+            offset = touchControl.stateBlock.byteOffset;
+            return true;
         }
 
         // We can only detect taps on touch *release*. At which point it acts like a button that triggers and releases

@@ -316,6 +316,18 @@ namespace UnityEngine.InputSystem.Editor
                     StringComparison.InvariantCultureIgnoreCase) != 0)
                     displayName = $"{displayName} (Current Layout: {key.displayName})";
 
+                // For left/right modifier keys, prepend artificial combined version.
+                ButtonControl combinedVersion = null;
+                if (key == keyboard.leftShiftKey)
+                    combinedVersion = keyboard.shiftKey;
+                else if (key == keyboard.leftAltKey)
+                    combinedVersion = keyboard.altKey;
+                else if (key == keyboard.leftCtrlKey)
+                    combinedVersion = keyboard.ctrlKey;
+                if (combinedVersion != null)
+                    parent.AddChild(new ControlDropdownItem(null, combinedVersion.name, combinedVersion.displayName, keyboard.layout,
+                        "", searchable));
+
                 var item = new ControlDropdownItem(null, key.name, displayName,
                     keyboard.layout, "", searchable);
 

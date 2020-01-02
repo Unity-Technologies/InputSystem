@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.LowLevel
         int size;
 
         [FieldOffset(sizeof(int))]
-        fixed char buffer[LowLevel.IMECompositionEvent.kIMECharBufferSize];
+        fixed char buffer[IMECompositionEvent.kIMECharBufferSize];
 
         public IMECompositionString(string characters)
         {
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 return;
             }
 
-            Debug.Assert(characters.Length < LowLevel.IMECompositionEvent.kIMECharBufferSize);
+            Debug.Assert(characters.Length < IMECompositionEvent.kIMECharBufferSize);
             size = characters.Length;
             for (var i = 0; i < size; i++)
                 buffer[i] = characters[i];

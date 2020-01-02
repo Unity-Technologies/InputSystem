@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.Utilities
             get
             {
                 if (index < 0 || index >= length)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 if (index == 0)
                     return firstValue;
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.Utilities
             set
             {
                 if (index < 0 || index >= length)
-                    throw new ArgumentOutOfRangeException("index");
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
                 if (index == 0)
                     firstValue = value;
@@ -278,7 +278,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 else
                 {
-                    firstValue = default(TValue);
+                    firstValue = default;
                 }
             }
             else
@@ -300,17 +300,19 @@ namespace UnityEngine.InputSystem.Utilities
                 {
                     // Remove entry at beginning or in middle by pasting together
                     // into a new array.
-                    var newAdditionalProcessors = new TValue[numAdditionalValues - 1];
+                    var newAdditionalValues = new TValue[numAdditionalValues - 1];
                     if (index >= 2)
                     {
                         // Copy elements before entry.
-                        Array.Copy(additionalValues, 0, newAdditionalProcessors, 0, index - 1);
+                        Array.Copy(additionalValues, 0, newAdditionalValues, 0, index - 1);
                     }
 
                     // Copy elements after entry. We already know that we're not removing
                     // the last entry so there have to be entries.
-                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalProcessors, index - 1,
+                    Array.Copy(additionalValues, index + 1 - 1, newAdditionalValues, index - 1,
                         length - index - 1);
+
+                    additionalValues = newAdditionalValues;
                 }
             }
 

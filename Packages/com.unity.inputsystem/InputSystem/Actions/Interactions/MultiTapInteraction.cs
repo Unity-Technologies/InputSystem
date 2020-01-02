@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////TODO: change this so that the interaction stays performed when the tap count is reached until the button is released
+
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>

@@ -508,8 +508,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position.
-        /// </see> used as a cursor for pointing at UI elements.
+        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
+        /// used as a cursor for pointing at UI elements.
         /// </summary>
         public InputActionReference point
         {
@@ -518,8 +518,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector.
-        /// </see> used for sending <see cref="AxisEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> 2D motion vector
+        /// used for sending <see cref="AxisEventData"/> events.
         /// </summary>
         public InputActionReference move
         {
@@ -528,8 +528,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2"> scroll wheel value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> scroll wheel value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference scrollWheel
         {
@@ -538,8 +538,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference leftClick
         {
@@ -548,8 +548,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference middleClick
         {
@@ -558,8 +558,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool"</c> button value
+        /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
         public InputActionReference rightClick
         {
@@ -568,8 +568,8 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
         public InputActionReference submit
         {
@@ -578,15 +578,14 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="bool"> button value.
-        /// </see> used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
+        /// used for sending <see cref="BaseEventData"/> events.
         /// </summary>
         public InputActionReference cancel
         {
             get => m_CancelAction;
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, OnAction);
         }
-
 
         public InputActionReference trackedDeviceOrientation
         {
@@ -917,10 +916,22 @@ namespace UnityEngine.InputSystem.UI
 
         private InputActionReference UpdateReferenceForNewAsset(InputActionReference actionReference)
         {
-            if (actionReference?.action == null)
+            var oldAction = actionReference?.action;
+            if (oldAction == null)
                 return null;
 
-            return InputActionReference.Create(m_ActionsAsset.FindAction(actionReference.action.name));
+            var oldActionMap = oldAction.actionMap;
+            Debug.Assert(oldActionMap != null, "Not expected to end up with a singleton action here");
+
+            var newActionMap = m_ActionsAsset.FindActionMap(oldActionMap.name);
+            if (newActionMap == null)
+                return null;
+
+            var newAction = newActionMap.FindAction(oldAction.name);
+            if (newAction == null)
+                return null;
+
+            return InputActionReference.Create(newAction);
         }
 
         [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
