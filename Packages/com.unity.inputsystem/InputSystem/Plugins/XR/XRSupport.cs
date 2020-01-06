@@ -30,7 +30,10 @@ namespace UnityEngine.InputSystem.XR
     }
 
     // Sync to UnityXRInputFeatureType in IUnityXRInput.h
-    enum FeatureType
+    /// <summary>
+    /// The type of data a <see cref="XRFeatureDescriptor>"/> exposes.
+    /// </summary>
+    public enum FeatureType
     {
         Custom = 0,
         Binary,
@@ -44,45 +47,95 @@ namespace UnityEngine.InputSystem.XR
         Eyes
     }
 
-    // These structures are not explicitly assigned, but they are filled in via JSON serialization coming from matching structs in native.
+    /// <summary>
+    /// Contextual strings that identify the contextual, cross-platform use that a feature represents.  <see cref="UnityEngine.XR.CommonUsages"/> for a list of unity's built-in shared usages.
+    /// </summary>
 #pragma warning disable 0649
     [Serializable]
-    struct UsageHint
+    public struct UsageHint
     {
         public string content;
     }
 
     //Sync to XRInputFeatureDefinition in XRInputDeviceDefinition.h
+    /// <summary>
+    /// Describes an individual input on a device, such as a trackpad, or button, or trigger.
+    /// </summary>
     [Serializable]
-    struct XRFeatureDescriptor
+    public struct XRFeatureDescriptor
     {
+        /// <summary>
+        /// The name of the feature.
+        /// </summary>
         public string name;
+        /// <summary>
+        /// The uses that this feature should represent, such as trigger, or grip, or touchpad.
+        /// </summary>
         public List<UsageHint> usageHints;
+        /// <summary>
+        /// The type of data this feature exposes.
+        /// </summary>
         public FeatureType featureType;
+        /// <summary>
+        /// The overall size of the feature.  This is only filled in when the <see cref="XRFeatureDescriptor.featureType"/> is <see cref="FeatureType.Custom"/>.
+        /// </summary>
         public uint customSize;
     }
 
     //Sync to XRInputDeviceDefinition in XRInputDeviceDefinition.h
+    /// <summary>
+    /// Describes an input device: what it can do and how it should be used.  These are reported during device connection, and help identify devices and map input data to the right controls.
+    /// </summary>
     [Serializable]
-    class XRDeviceDescriptor
+    public class XRDeviceDescriptor
     {
+        /// <summary>
+        /// The name of the device.
+        /// </summary>
         public string deviceName;
+        /// <summary>
+        /// The manufacturer of the device.
+        /// </summary>
         public string manufacturer;
+        /// <summary>
+        /// The serial number of the device.  An empty string if no serial number is available.
+        /// </summary>
         public string serialNumber;
 #if UNITY_2019_3_OR_NEWER
+        /// <summary>
+        /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
+        /// </summary>
         public InputDeviceCharacteristics characteristics;
 #else //UNITY_2019_3_OR_NEWER
+        /// <summary>
+        /// The role of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
+        /// </summary>
         public InputDeviceRole deviceRole;
 #endif //UNITY_2019_3_OR_NEWER
+        /// <summary>
+        /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
+        /// </summary>
         public int deviceId;
+        /// <summary>
+        /// A list of all input features.  <seealso cref="XRFeatureDescriptor"/>
+        /// </summary>
         public List<XRFeatureDescriptor> inputFeatures;
 
-        internal string ToJson()
+        /// <summary>
+        /// Converts this structure to a JSON string.
+        /// </summary>
+        /// <returns></returns>
+        public string ToJson()
         {
             return JsonUtility.ToJson(this);
         }
 
-        internal static XRDeviceDescriptor FromJson(string json)
+        /// <summary>
+        /// Converts a json string to a new <see cref="XRDeviceDescriptor"/>.
+        /// </summary>
+        /// <param name="json">The JSON string containing <see cref="XRDeviceDescriptor"/> data.</param>
+        /// <returns>A new <see cref="XRDeviceDescriptor"/></returns>
+        public static XRDeviceDescriptor FromJson(string json)
         {
             return JsonUtility.FromJson<XRDeviceDescriptor>(json);
         }

@@ -43,14 +43,14 @@ namespace UnityEngine.InputSystem.XR
             return 0;
         }
 
-        private static string SanitizeName(string originalName)
+        private static string SanitizeString(string original, bool allowPaths = false)
         {
-            var stringLength = originalName.Length;
+            var stringLength = original.Length;
             var sanitizedName = new StringBuilder(stringLength);
             for (var i = 0; i < stringLength; i++)
             {
-                var letter = originalName[i];
-                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter))
+                var letter = original[i];
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || (allowPaths && (letter == '/')))
                 {
                     sanitizedName.Append(letter);
                 }
@@ -109,12 +109,12 @@ namespace UnityEngine.InputSystem.XR
             string layoutName;
             if (string.IsNullOrEmpty(description.manufacturer))
             {
-                layoutName = $"{SanitizeName(description.interfaceName)}::{SanitizeName(description.product)}";
+                layoutName = $"{SanitizeString(description.interfaceName)}::{SanitizeString(description.product)}";
             }
             else
             {
                 layoutName =
-                    $"{SanitizeName(description.interfaceName)}::{SanitizeName(description.manufacturer)}::{SanitizeName(description.product)}";
+                    $"{SanitizeString(description.interfaceName)}::{SanitizeString(description.manufacturer)}::{SanitizeString(description.product)}";
             }
 
             var layout = new XRLayoutBuilder { descriptor = deviceDescriptor, parentLayout = matchedLayout, interfaceName = description.interfaceName };
@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem.XR
                 }
 
                 var featureName = feature.name;
-                featureName = SanitizeName(featureName);
+                featureName = SanitizeString(featureName, true);
                 if (inheritedLayout != null)
                     featureName = ConvertPotentialAliasToName(inheritedLayout, featureName);
 
