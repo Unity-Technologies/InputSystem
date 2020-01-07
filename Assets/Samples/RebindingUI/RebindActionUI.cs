@@ -82,6 +82,34 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         }
 
         /// <summary>
+        /// Optional text component that receives a text prompt when waiting for a control to be actuated.
+        /// </summary>
+        /// <seealso cref="startRebindEvent"/>
+        /// <seealso cref="rebindOverlay"/>
+        public Text rebindPrompt
+        {
+            get => m_RebindText;
+            set => m_RebindText = value;
+        }
+
+        /// <summary>
+        /// Optional UI that is activated when an interactive rebind is started and deactivated when the rebind
+        /// is finished. This is normally used to display an overlay over the current UI while the system is
+        /// waiting for a control to be actuated.
+        /// </summary>
+        /// <remarks>
+        /// If neither <see cref="rebindPrompt"/> nor <c>rebindOverlay</c> is set, the component will temporarily
+        /// replaced the <see cref="bindingText"/> (if not <c>null</c>) with <c>"Waiting..."</c>.
+        /// </remarks>
+        /// <seealso cref="startRebindEvent"/>
+        /// <seealso cref="rebindPrompt"/>
+        public GameObject rebindOverlay
+        {
+            get => m_RebindOverlay;
+            set => m_RebindOverlay = value;
+        }
+
+        /// <summary>
         /// Event that is triggered every time the UI updates to reflect the current binding.
         /// This can be used to tie custom visualizations to bindings.
         /// </summary>

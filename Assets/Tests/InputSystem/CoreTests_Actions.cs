@@ -9,6 +9,7 @@ using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
