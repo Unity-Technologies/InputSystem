@@ -220,6 +220,13 @@ namespace UnityEngine.InputSystem
         public const string DeviceRegainedMessage = "OnDeviceRegained";
 
         /// <summary>
+        /// Name of the message that is sent with <c>UnityEngine.Object.SendMessage</c> when the
+        /// controls used by a player are changed.
+        /// </summary>
+        /// <seealso cref="onControlsChanged"/>
+        public const string ControlsChangedMessage = "OnControlsChanged";
+
+        /// <summary>
         /// Whether input is on the player is active.
         /// </summary>
         /// <value>If true, the player is receiving input.</value>
@@ -512,6 +519,29 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Event that is triggered when the controls used by the player change.
+        /// </summary>
+        /// <remarks>
+        /// This event is only used if <see cref="notificationBehavior"/> is set to
+        /// <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
+        ///
+        /// The event is trigger when the set of <see cref="devices"/> used by the player change,
+        /// when the player switches to a different control scheme (see <see cref="currentControlScheme"/>),
+        /// or when the bindings used by the player are changed (e.g. when rebinding them). Also,
+        /// for <see cref="Keyboard"/> devices, the event is triggered when the currently used
+        /// keyboard layout (see <see cref="Keyboard.keyboardLayout"/>) changes.
+        /// </remarks>
+        public ControlsChangedEvent controlsChangedEvent
+        {
+            get
+            {
+                if (m_ControlsChangedEvent == null)
+                    m_ControlsChangedEvent = new ControlsChangedEvent();
+                return m_ControlsChangedEvent;
+            }
+        }
+
+        /// <summary>
         /// If <see cref="notificationBehavior"/> is set to <see cref="PlayerNotifications.InvokeCSharpEvents"/>, this
         /// event is triggered when an action fires.
         /// </summary>
@@ -605,6 +635,35 @@ namespace UnityEngine.InputSystem
                 var index = m_DeviceRegainedCallbacks.IndexOf(value);
                 if (index != -1)
                     m_DeviceRegainedCallbacks.RemoveAtWithCapacity(index);
+            }
+        }
+
+        /// <summary>
+        /// If <see cref="notificationBehavior"/> is <see cref="PlayerNotifications.InvokeCSharpEvents"/>, this event
+        /// is triggered when the controls used by the players are changed.
+        /// </summary>
+        /// <remarks>
+        /// The callback is invoked when the set of <see cref="devices"/> used by the player change,
+        /// when the player switches to a different control scheme (see <see cref="currentControlScheme"/>),
+        /// or when the bindings used by the player are changed (e.g. when rebinding them). Also,
+        /// for <see cref="Keyboard"/> devices, the callback is invoked when the currently used
+        /// keyboard layout (see <see cref="Keyboard.keyboardLayout"/>) changes.
+        /// </remarks>
+        public event Action<PlayerInput> onControlsChanged
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                m_ControlsChangedCallbacks.AppendWithCapacity(value, 5);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = m_ControlsChangedCallbacks.IndexOf(value);
+                if (index != -1)
+                    m_ControlsChangedCallbacks.RemoveAtWithCapacity(index);
             }
         }
 
@@ -906,6 +965,7 @@ namespace UnityEngine.InputSystem
         [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
+        [SerializeField] internal ControlsChangedEvent m_ControlsChangedEvent;
         [SerializeField] internal ActionEvent[] m_ActionEvents;
         [SerializeField] internal bool m_NeverAutoSwitchControlSchemes;
         [SerializeField] internal string m_DefaultControlScheme;////REVIEW: should we have IDs for these so we can rename safely?
@@ -929,6 +989,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceLostCallbacks;
         [NonSerialized] private InlinedArray<Action<PlayerInput>> m_DeviceRegainedCallbacks;
+        [NonSerialized] private InlinedArray<Action<PlayerInput>> m_ControlsChangedCallbacks;
         [NonSerialized] private InlinedArray<Action<InputAction.CallbackContext>> m_ActionTriggeredCallbacks;
         [NonSerialized] private Action<InputControl, InputEventPtr> m_UnpairedDeviceUsedDelegate;
         [NonSerialized] private bool m_OnUnpairedDeviceUsedHooked;
@@ -937,7 +998,7 @@ namespace UnityEngine.InputSystem
 
         internal static int s_AllActivePlayersCount;
         internal static PlayerInput[] s_AllActivePlayers;
-        internal static Action<InputUser, InputUserChange, InputDevice> s_UserChangeDelegate;
+        private static Action<InputUser, InputUserChange, InputDevice> s_UserChangeDelegate;
 
         // The following information is used when the next PlayerInput component is enabled.
 
@@ -1493,6 +1554,7 @@ namespace UnityEngine.InputSystem
             m_PlayerIndex = -1;
         }
 
+        // ReSharper disable once UnusedMember.Global
         /// <summary>
         /// Debug helper method that can be hooked up to actions when using <see cref="UnityEngine.InputSystem.PlayerNotifications.InvokeUnityEvents"/>.
         /// </summary>
@@ -1545,6 +1607,28 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private void HandleControlsChanged()
+        {
+            switch (m_NotificationBehavior)
+            {
+                case PlayerNotifications.SendMessages:
+                    SendMessage(ControlsChangedMessage, this, SendMessageOptions.DontRequireReceiver);
+                    break;
+
+                case PlayerNotifications.BroadcastMessages:
+                    BroadcastMessage(ControlsChangedMessage, this, SendMessageOptions.DontRequireReceiver);
+                    break;
+
+                case PlayerNotifications.InvokeUnityEvents:
+                    m_ControlsChangedEvent?.Invoke(this);
+                    break;
+
+                case PlayerNotifications.InvokeCSharpEvents:
+                    DelegateHelpers.InvokeCallbacksSafe(ref m_ControlsChangedCallbacks, this, "onControlsChanged");
+                    break;
+            }
+        }
+
         private static void OnUserChange(InputUser user, InputUserChange change, InputDevice device)
         {
             switch (change)
@@ -1561,6 +1645,15 @@ namespace UnityEngine.InputSystem
                             else if (change == InputUserChange.DeviceRegained)
                                 player.HandleDeviceRegained();
                         }
+                    }
+                    break;
+
+                case InputUserChange.ControlsChanged:
+                    for (var i = 0; i < s_AllActivePlayersCount; ++i)
+                    {
+                        var player = s_AllActivePlayers[i];
+                        if (player.m_InputUser == user)
+                            player.HandleControlsChanged();
                     }
                     break;
             }
@@ -1635,18 +1728,30 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Event that is triggered when an <see cref="InputDevice"/> paired to a <see cref="PlayerInput"/> is disconnected.
+        /// </summary>
+        /// <seealso cref="deviceLostEvent"/>
         [Serializable]
         public class DeviceLostEvent : UnityEvent<PlayerInput>
         {
         }
 
+        /// <summary>
+        /// Event that is triggered when a <see cref="PlayerInput"/> regains an <see cref="InputDevice"/> previously lost.
+        /// </summary>
+        /// <seealso cref="deviceRegainedEvent"/>
         [Serializable]
         public class DeviceRegainedEvent : UnityEvent<PlayerInput>
         {
         }
 
+        /// <summary>
+        /// Event that is triggered when the set of controls used by a <see cref="PlayerInput"/> changes.
+        /// </summary>
+        /// <seealso cref="controlsChangedEvent"/>
         [Serializable]
-        public class ControlSchemeChangeEvent : UnityEvent<PlayerInput>
+        public class ControlsChangedEvent : UnityEvent<PlayerInput>
         {
         }
     }

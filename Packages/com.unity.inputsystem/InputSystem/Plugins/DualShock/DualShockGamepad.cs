@@ -17,10 +17,10 @@ namespace UnityEngine.InputSystem.DualShock
         /// Button that is triggered when the touchbar on the controller is pressed down.
         /// </summary>
         /// <value>Control representing the touchbar button.</value>
-        [InputControl(name = "buttonWest", displayName = "Square", shortDisplayName = "\u25A1")]
-        [InputControl(name = "buttonNorth", displayName = "Triangle", shortDisplayName = "\u25B3")]
-        [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "\u25CB")]
-        [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "\u274C")]
+        [InputControl(name = "buttonWest", displayName = "Square", shortDisplayName = "Square")]
+        [InputControl(name = "buttonNorth", displayName = "Triangle", shortDisplayName = "Triangle")]
+        [InputControl(name = "buttonEast", displayName = "Circle", shortDisplayName = "Circle")]
+        [InputControl(name = "buttonSouth", displayName = "Cross", shortDisplayName = "Cross")]
         [InputControl]
         public ButtonControl touchpadButton { get; private set; }
 

@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -25,7 +27,8 @@ namespace UnityEngine.InputSystem.Interactions
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayName("Press")]
     public class PressInteraction : IInputInteraction
     {
         /// <summary>
@@ -38,6 +41,7 @@ namespace UnityEngine.InputSystem.Interactions
             + "'Default Press Point' in the global input settings.")]
         public float pressPoint;
 
+        ////REVIEW: this should really be named "pressBehavior"
         /// <summary>
         /// Determines how button presses trigger the action.
         /// </summary>

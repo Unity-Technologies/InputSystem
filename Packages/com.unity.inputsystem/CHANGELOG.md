@@ -9,6 +9,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.4] - 2019-12-12
 
+This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
+
 ### Added
 
 - `Keyboard` now has a `FindKeyOnCurrentKeyboardLayout` method to look up key controls by their display names.
@@ -25,11 +27,46 @@ however, it has to be formatted properly to pass verification tests.
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
+#### Actions
+
+- We've added APIs to simplify turning bindings into strings suitable for display in UIs.
+    ```CSharp
+    // Takes things such as currently bound controls and active binding masks into account
+    // and can handle composites.
+    action.GetBindingDisplayString();
+    ```
+  * Related to this, custom binding composites can now be annotated with the new `DisplayStringFormat` attribute to control how composites as a whole are turned into display strings.
+    ```CSharp
+    [DisplayStringFormat("{button}+{stick}")]
+    public class MyComposite : InputBindingComposite<Vector2>
+    {
+        [InputControl(layout = "Button")] public int button;
+        [InputControl(layout = "Stick")] public int stick;
+    }
+    ```
+  * More extensions to this mechanism (such as being able to assign roles to bindings in the same control schemes, e.g. a "primary" and "secondary" binding) are planned for later. One important missing part is support for localization.
+- `InputActionRebindingExtension.RebindingOperation` has a new configuration method `WithMatchingEventsBeingSuppressed` which allows suitable input events to automatically be swallowed while a rebind is ongoing. This greatly helps with not having something else respond to input while a rebind is in progress.
+- We've added two new samples:
+  * __Rebinding UI__: Demonstrates how to create a rebinding screen using the Input System's APIs. The sample also includes a reusable prefab you can use directly in your projects to quickly put rebinding screens together.
+  * __In-Game Hints__: Demonstrates how to show context-sensitive help that respects the current control scheme.
 
 ### Changed
 
 - `InputControlExtensions.GetStatePtrFromStateEvent` no longer throws `InvalidOperationException` when the state format for the event does not match that of the device. It simply returns `null` instead (same as when control is found in the event's state).
 
+#### Actions
+
+* `InputActionRebindingExtensions.PerformInteractiveRebinding` has been greatly enhanced to apply a wide range of default configurations to the rebind. This greatly reduces the need to manually configure the resulting rebind.
+    ```CSharp
+    // Start a rebind with the default configuration.
+    myAction.PerformInteractiveRebinding().Start();
+    ```
+  - Pointer position input will be ignored by default.
+  - If not a suitable binding target itself, `<Keyboard>/escape` will automatically be made to quit the rebind.
+  - Events with control input not explicitly matching exclusions will now get suppressed. This prevents input actions from getting triggered while a rebind is in progress.
+  - The expected control type is automatically adjusted if a part binding of a composite is targeted by the rebind (e.g. if the action expects a `Vector2` but the part binding expects a `Button`, the rebind switches automatically to `Button`).
+  - If the targeted binding is part of a control scheme, controls will automatically be restricted to match the device requirements of the control scheme. For example, if the binding belongs to a "Keyboard&Mouse" scheme that has `<Keyboard>` and a `<Mouse>` requirement, the rebind will ignore input on gamepads.
+  - As before, you can always create a `RebindingOperation` from scratch yourself or wipe/alter the configuration returned by `PerformInteractiveRebinding` however you see fit.
 ### Fixed
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.

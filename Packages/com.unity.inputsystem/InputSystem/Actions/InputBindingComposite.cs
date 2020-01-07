@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem
         /// [InputControl(layout = "Button")] public int up;
         /// </code>
         /// </example>
-        internal static string GetExpectedControlLayoutName(string composite, string part)
+        public static string GetExpectedControlLayoutName(string composite, string part)
         {
             if (string.IsNullOrEmpty(composite))
                 throw new ArgumentNullException(nameof(composite));
@@ -184,6 +184,22 @@ namespace UnityEngine.InputSystem
                 if (controlAttribute != null)
                     yield return field.Name;
             }
+        }
+
+        internal static string GetDisplayFormatString(string composite)
+        {
+            if (string.IsNullOrEmpty(composite))
+                throw new ArgumentNullException(nameof(composite));
+
+            var compositeType = s_Composites.LookupTypeRegistration(composite);
+            if (compositeType == null)
+                return null;
+
+            var displayFormatAttribute = compositeType.GetCustomAttribute<DisplayStringFormatAttribute>();
+            if (displayFormatAttribute == null)
+                return null;
+
+            return displayFormatAttribute.formatString;
         }
     }
 

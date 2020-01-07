@@ -341,16 +341,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Generate a new ID for the binding.
-        /// </summary>
-        /// <seealso cref="id"/>
-        public void GenerateId()
-        {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
-        }
-
-        /// <summary>
         /// Initialize a new binding.
         /// </summary>
         /// <param name="path">Path for the binding.</param>
@@ -377,19 +367,39 @@ namespace UnityEngine.InputSystem
             m_OverrideProcessors = default;
         }
 
+        public string GetNameOfComposite()
+        {
+            if (!isComposite)
+                return null;
+            return NameAndParameters.Parse(effectivePath).name;
+        }
+
+        internal void GenerateId()
+        {
+            m_Guid = Guid.NewGuid();
+            m_Id = m_Guid.ToString();
+        }
+
+        internal string MakeSureIdIsInPlace()
+        {
+            if (m_Guid != Guid.Empty)
+                return m_Id;
+
+            if (string.IsNullOrEmpty(m_Id))
+                GenerateId();
+            else
+                m_Guid = new Guid(m_Id);
+
+            return m_Id;
+        }
+
         public static InputBinding MaskByGroup(string group)
         {
-            if (string.IsNullOrEmpty(group))
-                throw new ArgumentNullException(nameof(group));
-
             return new InputBinding {groups = group};
         }
 
         public static InputBinding MaskByGroups(params string[] groups)
         {
-            if (groups == null)
-                throw new ArgumentNullException(nameof(groups));
-
             return new InputBinding {groups = string.Join(kSeparatorString, groups.Where(x => !string.IsNullOrEmpty(x)))};
         }
 
@@ -554,6 +564,165 @@ namespace UnityEngine.InputSystem
             return builder.ToString();
         }
 
+        /// <summary>
+        /// A set of flags to turn individual default behaviors of <see cref="InputBinding.ToDisplayString(DisplayStringOptions,InputControl)"/> off.
+        /// </summary>
+        [Flags]
+        public enum DisplayStringOptions
+        {
+            /// <summary>
+            /// Do not use short names of controls as set up by <see cref="InputControlAttribute.shortDisplayName"/>
+            /// and the <c>"shortDisplayName"</c> property in JSON. This will, for example, not use LMB instead of "left Button"
+            /// on <see cref="Mouse.leftButton"/>.
+            /// </summary>
+            DontUseShortDisplayNames = 1 << 0,
+
+            /// <summary>
+            /// By default device names are omitted from display strings. With this option, they are included instead.
+            /// For example, <c>"A"</c> will be <c>"A [Gamepad]"</c> instead.
+            /// </summary>
+            DontOmitDevice = 1 << 1,
+
+            /// <summary>
+            /// By default, interactions on bindings are included in the resulting display string. For example, a binding to
+            /// the gamepad's A button that has a "Hold" interaction on it, would come out as "Hold A". This can be suppressed
+            /// with this option in which case the same setup would come out as just "A".
+            /// </summary>
+            DontIncludeInteractions = 1 << 2,
+
+            /// <summary>
+            /// By default, <see cref="effectivePath"/> is used for generating a display name. Using this option, the display
+            /// string can be forced to <see cref="path"/> instead.
+            /// </summary>
+            IgnoreBindingOverrides = 1 << 3,
+        }
+
+        /// <summary>
+        /// Turn the binding into a string suitable for display in a UI.
+        /// </summary>
+        /// <param name="options">Optional set of formatting options.</param>
+        /// <param name="control">Optional control to which the binding has been resolved. If this is supplied,
+        /// the resulting string can reflect things such as the current keyboard layout or hardware/platform-specific
+        /// naming of controls (e.g. Xbox vs PS4 controllers as opposed to naming things generically based on the
+        /// <see cref="Gamepad"/> layout).</param>
+        /// <returns>A string representation of the binding suitable for display in a UI.</returns>
+        /// <remarks>
+        /// This method works only for bindings that are not composites. If the method is called on a binding
+        /// that is a composite (<see cref="isComposite"/> is true), an empty string will be returned. To automatically
+        /// handle composites, use <see cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,DisplayStringOptions,string)"/>
+        /// instead.
+        ///
+        /// <example>
+        /// <code>
+        /// var gamepadBinding = new InputBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// var mouseBinding = new InputBinding("&lt;Mouse&gt;/leftButton");
+        /// var keyboardBinding = new InputBinding("&lt;Keyboard&gt;/a");
+        ///
+        /// // Prints "A" except on PS4 where it prints "Cross".
+        /// Debug.Log(gamepadBinding.ToDisplayString());
+        ///
+        /// // Prints "LMB".
+        /// Debug.Log(mouseBinding.ToDisplayString());
+        ///
+        /// // Print "Left Button".
+        /// Debug.Log(mouseBinding.ToDisplayString(DisplayStringOptions.DontUseShortDisplayNames));
+        ///
+        /// // Prints the character associated with the "A" key on the current keyboard layout.
+        /// Debug.Log(keyboardBinding, control: Keyboard.current);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,int,InputBinding.DisplayStringOptions)"/>
+        public string ToDisplayString(DisplayStringOptions options = default, InputControl control = default)
+        {
+            return ToDisplayString(out var _, out var _, options, control);
+        }
+
+        /// <summary>
+        /// Turn the binding into a string suitable for display in a UI.
+        /// </summary>
+        /// <param name="options">Optional set of formatting options.</param>
+        /// <param name="control">Optional control to which the binding has been resolved. If this is supplied,
+        /// the resulting string can reflect things such as the current keyboard layout or hardware/platform-specific
+        /// naming of controls (e.g. Xbox vs PS4 controllers as opposed to naming things generically based on the
+        /// <see cref="Gamepad"/> layout).</param>
+        /// <returns>A string representation of the binding suitable for display in a UI.</returns>
+        /// <remarks>
+        /// This method is the same as <see cref="ToDisplayString(DisplayStringOptions,InputControl)"/> except that it
+        /// will also return the name of the device layout and path of the control, if applicable to the binding. This is
+        /// useful when needing more context on the resulting display string, for example to decide on an icon to display
+        /// instead of the textual display string.
+        ///
+        /// <example>
+        /// <code>
+        /// var displayString = new InputBinding("&lt;Gamepad&gt;/dpad/up")
+        ///     .ToDisplayString(out deviceLayout, out controlPath);
+        ///
+        /// // Will print "D-Pad Up".
+        /// Debug.Log(displayString);
+        ///
+        /// // Will print "Gamepad".
+        /// Debug.Log(deviceLayout);
+        ///
+        /// // Will print "dpad/up".
+        /// Debug.Log(controlPath);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,out string,out string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,int,out string,out string,InputBinding.DisplayStringOptions)"/>
+        public string ToDisplayString(out string deviceLayoutName, out string controlPath, DisplayStringOptions options = default,
+            InputControl control = default)
+        {
+            if (isComposite)
+            {
+                deviceLayoutName = null;
+                controlPath = null;
+                return string.Empty;
+            }
+
+            var readableStringOptions = default(InputControlPath.HumanReadableStringOptions);
+            if ((options & DisplayStringOptions.DontOmitDevice) == 0)
+                readableStringOptions |= InputControlPath.HumanReadableStringOptions.OmitDevice;
+            if ((options & DisplayStringOptions.DontUseShortDisplayNames) == 0)
+                readableStringOptions |= InputControlPath.HumanReadableStringOptions.UseShortNames;
+
+            var pathToUse = (options & DisplayStringOptions.IgnoreBindingOverrides) != 0
+                ? path
+                : effectivePath;
+
+            var result = InputControlPath.ToHumanReadableString(pathToUse, out deviceLayoutName, out controlPath, readableStringOptions, control);
+
+            if (!string.IsNullOrEmpty(effectiveInteractions))
+            {
+                var interactionString = string.Empty;
+                var parsedInteractions = NameAndParameters.ParseMultiple(effectiveInteractions);
+
+                foreach (var element in parsedInteractions)
+                {
+                    var interaction = element.name;
+                    var interactionDisplayName = InputInteraction.GetDisplayName(interaction);
+
+                    // An interaction can avoid being mentioned explicitly by just setting its display
+                    // name to an empty string.
+                    if (string.IsNullOrEmpty(interactionDisplayName))
+                        continue;
+
+                    ////TODO: this will need support for localization
+                    if (!string.IsNullOrEmpty(interactionString))
+                        interactionString = $"{interactionString} or {interactionDisplayName}";
+                    else
+                        interactionString = interactionDisplayName;
+                }
+
+                if (!string.IsNullOrEmpty(interactionString))
+                    result = $"{interactionString} {result}";
+            }
+
+            return result;
+        }
+
         ////TODO: also support matching by name (taking the binding tree into account so that components
         ////      of composites can be referenced through their parent)
 
@@ -644,9 +813,12 @@ namespace UnityEngine.InputSystem
         // Internally we pass by reference to not unnecessarily copy the struct.
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
+            ////TODO: add matching by ID
+
             if (path != null)
             {
                 ////REVIEW: should this use binding.effectivePath?
+                ////REVIEW: should this support matching by prefix only? should this use control path matching instead of just string comparisons?
                 ////TODO: handle things like ignoring leading '/'
                 if (binding.path == null
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(path, binding.path, Separator))

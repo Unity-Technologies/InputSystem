@@ -248,7 +248,7 @@ accelerateAction.AddCompositeBinding("Axis")
 
 # …create a UI to rebind input in my game?
 
-Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use [`InputAction.PerformInteractiveRebinding`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_) to handle the rebinding:
+Create a UI with a button to trigger rebinding. If the user clicks the button to bind a control to an action, use [`InputAction.PerformInteractiveRebinding`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_System_Int32_) to handle the rebinding:
 
 ```C#
     void RemapButtonClicked(InputAction actionToRebind)

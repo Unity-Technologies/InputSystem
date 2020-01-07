@@ -478,10 +478,16 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return true if the actual value
+        /// Return true if the current value of <paramref name="control"/> is different to the one found
+        /// in <paramref name="statePtr"/>.
         /// </summary>
-        /// <param name="statePtr"></param>
-        /// <returns></returns>
+        /// <param name="control">Control whose state to compare to what is stored in <paramref name="statePtr"/>.</param>
+        /// <param name="statePtr">A block of input state memory containing the <see cref="InputControl.stateBlock"/>
+        /// of <paramref name="control."/></param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> or <paramref name="statePtr"/>
+        /// is <c>null</c>.</exception>
+        /// <returns>True if the value of <paramref name="control"/> stored in <paramref name="statePtr"/> is different
+        /// compared to what <see cref="InputControl{T}.ReadValue"/> of the control returns.</returns>
         public static unsafe bool HasValueChangeInState(this InputControl control, void* statePtr)
         {
             if (control == null)

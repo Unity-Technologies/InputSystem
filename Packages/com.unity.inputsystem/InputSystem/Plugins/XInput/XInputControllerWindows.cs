@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XInput.LowLevel
 {
@@ -93,7 +94,7 @@ namespace UnityEngine.InputSystem.XInput
     /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
     /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
-    [Scripting.Preserve]
+    [Preserve]
     public class XInputControllerWindows : XInputController
     {
     }

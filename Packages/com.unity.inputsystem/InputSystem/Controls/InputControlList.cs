@@ -383,7 +383,8 @@ namespace UnityEngine.InputSystem
             if (index2 < 0 || index2 >= m_Count)
                 throw new ArgumentOutOfRangeException(nameof(index2));
 
-            m_Indices.SwapElements(index1, index2);
+            if (index1 != index2)
+                m_Indices.SwapElements(index1, index2);
         }
 
         public void Sort<TCompare>(int startIndex, int count, TCompare comparer)

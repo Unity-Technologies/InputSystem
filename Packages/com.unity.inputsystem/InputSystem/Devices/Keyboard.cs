@@ -905,7 +905,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public event Action<char> onTextInput
         {
-            add => m_TextInputListeners.Append(value);
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                if (!m_TextInputListeners.ContainsReference(value))
+                    m_TextInputListeners.Append(value);
+            }
             remove => m_TextInputListeners.Remove(value);
         }
 
@@ -921,7 +927,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
-            add => m_ImeCompositionListeners.Append(value);
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                if (!m_ImeCompositionListeners.ContainsReference(value))
+                    m_ImeCompositionListeners.Append(value);
+            }
             remove => m_ImeCompositionListeners.Remove(value);
         }
 

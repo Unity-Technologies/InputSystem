@@ -169,6 +169,40 @@ namespace UnityEngine.InputSystem
         private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
 
         /// <summary>
+        /// Set <see cref="Keyboard.keyboardLayout"/> of the given keyboard.
+        /// </summary>
+        /// <param name="name">Name of the keyboard layout to switch to.</param>
+        /// <param name="keyboard">Keyboard to switch layout on. If <c>null</c>, <see cref="Keyboard.current"/> is used.</param>
+        /// <exception cref="ArgumentException"><paramref name="keyboard"/> and <see cref="Keyboard.current"/> are both <c>null</c>.</exception>
+        /// <remarks>
+        /// Also queues and immediately processes an <see cref="DeviceConfigurationEvent"/> for the keyboard.
+        /// </remarks>
+        public unsafe void SetKeyboardLayout(string name, Keyboard keyboard = null)
+        {
+            if (keyboard == null)
+            {
+                keyboard = Keyboard.current;
+                if (keyboard == null)
+                    throw new ArgumentException("No keyboard has been created and no keyboard has been given", nameof(keyboard));
+            }
+
+            runtime.SetDeviceCommandCallback(keyboard, (id, command) =>
+            {
+                if (id == QueryKeyboardLayoutCommand.Type)
+                {
+                    var commandPtr = (QueryKeyboardLayoutCommand*)command;
+                    commandPtr->WriteLayoutName(name);
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+            // Make sure caches on keys are flushed.
+            InputSystem.QueueConfigChangeEvent(Keyboard.current);
+            InputSystem.Update();
+        }
+
+        /// <summary>
         /// Set the <see cref="InputControl.displayName"/> of <paramref name="key"/> on the current
         /// <see cref="Keyboard"/> to be <paramref name="displayName"/>.
         /// </summary>
@@ -475,7 +509,7 @@ namespace UnityEngine.InputSystem
         /// <value>Current time used by the input system.</value>
         public double currentTime
         {
-            get => runtime.currentTime = currentTime;
+            get => runtime.currentTime;
             set => runtime.currentTime = value;
         }
 

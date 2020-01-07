@@ -715,7 +715,6 @@ namespace UnityEngine.InputSystem
         /// Initialized when map (or any action in it) is first enabled.
         /// </remarks>
         [NonSerialized] internal InputActionState m_State;
-        [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
         [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
@@ -967,13 +966,10 @@ namespace UnityEngine.InputSystem
             if (m_State == null)
                 return false;
 
-            // If we don't have enabled actions, defer binding resolution to when we next
-            // enable actions.
-            if (m_EnabledActionsCount == 0)
-            {
-                m_NeedToResolveBindings = true;
-                return false;
-            }
+            // We used to defer binding resolution here in case the map had no enabled actions. That behavior,
+            // however, leads to rather unpredictable BoundControlsChanged notifications (especially for
+            // rebinding UIs), so now we just always re-resolve anything that ever had an InputActionState
+            // created. Unfortunately, this can lead to some unnecessary re-resolving.
 
             // Have to do it straight away.
             ResolveBindings();
@@ -987,7 +983,7 @@ namespace UnityEngine.InputSystem
             //       We only resolve if a map is used that needs resolution to happen. Note that
             //       this will still resolve bindings for *all* maps in the asset.
 
-            if (m_State == null || m_NeedToResolveBindings)
+            if (m_State == null)
                 ResolveBindings();
         }
 
@@ -1067,9 +1063,11 @@ namespace UnityEngine.InputSystem
                         // actions so that cancellations happen first.
                         if (map.m_SingletonAction != null)
                             InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map.m_SingletonAction);
-                        else
+                        else if (m_Asset == null)
                             InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
                     }
+                    if (m_Asset != null)
+                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, m_Asset);
 
                     // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
                     resolver.StartWithArraysFrom(m_State);
@@ -1107,16 +1105,17 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < actionMaps.Count; ++i)
                 {
                     var map = actionMaps[i];
-                    map.m_NeedToResolveBindings = false;
 
                     ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
                     map.m_ControlsForEachAction = null;
 
                     if (map.m_SingletonAction != null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
-                    else
+                    else if (m_Asset == null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
                 }
+                if (m_Asset != null)
+                    InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
 
                 // Re-enable actions.
                 if (hasEnabledActions)

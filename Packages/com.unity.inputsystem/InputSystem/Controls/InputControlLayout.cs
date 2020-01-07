@@ -1238,6 +1238,10 @@ namespace UnityEngine.InputSystem.Layouts
             // Retain list of overrides.
             m_AppliedOverrides.Merge(other.m_AppliedOverrides);
 
+            // Inherit display name.
+            if (string.IsNullOrEmpty(m_DisplayName))
+                m_DisplayName = other.m_DisplayName;
+
             // Merge controls.
             if (m_Controls == null)
             {
@@ -1905,6 +1909,13 @@ namespace UnityEngine.InputSystem.Layouts
                 }
 
                 return layout;
+            }
+
+            public InternedString GetBaseLayoutName(InternedString layoutName)
+            {
+                if (baseLayoutTable.TryGetValue(layoutName, out var baseLayoutName))
+                    return baseLayoutName;
+                return default;
             }
 
             // Return name of layout at root of "extend" chain of given layout.

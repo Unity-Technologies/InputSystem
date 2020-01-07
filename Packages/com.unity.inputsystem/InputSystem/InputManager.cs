@@ -2668,6 +2668,7 @@ namespace UnityEngine.InputSystem
 
                     case DeviceConfigurationEvent.Type:
                         device.OnConfigurationChanged();
+                        InputActionState.OnDeviceChange(device, InputDeviceChange.ConfigurationChanged);
                         for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                             m_DeviceChangeListeners[i](device, InputDeviceChange.ConfigurationChanged);
                         break;

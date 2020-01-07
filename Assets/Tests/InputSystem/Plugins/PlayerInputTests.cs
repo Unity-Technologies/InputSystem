@@ -644,7 +644,13 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
         Assert.That(playerInput.user.controlScheme, Is.Not.Null);
         Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput), // Initial resolve.
+            new Message("OnControlsChanged", playerInput), // Control scheme switch.
+            new Message("OnFire", 1f)
+        }));
+    }
     }
 
     [Test]
@@ -674,7 +680,11 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
         Assert.That(listener.messages,
             Is.EquivalentTo(new[]
-                {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))}));
+            {
+                new Message("OnControlsChanged", playerInput), // Initial resolve.
+                new Message("OnControlsChanged", playerInput), // Control scheme switch.
+                new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
+            }));
 
         listener.messages.Clear();
 
@@ -848,7 +858,11 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnOtherAction", 0.234f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput),
+            new Message("OnOtherAction", 0.234f)
+        }));
     }
 
     [Test]
@@ -867,7 +881,11 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.True);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.False);
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 0.234f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput),
+            new Message("OnFire", 0.234f)
+        }));
 
         listener.messages.Clear();
 
@@ -997,7 +1015,11 @@ internal class PlayerInputTests : InputTestFixture
 
         Press(gamepad.buttonSouth);
 
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput),
+            new Message("OnFire", 1f)
+        }));
 
         listener.messages.Clear();
 
@@ -1027,6 +1049,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(listener.messages,
             Is.EquivalentTo(new[]
             {
+                new Message("OnControlsChanged", playerInput),
                 new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
             }));
 
@@ -1151,6 +1174,68 @@ internal class PlayerInputTests : InputTestFixture
         Object.DestroyImmediate(go1);
 
         Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerLeft", playerInput1)}));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
+    [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener))]
+    [TestCase(PlayerNotifications.InvokeCSharpEvents, typeof(PlayerInputCSharpEventListener))]
+    public void PlayerInput_CanReceiveNotificationWhenControlsAreModified(PlayerNotifications notificationBehavior, Type listenerType)
+    {
+        InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Keyboard>();
+
+        var go = new GameObject();
+        go.SetActive(false);
+        IListener listener;
+        if (notificationBehavior == PlayerNotifications.BroadcastMessages)
+        {
+            var child = new GameObject();
+            child.transform.parent = go.transform;
+            listener = (IListener)child.AddComponent(listenerType);
+        }
+        else
+        {
+            listener = (IListener)go.AddComponent(listenerType);
+        }
+        var playerInput = go.AddComponent<PlayerInput>();
+
+        playerInput.notificationBehavior = notificationBehavior;
+        playerInput.defaultControlScheme = "Gamepad";
+        playerInput.defaultActionMap = "Gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        // NOTE: No message when controls are first enabled. This means that, for example, when rebinding happens in a UI
+        //       while the component is disabled and we then enable the component, there will *NOT* be an OnControlsChanged call.
+        go.SetActive(true);
+
+        // Rebind fire button.
+        playerInput.actions["fire"].ApplyBindingOverride("<Gamepad>/leftTrigger", group: "Gamepad");
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnControlsChanged", playerInput)}));
+
+        listener.messages.Clear();
+
+        // Switch control scheme.
+        playerInput.SwitchCurrentControlScheme("Keyboard&Mouse");
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            ////FIXME: ATM the way we do this triggers the notification twice, first from unpairing and then from control
+            ////       scheme switching; make this a single operation
+            new Message("OnControlsChanged", playerInput),
+            new Message("OnControlsChanged", playerInput)
+        }));
+
+        listener.messages.Clear();
+
+        // Switch keyboard layout.
+        SetKeyboardLayout("Other");
+
+        Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnControlsChanged", playerInput)}));
     }
 
     [Test]
@@ -1711,6 +1796,12 @@ internal class PlayerInputTests : InputTestFixture
         }
 
         // ReSharper disable once UnusedMember.Local
+        public void OnControlsChanged(PlayerInput player)
+        {
+            messages.Add(new Message { name = "OnControlsChanged", value = player});
+        }
+
+        // ReSharper disable once UnusedMember.Local
         public void OnPlayerJoined(PlayerInput player)
         {
             messages.Add(new Message { name = "OnPlayerJoined", value = player});
@@ -1739,6 +1830,7 @@ internal class PlayerInputTests : InputTestFixture
 
             playerInput.deviceLostEvent.AddListener(OnDeviceLost);
             playerInput.deviceRegainedEvent.AddListener(OnDeviceRegained);
+            playerInput.controlsChangedEvent.AddListener(OnControlsChanged);
         }
 
         private void SetUpActionEvents(PlayerInput player)
@@ -1790,6 +1882,11 @@ internal class PlayerInputTests : InputTestFixture
         {
             messages.Add(new Message("OnDeviceRegained", player));
         }
+
+        private void OnControlsChanged(PlayerInput player)
+        {
+            messages.Add(new Message("OnControlsChanged", player));
+        }
     }
 
     // il2cpp internally crashes if this gets stripped. Need to investigate, but for now we preserve it.
@@ -1806,6 +1903,7 @@ internal class PlayerInputTests : InputTestFixture
             playerInput.onActionTriggered += OnAction;
             playerInput.onDeviceLost += OnDeviceLost;
             playerInput.onDeviceRegained += OnDeviceRegained;
+            playerInput.onControlsChanged += OnControlsChanged;
         }
 
         private void OnAction(InputAction.CallbackContext context)
@@ -1821,6 +1919,11 @@ internal class PlayerInputTests : InputTestFixture
         private void OnDeviceRegained(PlayerInput player)
         {
             messages.Add(new Message("OnDeviceRegained", player));
+        }
+
+        private void OnControlsChanged(PlayerInput player)
+        {
+            messages.Add(new Message("OnControlsChanged", player));
         }
     }
 

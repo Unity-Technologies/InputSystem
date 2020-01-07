@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -9,7 +11,8 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
     /// and then released.
     /// </summary>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayName("Tap")]
     public class TapInteraction : IInputInteraction
     {
         /// <summary>
