@@ -1909,6 +1909,7 @@ namespace UnityEngine.InputSystem
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Touchscreen>/touch*/position")
                 .WithControlsExcluding("<Touchscreen>/touch*/delta")
+                .WithControlsExcluding("<Mouse>/clickCount")
                 .WithMatchingEventsBeingSuppressed();
 
             // If we're not looking for a button, automatically add keyboard escape key to abort rebind.
@@ -1970,7 +1971,6 @@ namespace UnityEngine.InputSystem
             }
 
             return rebind;
-        }
         }
     }
 }
