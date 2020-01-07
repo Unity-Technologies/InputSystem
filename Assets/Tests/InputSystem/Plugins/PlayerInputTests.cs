@@ -651,7 +651,6 @@ internal class PlayerInputTests : InputTestFixture
             new Message("OnFire", 1f)
         }));
     }
-    }
 
     [Test]
     [Category("PlayerInput")]
