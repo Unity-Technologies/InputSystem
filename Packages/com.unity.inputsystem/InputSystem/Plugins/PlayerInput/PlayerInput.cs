@@ -281,8 +281,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="SwitchCurrentActionMap"/>
         public InputActionAsset actions
         {
-            ////FIXME: this may return the wrong set of action if called before OnEnable
-            get => m_Actions;
+            get
+            {
+                if (!m_ActionsInitialized && gameObject.activeSelf)
+                    InitializeActions();
+                return m_Actions;
+            }
             set
             {
                 if (m_Actions == value)
@@ -689,7 +693,19 @@ namespace UnityEngine.InputSystem
         public InputSystemUIInputModule uiInputModule
         {
             get => m_UIInputModule;
-            set => m_UIInputModule = value;
+            set
+            {
+                if (m_UIInputModule == value)
+                    return;
+
+                if (m_UIInputModule != null && this.m_UIInputModule.actionsAsset == m_Actions)
+                    m_UIInputModule.actionsAsset = null;
+
+                m_UIInputModule = value;
+
+                if (m_UIInputModule != null && m_Actions != null)
+                    m_UIInputModule.actionsAsset = m_Actions;
+            }
         }
 
         /// <summary>
@@ -804,13 +820,14 @@ namespace UnityEngine.InputSystem
             if (devices == null)
                 throw new ArgumentNullException(nameof(devices));
 
-            ////REVIEW: probably would be good for InputUser to have a method that allows to perform
-            ////        all this in a single call; would also simplify the steps necessary internally
-            user.UnpairDevices();
-            for (var i = 0; i < devices.Length; ++i)
-                InputUser.PerformPairingWithDevice(devices[i], user: user);
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                user.UnpairDevices();
+                for (var i = 0; i < devices.Length; ++i)
+                    InputUser.PerformPairingWithDevice(devices[i], user: user);
 
-            user.ActivateControlScheme(controlScheme);
+                user.ActivateControlScheme(controlScheme);
+            }
         }
 
         public void SwitchCurrentActionMap(string mapNameOrId)
@@ -1006,6 +1023,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
         [NonSerialized] private bool m_Enabled;
+        [NonSerialized] private bool m_ActionsInitialized;
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
@@ -1032,6 +1050,8 @@ namespace UnityEngine.InputSystem
 
         private void InitializeActions()
         {
+            if (m_ActionsInitialized)
+                return;
             if (m_Actions == null)
                 return;
 
@@ -1111,10 +1131,14 @@ namespace UnityEngine.InputSystem
                     break;
                 }
             }
+
+            m_ActionsInitialized = true;
         }
 
         private void UninitializeActions()
         {
+            if (!m_ActionsInitialized)
+                return;
             if (m_Actions == null)
                 return;
 
@@ -1141,6 +1165,7 @@ namespace UnityEngine.InputSystem
             }
 
             m_CurrentActionMap = null;
+            m_ActionsInitialized = false;
         }
 
         private void InstallOnActionTriggeredHook()
@@ -1296,25 +1321,21 @@ namespace UnityEngine.InputSystem
                 // search for a control scheme matching the given devices.
                 if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
                 {
-                    foreach (var controlScheme in m_Actions.controlSchemes)
-                    {
-                        for (var i = 0; i < s_InitPairWithDevicesCount; ++i)
-                        {
-                            var device = s_InitPairWithDevices[i];
-                            if (controlScheme.SupportsDevice(device) && TryToActivateControlScheme(controlScheme))
-                                break;
-                        }
-                    }
+                    var controlScheme = InputControlScheme.FindControlSchemeForDevices(
+                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes);
+                    if (controlScheme != null)
+                        TryToActivateControlScheme(controlScheme.Value);
                 }
                 // If we don't have a working control scheme by now and we haven't been instructed to use
                 // one specific control scheme, try each one in the asset one after the other until we
                 // either find one we can use or run out of options.
                 else if ((!m_InputUser.valid || m_InputUser.controlScheme == null) && string.IsNullOrEmpty(s_InitControlScheme))
                 {
-                    foreach (var controlScheme in m_Actions.controlSchemes)
+                    using (var availableDevices = InputUser.GetUnpairedInputDevices())
                     {
-                        if (TryToActivateControlScheme(controlScheme))
-                            break;
+                        var controlScheme = InputControlScheme.FindControlSchemeForDevices(availableDevices, m_Actions.controlSchemes);
+                        if (controlScheme != null)
+                            TryToActivateControlScheme(controlScheme.Value);
                     }
                 }
             }
@@ -1692,23 +1713,63 @@ namespace UnityEngine.InputSystem
             if (player.m_Actions == null)
                 return;
 
-            // Go through all control schemes and see if there is one usable with the device.
-            // If so, switch to it.
-            var controlScheme = InputControlScheme.FindControlSchemeForDevice(control.device, player.m_Actions.controlSchemes);
-            if (controlScheme != null)
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            using (var availableDevices = InputUser.GetUnpairedInputDevices())
             {
-                // First remove the currently paired devices, then pair the device that was used,
-                // and finally switch to the new control scheme and grab whatever other devices we're missing.
-                player.user.UnpairDevices();
-                InputUser.PerformPairingWithDevice(control.device, user: player.user);
-                player.user.ActivateControlScheme(controlScheme.Value).AndPairRemainingDevices();
+                // Put our device first in the list to make sure it's the first one picked for a match.
+                var device = control.device;
+                if (availableDevices.Count > 1)
+                {
+                    var indexOfDevice = availableDevices.IndexOf(device);
+                    Debug.Assert(indexOfDevice != -1, "Did not find unpaired device in list of unpaired devices");
+                    availableDevices.SwapElements(0, indexOfDevice);
+                }
+
+                // Add all devices currently already paired to us. This avoids us preventing
+                // control schemes switches because of devices we're looking for already being
+                // paired to us.
+                var currentDevices = player.devices;
+                for (var i = 0; i < currentDevices.Count; ++i)
+                    availableDevices.Add(currentDevices[i]);
+
+                // Find the best control scheme to use.
+                if (InputControlScheme.FindControlSchemeForDevices(availableDevices, player.m_Actions.controlSchemes,
+                    out var controlScheme, out var matchResult, mustIncludeDevice: device))
+                {
+                    try
+                    {
+                        // First remove the currently paired devices.
+                        var userValid = player.user.valid;
+                        if (userValid)
+                            player.user.UnpairDevices();
+
+                        // Then pair devices that we've picked according to the control scheme.
+                        var newDevices = matchResult.devices;
+                        Debug.Assert(newDevices.Count > 0, "Expecting to see at least one device here");
+                        for (var i = 0; i < newDevices.Count; ++i)
+                        {
+                            player.m_InputUser = InputUser.PerformPairingWithDevice(newDevices[i], user: player.m_InputUser);
+                            if (!userValid && player.actions != null)
+                                player.m_InputUser.AssociateActionsWithUser(player.actions);
+                        }
+
+                        // And finally switch to the new control scheme.
+                        player.user.ActivateControlScheme(controlScheme);
+                    }
+                    finally
+                    {
+                        matchResult.Dispose();
+                    }
+                }
             }
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            // If a device was added
+            // If a device was added and we have no control schemes in the actions and we're in
+            // single-player mode, pair the device to the player if it works with the bindings we have.
             if (change == InputDeviceChange.Added &&
+                isSinglePlayer &&
                 m_Actions != null && m_Actions.controlSchemes.Count == 0 &&
                 HaveBindingForDevice(device) &&
                 m_InputUser.valid)

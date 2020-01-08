@@ -270,29 +270,51 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                // Return asset's device list if we have none (only if we're part of an asset).
-                if (m_Devices == null && asset != null)
-                    return asset.devices;
-
-                return m_Devices;
+                if (m_DevicesCount < 0)
+                {
+                    // Return asset's device list if we have none (only if we're part of an asset).
+                    if (asset != null)
+                        return asset.devices;
+                    return null;
+                }
+                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
             }
             set
             {
                 if (value == null)
                 {
-                    if (m_DevicesArray != null)
+                    if (m_DevicesCount < 0)
+                        return; // No change.
+
+                    if (m_DevicesArray != null & m_DevicesCount > 0)
                         Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = 0;
-                    m_Devices = null;
+                    m_DevicesCount = -1;
                 }
                 else
                 {
-                    m_DevicesArray.Clear(ref m_DevicesCount);
+                    // See if the array actually changes content. Avoids re-resolving when there
+                    // is no need to.
+                    if (m_DevicesCount == value.Value.Count)
+                    {
+                        var noChange = true;
+                        for (var i = 0; i < m_DevicesCount; ++i)
+                        {
+                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
+                            {
+                                noChange = false;
+                                break;
+                            }
+                        }
+                        if (noChange)
+                            return;
+                    }
+
+                    if (m_DevicesCount > 0)
+                        m_DevicesArray.Clear(ref m_DevicesCount);
+                    m_DevicesCount = 0;
                     ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
                 }
 
-                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
                 LazyResolveBindings();
             }
         }
@@ -339,14 +361,23 @@ namespace UnityEngine.InputSystem
             remove => m_ActionCallbacks.RemoveByMovingTailWithCapacity(value); ////FIXME: Changes callback ordering.
         }
 
+        public InputActionMap()
+        {
+            // For some reason, when using UnityEngine.Object.Instantiate the -1 initialization
+            // does not come through except if explicitly done here in the default constructor.
+            m_DevicesCount = -1;
+        }
+
         /// <summary>
         /// Construct an action map with the given name.
         /// </summary>
         /// <param name="name">Name to give to the action map. By default <c>null</c>, i.e. does
         /// not assign a name to the map.</param>
-        public InputActionMap(string name = null)
+        public InputActionMap(string name)
+            : this()
         {
             m_Name = name;
+            m_DevicesCount = -1;
         }
 
         /// <summary>
@@ -715,13 +746,15 @@ namespace UnityEngine.InputSystem
         /// Initialized when map (or any action in it) is first enabled.
         /// </remarks>
         [NonSerialized] internal InputActionState m_State;
+        [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
-        [NonSerialized] private int m_DevicesCount;
+        [NonSerialized] private int m_DevicesCount = -1;
         [NonSerialized] private InputDevice[] m_DevicesArray;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
+
+        internal static int s_DeferBindingResolution;
 
         /// <summary>
         /// Return the list of bindings for just the given actions.
@@ -971,6 +1004,12 @@ namespace UnityEngine.InputSystem
             // rebinding UIs), so now we just always re-resolve anything that ever had an InputActionState
             // created. Unfortunately, this can lead to some unnecessary re-resolving.
 
+            if (s_DeferBindingResolution > 0)
+            {
+                m_NeedToResolveBindings = true;
+                return false;
+            }
+
             // Have to do it straight away.
             ResolveBindings();
             return true;
@@ -983,7 +1022,7 @@ namespace UnityEngine.InputSystem
             //       We only resolve if a map is used that needs resolution to happen. Note that
             //       this will still resolve bindings for *all* maps in the asset.
 
-            if (m_State == null)
+            if (m_State == null || m_NeedToResolveBindings)
                 ResolveBindings();
         }
 
@@ -1105,6 +1144,7 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < actionMaps.Count; ++i)
                 {
                     var map = actionMaps[i];
+                    map.m_NeedToResolveBindings = false;
 
                     ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
                     map.m_ControlsForEachAction = null;

@@ -1972,5 +1972,39 @@ namespace UnityEngine.InputSystem
 
             return rebind;
         }
+
+        /// <summary>
+        /// Temporarily suspend immediate re-resolution of bindings.
+        /// </summary>
+        /// <remarks>
+        /// When changing control setups, it may take multiple steps to get to the final setup but each individual
+        /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
+        /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
+        /// is complete and the final binding setup is in place.
+        /// </remarks>
+        internal static IDisposable DeferBindingResolution()
+        {
+            if (s_DeferBindingResolutionWrapper == null)
+                s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
+            s_DeferBindingResolutionWrapper.Acquire();
+            return s_DeferBindingResolutionWrapper;
+        }
+
+        private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
+
+        private class DeferBindingResolutionWrapper : IDisposable
+        {
+            public void Acquire()
+            {
+                ++InputActionMap.s_DeferBindingResolution;
+            }
+
+            public void Dispose()
+            {
+                if (InputActionMap.s_DeferBindingResolution > 0)
+                    --InputActionMap.s_DeferBindingResolution;
+                InputActionState.DeferredResolutionOfBindings();
+            }
+        }
     }
 }

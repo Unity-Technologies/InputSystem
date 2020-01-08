@@ -15,6 +15,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
@@ -2420,18 +2421,21 @@ partial class CoreTests
         var map = new InputActionMap();
         var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
 
+        Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
 
         map.devices = new[] {gamepad2};
 
+        Assert.That(map.devices, Is.EquivalentTo(new[] { gamepad2}));
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
 
         map.devices = null;
 
+        Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
@@ -2472,6 +2476,7 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
 
+        Assert.That(asset.devices, Is.Null);
         Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
@@ -2479,6 +2484,7 @@ partial class CoreTests
 
         asset.devices = new[] {gamepad2};
 
+        Assert.That(asset.devices, Is.EquivalentTo(new[] { gamepad2 }));
         Assert.That(map.devices, Is.EquivalentTo(asset.devices));
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
@@ -2486,6 +2492,7 @@ partial class CoreTests
 
         asset.devices = null;
 
+        Assert.That(asset.devices, Is.Null);
         Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
@@ -4207,6 +4214,51 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
+    {
+        var genericGamepad = InputSystem.AddDevice<Gamepad>();
+        var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var genericGamepadScheme = new InputControlScheme("GenericGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var ps4GamepadScheme = new InputControlScheme("PS4Gamepad")
+            .WithRequiredDevice("<DualShockGamepad>");
+
+        using (var genericToGeneric = genericGamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
+        using (var genericToPS4 = genericGamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
+        using (var ps4ToGeneric = ps4GamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
+        using (var ps4ToPS4 = ps4GamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
+        using (var genericToMouse = genericGamepadScheme.PickDevicesFrom(new[] { mouse }))
+        using (var ps4ToMouse = ps4GamepadScheme.PickDevicesFrom(new[] { mouse }))
+        {
+            Assert.That(genericToGeneric.score, Is.GreaterThan(1));
+            Assert.That(genericToPS4.score, Is.GreaterThan(1));
+            Assert.That(ps4ToGeneric.score, Is.Zero); // Generic gamepad is no match for PS4 scheme.
+            Assert.That(ps4ToPS4.score, Is.GreaterThan(1));
+            Assert.That(genericToMouse.score, Is.Zero);
+            Assert.That(ps4ToMouse.score, Is.Zero);
+
+            // Generic gawmepad is a more precise match for generic gamepad scheme than PS4 controller is
+            // for generic gamepad scheme.
+            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToGeneric.score));
+
+            // Generic gamepad is a more precise match for generic gamepad scheme than PS4 *HID* controller
+            // is for PS4 gamepad scheme.
+            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToPS4.score));
+
+            // Generic gamepad to generic gamepad scheme is a 100% match so score is one for matching the
+            // requirement plus 1 for matching it 100%.
+            Assert.That(genericToGeneric.score, Is.EqualTo(1 + 1));
+
+            // PS4 *HID* gamepad to PS4 gamepad scheme is a 50% match as the HID layout is one step removed
+            // from the base PS4 gamepad layout.
+            Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CanPickDevicesThatMatchGivenControlScheme_WithoutAllocatingGCMemory()
     {
@@ -4247,12 +4299,39 @@ partial class CoreTests
 
         Assert.That(InputControlScheme.FindControlSchemeForDevice(gamepad, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme1));
-        Assert.That(InputControlScheme.FindControlSchemeForDevice(keyboard, new[] {scheme1, scheme2}),
-            Is.EqualTo(scheme2));
-        Assert.That(InputControlScheme.FindControlSchemeForDevice(mouse, new[] {scheme1, scheme2}),
-            Is.EqualTo(scheme2));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(keyboard, new[] { scheme1, scheme2 }),
+            Is.Null);
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(mouse, new[] { scheme1, scheme2 }),
+            Is.Null);
         Assert.That(InputControlScheme.FindControlSchemeForDevice(touch, new[] {scheme1, scheme2}),
             Is.Null);
+        Assert.That(InputControlScheme.FindControlSchemeForDevices(new InputDevice[] { keyboard, mouse }, new[] { scheme1, scheme2 }),
+            Is.EqualTo(scheme2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
+    {
+        var genericGamepadScheme = new InputControlScheme("GenericGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var ps4GamepadScheme = new InputControlScheme("PS4")
+            .WithRequiredDevice("<DualShockGamepad>");
+        var xboxGamepadScheme = new InputControlScheme("Xbox")
+            .WithRequiredDevice("<XInputController>");
+        var mouseScheme = new InputControlScheme("Mouse") // Noise.
+            .WithRequiredDevice("<Mouse>");
+
+        var genericGamepad = InputSystem.AddDevice<Gamepad>();
+        var ps4Controller = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var xboxController = InputSystem.AddDevice<XInputController>();
+
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(genericGamepad, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(genericGamepadScheme));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(ps4Controller, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(ps4GamepadScheme));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(xboxController, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(xboxGamepadScheme));
     }
 
     // The bindings targeting an action can be masked out such that only specific

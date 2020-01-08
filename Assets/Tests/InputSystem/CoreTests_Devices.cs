@@ -2129,6 +2129,7 @@ partial class CoreTests
     public void Devices_CanLookUpKeyFromKeyboardUsingDisplayName()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
+
         SetKeyInfo(Key.A, "q");
         SetKeyInfo(Key.Q, "a");
 

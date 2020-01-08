@@ -74,6 +74,9 @@ namespace UnityEngine.InputSystem
         {
             try
             {
+                // Apparently, NUnit is reusing instances :(
+                m_KeyInfos = default;
+
                 // Disable input debugger so we don't waste time responding to all the
                 // input system activity from the tests.
                 #if UNITY_EDITOR

@@ -6,10 +6,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.XInput;
 using Object = UnityEngine.Object;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
@@ -230,7 +232,11 @@ internal class PlayerInputTests : InputTestFixture
 
         Press(gamepad.buttonSouth);
 
-        Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("OnFire", 1f)}));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", instance),
+            new Message("OnFire", 1f)
+        }));
     }
 
     [Test]
@@ -646,10 +652,49 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.user.controlScheme.Value.name, Is.EqualTo("Gamepad"));
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
+            ////TODO: reduce the steps in which PlayerInput updates the data to result in fewer re-resolves
             new Message("OnControlsChanged", playerInput), // Initial resolve.
             new Message("OnControlsChanged", playerInput), // Control scheme switch.
             new Message("OnFire", 1f)
         }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanAutoSwitchControlSchemesInSinglePlayer_WithSomeDevicesSharedBetweenSchemes()
+    {
+        InputSystem.AddDevice<Touchscreen>(); // Noise.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        InputSystem.AddDevice<Gamepad>(); // Noise.
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMap = actions.AddActionMap("gameplay");
+        actionMap.AddAction("action", binding: "<Gamepad>/buttonSouth");
+
+        actions.AddControlScheme(new InputControlScheme("KeyboardMouse").WithRequiredDevice("<Keyboard>").WithRequiredDevice("<Mouse>"));
+        actions.AddControlScheme(new InputControlScheme("GamepadMouse").WithRequiredDevice("<Gamepad>").WithRequiredDevice("<Mouse>"));
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.defaultControlScheme = "KeyboardMouse";
+        playerInput.actions = actions;
+        go.SetActive(true);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("KeyboardMouse"));
+        Assert.That(playerInput.devices, Has.Count.EqualTo(2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(keyboard));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(mouse));
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("GamepadMouse"));
+        Assert.That(playerInput.devices, Has.Count.EqualTo(2));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(gamepad));
+        Assert.That(playerInput.devices, Has.Exactly(1).SameAs(mouse));
     }
 
     [Test]
@@ -680,8 +725,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(listener.messages,
             Is.EquivalentTo(new[]
             {
-                new Message("OnControlsChanged", playerInput), // Initial resolve.
-                new Message("OnControlsChanged", playerInput), // Control scheme switch.
+                new Message("OnControlsChanged", playerInput),
                 new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
             }));
 
@@ -703,8 +747,11 @@ internal class PlayerInputTests : InputTestFixture
                 // This looks counter-intuitive but what happens is that when switching from gamepad1 to gamepad2,
                 // the system will first cancel ongoing actions. So it'll cancel "Move" which, given how PlayerInput
                 // sends messages, will simply come out as another "Move" with a zero value.
-            {new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.0f, 0.0f))),
-             new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))}));
+            {
+                new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.0f, 0.0f))),
+                new Message("OnControlsChanged", playerInput),
+                new Message("OnMove", new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))
+            }));
     }
 
     [Test]
@@ -754,6 +801,29 @@ internal class PlayerInputTests : InputTestFixture
 
         Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_ByDefaultChoosesMostSpecificControlSchemeAvailable()
+    {
+        InputSystem.AddDevice<XInputController>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        actions.AddControlScheme("GenericGamepad").WithRequiredDevice("<Gamepad>");
+        actions.AddControlScheme("XboxGamepad").WithRequiredDevice("<XInputController>");
+        actions.AddControlScheme("PS4Gamepad").WithRequiredDevice("<DualShockGamepad>");
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.actions = actions;
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("XboxGamepad"));
+
+        var ps4Gamepad = InputSystem.AddDevice<DualShockGamepad>();
+        Press(ps4Gamepad.buttonSouth);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("PS4Gamepad"));
     }
 
     // Test setup where two players both use the keyboard but with two different control
@@ -1184,8 +1254,8 @@ internal class PlayerInputTests : InputTestFixture
     public void PlayerInput_CanReceiveNotificationWhenControlsAreModified(PlayerNotifications notificationBehavior, Type listenerType)
     {
         InputSystem.AddDevice<Gamepad>();
-        InputSystem.AddDevice<Mouse>();
-        InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var go = new GameObject();
         go.SetActive(false);
@@ -1219,13 +1289,10 @@ internal class PlayerInputTests : InputTestFixture
         listener.messages.Clear();
 
         // Switch control scheme.
-        playerInput.SwitchCurrentControlScheme("Keyboard&Mouse");
+        playerInput.SwitchCurrentControlScheme("Keyboard&Mouse", keyboard, mouse);
 
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
-            ////FIXME: ATM the way we do this triggers the notification twice, first from unpairing and then from control
-            ////       scheme switching; make this a single operation
-            new Message("OnControlsChanged", playerInput),
             new Message("OnControlsChanged", playerInput)
         }));
 

@@ -1479,7 +1479,7 @@ partial class CoreTests
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
         Assert.That(device.leftStick.x.displayName, Is.EqualTo("Primary Stick Horizontal"));
         Assert.That(device.leftStick.shortDisplayName, Is.EqualTo("PS"));
-        Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
+        Assert.That(device.leftStick.x.shortDisplayName, Is.EqualTo("PS Horizontal"));
     }
 
     [Preserve]

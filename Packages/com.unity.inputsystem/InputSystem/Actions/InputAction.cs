@@ -373,9 +373,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        ////TODO: add support for turning binding array into displayable info
-        ////      (allow to constrain by sets of devices set on action set)
-
         /// <summary>
         /// The list of bindings associated with the action.
         /// </summary>
@@ -1023,19 +1020,17 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void MakeSureIdIsInPlace()
+        internal string MakeSureIdIsInPlace()
         {
             if (m_Guid != Guid.Empty)
-                return;
+                return m_Id;
 
             if (string.IsNullOrEmpty(m_Id))
-            {
                 GenerateId();
-            }
             else
-            {
                 m_Guid = new Guid(m_Id);
-            }
+
+            return m_Id;
         }
 
         internal void GenerateId()
