@@ -27,6 +27,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
+- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
+
 #### Actions
 
 - We've added APIs to simplify turning bindings into strings suitable for display in UIs.

@@ -231,8 +231,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>If true, the player is receiving input.</value>
         /// <seealso cref="ActivateInput"/>
-        /// <seealso cref="PassivateInput"/>
-        public bool active => m_InputActive;
+        /// <seealso cref="DeactivateInput"/>
+        public bool inputIsActive => m_InputActive;
 
         /// <summary>
         /// Unique, zero-based index of the player. For example, <c>2</c> for the third player.
@@ -740,6 +740,17 @@ namespace UnityEngine.InputSystem
             s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
 
+        /// <summary>
+        /// Enable input on the player.
+        /// </summary>
+        /// <remarks>
+        /// Input will automatically be activated when the PlayerInput component is enabled. However, this method
+        /// can be called to reactivate input after deactivating it with <see cref="DeactivateInput"/>.
+        ///
+        /// Note that activating input will activate the current action map only (see <see cref="currentActionMap"/>).
+        /// </remarks>
+        /// <see cref="inputIsActive"/>
+        /// <seealso cref="DeactivateInput"/>
         public void ActivateInput()
         {
             m_InputActive = true;
@@ -752,7 +763,18 @@ namespace UnityEngine.InputSystem
                 m_CurrentActionMap?.Enable();
         }
 
-        public void PassivateInput()
+        /// <summary>
+        /// Disable input on the player.
+        /// </summary>
+        /// <remarks>
+        /// Input is automatically activated when the PlayerInput component is enabled. This method can be
+        /// used to deactivate input manually.
+        ///
+        /// Note that activating input will deactivate the current action map only (see <see cref="currentActionMap"/>).
+        /// </remarks>
+        /// <see cref="ActivateInput"/>
+        /// <see cref="inputIsActive"/>
+        public void DeactivateInput()
         {
             m_CurrentActionMap?.Disable();
 
@@ -1547,7 +1569,7 @@ namespace UnityEngine.InputSystem
             // Trigger leave event.
             PlayerInputManager.instance?.NotifyPlayerLeft(this);
 
-            PassivateInput();
+            DeactivateInput();
             UnassignUserAndDevices();
             UninitializeActions();
 

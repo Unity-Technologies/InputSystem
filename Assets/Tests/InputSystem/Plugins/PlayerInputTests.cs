@@ -479,15 +479,15 @@ internal class PlayerInputTests : InputTestFixture
 
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
 
-        go.SendMessage("PassivateInput");
+        go.SendMessage("DeactivateInput");
 
-        Assert.That(playerInput.active, Is.False);
+        Assert.That(playerInput.inputIsActive, Is.False);
 
         go.SendMessage("ActivateInput");
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
     }
 
     [Test]
@@ -506,21 +506,21 @@ internal class PlayerInputTests : InputTestFixture
         var gameplayActions = playerInput.actions.FindActionMap("gameplay");
         Set(gamepad.leftTrigger, 0.234f);
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
         Assert.That(gameplayActions.enabled, Is.True);
         Assert.That(moveAction.enabled, Is.True);
         Assert.That(navigateAction.enabled, Is.False);
 
         navigateAction.Enable();
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
         Assert.That(gameplayActions.enabled, Is.True);
         Assert.That(moveAction.enabled, Is.True);
         Assert.That(navigateAction.enabled, Is.True);
 
-        playerInput.PassivateInput();
+        playerInput.DeactivateInput();
 
-        Assert.That(playerInput.active, Is.False);
+        Assert.That(playerInput.inputIsActive, Is.False);
         Assert.That(gameplayActions.enabled, Is.False);
         Assert.That(moveAction.enabled, Is.False);
         Assert.That(navigateAction.enabled, Is.True);
@@ -544,7 +544,7 @@ internal class PlayerInputTests : InputTestFixture
 
         Set(gamepad.leftTrigger, 0.234f);
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
         Assert.That(gameplayActions.enabled, Is.True);
         Assert.That(moveAction.enabled, Is.True);
         Assert.That(otherActions.enabled, Is.False);
@@ -552,7 +552,7 @@ internal class PlayerInputTests : InputTestFixture
 
         navigateAction.Enable();
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
         Assert.That(gameplayActions.enabled, Is.True);
         Assert.That(moveAction.enabled, Is.True);
         Assert.That(otherActions.enabled, Is.False);
@@ -560,7 +560,7 @@ internal class PlayerInputTests : InputTestFixture
 
         playerInput.currentActionMap = otherActions;
 
-        Assert.That(playerInput.active, Is.True);
+        Assert.That(playerInput.inputIsActive, Is.True);
         Assert.That(gameplayActions.enabled, Is.False);
         Assert.That(moveAction.enabled, Is.False);
         Assert.That(otherActions.enabled, Is.True);
