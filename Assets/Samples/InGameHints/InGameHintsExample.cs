@@ -11,7 +11,6 @@
 // Depending on the current context, we display hints in the UI that reflect the currently
 // active bindings.
 
-using UnityEngine.InputSystem.Users;
 using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Samples.InGameHints
@@ -24,7 +23,6 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
         public float throwForce;
         public float pickupDistance;
         public float holdDistance;
-        public LayerMask objectLayerMask;
 
         private Vector2 m_Rotation;
 
@@ -83,7 +81,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                 case State.ObjectInSights:
                     // While looking around for an object to pick up, we constantly raycast into the world.
                     if (Physics.Raycast(transform.position, transform.forward, out var hitInfo,
-                        pickupDistance, objectLayerMask) && hitInfo.transform.CompareTag("Pickup"))
+                        pickupDistance) && hitInfo.transform.CompareTag("Pickup"))
                     {
                         if (m_CurrentState != State.ObjectInSights)
                             ChangeState(State.ObjectInSights);
