@@ -118,9 +118,9 @@ namespace UnityEngine.InputSystem
     ///         if (m_PlayerInput == null)
     ///         {
     ///             m_PlayerInput = GetComponent&lt;PlayerInput&gt;();
-    ///             m_FireAction = m_PlayerInput.actions["fire"]"
-    ///             m_LookAction = m_PlayerInput.actions["look"]"
-    ///             m_MoveAction = m_PlayerInput.actions["move"]"
+    ///             m_FireAction = m_PlayerInput.actions["fire"];
+    ///             m_LookAction = m_PlayerInput.actions["look"];
+    ///             m_MoveAction = m_PlayerInput.actions["move"];
     ///         }
     ///
     ///         if (m_FireAction.triggered)
@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem
     ///
     ///         var move = m_MoveAction.ReadValue&lt;Vector2&gt;();
     ///         var look = m_LookAction.ReadValue&lt;Vector2&gt;();
-    ///         /* Update transform from move&amp;look... *;
+    ///         /* Update transform from move&amp;look... */
     ///     }
     /// }
     /// </code>
@@ -233,6 +233,9 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="ActivateInput"/>
         /// <seealso cref="DeactivateInput"/>
         public bool inputIsActive => m_InputActive;
+
+        [Obsolete("Use inputIsActive instead.")]
+        public bool active => inputIsActive;
 
         /// <summary>
         /// Unique, zero-based index of the player. For example, <c>2</c> for the third player.
@@ -795,6 +798,12 @@ namespace UnityEngine.InputSystem
             m_CurrentActionMap?.Disable();
 
             m_InputActive = false;
+        }
+
+        [Obsolete("Use DeactivateInput instead.")]
+        public void PassivateInput()
+        {
+            DeactivateInput();
         }
 
         public bool SwitchCurrentControlScheme(params InputDevice[] devices)
