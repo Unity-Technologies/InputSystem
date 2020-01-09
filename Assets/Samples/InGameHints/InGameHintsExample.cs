@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                 case State.ObjectInSights:
                     // While looking around for an object to pick up, we constantly raycast into the world.
                     if (Physics.Raycast(transform.position, transform.forward, out var hitInfo,
-                        pickupDistance) && hitInfo.transform.CompareTag("Pickup"))
+                        pickupDistance) && !hitInfo.collider.gameObject.isStatic)
                     {
                         if (m_CurrentState != State.ObjectInSights)
                             ChangeState(State.ObjectInSights);

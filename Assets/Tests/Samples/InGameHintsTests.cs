@@ -27,7 +27,6 @@ public class InGameHintsTests : InputTestFixture
 
         var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.transform.position = new Vector3(0, 0, 100);
-        cube.tag = "Pickup";
 
         var player = new GameObject();
         player.SetActive(false); // Avoid PlayerInput grabbing devices before we have its configuration in place.
