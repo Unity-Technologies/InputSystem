@@ -31,6 +31,13 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 #### Actions
 
+- `PlayerInput` now has a new `Controls Changed` event/message which is triggered when the control setup of the player changes (e.g. when switching control schemes).
+    ```CSharp
+        public void OnControlsChanged()
+        {
+            // Update UI display hints, for example...
+        }
+    ```
 - We've added APIs to simplify turning bindings into strings suitable for display in UIs.
     ```CSharp
     // Takes things such as currently bound controls and active binding masks into account
@@ -46,7 +53,6 @@ This release includes a number of Quality-of-Life improvements for a range of co
         [InputControl(layout = "Stick")] public int stick;
     }
     ```
-  * More extensions to this mechanism (such as being able to assign roles to bindings in the same control schemes, e.g. a "primary" and "secondary" binding) are planned for later. One important missing part is support for localization.
 - `InputActionRebindingExtension.RebindingOperation` has a new configuration method `WithMatchingEventsBeingSuppressed` which allows suitable input events to automatically be swallowed while a rebind is ongoing. This greatly helps with not having something else respond to input while a rebind is in progress.
 - We've added two new samples:
   * __Rebinding UI__: Demonstrates how to create a rebinding screen using the Input System's APIs. The sample also includes a reusable prefab you can use directly in your projects to quickly put rebinding screens together.
