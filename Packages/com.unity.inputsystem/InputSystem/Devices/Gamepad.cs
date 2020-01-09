@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
+        public static FourCC Format => new FourCC('G', 'P', 'A', 'D');
 
         // On consoles, we use the platform defaults as the gamepad-wide default names.
         #if UNITY_XBOX_ONE || UNITY_SWITCH
@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// State format tag for GamepadState.
         /// </summary>
         /// <value>Returns "GPAD".</value>
-        public FourCC format => kFormat;
+        public FourCC format => Format;
 
         /// <summary>
         /// Create a gamepad state with the given buttons being pressed.

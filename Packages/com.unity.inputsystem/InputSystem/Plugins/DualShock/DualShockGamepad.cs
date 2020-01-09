@@ -44,42 +44,42 @@ namespace UnityEngine.InputSystem.DualShock
         /// The left shoulder button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.leftShoulder"/>.</value>
-        [InputControl(name = "leftShoulder", shortDisplayName = "L1")]
+        [InputControl(name = "leftShoulder", displayName = "L1", shortDisplayName = "L1")]
         public ButtonControl L1 { get; private set; }
 
         /// <summary>
         /// The right shoulder button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.rightShoulder"/>.</value>
-        [InputControl(name = "rightShoulder", shortDisplayName = "R1")]
+        [InputControl(name = "rightShoulder", displayName = "R1", shortDisplayName = "R1")]
         public ButtonControl R1 { get; private set; }
 
         /// <summary>
         /// The left trigger button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.leftTrigger"/>.</value>
-        [InputControl(name = "leftTrigger", shortDisplayName = "L2")]
+        [InputControl(name = "leftTrigger", displayName = "L2", shortDisplayName = "L2")]
         public ButtonControl L2 { get; private set; }
 
         /// <summary>
         /// The right trigger button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.rightTrigger"/>.</value>
-        [InputControl(name = "rightTrigger", shortDisplayName = "R2")]
+        [InputControl(name = "rightTrigger", displayName = "R2", shortDisplayName = "R2")]
         public ButtonControl R2 { get; private set; }
 
         /// <summary>
         /// The left stick press button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.leftStickButton"/>.</value>
-        [InputControl(name = "leftStickPress", shortDisplayName = "L3")]
+        [InputControl(name = "leftStickPress", displayName = "L3", shortDisplayName = "L3")]
         public ButtonControl L3 { get; private set; }
 
         /// <summary>
         /// The right stick press button.
         /// </summary>
         /// <value>Equivalent to <see cref="Gamepad.rightStickButton"/>.</value>
-        [InputControl(name = "rightStickPress", shortDisplayName = "R3")]
+        [InputControl(name = "rightStickPress", displayName = "R3", shortDisplayName = "R3")]
         public ButtonControl R3 { get; private set; }
 
         /// <summary>
