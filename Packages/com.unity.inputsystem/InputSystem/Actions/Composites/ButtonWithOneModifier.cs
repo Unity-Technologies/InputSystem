@@ -1,4 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 ////TODO: generalize the WithModifier composites so that they work with any kind of control, not just buttons
 
@@ -42,7 +44,8 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="ButtonWithTwoModifiers"/>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayStringFormat("{modifier}+{button}")]
     public class ButtonWithOneModifier : InputBindingComposite<float>
     {
         /// <summary>

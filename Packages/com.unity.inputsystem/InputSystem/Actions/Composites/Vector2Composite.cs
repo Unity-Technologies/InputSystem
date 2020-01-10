@@ -1,5 +1,7 @@
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 ////TODO: add support for ramp up/down
 
@@ -18,7 +20,8 @@ namespace UnityEngine.InputSystem.Composites
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayStringFormat("{up}/{left}/{down}/{right}")] // This results in WASD.
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>

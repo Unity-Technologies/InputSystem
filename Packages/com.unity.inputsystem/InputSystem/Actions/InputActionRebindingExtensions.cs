@@ -11,8 +11,6 @@ using UnityEngine.InputSystem.Utilities;
 // - By group (e.g. "search for binding on action 'fire' with group 'keyboard&mouse' and override it with '<Keyboard>/space'")
 // - By action (e.g. "bind action 'fire' from whatever it is right now to '<Gamepad>/leftStick'")
 
-////TODO: for interactive rebinding, if no expected control layout is set, infer it from the action type
-
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
 ////FIXME: properly work with composites
@@ -39,6 +37,424 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputAction.bindings"/>
     public static class InputActionRebindingExtensions
     {
+        /// <summary>
+        /// Get the index of the first binding in <see cref="InputAction.bindings"/> on <paramref name="action"/>
+        /// that matches the given binding mask.
+        /// </summary>
+        /// <param name="action">An input action.</param>
+        /// <param name="bindingMask">Binding mask to match (see <see cref="InputBinding.Matches"/>).</param>
+        /// <returns>The first binding on the action matching <paramref name="bindingMask"/> or -1 if no binding
+        /// on the action matches the mask.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding.Matches"/>
+        public static int GetBindingIndex(this InputAction action, InputBinding bindingMask)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var bindings = action.bindings;
+            for (var i = 0; i < bindings.Count; ++i)
+                if (bindingMask.Matches(bindings[i]))
+                    return i;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Get the index of the first binding in <see cref="InputAction.bindings"/> on <paramref name="action"/>
+        /// that matches the given binding group and/or path.
+        /// </summary>
+        /// <param name="action">An input action.</param>
+        /// <param name="group">Binding group to match (see <see cref="InputBinding.groups"/>).</param>
+        /// <param name="path">Binding path to match (see <see cref="InputBinding.path"/>).</param>
+        /// <returns>The first binding on the action matching the given group and/or path or -1 if no binding
+        /// on the action matches.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding.Matches"/>
+        public static int GetBindingIndex(this InputAction action, string group = default, string path = default)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            return action.GetBindingIndex(new InputBinding(groups: group, path: path));
+        }
+
+        /// <summary>
+        /// Return the binding that the given control resolved from.
+        /// </summary>
+        /// <param name="action">An input action that may be using the given control.</param>
+        /// <param name="control">Control to look for a binding for.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        /// <returns>The binding from which <paramref name="control"/> has been resolved or <c>null</c> if no such binding
+        /// could be found on <paramref name="action"/>.</returns>
+        public static InputBinding? GetBindingForControl(this InputAction action, InputControl control)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            var bindingIndex = GetBindingIndexForControl(action, control);
+            if (bindingIndex == -1)
+                return null;
+            return action.bindings[bindingIndex];
+        }
+
+        /// <summary>
+        /// Return the index into <paramref name="action"/>'s <see cref="InputAction.bindings"/> that corresponds
+        /// to <paramref name="control"/> bound to the action.
+        /// </summary>
+        /// <param name="action">The input action whose bindings to use.</param>
+        /// <param name="control">An input control for which to look for a binding.</param>
+        /// <returns>The index into the action's binding array for the binding that <paramref name="control"/> was
+        /// resolved from or -1 if the control is not currently bound to the action.</returns>
+        /// <remarks>
+        /// Note that this method will only take currently active bindings into consideration. This means that if
+        /// the given control <em>could</em> come from one of the bindings on the action but does not currently
+        /// do so, the method still returns -1.
+        ///
+        /// In case you want to manually find out which of the bindings on the action could match the given control,
+        /// you can do so using <see cref="InputControlPath.Matches"/>:
+        ///
+        /// <example>
+        /// <code>
+        /// // Find the binding on 'action' that matches the given 'control'.
+        /// foreach (var binding in action.bindings)
+        ///     if (InputControlPath.Matches(binding.effectivePath, control))
+        ///         Debug.Log($"Binding for {control}: {binding}");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        public static unsafe int GetBindingIndexForControl(this InputAction action, InputControl control)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            var actionMap = action.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+
+            var state = actionMap.m_State;
+            Debug.Assert(state != null, "Bindings are expected to have been resolved at this point");
+
+            // Find index of control in state.
+            var controlIndex = Array.IndexOf(state.controls, control);
+            if (controlIndex == -1)
+                return -1;
+
+            // Map to binding index.
+            var actionIndex = action.m_ActionIndexInState;
+            var bindingCount = state.totalBindingCount;
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingStatePtr = &state.bindingStates[i];
+                if (bindingStatePtr->actionIndex == actionIndex && bindingStatePtr->controlStartIndex <= controlIndex &&
+                    controlIndex < bindingStatePtr->controlStartIndex + bindingStatePtr->controlCount)
+                {
+                    var bindingIndexInMap = state.GetBindingIndexInMap(i);
+                    return action.BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
+        /// </summary>
+        /// <param name="action">Action to create a display string for.</param>
+        /// <param name="options">Optional set of formatting flags.</param>
+        /// <param name="group">Optional binding group to restrict the operation to. If this is supplied, it effectively
+        /// becomes the binding mask (see <see cref="InputBinding.Matches(InputBinding)"/>) to supply to <see
+        /// cref="GetBindingDisplayString(InputAction,InputBinding,InputBinding.DisplayStringOptions)"/>.</param>
+        /// <returns>A string suitable for display in rebinding UIs.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method will take into account any binding masks (such as from control schemes) in effect on the action
+        /// (such as <see cref="InputAction.bindingMask"/> on the action itself, the <see cref="InputActionMap.bindingMask"/>
+        /// on its action map, or the <see cref="InputActionAsset.bindingMask"/> on its asset) as well as the actual controls
+        /// that the action is currently bound to (see <see cref="InputAction.controls"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        ///
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
+        ///
+        /// // Prints "A | LMB".
+        /// Debug.Log(action.GetBindingDisplayString());
+        ///
+        /// // Prints "A".
+        /// Debug.Log(action.GetBindingDisplayString(group: "Gamepad");
+        ///
+        /// // Prints "LMB".
+        /// Debug.Log(action.GetBindingDisplayString(group: "KeyboardMouse");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        public static string GetBindingDisplayString(this InputAction action, InputBinding.DisplayStringOptions options = default,
+            string group = default)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            // Default binding mask to the one found on the action or any of its
+            // containers.
+            InputBinding bindingMask;
+            if (!string.IsNullOrEmpty(group))
+            {
+                bindingMask = InputBinding.MaskByGroup(group);
+            }
+            else
+            {
+                var mask = action.FindEffectiveBindingMask();
+                if (mask.HasValue)
+                    bindingMask = mask.Value;
+                else
+                    bindingMask = default;
+            }
+
+            return GetBindingDisplayString(action, bindingMask, options);
+        }
+
+        /// <summary>
+        /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
+        /// </summary>
+        /// <param name="action">Action to create a display string for.</param>
+        /// <param name="bindingMask">Mask for bindings to take into account. Any binding on the action not
+        /// matching (see <see cref="InputBinding.Matches(InputBinding)"/>) the mask is ignored and not included
+        /// in the resulting string.</param>
+        /// <param name="options">Optional set of formatting flags.</param>
+        /// <returns>A string suitable for display in rebinding UIs.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method will take into account any binding masks (such as from control schemes) in effect on the action
+        /// (such as <see cref="InputAction.bindingMask"/> on the action itself, the <see cref="InputActionMap.bindingMask"/>
+        /// on its action map, or the <see cref="InputActionAsset.bindingMask"/> on its asset) as well as the actual controls
+        /// that the action is currently bound to (see <see cref="InputAction.controls"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        ///
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
+        ///
+        /// // Prints "A".
+        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad"));
+        ///
+        /// // Prints "LMB".
+        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("KeyboardMouse"));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        public static string GetBindingDisplayString(this InputAction action, InputBinding bindingMask,
+            InputBinding.DisplayStringOptions options = default)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var result = string.Empty;
+            var bindings = action.bindings;
+            for (var i = 0; i < bindings.Count; ++i)
+            {
+                if (!bindingMask.Matches(bindings[i]))
+                    continue;
+
+                ////REVIEW: should this filter out bindings that are not resolving to any controls?
+
+                var text = action.GetBindingDisplayString(i, options);
+                if (result != "")
+                    result = $"{result} | {text}";
+                else
+                    result = text;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
+        /// </summary>
+        /// <param name="action">Action to create a display string for.</param>
+        /// <param name="bindingIndex">Index of the binding in the <see cref="InputAction.bindings"/> array of
+        /// <paramref name="action"/> for which to get a display string.</param>
+        /// <param name="options">Optional set of formatting flags.</param>
+        /// <returns>A string suitable for display in rebinding UIs.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method will ignore active binding masks and return the display string for the given binding whether it
+        /// is masked out (disabled) or not.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        ///
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
+        ///
+        /// // Prints "A".
+        /// Debug.Log(action.GetBindingDisplayString(0));
+        ///
+        /// // Prints "LMB".
+        /// Debug.Log(action.GetBindingDisplayString(1));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        public static string GetBindingDisplayString(this InputAction action, int bindingIndex, InputBinding.DisplayStringOptions options = default)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            return action.GetBindingDisplayString(bindingIndex, out var _, out var _, options);
+        }
+
+        /// <summary>
+        /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
+        /// </summary>
+        /// <param name="action">Action to create a display string for.</param>
+        /// <param name="bindingIndex">Index of the binding in the <see cref="InputAction.bindings"/> array of
+        /// <paramref name="action"/> for which to get a display string.</param>
+        /// <param name="deviceLayoutName">Receives the name of the <see cref="InputControlLayout"/> used for the
+        /// device in the given binding, if applicable. Otherwise is set to <c>null</c>. If, for example, the binding
+        /// is <c>"&lt;Gamepad&gt;/buttonSouth"</c>, the resulting value is <c>"Gamepad</c>.</param>
+        /// <param name="controlPath">Receives the path to the control on the device referenced in the given binding,
+        /// if applicable. Otherwise is set to <c>null</c>. If, for example, the binding is <c>"&lt;Gamepad&gt;/leftStick/x"</c>,
+        /// the resulting value is <c>"leftStick/x"</c>.</param>
+        /// <param name="options">Optional set of formatting flags.</param>
+        /// <returns>A string suitable for display in rebinding UIs.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// The information returned by <paramref name="deviceLayoutName"/> and <paramref name="controlPath"/> can be used, for example,
+        /// to associate images with controls. Based on knowing which layout is used and which control on the layout is referenced, you
+        /// can look up an image dynamically. For example, if the layout is based on <see cref="DualShock.DualShockGamepad"/> (use
+        /// <see cref="InputSystem.IsFirstLayoutBasedOnSecond"/> to determine inheritance), you can pick a PlayStation-specific image
+        /// for the control as named by <paramref name="controlPath"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        ///
+        /// action.AddBinding("&lt;Gamepad&gt;/dpad/up", groups: "Gamepad");
+        /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
+        ///
+        /// // Prints "A", then "Gamepad", then "dpad/up".
+        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad", out var deviceLayoutNameA, out var controlPathA));
+        /// Debug.Log(deviceLayoutNameA);
+        /// Debug.Log(controlPathA);
+        ///
+        /// // Prints "LMB", then "Mouse", then "leftButton".
+        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("KeyboardMouse", out var deviceLayoutNameB, out var controlPathB));
+        /// Debug.Log(deviceLayoutNameB);
+        /// Debug.Log(controlPathB);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        public static unsafe string GetBindingDisplayString(this InputAction action, int bindingIndex,
+            out string deviceLayoutName, out string controlPath,
+            InputBinding.DisplayStringOptions options = default)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            deviceLayoutName = null;
+            controlPath = null;
+
+            var bindings = action.bindings;
+            var bindingCount = bindings.Count;
+            if (bindingIndex < 0 || bindingIndex >= bindingCount)
+                throw new ArgumentOutOfRangeException(
+                    $"Binding index {bindingIndex} is out of range on action '{action}' with {bindings.Count} bindings",
+                    nameof(bindingIndex));
+
+            // If the binding is a composite, compose a string using the display format string for
+            // the composite.
+            // NOTE: In this case, there won't be a deviceLayoutName returned from the method.
+            if (bindings[bindingIndex].isComposite)
+            {
+                var compositeName = NameAndParameters.Parse(bindings[bindingIndex].effectivePath).name;
+
+                // Determine what parts we have.
+                var firstPartIndex = bindingIndex + 1;
+                var lastPartIndex = firstPartIndex;
+                while (lastPartIndex < bindingCount && bindings[lastPartIndex].isPartOfComposite)
+                    ++lastPartIndex;
+                var partCount = lastPartIndex - firstPartIndex;
+
+                // Get the display string for each part.
+                var partStrings = new string[partCount];
+                for (var i = 0; i < partCount; ++i)
+                    partStrings[i] = action.GetBindingDisplayString(firstPartIndex + i, options);
+
+                // Put the parts together based on the display format string for
+                // the composite.
+                var displayFormatString = InputBindingComposite.GetDisplayFormatString(compositeName);
+                if (string.IsNullOrEmpty(displayFormatString))
+                {
+                    // No display format string. Simply go and combine all part strings.
+                    return StringHelpers.Join("/", partStrings);
+                }
+
+                return StringHelpers.ExpandTemplateString(displayFormatString,
+                    fragment =>
+                    {
+                        var result = string.Empty;
+
+                        // Go through all parts and look for one with the given name.
+                        for (var i = 0; i < partCount; ++i)
+                        {
+                            if (!string.Equals(bindings[firstPartIndex + i].name, fragment, StringComparison.InvariantCultureIgnoreCase))
+                                continue;
+
+                            if (!string.IsNullOrEmpty(result))
+                                result = $"{result}|{partStrings[i]}";
+                            else
+                                result = partStrings[i];
+                        }
+
+                        return result;
+                    });
+            }
+
+            // See if the binding maps to controls.
+            InputControl control = null;
+            var actionMap = action.GetOrCreateActionMap();
+            actionMap.ResolveBindingsIfNecessary();
+            var actionState = actionMap.m_State;
+            Debug.Assert(actionState != null, "Expecting action state to be in place at this point");
+            var bindingIndexInMap = action.BindingIndexOnActionToBindingIndexOnMap(bindingIndex);
+            var bindingIndexInState = actionState.GetBindingIndexInState(actionMap.m_MapIndexInState, bindingIndexInMap);
+            Debug.Assert(bindingIndexInState >= 0 && bindingIndexInState < actionState.totalBindingCount,
+                "Computed binding index is out of range");
+            var bindingStatePtr = &actionState.bindingStates[bindingIndexInState];
+            if (bindingStatePtr->controlCount > 0)
+            {
+                ////REVIEW: does it make sense to just take a single control here?
+                control = actionState.controls[bindingStatePtr->controlStartIndex];
+            }
+
+            // Take interactions applied to the action into account.
+            var binding = bindings[bindingIndex];
+            if (string.IsNullOrEmpty(binding.effectiveInteractions))
+                binding.overrideInteractions = action.interactions;
+            else if (!string.IsNullOrEmpty(action.interactions))
+                binding.overrideInteractions = $"{binding.effectiveInteractions};action.interactions";
+
+            return binding.ToDisplayString(out deviceLayoutName, out controlPath, options, control: control);
+        }
+
         /// <summary>
         /// Put an override on all matching bindings of <paramref name="action"/>.
         /// </summary>
@@ -261,30 +677,61 @@ namespace UnityEngine.InputSystem
             actionMap.LazyResolveBindings();
         }
 
-        public static void RemoveBindingOverride(this InputAction action, InputBinding bindingOverride)
+        /// <summary>
+        /// Remove any overrides from the binding on <paramref name="action"/> with the given index.
+        /// </summary>
+        /// <param name="action">Action whose bindings to modify.</param>
+        /// <param name="bindingIndex">Index of the binding within <paramref name="action"/>'s <see cref="InputAction.bindings"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is invalid.</exception>
+        public static void RemoveBindingOverride(this InputAction action, int bindingIndex)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            bindingOverride.overridePath = null;
-            bindingOverride.overrideInteractions = null;
-            bindingOverride.overrideProcessors = null;
-
-            // Simply apply but with a null binding.
-            ApplyBindingOverride(action, bindingOverride);
+            action.ApplyBindingOverride(bindingIndex, default(InputBinding));
         }
 
-        private static void RemoveBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
+        /// <summary>
+        /// Remove any overrides from the binding on <paramref name="action"/> matching the given binding mask.
+        /// </summary>
+        /// <param name="action">Action whose bindings to modify.</param>
+        /// <param name="bindingMask">Mask that will be matched against the bindings on <paramref name="action"/>. All bindings
+        /// that match the mask (see <see cref="InputBinding.Matches"/>) will have their overrides removed. If none of the
+        /// bindings on the action match the mask, no bindings will be modified.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Remove all binding overrides from bindings associated with the "Gamepad" binding group.
+        /// myAction.RemoveBindingOverride(InputBinding.MaskByGroup("Gamepad"));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public static void RemoveBindingOverride(this InputAction action, InputBinding bindingMask)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            bindingMask.overridePath = null;
+            bindingMask.overrideInteractions = null;
+            bindingMask.overrideProcessors = null;
+
+            // Simply apply but with a null binding.
+            ApplyBindingOverride(action, bindingMask);
+        }
+
+        private static void RemoveBindingOverride(this InputActionMap actionMap, InputBinding bindingMask)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
 
-            bindingOverride.overridePath = null;
-            bindingOverride.overrideInteractions = null;
-            bindingOverride.overrideProcessors = null;
+            bindingMask.overridePath = null;
+            bindingMask.overrideInteractions = null;
+            bindingMask.overrideProcessors = null;
 
             // Simply apply but with a null binding.
-            ApplyBindingOverride(actionMap, bindingOverride);
+            ApplyBindingOverride(actionMap, bindingMask);
         }
 
         /// <summary>
@@ -454,6 +901,8 @@ namespace UnityEngine.InputSystem
         /// rebind.Start();
         /// </code>
         /// </example>
+        ///
+        /// Note that instances of this class <em>must</em> be disposed of to not leak memory on the unmanaged heap.
         /// </remarks>
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public sealed class RebindingOperation : IDisposable
@@ -540,6 +989,8 @@ namespace UnityEngine.InputSystem
 
             public float timeout => m_Timeout;
 
+            public string expectedControlType => m_ExpectedLayout;
+
             /// <summary>
             /// Perform rebinding on the bindings of the given action.
             /// </summary>
@@ -575,10 +1026,60 @@ namespace UnityEngine.InputSystem
                 //       of derived layouts may share the same control type.
                 if (!string.IsNullOrEmpty(action.expectedControlType))
                     WithExpectedControlType(action.expectedControlType);
+                else if (action.type == InputActionType.Button)
+                    WithExpectedControlType("Button");
 
                 return this;
             }
 
+            /// <summary>
+            /// Prevent all input events that have input matching the rebind operation's configuration from reaching
+            /// its targeted <see cref="InputDevice"/>s and thus taking effect.
+            /// </summary>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// While rebinding interactively, it is usually for the most part undesirable for input to actually have an effect.
+            /// For example, when rebind gamepad input, pressing the "A" button should not lead to a "submit" action in the UI.
+            /// For this reason, a rebind can be configured to automatically swallow any input event except the ones having
+            /// input on controls matching <see cref="WithControlsExcluding"/>.
+            ///
+            /// Not at all input necessarily should be suppressed. For example, it can be desirable to have UI that
+            /// allows the user to cancel an ongoing rebind by clicking with the mouse. This means that mouse position and
+            /// click input should come through. For this reason, input from controls matching <see cref="WithControlsExcluding"/>
+            /// is still let through.
+            /// </remarks>
+            public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
+            {
+                if (value)
+                    m_Flags |= Flags.SuppressMatchingEvents;
+                else
+                    m_Flags &= ~Flags.SuppressMatchingEvents;
+                return this;
+            }
+
+            /// <summary>
+            /// Set the control path that is matched against actuated controls.
+            /// </summary>
+            /// <param name="binding">A control path (see <see cref="InputControlPath"/>) such as <c>"&lt;Keyboard&gt;/escape"</c>.</param>
+            /// <returns>The same RebindingOperation instance.</returns>
+            /// <remarks>
+            /// Note that every rebind operation has only one such path. Calling this method repeatedly will overwrite
+            /// the path set from prior calls.
+            ///
+            /// <code>
+            /// var rebind = new RebindingOperation();
+            ///
+            /// // Cancel from keyboard escape key.
+            /// rebind
+            ///     .WithCancelingThrough("&lt;Keyboard&gt;/escape");
+            ///
+            /// // Cancel from any control with "Cancel" usage.
+            /// // NOTE: This can be dangerous. The control that the wants to bind to may have the "Cancel"
+            /// //       usage assigned to it, thus making it impossible for the user to bind to the control.
+            /// rebind
+            ///     .WithCancelingThrough("*/{Cancel}");
+            /// </code>
+            /// </remarks>
             public RebindingOperation WithCancelingThrough(string binding)
             {
                 m_CancelBinding = binding;
@@ -938,6 +1439,7 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// Reset the configuration on the rebind.
             /// </summary>
+            /// <returns>The same RebindingOperation instance.</returns>
             /// <remarks>
             /// Call this method to reset the effects of calling methods such as <see cref="WithAction"/>,
             /// <see cref="WithBindingGroup"/>, etc. but retain other data that the rebind operation
@@ -945,7 +1447,7 @@ namespace UnityEngine.InputSystem
             /// multiple times, a good strategy is to reset and reconfigure the operation before starting
             /// it again.
             /// </remarks>
-            public void Reset()
+            public RebindingOperation Reset()
             {
                 m_ActionToRebind = default;
                 m_BindingMask = default;
@@ -960,6 +1462,7 @@ namespace UnityEngine.InputSystem
                 m_Timeout = default;
                 m_WaitSecondsAfterMatch = default;
                 m_Flags = default;
+                return this;
             }
 
             private void HookOnEvent()
@@ -993,6 +1496,7 @@ namespace UnityEngine.InputSystem
                 var controls = device.allControls;
                 var controlCount = controls.Count;
                 var haveChangedCandidates = false;
+                var suppressEvent = false;
                 for (var i = 0; i < controlCount; ++i)
                 {
                     var control = controls[i];
@@ -1014,12 +1518,15 @@ namespace UnityEngine.InputSystem
                     if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
                         continue;
 
-                    // If controls have to match a certain path, check if this one does.
-                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
-                        continue;
-
                     // If controls must not match certain path, make sure the control doesn't.
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
+                        continue;
+
+                    // The control is not explicitly excluded so we suppress the event, if that's enabled.
+                    suppressEvent = true;
+
+                    // If controls have to match a certain path, check if this one does.
+                    if (m_IncludePathCount > 0 && !HavePathMatch(control, m_IncludePaths, m_IncludePathCount))
                         continue;
 
                     // If we're expecting controls of a certain type, skip if control isn't of
@@ -1040,19 +1547,9 @@ namespace UnityEngine.InputSystem
                     if (control.CheckStateIsAtDefault(statePtr))
                         continue;
 
-                    // Skip controls that have no effective value change.
-                    // NOTE: This will run the full processor stack and is more involved.
-                    if (!control.HasValueChangeInState(statePtr))
-                        continue;
-
-                    // If we have a magnitude threshold, see if control passes it.
-                    var magnitude = -1f;
-                    if (m_MagnitudeThreshold >= 0f)
-                    {
-                        magnitude = control.EvaluateMagnitude(statePtr);
-                        if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
-                            continue; // No, so skip.
-                    }
+                    var magnitude = control.EvaluateMagnitude(statePtr);
+                    if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
+                        continue; // No, so skip.
 
                     // Compute score.
                     float score;
@@ -1096,6 +1593,11 @@ namespace UnityEngine.InputSystem
                             m_LastMatchTime = InputRuntime.s_Instance.currentTime;
                     }
                 }
+
+                // See if we should suppress the event. If so, mark it handled so that the input manager
+                // will skip further processing of the event.
+                if (suppressEvent && (m_Flags & Flags.SuppressMatchingEvents) != 0)
+                    eventPtr.handled = true;
 
                 if (haveChangedCandidates && !canceled)
                 {
@@ -1348,6 +1850,7 @@ namespace UnityEngine.InputSystem
                 DontIgnoreNoisyControls = 1 << 6,
                 DontGeneralizePathOfSelectedControl = 1 << 7,
                 AddNewBinding = 1 << 8,
+                SuppressMatchingEvents = 1 << 9,
             }
         }
 
@@ -1355,12 +1858,153 @@ namespace UnityEngine.InputSystem
         /// Initiate an operation that interactively rebinds the given action based on received input.
         /// </summary>
         /// <param name="action">Action to perform rebinding on.</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="ArgumentException"></exception>
-        public static RebindingOperation PerformInteractiveRebinding(this InputAction action)
+        /// <param name="bindingIndex">Optional index (within the <see cref="InputAction.bindings"/> array of <paramref name="action"/>)
+        /// of binding to perform rebinding on. Must not be a composite binding.</param>
+        /// <returns>A rebind operation configured to perform the rebind.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is not a valid index.</exception>
+        /// <exception cref="InvalidOperationException">The binding at <paramref name="bindingIndex"/> is a composite binding.</exception>
+        /// <remarks>
+        /// This method will automatically perform a set of configuration on the <see cref="RebindingOperation"/>
+        /// based on the action and, if specified, binding.
+        ///
+        /// TODO
+        ///
+        /// Note that rebind operations must be disposed of once finished in order to not leak memory.
+        ///
+        /// <example>
+        /// <code>
+        /// // Target the first binding in the gamepad scheme.
+        /// var bindingIndex = myAction.GetBindingIndex(InputBinding.MaskByGroup("Gamepad"));
+        /// var rebind = myAction.PerformInteractiveRebinding(bindingIndex);
+        ///
+        /// // Dispose the operation on completion.
+        /// rebind.OnComplete(
+        ///    operation =>
+        ///    {
+        ///        Debug.Log($"Rebound '{myAction}' to '{operation.selectedControl}'");
+        ///        operation.Dispose();
+        ///    };
+        ///
+        /// // Start the rebind. This will cause the rebind operation to start running in the
+        /// // background listening for input.
+        /// rebind.Start();
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public static RebindingOperation PerformInteractiveRebinding(this InputAction action, int bindingIndex = -1)
         {
-            return new RebindingOperation().WithAction(action);
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var rebind = new RebindingOperation()
+                .WithAction(action)
+                // Give it an ever so slight delay to make sure there isn't a better match immediately
+                // following the current event.
+                .OnMatchWaitForAnother(0.05f)
+                // It doesn't really make sense to interactively bind pointer position input as interactive
+                // rebinds are usually initiated from UIs which are operated by pointers. So exclude pointer
+                // position controls by default.
+                .WithControlsExcluding("<Pointer>/delta")
+                .WithControlsExcluding("<Pointer>/position")
+                .WithControlsExcluding("<Touchscreen>/touch*/position")
+                .WithControlsExcluding("<Touchscreen>/touch*/delta")
+                .WithControlsExcluding("<Mouse>/clickCount")
+                .WithMatchingEventsBeingSuppressed();
+
+            // If we're not looking for a button, automatically add keyboard escape key to abort rebind.
+            if (rebind.expectedControlType != "Button")
+                rebind.WithCancelingThrough("<Keyboard>/escape");
+
+            if (bindingIndex >= 0)
+            {
+                var bindings = action.bindings;
+                if (bindingIndex >= bindings.Count)
+                    throw new ArgumentOutOfRangeException(
+                        $"Binding index {bindingIndex} is out of range for action '{action}' with {bindings.Count} bindings",
+                        nameof(bindings));
+                if (bindings[bindingIndex].isComposite)
+                    throw new InvalidOperationException(
+                        $"Cannot perform rebinding on composite binding '{bindings[bindingIndex]}' of '{action}'");
+
+                rebind.WithTargetBinding(bindingIndex);
+
+                // If the binding is a part binding, switch from the action's expected control type to
+                // that expected by the composite's part.
+                if (bindings[bindingIndex].isPartOfComposite)
+                {
+                    // Search for composite.
+                    var compositeIndex = bindingIndex - 1;
+                    while (compositeIndex > 0 && !bindings[compositeIndex].isComposite)
+                        --compositeIndex;
+
+                    if (compositeIndex >= 0 && bindings[compositeIndex].isComposite)
+                    {
+                        var compositeName = bindings[compositeIndex].GetNameOfComposite();
+                        var controlTypeExpectedByPart = InputBindingComposite.GetExpectedControlLayoutName(compositeName, bindings[bindingIndex].name);
+
+                        if (!string.IsNullOrEmpty(controlTypeExpectedByPart))
+                            rebind.WithExpectedControlType(controlTypeExpectedByPart);
+                    }
+                }
+
+                // If the binding is part of a control scheme, only accept controls
+                // that also match device requirements.
+                var bindingGroups = bindings[bindingIndex].groups;
+                var asset = action.actionMap?.asset;
+                if (asset != null && !string.IsNullOrEmpty(action.bindings[bindingIndex].groups))
+                {
+                    foreach (var group in bindingGroups.Split(InputBinding.Separator))
+                    {
+                        var controlSchemeIndex =
+                            asset.controlSchemes.IndexOf(x => group.Equals(x.bindingGroup, StringComparison.InvariantCultureIgnoreCase));
+                        if (controlSchemeIndex == -1)
+                            continue;
+
+                        ////TODO: make this deal with and/or requirements
+
+                        var controlScheme = asset.controlSchemes[controlSchemeIndex];
+                        foreach (var requirement in controlScheme.deviceRequirements)
+                            rebind.WithControlsHavingToMatchPath(requirement.controlPath);
+                    }
+                }
+            }
+
+            return rebind;
+        }
+
+        /// <summary>
+        /// Temporarily suspend immediate re-resolution of bindings.
+        /// </summary>
+        /// <remarks>
+        /// When changing control setups, it may take multiple steps to get to the final setup but each individual
+        /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
+        /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
+        /// is complete and the final binding setup is in place.
+        /// </remarks>
+        internal static IDisposable DeferBindingResolution()
+        {
+            if (s_DeferBindingResolutionWrapper == null)
+                s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
+            s_DeferBindingResolutionWrapper.Acquire();
+            return s_DeferBindingResolutionWrapper;
+        }
+
+        private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
+
+        private class DeferBindingResolutionWrapper : IDisposable
+        {
+            public void Acquire()
+            {
+                ++InputActionMap.s_DeferBindingResolution;
+            }
+
+            public void Dispose()
+            {
+                if (InputActionMap.s_DeferBindingResolution > 0)
+                    --InputActionMap.s_DeferBindingResolution;
+                InputActionState.DeferredResolutionOfBindings();
+            }
         }
     }
 }

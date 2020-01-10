@@ -966,6 +966,69 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_CanDetectChangeInBindings()
+    {
+        var actions = new InputActionMap();
+        var action = actions.AddAction("action", binding: "<Gamepad>/leftTrigger");
+        action.Enable();
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var user = InputUser.PerformPairingWithDevice(gamepad1);
+
+        user.AssociateActionsWithUser(actions);
+
+        InputUser? receivedUser = null;
+        InputUserChange? receivedChange = null;
+        InputDevice receivedDevice = null;
+
+        InputUser.onChange +=
+            (u, c, d) =>
+        {
+            if (c != InputUserChange.ControlsChanged)
+                return;
+
+            Assert.That(receivedUser, Is.Null);
+            Assert.That(receivedChange, Is.Null);
+            Assert.That(receivedDevice, Is.Null);
+
+            receivedUser = u;
+            receivedChange = c;
+            receivedDevice = d;
+        };
+
+        // Rebind.
+        action.ApplyBindingOverride("<Gamepad>/rightTrigger");
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        // Pair new device.
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        InputUser.PerformPairingWithDevice(gamepad2, user: user);
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        // Unpair device.
+        user.UnpairDevice(gamepad1);
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+    }
+
+    [Test]
+    [Category("Users")]
     [Ignore("TODO")]
     public void TODO_Users_CanApplySettings_WithCustomBindings()
     {
