@@ -6,7 +6,6 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
-using UnityEngine.iOS;
 using UnityEngine.Profiling;
 
 ////TODO: add support for spacing out events according to their original time
