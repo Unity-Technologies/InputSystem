@@ -15,7 +15,9 @@ public class InGameHintsTests : InputTestFixture
     [Category("Samples")]
     public IEnumerator Samples_InGameHints_ShowControlsAccordingToCurrentlyUsedDevice()
     {
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
         var switchController = InputSystem.AddDevice<SwitchProControllerHID>();
+#endif
         var xboxController = InputSystem.AddDevice<XInputController>();
         var ps4Controller = InputSystem.AddDevice<DualShockGamepad>();
 
@@ -62,9 +64,11 @@ public class InGameHintsTests : InputTestFixture
 
         Assert.That(text.text, Does.StartWith("Press A "));
 
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
         // Switch to Switch controller.
         Press(switchController.startButton);
 
         Assert.That(text.text, Does.StartWith("Press B "));
+#endif
     }
 }

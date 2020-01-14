@@ -2030,6 +2030,11 @@ namespace UnityEngine.InputSystem.Layouts
                 return valueType.IsAssignableFrom(valueTypOfControl);
             }
 
+            public bool IsGeneratedLayout(InternedString layout)
+            {
+                return layoutBuilders.ContainsKey(layout);
+            }
+
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)
             {
                 var layout = childLayout;

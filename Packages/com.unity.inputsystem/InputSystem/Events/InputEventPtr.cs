@@ -203,9 +203,18 @@ namespace UnityEngine.InputSystem.LowLevel
             return eventPtr.ToString();
         }
 
+        /// <summary>
+        /// Return the plain pointer wrapped around by the struct.
+        /// </summary>
+        /// <returns>A plain pointer. Can be <c>null</c>.</returns>
+        public InputEvent* ToPointer()
+        {
+            return this;
+        }
+
         public bool Equals(InputEventPtr other)
         {
-            return m_EventPtr == other.m_EventPtr;
+            return m_EventPtr == other.m_EventPtr || InputEvent.Equals(m_EventPtr, other.m_EventPtr);
         }
 
         public override bool Equals(object obj)

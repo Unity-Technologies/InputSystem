@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -272,6 +273,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"Event '{new InputEventPtr(currentPtr)}' is last event in given buffer with size {buffer.sizeInBytes}");
 
             return nextPtr;
+        }
+
+        public static unsafe bool Equals(InputEvent* first, InputEvent* second)
+        {
+            if (first == second)
+                return true;
+            if (first == null || second == null)
+                return false;
+
+            if (first->m_Event.sizeInBytes != second->m_Event.sizeInBytes)
+                return false;
+
+            return UnsafeUtility.MemCmp(first, second, first->m_Event.sizeInBytes) == 0;
         }
     }
 }

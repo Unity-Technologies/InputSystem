@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
@@ -707,6 +708,84 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public unsafe void Events_CanTraceEventsOfDevice_AndFilterEventsThroughCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.onFilterEvent +=
+                (eventPtr, device) => gamepad.buttonSouth.ReadValueFromEvent(eventPtr, out var value) && value > 0;
+
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(1));
+            Assert.That(*(GamepadState*)StateEvent.From(trace.ToArray()[0])->state, Is.EqualTo(new GamepadState(GamepadButton.South)));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanTraceEventsOfDevice_AndGrowBufferAsNeeded()
+    {
+        var device = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(10, growBuffer: true, growIncrementSizeInBytes: 2048) {deviceId = device.deviceId})
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.A));
+            InputSystem.QueueStateEvent(device, new GamepadState().WithButton(GamepadButton.B));
+
+            InputSystem.Update();
+
+            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(2048 + 10));
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanTraceEventsOfDevice_AndRecordFrameBoundaries()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad) { recordFrameMarkers = true })
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(3));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+            Assert.That(trace.ToArray()[2].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(5));
+            Assert.That(trace.ToArray()[0].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[1].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+            Assert.That(trace.ToArray()[2].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[3].type, Is.EqualTo(InputEventTrace.FrameMarkerEvent));
+            Assert.That(trace.ToArray()[4].type, Is.EqualTo(new FourCC(StateEvent.Type)));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -748,11 +827,473 @@ partial class CoreTests
             InputSystem.QueueStateEvent(device, new GamepadState());
             InputSystem.Update();
 
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.totalEventSizeInBytes, Is.GreaterThan(0));
             Assert.That(trace.ToList(), Has.Count.EqualTo(2));
 
             trace.Clear();
 
+            Assert.That(trace.eventCount, Is.EqualTo(0));
+            Assert.That(trace.totalEventSizeInBytes, Is.EqualTo(0));
             Assert.That(trace.ToList(), Has.Count.EqualTo(0));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanPersistEventTracesInStream()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var originalTrace = new InputEventTrace())
+        {
+            originalTrace.Enable();
+
+            InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(123, 234) });
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.A));
+            InputSystem.QueueStateEvent(pen, new PenState { position = new Vector2(234, 345) });
+
+            InputSystem.Update();
+
+            Assert.That(originalTrace.eventCount, Is.EqualTo(3));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                originalTrace.WriteTo(memoryStream);
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                using (var loadedTrace = InputEventTrace.LoadFrom(memoryStream))
+                {
+                    Assert.That(loadedTrace, Is.EquivalentTo(originalTrace));
+                    Assert.That(loadedTrace.totalEventSizeInBytes, Is.EqualTo(originalTrace.totalEventSizeInBytes));
+                }
+            }
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonNorth);
+
+            trace.Disable();
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            trace.Replay().PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_EventByEvent()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Press(gamepad.buttonNorth);
+
+            trace.Disable();
+
+            InputSystem.QueueStateEvent(gamepad, default(GamepadState));
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            var replay = trace.Replay();
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+
+            Assert.That(() => replay.PlayOneEvent(), Throws.InvalidOperationException);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_FrameByFrame()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad) { recordFrameMarkers = true })
+        {
+            Assert.That(trace.recordFrameMarkers, Is.True);
+
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            InputSystem.Update();
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            var replay = trace.Replay().PlayAllFramesOneByOne();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_UsingGivenDevice()
+    {
+        // Capture events from one device and replay them on another.
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad1))
+        {
+            trace.Enable();
+
+            Press(gamepad1.buttonSouth);
+            Release(gamepad1.buttonSouth);
+
+            var replay = trace.Replay()
+                .WithDeviceMappedFromTo(gamepad1, gamepad2);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad2.buttonSouth.isPressed, Is.True);
+
+            replay.PlayOneEvent();
+            InputSystem.Update();
+
+            Assert.That(gamepad2.buttonSouth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_UsingSyntheticDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            InputDevice addedDevice = null;
+            InputDevice removedDevice = null;
+            var trace2 = new InputEventTrace();
+
+            InputSystem.onDeviceChange +=
+                (device, change) =>
+            {
+                if (change == InputDeviceChange.Added)
+                {
+                    Assert.That(addedDevice, Is.Null);
+                    addedDevice = device;
+                    trace2.deviceId = device.deviceId;
+                    trace2.Enable();
+                }
+                else if (change == InputDeviceChange.Removed)
+                {
+                    Assert.That(removedDevice, Is.Null);
+                    removedDevice = device;
+                }
+            };
+
+            var replay = trace.Replay().WithAllDevicesMappedToNewInstances().PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(addedDevice, Is.Not.Null);
+            Assert.That(addedDevice, Is.TypeOf<Gamepad>());
+            Assert.That(addedDevice, Is.Not.SameAs(gamepad));
+            Assert.That(trace2.eventCount, Is.EqualTo(trace.eventCount));
+            Assert.That(trace2.deviceInfos, Has.Count.EqualTo(1));
+            Assert.That(trace2.deviceInfos, Has.All.Property("deviceId").EqualTo(addedDevice.deviceId));
+            Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[0]), Is.EqualTo(1));
+            Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[1]), Is.EqualTo(0));
+            Assert.That(removedDevice, Is.Null);
+            Assert.That(replay.createdDevices, Is.EquivalentTo(new[] { addedDevice }));
+
+            replay.Dispose();
+
+            Assert.That(removedDevice, Is.SameAs(addedDevice));
+            Assert.That(replay.createdDevices, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndGetInfoOnRecordedDevices()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+            Set(mouse.position, Vector2.one);
+
+            trace.Disable();
+
+            Assert.That(trace.deviceInfos, Has.Count.EqualTo(2));
+            Assert.That(trace.deviceInfos,
+                Has.Exactly(1).With.Property("deviceId").EqualTo(gamepad.deviceId).And.Property("layout").EqualTo(gamepad.layout).And
+                    .Property("stateFormat").EqualTo(gamepad.stateBlock.format).And.Property("stateSizeInBytes").EqualTo(gamepad.stateBlock.alignedSizeInBytes));
+            Assert.That(trace.deviceInfos,
+                Has.Exactly(1).With.Property("deviceId").EqualTo(mouse.deviceId).And.Property("layout").EqualTo(mouse.layout).And
+                    .Property("stateFormat").EqualTo(mouse.stateBlock.format).And.Property("stateSizeInBytes").EqualTo(mouse.stateBlock.alignedSizeInBytes));
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndRewindAndPlayAgain()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+            Release(gamepad.buttonSouth);
+
+            trace.Disable();
+
+            var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+            action.Enable();
+
+            var replay = trace.Replay().PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(action.triggered, Is.True);
+
+            InputSystem.Update();
+            Assert.That(action.triggered, Is.False);
+
+            replay.Rewind();
+            Assert.That(replay.position, Is.Zero);
+
+            replay.PlayAllEvents();
+            InputSystem.Update();
+
+            Assert.That(action.triggered, Is.True);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanReplayEventsFromEventTrace_AndUseOriginalEventTiming()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var trace = new InputEventTrace())
+        {
+            trace.Enable();
+
+            currentTime = 1;
+            Press(gamepad.buttonSouth);
+
+            currentTime = 3;
+            Press(gamepad.buttonNorth);
+            Release(gamepad.buttonSouth);
+
+            currentTime = 4;
+            Release(gamepad.buttonNorth);
+
+            var replay = trace.Replay();
+
+            replay.PlayAllEventsAccordingToTimestamps();
+
+            Assert.That(replay.position, Is.EqualTo(0));
+            Assert.That(replay.finished, Is.False);
+
+            // First update becomes starting point of replay, i.e. everything is
+            // relative to time=1 now.
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            currentTime += 1;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(1));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            currentTime += 1.5f;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.False);
+            Assert.That(replay.position, Is.EqualTo(3));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+
+            currentTime += 1;
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(replay.position, Is.EqualTo(4));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+
+            InputSystem.Update();
+
+            Assert.That(replay.finished, Is.True);
+            Assert.That(replay.position, Is.EqualTo(4));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+        }
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_CanResizeEventTrace()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Allocate a trace for 2.5 GamepadState events to get wrap-around in the buffer.
+        using (var trace = new InputEventTrace((int)(2.5f * StateEvent.GetEventSizeWithPayload<GamepadState>())))
+        {
+            trace.Enable();
+
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.North));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState(GamepadButton.East));
+            InputSystem.Update();
+
+            Assert.That(trace.eventCount, Is.EqualTo(2)); // Make sure we wrapped around.
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+
+            trace.Resize(4096);
+
+            // Contents should remain unchanged.
+            Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+
+            // Recording new events should append as expected.
+            Press(gamepad.buttonWest);
+
+            Assert.That(trace.eventCount, Is.EqualTo(3));
+            Assert.That(gamepad.buttonNorth.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonEast.ReadValueFromEvent(trace.ToArray()[1]), Is.EqualTo(1).Within(0.00001));
+            Assert.That(gamepad.buttonWest.ReadValueFromEvent(trace.ToArray()[2]), Is.EqualTo(1).Within(0.00001));
+
+            // Resize back down so we just barely fit one event.
+            trace.Resize(StateEvent.GetEventSizeWithPayload<GamepadState>() + 4);
+
+            Assert.That(trace.eventCount, Is.EqualTo(1));
+            Assert.That(gamepad.buttonWest.ReadValueFromEvent(trace.ToArray()[0]), Is.EqualTo(1).Within(0.00001));
+        }
+    }
+
+    #if UNITY_EDITOR
+    [Test]
+    [Category("Events")]
+    public void Events_EventTraceCanSurviveDomainReload()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+
+            // All that's necessary to survive the reload is for the serialized data to come through fine.
+            // We use the JSON serializer to test that. Technically, it's not quite the same as Unity internally
+            // serializes such that private, otherwise non-serialized data gets captured, too, but for our
+            // purposes here it's close enough.
+
+            var json = JsonUtility.ToJson(trace, prettyPrint: true); // Prettyprint for debugging.
+            var traceFromJson = JsonUtility.FromJson<InputEventTrace>(json);
+
+            Assert.That(traceFromJson.eventCount, Is.EqualTo(trace.eventCount));
+            Assert.That(traceFromJson.ToArray(), Is.EquivalentTo(trace.ToArray()));
+        }
+    }
+
+    #endif
+
+    // To simplify matters, rather than supporting some kind of buffer modifications while not supporting others,
+    // we just reject all of them. When playback is in progress, the buffer must not change. Period.
+    [Test]
+    [Category("Events")]
+    public void Events_WhenReplayingEvents_ModifyingTraceInvalidatesReplayController()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using (var trace = new InputEventTrace(gamepad))
+        {
+            trace.Enable();
+
+            Press(gamepad.buttonSouth);
+
+            var replay = trace.Replay();
+
+            replay.PlayOneEvent();
+
+            Release(gamepad.buttonSouth);
+
+            Assert.That(() => replay.PlayOneEvent(), Throws.InvalidOperationException);
         }
     }
 
