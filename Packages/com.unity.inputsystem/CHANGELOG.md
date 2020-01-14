@@ -18,7 +18,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
      ```CSharp
     // Write.
     myTrace.WriteTo("file.inputtrace");
-    
+
     // Read.
     InputEventTrace.LoadFrom("file.inputtrace");
      ```
