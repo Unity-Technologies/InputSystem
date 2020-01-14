@@ -24,7 +24,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
      ```
   * `InputEventTrace` now has built-in replay functionality.
      ```CSharp
-    myTrace.Replay().AllFrames();
+    myTrace.Replay().PlayAllFramesOneByOne();
      ```
   * The event trace in device windows of the Input Debugger has been extended with controls to save and load traces.
 - We've added a new `InputRecording` sample which has a reusable `MonoBehaviour` component that can be used to capture and replay device activity.
