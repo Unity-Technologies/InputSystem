@@ -19,6 +19,8 @@ public class InputRecorderTests : InputTestFixture
         recorder.recordFrames = false;
         recorder.startRecordingWhenEnabled = true;
 
+        Assert.That(recorder.captureIsRunning, Is.True);
+
         Press(keyboard.aKey);
         Press(mouse.leftButton);
         Release(keyboard.aKey);
@@ -40,13 +42,19 @@ public class InputRecorderTests : InputTestFixture
         mouseAction.Enable();
 
         recorder.StartReplay();
+
+        Assert.That(recorder.replayIsRunning, Is.True);
+        Assert.That(recorder.replay, Is.Not.Null);
+        Assert.That(recorder.replay.finished, Is.False);
+        Assert.That(recorder.replay.position, Is.Zero);
+
         InputSystem.Update(); // Recorder only queues events.
 
+        Assert.That(recorder.replayIsRunning, Is.False);
+        Assert.That(recorder.replay, Is.Null);
         Assert.That(keyboardAction.triggered, Is.True);
         Assert.That(mouseAction.triggered, Is.False);
         Assert.That(keyboardAction.ReadValue<float>(), Is.EqualTo(0));
-        Assert.That(recorder.replay, Is.Not.Null);
-        Assert.That(recorder.replay.finished, Is.True);
     }
 
     [Test]
