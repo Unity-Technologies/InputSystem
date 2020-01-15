@@ -3904,7 +3904,7 @@ partial class CoreTests
     [Test]
     [Category("Devices")]
     [Ignore("TODO")]
-    public void TODO_Devices_AltTabbingDoesAlterKeyboardState()
+    public void TODO_Devices_AltTabbingDoesNOTAlterKeyboardState()
     {
         ////TODO: add support for explicitly suppressing alt-tab, if enabled
         Assert.Fail();

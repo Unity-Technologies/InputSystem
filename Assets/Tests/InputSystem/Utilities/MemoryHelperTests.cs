@@ -169,4 +169,67 @@ internal class MemoryHelperTests
         Assert.That(new MemoryHelpers.BitRegion(12, 2).Overlap(new MemoryHelpers.BitRegion(13, 2)),
             Is.EqualTo(new MemoryHelpers.BitRegion(13, 1)));
     }
+
+    [Test]
+    [Category("Utilities")]
+    public unsafe void Utilities_CanInitializeMemory()
+    {
+        using (var mem = new NativeArray<byte>(6, Allocator.Temp))
+        {
+            var memPtr = (byte*)mem.GetUnsafePtr();
+
+            MemoryHelpers.MemSet(memPtr, 6, 123);
+
+            Assert.That(memPtr[0], Is.EqualTo(123));
+            Assert.That(memPtr[1], Is.EqualTo(123));
+            Assert.That(memPtr[2], Is.EqualTo(123));
+            Assert.That(memPtr[3], Is.EqualTo(123));
+            Assert.That(memPtr[4], Is.EqualTo(123));
+            Assert.That(memPtr[5], Is.EqualTo(123));
+        }
+    }
+
+    [Test]
+    [Category("Utilities")]
+    public unsafe void Utilities_CanCopyMemoryWithMask()
+    {
+        using (var from = new NativeArray<byte>(6, Allocator.Temp))
+        using (var to = new NativeArray<byte>(6, Allocator.Temp))
+        using (var mask = new NativeArray<byte>(6, Allocator.Temp))
+        {
+            var fromPtr = (byte*)from.GetUnsafePtr();
+            var toPtr = (byte*)to.GetUnsafePtr();
+            var maskPtr = (byte*)mask.GetUnsafePtr();
+
+            toPtr[0] = 0xff;
+            toPtr[1] = 0xf0;
+            toPtr[2] = 0x0f;
+            toPtr[3] = 0x01;
+            toPtr[4] = 0x40;
+            toPtr[5] = 0x00;
+
+            fromPtr[0] = 0x00;
+            fromPtr[1] = 0x01;
+            fromPtr[2] = 0x12;
+            fromPtr[3] = 0x10;
+            fromPtr[4] = 0x88;
+            fromPtr[5] = 0xC1;
+
+            maskPtr[0] = 0xF0;
+            maskPtr[1] = 0xF0;
+            maskPtr[2] = 0x0F;
+            maskPtr[3] = 0x00;
+            maskPtr[4] = 0xC0;
+            maskPtr[5] = 0x11;
+
+            MemoryHelpers.MemCpyExceptMasked(toPtr, fromPtr, 6, maskPtr);
+
+            Assert.That(toPtr[0], Is.EqualTo(0xF0));
+            Assert.That(toPtr[1], Is.EqualTo(0xF1));
+            Assert.That(toPtr[2], Is.EqualTo(0x1F));
+            Assert.That(toPtr[3], Is.EqualTo(0x10));
+            Assert.That(toPtr[4], Is.EqualTo(0x48));
+            Assert.That(toPtr[5], Is.EqualTo(0xC0));
+        }
+    }
 }
