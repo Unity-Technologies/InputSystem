@@ -320,6 +320,8 @@ namespace UnityEngine.InputSystem
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
+        public bool runInBackground { get; set; } = false;
+
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings

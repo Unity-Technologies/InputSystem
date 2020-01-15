@@ -223,6 +223,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////TODO: rename this to canReceiveInputInBackground
         /// <summary>
         /// If true, the device is capable of delivering input while the application is running in the background.
         /// </summary>
@@ -638,6 +639,13 @@ namespace UnityEngine.InputSystem
             for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
                 m_UsagesForEachControl[i] = default;
             m_UsageCount = default;
+        }
+
+        internal bool RequestRequest()
+        {
+            var resetCommand = RequestResetCommand.Create();
+            var result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         internal void NotifyAdded()

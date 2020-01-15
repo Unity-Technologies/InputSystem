@@ -152,6 +152,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }
 
+        bool runInBackground { get; }
+
         ScreenOrientation screenOrientation { get; }
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.

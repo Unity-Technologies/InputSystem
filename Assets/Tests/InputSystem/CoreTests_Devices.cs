@@ -793,6 +793,37 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_NoisyControlsAreToggledOnInNoiseMask()
+    {
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        const string layout = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""noisyControl"", ""layout"" : ""axis"", ""noisy"" : true }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = (Gamepad)InputSystem.AddDevice("TestDevice");
+
+        var noiseMaskPtr = (byte*)device.noiseMaskPtr;
+
+        const int kNumButtons = 14; // Buttons without left and right trigger which aren't stored in the buttons field.
+
+        // All the gamepads buttons should have the flag off as they aren't noise. However, the leftover
+        // bits in the "buttons" field should be marked as noise as they are not actively used by any control.
+        Assert.That(*(uint*)(noiseMaskPtr + device.stateBlock.byteOffset), Is.EqualTo(0xFFFFFFFF << kNumButtons));
+
+        // The noisy control we added should be flagged as noise.
+        Assert.That(*(uint*)(noiseMaskPtr + device["noisyControl"].stateBlock.byteOffset), Is.EqualTo(0xFFFFFFFF));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanLookUpDeviceByItsIdAfterItHasBeenAdded()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -3624,26 +3655,11 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    //This could be the first step towards being able to simulate input well.
-    [Test]
-    [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_CanCreateVirtualDevices()
-    {
-        //layout has one or more binding paths on controls instead of associated memory
-        //sets up state monitors
-        //virtual device is of a device type determined by base template (e.g. Gamepad)
-        //can associate additional processing logic with controls
-        //state changes for virtual devices are accumulated as separate buffer of events that is flushed out in a post-step
-        //performed as a loop so virtual devices can feed into other virtual devices
-        //virtual devices are marked with flag
-        Assert.Fail();
-    }
+    // NOTE: The focus handling logic will also implicitly take care of canceling and restarting actions.
 
-    // NOTE: The focus logic will also implicitly take care of canceling and restarting actions.
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_WhenFocusChanges_AllConnectedDevicesAreResetOnce()
+    public unsafe void Devices_WhenFocusIsLost_DevicesAreForciblyReset()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var keyboardDeviceReset = false;
@@ -3694,12 +3710,207 @@ partial class CoreTests
                 return InputDeviceCommand.GenericFailure;
             });
 
-        runtime.InvokePlayerFocusChanged(true);
+        // Put devices in non-default states.
+        Press(keyboard.aKey);
+        Press(gamepad.buttonSouth);
+        Set(pointer.position, new Vector2(123, 234));
+
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
+
+        // Focus loss should result in reset.
+        runtime.PlayerFocusLost();
 
         Assert.That(keyboardDeviceReset, Is.True);
         Assert.That(gamepadDeviceReset, Is.True);
         Assert.That(pointerDeviceReset, Is.True);
+
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.aKey.isPressed, Is.False);
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+        Assert.That(pointer.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        keyboardDeviceReset = false;
+        gamepadDeviceReset = false;
+        pointerDeviceReset = false;
+
+        // Focus gain should not result in a reset.
+        runtime.PlayerFocusGained();
+
+        Assert.That(keyboardDeviceReset, Is.False);
+        Assert.That(gamepadDeviceReset, Is.False);
+        Assert.That(pointerDeviceReset, Is.False);
+
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+        Assert.That(keyboard.aKey.isPressed, Is.False);
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+        Assert.That(pointer.position.ReadValue(), Is.EqualTo(default(Vector2)));
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenFocusIsLost_DevicesAreForciblyReset_ExceptForNoisyControls()
+    {
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        const string json = @"
+            {
+                ""name"" : ""NoisyGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""noisyControl"", ""noisy"" : true, ""layout"" : ""Axis"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var gamepad = (Gamepad)InputSystem.AddDevice("NoisyGamepad");
+
+        Press(gamepad.buttonSouth);
+        Set(gamepad.leftStick, new Vector2(123, 234));
+        Set((AxisControl)gamepad["noisyControl"], 345.0f);
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(gamepad.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gamepad.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
+        Assert.That(((AxisControl)gamepad["noisyControl"]).ReadValue(), Is.EqualTo(345.0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenFocusIsLost_DevicesAreForciblyReset_AndResetsAreObservableStateChanges()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var changeMonitorTriggered = false;
+        InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, d, arg3, arg4) => changeMonitorTriggered = true);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(changeMonitorTriggered, Is.True);
+
+        changeMonitorTriggered = false;
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(changeMonitorTriggered, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_WhenFocusIsLost_DevicesAreForciblyReset_ExceptThoseMarkedAsReceivingInputInBackground()
+    {
+        // TrackedDevice is all noisy controls. We need at least one non-noisy control to fully
+        // observe the behavior, so create a layout based on TrackedDevice that adds a button.
+        const string json = @"
+            {
+                ""name"" : ""TestTrackedDevice"",
+                ""extend"" : ""TrackedDevice"",
+                ""controls"" : [
+                    { ""name"" : ""Button"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TestTrackedDevice");
+
+        var receivedResetRequest = false;
+        runtime.SetDeviceCommandCallback(trackedDevice,
+            (id, commandPtr) =>
+            {
+                // IOCTL to return true from QueryCanRunInBackground.
+                if (commandPtr->type == QueryCanRunInBackground.Type)
+                {
+                    ((QueryCanRunInBackground*)commandPtr)->canRunInBackground = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                if (commandPtr->type == RequestResetCommand.Type)
+                {
+                    receivedResetRequest = true;
+                    // We still fail it as we don't actually reset.
+                    return InputDeviceCommand.GenericFailure;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Set(trackedDevice.devicePosition, new Vector3(123, 234, 345));
+        Press((ButtonControl)trackedDevice["Button"]);
+
+        // First, do it without run-in-background being enabled. This should actually lead to
+        // a reset of the device even though run-in-background is enabled on the device itself.
+        // However, since the app as a whole is not set to run in the background, we still force
+        // a reset.
+        runtime.runInBackground = false;
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(receivedResetRequest, Is.True);
+        Assert.That(trackedDevice.CheckStateIsAtDefault(), Is.False);
+        Assert.That(trackedDevice.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+        Assert.That(trackedDevice.devicePosition.ReadValue(),
+            Is.EqualTo(new Vector3(123, 234, 345)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(((ButtonControl)trackedDevice["Button"]).ReadValue(), Is.Zero);
+
+        runtime.PlayerFocusGained();
+        receivedResetRequest = false;
+
+        // Next, do the same all over with run-in-background enabled. Now, the device shouldn't reset at all.
+        runtime.runInBackground = true;
+        Press((ButtonControl)trackedDevice["Button"]);
+        runtime.PlayerFocusLost();
+
+        Assert.That(receivedResetRequest, Is.False);
+        Assert.That(trackedDevice.CheckStateIsAtDefault(), Is.False);
+        Assert.That(trackedDevice.CheckStateIsAtDefaultIgnoringNoise(), Is.False);
+        Assert.That(trackedDevice.devicePosition.ReadValue(),
+            Is.EqualTo(new Vector3(123, 234, 345)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(((ButtonControl)trackedDevice["Button"]).isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenFocusIsLost_OngoingTouchesGetCancelled()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        BeginTouch(1, new Vector2(123, 234));
+        BeginTouch(2, new Vector2(234, 345));
+
+        Assert.That(touchscreen.primaryTouch.isInProgress, Is.True);
+        Assert.That(touchscreen.touches[0].isInProgress, Is.True);
+        Assert.That(touchscreen.touches[1].isInProgress, Is.True);
+
+        runtime.PlayerFocusLost();
+
+        Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
+        Assert.That(touchscreen.touches[0].isInProgress, Is.False);
+        Assert.That(touchscreen.touches[1].isInProgress, Is.False);
+    }
+
+    // Alt-tabbing is only relevant on Windows (Mac uses system key for the same command instead of an application key).
+    ////TODO: investigate relevance on Linux
+    #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+    [Test]
+    [Category("Devices")]
+    [Ignore("TODO")]
+    public void TODO_Devices_AltTabbingDoesAlterKeyboardState()
+    {
+        ////TODO: add support for explicitly suppressing alt-tab, if enabled
+        Assert.Fail();
+    }
+
+    #endif
 
     [Test]
     [Category("Devices")]

@@ -325,6 +325,12 @@ namespace UnityEngine.InputSystem
         ///
         /// The primary effect of being noise is on <see cref="InputDevice.MakeCurrent"/> and
         /// on interactive rebinding (see <see cref="InputActionRebindingExtensions.RebindingOperation"/>).
+        /// However, being noisy also affects automatic resetting of controls that happens when the application
+        /// loses focus. While other controls are reset to their default value (except if <c>Application.runInBackground</c>
+        /// is true and the device the control belongs to is marked as <see cref="InputDevice.canRunInBackground"/>),
+        /// noisy controls will not be reset but rather remain at their current value. This is based on the assumption
+        /// that noisy controls most often represent sensor values and snapping the last sampling value back to default
+        /// will usually have undesirable effects on an application's simulation logic.
         /// </remarks>
         /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
         /// <seealso cref="InputControlAttribute.noisy"/>
@@ -779,6 +785,18 @@ namespace UnityEngine.InputSystem
 
         protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
 
+        /// <summary>
+        /// Return the memory that holds the noise mask for the control.
+        /// </summary>
+        /// <value>Noise bit mask for the control.</value>
+        /// <remarks>
+        /// Like with all state blocks, the specific memory block for the control is found at the memory
+        /// region specified by <see cref="stateBlock"/>.
+        ///
+        /// The noise mask indicates which bits in a state belong to noisy data. Every bit that is set means that
+        /// the corresponding bit of a control's state is noise.
+        /// </remarks>
+        /// <seealso cref="noisy"/>
         protected internal unsafe void* noiseMaskPtr => InputStateBuffers.s_NoiseMaskBuffer;
 
         /// <summary>
