@@ -52,6 +52,13 @@ partial class CoreTests
     public void Actions_TimeoutsDoNotGetTriggeredInEditorUpdates()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Devices get reset when losing focus so when we switch from the player to the editor,
+        // actions would get cancelled anyway. To avoid, create a device that runs in the background
+        // and enabled runInBackground.
+        SetCanRunInBackground(gamepad, true);
+        runtime.runInBackground = true;
+
         var action = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold");
         action.Enable();
 

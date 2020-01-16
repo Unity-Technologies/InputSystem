@@ -252,6 +252,24 @@ namespace UnityEngine.InputSystem
             InputSystem.Update();
         }
 
+        /// <summary>
+        /// Add support for <see cref="QueryCanRunInBackground"/> to <paramref name="device"/> and return
+        /// <paramref name="value"/> as <see cref="QueryCanRunInBackground.canRunInBackground"/>.
+        /// </summary>
+        /// <param name="device"></param>
+        internal unsafe void SetCanRunInBackground(InputDevice device, bool canRunInBackground = true)
+        {
+            runtime.SetDeviceCommandCallback(device, (id, command) =>
+            {
+                if (command->type == QueryCanRunInBackground.Type)
+                {
+                    ((QueryCanRunInBackground*)command)->canRunInBackground = canRunInBackground;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+        }
+
         public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null)
         {
             return new ActionConstraint(InputActionPhase.Started, action, control, time: time);

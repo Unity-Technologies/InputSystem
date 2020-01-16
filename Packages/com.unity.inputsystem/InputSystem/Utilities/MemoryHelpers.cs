@@ -150,18 +150,16 @@ namespace UnityEngine.InputSystem.Utilities
                 // to mask out parts of the bits we're reading.
                 var byteMask = 0xFF << (int)bitOffset;
                 if (bitCount + bitOffset < 8)
-                {
                     byteMask &= 0xFF >> (int)(8 - (bitCount + bitOffset));
-                }
 
                 if (maskPtr != null)
                 {
-                    byteMask &= *maskPtr;
+                    byteMask &= ~*maskPtr;
                     ++maskPtr;
                 }
 
-                var byte1 = *bytePtr1 & ~byteMask;
-                var byte2 = *bytePtr2 & ~byteMask;
+                var byte1 = *bytePtr1 & byteMask;
+                var byte2 = *bytePtr2 & byteMask;
 
                 if (byte1 != byte2)
                     return false;
@@ -189,9 +187,9 @@ namespace UnityEngine.InputSystem.Utilities
                     {
                         var byte1 = bytePtr1[i];
                         var byte2 = bytePtr2[i];
-                        var byteMask = maskPtr[i];
+                        var byteMask = ~maskPtr[i];
 
-                        if ((byte1 & ~byteMask) != (byte2 & ~byteMask))
+                        if ((byte1 & byteMask) != (byte2 & byteMask))
                             return false;
                     }
                 }
@@ -215,11 +213,11 @@ namespace UnityEngine.InputSystem.Utilities
                 if (maskPtr != null)
                 {
                     maskPtr += byteCount;
-                    byteMask &= *maskPtr;
+                    byteMask &= ~*maskPtr;
                 }
 
-                var byte1 = *bytePtr1 & ~byteMask;
-                var byte2 = *bytePtr2 & ~byteMask;
+                var byte1 = *bytePtr1 & byteMask;
+                var byte2 = *bytePtr2 & byteMask;
 
                 if (byte1 != byte2)
                     return false;
