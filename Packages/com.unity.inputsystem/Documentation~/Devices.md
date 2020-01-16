@@ -4,7 +4,12 @@
     * [Capabilities](#capabilities)
     * [Matching](#matching)
     * [Hijacking the matching process](#hijacking-the-matching-process)
-* [Device creation](#device-creation)
+* [Device lifecycle](#device-lifecycle)
+    * [Device creation](#device-creation)
+    * [Device removal](#device-removal)
+    * [Device resets](#device-resets)
+    * [Device enabling and disabling](#device-enabling-and-disabling)
+    * [Domain reloads](#domain-reloads-in-the-editor)
 * [Native Devices](#native-devices)
     * [Disconnected Devices](#disconnected-devices)
 * [Device IDs](#device-ids)
@@ -68,7 +73,9 @@ If multiple matchers are matching the same [`InputDeviceDescription`](../api/Uni
 
 You can overrule the internal matching process from outside to select a different layout for a Device than the system would normally choose. This also makes it possible to build new layouts on the fly. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System will use this layout.
 
-### Device creation
+### Device lifecycle
+
+#### Device creation
 
 Once a [layout](Layouts.md) has been chosen for a device, the system uses it to instantiate an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) and populate it with [`InputControls`](../api/UnityEngine.InputSystem.InputControl.html) as the layout ditates. This process is internal and happens automatically.
 
@@ -76,7 +83,50 @@ Once a [layout](Layouts.md) has been chosen for a device, the system uses it to 
 
 After the Input System assembles the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), it calls [`FinishSetup`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_FinishSetup_) on each control of the device and on the device itself. Use this to finalize the setup of the Controls.
 
-After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, the Input System adds it to the system. As part of this process, the Input System calls [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) on the Device, and signals  [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
+After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is fully assembled, the Input System adds it to the system. As part of this process, the Input System calls [`MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent_) on the Device, and signals  [`InputDeviceChange.Added`](../api/UnityEngine.InputSystem.InputDeviceChange.html#UnityEngine_InputSystem_InputDeviceChange_Added) on [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange). The Input System also calls [`InputDevice.OnAdded`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_OnAdded_).
+
+Once added, the [`InputDevice.added`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_added) flag is set to true.
+
+You can also add devices manually by calling one of the `InputSystem.AddDevice` methods such as [`InputSystem.AddDevice(layout)`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice_System_String_System_String_System_String_).
+
+```CSharp
+// Add a gamepad. This bypasses the matching process and will create a device directly
+// with the Gamepad layout.
+InputSystem.AddDevice<Gamepad>();
+
+// Add a device such that matching process is employed:
+InputSystem.AddDevice(new InputDeviceDescription
+{
+    interfaceName = "XInput",
+    product = "Xbox Controller",
+});
+```
+
+#### Device removal
+
+If a Device is disconnected, it will be removed from the system. You will see a notification for [`InputDeviceChange.Removed`](../api/UnityEngine.InputSystem.InputDeviceChange.html) sent via [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) and the Devices will be removed from the [`devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) list. Also, [`InputDevice.OnRemoved`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_OnRemoved_) is called.
+
+The [`InputDevice.added`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_added) flag is reset to false in the process.
+
+Note that Devices are not destroyed when removed. Device instances remain valid and you can still access them in code. Note, however, that trying to read values from the controls of these Devices will lead to exceptions.
+
+#### Device resets
+
+In the player, losing focus will lead to Devices being reset. Each such reset will set the state of a Device back to its default state. An exception to this are noisy controls which will be left at their current value based on the assumption that for the most part they represent sensor readings that should be left at the last sample rather than be snapped back to default values.
+
+The resetting happens from within [`Application.focusChanged`](https://docs.unity3d.com/ScriptReference/Application-focusChanged.html). The resets are observable state changes that trigger [`state change monitors`](../api/UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor.html) and thus also cancel ongoing Actions tied to the respective input state.
+
+When [`Application.runInBackground`](https://docs.unity3d.com/ScriptReference/Application-runInBackground.html) (not supported on all platforms) is enabled in the Unity player settings, devices that are marked as being able to run in the background via [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) will be left alone and won't be reset. This allows Devices such as HMDs and VR controllers to keep feeding input to a Unity application even if the application does not have focus.
+
+#### Device enabling and disabling
+
+When a Device is added, the Input System will send it an initial [`QueryEnabledStateCommand`](../api/UnityEngine.InputSystem.LowLevel.QueryEnabledStateCommand.html) to find out whether the device is currently enabled or not. The result of this will be reflected in the [`InputDevice.enabled`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_enabled) property.
+
+When not enabled, no events will be processed for a Device (in case there are events being sent even though the Device is disabled).
+
+A Device can be manually disabled and re-renabled via [`InputSystem.DisableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_) and [`InputSystem.EnableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_) respectively.
+
+Note that [sensors](Sensors.md) start out in disabled state by default and need to be enabled explicitly in order to start generating events.
 
 #### Domain reloads in the Editor
 

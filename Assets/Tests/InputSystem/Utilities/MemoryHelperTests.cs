@@ -126,27 +126,33 @@ internal class MemoryHelperTests
             var array2Ptr = (byte*)array2.GetUnsafePtr();
             var maskPtr = (byte*)mask.GetUnsafePtr();
 
+            // Set bit #2 in array1.
             MemoryHelpers.SetBitsInBuffer(array1Ptr, 0, 2, 1, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.True);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.False);
 
+            // Set bit #2 in mask.
             MemoryHelpers.SetBitsInBuffer(maskPtr, 0, 2, 1, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.False);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.True);
 
             UnsafeUtility.MemClear(array1Ptr, 8);
             UnsafeUtility.MemClear(array2Ptr, 8);
             UnsafeUtility.MemClear(maskPtr, 8);
 
+            // Set 24 bits in array1 starting at bit #5.
             MemoryHelpers.SetBitsInBuffer(array1Ptr, 0, 5, 24, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.True);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.False);
 
+            // Set 20 bits in mask starting at bit #5.
             MemoryHelpers.SetBitsInBuffer(maskPtr, 0, 5, 20, true);
+            // Set 24 bits in array2 starting at bit #5.
             MemoryHelpers.SetBitsInBuffer(array2Ptr, 0, 5, 24, true);
 
             Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.True);
 
+            // Set 21 bits in mask starting at bit #7.
             MemoryHelpers.SetBitsInBuffer(maskPtr, 0, 7, 21, true);
 
             Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.True);
