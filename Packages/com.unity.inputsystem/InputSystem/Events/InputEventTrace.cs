@@ -1346,11 +1346,12 @@ namespace UnityEngine.InputSystem.LowLevel
                         break;
                     }
 
-                    // Stop if we've reached the next frame.
+                    // Stop if we've reached the next frame (won't happen if we're playing events by time).
                     if (nextEvent.type == FrameMarkerEvent)
                     {
                         // Back up one event.
                         m_Enumerator.m_Current = currentEventPtr;
+                        --position;
                         break;
                     }
 
