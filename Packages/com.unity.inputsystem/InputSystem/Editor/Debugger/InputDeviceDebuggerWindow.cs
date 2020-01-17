@@ -211,8 +211,8 @@ namespace UnityEngine.InputSystem.Editor
             // Button to save event trace to file.
             if (GUILayout.Button(Contents.saveContent, Styles.toolbarButton))
             {
-                var defaultName = m_Device?.displayName + ".inputevents";
-                var fileName = EditorUtility.SaveFilePanel("Choose where to save event trace", string.Empty, defaultName, "inputevents");
+                var defaultName = m_Device?.displayName + ".inputtrace";
+                var fileName = EditorUtility.SaveFilePanel("Choose where to save event trace", string.Empty, defaultName, "inputtrace");
                 if (!string.IsNullOrEmpty(fileName))
                     m_EventTrace.WriteTo(fileName);
             }
@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Editor
             // Button to load event trace from file.
             if (GUILayout.Button(Contents.loadContent, Styles.toolbarButton))
             {
-                var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputevents");
+                var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputtrace");
                 if (!string.IsNullOrEmpty(fileName))
                 {
                     m_EventTrace.Disable();
