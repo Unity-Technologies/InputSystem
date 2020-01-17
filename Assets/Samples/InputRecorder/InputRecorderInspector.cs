@@ -2,6 +2,8 @@
 using UnityEditor;
 using UnityEngine.Events;
 
+////TODO: add ability to inspect contents of event traces in a separate window
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -129,15 +131,6 @@ namespace UnityEngine.InputSystem.Editor
                         recorder.StopCapture();
                 }
                 EditorGUI.EndDisabledGroup();
-
-                ////TODO: finish
-                #if false
-                // Inspect button.
-                EditorGUI.BeginDisabledGroup(recorder.eventCount == 0);
-                if (GUILayout.Button("Inspect"))
-                    InputRecorderWindow.OpenOrShow(recorder);
-                EditorGUI.EndDisabledGroup();
-                #endif
 
                 // Load button.
                 EditorGUI.BeginDisabledGroup(recorder.replayIsRunning);
