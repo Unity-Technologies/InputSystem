@@ -7,9 +7,6 @@ public class InputRecorderTests : InputTestFixture
 {
     [Test]
     [Category("Samples")]
-    #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-    [Ignore("Times out on farm but not locally; needs further investigation")]
-    #endif
     public void Samples_CanRecordAndReplayInputWithInputRecorder()
     {
         var go = new GameObject();
@@ -62,9 +59,6 @@ public class InputRecorderTests : InputTestFixture
 
     [Test]
     [Category("Samples")]
-    #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-    [Ignore("Times out on farm but not locally; needs further investigation")]
-    #endif
     public void Samples_CanRecordAndReplayInputWithInputRecorder_AndControlCaptureAndPlaybackViaButtons()
     {
         var go = new GameObject();

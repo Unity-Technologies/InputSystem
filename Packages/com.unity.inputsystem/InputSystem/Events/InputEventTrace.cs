@@ -8,8 +8,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Profiling;
 
-////TODO: add support for spacing out events according to their original time
-
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
@@ -548,6 +546,9 @@ namespace UnityEngine.InputSystem.LowLevel
                         m_EventSizeInBytes);
                 }
             }
+
+            if (m_EventBuffer != null)
+                UnsafeUtility.Free(m_EventBuffer, Allocator.Persistent);
 
             m_EventBufferSize = newBufferSize;
             m_EventBuffer = newEventBuffer;

@@ -1029,43 +1029,44 @@ partial class CoreTests
 
             InputDevice addedDevice = null;
             InputDevice removedDevice = null;
-            var trace2 = new InputEventTrace();
-
-            InputSystem.onDeviceChange +=
-                (device, change) =>
+            using (var trace2 = new InputEventTrace())
             {
-                if (change == InputDeviceChange.Added)
+                InputSystem.onDeviceChange +=
+                    (device, change) =>
                 {
-                    Assert.That(addedDevice, Is.Null);
-                    addedDevice = device;
-                    trace2.deviceId = device.deviceId;
-                    trace2.Enable();
-                }
-                else if (change == InputDeviceChange.Removed)
-                {
-                    Assert.That(removedDevice, Is.Null);
-                    removedDevice = device;
-                }
-            };
+                    if (change == InputDeviceChange.Added)
+                    {
+                        Assert.That(addedDevice, Is.Null);
+                        addedDevice = device;
+                        trace2.deviceId = device.deviceId;
+                        trace2.Enable();
+                    }
+                    else if (change == InputDeviceChange.Removed)
+                    {
+                        Assert.That(removedDevice, Is.Null);
+                        removedDevice = device;
+                    }
+                };
 
-            var replay = trace.Replay().WithAllDevicesMappedToNewInstances().PlayAllEvents();
-            InputSystem.Update();
+                var replay = trace.Replay().WithAllDevicesMappedToNewInstances().PlayAllEvents();
+                InputSystem.Update();
 
-            Assert.That(addedDevice, Is.Not.Null);
-            Assert.That(addedDevice, Is.TypeOf<Gamepad>());
-            Assert.That(addedDevice, Is.Not.SameAs(gamepad));
-            Assert.That(trace2.eventCount, Is.EqualTo(trace.eventCount));
-            Assert.That(trace2.deviceInfos, Has.Count.EqualTo(1));
-            Assert.That(trace2.deviceInfos, Has.All.Property("deviceId").EqualTo(addedDevice.deviceId));
-            Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[0]), Is.EqualTo(1));
-            Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[1]), Is.EqualTo(0));
-            Assert.That(removedDevice, Is.Null);
-            Assert.That(replay.createdDevices, Is.EquivalentTo(new[] { addedDevice }));
+                Assert.That(addedDevice, Is.Not.Null);
+                Assert.That(addedDevice, Is.TypeOf<Gamepad>());
+                Assert.That(addedDevice, Is.Not.SameAs(gamepad));
+                Assert.That(trace2.eventCount, Is.EqualTo(trace.eventCount));
+                Assert.That(trace2.deviceInfos, Has.Count.EqualTo(1));
+                Assert.That(trace2.deviceInfos, Has.All.Property("deviceId").EqualTo(addedDevice.deviceId));
+                Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[0]), Is.EqualTo(1));
+                Assert.That(((Gamepad)addedDevice).buttonSouth.ReadValueFromEvent(trace2.ToArray()[1]), Is.EqualTo(0));
+                Assert.That(removedDevice, Is.Null);
+                Assert.That(replay.createdDevices, Is.EquivalentTo(new[] { addedDevice }));
 
-            replay.Dispose();
+                replay.Dispose();
 
-            Assert.That(removedDevice, Is.SameAs(addedDevice));
-            Assert.That(replay.createdDevices, Is.Empty);
+                Assert.That(removedDevice, Is.SameAs(addedDevice));
+                Assert.That(replay.createdDevices, Is.Empty);
+            }
         }
     }
 
