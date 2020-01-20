@@ -312,6 +312,8 @@ namespace UnityEngine.InputSystem
 
         protected void OnDestroy()
         {
+            m_ReplayController?.Dispose();
+            m_ReplayController = null;
             m_EventTrace?.Dispose();
             m_EventTrace = null;
         }

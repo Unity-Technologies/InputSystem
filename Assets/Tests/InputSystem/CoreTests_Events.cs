@@ -743,8 +743,8 @@ partial class CoreTests
 
             InputSystem.Update();
 
-            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(2048 + 10));
             Assert.That(trace.eventCount, Is.EqualTo(2));
+            Assert.That(trace.allocatedSizeInBytes, Is.EqualTo(2048 + 10));
         }
     }
 
