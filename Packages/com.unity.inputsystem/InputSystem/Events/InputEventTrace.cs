@@ -810,87 +810,82 @@ namespace UnityEngine.InputSystem.LowLevel
 
             Profiler.BeginSample("InputEventTrace");
 
-            // Make room in the buffer for the event.
-            byte* buffer;
             if (m_EventBufferTail == default)
             {
                 // First event in buffer.
-                buffer = m_EventBuffer;
                 m_EventBufferHead = m_EventBuffer;
-                m_EventBufferTail = buffer + eventSize;
+                m_EventBufferTail = m_EventBuffer;
             }
-            else
+
+            var newTail = m_EventBufferTail + eventSize;
+            var newTailOvertakesHead = newTail > m_EventBufferHead && m_EventBufferHead != m_EventBuffer;
+
+            // If tail goes out of bounds, enlarge the buffer or wrap around to the beginning.
+            var newTailGoesPastEndOfBuffer = newTail > m_EventBuffer + m_EventBufferSize;
+            if (newTailGoesPastEndOfBuffer)
             {
-                var newTail = m_EventBufferTail + eventSize;
-                var newTailOvertakesHead = newTail > m_EventBufferHead && m_EventBufferHead != m_EventBuffer;
-
-                // If tail goes out of bounds, enlarge the buffer or wrap around to the beginning.
-                var newTailGoesPastEndOfBuffer = newTail > m_EventBuffer + m_EventBufferSize;
-                if (newTailGoesPastEndOfBuffer)
+                // If we haven't reached the max size yet, grow the buffer.
+                if (m_EventBufferSize < m_MaxEventBufferSize && !m_HasWrapped)
                 {
-                    // If we haven't reached the max size yet, grow the buffer.
-                    if (m_EventBufferSize < m_MaxEventBufferSize && !m_HasWrapped)
-                    {
-                        var increment = Math.Max(m_GrowIncrementSize, eventSize.AlignToMultipleOf(4));
-                        var newBufferSize = m_EventBufferSize + increment;
-                        if (newBufferSize > m_MaxEventBufferSize)
-                            newBufferSize = m_MaxEventBufferSize;
+                    var increment = Math.Max(m_GrowIncrementSize, eventSize.AlignToMultipleOf(4));
+                    var newBufferSize = m_EventBufferSize + increment;
+                    if (newBufferSize > m_MaxEventBufferSize)
+                        newBufferSize = m_MaxEventBufferSize;
 
-                        Resize(newBufferSize);
-                    }
-
-                    // See if we fit.
-                    var spaceLeft = m_EventBufferSize - (m_EventBufferTail - m_EventBuffer);
-                    if (spaceLeft < eventSize)
-                    {
-                        // No, so wrap around.
-                        m_HasWrapped = true;
-
-                        // Make sure head isn't trying to advance into gap we may be leaving at the end of the
-                        // buffer by wiping the space if it could fit an event.
-                        if (spaceLeft >= InputEvent.kBaseEventSize)
-                            UnsafeUtility.MemClear(m_EventBufferTail, InputEvent.kBaseEventSize);
-
-                        m_EventBufferTail = m_EventBuffer;
-                        newTail = m_EventBuffer + eventSize;
-
-                        // If the tail overtook both the head and the end of the buffer,
-                        // we need to make sure the head is wrapped around as well.
-                        if (newTailOvertakesHead)
-                            m_EventBufferHead = m_EventBuffer;
-
-                        // Recheck whether we're overtaking head.
-                        newTailOvertakesHead = newTail > m_EventBufferHead;
-                    }
+                    Resize(newBufferSize);
                 }
 
-                // If the new tail runs into head, bump head as many times as we need to
-                // make room for the event. Head may itself wrap around here.
-                if (newTailOvertakesHead)
+                // See if we fit.
+                var spaceLeft = m_EventBufferSize - (m_EventBufferTail - m_EventBuffer);
+                if (spaceLeft < eventSize)
                 {
-                    var newHead = m_EventBufferHead;
-                    var endOfBufferMinusOneEvent =
-                        m_EventBuffer + m_EventBufferSize - InputEvent.kBaseEventSize;
+                    // No, so wrap around.
+                    m_HasWrapped = true;
 
-                    while (newHead < newTail)
-                    {
-                        var numBytes = ((InputEvent*)newHead)->sizeInBytes;
-                        newHead += numBytes;
-                        --m_EventCount;
-                        m_EventSizeInBytes -= numBytes;
-                        if (newHead > endOfBufferMinusOneEvent || ((InputEvent*)newHead)->sizeInBytes == 0)
-                        {
-                            newHead = m_EventBuffer;
-                            break;
-                        }
-                    }
+                    // Make sure head isn't trying to advance into gap we may be leaving at the end of the
+                    // buffer by wiping the space if it could fit an event.
+                    if (spaceLeft >= InputEvent.kBaseEventSize)
+                        UnsafeUtility.MemClear(m_EventBufferTail, InputEvent.kBaseEventSize);
 
-                    m_EventBufferHead = newHead;
+                    m_EventBufferTail = m_EventBuffer;
+                    newTail = m_EventBuffer + eventSize;
+
+                    // If the tail overtook both the head and the end of the buffer,
+                    // we need to make sure the head is wrapped around as well.
+                    if (newTailOvertakesHead)
+                        m_EventBufferHead = m_EventBuffer;
+
+                    // Recheck whether we're overtaking head.
+                    newTailOvertakesHead = newTail > m_EventBufferHead;
                 }
-
-                buffer = m_EventBufferTail;
-                m_EventBufferTail = newTail;
             }
+
+            // If the new tail runs into head, bump head as many times as we need to
+            // make room for the event. Head may itself wrap around here.
+            if (newTailOvertakesHead)
+            {
+                var newHead = m_EventBufferHead;
+                var endOfBufferMinusOneEvent =
+                    m_EventBuffer + m_EventBufferSize - InputEvent.kBaseEventSize;
+
+                while (newHead < newTail)
+                {
+                    var numBytes = ((InputEvent*)newHead)->sizeInBytes;
+                    newHead += numBytes;
+                    --m_EventCount;
+                    m_EventSizeInBytes -= numBytes;
+                    if (newHead > endOfBufferMinusOneEvent || ((InputEvent*)newHead)->sizeInBytes == 0)
+                    {
+                        newHead = m_EventBuffer;
+                        break;
+                    }
+                }
+
+                m_EventBufferHead = newHead;
+            }
+
+            var buffer = m_EventBufferTail;
+            m_EventBufferTail = newTail;
 
             // Copy data to buffer.
             UnsafeUtility.MemCpy(buffer, eventData, eventSize);
