@@ -832,6 +832,9 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (newBufferSize > m_MaxEventBufferSize)
                         newBufferSize = m_MaxEventBufferSize;
 
+                    if (newBufferSize < eventSize)
+                        return;
+
                     Resize(newBufferSize);
                 }
 
