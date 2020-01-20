@@ -1073,6 +1073,9 @@ namespace UnityEngine.InputSystem.LowLevel
             /// </summary>
             public void Dispose()
             {
+                InputSystem.onBeforeUpdate -= OnBeginFrame;
+                finished = true;
+
                 foreach (var device in m_CreatedDevices)
                     InputSystem.RemoveDevice(device);
                 m_CreatedDevices = default;
