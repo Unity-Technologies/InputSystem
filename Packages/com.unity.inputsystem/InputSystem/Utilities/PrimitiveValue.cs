@@ -771,6 +771,8 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.UInt16: return new PrimitiveValue(Convert.ToUInt16(value));
                 case TypeCode.UInt32: return new PrimitiveValue(Convert.ToUInt32(value));
                 case TypeCode.UInt64: return new PrimitiveValue(Convert.ToUInt64(value));
+                case TypeCode.Single: return new PrimitiveValue(Convert.ToSingle(value));
+                case TypeCode.Double: return new PrimitiveValue(Convert.ToDouble(value));
             }
 
             throw new ArgumentException(
