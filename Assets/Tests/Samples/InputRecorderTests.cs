@@ -7,7 +7,6 @@ public class InputRecorderTests : InputTestFixture
 {
     [Test]
     [Category("Samples")]
-    [Ignore("TEMP")]
     public void Samples_CanRecordAndReplayInputWithInputRecorder()
     {
         var go = new GameObject();
@@ -60,7 +59,6 @@ public class InputRecorderTests : InputTestFixture
 
     [Test]
     [Category("Samples")]
-    [Ignore("TEMP")]
     public void Samples_CanRecordAndReplayInputWithInputRecorder_AndControlCaptureAndPlaybackViaButtons()
     {
         var go = new GameObject();
