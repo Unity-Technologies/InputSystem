@@ -518,6 +518,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     for (var i = 0; i < m_EventCount; ++i)
                     {
                         var eventSizeInBytes = fromPtr.sizeInBytes;
+                        var alignedEventSizeInBytes = eventSizeInBytes.AlignToMultipleOf(4);
 
                         // We only start copying once we know that the remaining events we have fit in the new buffer.
                         // This way we get the newest events and not the oldest ones.
@@ -525,11 +526,11 @@ namespace UnityEngine.InputSystem.LowLevel
                         {
                             UnsafeUtility.MemCpy(toPtr, fromPtr.ToPointer(), eventSizeInBytes);
                             toPtr = InputEvent.GetNextInMemory(toPtr);
-                            newEventSizeInBytes += (int)eventSizeInBytes;
+                            newEventSizeInBytes += (int)alignedEventSizeInBytes;
                             ++newEventCount;
                         }
 
-                        remainingEventBytes -= eventSizeInBytes;
+                        remainingEventBytes -= alignedEventSizeInBytes;
                         if (!GetNextEvent(ref fromPtr))
                             break;
                     }
