@@ -895,6 +895,8 @@ partial class CoreTests
             Assert.That(gamepad.buttonNorth.isPressed, Is.False);
 
             trace.Replay().PlayAllEvents();
+            Assert.That(runtime.eventCount, Is.EqualTo(2));
+
             InputSystem.Update();
 
             Assert.That(gamepad.buttonSouth.isPressed, Is.True);

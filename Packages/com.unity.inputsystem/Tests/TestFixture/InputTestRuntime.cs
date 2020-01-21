@@ -361,6 +361,8 @@ namespace UnityEngine.InputSystem
         public Action onProjectChange { get; set; }
         #endif
 
+        public int eventCount => m_EventCount;
+
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;
