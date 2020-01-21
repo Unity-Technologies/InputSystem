@@ -847,7 +847,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanPersistEventTracesInStream()
     {
         var pen = InputSystem.AddDevice<Pen>();
