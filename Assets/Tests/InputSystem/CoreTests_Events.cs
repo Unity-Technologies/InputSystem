@@ -709,7 +709,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public unsafe void Events_CanTraceEventsOfDevice_AndFilterEventsThroughCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
