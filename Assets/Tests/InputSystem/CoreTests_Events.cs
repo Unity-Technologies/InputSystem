@@ -665,7 +665,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public unsafe void Events_CanTraceEventsOfDevice()
     {
         var device = InputSystem.AddDevice<Gamepad>();
