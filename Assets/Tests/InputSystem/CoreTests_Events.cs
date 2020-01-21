@@ -790,7 +790,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_WhenTraceIsFull_WillStartOverwritingOldEvents()
     {
         var device = InputSystem.AddDevice<Gamepad>();
