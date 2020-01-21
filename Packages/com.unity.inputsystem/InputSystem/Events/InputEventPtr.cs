@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!valid)
                 return new InputEventPtr();
 
-            return new InputEventPtr((InputEvent*)((Int64)m_EventPtr + sizeInBytes));
+            return new InputEventPtr(InputEvent.GetNextInMemory(m_EventPtr));
         }
 
         public override string ToString()

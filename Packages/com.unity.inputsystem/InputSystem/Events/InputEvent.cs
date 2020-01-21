@@ -247,7 +247,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="GetNextInMemoryChecked"/>
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
-            Debug.Assert(currentPtr != null);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
@@ -262,7 +262,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <exception cref="InvalidOperationException">There are no more events in the given buffer.</exception>
         internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
         {
-            Debug.Assert(currentPtr != null);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);

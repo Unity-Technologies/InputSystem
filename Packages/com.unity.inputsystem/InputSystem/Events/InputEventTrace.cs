@@ -655,7 +655,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
             // Otherwise feel our way forward.
 
-            var nextEvent = (byte*)current.data + current.sizeInBytes;
+            var nextEvent = (byte*)current.Next().data;
             var endOfBuffer = m_EventBuffer + m_EventBufferSize;
 
             // If we've run into our tail, there's no more events.
@@ -801,11 +801,10 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_EventBuffer == default)
                 return;
 
-            var eventSize = inputEvent.sizeInBytes;
-            var eventData = inputEvent.data;
+            var bytesNeeded = inputEvent.sizeInBytes.AlignToMultipleOf(4);
 
             // Make sure we can fit the event at all.
-            if (eventSize > m_MaxEventBufferSize)
+            if (bytesNeeded > m_MaxEventBufferSize)
                 return;
 
             Profiler.BeginSample("InputEventTrace");
@@ -817,7 +816,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_EventBufferTail = m_EventBuffer;
             }
 
-            var newTail = m_EventBufferTail + eventSize;
+            var newTail = m_EventBufferTail + bytesNeeded;
             var newTailOvertakesHead = newTail > m_EventBufferHead && m_EventBufferHead != m_EventBuffer;
 
             // If tail goes out of bounds, enlarge the buffer or wrap around to the beginning.
@@ -827,12 +826,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 // If we haven't reached the max size yet, grow the buffer.
                 if (m_EventBufferSize < m_MaxEventBufferSize && !m_HasWrapped)
                 {
-                    var increment = Math.Max(m_GrowIncrementSize, eventSize.AlignToMultipleOf(4));
+                    var increment = Math.Max(m_GrowIncrementSize, bytesNeeded.AlignToMultipleOf(4));
                     var newBufferSize = m_EventBufferSize + increment;
                     if (newBufferSize > m_MaxEventBufferSize)
                         newBufferSize = m_MaxEventBufferSize;
 
-                    if (newBufferSize < eventSize)
+                    if (newBufferSize < bytesNeeded)
                         return;
 
                     Resize(newBufferSize);
@@ -840,7 +839,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 // See if we fit.
                 var spaceLeft = m_EventBufferSize - (m_EventBufferTail - m_EventBuffer);
-                if (spaceLeft < eventSize)
+                if (spaceLeft < bytesNeeded)
                 {
                     // No, so wrap around.
                     m_HasWrapped = true;
@@ -851,7 +850,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         UnsafeUtility.MemClear(m_EventBufferTail, InputEvent.kBaseEventSize);
 
                     m_EventBufferTail = m_EventBuffer;
-                    newTail = m_EventBuffer + eventSize;
+                    newTail = m_EventBuffer + bytesNeeded;
 
                     // If the tail overtook both the head and the end of the buffer,
                     // we need to make sure the head is wrapped around as well.
@@ -891,10 +890,10 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventBufferTail = newTail;
 
             // Copy data to buffer.
-            UnsafeUtility.MemCpy(buffer, eventData, eventSize);
+            UnsafeUtility.MemCpy(buffer, inputEvent.data, inputEvent.sizeInBytes);
             ++m_ChangeCounter;
             ++m_EventCount;
-            m_EventSizeInBytes += eventSize;
+            m_EventSizeInBytes += bytesNeeded;
 
             // Make sure we have a record for the device.
             if (device != null)
