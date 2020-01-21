@@ -875,7 +875,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
