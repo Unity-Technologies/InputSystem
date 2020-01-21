@@ -732,7 +732,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanTraceEventsOfDevice_AndGrowBufferAsNeeded()
     {
         var device = InputSystem.AddDevice<Gamepad>();
