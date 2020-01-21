@@ -906,7 +906,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_EventByEvent()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -946,7 +945,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_FrameByFrame()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -987,7 +985,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_UsingGivenDevice()
     {
         // Capture events from one device and replay them on another.
@@ -1019,7 +1016,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_UsingSyntheticDevice()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1078,7 +1074,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_AndGetInfoOnRecordedDevices()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1106,7 +1101,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_AndRewindAndPlayAgain()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1143,7 +1137,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanReplayEventsFromEventTrace_AndUseOriginalEventTiming()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1216,7 +1209,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanResizeEventTrace()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1289,7 +1281,6 @@ partial class CoreTests
     // we just reject all of them. When playback is in progress, the buffer must not change. Period.
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_WhenReplayingEvents_ModifyingTraceInvalidatesReplayController()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
