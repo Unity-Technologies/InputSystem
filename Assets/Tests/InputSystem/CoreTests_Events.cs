@@ -821,7 +821,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanClearEventTrace()
     {
         using (var trace = new InputEventTrace())
