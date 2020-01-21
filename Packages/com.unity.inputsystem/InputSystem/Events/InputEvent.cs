@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -246,7 +247,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="GetNextInMemoryChecked"/>
         internal static unsafe InputEvent* GetNextInMemory(InputEvent* currentPtr)
         {
-            Debug.Assert(currentPtr != null);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
             return (InputEvent*)((byte*)currentPtr + alignedSizeInBytes);
         }
@@ -261,7 +262,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <exception cref="InvalidOperationException">There are no more events in the given buffer.</exception>
         internal static unsafe InputEvent* GetNextInMemoryChecked(InputEvent* currentPtr, ref InputEventBuffer buffer)
         {
-            Debug.Assert(currentPtr != null);
+            Debug.Assert(currentPtr != null, "Event pointer must not be NULL");
             Debug.Assert(buffer.Contains(currentPtr), "Given event is not contained in given event buffer");
 
             var alignedSizeInBytes = currentPtr->sizeInBytes.AlignToMultipleOf(kAlignment);
@@ -272,6 +273,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     $"Event '{new InputEventPtr(currentPtr)}' is last event in given buffer with size {buffer.sizeInBytes}");
 
             return nextPtr;
+        }
+
+        public static unsafe bool Equals(InputEvent* first, InputEvent* second)
+        {
+            if (first == second)
+                return true;
+            if (first == null || second == null)
+                return false;
+
+            if (first->m_Event.sizeInBytes != second->m_Event.sizeInBytes)
+                return false;
+
+            return UnsafeUtility.MemCmp(first, second, first->m_Event.sizeInBytes) == 0;
         }
     }
 }

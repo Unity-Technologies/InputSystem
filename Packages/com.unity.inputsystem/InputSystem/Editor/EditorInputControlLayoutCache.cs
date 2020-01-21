@@ -232,6 +232,7 @@ namespace UnityEngine.InputSystem.Editor
             // Load and store all layouts.
             foreach (var layoutName in layoutNames)
             {
+                ////FIXME: does not protect against exceptions
                 var layout = InputControlLayout.cache.FindOrLoadLayout(layoutName, throwIfNotFound: false);
                 if (layout == null)
                     continue;

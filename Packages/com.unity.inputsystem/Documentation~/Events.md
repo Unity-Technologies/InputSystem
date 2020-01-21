@@ -82,7 +82,7 @@ The easiest way to access state contained in a state event is to rely on the Dev
 
 For example, the following code demonstrates how to read a value for [`Gamepad.leftStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStick) from a state event targeted at a [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html).
 
-```
+```CSharp
 InputSystem.onEvent +=
     (eventPtr, device) =>
     {
@@ -113,7 +113,7 @@ Note that queuing an event doesn't immediately consume the event. Event processi
 
 The easiest way to create a state event is directly from the Device.
 
-```
+```CSharp
 // `StateEvent.From` creates a temporary buffer in unmanaged memory that holds
 // a state event large enough for the given device and contains a memory
 // copy of the device's current state.
@@ -127,7 +127,7 @@ using (StateEvent.From(myDevice, out eventPtr))
 
 Alternatively, you can send events for individual Controls.
 
-```
+```CSharp
 // Send event to update leftStick on the gamepad.
 InputSystem.QueueDeltaStateEvent(Gamepad.current.leftStick,
     new Vector2(0.123f, 0.234f);
@@ -137,28 +137,64 @@ Note that delta state events only work for Controls that are both byte-aligned a
 
 ### Capturing Events
 
+>NOTE: You can find a sample using [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) called "Input Recorder" that comes with the Input System package. To install it, open the Package Manager inside Unity and click the "Input Recorder" sample that you can find when you select the Input System package. The sample contains a reusable MonoBehaviour called `InputRecorder` which can be used to capture and replay input from arbitrary devices.
+
 You can use the [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) class to record input events for later processing:
 
 ```CSharp
+var trace = new InputEventTrace(); // Can also give device ID to only
+                                   // trace events for a specific device.
 
-    var trace = new InputEventTrace(); // Can also give device ID to only
-                                       // trace events for a specific device.
+trace.Enable();
 
-    trace.Enable();
+//... run stuff
 
-    //... run stuff
+var current = new InputEventPtr();
+while (trace.GetNextEvent(ref current))
+{
+    Debug.Log("Got some event: " + current);
+}
 
-    var current = new InputEventPtr();
-    while (trace.GetNextEvent(ref current))
-    {
-        Debug.Log("Got some event: " + current);
-    }
+// Also supports IEnumerable.
+foreach (var eventPtr in trace)
+    Debug.Log("Got some event: " + eventPtr);
 
-    // Also supports IEnumerable.
-    foreach (var eventPtr in trace)
-        Debug.Log("Got some event: " + eventPtr);
+// Trace consumes unmanaged resources. Make sure to dispose.
+trace.Dispose();
+```
 
-    // Trace consumes unmanaged resources. Make sure to dispose.
-    trace.Dispose();
+Event traces __MUST__ be disposed of after use or they will leak memory on the unmanaged (C++) memory heap.
 
+You can also write event traces out to files/streams, load them back in, and replay recorded streams.
+
+```CSharp
+// Set up a trace with such that it automatically grows in size as needed.
+var trace = new InputEventTrace(growBuffer: true);
+trace.Enable();
+
+// ... capture some input ...
+
+// Write trace to file.
+trace.WriteTo("mytrace.inputtrace.");
+
+// Load trace from same file.
+var loadedTrace = InputEventTrace.LoadFrom("mytrace.inputtrace");
+```
+
+You can replay captured traces directly from [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) instances using the [`Replay`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html#UnityEngine_InputSystem_LowLevel_InputEventTrace_Replay_) method.
+
+```CSharp
+// The Replay method returns a ReplayController that can be used to
+// configure and control playback.
+var controller = trace.Replay();
+
+// For example, to not replay the events as is but rather create new devices and send
+// the events to them, call WithAllDevicesMappedToNewInstances.
+controller.WithAllDevicessMappedToNewInstances();
+
+// Replay all frames one by one.
+controller.PlayAllFramesOnyByOne();
+
+// Replay events in a way that tries to simulate original event timing.
+controller.PlayAllEventsAccordingToTimestamps();
 ```

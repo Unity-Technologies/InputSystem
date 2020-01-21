@@ -141,6 +141,42 @@ namespace UnityEngine.InputSystem.Utilities
             return $"{numBytes} Bytes";
         }
 
+        public static bool FromNicifiedMemorySize(string text, out long result, long defaultMultiplier = 1)
+        {
+            text = text.Trim();
+
+            var multiplier = defaultMultiplier;
+            if (text.EndsWith("MB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024 * 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("GB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024 * 1024 * 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("KB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("Bytes", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1;
+                text = text.Substring(0, text.Length - "Bytes".Length);
+            }
+
+            if (!long.TryParse(text, out var num))
+            {
+                result = default;
+                return false;
+            }
+
+            result = num * multiplier;
+            return true;
+        }
+
         public static int CountOccurrences(this string str, char ch)
         {
             if (str == null)
