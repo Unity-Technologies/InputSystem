@@ -708,7 +708,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public unsafe void Events_CanTraceEventsOfDevice_AndFilterEventsThroughCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -731,7 +730,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanTraceEventsOfDevice_AndGrowBufferAsNeeded()
     {
         var device = InputSystem.AddDevice<Gamepad>();
@@ -752,7 +750,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanTraceEventsOfDevice_AndRecordFrameBoundaries()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -844,7 +841,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanPersistEventTracesInStream()
     {
         var pen = InputSystem.AddDevice<Pen>();
