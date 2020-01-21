@@ -759,8 +759,10 @@ namespace UnityEngine.InputSystem.LowLevel
             Clear();
 
             if (m_EventBuffer != default)
+            {
                 UnsafeUtility.Free(m_EventBuffer, Allocator.Persistent);
-            m_EventBuffer = default;
+                m_EventBuffer = default;
+            }
         }
 
         private void OnBeforeUpdate()
@@ -835,6 +837,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         return;
 
                     Resize(newBufferSize);
+
+                    newTail = m_EventBufferTail + bytesNeeded;
                 }
 
                 // See if we fit.
