@@ -753,7 +753,6 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    [Ignore("TEMP")]
     public void Events_CanTraceEventsOfDevice_AndRecordFrameBoundaries()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
