@@ -730,55 +730,73 @@ namespace UnityEngine.InputSystem.UI
         void OnAction(InputAction.CallbackContext context)
         {
             var action = context.action;
+            bool mousePointValid = !float.IsNegativeInfinity(mousePoint.x);
             if (action == m_PointAction?.action)
             {
                 var index = GetMouseDeviceIndexForCallbackContext(context);
                 var state = mouseStates[index];
                 state.position = context.ReadValue<Vector2>();
+                mousePoint = state.position;
                 mouseStates[index] = state;
             }
             else if (action == m_ScrollWheelAction?.action)
             {
-                var index = GetMouseDeviceIndexForCallbackContext(context);
-                var state = mouseStates[index];
-                // The old input system reported scroll deltas in lines, we report pixels.
-                // Need to scale as the UI system expects lines.
-                const float kPixelPerLine = 20;
-                state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
-                mouseStates[index] = state;
+                if (mousePointValid)
+                {
+                    var index = GetMouseDeviceIndexForCallbackContext(context);
+                    var state = mouseStates[index];
+                    // The old input system reported scroll deltas in lines, we report pixels.
+                    // Need to scale as the UI system expects lines.
+                    const float kPixelPerLine = 20;
+                    state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
+                    state.position = mousePoint;
+                    mouseStates[index] = state;
+                }
             }
             else if (action == m_LeftClickAction?.action)
             {
-                var index = GetMouseDeviceIndexForCallbackContext(context);
-                var state = mouseStates[index];
+                if (mousePointValid)
+                {
+                    var index = GetMouseDeviceIndexForCallbackContext(context);
+                    var state = mouseStates[index];
 
-                var buttonState = state.leftButton;
-                buttonState.isDown = context.ReadValue<float>() > 0;
-                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                state.leftButton = buttonState;
-                mouseStates[index] = state;
+                    var buttonState = state.leftButton;
+                    buttonState.isDown = context.ReadValue<float>() > 0;
+                    buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
+                    state.leftButton = buttonState;
+                    state.position = mousePoint;
+                    mouseStates[index] = state;
+                }
             }
             else if (action == m_RightClickAction?.action)
             {
-                var index = GetMouseDeviceIndexForCallbackContext(context);
-                var state = mouseStates[index];
+                if (mousePointValid)
+                {
+                    var index = GetMouseDeviceIndexForCallbackContext(context);
+                    var state = mouseStates[index];
 
-                var buttonState = state.rightButton;
-                buttonState.isDown = context.ReadValue<float>() > 0;
-                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                state.rightButton = buttonState;
-                mouseStates[index] = state;
+                    var buttonState = state.rightButton;
+                    buttonState.isDown = context.ReadValue<float>() > 0;
+                    buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
+                    state.rightButton = buttonState;
+                    state.position = mousePoint;
+                    mouseStates[index] = state;
+                }
             }
             else if (action == m_MiddleClickAction?.action)
             {
-                var index = GetMouseDeviceIndexForCallbackContext(context);
-                var state = mouseStates[index];
+                if (mousePointValid)
+                {
+                    var index = GetMouseDeviceIndexForCallbackContext(context);
+                    var state = mouseStates[index];
 
-                var buttonState = state.middleButton;
-                buttonState.isDown = context.ReadValue<float>() > 0;
-                buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
-                state.middleButton = buttonState;
-                mouseStates[index] = state;
+                    var buttonState = state.middleButton;
+                    buttonState.isDown = context.ReadValue<float>() > 0;
+                    buttonState.clickCount = (context.control.device as Mouse)?.clickCount.ReadValue() ?? 0;
+                    state.middleButton = buttonState;
+                    state.position = mousePoint;
+                    mouseStates[index] = state;
+                }
             }
             else if (action == m_MoveAction?.action)
             {
@@ -991,5 +1009,6 @@ namespace UnityEngine.InputSystem.UI
         [NonSerialized] private JoystickModel joystickState;
         [NonSerialized] private List<TrackedDeviceModel> trackedDeviceStates = new List<TrackedDeviceModel>();
         [NonSerialized] private List<MouseModel> mouseStates = new List<MouseModel>();
+        [NonSerialized] private Vector2 mousePoint = Vector2.negativeInfinity;
     }
 }
