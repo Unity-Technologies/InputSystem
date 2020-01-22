@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Switch
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
-    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
+    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
     [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
     {

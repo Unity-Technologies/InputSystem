@@ -324,6 +324,8 @@ namespace UnityEngine.InputSystem
 
         public bool dontAdvanceTimeNextDynamicUpdate { get; set; }
 
+        public bool runInBackground { get; set; } = false;
+
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings

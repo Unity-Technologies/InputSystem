@@ -32,6 +32,10 @@ namespace UnityEngine.InputSystem.Layouts
 
         internal bool? updateBeforeRenderInternal;
 
+        /// <summary>
+        /// Whether the device should receive events in <see cref="LowLevel.InputUpdateType.BeforeRender"/> updates.
+        /// </summary>
+        /// <seealso cref="InputDevice.updateBeforeRender"/>
         public bool updateBeforeRender
         {
             get => updateBeforeRenderInternal.Value;

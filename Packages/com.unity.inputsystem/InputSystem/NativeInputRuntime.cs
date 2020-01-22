@@ -182,6 +182,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
 
+        public bool runInBackground => Application.runInBackground;
+
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
         private Action<InputUpdateType> m_OnBeforeUpdate;

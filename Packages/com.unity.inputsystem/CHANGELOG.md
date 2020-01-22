@@ -75,6 +75,11 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 ### Changed
 
+- The logic for resetting devices on focus loss has changed somewhat:
+  * When focus is lost, all devices are forcibly reset to their default state. As before, a `RequestResetCommand` for each device is also sent to the backend but regardless of whether the device responds or not, the input state for the device will be overwritten to default.
+  * __Noisy controls are exempted from resets__. The assumption here is that noisy controls most often represent sensor readings of some kind (e.g. tracking data) and snapping the values back to their default will usually
+  * If `Application.runInBackground` is `true`, all devices that return `true` from `InputDevice.canRunInBackground` are exempted from resets entirely. This, for example, allows XR devices to continue running regardless of focus change.
+  * This fixes problems such as keyboard keys getting stuck when alt-tabbing between applications (case 1206199).
 - `InputControlExtensions.GetStatePtrFromStateEvent` no longer throws `InvalidOperationException` when the state format for the event does not match that of the device. It simply returns `null` instead (same as when control is found in the event's state).
 - `InputEventTrace` instances are no longer disposed automatically from their finalizer but __MUST__ be disposed of explicitly using `Dispose()`.
   * This is to allow event traces to survive domain reloads. If they are disposed of automatically during finalizers, even if they survive the reload, the next GC will cause traces to be deallocated.
@@ -104,6 +109,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
 - Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.
   * This bug led to input being missed on a device once another device had been removed.
+- `TrackedDevice` layout is no longer incorrectly registered as `Tracked Device`.
 - Event traces in the input debugger are no longer lost on domain reloads.
 
 #### Actions

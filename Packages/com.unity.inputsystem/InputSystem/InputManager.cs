@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
 using Unity.Collections.LowLevel.Unsafe;
@@ -1570,7 +1571,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
-            RegisterControlLayout("Tracked Device", typeof(TrackedDevice));
+            RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
@@ -1986,19 +1987,24 @@ namespace UnityEngine.InputSystem
             // Assume that everything in the device is noise. This way we also catch memory regions
             // that are not actually covered by a control and implicitly mark them as noise (e.g. the
             // report ID in HID input reports).
+            //
+            // NOTE: Noise is indicated by *unset* bits so we don't have to do anything here to start
+            //       with all-noise as we expect noise mask memory to be cleared on allocation.
+
+            var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
 
             ////FIXME: this needs to properly take leaf vs non-leaf controls into account
 
-            // Go through controls and for each one that isn't noisy, enable the control's
+            // Go through controls and for each one that isn't noisy, set the control's
             // bits in the mask.
-            var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
             for (var n = 0; n < controlCount; ++n)
             {
                 var control = controls[n];
                 if (control.noisy)
                     continue;
 
-                var stateBlock = control.m_StateBlock;
+                ref var stateBlock = ref control.m_StateBlock;
+
                 Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
                 Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
                 Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
@@ -2308,16 +2314,109 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void OnFocusChanged(bool focus)
+        private unsafe void OnFocusChanged(bool focus)
         {
-            m_HasFocus = focus;
-            var deviceCount = m_DevicesCount;
-            for (var i = 0; i < deviceCount; ++i)
+            ////REVIEW: should we also flush the event queue on focus loss?
+
+            // On focus loss, reset devices.
+            if (!focus)
             {
-                var device = m_Devices[i];
-                if (!InputSystem.TrySyncDevice(device))
-                    InputSystem.TryResetDevice(device);
+                // When running in background is enabled for the application, we only reset devices that aren't
+                // marked as canRunInBackground.
+                var runInBackground = m_Runtime.runInBackground;
+
+                // Find the size of the largest state block. This determines the amount of temporary memory we
+                // need to allocate.
+                var largestDeviceStateBlock = 0;
+                var deviceCount = m_DevicesCount;
+                for (var i = 0; i < deviceCount; ++i)
+                    largestDeviceStateBlock = Math.Max(largestDeviceStateBlock, (int)m_Devices[i].m_StateBlock.alignedSizeInBytes);
+
+                // Allocate temp memory to hold one state event.
+                ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
+                ////        to tell synthetic input (or input sources in general) apart
+                // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
+                //       like any other input. If we don't do that but rather just call UpdateState() with a null event
+                //       pointer, the change will be considered an internal state change and will get ignored by some
+                //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
+                //       by ignoring any change that is not coming from an input event).
+                using (var tempBuffer =
+                           new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + largestDeviceStateBlock, Allocator.Temp))
+                {
+                    var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
+                    var statePtr = stateEventPtr->state;
+                    var currentTime = m_Runtime.currentTime;
+                    var updateType = defaultUpdateType;
+
+                    for (var i = 0; i < deviceCount; ++i)
+                    {
+                        var device = m_Devices[i];
+
+                        // Skip disabled devices.
+                        if (!device.enabled)
+                            continue;
+
+                        // If the app will keep running in the background and the device is marked as being
+                        // able to run in the background, don't touch it.
+                        if (runInBackground && device.canRunInBackground)
+                            continue;
+
+                        // Set up the state event.
+                        ref var stateBlock = ref device.m_StateBlock;
+                        var deviceStateBlockSize = stateBlock.alignedSizeInBytes;
+                        stateEventPtr->baseEvent.type = StateEvent.Type;
+                        stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
+                        stateEventPtr->baseEvent.time = currentTime;
+                        stateEventPtr->baseEvent.deviceId = device.deviceId;
+                        stateEventPtr->baseEvent.eventId = -1;
+                        stateEventPtr->stateFormat = device.m_StateBlock.format;
+
+                        // Set up new state.
+                        var defaultStatePtr = device.defaultStatePtr;
+                        if (device.noisy)
+                        {
+                            // The device has noisy controls. We don't want to reset those as they mostly
+                            // represent sensor input and resetting sensor samples to default values isn't a good
+                            // a good idea.
+                            //
+                            // Copy everything from defaultStatePtr except for the bits that are flagged in the
+                            // device's noise mask.
+
+                            var currentStatePtr = device.currentStatePtr;
+                            var noiseMaskPtr = device.noiseMaskPtr;
+
+                            // To preserve values from noisy controls, we need to first copy their current values.
+                            UnsafeUtility.MemCpy(statePtr,
+                                (byte*)currentStatePtr + stateBlock.byteOffset,
+                                deviceStateBlockSize);
+
+                            // And then we copy over default values masked by noise bits.
+                            MemoryHelpers.MemCpyMasked(statePtr,
+                                (byte*)defaultStatePtr + stateBlock.byteOffset,
+                                (int)deviceStateBlockSize,
+                                (byte*)noiseMaskPtr + stateBlock.byteOffset);
+                        }
+                        else
+                        {
+                            // No noisy controls in device. Just take the default state and put it in the event
+                            // as is.
+                            UnsafeUtility.MemCpy(statePtr,
+                                (byte*)defaultStatePtr + stateBlock.byteOffset,
+                                deviceStateBlockSize);
+                        }
+
+                        // Perform the reset.
+                        UpdateState(device, updateType, statePtr, 0, deviceStateBlockSize, currentTime,
+                            new InputEventPtr((InputEvent*)stateEventPtr));
+
+                        // Tell the backend to reset.
+                        device.RequestRequest();
+                    }
+                }
             }
+
+            // We set this *after* the block above as defaultUpdateType is influenced by the setting.
+            m_HasFocus = focus;
         }
 
         private bool ShouldRunUpdate(InputUpdateType updateType)
