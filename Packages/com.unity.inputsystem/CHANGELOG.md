@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.4] - 2019-12-12
+## [1.0.0-preview.4] - 2020-12-12
 
 This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
 
 ### Added
 
+- To aid in debugging issues, we've extended the system's event tracing and replay functionality to allow persisting and replaying arbitrary input event streams.
+  * `InputEventTrace` now has APIs to persist the events to disk and to load them back in from previously persisted event streams. The same API can be used to persist in arbitrary C# `Stream` instances, not just in file streams.
+     ```CSharp
+    // Write.
+    myTrace.WriteTo("file.inputtrace");
+
+    // Read.
+    InputEventTrace.LoadFrom("file.inputtrace");
+     ```
+  * `InputEventTrace` now has built-in replay functionality.
+     ```CSharp
+    myTrace.Replay().PlayAllFramesOneByOne();
+     ```
+  * The event trace in device windows of the Input Debugger has been extended with controls to save and load traces.
+- We've added a new `InputRecording` sample which has a reusable `MonoBehaviour` component that can be used to capture and replay device activity.
 - `Keyboard` now has a `FindKeyOnCurrentKeyboardLayout` method to look up key controls by their display names.
 - Keyboards now have synthetic controls that combine left and right variants of modifier keys.
   * This means that you can bind to just "shift" now, for example, instead of having to bind to both "left shift" and "right shift".
@@ -66,6 +81,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * If `Application.runInBackground` is `true`, all devices that return `true` from `InputDevice.canRunInBackground` are exempted from resets entirely. This, for example, allows XR devices to continue running regardless of focus change.
   * This fixes problems such as keyboard keys getting stuck when alt-tabbing between applications (case 1206199).
 - `InputControlExtensions.GetStatePtrFromStateEvent` no longer throws `InvalidOperationException` when the state format for the event does not match that of the device. It simply returns `null` instead (same as when control is found in the event's state).
+- `InputEventTrace` instances are no longer disposed automatically from their finalizer but __MUST__ be disposed of explicitly using `Dispose()`.
+  * This is to allow event traces to survive domain reloads. If they are disposed of automatically during finalizers, even if they survive the reload, the next GC will cause traces to be deallocated.
 
 #### Actions
 
@@ -83,6 +100,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Control schemes can now handle ambiguity.
   * This means that, for example, you can now have one control scheme for generic gamepads and another control scheme specifically for PS4 controllers and the system will reliably pick the PS4 scheme when a PS4 controller is used and fall back to the generic gamepad scheme otherwise.
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
+
 ### Fixed
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
@@ -91,8 +109,12 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
 - Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.
   * This bug led to input being missed on a device once another device had been removed.
-- Noise masks for controls were initialized incorrectly, leading to incorrect input noise detection.
 - `TrackedDevice` layout is no longer incorrectly registered as `Tracked Device`.
+- Event traces in the input debugger are no longer lost on domain reloads.
+
+#### Actions
+
+- Clicking the "Replace with InputSystemUIInputModule" button in the inspector when looking at `StandaloneInputModule`, the resulting operation is now undoable and will properly dirty the scene.
 
 ## [1.0.0-preview.3] - 2019-11-14
 

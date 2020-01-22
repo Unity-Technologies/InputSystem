@@ -7,13 +7,15 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: allow selecting events and saving out only the selected ones
+
 ////TODO: add the ability for the debugger to just generate input on the device according to the controls it finds; good for testing
 
 ////TODO: add commands to event trace (also clickable)
 
 ////TODO: add diff-to-previous-event ability to event window
 
-////FIXME: doesn't survive domain reload correctly
+////FIXME: doesn't survive domain reload correctly (could be, it's even leaking unmanaged memory)
 
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
@@ -37,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
-        internal const int kMaxNumEventsInTrace = 64;
+        internal const int kDefaultEventTraceSizeInMB = 1;
 
         internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
 
@@ -82,12 +84,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 RemoveFromList();
 
-                m_EventTrace?.Dispose();
-                m_EventTrace = null;
-
                 InputSystem.onDeviceChange -= OnDeviceChange;
                 InputState.onChange -= OnDeviceStateChange;
             }
+
+            m_EventTrace?.Dispose();
+            m_EventTrace = null;
         }
 
         public void Dispose()
@@ -177,13 +179,22 @@ namespace UnityEngine.InputSystem.Editor
             GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button(Contents.clearContent, EditorStyles.toolbarButton))
+            // Text field to determine size of event trace.
+            var currentTraceSizeInBytes = m_EventTrace.allocatedSizeInBytes / (1024 * 1024);
+            var oldSizeText = currentTraceSizeInBytes + " MB";
+            var newSizeText = EditorGUILayout.DelayedTextField(oldSizeText, Styles.toolbarTextField, GUILayout.Width(75));
+            if (oldSizeText != newSizeText && StringHelpers.FromNicifiedMemorySize(newSizeText, out var newSizeInBytes, defaultMultiplier: 1024 * 1024))
+                m_EventTrace.Resize(newSizeInBytes);
+
+            // Button to clear event trace.
+            if (GUILayout.Button(Contents.clearContent, Styles.toolbarButton))
             {
                 m_EventTrace.Clear();
                 m_EventTree.Reload();
             }
 
-            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, EditorStyles.toolbarButton);
+            // Button to disable event tracing.
+            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
             if (eventTraceDisabledNow != m_EventTraceDisabled)
             {
                 m_EventTraceDisabled = eventTraceDisabledNow;
@@ -191,6 +202,33 @@ namespace UnityEngine.InputSystem.Editor
                     m_EventTrace.Disable();
                 else
                     m_EventTrace.Enable();
+            }
+
+            // Button to toggle recording of frame markers.
+            m_EventTrace.recordFrameMarkers =
+                GUILayout.Toggle(m_EventTrace.recordFrameMarkers, Contents.recordFramesContent, Styles.toolbarButton);
+
+            // Button to save event trace to file.
+            if (GUILayout.Button(Contents.saveContent, Styles.toolbarButton))
+            {
+                var defaultName = m_Device?.displayName + ".inputtrace";
+                var fileName = EditorUtility.SaveFilePanel("Choose where to save event trace", string.Empty, defaultName, "inputtrace");
+                if (!string.IsNullOrEmpty(fileName))
+                    m_EventTrace.WriteTo(fileName);
+            }
+
+            // Button to load event trace from file.
+            if (GUILayout.Button(Contents.loadContent, Styles.toolbarButton))
+            {
+                var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputtrace");
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    m_EventTrace.Disable();
+                    m_EventTraceDisabled = true;
+                    m_EventTrace.ReadFrom(fileName);
+                    m_EventTree.Reload();
+                    m_EventTrace.Replay().PlayAllFramesOneByOne();
+                }
             }
 
             GUILayout.EndHorizontal();
@@ -224,7 +262,10 @@ namespace UnityEngine.InputSystem.Editor
             // likely bog down the UI if we try to display that many events. Instead, come up
             // with a more reasonable sized based on the state size of the device.
             if (m_EventTrace == null)
-                m_EventTrace = new InputEventTrace((int)device.stateBlock.alignedSizeInBytes * kMaxNumEventsInTrace) {deviceId = device.deviceId};
+                m_EventTrace =
+                    new InputEventTrace(
+                        (kDefaultEventTraceSizeInMB * (1024 * 1024)).AlignToMultipleOf((int)device.stateBlock.alignedSizeInBytes))
+                { deviceId = device.deviceId };
             m_EventTrace.onEvent += _ =>
             {
                 ////FIXME: this is very inefficient
@@ -327,12 +368,27 @@ namespace UnityEngine.InputSystem.Editor
         private static class Styles
         {
             public static string notFoundHelpText = "Device could not be found.";
+
+            public static GUIStyle toolbarTextField;
+            public static GUIStyle toolbarButton;
+
+            static Styles()
+            {
+                toolbarTextField = new GUIStyle(EditorStyles.toolbarTextField);
+                toolbarTextField.alignment = TextAnchor.MiddleRight;
+
+                toolbarButton = new GUIStyle(EditorStyles.toolbarButton);
+                toolbarButton.alignment = TextAnchor.MiddleCenter;
+            }
         }
 
         private static class Contents
         {
             public static GUIContent clearContent = new GUIContent("Clear");
             public static GUIContent pauseContent = new GUIContent("Pause");
+            public static GUIContent saveContent = new GUIContent("Save");
+            public static GUIContent loadContent = new GUIContent("Load");
+            public static GUIContent recordFramesContent = new GUIContent("Record Frames");
             public static GUIContent stateContent = new GUIContent("State");
         }
 
