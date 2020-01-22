@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem
         public double currentTimeForFixedUpdate { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
-        
+
         public bool dontAdvanceTimeNextDynamicUpdate { get; set; }
 
         public bool runInBackground { get; set; } = false;

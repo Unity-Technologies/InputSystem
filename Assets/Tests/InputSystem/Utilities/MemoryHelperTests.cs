@@ -129,12 +129,12 @@ internal class MemoryHelperTests
             // Set bit #2 in array1.
             MemoryHelpers.SetBitsInBuffer(array1Ptr, 0, 2, 1, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.False);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.True);
 
             // Set bit #2 in mask.
             MemoryHelpers.SetBitsInBuffer(maskPtr, 0, 2, 1, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.True);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 2, 1, maskPtr), Is.False);
 
             UnsafeUtility.MemClear(array1Ptr, 8);
             UnsafeUtility.MemClear(array2Ptr, 8);
@@ -143,7 +143,7 @@ internal class MemoryHelperTests
             // Set 24 bits in array1 starting at bit #5.
             MemoryHelpers.SetBitsInBuffer(array1Ptr, 0, 5, 24, true);
 
-            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.False);
+            Assert.That(MemoryHelpers.MemCmpBitRegion(array1Ptr, array2Ptr, 5, 24, maskPtr), Is.True);
 
             // Set 20 bits in mask starting at bit #5.
             MemoryHelpers.SetBitsInBuffer(maskPtr, 0, 5, 20, true);
@@ -228,14 +228,14 @@ internal class MemoryHelperTests
             maskPtr[4] = 0xC0;
             maskPtr[5] = 0x11;
 
-            MemoryHelpers.MemCpyExceptMasked(toPtr, fromPtr, 6, maskPtr);
+            MemoryHelpers.MemCpyMasked(toPtr, fromPtr, 6, maskPtr);
 
-            Assert.That(toPtr[0], Is.EqualTo(0xF0));
-            Assert.That(toPtr[1], Is.EqualTo(0xF1));
-            Assert.That(toPtr[2], Is.EqualTo(0x1F));
-            Assert.That(toPtr[3], Is.EqualTo(0x10));
-            Assert.That(toPtr[4], Is.EqualTo(0x48));
-            Assert.That(toPtr[5], Is.EqualTo(0xC0));
+            Assert.That(toPtr[0], Is.EqualTo(0x0F));
+            Assert.That(toPtr[1], Is.EqualTo(0x00));
+            Assert.That(toPtr[2], Is.EqualTo(0x02));
+            Assert.That(toPtr[3], Is.EqualTo(0x01));
+            Assert.That(toPtr[4], Is.EqualTo(0x80));
+            Assert.That(toPtr[5], Is.EqualTo(0x01));
         }
     }
 }

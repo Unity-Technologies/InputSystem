@@ -1987,13 +1987,15 @@ namespace UnityEngine.InputSystem
             // Assume that everything in the device is noise. This way we also catch memory regions
             // that are not actually covered by a control and implicitly mark them as noise (e.g. the
             // report ID in HID input reports).
+            //
+            // NOTE: Noise is indicated by *unset* bits so we don't have to do anything here to start
+            //       with all-noise as we expect noise mask memory to be cleared on allocation.
+
             var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
-            MemoryHelpers.MemSet((byte*)noiseMaskBuffer + device.m_StateBlock.byteOffset,
-                (int)device.m_StateBlock.alignedSizeInBytes, 0xFF);
 
             ////FIXME: this needs to properly take leaf vs non-leaf controls into account
 
-            // Go through controls and for each one that isn't noisy, clear the control's
+            // Go through controls and for each one that isn't noisy, set the control's
             // bits in the mask.
             for (var n = 0; n < controlCount; ++n)
             {
@@ -2011,7 +2013,7 @@ namespace UnityEngine.InputSystem
                     device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
                 MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
-                    (int)stateBlock.sizeInBits, false);
+                    (int)stateBlock.sizeInBits, true);
             }
         }
 
@@ -2389,7 +2391,7 @@ namespace UnityEngine.InputSystem
                                 deviceStateBlockSize);
 
                             // And then we copy over default values masked by noise bits.
-                            MemoryHelpers.MemCpyExceptMasked(statePtr,
+                            MemoryHelpers.MemCpyMasked(statePtr,
                                 (byte*)defaultStatePtr + stateBlock.byteOffset,
                                 (int)deviceStateBlockSize,
                                 (byte*)noiseMaskPtr + stateBlock.byteOffset);

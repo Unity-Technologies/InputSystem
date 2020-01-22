@@ -793,7 +793,7 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_NoisyControlsAreToggledOnInNoiseMask()
+    public unsafe void Devices_NoisyControlsAreToggledOffInNoiseMask()
     {
         InputSystem.AddDevice<Mouse>(); // Noise.
 
@@ -814,12 +814,12 @@ partial class CoreTests
 
         const int kNumButtons = 14; // Buttons without left and right trigger which aren't stored in the buttons field.
 
-        // All the gamepads buttons should have the flag off as they aren't noise. However, the leftover
+        // All the gamepads buttons should have the flag on as they aren't noise. However, the leftover
         // bits in the "buttons" field should be marked as noise as they are not actively used by any control.
-        Assert.That(*(uint*)(noiseMaskPtr + device.stateBlock.byteOffset), Is.EqualTo(0xFFFFFFFF << kNumButtons));
+        Assert.That(*(uint*)(noiseMaskPtr + device.stateBlock.byteOffset), Is.EqualTo((1 << kNumButtons) - 1));
 
-        // The noisy control we added should be flagged as noise.
-        Assert.That(*(uint*)(noiseMaskPtr + device["noisyControl"].stateBlock.byteOffset), Is.EqualTo(0xFFFFFFFF));
+        // The noisy control we added should be flagged as noise by having their bits off.
+        Assert.That(*(uint*)(noiseMaskPtr + device["noisyControl"].stateBlock.byteOffset), Is.Zero);
     }
 
     [Test]

@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <param name="ptr2">Pointer to start of second memory region.</param>
         /// <param name="bitOffset">Offset in bits from each of the pointers to the start of the memory region to compare.</param>
         /// <param name="bitCount">Number of bits to compare in the memory region.</param>
-        /// <param name="mask">If not null, ignore any bits set in the mask. This allows comparing two memory regions while
+        /// <param name="mask">If not null, only compare bits set in the mask. This allows comparing two memory regions while
         /// ignoring specific bits.</param>
         /// <returns>True if the two memory regions are identical, false otherwise.</returns>
         public static bool MemCmpBitRegion(void* ptr1, void* ptr2, uint bitOffset, uint bitCount, void* mask = null)
@@ -154,7 +154,7 @@ namespace UnityEngine.InputSystem.Utilities
 
                 if (maskPtr != null)
                 {
-                    byteMask &= ~*maskPtr;
+                    byteMask &= *maskPtr;
                     ++maskPtr;
                 }
 
@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem.Utilities
                     {
                         var byte1 = bytePtr1[i];
                         var byte2 = bytePtr2[i];
-                        var byteMask = ~maskPtr[i];
+                        var byteMask = maskPtr[i];
 
                         if ((byte1 & byteMask) != (byte2 & byteMask))
                             return false;
@@ -213,7 +213,7 @@ namespace UnityEngine.InputSystem.Utilities
                 if (maskPtr != null)
                 {
                     maskPtr += byteCount;
-                    byteMask &= ~*maskPtr;
+                    byteMask &= *maskPtr;
                 }
 
                 var byte1 = *bytePtr1 & byteMask;
@@ -263,14 +263,14 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         /// <summary>
-        /// Copy from <paramref name="source"/> to <paramref name="destination"/> except for the bits that are
-        /// set in <paramref name="mask"/>.
+        /// Copy from <paramref name="source"/> to <paramref name="destination"/> all the bits that
+        /// ARE set in <paramref name="mask"/>.
         /// </summary>
         /// <param name="destination">Memory to copy to.</param>
         /// <param name="source">Memory to copy from.</param>
         /// <param name="numBytes">Number of bytes to copy.</param>
-        /// <param name="mask">Bitmask that determines which bits to copy. Bits that are set will NOT be copied.</param>
-        public static void MemCpyExceptMasked(void* destination, void* source, int numBytes, void* mask)
+        /// <param name="mask">Bitmask that determines which bits to copy. Bits that are set WILL be copied.</param>
+        public static void MemCpyMasked(void* destination, void* source, int numBytes, void* mask)
         {
             var from = (byte*)source;
             var to = (byte*)destination;
@@ -283,8 +283,8 @@ namespace UnityEngine.InputSystem.Utilities
                 #if UNITY_64
                 while (numBytes >= 8)
                 {
-                    *(ulong*)(to + pos) &= *(ulong*)(bits + pos); // Preserve masked bits.
-                    *(ulong*)(to + pos) |= *(ulong*)(from + pos) & ~*(ulong*)(bits + pos); // Copy unmasked bits.
+                    *(ulong*)(to + pos) &= ~*(ulong*)(bits + pos); // Preserve unmasked bits.
+                    *(ulong*)(to + pos) |= *(ulong*)(from + pos) & *(ulong*)(bits + pos); // Copy masked bits.
                     numBytes -= 8;
                     pos += 8;
                 }
@@ -293,8 +293,8 @@ namespace UnityEngine.InputSystem.Utilities
                 // Copy 32bit blocks.
                 while (numBytes >= 4)
                 {
-                    *(uint*)(to + pos) &= *(uint*)(bits + pos); // Preserve masked bits.
-                    *(uint*)(to + pos) |= *(uint*)(from + pos) & ~*(uint*)(bits + pos); // Copy unmasked bits.
+                    *(uint*)(to + pos) &= ~*(uint*)(bits + pos); // Preserve unmasked bits.
+                    *(uint*)(to + pos) |= *(uint*)(from + pos) & *(uint*)(bits + pos); // Copy masked bits.
                     numBytes -= 4;
                     pos += 4;
                 }
@@ -304,8 +304,8 @@ namespace UnityEngine.InputSystem.Utilities
                 {
                     unchecked
                     {
-                        to[pos] &= bits[pos]; // Preserve masked bits.
-                        to[pos] |= (byte)(from[pos] & (byte)~bits[pos]); // Copy unmasked bits.
+                        to[pos] &= (byte)~bits[pos]; // Preserve unmasked bits.
+                        to[pos] |= (byte)(from[pos] & bits[pos]); // Copy masked bits.
                     }
                     numBytes -= 1;
                     pos += 1;

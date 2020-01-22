@@ -793,8 +793,10 @@ namespace UnityEngine.InputSystem
         /// Like with all state blocks, the specific memory block for the control is found at the memory
         /// region specified by <see cref="stateBlock"/>.
         ///
-        /// The noise mask indicates which bits in a state belong to noisy data. Every bit that is set means that
-        /// the corresponding bit of a control's state is noise.
+        /// The noise mask can be overlaid as a bit mask over the state for the control. When doing so, all state
+        /// that is noise will be masked out whereas all state that isn't will come through unmodified. In other words,
+        /// any bit that is set in the noise mask indicates that the corresponding bit in the control's state memory
+        /// is noise.
         /// </remarks>
         /// <seealso cref="noisy"/>
         protected internal unsafe void* noiseMaskPtr => InputStateBuffers.s_NoiseMaskBuffer;
