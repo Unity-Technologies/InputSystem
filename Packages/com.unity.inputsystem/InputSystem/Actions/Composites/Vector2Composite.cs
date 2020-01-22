@@ -67,17 +67,37 @@ namespace UnityEngine.InputSystem.Composites
         /// vectors will have a magnitude > 1 (i.e. will be <c>new Vector2(1,1)</c>, for example,
         /// instead of <c>new Vector2(1,1).normalized</c>).
         /// </summary>
+        /// <value>Whether the normalize the resulting vector.</value>
         public bool normalize = true;
+
+        /// <summary>
+        /// If true (default), the up/down/left/right inputs will be treated as analog meaning that
+        /// their actual values will be used. If this is false, the values will be read as buttons
+        /// meaning that instead if an input value is below the button press threshold, the value
+        /// that is used is 0 and otherwise the value that is used is 1.
+        /// </summary>
+        /// <value>Whether to treat part bindings as analog controls.</value>
+        public bool analog = true;
 
         /// <inheritdoc />
         public override Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
-            var upIsPressed = context.ReadValueAsButton(up);
-            var downIsPressed = context.ReadValueAsButton(down);
-            var leftIsPressed = context.ReadValueAsButton(left);
-            var rightIsPressed = context.ReadValueAsButton(right);
+            if (!analog)
+            {
+                var upIsPressed = context.ReadValueAsButton(up);
+                var downIsPressed = context.ReadValueAsButton(down);
+                var leftIsPressed = context.ReadValueAsButton(left);
+                var rightIsPressed = context.ReadValueAsButton(right);
 
-            return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
+                return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
+            }
+
+            var upValue = context.ReadValue<float>(up);
+            var downValue = context.ReadValue<float>(down);
+            var leftValue = context.ReadValue<float>(left);
+            var rightValue = context.ReadValue<float>(right);
+
+            return DpadControl.MakeDpadVector(upValue, downValue, leftValue, rightValue, normalize);
         }
 
         /// <inheritdoc />

@@ -102,6 +102,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Control schemes can now handle ambiguity.
   * This means that, for example, you can now have one control scheme for generic gamepads and another control scheme specifically for PS4 controllers and the system will reliably pick the PS4 scheme when a PS4 controller is used and fall back to the generic gamepad scheme otherwise.
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
+- `Vector2Composite` will now treat controls bound in the composite as analog by default, i.e. the actual values of the controls will be reflected in the resulting vector.
+  * A new parameter called `analog` has been added that if set to `false` reverts to the previous behavior of treating controls as buttons.
 
 ### Fixed
 
