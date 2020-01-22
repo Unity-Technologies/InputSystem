@@ -1,6 +1,10 @@
+using System.ComponentModel;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
+
+////REVIEW: this is confusing when considered next to HoldInteraction
 
 namespace UnityEngine.InputSystem.Interactions
 {
@@ -9,7 +13,8 @@ namespace UnityEngine.InputSystem.Interactions
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayName("Long Tap")]
     public class SlowTapInteraction : IInputInteraction
     {
         /// <summary>

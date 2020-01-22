@@ -438,6 +438,7 @@ namespace UnityEngine.InputSystem.Editor
                 .WithControlsExcluding("<Pointer>/position")
                 .WithControlsExcluding("<Pointer>/delta")
                 .WithControlsExcluding("<Pointer>/press")
+                .WithControlsExcluding("<Pointer>/clickCount")
                 .WithControlsExcluding("<Pointer>/{PrimaryAction}")
                 .WithControlsExcluding("<Mouse>/scroll")
                 .OnPotentialMatch(

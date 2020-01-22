@@ -5,7 +5,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
@@ -996,8 +995,8 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.dpad.up.displayName, Is.EqualTo("D-Pad Up"));
-        Assert.That(gamepad.dpad.up.shortDisplayName, Is.EqualTo("D-Pad \u2191"));
+        Assert.That(gamepad.leftStick.up.displayName, Is.EqualTo("Left Stick Up"));
+        Assert.That(gamepad.leftStick.up.shortDisplayName, Is.EqualTo("LS Up"));
     }
 
     [Test]
@@ -1007,19 +1006,40 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Left Stick [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Left Stick/X [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XRController]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XR Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo(GamepadState.ButtonSouthDisplayName + " [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
 
+        // OmitDevice.
         Assert.That(
             InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth",
-                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("Button South"));
+                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo(GamepadState.ButtonSouthDisplayName));
         Assert.That(
             InputControlPath.ToHumanReadableString("*/{PrimaryAction}",
                 InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("PrimaryAction"));
+
+        // UseShortName.
+        Assert.That(
+            InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth", InputControlPath.HumanReadableStringOptions.UseShortNames),
+            Is.EqualTo(GamepadState.ButtonSouthShortDisplayName + " [Gamepad]"));
+        Assert.That(
+            InputControlPath.ToHumanReadableString("<Mouse>/leftButton", InputControlPath.HumanReadableStringOptions.UseShortNames),
+            Is.EqualTo("LMB [Mouse]"));
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanTurnControlPathIntoHumanReadableText_UsingDisplayNamesFromActualDevice()
+    {
+        InputSystem.AddDevice<Keyboard>();
+
+        // Pretend 'a' key is mapped to 'q' in current keyboard layout.
+        SetKeyInfo(Key.A, "q");
+
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("q [Keyboard]"));
     }
 
     [Preserve]

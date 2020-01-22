@@ -12,6 +12,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: add way to load and replay event traces
+
 ////TODO: refresh metrics on demand
 
 ////TODO: when an action is triggered and when a device changes state, make them bold in the list for a brief moment
@@ -90,7 +92,23 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnActionChange(object actionOrMap, InputActionChange change)
         {
-            Refresh();
+            switch (change)
+            {
+                // When an action is triggered, we only need a repaint.
+                case InputActionChange.ActionStarted:
+                case InputActionChange.ActionPerformed:
+                case InputActionChange.ActionCanceled:
+                    Repaint();
+                    break;
+
+                case InputActionChange.ActionEnabled:
+                case InputActionChange.ActionDisabled:
+                case InputActionChange.ActionMapDisabled:
+                case InputActionChange.ActionMapEnabled:
+                case InputActionChange.BoundControlsChanged:
+                    Refresh();
+                    break;
+            }
         }
 
         private void OnSettingsChange()

@@ -465,9 +465,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Check if the given state corresponds to the default state of the control.
         /// </summary>
+        /// <param name="control">Control to check the state for in <paramref name="statePtr"/>.</param>
         /// <param name="statePtr">Pointer to a state buffer containing the <see cref="InputControl.stateBlock"/> for <paramref name="control"/>.</param>
-        /// <param name="maskPtr">If not null, only bits set to true in the buffer will be taken into account. This can be used
-        /// to mask out noise.</param>
+        /// <param name="maskPtr">If not null, only bits set to <c>false</c> (!) in the buffer will be taken into account. This can be used
+        /// to mask out noise, i.e. every bit that is set in the mask is considered to represent noise.</param>
         /// <returns>True if the control/device is in its default state.</returns>
         /// <remarks>
         /// Note that default does not equate all zeroes. Stick axes, for example, that are stored as unsigned byte
@@ -577,10 +578,16 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return true if the actual value
+        /// Return true if the current value of <paramref name="control"/> is different to the one found
+        /// in <paramref name="statePtr"/>.
         /// </summary>
-        /// <param name="statePtr"></param>
-        /// <returns></returns>
+        /// <param name="control">Control whose state to compare to what is stored in <paramref name="statePtr"/>.</param>
+        /// <param name="statePtr">A block of input state memory containing the <see cref="InputControl.stateBlock"/>
+        /// of <paramref name="control."/></param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> or <paramref name="statePtr"/>
+        /// is <c>null</c>.</exception>
+        /// <returns>True if the value of <paramref name="control"/> stored in <paramref name="statePtr"/> is different
+        /// compared to what <see cref="InputControl{T}.ReadValue"/> of the control returns.</returns>
         public static unsafe bool HasValueChangeInState(this InputControl control, void* statePtr)
         {
             if (control == null)

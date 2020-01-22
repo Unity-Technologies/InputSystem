@@ -1238,6 +1238,10 @@ namespace UnityEngine.InputSystem.Layouts
             // Retain list of overrides.
             m_AppliedOverrides.Merge(other.m_AppliedOverrides);
 
+            // Inherit display name.
+            if (string.IsNullOrEmpty(m_DisplayName))
+                m_DisplayName = other.m_DisplayName;
+
             // Merge controls.
             if (m_Controls == null)
             {
@@ -1907,12 +1911,54 @@ namespace UnityEngine.InputSystem.Layouts
                 return layout;
             }
 
+            public InternedString GetBaseLayoutName(InternedString layoutName)
+            {
+                if (baseLayoutTable.TryGetValue(layoutName, out var baseLayoutName))
+                    return baseLayoutName;
+                return default;
+            }
+
             // Return name of layout at root of "extend" chain of given layout.
             public InternedString GetRootLayoutName(InternedString layoutName)
             {
                 while (baseLayoutTable.TryGetValue(layoutName, out var baseLayout))
                     layoutName = baseLayout;
                 return layoutName;
+            }
+
+            public bool ComputeDistanceInInheritanceHierarchy(InternedString firstLayout, InternedString secondLayout, out int distance)
+            {
+                distance = 0;
+
+                // First try, assume secondLayout is based on firstLayout.
+                var secondDistanceToFirst = 0;
+                var current = secondLayout;
+                while (!current.IsEmpty() && current != firstLayout)
+                {
+                    current = GetBaseLayoutName(current);
+                    ++secondDistanceToFirst;
+                }
+                if (current == firstLayout)
+                {
+                    distance = secondDistanceToFirst;
+                    return true;
+                }
+
+                // Second try, assume firstLayout is based on secondLayout.
+                var firstDistanceToSecond = 0;
+                current = firstLayout;
+                while (!current.IsEmpty() && current != secondLayout)
+                {
+                    current = GetBaseLayoutName(current);
+                    ++firstDistanceToSecond;
+                }
+                if (current == secondLayout)
+                {
+                    distance = firstDistanceToSecond;
+                    return true;
+                }
+
+                return false;
             }
 
             public InternedString FindLayoutThatIntroducesControl(InputControl control, Cache cache)
@@ -1982,6 +2028,11 @@ namespace UnityEngine.InputSystem.Layouts
                     return false;
 
                 return valueType.IsAssignableFrom(valueTypOfControl);
+            }
+
+            public bool IsGeneratedLayout(InternedString layout)
+            {
+                return layoutBuilders.ContainsKey(layout);
             }
 
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)

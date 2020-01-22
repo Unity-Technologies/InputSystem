@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// The base type for all XR handed controllers.
     /// </summary>
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true)]
+    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true, displayName = "XR Controller")]
     [Preserve]
     public class XRController : TrackedDevice
     {

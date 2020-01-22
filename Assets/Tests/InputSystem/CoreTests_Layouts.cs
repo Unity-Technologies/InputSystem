@@ -1479,7 +1479,7 @@ partial class CoreTests
         Assert.That(device.leftStick.displayName, Is.EqualTo("Primary Stick"));
         Assert.That(device.leftStick.x.displayName, Is.EqualTo("Primary Stick Horizontal"));
         Assert.That(device.leftStick.shortDisplayName, Is.EqualTo("PS"));
-        Assert.That(device.leftStick.x.shortDisplayName, Is.Null);
+        Assert.That(device.leftStick.x.shortDisplayName, Is.EqualTo("PS Horizontal"));
     }
 
     [Preserve]
@@ -1891,6 +1891,25 @@ partial class CoreTests
         Assert.That(InputControlPath.TryGetDeviceLayout("/*/*Stick"), Is.EqualTo("*"));
         Assert.That(InputControlPath.TryGetDeviceLayout("/*"), Is.EqualTo("*"));
         Assert.That(InputControlPath.TryGetDeviceLayout("/gamepad/leftStick"), Is.Null);
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanGetNameOfBaseLayout()
+    {
+        Assert.That(InputSystem.GetNameOfBaseLayout("DualShockGamepad"), Is.EqualTo("Gamepad"));
+        Assert.That(InputSystem.GetNameOfBaseLayout("Mouse"), Is.EqualTo("Pointer"));
+        Assert.That(InputSystem.GetNameOfBaseLayout("Pointer"), Is.EqualTo(null));
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
+    {
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShock4GamepadHID", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Pointer"), Is.False);
     }
 
     [Test]

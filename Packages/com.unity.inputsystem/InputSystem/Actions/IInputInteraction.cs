@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel;
+using System.Reflection;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
@@ -285,6 +287,22 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(interactionType));
 
             return TypeHelpers.GetGenericTypeArgumentFromHierarchy(interactionType, typeof(IInputInteraction<>), 0);
+        }
+
+        public static string GetDisplayName(string interaction)
+        {
+            if (string.IsNullOrEmpty(interaction))
+                throw new ArgumentNullException(nameof(interaction));
+
+            var interactionType = s_Interactions.LookupTypeRegistration(interaction);
+            if (interactionType == null)
+                return interaction;
+
+            var displayNameAttribute = interactionType.GetCustomAttribute<DisplayNameAttribute>();
+            if (displayNameAttribute == null)
+                return interaction;
+
+            return displayNameAttribute.DisplayName;
         }
     }
 }

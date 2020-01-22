@@ -85,7 +85,7 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine($"public class @{options.className} : IInputActionCollection, IDisposable");
             writer.BeginBlock();
 
-            writer.WriteLine($"private InputActionAsset asset;");
+            writer.WriteLine($"public InputActionAsset asset {{ get; }}");
 
             // Default constructor.
             writer.WriteLine($"public @{options.className}()");

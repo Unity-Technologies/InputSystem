@@ -25,16 +25,16 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [InputControl(name = "dpad/right", format = "BIT", layout = "DiscreteButton", parameters = "minValue=1,maxValue=3", bit = 24, sizeInBits = 4)]
         [InputControl(name = "dpad/down", format = "BIT", layout = "DiscreteButton", parameters = "minValue=3,maxValue=5", bit = 24, sizeInBits = 4)]
         [InputControl(name = "dpad/left", format = "BIT", layout = "DiscreteButton", parameters = "minValue=5, maxValue=7", bit = 24, sizeInBits = 4)]
-        [InputControl(name = "buttonNorth", displayName = "X", bit = (uint)Button.North)]
-        [InputControl(name = "buttonSouth", displayName = "B", bit = (uint)Button.South, usage = "Back")]
-        [InputControl(name = "buttonWest", displayName = "Y", bit = (uint)Button.West, usage = "SecondaryAction")]
-        [InputControl(name = "buttonEast", displayName = "A", bit = (uint)Button.East, usage = "PrimaryAction")]
+        [InputControl(name = "buttonNorth", displayName = "X", shortDisplayName = "X", bit = (uint)Button.North)]
+        [InputControl(name = "buttonSouth", displayName = "B", shortDisplayName = "B", bit = (uint)Button.South, usage = "Back")]
+        [InputControl(name = "buttonWest", displayName = "Y", shortDisplayName = "Y", bit = (uint)Button.West, usage = "SecondaryAction")]
+        [InputControl(name = "buttonEast", displayName = "A", shortDisplayName = "A", bit = (uint)Button.East, usage = "PrimaryAction")]
         [InputControl(name = "leftStickPress", displayName = "Left Stick", bit = (uint)Button.StickL)]
         [InputControl(name = "rightStickPress", displayName = "Right Stick", bit = (uint)Button.StickR)]
-        [InputControl(name = "leftShoulder", displayName = "L", bit = (uint)Button.L)]
-        [InputControl(name = "rightShoulder", displayName = "R", bit = (uint)Button.R)]
-        [InputControl(name = "leftTrigger", displayName = "ZL", format = "BIT", bit = (uint)Button.ZL)]
-        [InputControl(name = "rightTrigger", displayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
+        [InputControl(name = "leftShoulder", displayName = "L", shortDisplayName = "L", bit = (uint)Button.L)]
+        [InputControl(name = "rightShoulder", displayName = "R", shortDisplayName = "R", bit = (uint)Button.R)]
+        [InputControl(name = "leftTrigger", displayName = "ZL", shortDisplayName = "ZL", format = "BIT", bit = (uint)Button.ZL)]
+        [InputControl(name = "rightTrigger", displayName = "ZR", shortDisplayName = "ZR", format = "BIT", bit = (uint)Button.ZR)]
         [InputControl(name = "start", displayName = "Plus", bit = (uint)Button.Plus, usage = "Menu")]
         [InputControl(name = "select", displayName = "Minus", bit = (uint)Button.Minus)]
         [FieldOffset(0)]
@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Switch
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
-    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Controller (on HID)")]
+    [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
     [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
     {

@@ -644,10 +644,7 @@ partial class CoreTests
             return this;
         }
 
-        public FourCC format
-        {
-            get { return new FourCC('T', 'E', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('T', 'E', 'S', 'T');
     }
 
     [InputControlLayout(stateType = typeof(StateWithMultiBitControl))]
@@ -741,6 +738,24 @@ partial class CoreTests
 
         Assert.That(monitorFired);
         Assert.That(receivedMonitorIndex.Value, Is.EqualTo(kRightStick));
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_StateChangeMonitorsStayIntactWhenOtherDevicesAreRemoved()
+    {
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var positionMonitorFired = false;
+        InputState.AddChangeMonitor(mouse.position, (control, d, arg3, arg4) => positionMonitorFired = true);
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Set(mouse.position, new Vector2(123, 234));
+
+        Assert.That(positionMonitorFired);
     }
 
     // For certain actions, we want to be able to tell whether a specific input arrives in time.

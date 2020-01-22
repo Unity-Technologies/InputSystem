@@ -4,7 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Unity.Collections;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+
+////TODO: introduce the concept of a "variation"
+////      - a variation is just a variant of a control scheme, not a full control scheme by itself
+////      - an individual variation can be toggled on and off independently
+////      - while a control is is active, all its variations that are toggled on are also active
+////      - assignment to variations works the same as assignment to control schemes
+////  use case: left/right stick toggles, left/right bumper toggles, etc
+
+////TODO: introduce concept of precedence where one control scheme will be preferred over another that is also a match
+////      (might be its enough to represent this simply through ordering by giving the user control over the ordering through the UI)
 
 ////REVIEW: allow associating control schemes with platforms, too?
 
@@ -180,7 +191,24 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes)
+        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes, InputDevice mustIncludeDevice = null)
+            where TDevices : IReadOnlyList<InputDevice>
+            where TSchemes : IEnumerable<InputControlScheme>
+        {
+            if (devices == null)
+                throw new ArgumentNullException(nameof(devices));
+            if (schemes == null)
+                throw new ArgumentNullException(nameof(schemes));
+
+            if (!FindControlSchemeForDevices(devices, schemes, out var controlScheme, out var matchResult, mustIncludeDevice))
+                return null;
+
+            matchResult.Dispose();
+            return controlScheme;
+        }
+
+        public static bool FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes,
+            out InputControlScheme controlScheme, out MatchResult matchResult, InputDevice mustIncludeDevice = null)
             where TDevices : IReadOnlyList<InputDevice>
             where TSchemes : IEnumerable<InputControlScheme>
         {
@@ -194,33 +222,40 @@ namespace UnityEngine.InputSystem
 
             foreach (var scheme in schemes)
             {
-                var matchResult = scheme.PickDevicesFrom(devices);
+                var result = scheme.PickDevicesFrom(devices);
 
                 // Ignore if scheme doesn't fit devices.
-                if (!matchResult.isSuccessfulMatch)
+                if (!result.isSuccessfulMatch)
                 {
-                    matchResult.Dispose();
+                    result.Dispose();
                     continue;
                 }
 
-                // Ignore if it does fit but we already have a fit covering more of the devices we have.
-                if (bestResult != null && bestResult.Value.devices.Count > matchResult.devices.Count)
+                // Ignore if we have a device we specifically want to be part of the result and
+                // the current match doesn't have it.
+                if (mustIncludeDevice != null && !result.devices.Contains(mustIncludeDevice))
                 {
-                    matchResult.Dispose();
+                    result.Dispose();
                     continue;
                 }
 
-                bestResult = matchResult;
+                // Ignore if it does fit but we already have a better fit.
+                if (bestResult != null && bestResult.Value.score >= result.score)
+                {
+                    result.Dispose();
+                    continue;
+                }
+
+                bestResult?.Dispose();
+
+                bestResult = result;
                 bestScheme = scheme;
             }
 
-            if (bestResult != null)
-            {
-                bestResult.Value.Dispose();
-                return bestScheme;
-            }
+            matchResult = bestResult ?? default;
+            controlScheme = bestScheme ?? default;
 
-            return null;
+            return bestResult.HasValue;
         }
 
         /// <summary>
@@ -242,12 +277,7 @@ namespace UnityEngine.InputSystem
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
 
-            ////TODO: this should favor schemes that *require* the device over ones that have it optional
-            foreach (var scheme in schemes)
-                if (scheme.SupportsDevice(device))
-                    return scheme;
-
-            return null;
+            return FindControlSchemeForDevices(new OneOrMore<InputDevice, ReadOnlyArray<InputDevice>>(device), schemes);
         }
 
         /// <summary>
@@ -299,6 +329,9 @@ namespace UnityEngine.InputSystem
                 return new MatchResult
                 {
                     m_Result = MatchResult.Result.AllSatisfied,
+                    // Prevent zero score on successful match but make less than one which would
+                    // result from having a single requirement.
+                    m_Score = 0.5f,
                 };
             }
 
@@ -308,6 +341,7 @@ namespace UnityEngine.InputSystem
             var haveAllRequired = true;
             var haveAllOptional = true;
             var requirementCount = m_DeviceRequirements.Length;
+            var score = 0f;
             var controls = new InputControlList<InputControl>(Allocator.Persistent, requirementCount);
             try
             {
@@ -332,6 +366,7 @@ namespace UnityEngine.InputSystem
                     var path = m_DeviceRequirements[i].controlPath;
                     if (string.IsNullOrEmpty(path))
                     {
+                        score += 1;
                         controls.Add(null);
                         continue;
                     }
@@ -347,12 +382,36 @@ namespace UnityEngine.InputSystem
                         if (matchedControl == null)
                             continue; // No.
 
-                        // We have a match but if we've already match the same control through another requirement,
+                        // We have a match but if we've already matched the same control through another requirement,
                         // we can't use the match.
                         if (controls.Contains(matchedControl))
                             continue;
 
                         match = matchedControl;
+
+                        // Compute score for match.
+                        var deviceLayoutOfControlPath = new InternedString(InputControlPath.TryGetDeviceLayout(path));
+                        if (deviceLayoutOfControlPath.IsEmpty())
+                        {
+                            // Generic match adds 1 to score.
+                            score += 1;
+                        }
+                        else
+                        {
+                            var deviceLayoutOfControl = matchedControl.device.m_Layout;
+                            if (InputControlLayout.s_Layouts.ComputeDistanceInInheritanceHierarchy(deviceLayoutOfControlPath,
+                                deviceLayoutOfControl, out var distance))
+                            {
+                                score += 1 + 1f / (Math.Abs(distance) + 1);
+                            }
+                            else
+                            {
+                                // Shouldn't really get here as for the control to be a match for the path, the device layouts
+                                // would be expected to be related to each other. But just add 1 for a generic match and go on.
+                                score += 1;
+                            }
+                        }
+
                         break;
                     }
 
@@ -444,6 +503,7 @@ namespace UnityEngine.InputSystem
                     : MatchResult.Result.AllSatisfied,
                 m_Controls = controls,
                 m_Requirements = m_DeviceRequirements,
+                m_Score = score,
             };
         }
 
@@ -464,7 +524,7 @@ namespace UnityEngine.InputSystem
             {
                 var device = m_DeviceRequirements[i];
                 var haveMatch = false;
-                for (var n = 0; i < deviceCount; ++n)
+                for (var n = 0; n < deviceCount; ++n)
                 {
                     if (other.m_DeviceRequirements[n] == device)
                     {
@@ -550,6 +610,36 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControlScheme.PickDevicesFrom{TDevices}"/>
         public struct MatchResult : IEnumerable<MatchResult.Match>, IDisposable
         {
+            /// <summary>
+            /// Overall, relative measure for how well the control scheme matches.
+            /// </summary>
+            /// <value>Scoring value for the control scheme match.</value>
+            /// <remarks>
+            /// Two control schemes may, for example, both support gamepads but one may be tailored to a specific
+            /// gamepad whereas the other one is a generic gamepad control scheme. To differentiate the two, we need
+            /// to know not only that a control schemes but how well it matches relative to other schemes. This is
+            /// what the score value is used for.
+            ///
+            /// Scores are computed primarily based on layouts referenced from device requirements. To start with, each
+            /// matching device requirement (whether optional or mandatory) will add 1 to the score. This the base
+            /// score of a match. Then, for each requirement a delta is computed from the device layout referenced by
+            /// the requirement to the device layout used by the matching control. For example, if the requirement is
+            /// <c>"&lt;Gamepad&gt;</c> and the matching control uses the <see cref="DualShock.DualShock4GamepadHID"/>
+            /// layout, the delta is 2 as the latter layout is derived from <see cref="Gamepad"/> via the intermediate
+            /// <see cref="DualShock.DualShockGamepad"/> layout, i.e. two steps in the inheritance hierarchy. The
+            /// <em>inverse</em> of the delta plus one, i.e. <c>1/(delta+1)</c> is then added to the score. This means
+            /// that an exact match will add an additional 1 to the score and less exact matches will add progressively
+            /// smaller values to the score (proportional to the distance of the actual layout to the one used in the
+            /// requirement).
+            ///
+            /// What this leads to is that, for example, a control scheme with a <c>"&lt;Gamepad&gt;"</c> requirement
+            /// will match a <see cref="DualShock.DualShock4GamepadHID"/> with a <em>lower</em> score than a control
+            /// scheme with a <c>"&lt;DualShockGamepad&gt;"</c> requirement as the <see cref="Gamepad"/> layout is
+            /// further removed (i.e. smaller inverse delta) from <see cref="DualShock.DualShock4GamepadHID"/> than
+            /// <see cref="DualShock.DualShockGamepad"/>.
+            /// </remarks>
+            public float score => m_Score;
+
             /// <summary>
             /// Whether the device requirements got successfully matched.
             /// </summary>
@@ -655,6 +745,7 @@ namespace UnityEngine.InputSystem
             }
 
             internal Result m_Result;
+            internal float m_Score;
             internal InputControlList<InputDevice> m_Devices;
             internal InputControlList<InputControl> m_Controls;
             internal DeviceRequirement[] m_Requirements;

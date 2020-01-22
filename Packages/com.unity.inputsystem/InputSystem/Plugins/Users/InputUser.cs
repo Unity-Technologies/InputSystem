@@ -441,10 +441,37 @@ namespace UnityEngine.InputSystem.Users
         }
 
         /// <summary>
-        /// Associate an .inputactions asset with the user.
+        /// Associate a collection of <see cref="InputAction"/>s with the user.
         /// </summary>
-        /// <param name="actions"></param>
-        /// <exception cref="InvalidOperationException"></exception>
+        /// <param name="actions">Actions to associate with the user, either an <see cref="InputActionAsset"/>
+        /// or an <see cref="InputActionMap"/>. Can be <c>null</c> to unset the current association.</param>
+        /// <exception cref="InvalidOperationException">The user instance is invalid.</exception>
+        /// <remarks>
+        /// Associating actions with a user will ensure that the <see cref="IInputActionCollection.devices"/> and
+        /// <see cref="IInputActionCollection.bindingMask"/> property of the action collection are automatically
+        /// kept in sync with the device paired to the user (see <see cref="pairedDevices"/>) and the control
+        /// scheme active on the user (see <see cref="controlScheme"/>).
+        ///
+        /// <example>
+        /// <code>
+        /// var gamepad = Gamepad.all[0];
+        ///
+        /// // Pair the gamepad to a user.
+        /// var user = InputUser.PerformPairingWithDevice(gamepad);
+        ///
+        /// // Create an action map with an action.
+        /// var actionMap = new InputActionMap():
+        /// actionMap.AddAction("Fire", binding: "&lt;Gamepad&gt;/buttonSouth");
+        ///
+        /// // Associate the action map with the user (the same works for an asset).
+        /// user.AssociateActionsWithUser(actionMap);
+        ///
+        /// // Now the action map is restricted to just the gamepad that is paired
+        /// // with the user, even if there are more gamepads currently connected.
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="actions"/>
         public void AssociateActionsWithUser(IInputActionCollection actions)
         {
             var userIndex = index; // Throws if user is invalid.
@@ -464,6 +491,8 @@ namespace UnityEngine.InputSystem.Users
             // If we've switched to a different set of actions, synchronize our state.
             if (actions != null)
             {
+                HookIntoActionChange();
+
                 actions.devices = pairedDevices;
                 if (s_AllUserData[userIndex].controlScheme != null)
                     ActivateControlSchemeInternal(userIndex, s_AllUserData[userIndex].controlScheme.Value);
@@ -619,6 +648,14 @@ namespace UnityEngine.InputSystem.Users
 
             // Remove.
             ArrayHelpers.EraseSliceWithCapacity(ref s_AllPairedDevices, ref s_AllPairedDeviceCount, deviceStartIndex, deviceCount);
+            if (s_AllUserData[userIndex].lostDeviceCount > 0)
+            {
+                ArrayHelpers.EraseSliceWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount,
+                    s_AllUserData[userIndex].lostDeviceStartIndex, s_AllUserData[userIndex].lostDeviceCount);
+
+                s_AllUserData[userIndex].lostDeviceCount = 0;
+                s_AllUserData[userIndex].lostDeviceStartIndex = 0;
+            }
 
             // Adjust indices of other users.
             for (var i = 0; i < s_AllUserCount; ++i)
@@ -1029,7 +1066,10 @@ namespace UnityEngine.InputSystem.Users
 
             // Remove our hook if we no longer need it.
             if (s_AllUserCount == 0)
+            {
                 UnhookFromDeviceChange();
+                UnhookFromActionChange();
+            }
         }
 
         private static void Notify(int userIndex, InputUserChange change, InputDevice device)
@@ -1468,6 +1508,19 @@ namespace UnityEngine.InputSystem.Users
             return initiatePairingResult == (long)InitiateUserAccountPairingCommand.Result.SuccessfullyInitiated;
         }
 
+        private static void OnActionChange(object obj, InputActionChange change)
+        {
+            if (change == InputActionChange.BoundControlsChanged)
+            {
+                for (var i = 0; i < s_AllUserCount; ++i)
+                {
+                    ref var user = ref s_AllUsers[i];
+                    if (ReferenceEquals(user.actions, obj))
+                        Notify(i, InputUserChange.ControlsChanged, null);
+                }
+            }
+        }
+
         /// <summary>
         /// Invoked in response to <see cref="InputSystem.onDeviceChange"/>.
         /// </summary>
@@ -1584,7 +1637,7 @@ namespace UnityEngine.InputSystem.Users
                     // there was a user account change that happened outside the application.
                     if (!wasOngoingAccountSelection)
                     {
-                        // Could paired to multiple users. Repeatedly search in s_AllPairedDevices
+                        // Could be paired to multiple users. Repeatedly search in s_AllPairedDevices
                         // until we can't find the device anymore.
                         var deviceIndex = ArrayHelpers.IndexOfReference(s_AllPairedDevices, device, s_AllPairedDeviceCount);
                         while (deviceIndex != -1)
@@ -1852,11 +1905,31 @@ namespace UnityEngine.InputSystem.Users
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
         private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
+        private static Action<object, InputActionChange> s_ActionChangeDelegate;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
         private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;
+        private static bool s_OnActionChangeHooked;
         private static bool s_OnDeviceChangeHooked;
         private static bool s_OnEventHooked;
         private static int s_ListenForUnpairedDeviceActivity;
+
+        private static void HookIntoActionChange()
+        {
+            if (s_OnActionChangeHooked)
+                return;
+            if (s_ActionChangeDelegate == null)
+                s_ActionChangeDelegate = OnActionChange;
+            InputSystem.onActionChange += OnActionChange;
+            s_OnActionChangeHooked = true;
+        }
+
+        private static void UnhookFromActionChange()
+        {
+            if (!s_OnActionChangeHooked)
+                return;
+            InputSystem.onActionChange -= OnActionChange;
+            s_OnActionChangeHooked = true;
+        }
 
         private static void HookIntoDeviceChange()
         {
@@ -1915,6 +1988,7 @@ namespace UnityEngine.InputSystem.Users
             s_OnDeviceChangeDelegate = null;
             s_OnEventDelegate = null;
             s_OnDeviceChangeHooked = false;
+            s_OnActionChangeHooked = false;
             s_OnEventHooked = false;
             s_ListenForUnpairedDeviceActivity = 0;
         }

@@ -324,6 +324,8 @@ namespace UnityEngine.InputSystem
 
         public bool dontAdvanceTimeNextDynamicUpdate { get; set; }
 
+        public bool runInBackground { get; set; } = false;
+
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -361,9 +363,11 @@ namespace UnityEngine.InputSystem
         public Action onProjectChange { get; set; }
         #endif
 
+        public int eventCount => m_EventCount;
+
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
-        private int m_EventCount;
+        internal int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;

@@ -6,7 +6,11 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
 
+////TODO: give more control over when an OSC creates a new devices; going simply by name of layout only is inflexible
+
 ////TODO: make this survive domain reloads
+
+////TODO: allow feeding into more than one control
 
 namespace UnityEngine.InputSystem.OnScreen
 {
@@ -91,6 +95,7 @@ namespace UnityEngine.InputSystem.OnScreen
             var deviceInfoIndex = -1;
             for (var i = 0; i < s_OnScreenDevices.length; ++i)
             {
+                ////FIXME: this does not take things such as different device usages into account
                 if (s_OnScreenDevices[i].device.m_Layout == internedLayoutName)
                 {
                     deviceInfoIndex = i;

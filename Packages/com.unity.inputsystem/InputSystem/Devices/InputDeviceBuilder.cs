@@ -588,14 +588,37 @@ namespace UnityEngine.InputSystem.Layouts
 
         // NOTE: We can only do this once we've initialized the names on the parent control. I.e. it has to be
         //       done in the second pass we do over the control hierarchy.
-        private void SetDisplayName(InputControl control, string displayNameFromLayout, bool shortName)
+        private void SetDisplayName(InputControl control, string longDisplayNameFromLayout, string shortDisplayNameFromLayout, bool shortName)
         {
+            var displayNameFromLayout = shortName ? shortDisplayNameFromLayout : longDisplayNameFromLayout;
+
             // Display name may not be set in layout.
             if (string.IsNullOrEmpty(displayNameFromLayout))
             {
-                // For short names, we leave it unassigned if there's nothing in the layout.
+                // For short names, we leave it unassigned if there's nothing in the layout
+                // except if it's a nested control where the parent has a short name.
                 if (shortName)
                 {
+                    if (control.parent != null && control.parent != control.device)
+                    {
+                        if (m_StringBuilder == null)
+                            m_StringBuilder = new StringBuilder();
+                        m_StringBuilder.Length = 0;
+                        AddParentDisplayNameRecursive(control.parent, m_StringBuilder, true);
+                        if (m_StringBuilder.Length == 0)
+                        {
+                            control.m_ShortDisplayNameFromLayout = null;
+                            return;
+                        }
+
+                        if (!string.IsNullOrEmpty(longDisplayNameFromLayout))
+                            m_StringBuilder.Append(longDisplayNameFromLayout);
+                        else
+                            m_StringBuilder.Append(control.name);
+                        control.m_ShortDisplayNameFromLayout = m_StringBuilder.ToString();
+                        return;
+                    }
+
                     control.m_ShortDisplayNameFromLayout = null;
                     return;
                 }
@@ -825,9 +848,12 @@ namespace UnityEngine.InputSystem.Layouts
 
         private void FinalizeControlHierarchyRecursive(InputControl control)
         {
-            // Set display names.
-            SetDisplayName(control, control.m_DisplayNameFromLayout, false);
-            SetDisplayName(control, control.m_ShortDisplayNameFromLayout, true);
+            // Set final display names. This may overwrite the ones supplied by the layout so temporarily
+            // store the values here.
+            var displayNameFromLayout = control.m_DisplayNameFromLayout;
+            var shortDisplayNameFromLayout = control.m_ShortDisplayNameFromLayout;
+            SetDisplayName(control, displayNameFromLayout, shortDisplayNameFromLayout, false);
+            SetDisplayName(control, displayNameFromLayout, shortDisplayNameFromLayout, true);
 
             // Recurse into children. Also bake our state offset into our children.
             var ourOffset = control.m_StateBlock.byteOffset;
