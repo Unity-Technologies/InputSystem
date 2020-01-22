@@ -252,7 +252,7 @@ var actionMap = new InputActionMap();
 actionMap.AddAction("action1", "<Gamepad>/buttonSouth");
 actionMap.AddAction("action2", "<Gamepad>/buttonNorth");
 
-actionMap.onActionTriggered +=
+actionMap.actionTriggered +=
     context => { ... };
 ```
 

@@ -1,6 +1,6 @@
 # Known Limitations
 
-The following is a little of known shortcomings that the Input System currently has.
+The following is a list of known limitations that the Input System currently has.
 
 ## Compatibility with other Unity features
 
