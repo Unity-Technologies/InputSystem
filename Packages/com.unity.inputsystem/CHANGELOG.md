@@ -42,9 +42,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
-- We've added a `VirtualMouseInput` component that can be used to simulate a mouse based on gamepad input.
-  * Related to this, we've added a new sample called "Gamepad Mouse Cursor" that demonstrates how to set this up with uGUI.
-- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
+- We've added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
+  - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
 
 #### Actions
 
@@ -104,6 +103,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
 - `Vector2Composite` will now treat controls bound in the composite as analog by default, i.e. the actual values of the controls will be reflected in the resulting vector.
   * A new parameter called `analog` has been added that if set to `false` reverts to the previous behavior of treating controls as buttons.
+- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 ### Fixed
 

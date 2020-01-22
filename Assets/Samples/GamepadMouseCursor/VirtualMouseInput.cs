@@ -1,5 +1,4 @@
 using System;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: add support for acceleration
@@ -7,6 +6,8 @@ using UnityEngine.InputSystem.LowLevel;
 ////TODO: automatically scale mouse speed to resolution such that it stays constant regardless of resolution
 
 ////TODO: make it work with PlayerInput such that it will automatically look up actions in the actual PlayerInput instance it is used with (based on the action IDs it has)
+
+////REVIEW: consider this for inclusion directly in the input system
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -82,24 +83,6 @@ namespace UnityEngine.InputSystem.UI
             get => m_ScrollSpeed;
             set => m_ScrollSpeed = value;
         }
-
-        /*
-        /// <summary>
-        /// How many seconds it takes for the cursor to reach full <see cref="cursorSpeed"/>. By default,
-        /// this is 0 meaning that there is no acceleration and the cursor will always travel at maximum
-        /// speed.
-        /// </summary>
-        /// <value>Mouse acceleration time in seconds.</value>
-        /// <remarks>
-        /// To compute current mouse speed while the cursor is in an acceleration phase, <a
-        /// href="https://docs.unity3d.com/ScriptReference/Mathf.SmoothDamp.html">Mathf.SmoothDamp</a> is used.
-        /// </remarks>
-        public float mouseAcceleration
-        {
-            get => m_MouseAcceleration;
-            set => m_MouseAcceleration = value;
-        }
-        */
 
         /// <summary>
         /// The virtual mouse device that the component feeds with input.
@@ -315,14 +298,13 @@ namespace UnityEngine.InputSystem.UI
             var stickValue = stickAction.ReadValue<Vector2>();
             if (Mathf.Approximately(0, stickValue.x) && Mathf.Approximately(0, stickValue.y))
             {
-                ////REVIEW: should mouse acceleration also be applied as deceleration?
                 // Motion has stopped.
                 m_LastTime = default;
                 m_LastStickValue = default;
             }
             else
             {
-                var currentTime = InputRuntime.s_Instance.currentTime;
+                var currentTime = InputState.currentTime;
                 if (Mathf.Approximately(0, m_LastStickValue.x) && Mathf.Approximately(0, m_LastStickValue.y))
                 {
                     // Motion has started.

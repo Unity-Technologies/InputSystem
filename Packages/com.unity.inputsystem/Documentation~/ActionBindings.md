@@ -108,6 +108,7 @@ In addition, you can set the following parameters on a 2D vector Composite:
 |Parameter|Description|
 |---------|-----------|
 |[`normalize`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_normalize)|Whether the resulting vector should be normalized or not. If this is disabled, then, for example, pressing both [`up`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_up) and [`right`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_right)  yields a vector `(1,1)` which has a length greater than 1. This can be undesirable in situations where the vector's magnitude matters (for example, when scaling running speed by the length of the input vector).<br><br>This is true by default.|
+|[`analog`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_analog)|Whether the controls bound in the composite should be treated as analog controls or not. This is on by default. This means that if, for example, you bind `up` to the left trigger on a gamepad and `down` to the right trigger and the left trigger is at 0.25 and the right trigger at 0, the resulting vector will be `(0,0.25)`. If, however, you turn this option off, the triggers will be treated as digital buttons (either on=1 or off=0) and the resulting vector from the same inputs will be `(0,1)`.|
 
 ### Button with one modifier
 
