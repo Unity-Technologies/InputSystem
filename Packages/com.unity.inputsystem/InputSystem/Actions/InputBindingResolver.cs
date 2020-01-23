@@ -289,7 +289,7 @@ namespace UnityEngine.InputSystem
                                     : InputActionState.kInvalidIndex;
 
                                 // Instantiate. For composites, the path is the name of the composite.
-                                var composite = InstantiateBindingComposite(unresolvedBinding.path);
+                                var composite = InstantiateBindingComposite(unresolvedBinding.effectivePath);
                                 currentCompositeIndex =
                                     ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
                                 currentCompositeBindingIndex = bindingIndex;
