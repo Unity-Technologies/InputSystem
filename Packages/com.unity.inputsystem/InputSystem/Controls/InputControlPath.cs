@@ -925,7 +925,7 @@ namespace UnityEngine.InputSystem
             if (usages == null)
                 return null;
 
-            var usageCount = usages.Length;
+            var usageCount = device.m_UsageToControl.Length;
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
             var pathLength = path.Length;

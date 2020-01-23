@@ -820,6 +820,20 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
+    public void Controls_FindingControlsByUsage_IgnoresUsagesOnDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.SetDeviceUsage(gamepad, "Primary2DMotion");
+
+        using (var matches = InputSystem.FindControls("<Gamepad>/{Primary2DMotion}"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
     public void Controls_CanFindChildControlsOfControlsFoundByUsage()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
