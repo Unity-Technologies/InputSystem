@@ -314,7 +314,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             fixed(byte* statePtr = state)
             {
-                var ptr = statePtr + control.m_StateBlock.byteOffset - m_RootControl.m_StateBlock.byteOffset;
+                var ptr = statePtr - m_RootControl.m_StateBlock.byteOffset;
                 return control.ReadValueFromStateAsObject(ptr).ToString();
             }
         }
