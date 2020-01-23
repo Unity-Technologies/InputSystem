@@ -177,6 +177,9 @@ namespace UnityEngine.InputSystem.Editor
             GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
+            if (m_ReplayController != null && !m_ReplayController.finished)
+                EditorGUILayout.LabelField("Playing...", EditorStyles.miniLabel);
+
             // Text field to determine size of event trace.
             var currentTraceSizeInBytes = m_EventTrace.allocatedSizeInBytes / (1024 * 1024);
             var oldSizeText = currentTraceSizeInBytes + " MB";
@@ -192,14 +195,18 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Button to disable event tracing.
-            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
-            if (eventTraceDisabledNow != m_EventTraceDisabled)
+            // NOTE: We force-disable event tracing while a replay is in progress.
+            using (new EditorGUI.DisabledScope(m_ReplayController != null && !m_ReplayController.finished))
             {
-                m_EventTraceDisabled = eventTraceDisabledNow;
-                if (eventTraceDisabledNow)
-                    m_EventTrace.Disable();
-                else
-                    m_EventTrace.Enable();
+                var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
+                if (eventTraceDisabledNow != m_EventTraceDisabled)
+                {
+                    m_EventTraceDisabled = eventTraceDisabledNow;
+                    if (eventTraceDisabledNow)
+                        m_EventTrace.Disable();
+                    else
+                        m_EventTrace.Enable();
+                }
             }
 
             // Button to toggle recording of frame markers.
@@ -221,11 +228,28 @@ namespace UnityEngine.InputSystem.Editor
                 var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputtrace");
                 if (!string.IsNullOrEmpty(fileName))
                 {
+                    // If replay is in progress, stop it.
+                    if (m_ReplayController != null)
+                    {
+                        m_ReplayController.Dispose();
+                        m_ReplayController = null;
+                    }
+
+                    // Make sure event trace isn't recording while we're playing.
                     m_EventTrace.Disable();
                     m_EventTraceDisabled = true;
+
                     m_EventTrace.ReadFrom(fileName);
                     m_EventTree.Reload();
-                    m_EventTrace.Replay().PlayAllFramesOneByOne();
+
+                    m_ReplayController = m_EventTrace.Replay()
+                        .PlayAllFramesOneByOne()
+                        .OnFinished(() =>
+                        {
+                            m_ReplayController.Dispose();
+                            m_ReplayController = null;
+                            Repaint();
+                        });
                 }
             }
 
