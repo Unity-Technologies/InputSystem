@@ -2561,7 +2561,7 @@ namespace UnityEngine.InputSystem
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 lock (s_Manager)
-                    if (!InputActionState.s_OnActionChange.ContainsReference(value))
+                    if (!InputActionState.s_OnActionChange.Contains(value))
                         InputActionState.s_OnActionChange.Append(value);
             }
             remove

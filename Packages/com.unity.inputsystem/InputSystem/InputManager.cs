@@ -238,7 +238,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_EventListeners.ContainsReference(value))
+                if (!m_EventListeners.Contains(value))
                     m_EventListeners.AppendWithCapacity(value);
             }
             remove
@@ -254,7 +254,7 @@ namespace UnityEngine.InputSystem
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                if (!m_BeforeUpdateListeners.ContainsReference(value))
+                if (!m_BeforeUpdateListeners.Contains(value))
                     m_BeforeUpdateListeners.AppendWithCapacity(value);
             }
             remove
@@ -269,7 +269,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_AfterUpdateListeners.ContainsReference(value))
+                if (!m_AfterUpdateListeners.Contains(value))
                     m_AfterUpdateListeners.AppendWithCapacity(value);
             }
             remove
@@ -284,7 +284,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_SettingsChangedListeners.ContainsReference(value))
+                if (!m_SettingsChangedListeners.Contains(value))
                     m_SettingsChangedListeners.AppendWithCapacity(value);
             }
             remove

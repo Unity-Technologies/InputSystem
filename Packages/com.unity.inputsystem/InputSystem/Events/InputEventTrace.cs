@@ -153,7 +153,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             add
             {
-                if (!m_EventListeners.ContainsReference(value))
+                if (!m_EventListeners.Contains(value))
                     m_EventListeners.Append(value);
             }
             remove => m_EventListeners.Remove(value);

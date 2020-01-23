@@ -909,7 +909,7 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                if (!m_TextInputListeners.ContainsReference(value))
+                if (!m_TextInputListeners.Contains(value))
                     m_TextInputListeners.Append(value);
             }
             remove => m_TextInputListeners.Remove(value);
@@ -931,7 +931,7 @@ namespace UnityEngine.InputSystem
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                if (!m_ImeCompositionListeners.ContainsReference(value))
+                if (!m_ImeCompositionListeners.Contains(value))
                     m_ImeCompositionListeners.Append(value);
             }
             remove => m_ImeCompositionListeners.Remove(value);
