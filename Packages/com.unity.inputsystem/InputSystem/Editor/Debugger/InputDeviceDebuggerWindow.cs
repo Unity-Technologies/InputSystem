@@ -15,8 +15,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add diff-to-previous-event ability to event window
 
-////FIXME: doesn't survive domain reload correctly (could be, it's even leaking unmanaged memory)
-
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
 ////TODO: Add "Remote:" field in list that also has a button for local devices that allows to mirror them and their input
@@ -301,13 +299,15 @@ namespace UnityEngine.InputSystem.Editor
         // We will lose our device on domain reload and then look it back up the first
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
-        [NonSerialized] private InputDevice m_Device;
-        [NonSerialized] private string m_DeviceIdString;
-        [NonSerialized] private string m_DeviceUsagesString;
-        [NonSerialized] private string m_DeviceFlagsString;
-        [NonSerialized] private InputControlTreeView m_ControlTree;
-        [NonSerialized] private InputEventTreeView m_EventTree;
-        [NonSerialized] private bool m_NeedControlValueRefresh;
+        private InputDevice m_Device;
+        private string m_DeviceIdString;
+        private string m_DeviceUsagesString;
+        private string m_DeviceFlagsString;
+        private InputControlTreeView m_ControlTree;
+        private InputEventTreeView m_EventTree;
+        private bool m_NeedControlValueRefresh;
+        private InputEventTrace.ReplayController m_ReplayController;
+        private InputEventTrace m_EventTrace;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -315,7 +315,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
-        [SerializeField] private InputEventTrace m_EventTrace;
         [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;
