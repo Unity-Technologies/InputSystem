@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
-        internal const int kDefaultEventTraceSizeInMB = 1;
+        private const int kDefaultEventTraceSizeInMB = 1;
 
         internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
 
@@ -88,11 +88,15 @@ namespace UnityEngine.InputSystem.Editor
 
             m_EventTrace?.Dispose();
             m_EventTrace = null;
+
+            m_ReplayController?.Dispose();
+            m_ReplayController = null;
         }
 
         public void Dispose()
         {
             m_EventTrace?.Dispose();
+            m_ReplayController?.Dispose();
         }
 
         internal void OnGUI()
