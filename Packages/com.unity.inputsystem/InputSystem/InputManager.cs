@@ -1183,8 +1183,8 @@ namespace UnityEngine.InputSystem
             var deviceId = device.deviceId;
             if (deviceIndex < m_StateChangeMonitors.LengthSafe())
             {
-                // m_StateChangeMonitors mirrors layout of m_Devices.
-                var count = m_DevicesCount;
+                // m_StateChangeMonitors mirrors layout of m_Devices *but* may be shorter.
+                var count = m_StateChangeMonitors.Length;
                 ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors, ref count, deviceIndex);
             }
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
