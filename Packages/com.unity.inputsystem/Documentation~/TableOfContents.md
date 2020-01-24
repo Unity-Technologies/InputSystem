@@ -10,6 +10,7 @@
   * [Debugging](Debugging.md)
   * [Input testing](Testing.md)
   * [Contributing](Contributing.md)
+  * [Known Limitations](KnownLimitations.md)
 
 * Reference
   * [Input settings](Settings.md)

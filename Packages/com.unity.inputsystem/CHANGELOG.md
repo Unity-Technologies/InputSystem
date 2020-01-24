@@ -111,6 +111,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This bug led to input being missed on a device once another device had been removed.
 - `TrackedDevice` layout is no longer incorrectly registered as `Tracked Device`.
 - Event traces in the input debugger are no longer lost on domain reloads.
+- `IndexOutOfRangeException` being thrown when looking up controls on XR devices.
 
 #### Actions
 
