@@ -170,6 +170,9 @@ To define a new type of Composite, create a class based on [`InputBindingComposi
 #if UNITY_EDITOR
 [InitializeOnLoad] // Automatically register in editor.
 #endif
+// Determine how GetBindingDisplayString() formats the composite by applying
+// the  DisplayStringFormat attribute.
+[DisplayStringFormat("{firstPart}+{secondPart}")]
 public class CustomComposite : InputBindingComposite<float>
 {
     // Each part binding is represented as a field of type int and annotated with
@@ -295,16 +298,17 @@ Actions with the type set to [Button](Actions.md#button) don't perform any initi
 
 ## Run time rebinding
 
-To allow users to choose their own Bindings, use the  [`InputActionRebindingExtensions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) class. Call the [`PerformInteractiveRebinding()`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_) method on an Action to create a rebinding operation, which waits for the Input System to register any input to assign to the Action as a new Binding. Once it detects any Control being actuated on any Device which matches the Action's expected Control type, it then assigns the Control path for that Control to the Action's Bindings using [`InputBinding.overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath). If multiple Controls are actuated, the operation chooses the Control with the highest [magnitude](Controls.md#control-actuation).
+>NOTE: There is a sample that comes with the Input System package called "Rebinding UI" which you can install from the package manager by selecting it on the page for the Input System package. It demonstrates how you can use the Input System APIs to set up rebinding UIs and also provides a ready-made component that you can use in your projects.
+
+To allow users to choose their own Bindings, use the  [`InputActionRebindingExtensions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) class. Call the [`PerformInteractiveRebinding()`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_System_Int32_) method on an Action to create a rebinding operation, which waits for the Input System to register any input to assign to the Action as a new Binding. Once it detects any Control being actuated on any Device which matches the Action's expected Control type, it then assigns the Control path for that Control to the Action's Bindings using [`InputBinding.overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath). If multiple Controls are actuated, the operation chooses the Control with the highest [magnitude](Controls.md#control-actuation).
+
+>IMPORTANT: [`InputActionRebindingExtensions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) instances must be disposed via `Dispose()` in order for them to not leak memory on the unmanaged memory heap.
 
 ```C#
     void RemapButtonClicked(InputAction actionToRebind)
     {
-        var rebindOperation = actionToRebind.PerformInteractiveRebinding()
-                    // To avoid accidental input from mouse motion
-                    .WithControlsExcluding("Mouse")
-                    .OnMatchWaitForAnother(0.1f)
-                    .Start();
+        var rebindOperation = actionToRebind
+            .PerformInteractiveRebinding().Start();
     }
 ```
 
@@ -320,13 +324,72 @@ The [`InputActionRebindingExtensions.RebindingOperation`](../api/UnityEngine.Inp
 
 Refer to the [scripting API reference for `InputActionRebindingExtensions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) for a full overview.
 
+Note that [`PerformInteractiveRebinding()`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_PerformInteractiveRebinding_UnityEngine_InputSystem_InputAction_System_Int32_) automatically applies a set of default configurations based on the given action and targeted binding.
+
 ### Showing current Bindings
 
-It can be useful for the user to know what an Action is currently bound to (taking any potentially active rebindings into account), both in rebinding UIs as well as for on-screen hints while the app is running. You can use [`InputBinding.effectivePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_effectivePath) to get the currently active path for a Binding (either [`path`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_path) or [`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath), if applicable). You can then use [`InputControlPath.ToHumanReadableString`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_ToHumanReadableString_System_String_UnityEngine_InputSystem_InputControlPath_HumanReadableStringOptions_) to turn that into a meaningful control name.
+It can be useful for the user to know what an Action is currently bound to (taking any potentially active rebindings into account), both in rebinding UIs as well as for on-screen hints while the app is running. You can use [`InputBinding.effectivePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_effectivePath) to get the currently active path for a Binding (which returns [`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath), if set, or otherwise returns [`path`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_path)).
+
+The easiest way to retrieve a display string for an action is to call [`InputActionRebindingExtensions.GetBindingDisplayString`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_GetBindingDisplayString_) which is an extension method for [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html).
 
 ```CSharp
-    m_RebindButtonName.text = InputControlPath.ToHumanReadableString(m_Action.bindings[0].effectivePath);
+    // Get a binding string for the action as a whole. This takes into account which
+    // bindings are currently active and the actual controls bound to the action.
+    m_RebindButton.GetComponentInChildren<Text>().text = action.GetBindingDisplayString();
+
+    // Get a binding string for a specific binding on an action by index.
+    m_RebindButton.GetComponentInChildren<Text>().text = action.GetBindingDisplayString(1);
+
+    // You can look up binding indices using GetBindingIndex.
+    var bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup("Gamepad"));
+    m_RebindButton.GetComponentInChildren<Text>().text =
+        action.GetBindingDisplayString(bindingIndex);
 ```
+
+This method can also be used in case you want to replace the text string with images.
+
+```CSharp
+    // Call GetBindingDisplayString() such that it also returns information about the
+    // name of the device layout and path of the control on the device. This information
+    // is useful for reliably associating imagery with individual controls.
+    var bindingString = action.GetBindingDisplayString(out deviceLayout, out controlPath);
+
+    // If it's a gamepad, look up an icon for the control.
+    Sprite icon = null;
+    if (!string.IsNullOrEmpty(deviceLayout)
+        && !string.IsNullOrEmpty(controlPath)
+        && InputSystem.IsFirstLayoutBasedOnSecond(deviceLayout, "Gamepad"))
+    {
+        switch (controlPath)
+        {
+            case "buttonSouth": icon = aButtonIcon; break;
+            case "dpad/up": icon = dpadUpIcon; break;
+            //...
+        }
+    }
+
+    // If we have an icon, display it instead of the text.
+    var text = m_RebindButton.GetComponentInChildren<Text>();
+    var image = m_RebindButton.GetComponentInChildren<Image>();
+    if (icon != null)
+    {
+        // Display icon.
+        text.gameObject.SetActive(false);
+        image.gameObject.SetActive(true);
+        image.sprite = icon;
+    }
+    else
+    {
+        // Display text.
+        text.gameObject.SetActive(true);
+        image.gameObject.SetActive(false);
+        text.text = bindingString;
+    }
+```
+
+Additionally, each binding has a [`ToDisplayString`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_ToDisplayString_UnityEngine_InputSystem_InputBinding_DisplayStringOptions_UnityEngine_InputSystem_InputControl_) method which you can use to turn individual bindings into display strings. Also, there is a generic formatting method for control paths in the form of [`InputControlPath.ToHumanReadableString`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_ToHumanReadableString_System_String_UnityEngine_InputSystem_InputControlPath_HumanReadableStringOptions_UnityEngine_InputSystem_InputControl_) which you can use with arbitrary control path strings.
+
+Note that the controls a given binding resolves to may change at any time. Additionally, the display strings of controls may change dynamically. For example, if the user switches the currently active keyboard layout, the display string of each individual key on the [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html) may change. If bindings are displayed in the UI, this
 
 ## Control Schemes
 

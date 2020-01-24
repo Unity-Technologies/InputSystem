@@ -194,6 +194,7 @@ namespace UnityEngine.InputSystem.Editor
                         // Misc events.
                         EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceLostEvent"));
                         EditorGUILayout.PropertyField(serializedObject.FindProperty("m_DeviceRegainedEvent"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("m_ControlsChangedEvent"));
                     }
                     break;
             }
@@ -340,6 +341,8 @@ namespace UnityEngine.InputSystem.Editor
                     builder.Append(PlayerInput.DeviceLostMessage);
                     builder.Append(", ");
                     builder.Append(PlayerInput.DeviceRegainedMessage);
+                    builder.Append(", ");
+                    builder.Append(PlayerInput.ControlsChangedMessage);
 
                     var playerInput = (PlayerInput)target;
                     var asset = playerInput.m_Actions;
@@ -363,6 +366,8 @@ namespace UnityEngine.InputSystem.Editor
                         playerInput.m_DeviceLostEvent = new PlayerInput.DeviceLostEvent();
                     if (playerInput.m_DeviceRegainedEvent == null)
                         playerInput.m_DeviceRegainedEvent = new PlayerInput.DeviceRegainedEvent();
+                    if (playerInput.m_ControlsChangedEvent == null)
+                        playerInput.m_ControlsChangedEvent = new PlayerInput.ControlsChangedEvent();
                     serializedObject.Update();
 
                     // Force action refresh.
@@ -442,6 +447,7 @@ namespace UnityEngine.InputSystem.Editor
                     if (oldActionEvents != null && oldActionEvents.Any(x => x.actionId == action.id.ToString()))
                         continue;
 
+                    ////FIXME: adds bindings to the name
                     AddEntry(action, new PlayerInput.ActionEvent(action.id, action.ToString()));
                 }
 

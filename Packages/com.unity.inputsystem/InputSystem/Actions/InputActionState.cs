@@ -353,10 +353,6 @@ namespace UnityEngine.InputSystem
                     var mapIndex = actionState->mapIndex;
                     var map = maps[mapIndex];
                     ++map.m_EnabledActionsCount;
-
-                    ////REVIEW: Ideally, we'd know when an action map had *ALL* actions enabled and do not send notifications one by one here
-                    var action = map.m_Actions[actionIndex - mapIndices[mapIndex].actionStartIndex];
-                    NotifyListenersOfActionChange(InputActionChange.ActionEnabled, action);
                 }
 
                 // Enable all controls on the binding.
@@ -366,6 +362,23 @@ namespace UnityEngine.InputSystem
 
             // Make sure we get an initial state check.
             HookOnBeforeUpdate();
+
+            // Fire notifications.
+            if (s_OnActionChange.length > 0)
+            {
+                for (var i = 0; i < totalMapCount; ++i)
+                {
+                    var map = maps[i];
+                    if (map.m_SingletonAction == null && map.m_EnabledActionsCount == map.m_Actions.LengthSafe())
+                        NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
+                    else
+                    {
+                        var actions = map.actions;
+                        for (var n = 0; n < actions.Count; ++n)
+                            NotifyListenersOfActionChange(InputActionChange.ActionEnabled, actions[n]);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1686,6 +1699,20 @@ namespace UnityEngine.InputSystem
 
             Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount, "Interaction index out of range");
             return interactions[trigger.interactionIndex];
+        }
+
+        internal int GetBindingIndexInMap(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
+            var mapIndex = bindingStates[bindingIndex].mapIndex;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return bindingIndex - bindingStartIndex;
+        }
+
+        internal int GetBindingIndexInState(int mapIndex, int bindingIndexInMap)
+        {
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            return bindingStartIndex + bindingIndexInMap;
         }
 
         internal InputBinding GetBinding(int bindingIndex)
@@ -3021,14 +3048,14 @@ namespace UnityEngine.InputSystem
             s_GlobalList.length = head;
         }
 
-        internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMap)
+        internal static void NotifyListenersOfActionChange(InputActionChange change, object actionOrMapOrAsset)
         {
-            Debug.Assert(actionOrMap != null, "Should have action or action map object to notify about");
-            Debug.Assert(actionOrMap is InputAction || ((InputActionMap)actionOrMap).m_SingletonAction == null,
+            Debug.Assert(actionOrMapOrAsset != null, "Should have action or action map or asset object to notify about");
+            Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
             for (var i = 0; i < s_OnActionChange.length; ++i)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMap, change, "onActionChange");
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
         }
 
         /// <summary>
@@ -3111,7 +3138,7 @@ namespace UnityEngine.InputSystem
             ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
             Debug.Assert(
                 change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
-                change == InputDeviceChange.UsageChanged,
+                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged,
                 "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
@@ -3135,15 +3162,38 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
+                if (change == InputDeviceChange.ConfigurationChanged && !state.IsUsingDevice(device))
+                    continue;
 
                 // Trigger a lazy-resolve on all action maps in the state.
                 for (var n = 0; n < state.totalMapCount; ++n)
                     if (state.maps[n].LazyResolveBindings())
                     {
-                        // Map has chosen to resolve right away (i.e it has enabled actions).
-                        // This will resolve bindings for *all* maps in the state, so we're done here.
+                        // Map has chosen to resolve right away. This will resolve bindings for *all*
+                        // maps in the state, so we're done here.
                         break;
                     }
+            }
+        }
+
+        internal static void DeferredResolutionOfBindings()
+        {
+            for (var i = 0; i < s_GlobalList.length; ++i)
+            {
+                var handle = s_GlobalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
+                {
+                    // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                    if (handle.IsAllocated)
+                        s_GlobalList[i].Free();
+                    s_GlobalList.RemoveAtWithCapacity(i);
+                    --i;
+                    continue;
+                }
+
+                var state = (InputActionState)handle.Target;
+                for (var n = 0; n < state.totalMapCount; ++n)
+                    state.maps[n].ResolveBindingsIfNecessary();
             }
         }
 

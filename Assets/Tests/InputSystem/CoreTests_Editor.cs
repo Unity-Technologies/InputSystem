@@ -2150,6 +2150,36 @@ partial class CoreTests
         throw new NotImplementedException();
     }
 
+    // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
+    // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
+    // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,
+    // this will usually lead to the camera looking down at the ground because after clicking the play mode button at the
+    // top of the UI, the user will likely move the pointer down towards the game view area thus generating a large down
+    // motion delta.
+    //
+    // What we do to counter this is to record the time of when we enter play mode and then record the time again when
+    // we have fully entered play mode. All the events in-between we discard.
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputEventsOccurringWhileGoingIntoPlayMode_AreDiscarded()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // We need to actually pass time and have a non-zero start time for this to work.
+        currentTime = 1;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(234, 345) });
+        currentTime = 2;
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        InputSystem.Update();
+
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Make sure the event was not left in the buffer.
+        Assert.That(runtime.m_EventCount, Is.EqualTo(0));
+    }
+
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
 }
 #endif // UNITY_EDITOR

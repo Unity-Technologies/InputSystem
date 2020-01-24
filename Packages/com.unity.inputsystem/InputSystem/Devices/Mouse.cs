@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Successive click count.</value>
         /// <seealso cref="Mouse.clickCount"/>
-        [InputControl(layout = "Integer", displayName = "Click Count")]
+        [InputControl(layout = "Integer", displayName = "Click Count", synthetic = true)]
         [FieldOffset(28)]
         public ushort clickCount;
 

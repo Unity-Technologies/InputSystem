@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools.Utils;
 
 internal partial class CoreTests
 {
@@ -147,7 +148,8 @@ internal partial class CoreTests
         var receivedCompleteCallback = false;
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnComplete(
                            operation =>
                            {
@@ -192,7 +194,8 @@ internal partial class CoreTests
         var receivedCancelCallback = false;
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnComplete(
                            operation =>
                            {
@@ -228,7 +231,8 @@ internal partial class CoreTests
         var receivedCancelCallback = false;
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnComplete(
                            operation =>
                            {
@@ -265,7 +269,8 @@ internal partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithTargetBinding(3) // Left
                        .Start())
         {
@@ -305,7 +310,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithExpectedControlType("Stick")
                        .Start())
         {
@@ -340,7 +346,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithRebindAddingNewBinding(group: "testGroup")
                        .Start())
         {
@@ -388,8 +395,9 @@ internal partial class CoreTests
                 ""name"" : ""TestLayout"",
                 ""controls"" : [
                     {
-                        ""name"" : ""button"",
+                        ""name"" : ""noisyButton"",
                         ""layout"" : ""Button"",
+                        ""format"" : ""FLT"",
                         ""noisy"" : true
                     }
                 ]
@@ -399,9 +407,9 @@ internal partial class CoreTests
         InputSystem.RegisterLayout(layout);
         var device = InputSystem.AddDevice("TestLayout");
 
-        using (var rebind = action.PerformInteractiveRebinding().Start())
+        using (var rebind = action.PerformInteractiveRebinding().OnMatchWaitForAnother(0).Start())
         {
-            Set((ButtonControl)device["button"], 0.678f);
+            Set((ButtonControl)device["noisyButton"], 0.678f);
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(action.bindings[0].overridePath, Is.Null);
@@ -411,11 +419,10 @@ internal partial class CoreTests
             // a good enough job.
             rebind.WithoutIgnoringNoisyControls();
 
-            Set((ButtonControl)device["button"], 0f);
-            Set((ButtonControl)device["button"], 0.789f);
+            Set((ButtonControl)device["noisyButton"], 0.789f);
 
             Assert.That(rebind.completed, Is.True);
-            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<TestLayout>/button"));
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<TestLayout>/noisyButton"));
         }
     }
 
@@ -427,7 +434,8 @@ internal partial class CoreTests
         action.expectedControlType = "Axis";
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        using (var rebind = action.PerformInteractiveRebinding()
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
                    .OnPotentialMatch(
                        operation =>
                        {
@@ -474,7 +482,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnPotentialMatch(
                            operation =>
                            {
@@ -525,7 +534,8 @@ internal partial class CoreTests
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        using (var rebind = action.PerformInteractiveRebinding()
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
                    .OnPotentialMatch(
                        operation =>
                        {
@@ -575,7 +585,7 @@ internal partial class CoreTests
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
         InputSystem.Update();
 
-        using (var rebind = action.PerformInteractiveRebinding().Start())
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
             // Reset buttonNorth to unpressed state.
             InputSystem.QueueStateEvent(gamepad, new GamepadState());
@@ -636,7 +646,7 @@ internal partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/leftStick/x");
         var derived = InputSystem.AddDevice("DerivedLayout");
 
-        using (action.PerformInteractiveRebinding().Start())
+        using (new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
             using (StateEvent.From(derived, out var eventPtr))
             {
@@ -661,7 +671,7 @@ internal partial class CoreTests
         var rightHand = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(rightHand, CommonUsages.RightHand);
 
-        using (var rebind = action.PerformInteractiveRebinding().Start())
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
             InputSystem.QueueStateEvent(rightHand, new GamepadState().WithButton(GamepadButton.South));
             InputSystem.Update();
@@ -684,7 +694,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithBindingGroup("Gamepad")
                        .Start())
         {
@@ -712,7 +723,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithoutGeneralizingPathOfSelectedControl()
                        .Start())
         {
@@ -736,7 +748,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnMatchWaitForAnother(1) // Wait one second for a better match.
                        .WithExpectedControlType("Stick")
                        .Start())
@@ -783,7 +796,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithMagnitudeHavingToBeGreaterThan(0.5f)
                        .Start())
         {
@@ -813,7 +827,8 @@ internal partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithControlsHavingToMatchPath("<Keyboard>")
                        .WithControlsHavingToMatchPath("<Mouse>")
                        .OnPotentialMatch(operation => {})  // Don't complete. Just keep going.
@@ -847,7 +862,8 @@ internal partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .WithControlsExcluding("<Mouse>/position")
                        .Start())
         {
@@ -873,7 +889,8 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         using (var rebind =
-                   action.PerformInteractiveRebinding()
+                   new InputActionRebindingExtensions.RebindingOperation()
+                       .WithAction(action)
                        .OnComplete(
                            operation =>
                            {
@@ -979,14 +996,14 @@ internal partial class CoreTests
                 .OnApplyBinding((operation, s) => {});
 
             rebind.Start();
-            Press(gamepad.buttonSouth);
+            PressAndRelease(gamepad.buttonSouth);
 
             Assert.That(candidates, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
 
             rebind.Cancel();
             candidates = null;
             rebind.Start();
-            Press(gamepad.buttonNorth);
+            PressAndRelease(gamepad.buttonNorth);
 
             Assert.That(candidates, Is.EquivalentTo(new[] { gamepad.buttonNorth }));
         }
@@ -1003,13 +1020,41 @@ internal partial class CoreTests
         InputSystem.SetDeviceUsage(rightHandVertical, CommonUsages.RightHand);
         InputSystem.AddDeviceUsage(rightHandVertical, CommonUsages.Vertical);
 
-        using (var rebind = action.PerformInteractiveRebinding().Start())
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
             InputSystem.QueueStateEvent(rightHandVertical, new GamepadState().WithButton(GamepadButton.South));
             InputSystem.Update();
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>{RightHand}{Vertical}/buttonSouth"));
+        }
+    }
+
+    // It can be desirable to not let the event through that we're rebinding from. This, for example, prevents the event
+    // from triggering UI actions. Note, however, that it also prevents the state of the device from updating correctly.
+    //
+    // NOTE: Hopefully, when we have a system in place that allows coordinating event consumption between actions, we have
+    //       have a more elegant solution at our hand for solving the problem here.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanSuppressEventsWhileListening()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonNorth");
+
+        using (new InputActionRebindingExtensions.RebindingOperation()
+               .WithAction(action)
+               .WithControlsExcluding("<Pointer>/position")
+               .WithMatchingEventsBeingSuppressed().Start())
+        {
+            Set(mouse.position, new Vector2(123, 234));
+            Press(gamepad.buttonSouth);
+
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
         }
     }
 }

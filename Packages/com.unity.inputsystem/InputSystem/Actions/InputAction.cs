@@ -1,8 +1,9 @@
 using System;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
+
+////TODO: add way to retrieve the binding correspond to a control
 
 ////TODO: add way to retrieve the currently ongoing interaction and also add way to know how long it's been going on
 
@@ -371,9 +372,6 @@ namespace UnityEngine.InputSystem
                     map.LazyResolveBindings();
             }
         }
-
-        ////TODO: add support for turning binding array into displayable info
-        ////      (allow to constrain by sets of devices set on action set)
 
         /// <summary>
         /// The list of bindings associated with the action.
@@ -1022,19 +1020,17 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal void MakeSureIdIsInPlace()
+        internal string MakeSureIdIsInPlace()
         {
             if (m_Guid != Guid.Empty)
-                return;
+                return m_Id;
 
             if (string.IsNullOrEmpty(m_Id))
-            {
                 GenerateId();
-            }
             else
-            {
                 m_Guid = new Guid(m_Id);
-            }
+
+            return m_Id;
         }
 
         internal void GenerateId()
@@ -1058,6 +1054,17 @@ namespace UnityEngine.InputSystem
                 m_SingletonAction = this,
                 m_Bindings = m_SingletonActionBindings
             };
+        }
+
+        internal InputBinding? FindEffectiveBindingMask()
+        {
+            if (m_BindingMask.HasValue)
+                return m_BindingMask;
+
+            if (m_ActionMap?.m_BindingMask != null)
+                return m_ActionMap.m_BindingMask;
+
+            return m_ActionMap?.m_Asset?.m_BindingMask;
         }
 
         internal int BindingIndexOnActionToBindingIndexOnMap(int indexOfBindingOnAction)
@@ -1091,6 +1098,25 @@ namespace UnityEngine.InputSystem
 
             throw new ArgumentOutOfRangeException(nameof(indexOfBindingOnAction),
                 $"Binding index {indexOfBindingOnAction} is out of range for action '{this}' with {currentBindingIndexOnAction + 1} bindings");
+        }
+
+        internal int BindingIndexOnMapToBindingIndexOnAction(int indexOfBindingOnMap)
+        {
+            var actionMap = GetOrCreateActionMap();
+            var bindingsInMap = actionMap.m_Bindings;
+            var actionName = name;
+
+            var bindingIndexOnAction = 0;
+            for (var i = indexOfBindingOnMap - 1; i >= 0; --i)
+            {
+                ref var binding = ref bindingsInMap[i];
+
+                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                    binding.action == m_Id)
+                    ++bindingIndexOnAction;
+            }
+
+            return bindingIndexOnAction;
         }
 
         ////TODO: make current event available in some form

@@ -92,6 +92,7 @@ namespace UnityEngine.InputSystem.XR
         {
             if (!m_PositionBound && m_PositionAction != null)
             {
+                m_PositionAction.Rename($"{gameObject.name} - TPD - Position");
                 m_PositionAction.performed += OnPositionUpdate;
                 m_PositionBound = true;
                 m_PositionAction.Enable();
@@ -102,6 +103,7 @@ namespace UnityEngine.InputSystem.XR
         {
             if (!m_RotationBound && m_RotationAction != null)
             {
+                m_RotationAction.Rename($"{gameObject.name} - TPD - Rotation");
                 m_RotationAction.performed += OnRotationUpdate;
                 m_RotationBound = true;
                 m_RotationAction.Enable();

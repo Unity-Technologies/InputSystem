@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <param name="ptr2">Pointer to start of second memory region.</param>
         /// <param name="bitOffset">Offset in bits from each of the pointers to the start of the memory region to compare.</param>
         /// <param name="bitCount">Number of bits to compare in the memory region.</param>
-        /// <param name="mask">If not null, ignore any bits set in the mask. This allows comparing two memory regions while
+        /// <param name="mask">If not null, only compare bits set in the mask. This allows comparing two memory regions while
         /// ignoring specific bits.</param>
         /// <returns>True if the two memory regions are identical, false otherwise.</returns>
         public static bool MemCmpBitRegion(void* ptr1, void* ptr2, uint bitOffset, uint bitCount, void* mask = null)
@@ -150,9 +150,7 @@ namespace UnityEngine.InputSystem.Utilities
                 // to mask out parts of the bits we're reading.
                 var byteMask = 0xFF << (int)bitOffset;
                 if (bitCount + bitOffset < 8)
-                {
                     byteMask &= 0xFF >> (int)(8 - (bitCount + bitOffset));
-                }
 
                 if (maskPtr != null)
                 {
@@ -226,6 +224,93 @@ namespace UnityEngine.InputSystem.Utilities
             }
 
             return true;
+        }
+
+        public static void MemSet(void* destination, int numBytes, byte value)
+        {
+            var to = (byte*)destination;
+            var pos = 0;
+
+            unchecked
+            {
+                // 64bit blocks.
+                #if UNITY_64
+                while (numBytes >= 8)
+                {
+                    *(ulong*)&to[pos] = ((ulong)value << 56) | ((ulong)value << 48) | ((ulong)value << 40) | ((ulong)value << 32)
+                        | ((ulong)value << 24) | ((ulong)value << 16) | ((ulong)value << 8) | value;
+                    numBytes -= 8;
+                    pos += 8;
+                }
+                #endif
+
+                // 32bit blocks.
+                while (numBytes >= 4)
+                {
+                    *(uint*)&to[pos] = ((uint)value << 24) | ((uint)value << 16) | ((uint)value << 8) | value;
+                    numBytes -= 4;
+                    pos += 4;
+                }
+
+                // Remaining bytes.
+                while (numBytes > 0)
+                {
+                    to[pos] = value;
+                    numBytes -= 1;
+                    pos += 1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copy from <paramref name="source"/> to <paramref name="destination"/> all the bits that
+        /// ARE set in <paramref name="mask"/>.
+        /// </summary>
+        /// <param name="destination">Memory to copy to.</param>
+        /// <param name="source">Memory to copy from.</param>
+        /// <param name="numBytes">Number of bytes to copy.</param>
+        /// <param name="mask">Bitmask that determines which bits to copy. Bits that are set WILL be copied.</param>
+        public static void MemCpyMasked(void* destination, void* source, int numBytes, void* mask)
+        {
+            var from = (byte*)source;
+            var to = (byte*)destination;
+            var bits = (byte*)mask;
+            var pos = 0;
+
+            unchecked
+            {
+                // Copy 64bit blocks.
+                #if UNITY_64
+                while (numBytes >= 8)
+                {
+                    *(ulong*)(to + pos) &= ~*(ulong*)(bits + pos); // Preserve unmasked bits.
+                    *(ulong*)(to + pos) |= *(ulong*)(from + pos) & *(ulong*)(bits + pos); // Copy masked bits.
+                    numBytes -= 8;
+                    pos += 8;
+                }
+                #endif
+
+                // Copy 32bit blocks.
+                while (numBytes >= 4)
+                {
+                    *(uint*)(to + pos) &= ~*(uint*)(bits + pos); // Preserve unmasked bits.
+                    *(uint*)(to + pos) |= *(uint*)(from + pos) & *(uint*)(bits + pos); // Copy masked bits.
+                    numBytes -= 4;
+                    pos += 4;
+                }
+
+                // Copy remaining bytes.
+                while (numBytes > 0)
+                {
+                    unchecked
+                    {
+                        to[pos] &= (byte)~bits[pos]; // Preserve unmasked bits.
+                        to[pos] |= (byte)(from[pos] & bits[pos]); // Copy masked bits.
+                    }
+                    numBytes -= 1;
+                    pos += 1;
+                }
+            }
         }
 
         public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)

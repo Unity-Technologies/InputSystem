@@ -9,11 +9,13 @@ using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Composites;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
@@ -50,6 +52,13 @@ partial class CoreTests
     public void Actions_TimeoutsDoNotGetTriggeredInEditorUpdates()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Devices get reset when losing focus so when we switch from the player to the editor,
+        // actions would get cancelled anyway. To avoid, create a device that runs in the background
+        // and enabled runInBackground.
+        SetCanRunInBackground(gamepad, true);
+        runtime.runInBackground = true;
+
         var action = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold");
         action.Enable();
 
@@ -2419,18 +2428,21 @@ partial class CoreTests
         var map = new InputActionMap();
         var action = map.AddAction("action", binding: "<Gamepad>/leftStick");
 
+        Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
 
         map.devices = new[] {gamepad2};
 
+        Assert.That(map.devices, Is.EquivalentTo(new[] { gamepad2}));
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
 
         map.devices = null;
 
+        Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad2.leftStick));
@@ -2471,6 +2483,7 @@ partial class CoreTests
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map);
 
+        Assert.That(asset.devices, Is.Null);
         Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
@@ -2478,6 +2491,7 @@ partial class CoreTests
 
         asset.devices = new[] {gamepad2};
 
+        Assert.That(asset.devices, Is.EquivalentTo(new[] { gamepad2 }));
         Assert.That(map.devices, Is.EquivalentTo(asset.devices));
         Assert.That(action.controls, Has.Count.EqualTo(1));
         Assert.That(action.controls, Has.None.SameAs(gamepad1.leftStick));
@@ -2485,6 +2499,7 @@ partial class CoreTests
 
         asset.devices = null;
 
+        Assert.That(asset.devices, Is.Null);
         Assert.That(map.devices, Is.Null);
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad1.leftStick));
@@ -2901,12 +2916,40 @@ partial class CoreTests
         Assert.That(action.controls, Is.EquivalentTo(new[] {device2.leftButton}));
     }
 
+    // This case is important for keyboards as a configuration change on the keyboard may imply a change in keyboard
+    // layout which in turn affects bindings to keys by "display name" (i.e. text character).
     [Test]
     [Category("Actions")]
-    public void Actions_WhenControlsUpdate_NotificationIsTriggered()
+    public void Actions_ControlsUpdateWhenDeviceConfigurationChanges()
     {
-        var action = new InputAction("action", binding: "<Gamepad>/leftTrigger");
-        action.Enable();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Bind to key generating a 'q' character.
+        var action = new InputAction(binding: "<Keyboard>/#(Q)");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.qKey}));
+
+        // Swap 'a' and 'q'.
+        SetKeyInfo(Key.A, "Q");
+        SetKeyInfo(Key.Q, "A");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.aKey}));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenControlsUpdate_NotificationIsTriggered_ButOnlyAfterBindingsHaveFirstBeenResolved()
+    {
+        var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
+
+        // Enabling an action resolves its bindings. From the on, we get notifications for when
+        // bound controls change.
+        enabledAction.Enable();
+
+        // On this action we don't trigger binding resolution and thus should not see notifications.
+        new InputAction("disabledAction", binding: "<Gamepad>/leftTrigger");
+
+        var controlsQueriedAction = new InputAction("controlsQueriedAction", binding: "<Keyboard>/space");
 
         var received = new List<object>();
         InputSystem.onActionChange +=
@@ -2923,11 +2966,98 @@ partial class CoreTests
             {
                 // When the action map re-resolves it will temporarily disable the action
                 // which we see surface through the notifications.
-                action, InputActionChange.ActionDisabled,
-                action, InputActionChange.BoundControlsAboutToChange,
-                action, InputActionChange.BoundControlsChanged,
-                action, InputActionChange.ActionEnabled,
+                enabledAction, InputActionChange.ActionDisabled,
+                enabledAction, InputActionChange.BoundControlsAboutToChange,
+                enabledAction, InputActionChange.BoundControlsChanged,
+                enabledAction, InputActionChange.ActionEnabled,
             }));
+
+        received.Clear();
+
+        // Querying controls from an action resolves its bindings so we should see notifications
+        // after doing this.
+        _ = controlsQueriedAction.controls;
+
+        Assert.That(received,
+            Is.EquivalentTo(new object[]
+            {
+                controlsQueriedAction, InputActionChange.BoundControlsChanged
+            }));
+
+        received.Clear();
+
+        InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(received,
+            Is.EquivalentTo(new object[]
+            {
+                controlsQueriedAction, InputActionChange.BoundControlsAboutToChange,
+                controlsQueriedAction, InputActionChange.BoundControlsChanged
+            }));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenControlsUpdateInActionMap_NotificationIsTriggered()
+    {
+        var actionMap = new InputActionMap("map");
+        actionMap.AddAction("action", binding: "<Gamepad>/leftTrigger");
+        actionMap.Enable();
+
+        var received = new List<object>();
+        InputSystem.onActionChange +=
+            (obj, change) =>
+        {
+            received.Add(obj);
+            received.Add(change);
+        };
+
+        InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(received,
+            Is.EquivalentTo(new object[]
+            {
+                // When the action map re-resolves it will temporarily disable the action
+                // which we see surface through the notifications.
+                actionMap, InputActionChange.ActionMapDisabled,
+                actionMap, InputActionChange.BoundControlsAboutToChange,
+                actionMap, InputActionChange.BoundControlsChanged,
+                actionMap, InputActionChange.ActionMapEnabled,
+            }));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenControlsUpdateInActionAsset_NotificationIsTriggered()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.name = "asset";
+        var actionMap = new InputActionMap("map");
+        asset.AddActionMap(actionMap);
+        actionMap.AddAction("action", binding: "<Gamepad>/leftTrigger");
+        actionMap.Enable();
+
+        var received = new List<object>();
+        InputSystem.onActionChange +=
+            (obj, change) =>
+        {
+            received.Add(obj);
+            received.Add(change);
+        };
+
+        InputSystem.AddDevice<Gamepad>();
+
+        // For some reason, actionMap and asset are considered equivalent so we do the element
+        // checks individually here.
+        Assert.That(received, Has.Count.EqualTo(8));
+        Assert.That(received[0], Is.SameAs(actionMap));
+        Assert.That(received[1], Is.EqualTo(InputActionChange.ActionMapDisabled));
+        Assert.That(received[2], Is.SameAs(asset));
+        Assert.That(received[3], Is.EqualTo(InputActionChange.BoundControlsAboutToChange));
+        Assert.That(received[4], Is.SameAs(asset));
+        Assert.That(received[5], Is.EqualTo(InputActionChange.BoundControlsChanged));
+        Assert.That(received[6], Is.SameAs(actionMap));
+        Assert.That(received[7], Is.EqualTo(InputActionChange.ActionMapEnabled));
     }
 
     [Test]
@@ -4091,6 +4221,51 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
+    {
+        var genericGamepad = InputSystem.AddDevice<Gamepad>();
+        var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var genericGamepadScheme = new InputControlScheme("GenericGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var ps4GamepadScheme = new InputControlScheme("PS4Gamepad")
+            .WithRequiredDevice("<DualShockGamepad>");
+
+        using (var genericToGeneric = genericGamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
+        using (var genericToPS4 = genericGamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
+        using (var ps4ToGeneric = ps4GamepadScheme.PickDevicesFrom(new[] { genericGamepad }))
+        using (var ps4ToPS4 = ps4GamepadScheme.PickDevicesFrom(new[] { ps4Gamepad }))
+        using (var genericToMouse = genericGamepadScheme.PickDevicesFrom(new[] { mouse }))
+        using (var ps4ToMouse = ps4GamepadScheme.PickDevicesFrom(new[] { mouse }))
+        {
+            Assert.That(genericToGeneric.score, Is.GreaterThan(1));
+            Assert.That(genericToPS4.score, Is.GreaterThan(1));
+            Assert.That(ps4ToGeneric.score, Is.Zero); // Generic gamepad is no match for PS4 scheme.
+            Assert.That(ps4ToPS4.score, Is.GreaterThan(1));
+            Assert.That(genericToMouse.score, Is.Zero);
+            Assert.That(ps4ToMouse.score, Is.Zero);
+
+            // Generic gawmepad is a more precise match for generic gamepad scheme than PS4 controller is
+            // for generic gamepad scheme.
+            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToGeneric.score));
+
+            // Generic gamepad is a more precise match for generic gamepad scheme than PS4 *HID* controller
+            // is for PS4 gamepad scheme.
+            Assert.That(genericToGeneric.score, Is.GreaterThan(ps4ToPS4.score));
+
+            // Generic gamepad to generic gamepad scheme is a 100% match so score is one for matching the
+            // requirement plus 1 for matching it 100%.
+            Assert.That(genericToGeneric.score, Is.EqualTo(1 + 1));
+
+            // PS4 *HID* gamepad to PS4 gamepad scheme is a 50% match as the HID layout is one step removed
+            // from the base PS4 gamepad layout.
+            Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_CanPickDevicesThatMatchGivenControlScheme_WithoutAllocatingGCMemory()
     {
@@ -4131,12 +4306,39 @@ partial class CoreTests
 
         Assert.That(InputControlScheme.FindControlSchemeForDevice(gamepad, new[] {scheme1, scheme2}),
             Is.EqualTo(scheme1));
-        Assert.That(InputControlScheme.FindControlSchemeForDevice(keyboard, new[] {scheme1, scheme2}),
-            Is.EqualTo(scheme2));
-        Assert.That(InputControlScheme.FindControlSchemeForDevice(mouse, new[] {scheme1, scheme2}),
-            Is.EqualTo(scheme2));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(keyboard, new[] { scheme1, scheme2 }),
+            Is.Null);
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(mouse, new[] { scheme1, scheme2 }),
+            Is.Null);
         Assert.That(InputControlScheme.FindControlSchemeForDevice(touch, new[] {scheme1, scheme2}),
             Is.Null);
+        Assert.That(InputControlScheme.FindControlSchemeForDevices(new InputDevice[] { keyboard, mouse }, new[] { scheme1, scheme2 }),
+            Is.EqualTo(scheme2));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
+    {
+        var genericGamepadScheme = new InputControlScheme("GenericGamepad")
+            .WithRequiredDevice("<Gamepad>");
+        var ps4GamepadScheme = new InputControlScheme("PS4")
+            .WithRequiredDevice("<DualShockGamepad>");
+        var xboxGamepadScheme = new InputControlScheme("Xbox")
+            .WithRequiredDevice("<XInputController>");
+        var mouseScheme = new InputControlScheme("Mouse") // Noise.
+            .WithRequiredDevice("<Mouse>");
+
+        var genericGamepad = InputSystem.AddDevice<Gamepad>();
+        var ps4Controller = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var xboxController = InputSystem.AddDevice<XInputController>();
+
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(genericGamepad, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(genericGamepadScheme));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(ps4Controller, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(ps4GamepadScheme));
+        Assert.That(InputControlScheme.FindControlSchemeForDevice(xboxController, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
+            Is.EqualTo(xboxGamepadScheme));
     }
 
     // The bindings targeting an action can be masked out such that only specific
@@ -4304,6 +4506,259 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
         Assert.That(action.controls, Has.Exactly(1).SameAs(mouse.press));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetDisplayStringForBindings()
+    {
+        Assert.That(new InputBinding("<Keyboard>/space").ToDisplayString(), Is.EqualTo("Space"));
+        Assert.That(new InputBinding("<Gamepad>/buttonSouth").ToDisplayString(), Is.EqualTo(GamepadState.ButtonSouthShortDisplayName));
+        Assert.That(new InputBinding("<Mouse>/leftButton").ToDisplayString(), Is.EqualTo("LMB"));
+        Assert.That(new InputBinding().ToDisplayString(), Is.EqualTo(""));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetDisplayStringForBindings_UsingDisplayNamesFromActualDevice()
+    {
+        var psController = InputSystem.AddDevice<DualShockGamepad>();
+
+        Assert.That(new InputBinding("<Gamepad>/buttonSouth").ToDisplayString(control: psController), Is.EqualTo("Cross"));
+    }
+
+    // The following functionality is the basis for associating images with binding strings. For example, when looking at the
+    // binding string "A", we need to know the context of it to be able to choose an image. Is it a keyboard "A" key or is it the
+    // "A" button on a gamepad? Two different images. So, we need to be able to not just get the "A" string but also the name
+    // of the device layout that gives context to the display string.
+    //
+    // The input system currently has no built-in mechanism for actually managing such imagery but with the functionality here,
+    // it is possible to easily build custom mechanisms.
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetDisplayStringForBindings_AndGetDeviceLayoutAndControlPath()
+    {
+        var psController = InputSystem.AddDevice<DualShockGamepad>();
+
+        new InputBinding("<Gamepad>/buttonSouth").ToDisplayString(out var layoutA, out var controlA, control: psController);
+        new InputBinding("<Gamepad>/buttonSouth").ToDisplayString(out var layoutB, out var controlB);
+
+        Assert.That(layoutA, Is.EqualTo("DualShockGamepad"));
+        Assert.That(layoutB, Is.EqualTo("Gamepad"));
+        Assert.That(controlA, Is.EqualTo("buttonSouth"));
+        Assert.That(controlB, Is.EqualTo("buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetDisplayStringForBindings_AndIgnoreBindingOverrides()
+    {
+        Assert.That(
+            new InputBinding { path = "<Mouse>/leftButton", overridePath = "<Keyboard>/space" }.ToDisplayString(InputBinding
+                .DisplayStringOptions.IgnoreBindingOverrides), Is.EqualTo("LMB"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CannotGetDisplayStringForCompositeBindingsDirectlyFromBinding()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Positive", "<Keyboard>/a")
+            .With("Negative", "<Keyboard>/d");
+
+        Assert.That(action.bindings[0].ToDisplayString(), Is.EqualTo(""));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpBindingIndexByMask()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        Assert.That(action.GetBindingIndex(group: "Keyboard"), Is.EqualTo(0));
+        Assert.That(action.GetBindingIndex(group: "Gamepad"), Is.EqualTo(1));
+        Assert.That(action.GetBindingIndex(group: "Mouse"), Is.EqualTo(2));
+
+        Assert.That(action.GetBindingIndex(path: "<Keyboard>/space"), Is.EqualTo(0));
+        Assert.That(action.GetBindingIndex(path: "<Gamepad>/buttonSouth"), Is.EqualTo(1));
+        Assert.That(action.GetBindingIndex(path: "<Mouse>/leftButton"), Is.EqualTo(2));
+
+        Assert.That(action.GetBindingIndex("DoesNotExist"), Is.EqualTo(-1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpBindingIndexByBoundControl()
+    {
+        var action = new InputAction();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        action.AddBinding("<Keyboard>/space");
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Mouse>/leftButton");
+
+        Assert.That(action.GetBindingIndexForControl(keyboard.spaceKey), Is.EqualTo(0));
+        Assert.That(action.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(1));
+        Assert.That(action.GetBindingIndexForControl(gamepad.buttonNorth), Is.EqualTo(-1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpBindingIndexByBoundControl_InComplexSetup()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = asset.AddActionMap("map1");
+        var map2 = asset.AddActionMap("map2");
+
+        var action1 = map1.AddAction("action1");
+        var action2 = map1.AddAction("action2");
+        var action3 = map2.AddAction("action3");
+        var action4 = map2.AddAction("action4");
+
+        map1.AddBinding("<Gamepad>/buttonSouth", action: "action1");
+        map2.AddBinding("<Gamepad>/buttonSouth", action: "action3");
+        map2.AddBinding("<Gamepad>/buttonNorth", action: "action4");
+        map2.AddBinding("<Gamepad>/buttonWest", action: "action3");
+        map2.AddBinding("<Gamepad>/buttonEast", action: "action3");
+
+        Assert.That(action1.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
+        Assert.That(action2.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(-1));
+        Assert.That(action3.GetBindingIndexForControl(gamepad.buttonWest), Is.EqualTo(1));
+        Assert.That(action3.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(-1));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetDisplayTextForBindingsOnAction()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        Assert.That(action.GetBindingDisplayString(), Is.EqualTo("Space | A | LMB"));
+        Assert.That(action.GetBindingDisplayString(group: "Keyboard"), Is.EqualTo("Space"));
+        Assert.That(action.GetBindingDisplayString(group: "Gamepad"), Is.EqualTo("A"));
+        Assert.That(action.GetBindingDisplayString(group: "Mouse"), Is.EqualTo("LMB"));
+
+        // No binding for scheme simply returns empty string.
+        Assert.That(action.GetBindingDisplayString(group: "DoesNotExist"), Is.EqualTo(""));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_BindingMaskActsAsDefault()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        action.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        action.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        var actionMap = new InputActionMap();
+        var actionInMap = actionMap.AddAction("action");
+        actionInMap.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        actionInMap.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        actionInMap.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var actionMapInAsset = asset.AddActionMap("map");
+        var actionInAsset = actionMapInAsset.AddAction("action");
+        actionInAsset.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        actionInAsset.AddBinding("<Gamepad>/buttonSouth", groups: "Gamepad");
+        actionInAsset.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        action.bindingMask = InputBinding.MaskByGroup("Keyboard");
+        actionInMap.bindingMask = InputBinding.MaskByGroup("Keyboard");
+        actionInAsset.bindingMask = InputBinding.MaskByGroup("Keyboard");
+
+        Assert.That(action.GetBindingDisplayString(), Is.EqualTo("Space"));
+        Assert.That(actionInMap.GetBindingDisplayString(), Is.EqualTo("Space"));
+        Assert.That(actionInAsset.GetBindingDisplayString(), Is.EqualTo("Space"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_ResolvedControlsAreUsedForDisplayNames()
+    {
+        var action = new InputAction();
+
+        action.AddBinding("<Keyboard>/space", groups: "Keyboard");
+        action.AddBinding("<Mouse>/leftButton", groups: "Mouse");
+
+        InputSystem.AddDevice<Keyboard>();
+        SetKeyInfo(Key.Space, "Leertaste");
+
+        Assert.That(action.GetBindingDisplayString(group: "Keyboard"), Is.EqualTo("Leertaste"));
+        Assert.That(action.GetBindingDisplayString(group: "Mouse"), Is.EqualTo("LMB"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_CompositesAreFormattedAsWhole()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a")
+            .With("Positive", "<Keyboard>/d");
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+        action.AddCompositeBinding("ButtonWithOneModifier")
+            .With("Modifier", "<Keyboard>/LeftShift")
+            .With("Modifier", "<Keyboard>/RightShift")
+            .With("Button", "<Keyboard>/a");
+        action.AddBinding("<Gamepad>/leftStick/x"); // Noise.
+
+        Assert.That(action.GetBindingDisplayString(0), Is.EqualTo("A/D"));
+        Assert.That(action.GetBindingDisplayString(3), Is.EqualTo("W/A/S/D"));
+        Assert.That(action.GetBindingDisplayString(8), Is.EqualTo("Left Shift|Right Shift+A"));
+    }
+
+    ////TODO: this will need to take localization into account (though this is part of a broader integration that also affects other features of the input system)
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_InteractionsAreShownByDefault()
+    {
+        var action1 = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.4)");
+        var action2 = new InputAction(binding: "<Gamepad>/buttonSouth", interactions: "hold(duration=0.4);press");
+
+        // An action where the interaction sits directly on the action and not on bindings.
+        var action3 = new InputAction(interactions: "hold");
+        action3.AddBinding("<Gamepad>/buttonSouth");
+
+        Assert.That(action1.GetBindingDisplayString(), Is.EqualTo("Hold " + GamepadState.ButtonSouthShortDisplayName));
+        Assert.That(action2.GetBindingDisplayString(), Is.EqualTo("Hold or Press " + GamepadState.ButtonSouthShortDisplayName));
+        Assert.That(action3.GetBindingDisplayString(), Is.EqualTo("Hold " + GamepadState.ButtonSouthShortDisplayName));
+
+        // Can suppress.
+        Assert.That(action1.GetBindingDisplayString(InputBinding.DisplayStringOptions.DontIncludeInteractions),
+            Is.EqualTo("Hold " + GamepadState.ButtonSouthShortDisplayName));
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Ignore("TODO")]
+    public void TODO_Actions_WhenGettingDisplayTextForBindingsOnAction_CanGetQualificationsForEachIndividualStringComponent()
+    {
+        //interaction:Hold gamepad:A
+        //is this actually useful? the use case here is localization but not sure this is the most usable approach
+        Assert.Fail();
     }
 
     // When we have an .inputactions asset, at runtime we should end up with a single array of resolved
@@ -4493,6 +4948,18 @@ partial class CoreTests
     public void TODO_Actions_CompositesWithMissingBindings_ThrowExceptions()
     {
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanGetCompositeNameFromBinding()
+    {
+        var action = new InputAction();
+        action.AddCompositeBinding("1DAxis(normalize=false)")
+            .With("Positive", "<Gamepad>/leftTrigger")
+            .With("Negative", "<Gamepad>/rightTrigger");
+
+        Assert.That(action.bindings[0].GetNameOfComposite(), Is.EqualTo("1DAxis"));
     }
 
     [Test]

@@ -200,24 +200,48 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionMap.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get => m_Devices;
+            get
+            {
+                if (m_DevicesCount < 0)
+                    return null;
+                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
+            }
             set
             {
                 if (value == null)
                 {
-                    if (m_DevicesArray != null)
+                    if (m_DevicesCount < 0)
+                        return; // No change.
+
+                    if (m_DevicesArray != null & m_DevicesCount > 0)
                         Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = 0;
-                    m_Devices = null;
+                    m_DevicesCount = -1;
                 }
                 else
                 {
-                    ArrayHelpers.Clear(m_DevicesArray, ref m_DevicesCount);
+                    // See if the array actually changes content. Avoids re-resolving when there
+                    // is no need to.
+                    if (m_DevicesCount == value.Value.Count)
+                    {
+                        var noChange = true;
+                        for (var i = 0; i < m_DevicesCount; ++i)
+                        {
+                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
+                            {
+                                noChange = false;
+                                break;
+                            }
+                        }
+                        if (noChange)
+                            return;
+                    }
+
+                    if (m_DevicesCount > 0)
+                        m_DevicesArray.Clear(ref m_DevicesCount);
+                    m_DevicesCount = 0;
                     ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                    m_Devices = new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
                 }
 
-                ////TODO: determine if this has *actually* changed things before firing off a re-resolve
                 ReResolveIfNecessary();
             }
         }
@@ -762,7 +786,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(m_ActionMaps != null && m_ActionMaps.Length > 0);
             // State is share between all action maps in the asset. Resolving bindings for the
             // first map will resolve them for all maps.
-            m_ActionMaps[0].ResolveBindings();
+            m_ActionMaps[0].LazyResolveBindings();
         }
 
         private void OnDestroy()
@@ -787,8 +811,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private ReadOnlyArray<InputDevice>? m_Devices;
-        [NonSerialized] private int m_DevicesCount;
+        [NonSerialized] private int m_DevicesCount = -1;
         [NonSerialized] private InputDevice[] m_DevicesArray;
 
         [Serializable]

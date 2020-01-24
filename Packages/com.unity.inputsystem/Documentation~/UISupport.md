@@ -2,6 +2,8 @@
 
 You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
+>NOTE: At the moment, there is no support for IMGUI or for UIElements. This is being worked on.
+
 ## `InputSystemUIInputModule` Component
 
 The [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component acts as a drop-in replacement for the [`StandaloneInputModule`](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html) component that the Unity UI package. [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) provides the same kind of functionality as  [`StandaloneInputModule`](https://docs.unity3d.com/Manual/script-StandaloneInputModule.html), but it uses the Input System instead of the legacy Input Manager to drive UI input.

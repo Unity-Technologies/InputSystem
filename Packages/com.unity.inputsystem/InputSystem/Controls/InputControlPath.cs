@@ -8,6 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: allow stuff like "/gamepad/**/<button>"
 ////TODO: add support for | (e.g. "<Gamepad>|<Joystick>/{PrimaryMotion}"
 ////TODO: handle arrays
+////TODO: add method to extract control path
 
 ////REVIEW: change "*/{PrimaryAction}" to "*/**/{PrimaryAction}" so that the hierarchy crawling becomes explicit?
 
@@ -129,6 +130,12 @@ namespace UnityEngine.InputSystem
             /// return just "A".
             /// </summary>
             OmitDevice = 1 << 1,
+
+            /// <summary>
+            /// When available, use short display names instead of long ones. For example, instead of "Left Button",
+            /// return "LMB".
+            /// </summary>
+            UseShortNames = 1 << 2,
         }
 
         ////TODO: factor out the part that looks up an InputControlLayout.ControlItem from a given path
@@ -139,6 +146,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="path">A control path such as "&lt;XRController>{LeftHand}/position".</param>
         /// <param name="options">Customize the resulting string.</param>
+        /// <param name="control">An optional control. If supplied and the control or one of its children
+        /// matches the given <paramref name="path"/>, display names will be based on the matching control
+        /// rather than on static information available from <see cref="InputControlLayout"/>s.</param>
         /// <returns>A string such as "Left Stick/X [Gamepad]".</returns>
         /// <remarks>
         /// This function is most useful for turning binding paths (see <see cref="InputBinding.path"/>)
@@ -165,11 +175,94 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         /// <seealso cref="InputBinding.path"/>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,int,InputBinding.DisplayStringOptions)"/>
         public static string ToHumanReadableString(string path,
-            HumanReadableStringOptions options = HumanReadableStringOptions.None)
+            HumanReadableStringOptions options = HumanReadableStringOptions.None,
+            InputControl control = null)
         {
+            return ToHumanReadableString(path, out _, out _, options, control);
+        }
+
+        /// <summary>
+        /// Create a human readable string from the given control path.
+        /// </summary>
+        /// <param name="path">A control path such as "&lt;XRController>{LeftHand}/position".</param>
+        /// <param name="deviceLayoutName">Receives the name of the device layout that the control path was resolved to.
+        /// This is useful </param>
+        /// <param name="controlPath">Receives the path to the referenced control on the device or <c>null</c> if not applicable.
+        /// For example, with a <paramref name="path"/> of <c>"&lt;Gamepad&gt;/dpad/up"</c>, the resulting control path
+        /// will be <c>"dpad/up"</c>. This is useful when trying to look up additional resources (such as images) based on the
+        /// control that is being referenced.</param>
+        /// <param name="options">Customize the resulting string.</param>
+        /// <param name="control">An optional control. If supplied and the control or one of its children
+        /// matches the given <paramref name="path"/>, display names will be based on the matching control
+        /// rather than on static information available from <see cref="InputControlLayout"/>s.</param>
+        /// <returns>A string such as "Left Stick/X [Gamepad]".</returns>
+        /// <remarks>
+        /// This function is most useful for turning binding paths (see <see cref="InputBinding.path"/>)
+        /// into strings that can be displayed in UIs (such as rebinding screens). It is used by
+        /// the Unity editor itself to display binding paths in the UI.
+        ///
+        /// The method uses display names (see <see cref="InputControlAttribute.displayName"/>,
+        /// <see cref="InputControlLayoutAttribute.displayName"/>, and <see cref="InputControlLayout.ControlItem.displayName"/>)
+        /// where possible. For example, "&lt;XInputController&gt;/buttonSouth" will be returned as
+        /// "A [Xbox Controller]" as the display name of <see cref="XInput.XInputController"/> is "XBox Controller"
+        /// and the display name of its "buttonSouth" control is "A".
+        ///
+        /// Note that these lookups depend on the currently registered control layouts (see <see
+        /// cref="InputControlLayout"/>) and different strings may thus be returned for the same control
+        /// path depending on the layouts registered with the system.
+        ///
+        /// <example>
+        /// <code>
+        /// InputControlPath.ToHumanReadableString("*/{PrimaryAction"); // -> "PrimaryAction [Any]"
+        /// InputControlPath.ToHumanReadableString("&lt;Gamepad&gt;/buttonSouth"); // -> "Button South [Gamepad]"
+        /// InputControlPath.ToHumanReadableString("&lt;XInputController&gt;/buttonSouth"); // -> "A [Xbox Controller]"
+        /// InputControlPath.ToHumanReadableString("&lt;Gamepad&gt;/leftStick/x"); // -> "Left Stick/X [Gamepad]"
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputBinding.path"/>
+        /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,int,InputBinding.DisplayStringOptions)"/>
+        public static string ToHumanReadableString(string path,
+            out string deviceLayoutName,
+            out string controlPath,
+            HumanReadableStringOptions options = HumanReadableStringOptions.None,
+            InputControl control = null)
+        {
+            deviceLayoutName = null;
+            controlPath = null;
+
             if (string.IsNullOrEmpty(path))
                 return string.Empty;
+
+            // If we have a control, see if the path matches something in its hierarchy. If so,
+            // don't both parsing the path and just use the matched control for creating a display
+            // string.
+            if (control != null)
+            {
+                var childControl = TryFindControl(control, path);
+                var matchedControl = childControl ?? (Matches(path, control) ? control : null);
+
+                if (matchedControl != null)
+                {
+                    var text = (options & HumanReadableStringOptions.UseShortNames) != 0 &&
+                        !string.IsNullOrEmpty(matchedControl.shortDisplayName)
+                        ? matchedControl.shortDisplayName
+                        : matchedControl.displayName;
+
+                    if ((options & HumanReadableStringOptions.OmitDevice) == 0)
+                        text = $"{text} [{matchedControl.device.displayName}]";
+
+                    deviceLayoutName = matchedControl.device.layout;
+                    if (!(matchedControl is InputDevice))
+                        controlPath = matchedControl.path.Substring(matchedControl.device.path.Length + 1);
+
+                    return text;
+                }
+            }
 
             var buffer = new StringBuilder();
             var parser = new PathParser(path);
@@ -184,7 +277,8 @@ namespace UnityEngine.InputSystem
                 {
                     // Keep track of which control layout we're on (if any) as we're crawling
                     // down the path.
-                    var device = parser.current.ToHumanReadableString(null, out var currentLayoutName);
+                    var device = parser.current.ToHumanReadableString(null, null, out var currentLayoutName, out var _, options);
+                    deviceLayoutName = currentLayoutName;
 
                     // Any additional levels (if present) are taken to form a control path on the device.
                     var isFirstControlLevel = true;
@@ -194,7 +288,7 @@ namespace UnityEngine.InputSystem
                             buffer.Append('/');
 
                         buffer.Append(parser.current.ToHumanReadableString(
-                            currentLayoutName, out currentLayoutName));
+                            currentLayoutName, controlPath, out currentLayoutName, out controlPath, options));
                         isFirstControlLevel = false;
                     }
 
@@ -574,6 +668,8 @@ namespace UnityEngine.InputSystem
             return matches.Count - countBefore;
         }
 
+        ////REVIEW: what's the difference between TryFindChild and TryFindControl??
+
         public static InputControl TryFindChild(InputControl control, string path, int indexInPath = 0)
         {
             return TryFindChild<InputControl>(control, path, indexInPath);
@@ -613,6 +709,29 @@ namespace UnityEngine.InputSystem
             return MatchesRecursive(ref parser, control);
         }
 
+        /// <summary>
+        /// Check whether the given path matches <paramref name="control"/> or any of its parents.
+        /// </summary>
+        /// <param name="expected">A control path.</param>
+        /// <param name="control">An input control.</param>
+        /// <returns>True if the given path matches at least a partial path to <paramref name="control"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="expected"/> is <c>null</c> or empty -or-
+        /// <paramref name="control"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // True as the path matches the Keyboard device itself, i.e. the parent of
+        /// // Keyboard.aKey.
+        /// InputControlPath.MatchesPrefix("&lt;Keyboard&gt;", Keyboard.current.aKey);
+        ///
+        /// // False as the path matches none of the controls leading to Keyboard.aKey.
+        /// InputControlPath.MatchesPrefix("&lt;Gamepad&gt;", Keyboard.current.aKey);
+        ///
+        /// // True as the path matches Keyboard.aKey itself.
+        /// InputControlPath.MatchesPrefix("&lt;Keyboard&gt;/a", Keyboard.current.aKey);
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static bool MatchesPrefix(string expected, InputControl control)
         {
             if (string.IsNullOrEmpty(expected))
@@ -806,7 +925,7 @@ namespace UnityEngine.InputSystem
             if (usages == null)
                 return null;
 
-            var usageCount = usages.Length;
+            var usageCount = device.m_UsageToControl.Length;
             var startIndex = indexInPath + 1;
             var pathCanMatchMultiple = PathComponentCanYieldMultipleMatches(path, indexInPath);
             var pathLength = path.Length;
@@ -1024,9 +1143,11 @@ namespace UnityEngine.InputSystem
             public bool isWildcard => name == Wildcard;
             public bool isDoubleWildcard => name == DoubleWildcard;
 
-            public string ToHumanReadableString(string parentLayoutName, out string referencedLayoutName)
+            public string ToHumanReadableString(string parentLayoutName, string parentControlPath, out string referencedLayoutName,
+                out string controlPath, HumanReadableStringOptions options)
             {
                 referencedLayoutName = null;
+                controlPath = null;
 
                 var result = string.Empty;
                 if (isWildcard)
@@ -1092,12 +1213,36 @@ namespace UnityEngine.InputSystem
                             var control = parentLayout.FindControlIncludingArrayElements(controlName, out var arrayIndex);
                             if (control != null)
                             {
-                                if (!string.IsNullOrEmpty(control.Value.displayName))
+                                // Synthesize path of control.
+                                if (string.IsNullOrEmpty(parentControlPath))
                                 {
                                     if (arrayIndex != -1)
-                                        nameString = $"{control.Value.displayName} #{arrayIndex}";
+                                        controlPath = $"{control.Value.name}{arrayIndex}";
                                     else
-                                        nameString = control.Value.displayName;
+                                        controlPath = control.Value.name;
+                                }
+                                else
+                                {
+                                    if (arrayIndex != -1)
+                                        controlPath = $"{parentControlPath}/{control.Value.name}{arrayIndex}";
+                                    else
+                                        controlPath = $"{parentControlPath}/{control.Value.name}";
+                                }
+
+                                var shortDisplayName = (options & HumanReadableStringOptions.UseShortNames) != 0
+                                    ? control.Value.shortDisplayName
+                                    : null;
+
+                                var displayName = !string.IsNullOrEmpty(shortDisplayName)
+                                    ? shortDisplayName
+                                    : control.Value.displayName;
+
+                                if (!string.IsNullOrEmpty(displayName))
+                                {
+                                    if (arrayIndex != -1)
+                                        nameString = $"{displayName} #{arrayIndex}";
+                                    else
+                                        nameString = displayName;
                                 }
 
                                 // If we don't have an explicit <layout> part in the component,

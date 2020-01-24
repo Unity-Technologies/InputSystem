@@ -19,23 +19,22 @@ namespace UnityEngine.InputSystem.Editor
     public sealed class InputControlPathEditor : IDisposable
     {
         /// <summary>
-        ///
+        /// Initialize the control path editor.
         /// </summary>
         /// <param name="pathProperty"><see cref="string"/> type property that will receive the picked input control path.</param>
-        /// <param name="pickerState">Persistent editing state of the </param>
-        /// <param name="onModified"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified)
+        /// <param name="pickerState">Persistent editing state of the path editor. Used to retain state across domain reloads.</param>
+        /// <param name="onModified">Delegate that is called when the path has been modified.</param>
+        /// <param name="label">Optional label to display instead of display name of <paramref name="pathProperty"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="pathProperty"/> is <c>null</c>.</exception>
+        public InputControlPathEditor(SerializedProperty pathProperty, InputControlPickerState pickerState, Action onModified, GUIContent label = null)
         {
             if (pathProperty == null)
                 throw new ArgumentNullException(nameof(pathProperty));
 
             this.pathProperty = pathProperty;
-
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
-
-            m_PathLabel = new GUIContent(pathProperty.displayName, pathProperty.tooltip);
+            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.tooltip);
         }
 
         public void Dispose()

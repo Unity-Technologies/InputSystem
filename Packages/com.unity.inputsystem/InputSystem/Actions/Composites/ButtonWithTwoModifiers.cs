@@ -1,4 +1,6 @@
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Composites
 {
@@ -43,7 +45,8 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     /// </remarks>
     /// <seealso cref="ButtonWithOneModifier"/>
-    [Scripting.Preserve]
+    [Preserve]
+    [DisplayStringFormat("{modifier1}+{modifier2}+{button}")]
     public class ButtonWithTwoModifiers : InputBindingComposite<float>
     {
         /// <summary>

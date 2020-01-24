@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
-using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
@@ -853,6 +852,36 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedControls, Has.Exactly(1).SameAs(gamepad.aButton));
     }
 
+    // Touchscreens, because of the unusual TouchState events they receive, are trickier to handle than other
+    // types of devices. Make use that InputUser.listenForUnpairedDeviceActivity doesn't choke on such events.
+    // (case 1196522)
+    [Test]
+    [Category("Users")]
+    public void Users_CanDetectUseOfUnpairedDevice_WhenDeviceIsTouchscreen()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+
+        var activityWasDetected = false;
+
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed +=
+            (control, eventPtr) =>
+        {
+            // Because of Touchscreen's state trickery, there's no saying which actual TouchControl
+            // the event is for until Touchscreen has actually gone and done its thing and processed
+            // the event. So, all we can say here is that 'control' should be part of any of the
+            // TouchControls on our Touchscreen.
+            Assert.That(control.FindInParentChain<TouchControl>(), Is.Not.Null);
+            Assert.That(control.device, Is.SameAs(touchscreen));
+
+            activityWasDetected = true;
+        };
+
+        BeginTouch(1, new Vector2(123, 234));
+
+        Assert.That(activityWasDetected);
+    }
+
     // Make sure that if we pair a device from InputUser.onUnpairedDeviceUsed, we don't get any further
     // callbacks.
     [Test]
@@ -933,6 +962,69 @@ internal class UserTests : InputTestFixture
             new UserChange(user2, InputUserChange.DeviceRegained, gamepad2),
             new UserChange(user2, InputUserChange.DevicePaired, gamepad2),
         }));
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanDetectChangeInBindings()
+    {
+        var actions = new InputActionMap();
+        var action = actions.AddAction("action", binding: "<Gamepad>/leftTrigger");
+        action.Enable();
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var user = InputUser.PerformPairingWithDevice(gamepad1);
+
+        user.AssociateActionsWithUser(actions);
+
+        InputUser? receivedUser = null;
+        InputUserChange? receivedChange = null;
+        InputDevice receivedDevice = null;
+
+        InputUser.onChange +=
+            (u, c, d) =>
+        {
+            if (c != InputUserChange.ControlsChanged)
+                return;
+
+            Assert.That(receivedUser, Is.Null);
+            Assert.That(receivedChange, Is.Null);
+            Assert.That(receivedDevice, Is.Null);
+
+            receivedUser = u;
+            receivedChange = c;
+            receivedDevice = d;
+        };
+
+        // Rebind.
+        action.ApplyBindingOverride("<Gamepad>/rightTrigger");
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        // Pair new device.
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        InputUser.PerformPairingWithDevice(gamepad2, user: user);
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        // Unpair device.
+        user.UnpairDevice(gamepad1);
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
     }
 
     [Test]

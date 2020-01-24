@@ -623,6 +623,76 @@ namespace UnityEngine.InputSystem
             return s_Manager.TryLoadControlLayout(typeof(TControl));
         }
 
+        /// <summary>
+        /// Return the name of the layout that the layout registered as <paramref name="layoutName"/>
+        /// is based on.
+        /// </summary>
+        /// <param name="layoutName">Name of a layout as registered with a method such as <see
+        /// cref="RegisterLayout{T}(string,InputDeviceMatcher?)"/>. Case-insensitive.</param>
+        /// <returns>Name of the immediate parent layout of <paramref name="layoutName"/> or <c>null</c> if no layout
+        /// with the given name is registered or if it is not based on another layout or if it is a layout override.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="layoutName"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This method does not work for layout overrides (which can be based on multiple base layouts). To find
+        /// out which layouts a specific override registered with <see cref="RegisterLayoutOverride"/> is based on,
+        /// load the layout with <see cref="LoadLayout"/> and inspect <see cref="InputControlLayout.baseLayouts"/>.
+        /// This method will return <c>null</c> when <paramref name="layoutName"/> is the name of a layout override.
+        ///
+        /// One advantage of this method over calling <see cref="LoadLayout"/> and looking at <see cref="InputControlLayout.baseLayouts"/>
+        /// is that this method does not have to actually load the layout but instead only performs a simple lookup.
+        ///
+        /// <example>
+        /// <code>
+        /// // Prints "Pointer".
+        /// Debug.Log(InputSystem.GetNameOfBaseLayout("Mouse"));
+        ///
+        /// // Also works for control layouts. Prints "Axis".
+        /// Debug.Log(InputSystem.GetNameOfBaseLayout("Button"));
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControlLayout.baseLayouts"/>
+        public static string GetNameOfBaseLayout(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentNullException(nameof(layoutName));
+
+            var internedLayoutName = new InternedString(layoutName);
+            if (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(internedLayoutName, out var result))
+                return result;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Check whether the first layout is based on the second.
+        /// </summary>
+        /// <param name="firstLayoutName">Name of a registered <see cref="InputControlLayout"/>.</param>
+        /// <param name="secondLayoutName">Name of a registered <see cref="InputControlLayout"/>.</param>
+        /// <returns>True if <paramref name="firstLayoutName"/> is based on <paramref name="secondLayoutName"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="firstLayoutName"/> is <c>null</c> or empty -or-
+        /// <paramref name="secondLayoutName"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// This is
+        /// <example>
+        /// </example>
+        /// </remarks>
+        public static bool IsFirstLayoutBasedOnSecond(string firstLayoutName, string secondLayoutName)
+        {
+            if (string.IsNullOrEmpty(firstLayoutName))
+                throw new ArgumentNullException(nameof(firstLayoutName));
+            if (string.IsNullOrEmpty(secondLayoutName))
+                throw new ArgumentNullException(nameof(secondLayoutName));
+
+            var internedFirstName = new InternedString(firstLayoutName);
+            var internedSecondName = new InternedString(secondLayoutName);
+
+            if (internedFirstName == internedSecondName)
+                return true;
+
+            return InputControlLayout.s_Layouts.IsBasedOn(internedSecondName, internedFirstName);
+        }
+
         #endregion
 
         #region Processors
@@ -1607,10 +1677,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-
-            var resetCommand = RequestResetCommand.Create();
-            var result = device.ExecuteCommand(ref resetCommand);
-            return result >= 0;
+            return device.RequestRequest();
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
@@ -2449,9 +2516,16 @@ namespace UnityEngine.InputSystem
         /// when actions are triggered.
         /// </summary>
         /// <remarks>
-        /// The object received by the callback is either an <see cref="InputAction"/> or an
-        /// <see cref="InputActionMap"/> depending on whether the <see cref="InputActionChange"/>
-        /// affects a single action or an entire action map.
+        /// The object received by the callback is either an <see cref="InputAction"/>,
+        /// <see cref="InputActionMap"/>, or <see cref="InputActionAsset"/> depending on whether the
+        /// <see cref="InputActionChange"/> affects a single action, an entire action map, or an
+        /// entire action asset.
+        ///
+        /// For <see cref="InputActionChange.BoundControlsAboutToChange"/> and <see cref="InputActionChange.BoundControlsChanged"/>,
+        /// the given object is an <see cref="InputAction"/> if the action is not part of an action map,
+        /// an <see cref="InputActionMap"/> if the the actions are part of a map but not part of an asset, and an
+        /// <see cref="InputActionAsset"/> if the actions are part of an asset. In other words, the notification is
+        /// sent for the topmost object in the hierarchy.
         /// </remarks>
         /// <example>
         /// <code>
@@ -2464,13 +2538,39 @@ namespace UnityEngine.InputSystem
         ///             var control = action.activeControl;
         ///             //...
         ///         }
+        ///         else if (change == InputActionChange.ActionMapEnabled)
+        ///         {
+        ///             var actionMap = (InputActionMap)obj;
+        ///             //...
+        ///         }
+        ///         else if (change == InputActionChange.BoundControlsChanged)
+        ///         {
+        ///             var action = obj as InputAction;
+        ///             var actionMap = action?.actionMap ?? obj as InputActionMap;
+        ///             var actionAsset = actionMap?.asset ?? obj as InputActionAsset;
+        ///             //...
+        ///         }
         ///     };
         /// </code>
         /// </example>
+        /// <seealso cref="InputAction.controls"/>
         public static event Action<object, InputActionChange> onActionChange
         {
-            add => InputActionState.s_OnActionChange.Append(value);
-            remove => InputActionState.s_OnActionChange.Remove(value);
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                lock (s_Manager)
+                    if (!InputActionState.s_OnActionChange.Contains(value))
+                        InputActionState.s_OnActionChange.Append(value);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                lock (s_Manager)
+                    InputActionState.s_OnActionChange.Remove(value);
+            }
         }
 
         /// <summary>
@@ -2801,12 +2901,18 @@ namespace UnityEngine.InputSystem
             Profiling.Profiler.EndSample();
         }
 
-        private static void OnPlayModeChange(PlayModeStateChange change)
+        internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
                     s_SystemObject.settings = JsonUtility.ToJson(settings);
+                    s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_SystemObject.enterPlayModeTime = 0;
+                    break;
+
+                case PlayModeStateChange.EnteredPlayMode:
+                    s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps
@@ -3028,6 +3134,7 @@ namespace UnityEngine.InputSystem
             [SerializeField] public InputRemoting.SerializedState remotingState;
             #if UNITY_EDITOR
             [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+            [SerializeField] public string systemObject;
             #endif
             ////REVIEW: preserve InputUser state? (if even possible)
         }
@@ -3064,6 +3171,7 @@ namespace UnityEngine.InputSystem
                 remotingState = s_Remote?.SaveState() ?? new InputRemoting.SerializedState(),
                 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
+                systemObject = JsonUtility.ToJson(s_SystemObject),
                 #endif
             });
 
@@ -3094,6 +3202,7 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
+            JsonUtility.FromJsonOverwrite(state.systemObject, s_SystemObject);
             #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them

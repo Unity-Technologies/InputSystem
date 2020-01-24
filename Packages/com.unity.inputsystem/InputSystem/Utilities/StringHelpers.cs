@@ -141,6 +141,42 @@ namespace UnityEngine.InputSystem.Utilities
             return $"{numBytes} Bytes";
         }
 
+        public static bool FromNicifiedMemorySize(string text, out long result, long defaultMultiplier = 1)
+        {
+            text = text.Trim();
+
+            var multiplier = defaultMultiplier;
+            if (text.EndsWith("MB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024 * 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("GB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024 * 1024 * 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("KB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1024;
+                text = text.Substring(0, text.Length - 2);
+            }
+            else if (text.EndsWith("Bytes", StringComparison.InvariantCultureIgnoreCase))
+            {
+                multiplier = 1;
+                text = text.Substring(0, text.Length - "Bytes".Length);
+            }
+
+            if (!long.TryParse(text, out var num))
+            {
+                result = default;
+                return false;
+            }
+
+            result = num * multiplier;
+            return true;
+        }
+
         public static int CountOccurrences(this string str, char ch)
         {
             if (str == null)
@@ -512,6 +548,39 @@ namespace UnityEngine.InputSystem.Utilities
             if (string.IsNullOrEmpty(left))
                 return string.IsNullOrEmpty(right);
             return string.Equals(left, right, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static string ExpandTemplateString(string template, Func<string, string> mapFunc)
+        {
+            if (string.IsNullOrEmpty(template))
+                throw new ArgumentNullException(nameof(template));
+            if (mapFunc == null)
+                throw new ArgumentNullException(nameof(mapFunc));
+
+            var buffer = new StringBuilder();
+
+            var length = template.Length;
+            for (var i = 0; i < length; ++i)
+            {
+                var ch = template[i];
+                if (ch != '{')
+                {
+                    buffer.Append(ch);
+                    continue;
+                }
+
+                ++i;
+                var tokenStartPos = i;
+                while (i < length && template[i] != '}')
+                    ++i;
+                var token = template.Substring(tokenStartPos, i - tokenStartPos);
+                // Loop increment will skip closing '}'.
+
+                var mapped = mapFunc(token);
+                buffer.Append(mapped);
+            }
+
+            return buffer.ToString();
         }
     }
 }

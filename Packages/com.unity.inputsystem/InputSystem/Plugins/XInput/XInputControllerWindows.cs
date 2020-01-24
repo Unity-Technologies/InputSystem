@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.XInput.LowLevel
 {
@@ -11,10 +12,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     internal struct XInputControllerWindowsState : IInputStateTypeInfo
     {
-        public FourCC format
-        {
-            get { return new FourCC('X', 'I', 'N', 'P'); }
-        }
+        public FourCC format => new FourCC('X', 'I', 'N', 'P');
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
         public enum Button
@@ -93,7 +91,7 @@ namespace UnityEngine.InputSystem.XInput
     /// An <see cref="XInputController"/> compatible game controller connected to a Windows desktop machine.
     /// </summary>
     [InputControlLayout(stateType = typeof(XInputControllerWindowsState), hideInUI = true)]
-    [Scripting.Preserve]
+    [Preserve]
     public class XInputControllerWindows : XInputController
     {
     }

@@ -57,7 +57,7 @@ namespace UnityEngine.InputSystem
 
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
-                if (type == InputUpdateType.Dynamic)
+                if (type == InputUpdateType.Dynamic && !dontAdvanceTimeNextDynamicUpdate)
                     currentTime += advanceTimeEachDynamicUpdate;
 
                 if (onUpdate != null)
@@ -79,6 +79,8 @@ namespace UnityEngine.InputSystem
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
+
+                dontAdvanceTimeNextDynamicUpdate = false;
             }
         }
 
@@ -320,6 +322,10 @@ namespace UnityEngine.InputSystem
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
+        public bool dontAdvanceTimeNextDynamicUpdate { get; set; }
+
+        public bool runInBackground { get; set; } = false;
+
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
         public List<PairedUser> userAccountPairings
@@ -357,9 +363,11 @@ namespace UnityEngine.InputSystem
         public Action onProjectChange { get; set; }
         #endif
 
+        public int eventCount => m_EventCount;
+
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
-        private int m_EventCount;
+        internal int m_EventCount;
         private int m_EventWritePosition;
         private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;

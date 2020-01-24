@@ -32,7 +32,40 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('G', 'P', 'A', 'D');
+        public static FourCC Format => new FourCC('G', 'P', 'A', 'D');
+
+        // On consoles, we use the platform defaults as the gamepad-wide default names.
+        #if UNITY_XBOX_ONE || UNITY_SWITCH
+        internal const string ButtonSouthDisplayName = "A";
+        internal const string ButtonNorthDisplayName = "Y";
+        internal const string ButtonWestDisplayName = "B";
+        internal const string ButtonEastDisplayName = "X";
+
+        internal const string ButtonSouthShortDisplayName = "A";
+        internal const string ButtonNorthShortDisplayName = "Y";
+        internal const string ButtonWestShortDisplayName = "X";
+        internal const string ButtonEastShortDisplayName = "B";
+        #elif UNITY_PS4
+        internal const string ButtonSouthDisplayName = "Cross";
+        internal const string ButtonNorthDisplayName = "Triangle";
+        internal const string ButtonWestDisplayName = "Square";
+        internal const string ButtonEastDisplayName = "Circle";
+
+        internal const string ButtonSouthShortDisplayName = "Cross";
+        internal const string ButtonNorthShortDisplayName = "Triangle";
+        internal const string ButtonWestShortDisplayName = "Square";
+        internal const string ButtonEastShortDisplayName = "East";
+        #else
+        internal const string ButtonSouthDisplayName = "Button South";
+        internal const string ButtonNorthDisplayName = "Button North";
+        internal const string ButtonWestDisplayName = "Button West";
+        internal const string ButtonEastDisplayName = "Button East";
+
+        internal const string ButtonSouthShortDisplayName = "A";
+        internal const string ButtonNorthShortDisplayName = "Y";
+        internal const string ButtonWestShortDisplayName = "X";
+        internal const string ButtonEastShortDisplayName = "B";
+        #endif
 
         /// <summary>
         /// Button bit mask.
@@ -50,11 +83,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="Gamepad.leftStickButton"/>
         /// <seealso cref="Gamepad.rightStickButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
-        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad")]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = "A")]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = "X")]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = "Y")]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = "B")]
+        [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad", format = "BIT", sizeInBits = 4, bit = 0)]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = ButtonSouthDisplayName, shortDisplayName = ButtonSouthShortDisplayName)]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = ButtonWestDisplayName, shortDisplayName = ButtonWestShortDisplayName)]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = ButtonNorthDisplayName, shortDisplayName = ButtonNorthShortDisplayName)]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = ButtonEastDisplayName, shortDisplayName = ButtonEastShortDisplayName)]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]
@@ -110,7 +143,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// State format tag for GamepadState.
         /// </summary>
         /// <value>Returns "GPAD".</value>
-        public FourCC format => kFormat;
+        public FourCC format => Format;
 
         /// <summary>
         /// Create a gamepad state with the given buttons being pressed.
@@ -148,6 +181,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
     }
 
+    ////NOTE: The bit positions here based on the enum value are also used in native.
     /// <summary>
     /// Enum of common gamepad buttons.
     /// </summary>
@@ -163,22 +197,22 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// The up button on a gamepad's dpad.
         /// </summary>
-        DpadUp,
+        DpadUp = 0,
 
         /// <summary>
         /// The down button on a gamepad's dpad.
         /// </summary>
-        DpadDown,
+        DpadDown = 1,
 
         /// <summary>
         /// The left button on a gamepad's dpad.
         /// </summary>
-        DpadLeft,
+        DpadLeft = 2,
 
         /// <summary>
         /// The right button on a gamepad's dpad.
         /// </summary>
-        DpadRight,
+        DpadRight = 3,
 
         // Face buttons. We go with a north/south/east/west naming as that
         // clearly disambiguates where we expect the respective button to be.
@@ -189,7 +223,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Identical to <see cref="Y"/> and <see cref="Triangle"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
-        North,
+        North = 4,
 
         /// <summary>
         /// The right action button on a gamepad.
@@ -197,7 +231,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Identical to <see cref="B"/> and <see cref="Circle"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
-        East,
+        East = 5,
 
         /// <summary>
         /// The lower action button on a gamepad.
@@ -205,7 +239,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Identical to <see cref="A"/> and <see cref="Cross"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
-        South,
+        South = 6,
 
         /// <summary>
         /// The left action button on a gamepad.
@@ -213,48 +247,51 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <remarks>
         /// Identical to <see cref="X"/> and <see cref="Square"/> which are the Xbox and PlayStation controller names for this button.
         /// </remarks>
-        West,
+        West = 7,
 
 
         /// <summary>
         /// The button pressed by pressing down the left stick on a gamepad.
         /// </summary>
-        LeftStick,
+        LeftStick = 8,
 
         /// <summary>
         /// The button pressed by pressing down the right stick on a gamepad.
         /// </summary>
-        RightStick,
+        RightStick = 9,
 
         /// <summary>
         /// The left shoulder button on a gamepad.
         /// </summary>
-        LeftShoulder,
+        LeftShoulder = 10,
 
         /// <summary>
         /// The right shoulder button on a gamepad.
         /// </summary>
-        RightShoulder,
-
-        /// <summary>
-        /// The left trigger button on a gamepad.
-        /// </summary>
-        LeftTrigger,
-
-        /// <summary>
-        /// The right trigger button on a gamepad.
-        /// </summary>
-        RightTrigger,
+        RightShoulder = 11,
 
         /// <summary>
         /// The start button.
         /// </summary>
-        Start,
+        Start = 12,
 
         /// <summary>
         /// The select button.
         /// </summary>
-        Select,
+        Select = 13,
+
+        // For values that are not part of the buttons bitmask in GamepadState, assign large values that are outside
+        // the 32bit bit range.
+
+        /// <summary>
+        /// The left trigger button on a gamepad.
+        /// </summary>
+        LeftTrigger = 32,
+
+        /// <summary>
+        /// The right trigger button on a gamepad.
+        /// </summary>
+        RightTrigger = 33,
 
         /// <summary>
         /// The X button on an Xbox controller.

@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor.IMGUI.Controls;
@@ -15,7 +14,7 @@ using UnityEngine.Profiling;
 
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
-////TODO: implement support for sorting data by different property collumns (we currently always sort events by ID)
+////TODO: implement support for sorting data by different property columns (we currently always sort events by ID)
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -192,27 +191,24 @@ namespace UnityEngine.InputSystem.Editor
             };
 
             ////FIXME: doing this over and over is very inefficient
-            m_Events = m_EventTrace.ToArray();
-            Array.Sort(m_Events,
-                (a, b) =>
-                {
-                    var aId = a.id;
-                    var bId = b.id;
-                    if (aId > bId)
-                        return -1;
-                    if (aId < bId)
-                        return 1;
-                    return 0;
-                });
+            var eventCount = m_EventTrace.eventCount;
+            m_Events = new InputEventPtr[eventCount];
+            var current = new InputEventPtr();
+            for (var i = eventCount - 1; i >= 0; --i)
+            {
+                if (!m_EventTrace.GetNextEvent(ref current))
+                    break;
+                m_Events[i] = current;
+            }
 
-            if (m_Events.Length == 0)
+            if (eventCount == 0)
             {
                 // TreeView doesn't allow having empty trees. Put a dummy item in here that we
                 // render without contents.
                 root.AddChild(new TreeViewItem(1));
             }
 
-            for (var i = 0; i < m_Events.Length; ++i)
+            for (var i = 0; i < eventCount; ++i)
             {
                 var eventPtr = m_Events[i];
 

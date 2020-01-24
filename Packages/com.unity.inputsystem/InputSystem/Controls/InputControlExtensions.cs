@@ -16,6 +16,29 @@ namespace UnityEngine.InputSystem
     public static class InputControlExtensions
     {
         /// <summary>
+        /// Find a control of the given type in control hierarchy of <paramref name="control"/>.
+        /// </summary>
+        /// <param name="control">Control whose parents to inspect.</param>
+        /// <typeparam name="TControl">Type of control to look for. Actual control type can be
+        /// subtype of this.</typeparam>
+        /// <remarks>The found control of type <typeparamref name="TControl"/> which may be either
+        /// <paramref name="control"/> itself or one of its parents. If no such control was found,
+        /// returns <c>null</c>.</remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        public static TControl FindInParentChain<TControl>(this InputControl control)
+            where TControl : InputControl
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            for (var parent = control; parent != null; parent = parent.parent)
+                if (parent is TControl parentOfType)
+                    return parentOfType;
+
+            return null;
+        }
+
+        /// <summary>
         /// Return true if the given control is actuated.
         /// </summary>
         /// <param name="control"></param>
@@ -113,16 +136,38 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Read the value of the given control from an event.
+        /// Read the value for the given control from the given event.
         /// </summary>
-        /// <param name="control"></param>
-        /// <param name="inputEvent">Input event. This must be a <see cref="StateEvent"/> or <seealso cref="DeltaStateEvent"/>.
+        /// <param name="control">Control to read value for.</param>
+        /// <param name="inputEvent">Event to read value from. Must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <typeparam name="TValue">Type of value to read.</typeparam>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="inputEvent"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</exception>
+        /// <returns>The value for the given control as read out from the given event or <c>default(TValue)</c> if the given
+        /// event does not contain a value for the control (e.g. if it is a <see cref="DeltaStateEvent"/> not containing the relevant
+        /// portion of the device's state memory).</returns>
+        public static TValue ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent)
+            where TValue : struct
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (!ReadValueFromEvent(control, inputEvent, out var value))
+                return default;
+            return value;
+        }
+
+        /// <summary>
+        /// Check if the given event contains a value for the given control and if so, read the value.
+        /// </summary>
+        /// <param name="control">Control to read value for.</param>
+        /// <param name="inputEvent">Input event. This must be a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.
         /// Note that in the case of a <see cref="DeltaStateEvent"/>, the control may not actually be part of the event. In this
         /// case, the method returns false and stores <c>default(TValue)</c> in <paramref name="value"/>.</param>
         /// <param name="value">Variable that receives the control value.</param>
-        /// <typeparam name="TValue"></typeparam>
+        /// <typeparam name="TValue">Type of value to read.</typeparam>
         /// <returns>True if the value has been successfully read from the event, false otherwise.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="inputEvent"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</exception>
         /// <seealso cref="ReadUnprocessedValueFromEvent{TValue}(InputControl{TValue},InputEventPtr)"/>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
@@ -321,9 +366,10 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Check if the given state corresponds to the default state of the control.
         /// </summary>
+        /// <param name="control">Control to check the state for in <paramref name="statePtr"/>.</param>
         /// <param name="statePtr">Pointer to a state buffer containing the <see cref="InputControl.stateBlock"/> for <paramref name="control"/>.</param>
-        /// <param name="maskPtr">If not null, only bits set to true in the buffer will be taken into account. This can be used
-        /// to mask out noise.</param>
+        /// <param name="maskPtr">If not null, only bits set to <c>false</c> (!) in the buffer will be taken into account. This can be used
+        /// to mask out noise, i.e. every bit that is set in the mask is considered to represent noise.</param>
         /// <returns>True if the control/device is in its default state.</returns>
         /// <remarks>
         /// Note that default does not equate all zeroes. Stick axes, for example, that are stored as unsigned byte
@@ -433,10 +479,16 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return true if the actual value
+        /// Return true if the current value of <paramref name="control"/> is different to the one found
+        /// in <paramref name="statePtr"/>.
         /// </summary>
-        /// <param name="statePtr"></param>
-        /// <returns></returns>
+        /// <param name="control">Control whose state to compare to what is stored in <paramref name="statePtr"/>.</param>
+        /// <param name="statePtr">A block of input state memory containing the <see cref="InputControl.stateBlock"/>
+        /// of <paramref name="control."/></param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> or <paramref name="statePtr"/>
+        /// is <c>null</c>.</exception>
+        /// <returns>True if the value of <paramref name="control"/> stored in <paramref name="statePtr"/> is different
+        /// compared to what <see cref="InputControl{T}.ReadValue"/> of the control returns.</returns>
         public static unsafe bool HasValueChangeInState(this InputControl control, void* statePtr)
         {
             if (control == null)
@@ -457,6 +509,26 @@ namespace UnityEngine.InputSystem
             return control.CompareValue(control.currentStatePtr, control.GetStatePtrFromStateEvent(eventPtr));
         }
 
+        /// <summary>
+        /// Given a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>, return the raw memory pointer that can
+        /// be used, for example, with <see cref="InputControl{T}.ReadValueFromState"/> to read out the value of <paramref name="control"/>
+        /// contained in the event.
+        /// </summary>
+        /// <param name="control">Control to access state for in the given state event.</param>
+        /// <param name="eventPtr">A <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> containing input state.</param>
+        /// <returns>A pointer that can be used with methods such as <see cref="InputControl{TValue}.ReadValueFromState"/> or <c>null</c>
+        /// if <paramref name="eventPtr"/> does not contain state for the given <paramref name="control"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> -or- <paramref name="eventPtr"/> is invalid.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</exception>
+        /// <remarks>
+        /// Note that the given state event must have the same state format (see <see cref="InputStateBlock.format"/>) as the device
+        /// to which <paramref name="control"/> belongs. If this is not the case, the method will invariably return <c>null</c>.
+        ///
+        /// In practice, this means that the method cannot be used with touch events or, in general, with events sent to devices
+        /// that implement <see cref="IInputStateCallbackReceiver"/> (which <see cref="Touchscreen"/> does) except if the event
+        /// is in the same state format as the device. Touch events will generally be sent as state events containing only the
+        /// state of a single <see cref="Controls.TouchControl"/>, not the state of the entire <see cref="Touchscreen"/>.
+        /// </remarks>
         public static unsafe void* GetStatePtrFromStateEvent(this InputControl control, InputEventPtr eventPtr)
         {
             if (control == null)
@@ -489,7 +561,7 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                throw new ArgumentException("Event must be a state or delta state event", "eventPtr");
+                throw new ArgumentException("Event must be a state or delta state event", nameof(eventPtr));
             }
 
             // Make sure we have a state event compatible with our device. The event doesn't
@@ -498,11 +570,18 @@ namespace UnityEngine.InputSystem
             // to read.
             var device = control.device;
             if (stateFormat != device.m_StateBlock.format)
-                throw new InvalidOperationException(
-                    $"Cannot read control '{control.path}' from {eventPtr.type} with format {stateFormat}; device '{device}' expects format {device.m_StateBlock.format}");
+            {
+                // If the device is an IInputStateCallbackReceiver, there's a chance it actually recognizes
+                // the state format in the event and can correlate it to the state as found on the device.
+                if (!device.hasStateCallbacks ||
+                    !((IInputStateCallbackReceiver)device).GetStateOffsetForEvent(control, eventPtr, ref stateOffset))
+                    return null;
+            }
 
             // Once a device has been added, global state buffer offsets are baked into control hierarchies.
             // We need to unsubtract those offsets here.
+            // NOTE: If the given device has not actually been added to the system, the offset is simply 0
+            //       and this is a harmless NOP.
             stateOffset += device.m_StateBlock.byteOffset;
 
             // Return null if state is out of range.

@@ -35,6 +35,14 @@ using UnityEngine.InputSystem.Editor;
 #if UNITY_EDITOR
 [InitializeOnLoad]
 #endif
+// We can customize the way display strings are formed for our composite by
+// annotating it with DisplayStringFormatAttribute. The string is simply a
+// list with elements to be replaced enclosed in curly braces. Everything
+// outside those will taken verbatim. The fragments inside the curly braces
+// in this case refer to the binding composite parts by name. Each such
+// instance is replaced with the display text for the corresponding
+// part binding.
+[DisplayStringFormat("{multiplier}*{stick}")]
 public class CustomComposite : InputBindingComposite<Vector2>
 {
     // In the editor, the static class constructor will be called on startup

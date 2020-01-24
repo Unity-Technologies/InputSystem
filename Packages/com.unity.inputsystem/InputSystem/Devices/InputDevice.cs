@@ -223,14 +223,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////TODO: rename this to canReceiveInputInBackground
         /// <summary>
-        /// If true, the device is capable of delivering input while the application is running in the background.
+        /// If true, the device is capable of delivering input while the application is running in the background, i.e.
+        /// while <c>Application.isFocused</c> is false.
         /// </summary>
+        /// <value>Whether the device can generate input while in the background.</value>
         /// <remarks>
-        /// Note that by default, even if capable of doing so, devices will not generate input while the application is not
-        /// focused. To enable the behavior, use <see cref="InputSettings.runInBackground"/>.
+        /// Note that processing input in the background requires <c>Application.runInBackground</c> to be enabled in the
+        /// player preferences. If this is enabled, the input system will keep running by virtue of being part of the Unity
+        /// player loop which will keep running in the background. Note, however, that this does not necessarily mean that
+        /// the application will necessarily receive input.
+        ///
+        /// Only a select set of hardware, platform, and SDK/API combinations support gathering input while not having
+        /// input focus. The most notable set of devices are HMDs and VR controllers.
+        ///
+        /// The value of this property is determined by sending <see cref="QueryCanRunInBackground"/> to the device.
         /// </remarks>
-        /// <seealso cref="InputSettings.runInBackground"/>
         public bool canRunInBackground
         {
             get
@@ -594,6 +603,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal bool hasStateCallbacks
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) == DeviceFlags.HasStateCallbacks;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasStateCallbacks;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasStateCallbacks;
+            }
+        }
+
         internal void AddDeviceUsage(InternedString usage)
         {
             var controlUsageCount = m_UsageToControl.LengthSafe();
@@ -626,6 +647,13 @@ namespace UnityEngine.InputSystem
             for (var i = m_UsageStartIndex; i < m_UsageCount; ++i)
                 m_UsagesForEachControl[i] = default;
             m_UsageCount = default;
+        }
+
+        internal bool RequestRequest()
+        {
+            var resetCommand = RequestResetCommand.Create();
+            var result = device.ExecuteCommand(ref resetCommand);
+            return result >= 0;
         }
 
         internal void NotifyAdded()

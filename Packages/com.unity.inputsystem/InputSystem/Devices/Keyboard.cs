@@ -6,6 +6,8 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 
+////FIXME: display names for keys should be localized key names, not just printable characters (e.g. "Space" should be called "Leertaste")
+
 ////TODO: usages on modifiers so they can be identified regardless of platform conventions
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -85,10 +87,13 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "0", displayName = "0", layout = "Key", bit = (int)Key.Digit0)]
         [InputControl(name = "leftShift", displayName = "Left Shift", layout = "Key", usage = "Modifier", bit = (int)Key.LeftShift)]
         [InputControl(name = "rightShift", displayName = "Right Shift", layout = "Key", usage = "Modifier", bit = (int)Key.RightShift)]
+        [InputControl(name = "shift", displayName = "Shift", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftShift, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
         [InputControl(name = "leftAlt", displayName = "Left Alt", layout = "Key", usage = "Modifier", bit = (int)Key.LeftAlt)]
         [InputControl(name = "rightAlt", displayName = "Right Alt", layout = "Key", usage = "Modifier", bit = (int)Key.RightAlt, alias = "AltGr")]
+        [InputControl(name = "alt", displayName = "Alt", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftAlt, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
         [InputControl(name = "leftCtrl", displayName = "Left Control", layout = "Key", usage = "Modifier", bit = (int)Key.LeftCtrl)]
         [InputControl(name = "rightCtrl", displayName = "Right Control", layout = "Key", usage = "Modifier", bit = (int)Key.RightCtrl)]
+        [InputControl(name = "ctrl", displayName = "Control", layout = "DiscreteButton", usage = "Modifier", bit = (int)Key.LeftCtrl, sizeInBits = 2, synthetic = true, parameters = "minValue=1,maxValue=3")]
         [InputControl(name = "leftMeta", displayName = "Left System", layout = "Key", usage = "Modifier", bit = (int)Key.LeftMeta, aliases = new[] { "LeftWindows", "LeftApple", "LeftCommand" })]
         [InputControl(name = "rightMeta", displayName = "Right System", layout = "Key", usage = "Modifier", bit = (int)Key.RightMeta, aliases = new[] { "RightWindows", "RightApple", "RightCommand" })]
         [InputControl(name = "contextMenu", displayName = "Context Menu", layout = "Key", usage = "Modifier", bit = (int)Key.ContextMenu)]
@@ -150,10 +155,24 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 UnsafeUtility.MemClear(keysPtr, kSizeInBytes);
                 for (var i = 0; i < pressedKeys.Length; ++i)
-                {
                     MemoryHelpers.WriteSingleBit(keysPtr, (uint)pressedKeys[i], true);
-                }
             }
+        }
+
+        public void Set(Key key, bool state)
+        {
+            fixed(byte* keysPtr = keys)
+            MemoryHelpers.WriteSingleBit(keysPtr, (uint)key, state);
+        }
+
+        public void Press(Key key)
+        {
+            Set(key, true);
+        }
+
+        public void Release(Key key)
+        {
+            Set(key, false);
         }
 
         public FourCC format => Format;
@@ -431,6 +450,8 @@ namespace UnityEngine.InputSystem
         Digit0,
 
         // ---- Non-printable keys ----
+
+        // NOTE: The left&right variants for shift, ctrl, and alt must be next to each other.
 
         /// <summary>
         /// The <see cref="Keyboard.leftShiftKey"/>.
@@ -777,6 +798,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         OEM5,
 
+        ////FIXME: This should never have been a Key but rather just an extra button or state on keyboard
         // Not exactly a key, but binary data sent by the Keyboard to say if IME is being used.
         IMESelected
     }
@@ -883,7 +905,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public event Action<char> onTextInput
         {
-            add => m_TextInputListeners.Append(value);
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                if (!m_TextInputListeners.Contains(value))
+                    m_TextInputListeners.Append(value);
+            }
             remove => m_TextInputListeners.Remove(value);
         }
 
@@ -899,7 +927,13 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public event Action<IMECompositionString> onIMECompositionChange
         {
-            add => m_ImeCompositionListeners.Append(value);
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                if (!m_ImeCompositionListeners.Contains(value))
+                    m_ImeCompositionListeners.Append(value);
+            }
             remove => m_ImeCompositionListeners.Remove(value);
         }
 
@@ -1848,6 +1882,36 @@ namespace UnityEngine.InputSystem
         public KeyControl oem5Key => this[Key.OEM5];
 
         /// <summary>
+        /// An artificial combination of <see cref="leftShiftKey"/> and <see cref="rightShiftKey"/> into one control.
+        /// </summary>
+        /// <value>Control representing a combined left and right shift key.</value>
+        /// <remarks>
+        /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
+        /// right shift key is pressed.
+        /// </remarks>
+        public ButtonControl shiftKey { get; private set; }
+
+        /// <summary>
+        /// An artificial combination of <see cref="leftCtrlKey"/> and <see cref="rightCtrlKey"/> into one control.
+        /// </summary>
+        /// <value>Control representing a combined left and right ctrl key.</value>
+        /// <remarks>
+        /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
+        /// right ctrl key is pressed.
+        /// </remarks>
+        public ButtonControl ctrlKey { get; private set; }
+
+        /// <summary>
+        /// An artificial combination of <see cref="leftAltKey"/> and <see cref="rightAltKey"/> into one control.
+        /// </summary>
+        /// <value>Control representing a combined left and right alt key.</value>
+        /// <remarks>
+        /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
+        /// right alt key is pressed.
+        /// </remarks>
+        public ButtonControl altKey { get; private set; }
+
+        /// <summary>
         /// True when IME composition is enabled.  Requires <see cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
         /// </summary>
         /// <remarks>
@@ -2042,6 +2106,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(keyStrings[(int)Key.OEM5 - 1] == "oem5",
                 "keyString array layout doe not match Key enum layout");
             anyKey = GetChildControl<AnyKeyControl>("anyKey");
+            shiftKey = GetChildControl<ButtonControl>("shift");
+            ctrlKey = GetChildControl<ButtonControl>("ctrl");
+            altKey = GetChildControl<ButtonControl>("alt");
             imeSelected = GetChildControl<ButtonControl>("IMESelected");
 
             base.FinishSetup();
@@ -2068,6 +2135,32 @@ namespace UnityEngine.InputSystem
         {
             for (var i = 0; i < m_TextInputListeners.length; ++i)
                 m_TextInputListeners[i](character);
+        }
+
+        /// <summary>
+        /// Return the key control that, according to the currently active keyboard layout (see <see cref="keyboardLayout"/>),
+        /// is associated with the given text.
+        /// </summary>
+        /// <param name="displayName">Display name reported for the key according to the currently active keyboard layout.</param>
+        /// <returns>The key control corresponding to the given text or <c>null</c> if no such key was found on the current
+        /// keyboard layout.</returns>
+        /// <remarks>
+        /// In most cases, this means that the key inputs the given text when pressed. However, this does not have to be the
+        /// case. Keys do not necessarily lead to character input.
+        ///
+        /// <example>
+        /// // Find key that prints 'q' character (if any).
+        /// Keyboard.current.FindKeyOnCurrentKeyboardLayout("q");
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="keyboardLayout"/>
+        public KeyControl FindKeyOnCurrentKeyboardLayout(string displayName)
+        {
+            var keys = allKeys;
+            for (var i = 0; i < keys.Count; ++i)
+                if (string.Equals(keys[i].displayName, displayName, StringComparison.CurrentCultureIgnoreCase))
+                    return keys[i];
+            return null;
         }
 
         public void OnIMECompositionChanged(IMECompositionString compositionString)

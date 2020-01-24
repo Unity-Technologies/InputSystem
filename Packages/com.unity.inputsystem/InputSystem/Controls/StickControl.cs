@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Controls
         ///
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
-        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Up", shortDisplayName = "\u2191")]
+        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Up")]
         // Set min&max on XY axes. We do this here as the documentation generator will not be happy
         // if we place this above the doc comment.
         // Also puts AxisDeadzones on the axes.
@@ -79,15 +79,15 @@ namespace UnityEngine.InputSystem.Controls
         [Scripting.Preserve]
         public ButtonControl up { get; private set; }
 
-        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down", shortDisplayName = "\u2193")]
+        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
         [Scripting.Preserve]
         public ButtonControl down { get; private set; }
 
-        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left", shortDisplayName = "\u2190")]
+        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
         [Scripting.Preserve]
         public ButtonControl left { get; private set; }
 
-        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right", shortDisplayName = "\u2192")]
+        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
         [Scripting.Preserve]
         public ButtonControl right { get; private set; }
 
