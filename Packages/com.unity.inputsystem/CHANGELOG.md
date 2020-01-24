@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.4] - 2020-12-12
+## [1.0.0-preview.4] - 2020-01-24
 
 This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
 
