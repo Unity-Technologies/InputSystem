@@ -269,7 +269,6 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessMouseButtonDrag(PointerEventData eventData, float pixelDragThresholdMultiplier = 1.0f)
         {
             if (!eventData.IsPointerMoving() ||
-                Cursor.lockState == CursorLockMode.Locked ||
                 eventData.pointerDrag == null)
                 return;
 
@@ -733,11 +732,16 @@ namespace UnityEngine.InputSystem.UI
             bool mousePointValid = !float.IsNegativeInfinity(mousePoint.x);
             if (action == m_PointAction?.action)
             {
-                var index = GetMouseDeviceIndexForCallbackContext(context);
-                var state = mouseStates[index];
-                state.position = context.ReadValue<Vector2>();
-                mousePoint = state.position;
-                mouseStates[index] = state;
+                GetMouseDeviceIndexForCallbackContext(context);
+                mousePoint = context.ReadValue<Vector2>();
+
+                // update the positions of all mouseStates
+                for (int i = 0; i < mouseStates.Count; ++i)
+                {
+                    var state = mouseStates[i];
+                    state.position = mousePoint;
+                    mouseStates[i] = state;
+                }
             }
             else if (action == m_ScrollWheelAction?.action)
             {
