@@ -14,6 +14,7 @@ The following is a list of known limitations that the Input System currently has
 * (Windows) Pen input will not work with Wacom devices if "Windows Ink" support is turned off.
 * Joy-Cons are only supported on Switch.
 * Sensors in the PS4 controller are currently only supported on PS4.
+  >NOTE: Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
 
 ## Features Supported by Old Input Manager
 
