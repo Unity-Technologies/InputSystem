@@ -1251,10 +1251,7 @@ namespace UnityEngine.InputSystem
             foreach (var action in m_Actions)
             {
                 action.MakeSureIdIsInPlace();
-
-                var name = action.name;
-                if (char.IsLower(name[0]))
-                    name = char.ToUpper(name[0]) + name.Substring(1);
+                var name = CSharpCodeHelpers.MakeTypeName(action.name);
                 m_ActionMessageNames[action.m_Id] = "On" + name;
             }
         }
