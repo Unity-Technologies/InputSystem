@@ -590,6 +590,6 @@ Use this code:
 
 # …see what Devices I have and what state they're in?
 
-Go to __Windows > Analysis > Input Debugger__(Debugging.md), then double click on a Device to see its Controls. You can also click the __Remote Devices…__ button to remotely see Devices from Unity Players deployed to any connected computers or devices.
+Go to __Windows > Analysis > Input Debugger__(Debugging.md), then double click on a Device to see its Controls. You can also click the __Remote Devices__ button to remotely see Devices from Unity Players deployed to any connected computers or devices.
 
 [//]: # (TODO: working on having device setups from players mirrored 1:1 into the running input system in the editor (including having their input available in the editor))

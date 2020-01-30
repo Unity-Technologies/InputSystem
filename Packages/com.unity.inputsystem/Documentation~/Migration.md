@@ -1,8 +1,8 @@
 # Migrating from the old input system
 
-This guide provides a listing of APIs in `UnityEngine.Input` (and other related APIs in `UnityEngine`) and their corresponding APIs in the new Input System. Not all APIs have a corresponding version in the new API yet.
+This guide provides a list of APIs in `UnityEngine.Input` (and other related APIs in `UnityEngine`) and their corresponding APIs in the new Input System. Not all APIs have a corresponding version in the new API yet.
 
->__Note__: The new APIs are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
+>__Note__: All of the new APIs are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
 
 ## [`UnityEngine.Input`](https://docs.unity3d.com/ScriptReference/Input.html)
 
@@ -12,13 +12,13 @@ Use [`Accelerometer.current.acceleration.ReadValue()`](../api/UnityEngine.InputS
 
 ### [`UnityEngine.Input.accelerationEventCount`](https://docs.unity3d.com/ScriptReference/Input-accelerationEventCount.html)
 
-See next section.
+See [`UnityEngine.Input.accelerationEvents`](#accelerationEvents).
 
 ### <a name="accelerationEvents"></a>[`UnityEngine.Input.accelerationEvents`](https://docs.unity3d.com/ScriptReference/Input-accelerationEvents.html)
 
 Acceleration events aren't made available separately from other input events. The following code traces all input events on the [`Accelerometer.current`](../api/UnityEngine.InputSystem.Accelerometer.html) device.
 
-```
+```CSharp
     private InputEventTrace trace;
 
     void StartTrace()
@@ -39,13 +39,13 @@ Acceleration events aren't made available separately from other input events. Th
 
 ### [`UnityEngine.Input.anyKey`](https://docs.unity3d.com/ScriptReference/Input-anyKey.html)
 
-For keyboard keys:
+For keyboard keys, use:
+* [`Keyboard.current.anyKey.isPressed`](../api/UnityEngine.InputSystem.Keyboard.html)
 
-Use [`Keyboard.current.anyKey.isPressed`](../api/UnityEngine.InputSystem.Keyboard.html).
-
-For mouse buttons:
-
-Use [`Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed || Mouse.current.middleButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html).
+For mouse buttons, use:
+* [`Mouse.current.leftButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
+* [`Mouse.current.rightButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
+* [`Mouse.current.middleButton.isPressed`](../api/UnityEngine.InputSystem.Mouse.html)
 
 ### [`UnityEngine.Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)
 
@@ -71,7 +71,7 @@ Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](../api/UnityEngine.Inp
 
 Subscribe to the [`Keyboard.onIMECompositionChange`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_onIMECompositionChange) event:
 
-```
+```CSharp
     var compositionString = "";
     Keyboard.current.onIMECompositionChange += composition =>
     {
@@ -101,14 +101,14 @@ Use [`AttitudeSensor.current.orientation.ReadValue()`](../api/UnityEngine.InputS
 
 ```
 // Get:
-Gyroscope.current.enabled
+`Gyroscope.current.enabled`
 
 // Set:
-InputSystem.EnableDevice(Gyroscope.current);
-InputSystem.DisableDevice(Gyroscope.current);
+`InputSystem.EnableDevice(Gyroscope.current);`
+`InputSystem.DisableDevice(Gyroscope.current);`
 ```
 
->__Note__: `UnityEngine.Gyroscope` is replaced by multiple separate sensor devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#gyro) section above.
+>__Note__: The new Input System replaces `UnityEngine.Gyroscope` with multiple separate sensor devices. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See [`UnityEngine.Input.gyro`](#gyro) section for details.
 
 ### [`UnityEngine.Input.gyro.gravity`](https://docs.unity3d.com/ScriptReference/Gyroscope-gravity.html)
 
@@ -132,7 +132,7 @@ Gyroscope.current.samplingFrequency = 1.0f / updateInterval;
 
 >__Note__:
 >* [`samplingFrequency`](../api/UnityEngine.InputSystem.Sensor.html#UnityEngine_InputSystem_Sensor_samplingFrequency) is in Hz, not in seconds as [`updateInterval`](https://docs.unity3d.com/ScriptReference/Gyroscope-updateInterval.html), so you need to divide 1 by the value.
->* `UnityEngine.Gyroscope` is replaced by multiple separate sensor Devices in the new Input System. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See the [`UnityEngine.Input.gyro`](#gyro) section above.
+>* The new Input System replaces `UnityEngine.Gyroscope` with multiple separate sensor devices. Substitute [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html) with other sensors in the sample as needed. See [`UnityEngine.Input.gyro`](#gyro) for details.
 
 ### [`UnityEngine.Input.gyro.userAcceleration`](https://docs.unity3d.com/ScriptReference/Gyroscope-userAcceleration.html)
 
@@ -215,7 +215,7 @@ See [`UnityEngine.Input.accelerationEvents`](#accelerationEvents).
 
 [//]: # (TODO: we should probably reference PlayerInput here in addition to or instead of the manual action setups described here)
 
-There is no global setup corresponding exactly to virtual axis setups in the old __Input Manager__ settings. Instead, you can create sets of [Input Actions](Actions.md) as independent Assets, or put the, directly on your C# components.
+There is no global setup that corresponds exactly to virtual axis setups in the old __Input Manager__ settings. Instead, you can create sets of [Input Actions](Actions.md) as independent Assets, or put them directly on your C# components.
 
 For example, if you want to recreate the following axis configuration:
 
@@ -231,7 +231,7 @@ For example, if you want to recreate the following axis configuration:
            public InputAction fireAction;
    ```
 
-2. Hook up a response to the Action.
+2. Configure a response to the Action.
    ```
            void Awake()
            {
@@ -261,13 +261,13 @@ For example, if you want to recreate the following axis configuration:
 
 #### Option B: Create an Input Action Asset
 
-1. Create an Input Action Asset by right-clicking in the Project browser and selecting __Create > Input Actions__. Give a name to the Asset.
+1. Create an Input Action Asset (right-click in the Project browser and select __Create > Input Actions__). Give the Asset a name.
 2. Double-click the Asset to open the Input Actions editor window.
 3. In the __Action Maps__ column, click the plus sign to add a new Action Map.
 4. Double-click the __New Action Map__ name to rename the set. Use a descriptive name, such as *gameplay*.
 5. In the __Actions__ column, click the plus sign to add a new Action.
 6. Double-click the Action to give it a name.
-7. Add Bindings to the Action by clicking the plus sign on the Action and choosing a Binding type from the list.
+7. Add Bindings to the Action. To do this, click the plus sign on the Action and choose a Binding type from the list.
 8. Select the Binding and click on the __Path__ button in the right column to pick Controls to bind to.
 9. Click __Save Asset__. Your Input Action editor should now look like this:
 

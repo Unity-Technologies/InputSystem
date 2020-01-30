@@ -1,14 +1,14 @@
 # Mouse support
 
-Mice are represented by the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
+The Input System represents mouse input with the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) Device layout that the [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) class implements. Mice are based on the [`Pointer`](Pointers.md) layout.
 
-You can query the last used or last added mouse with [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
+To query the last used or last added mouse, use [`Mouse.current`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_current).
 
 ```
     var mouse = Mouse.current;
 ```
 
->__Note__: At the moment, Unity doesn't support:
+>__Note__: The Input System does not currently support:
 >* Input from multiple mice at the platform level.
 >* Identifying the current display a mouse is on.
 
@@ -28,7 +28,7 @@ In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), Mo
 
 ## Cursor warping
 
-On desktop platforms (Windows, Mac, Linux, and UWP), you can move the mouse cursor from code. Note that this moves the system's actual mouse cursor, not just Unity's internally-stored mouse position. This means that the user sees the cursor jumping to a different position, which is generally considered to be bad UX practice. It's advisable to only do this if the cursor is hidden (see the [`Cursor` API](https://docs.unity3d.com/ScriptReference/Cursor.html) documentation for more information).
+On desktop platforms (Windows, Mac, Linux, and UWP), you can move the mouse cursor via code. Note that this moves the system's actual mouse cursor, not just Unity's internally-stored mouse position. This means that the user sees the cursor jumping to a different position, which is generally considered to be bad UX practice. It's advisable to only do this if the cursor is hidden (see the [`Cursor` API documentation](https://docs.unity3d.com/ScriptReference/Cursor.html) for more information).
 
 To move the cursor to a different position, use [`Mouse.WarpCursorPosition`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_Vector2_). The coordinates are expressed as Unity screen coordinates, just like [`Mouse.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position).
 
