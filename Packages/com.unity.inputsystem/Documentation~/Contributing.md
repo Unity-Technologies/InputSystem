@@ -1,6 +1,6 @@
 # Contributing
 
-The [full source code](https://github.com/Unity-Technologies/InputSystem) for the Input System is available on GitHub. This is also where most of Unity's development happens.
+The [full source code](https://github.com/Unity-Technologies/InputSystem) for the Input System is available on GitHub. This is also where most of the Input System's development happens.
 
 >__Note__: This includes the full source code for the managed/C# part of the system. At this point, the native, platform-specific C++ backends are still closed-source and require a source code license.
 
