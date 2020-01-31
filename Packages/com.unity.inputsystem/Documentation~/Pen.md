@@ -1,6 +1,6 @@
 # Pen, tablet, and stylus support
 
-Pen support comprises both desktop tablets (such as the various tablets produced by Wacom), and styluses on mobile devices (such as the stylus on the Samsung Note, the Apple Pencil on iOS, or the Surface Pen on the Microsoft Surface line of notebooks).
+Pen support comprises both tablets on desktops (such as the various tablets produced by Wacom), and styluses on mobile devices (such as the stylus on the Samsung Note, the Apple Pencil on iOS, or the Surface Pen on the Microsoft Surface line of notebooks).
 
 Pens generally offer pressure sensitivity, in-range detection (being able to control the cursor while not yet touching the tablet/screen surface), and often the ability to flip the pen for eraser-like behavior.
 
