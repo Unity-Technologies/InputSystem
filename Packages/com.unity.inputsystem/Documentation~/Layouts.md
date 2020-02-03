@@ -2,7 +2,7 @@
 
 Layouts are the central mechanism by which the Input System learns about types of Input Devices and Input Controls. Each layout represents a specific composition of Input Controls. By matching the description of a Device to a layout, the Input System is able to create the correct type of Device and interpret the incoming input data correctly.
 
->__Note__: Layouts are an advanced, mostly internal feature of the Input System. You don't need to understand them to use the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
+>__Note__: Layouts are an advanced, mostly internal feature of the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
 
 A layout describes a memory format for input, and the Input Controls to build in order to read and write data to or from that memory.
 
