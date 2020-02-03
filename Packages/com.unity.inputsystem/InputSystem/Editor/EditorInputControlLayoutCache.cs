@@ -112,6 +112,20 @@ namespace UnityEngine.InputSystem.Editor
             return matchers;
         }
 
+        public static string GetDisplayName(string layoutName)
+        {
+            if (string.IsNullOrEmpty(layoutName))
+                throw new ArgumentException("Layout name cannot be null or empty", nameof(layoutName));
+
+            var layout = TryGetLayout(layoutName);
+            if (layout == null)
+                return layoutName;
+
+            if (!string.IsNullOrEmpty(layout.displayName))
+                return layout.displayName;
+            return layout.name;
+        }
+
         /// <summary>
         /// List the controls that may be present on controls or devices of the given layout by virtue
         /// of being defined in other layouts based on it.
