@@ -40,7 +40,7 @@ In its most basic form, a layout can be expressed by a C# class derived from:
 
 ```CSharp
 // The InputControlLayout attribute is not strictly necessary here.
-// However, it can set additional properties (such as
+// However, you can use it to set additional properties (such as
 // a custom display name for the layout).
 [InputControlLayout]
 public class MyDevice : InputDevice
