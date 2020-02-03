@@ -326,12 +326,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             ////TODO: need something more flexible to produce correct results for more than the simple string we produce here
             var deviceLayout = InputControlPath.TryGetDeviceLayout(requirement.controlPath);
+            var deviceLayoutText = !string.IsNullOrEmpty(deviceLayout)
+                ? EditorInputControlLayoutCache.GetDisplayName(deviceLayout)
+                : string.Empty;
             var usages = InputControlPath.TryGetDeviceUsages(requirement.controlPath);
 
             if (usages != null && usages.Length > 0)
-                return $"{deviceLayout} {string.Join("}{", usages)}";
+                return $"{deviceLayoutText} {string.Join("}{", usages)}";
 
-            return deviceLayout;
+            return deviceLayoutText;
         }
 
         // Notifications.

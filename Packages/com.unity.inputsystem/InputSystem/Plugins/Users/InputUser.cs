@@ -691,6 +691,8 @@ namespace UnityEngine.InputSystem.Users
 
             var userIndex = index;
             RemoveUser(userIndex);
+
+            m_Id = default;
         }
 
         /// <summary>
