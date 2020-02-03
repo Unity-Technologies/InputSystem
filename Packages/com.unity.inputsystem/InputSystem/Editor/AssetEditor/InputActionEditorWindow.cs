@@ -449,7 +449,7 @@ namespace UnityEngine.InputSystem.Editor
             if (selectedActionMapItem == null)
             {
                 // Nothing selected. Wipe middle and right pane.
-                m_ActionsTree.onBuildTree = () => new TreeViewItem(0, -1, "");
+                m_ActionsTree.onBuildTree = null;
             }
             else
             {
