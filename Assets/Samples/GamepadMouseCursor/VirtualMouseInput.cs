@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UI;
 
 ////TODO: add support for acceleration
 
@@ -12,7 +13,8 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
-    /// A component that creates a virtual <see cref="Mouse"/> device and drives its input from gamepad-style inputs.
+    /// A component that creates a virtual <see cref="Mouse"/> device and drives its input from gamepad-style inputs. This effectively
+    /// adds a software mouse cursor.
     /// </summary>
     /// <remarks>
     /// This component can be used with UIs that are designed for mouse input, i.e. need to be operated with a cursor.
@@ -49,21 +51,6 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// The canvas that defines the screen area for the mouse cursor. Optional.
-        /// </summary>
-        /// <value>Screen for the mouse cursor.</value>
-        /// <remarks>
-        /// If this is set, the cursor will automatically be clamped to the <a
-        /// href="https://docs.unity3d.com/ScriptReference/Canvas-pixelRect.html">pixelRect</a>
-        /// of the canvas.
-        /// </remarks>
-        public Canvas canvas
-        {
-            get => m_Canvas;
-            set => m_Canvas = value;////TODO: clamp current position
-        }
-
-        /// <summary>
         /// How many pixels per second the cursor travels in one axis when the respective axis from
         /// <see cref="stickAction"/> is 1.
         /// </summary>
@@ -72,6 +59,70 @@ namespace UnityEngine.InputSystem.UI
         {
             get => m_CursorSpeed;
             set => m_CursorSpeed = value;
+        }
+
+        /// <summary>
+        /// Determines which cursor representation to use. If this is set to <see cref="CursorMode.SoftwareCursor"/>
+        /// (the default), then <see cref="cursorGraphic"/> and <see cref="cursorTransform"/> define a software cursor
+        /// that is made to correspond to the position of <see cref="virtualMouse"/>. If this is set to <see
+        /// cref="CursorMode.HardwareCursorIfAvailable"/> and there is a native <see cref="Mouse"/> device present,
+        /// the component will take over that mouse device and disable it (so as for it to not also generate position
+        /// updates). It will then use <see cref="Mouse.WarpCursorPosition"/> to move the system mouse cursor to
+        /// correspond to the position of the <see cref="virtualMouse"/>. In this case, <see cref="cursorGraphic"/>
+        /// will be disabled and <see cref="cursorTransform"/> will not be updated.
+        /// </summary>
+        /// <value>Whether the system mouse cursor (if present) should be made to correspond with the virtual mouse position.</value>
+        /// <remarks>
+        /// Note that regardless of which mode is used for the cursor, mouse input is expected to be picked up from <see cref="virtualMouse"/>.
+        ///
+        /// Note that if <see cref="CursorMode.HardwareCursorIfAvailable"/> is used, the software cursor is still used
+        /// if no native <see cref="Mouse"/> device is present.
+        /// </remarks>
+        public CursorMode cursorMode
+        {
+            get => m_CursorMode;
+            set
+            {
+                if (m_CursorMode == value)
+                    return;
+
+                // If we're turning it off, make sure we re-enable the system mouse.
+                if (m_CursorMode == CursorMode.HardwareCursorIfAvailable && m_SystemMouse != null)
+                {
+                    InputSystem.EnableDevice(m_SystemMouse);
+                    m_SystemMouse = null;
+                }
+
+                m_CursorMode = value;
+
+                if (m_CursorMode == CursorMode.HardwareCursorIfAvailable)
+                    TryEnableHardwareCursor();
+                else if (m_CursorGraphic != null)
+                    m_CursorGraphic.enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// The UI graphic element that represents the mouse cursor.
+        /// </summary>
+        /// <value>Graphic element for the software mouse cursor.</value>
+        /// <remarks>
+        /// If <see cref="cursorMode"/> is set to <see cref="CursorMode.HardwareCursorIfAvailable"/>, this graphic will
+        /// be disabled.
+        ///
+        /// Also, this UI component implicitly determines the <c>Canvas</c> that defines the screen area for the cursor.
+        /// The canvas that this graphic is on will be looked up using <c>GetComponentInParent</c> and then the <c>Canvas.pixelRect</c>
+        /// of the canvas is used as the bounds for the cursor motion range.
+        /// </remarks>
+        /// <seealso cref="CursorMode.SoftwareCursor"/>
+        public Graphic cursorGraphic
+        {
+            get => m_CursorGraphic;
+            set
+            {
+                m_CursorGraphic = value;
+                TryFindCanvas();
+            }
         }
 
         /// <summary>
@@ -219,6 +270,10 @@ namespace UnityEngine.InputSystem.UI
 
         protected void OnEnable()
         {
+            // Hijack system mouse, if enabled.
+            if (m_CursorMode == CursorMode.HardwareCursorIfAvailable)
+                TryEnableHardwareCursor();
+
             // Add mouse device.
             if (m_VirtualMouse == null)
                 m_VirtualMouse = (Mouse)InputSystem.AddDevice("VirtualMouse");
@@ -227,7 +282,11 @@ namespace UnityEngine.InputSystem.UI
 
             // Set initial cursor position.
             if (m_CursorTransform != null)
-                InputState.Change(m_VirtualMouse.position, m_CursorTransform.anchoredPosition);
+            {
+                var position = m_CursorTransform.anchoredPosition;
+                InputState.Change(m_VirtualMouse.position, position);
+                m_SystemMouse?.WarpCursorPosition(position);
+            }
 
             // Hook into input update.
             if (m_AfterInputUpdateDelegate == null)
@@ -259,6 +318,13 @@ namespace UnityEngine.InputSystem.UI
             if (m_VirtualMouse != null && m_VirtualMouse.added)
                 InputSystem.RemoveDevice(m_VirtualMouse);
 
+            // Let go of system mouse.
+            if (m_SystemMouse != null)
+            {
+                InputSystem.EnableDevice(m_SystemMouse);
+                m_SystemMouse = null;
+            }
+
             // Remove ourselves from input update.
             if (m_AfterInputUpdateDelegate != null)
                 InputSystem.onAfterUpdate -= m_AfterInputUpdateDelegate;
@@ -284,6 +350,42 @@ namespace UnityEngine.InputSystem.UI
 
             m_LastTime = default;
             m_LastStickValue = default;
+        }
+
+        private void TryFindCanvas()
+        {
+            m_Canvas = m_CursorGraphic?.GetComponentInParent<Canvas>();
+        }
+
+        private void TryEnableHardwareCursor()
+        {
+            var devices = InputSystem.devices;
+            for (var i = 0; i < devices.Count; ++i)
+            {
+                var device = devices[i];
+                if (device.native && device is Mouse mouse)
+                {
+                    m_SystemMouse = mouse;
+                    break;
+                }
+            }
+
+            if (m_SystemMouse == null)
+            {
+                if (m_CursorGraphic != null)
+                    m_CursorGraphic.enabled = true;
+                return;
+            }
+
+            InputSystem.DisableDevice(m_SystemMouse);
+
+            // Sync position.
+            if (m_VirtualMouse != null)
+                m_SystemMouse.WarpCursorPosition(m_VirtualMouse.position.ReadValue());
+
+            // Turn off mouse cursor image.
+            if (m_CursorGraphic != null)
+                m_CursorGraphic.enabled = false;
         }
 
         private void UpdateMotion()
@@ -319,6 +421,8 @@ namespace UnityEngine.InputSystem.UI
                 var currentPosition = m_VirtualMouse.position.ReadValue();
                 var newPosition = currentPosition + delta;
 
+                ////REVIEW: for the hardware cursor, clamp to something else?
+                // Clamp to canvas.
                 if (m_Canvas != null)
                 {
                     // Clamp to canvas.
@@ -331,12 +435,15 @@ namespace UnityEngine.InputSystem.UI
                 InputState.Change(m_VirtualMouse.position, newPosition);
                 InputState.Change(m_VirtualMouse.delta, delta);
 
-                // Update transform, if any.
-                if (m_CursorTransform != null)
+                // Update software cursor transform, if any.
+                if (m_CursorTransform != null && m_CursorMode == CursorMode.SoftwareCursor)
                     m_CursorTransform.anchoredPosition = newPosition;
 
                 m_LastStickValue = stickValue;
                 m_LastTime = currentTime;
+
+                // Update hardware cursor.
+                m_SystemMouse?.WarpCursorPosition(newPosition);
             }
 
             // Update scroll wheel.
@@ -351,10 +458,16 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        [Header("Cursor")]
+        [SerializeField] private CursorMode m_CursorMode;
+        [SerializeField] private Graphic m_CursorGraphic;
+        [SerializeField] private RectTransform m_CursorTransform;
+
+        [Header("Motion")]
         [SerializeField] private float m_CursorSpeed = 400;
         [SerializeField] private float m_ScrollSpeed = 45;
-        [SerializeField] private RectTransform m_CursorTransform;
-        [SerializeField] private Canvas m_Canvas;
+
+        [Space(10)]
         [SerializeField] private InputActionProperty m_StickAction;
         [SerializeField] private InputActionProperty m_LeftButtonAction;
         [SerializeField] private InputActionProperty m_MiddleButtonAction;
@@ -363,7 +476,9 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private InputActionProperty m_BackButtonAction;
         [SerializeField] private InputActionProperty m_ScrollWheelAction;
 
+        private Canvas m_Canvas; // Canvas that gives the motion range for the software cursor.
         private Mouse m_VirtualMouse;
+        private Mouse m_SystemMouse;
         private Action m_AfterInputUpdateDelegate;
         private Action<InputAction.CallbackContext> m_ButtonActionTriggeredDelegate;
         private double m_LastTime;
@@ -443,6 +558,28 @@ namespace UnityEngine.InputSystem.UI
         private void OnAfterInputUpdate()
         {
             UpdateMotion();
+        }
+
+        /// <summary>
+        /// Determines how the cursor for the virtual mouse is represented.
+        /// </summary>
+        /// <seealso cref="cursorMode"/>
+        public enum CursorMode
+        {
+            /// <summary>
+            /// The cursor is represented as a UI element. See <see cref="cursorGraphic"/>.
+            /// </summary>
+            SoftwareCursor,
+
+            /// <summary>
+            /// If a native <see cref="Mouse"/> device is present, its cursor will be used and driven
+            /// by the virtual mouse using <see cref="Mouse.WarpCursorPosition"/>. The software cursor
+            /// referenced by <see cref="cursorGraphic"/> will be disabled.
+            ///
+            /// Note that if no native <see cref="Mouse"/> is present, behavior will fall back to
+            /// <see cref="SoftwareCursor"/>.
+            /// </summary>
+            HardwareCursorIfAvailable,
         }
     }
 }

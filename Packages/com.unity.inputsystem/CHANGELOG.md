@@ -24,6 +24,11 @@ however, it has to be formatted properly to pass verification tests.
 - "Invalid user" `ArgumentException` when turning the same `PlayerInput` on and off ([case 1198889](https://issuetracker.unity3d.com/issues/input-system-package-argumentexception-invalid-user-error-is-thrown-when-the-callback-disables-game-object-with-playerinput)).
 - The list of device requirements for a control scheme in the action editor no longer displays devices with their internal layout name rather than their external display name.
 
+### Added
+
+- We've added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
+  - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
+
 ## [1.0.0-preview.4] - 2020-01-24
 
 This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
@@ -59,8 +64,6 @@ This release includes a number of Quality-of-Life improvements for a range of co
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
-- We've added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
-  - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
 
 #### Actions
 

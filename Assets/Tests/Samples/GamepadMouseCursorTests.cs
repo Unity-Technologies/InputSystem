@@ -22,7 +22,7 @@ public class GamepadMouseCursorTests : InputTestFixture
 
         var canvasGO = new GameObject();
         canvasGO.SetActive(false);
-        var canvas = canvasGO.AddComponent<Canvas>();
+        canvasGO.AddComponent<Canvas>();
 
         var cursorGO = new GameObject();
         cursorGO.SetActive(false);
@@ -31,7 +31,6 @@ public class GamepadMouseCursorTests : InputTestFixture
         cursorInput.cursorSpeed = kCursorSpeed;
         cursorInput.scrollSpeed = kScrollSpeed;
         cursorInput.cursorTransform = cursorTransform;
-        cursorInput.canvas = canvas;
         cursorTransform.SetParent(canvasGO.transform, worldPositionStays: false);
         cursorTransform.pivot = new Vector2(0.5f, 0.5f);
         cursorTransform.anchorMin = Vector2.zero;
@@ -45,7 +44,7 @@ public class GamepadMouseCursorTests : InputTestFixture
         var forwardButtonAction = new InputAction(binding: "<Gamepad>/buttonWest");
         var backButtonAction = new InputAction(binding: "<Gamepad>/buttonEast");
         var scrollWheelAction = new InputAction();
-        scrollWheelAction.AddCompositeBinding("2DVector(normalize=false)")
+        scrollWheelAction.AddCompositeBinding("2DVector(mode=2)")
             .With("Up", "<Gamepad>/leftTrigger")
             .With("Down", "<Gamepad>/rightTrigger")
             .With("Left", "<Gamepad>/dpad/left")
@@ -177,5 +176,15 @@ public class GamepadMouseCursorTests : InputTestFixture
         Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
         Release(gamepad.dpad.left);
         Assert.That(scrollAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(kScrollSpeed, -kScrollSpeed * 0.3f)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    // This test requires some functionality which ATM is only available through InputTestRuntime (namely, being able to create
+    // native devices and set up IOCTLs for them).
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveVirtualMouseCursorFromGamepad_AndWarpSystemMouseIfPresent()
+    {
+        Assert.Fail();
     }
 }
