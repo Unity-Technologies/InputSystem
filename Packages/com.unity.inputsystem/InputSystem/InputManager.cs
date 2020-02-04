@@ -238,7 +238,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_EventListeners.ContainsReference(value))
+                if (!m_EventListeners.Contains(value))
                     m_EventListeners.AppendWithCapacity(value);
             }
             remove
@@ -254,7 +254,7 @@ namespace UnityEngine.InputSystem
             add
             {
                 InstallBeforeUpdateHookIfNecessary();
-                if (!m_BeforeUpdateListeners.ContainsReference(value))
+                if (!m_BeforeUpdateListeners.Contains(value))
                     m_BeforeUpdateListeners.AppendWithCapacity(value);
             }
             remove
@@ -269,7 +269,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_AfterUpdateListeners.ContainsReference(value))
+                if (!m_AfterUpdateListeners.Contains(value))
                     m_AfterUpdateListeners.AppendWithCapacity(value);
             }
             remove
@@ -284,7 +284,7 @@ namespace UnityEngine.InputSystem
         {
             add
             {
-                if (!m_SettingsChangedListeners.ContainsReference(value))
+                if (!m_SettingsChangedListeners.Contains(value))
                     m_SettingsChangedListeners.AppendWithCapacity(value);
             }
             remove
@@ -1183,8 +1183,8 @@ namespace UnityEngine.InputSystem
             var deviceId = device.deviceId;
             if (deviceIndex < m_StateChangeMonitors.LengthSafe())
             {
-                // m_StateChangeMonitors mirrors layout of m_Devices.
-                var count = m_DevicesCount;
+                // m_StateChangeMonitors mirrors layout of m_Devices *but* may be shorter.
+                var count = m_StateChangeMonitors.Length;
                 ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors, ref count, deviceIndex);
             }
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);

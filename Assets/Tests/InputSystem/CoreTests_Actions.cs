@@ -398,6 +398,35 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1192972/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRemoveCallbackInCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var callback1Triggered = false;
+        var callback2Triggered = false;
+
+        Action<InputAction.CallbackContext> callback1 = null;
+        callback1 = _ =>
+        {
+            callback1Triggered = true;
+            action.performed -= callback1;
+        };
+
+        action.performed += callback1;
+        action.performed += _ => callback2Triggered = true;
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callback1Triggered, Is.True);
+        Assert.That(callback2Triggered, Is.True);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanBeDisabledInCallback()
@@ -6513,17 +6542,17 @@ partial class CoreTests
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of callback for 'Started' phase of 'testAction.*' action in map 'testMap'.*"));
+                ".*InvalidOperationException while executing 'started' callbacks of 'testMap'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of 'Performed' callback on action 'testMap/testAction.*'.*"));
+                ".*InvalidOperationException while executing 'performed' callbacks of 'testMap/testAction.*'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of callback for 'Performed' phase of 'testAction.*' action in map 'testMap'.*"));
+                ".*InvalidOperationException while executing 'performed' callbacks of 'testMap'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));

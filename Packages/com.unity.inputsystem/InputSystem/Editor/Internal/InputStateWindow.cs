@@ -37,6 +37,8 @@ namespace UnityEngine.InputSystem.Editor
             m_StateBuffers = new byte[1][];
             m_StateBuffers[0] = GetEventStateBuffer(eventPtr, control);
             m_SelectedStateBuffer = 0;
+
+            titleContent = new GUIContent(control.displayName);
         }
 
         public void InitializeWithEvents(InputEventPtr[] eventPtrs, InputControl control)
@@ -49,6 +51,8 @@ namespace UnityEngine.InputSystem.Editor
                 m_StateBuffers[i] = GetEventStateBuffer(eventPtrs[i], control);
             m_CompareStateBuffers = true;
             m_ShowDifferentOnly = true;
+
+            titleContent = new GUIContent(control.displayName);
         }
 
         private unsafe byte[] GetEventStateBuffer(InputEventPtr eventPtr, InputControl control)
@@ -124,6 +128,8 @@ namespace UnityEngine.InputSystem.Editor
 
             m_BufferChoices = bufferChoices.ToArray();
             m_BufferChoiceValues = bufferChoiceValues.ToArray();
+
+            titleContent = new GUIContent(control.displayName);
         }
 
         private static unsafe void* TryGetDeviceState(InputDevice device, BufferSelector selector)

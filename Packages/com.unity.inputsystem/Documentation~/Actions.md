@@ -234,7 +234,7 @@ The `Started`, `Performed`, and `Canceled` phases each have a callback associate
 
     action.started += ctx => /* Action was started */;
     action.performed += ctx => /* Action was performed */;
-    action.canceled += ctx => /* Action was started */;
+    action.canceled += ctx => /* Action was canceled */;
 ```
 
 Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) structure holding context information that you can use to query the current state of the Action and to read out values from Controls that triggered the Action ([`InputAction.CallbackContext.ReadValue`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_ReadValue__1)).

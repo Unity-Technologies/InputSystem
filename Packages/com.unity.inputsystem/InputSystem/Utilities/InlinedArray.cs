@@ -428,6 +428,14 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        public static bool Contains<TValue>(this InlinedArray<TValue> array, TValue value)
+        {
+            for (var i = 0; i < array.length; ++i)
+                if (array[i].Equals(value))
+                    return true;
+            return false;
+        }
+
         public static bool ContainsReference<TValue>(this InlinedArray<TValue> array, TValue value)
             where TValue : class
         {

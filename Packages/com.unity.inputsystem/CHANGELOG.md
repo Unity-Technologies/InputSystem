@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0-preview.4] - 2020-12-12
+## [1.0.0-preview.5] - 2020-12-12
+
+### Fixed
+
+- XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
+
+#### Actions
+
+- Removing a callback from actions from the callback itself no longer throws `ArgumentOutOfRangeException` ([case 1192972](https://issuetracker.unity3d.com/issues/input-system-package-argumentoutofrangeexception-error-is-thrown-when-the-callback-is-removed-while-its-being-triggered)).
+- "Invalid user" `ArgumentException` when turning the same `PlayerInput` on and off ([case 1198889](https://issuetracker.unity3d.com/issues/input-system-package-argumentexception-invalid-user-error-is-thrown-when-the-callback-disables-game-object-with-playerinput)).
+- The list of device requirements for a control scheme in the action editor no longer displays devices with their internal layout name rather than their external display name.
+
+## [1.0.0-preview.4] - 2020-01-24
 
 This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
 
@@ -116,6 +128,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This bug led to input being missed on a device once another device had been removed.
 - `TrackedDevice` layout is no longer incorrectly registered as `Tracked Device`.
 - Event traces in the input debugger are no longer lost on domain reloads.
+- `IndexOutOfRangeException` being thrown when looking up controls on XR devices.
 
 #### Actions
 
