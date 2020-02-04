@@ -9,6 +9,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.5] - 2020-12-12
 
+### Changed
+
+- `Vector2Composite` now has a `mode` parameter which can be used to choose between `DigitalNormalized` (the default), `Digital` (same as `DigitalNormalized` but does not normalize the resulting vector), and `Analog` (uses float input values as is).
+  * `Vector2Composite.normalize` has been deprecated. Note that it will not work together with `Analog`. The parameter will be removed in the future.
+
 ### Fixed
 
 - XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
@@ -113,8 +118,6 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Control schemes can now handle ambiguity.
   * This means that, for example, you can now have one control scheme for generic gamepads and another control scheme specifically for PS4 controllers and the system will reliably pick the PS4 scheme when a PS4 controller is used and fall back to the generic gamepad scheme otherwise.
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
-- `Vector2Composite` will now treat controls bound in the composite as analog by default, i.e. the actual values of the controls will be reflected in the resulting vector.
-  * A new parameter called `analog` has been added that if set to `false` reverts to the previous behavior of treating controls as buttons.
 - `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 ### Fixed

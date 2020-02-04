@@ -5238,12 +5238,12 @@ partial class CoreTests
         var analogAction = new InputAction("analog", type: InputActionType.Value);
         var digitalAction = new InputAction("digital", type: InputActionType.Value);
 
-        analogAction.AddCompositeBinding("2DVector(analog=true,normalize=false)")
+        analogAction.AddCompositeBinding("2DVector(mode=2)") // Mode.Analog
             .With("Up", "<Gamepad>/leftStick/up")
             .With("Down", "<Gamepad>/leftStick/down")
             .With("Left", "<Gamepad>/leftStick/left")
             .With("Right", "<Gamepad>/leftStick/right");
-        digitalAction.AddCompositeBinding("2DVector(analog=false,normalize=false)")
+        digitalAction.AddCompositeBinding("2DVector(mode=1)") // Mode.Digital
             .With("Up", "<Gamepad>/leftStick/up")
             .With("Down", "<Gamepad>/leftStick/down")
             .With("Left", "<Gamepad>/leftStick/left")
@@ -5271,7 +5271,7 @@ partial class CoreTests
 
         // Set up classic WASD control.
         var action = new InputAction();
-        action.AddCompositeBinding("Dpad(analog=false)")
+        action.AddCompositeBinding("Dpad")
             .With("Up", "<Gamepad>/leftstick/up")
             .With("Down", "<Gamepad>/leftstick/down")
             .With("Left", "<Gamepad>/leftstick/left")

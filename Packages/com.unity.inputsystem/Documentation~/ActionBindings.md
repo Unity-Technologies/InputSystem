@@ -92,6 +92,13 @@ myAction.AddCompositeBinding("2DVector") // Or "Dpad"
     .With("Down", "<Keyboard>/s")
     .With("Left", "<Keyboard>/a")
     .With("Right", "<Keyboard>/d");
+
+// To set mode (2=analog, 1=digital, 0=digitalNormalized):
+myAction.AddCompositeBinding("2DVector(mode=2)")
+    .With("Up", "<Gamepad>/leftStick/up")
+    .With("Down", "<Keyboard>/leftStick/down")
+    .With("Left", "<Keyboard>/leftStick/left")
+    .With("Right", "<Keyboard>/leftStick/right");
 ```
 
 The 2D vector Composite has four part Bindings.
@@ -107,8 +114,7 @@ In addition, you can set the following parameters on a 2D vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`normalize`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_normalize)|Whether the resulting vector should be normalized or not. If this is disabled, then, for example, pressing both [`up`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_up) and [`right`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_right)  yields a vector `(1,1)` which has a length greater than 1. This can be undesirable in situations where the vector's magnitude matters (for example, when scaling running speed by the length of the input vector).<br><br>This is true by default.|
-|[`analog`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_analog)|Whether the controls bound in the composite should be treated as analog controls or not. This is on by default. This means that if, for example, you bind `up` to the left trigger on a gamepad and `down` to the right trigger and the left trigger is at 0.25 and the right trigger at 0, the resulting vector will be `(0,0.25)`. If, however, you turn this option off, the triggers will be treated as digital buttons (either on=1 or off=0) and the resulting vector from the same inputs will be `(0,1)`.|
+|[`mode`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_mode)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Digital), the behavior is essentially the same as [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Analog), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_down) and [`left`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_left) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized).|
 
 ### Button with one modifier
 

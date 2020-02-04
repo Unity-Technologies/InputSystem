@@ -142,14 +142,10 @@ namespace UnityEngine.InputSystem.Controls
         /// <param name="down">Axis value representing the down direction.</param>
         /// <param name="left">Axis value representing the left direction.</param>
         /// <param name="right">Axis value representing the right direction.</param>
-        /// <param name="normalize">Whether to normalize the resulting vector.</param>
         /// <returns>A 2D direction vector.</returns>
-        public static Vector2 MakeDpadVector(float up, float down, float left, float right, bool normalize = true)
+        public static Vector2 MakeDpadVector(float up, float down, float left, float right)
         {
-            var result = new Vector2(-left + right, up - down);
-            if (normalize)
-                return result.normalized;
-            return result;
+            return new Vector2(-left + right, up - down);
         }
 
         internal enum ButtonBits

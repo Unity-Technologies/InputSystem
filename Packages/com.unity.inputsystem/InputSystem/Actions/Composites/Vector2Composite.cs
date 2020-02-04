@@ -1,4 +1,7 @@
+using System;
+using UnityEditor;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
@@ -62,42 +65,77 @@ namespace UnityEngine.InputSystem.Composites
         /// </remarks>
         [InputControl(layout = "Button")] public int right = 0;
 
-        /// <summary>
-        /// If true (default), then the resulting vector will be normalized. Otherwise, diagonal
-        /// vectors will have a magnitude > 1 (i.e. will be <c>new Vector2(1,1)</c>, for example,
-        /// instead of <c>new Vector2(1,1).normalized</c>).
-        /// </summary>
-        /// <value>Whether the normalize the resulting vector.</value>
+        [Obsolete("Use Mode.DigitalNormalized with 'mode' instead")]
         public bool normalize = true;
 
         /// <summary>
-        /// If true (default), the up/down/left/right inputs will be treated as analog meaning that
-        /// their actual values will be used. If this is false, the values will be read as buttons
-        /// meaning that instead if an input value is below the button press threshold, the value
-        /// that is used is 0 and otherwise the value that is used is 1.
+        /// How to synthesize a Vector2 from the values read from <see cref="up"/>, <see cref="down"/>,
+        /// <see cref="left"/>, and <see cref="right"/>.
         /// </summary>
-        /// <value>Whether to treat part bindings as analog controls.</value>
-        public bool analog = true;
+        /// <value>Determines how X and Y of the resulting Vector2 are formed from input values.</value>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// var action = new InputAction();
+        ///
+        /// // DigitalNormalized composite (the default). Turns gamepad left stick into
+        /// // control equivalent to the D-Pad.
+        /// action.AddCompositeBinding("2DVector(mode=0)")
+        ///     .With("up", "&lt;Gamepad&gt;/leftStick/up")
+        ///     .With("down", "&lt;Gamepad&gt;/leftStick/down")
+        ///     .With("left", "&lt;Gamepad&gt;/leftStick/left")
+        ///     .With("right", "&lt;Gamepad&gt;/leftStick/right");
+        ///
+        /// // Digital composite. Turns gamepad left stick into control equivalent
+        /// // to the D-Pad except that diagonals will not be normalized.
+        /// action.AddCompositeBinding("2DVector(mode=1)")
+        ///     .With("up", "&lt;Gamepad&gt;/leftStick/up")
+        ///     .With("down", "&lt;Gamepad&gt;/leftStick/down")
+        ///     .With("left", "&lt;Gamepad&gt;/leftStick/left")
+        ///     .With("right", "&lt;Gamepad&gt;/leftStick/right");
+        ///
+        /// // Analog composite. In this case results in setup that behaves exactly
+        /// // the same as leftStick already does. But you could use it, for example,
+        /// // to swap directions by binding "up" to leftStick/down and "down" to
+        /// // leftStick/up.
+        /// action.AddCompositeBinding("2DVector(mode=2)")
+        ///     .With("up", "&lt;Gamepad&gt;/leftStick/up")
+        ///     .With("down", "&lt;Gamepad&gt;/leftStick/down")
+        ///     .With("left", "&lt;Gamepad&gt;/leftStick/left")
+        ///     .With("right", "&lt;Gamepad&gt;/leftStick/right");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public Mode mode;
 
         /// <inheritdoc />
         public override Vector2 ReadValue(ref InputBindingCompositeContext context)
         {
-            if (!analog)
-            {
-                var upIsPressed = context.ReadValueAsButton(up);
-                var downIsPressed = context.ReadValueAsButton(down);
-                var leftIsPressed = context.ReadValueAsButton(left);
-                var rightIsPressed = context.ReadValueAsButton(right);
+            var mode = this.mode;
 
-                return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, normalize);
+            if (mode == Mode.Analog)
+            {
+                var upValue = context.ReadValue<float>(up);
+                var downValue = context.ReadValue<float>(down);
+                var leftValue = context.ReadValue<float>(left);
+                var rightValue = context.ReadValue<float>(right);
+
+                return DpadControl.MakeDpadVector(upValue, downValue, leftValue, rightValue);
             }
 
-            var upValue = context.ReadValue<float>(up);
-            var downValue = context.ReadValue<float>(down);
-            var leftValue = context.ReadValue<float>(left);
-            var rightValue = context.ReadValue<float>(right);
+            var upIsPressed = context.ReadValueAsButton(up);
+            var downIsPressed = context.ReadValueAsButton(down);
+            var leftIsPressed = context.ReadValueAsButton(left);
+            var rightIsPressed = context.ReadValueAsButton(right);
 
-            return DpadControl.MakeDpadVector(upValue, downValue, leftValue, rightValue, normalize);
+            // Legacy. We need to reference the obsolete member here so temporarily
+            // turn of the warning.
+            #pragma warning disable CS0618
+            if (!normalize) // Was on by default.
+                mode = Mode.Digital;
+            #pragma warning restore CS0618
+
+            return DpadControl.MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed, mode == Mode.DigitalNormalized);
         }
 
         /// <inheritdoc />
@@ -106,5 +144,47 @@ namespace UnityEngine.InputSystem.Composites
             var value = ReadValue(ref context);
             return value.magnitude;
         }
+
+        /// <summary>
+        /// Determines how a Vector2 is synthesized from part controls.
+        /// </summary>
+        public enum Mode
+        {
+            /// <summary>
+            /// Part controls are treated as analog meaning that the floating-point values read from controls
+            /// will come through as is (minus the fact that the down and left direction values are negated).
+            /// </summary>
+            Analog = 2,
+
+            /// <summary>
+            /// Part controls are treated as buttons (on/off) and the resulting vector is normalized. This means
+            /// that if, for example, both left and up are pressed, instead of returning a vector (-1,1), a vector
+            /// of roughly (-0.7,0.7) (i.e. corresponding to <c>new Vector2(-1,1).normalized</c>) is returned instead.
+            /// The resulting 2D area is diamond-shaped.
+            /// </summary>
+            DigitalNormalized = 0,
+
+            /// <summary>
+            /// Part controls are treated as buttons (on/off) and the resulting vector is not normalized. This means
+            /// that if, for example, both left and up are pressed, the resulting vector is (-1,1) and has a length
+            /// greater than 1. The resulting 2D area is box-shaped.
+            /// </summary>
+            Digital = 1
+        }
     }
+
+    #if UNITY_EDITOR
+    internal class Vector2CompositeEditor : InputParameterEditor<Vector2Composite>
+    {
+        private GUIContent m_ModeLabel = new GUIContent("Mode",
+            "How to create synthesize a Vector2 from the inputs. Digital "
+            + "treats part bindings as buttons (on/off) whereas Analog preserves "
+            + "floating-point magnitudes as read from controls.");
+
+        public override void OnGUI()
+        {
+            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
+        }
+    }
+    #endif
 }
