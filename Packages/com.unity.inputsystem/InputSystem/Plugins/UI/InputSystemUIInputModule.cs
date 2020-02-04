@@ -1,9 +1,11 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should each of the actions be *lists* of actions?
+
+////FIXME: doesn't handle devices getting removed; will just keep device states forever
 
 ////TODO: add ability to query which device was last used with any of the actions
 
@@ -119,11 +121,9 @@ namespace UnityEngine.InputSystem.UI
         // not under the current MultiplayerEventSystem's root.
         private bool PointerShouldIgnoreTransform(Transform t)
         {
-            if (eventSystem is MultiplayerEventSystem)
+            if (eventSystem is MultiplayerEventSystem multiplayerEventSystem && multiplayerEventSystem.playerRoot != null)
             {
-                var mes = eventSystem as MultiplayerEventSystem;
-
-                if (mes.playerRoot != null && !t.IsChildOf(mes.playerRoot.transform))
+                if (!t.IsChildOf(multiplayerEventSystem.playerRoot.transform))
                     return true;
             }
             return false;
@@ -489,8 +489,11 @@ namespace UnityEngine.InputSystem.UI
             set => m_TrackedDeviceDragThresholdMultiplier = value;
         }
 
-        private static void SwapAction(ref InputActionReference property, InputActionReference newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
+        private void SwapAction(ref InputActionReference property, InputActionReference newValue, bool actionsHooked, Action<InputAction.CallbackContext> actionCallback)
         {
+            if (property == newValue || (property != null && newValue != null && property.action == newValue.action))
+                return;
+
             if (property != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
@@ -498,6 +501,14 @@ namespace UnityEngine.InputSystem.UI
             }
 
             property = newValue;
+
+            #if DEBUG
+            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough)
+            {
+                Debug.LogWarning("Actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
+                    + $"input from multiple devices (action {newValue.action} is set to {newValue.action.type})", this);
+            }
+            #endif
 
             if (newValue != null && actionsHooked)
             {
@@ -650,8 +661,6 @@ namespace UnityEngine.InputSystem.UI
                 (m_TrackedDeviceSelectAction?.action?.enabled ?? true);
         }
 
-        private bool m_OwnsEnabledState;
-
         /// <summary>
         /// This is a quick accessor for enabling all actions.  Currently, action ownership is ambiguous,
         /// and we need a way to enable/disable inspector-set actions.
@@ -700,30 +709,29 @@ namespace UnityEngine.InputSystem.UI
 
         private int GetTrackedDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
-            Debug.Assert(context.action.type == InputActionType.PassThrough, $"XR actions should be pass-through actions, so the UI can properly distinguish multiple tracked devices. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
-            for (var i = 0; i < m_TrackedDeviceStates.Count; i++)
+            for (var i = 0; i < m_TrackedDeviceStatesCount; i++)
             {
                 if (m_TrackedDeviceStates[i].device == context.control.device)
                     return i;
             }
-            m_TrackedDeviceStates.Add(new TrackedDeviceModel(m_RollingPointerId++, context.control.device));
-            return m_TrackedDeviceStates.Count - 1;
+
+            return ArrayHelpers.AppendWithCapacity(ref m_TrackedDeviceStates, ref m_TrackedDeviceStatesCount,
+                new TrackedDeviceModel(m_RollingPointerId++, context.control.device));
         }
 
         private int GetMouseDeviceIndexForCallbackContext(InputAction.CallbackContext context)
         {
-            Debug.Assert(context.action.type == InputActionType.PassThrough, $"Pointer actions should be pass-through actions, so the UI can properly distinguish multiple pointing devices/fingers. Please set the action type of '{context.action.name}' to 'Pass-Through'.");
             var touchId = PointerInputModule.kMouseLeftId;
-            if (context.control.parent is TouchControl)
-                touchId = ((TouchControl)context.control.parent).touchId.ReadValue();
+            if (context.control.parent is TouchControl touchControl)
+                touchId = touchControl.touchId.ReadValue();
 
-            for (var i = 0; i < m_MouseStates.Count; i++)
+            for (var i = 0; i < m_MouseStates.length; i++)
             {
                 if (m_MouseStates[i].device == context.control.device && m_MouseStates[i].touchId == touchId)
                     return i;
             }
-            m_MouseStates.Add(new MouseModel(m_RollingPointerId++, context.control.device, touchId));
-            return m_MouseStates.Count - 1;
+
+            return m_MouseStates.AppendWithCapacity(new MouseModel(m_RollingPointerId++, context.control.device, touchId));
         }
 
         private void OnAction(InputAction.CallbackContext context)
@@ -825,23 +833,23 @@ namespace UnityEngine.InputSystem.UI
             if (!eventSystem.isFocused)
             {
                 m_JoystickState.OnFrameFinished();
-                foreach (var mouseState in m_MouseStates)
-                    mouseState.OnFrameFinished();
-                foreach (var trackedDeviceState in m_TrackedDeviceStates)
-                    trackedDeviceState.OnFrameFinished();
+                for (var i = 0; i < m_MouseStates.length; ++i)
+                    m_MouseStates[i].OnFrameFinished();
+                for (var i = 0; i < m_TrackedDeviceStatesCount; ++i)
+                    m_TrackedDeviceStates[i].OnFrameFinished();
             }
             else
             {
                 ProcessJoystick(ref m_JoystickState);
 
-                for (var i = 0; i < m_MouseStates.Count; i++)
+                for (var i = 0; i < m_MouseStates.length; i++)
                 {
                     var state = m_MouseStates[i];
                     ProcessMouse(ref state);
                     m_MouseStates[i] = state;
                 }
 
-                for (var i = 0; i < m_TrackedDeviceStates.Count; i++)
+                for (var i = 0; i < m_TrackedDeviceStatesCount; i++)
                 {
                     var state = m_TrackedDeviceStates[i];
                     ProcessTrackedDevice(ref state);
@@ -933,8 +941,6 @@ namespace UnityEngine.InputSystem.UI
             return InputActionReference.Create(newAction);
         }
 
-        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
-
         public InputActionAsset actionsAsset
         {
             get => m_ActionsAsset;
@@ -960,16 +966,7 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D screen position
-        /// </see> used as a cursor for pointing at UI elements.
-        /// </summary>
         [SerializeField, HideInInspector] private InputActionReference m_PointAction;
-
-        /// <summary>
-        /// An <see cref="InputAction"/> delivering a <see cref="Vector2">2D motion vector
-        /// </see> used for sending <see cref="AxisEventData"/> events.
-        /// </summary>
         [SerializeField, HideInInspector] private InputActionReference m_MoveAction;
         [SerializeField, HideInInspector] private InputActionReference m_SubmitAction;
         [SerializeField, HideInInspector] private InputActionReference m_CancelAction;
@@ -982,12 +979,16 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceOrientationAction;
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceSelectAction;
 
-        [NonSerialized] private int m_RollingPointerId;
-        [NonSerialized] private bool m_ActionsHooked;
-        [NonSerialized] private Action<InputAction.CallbackContext> m_OnActionDelegate;
+        [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
 
-        [NonSerialized] private JoystickModel m_JoystickState;
-        [NonSerialized] private List<TrackedDeviceModel> m_TrackedDeviceStates = new List<TrackedDeviceModel>();
-        [NonSerialized] private List<MouseModel> m_MouseStates = new List<MouseModel>();
+        private int m_RollingPointerId;
+        private bool m_OwnsEnabledState;
+        private bool m_ActionsHooked;
+        private Action<InputAction.CallbackContext> m_OnActionDelegate;
+
+        private JoystickModel m_JoystickState;
+        private int m_TrackedDeviceStatesCount;
+        private TrackedDeviceModel[] m_TrackedDeviceStates;
+        private InlinedArray<MouseModel> m_MouseStates;
     }
 }

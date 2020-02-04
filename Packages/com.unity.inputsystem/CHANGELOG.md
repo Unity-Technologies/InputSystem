@@ -17,9 +17,11 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
+- `InputSystemUIInputModule` no longer generates GC heap garbage every time mouse events are processed.
 
 #### Actions
 
+- When no action map is selected in action editor, plus icon to add an action is now disabled; formerly threw an exception when clicked (case 1199562).
 - Removing a callback from actions from the callback itself no longer throws `ArgumentOutOfRangeException` ([case 1192972](https://issuetracker.unity3d.com/issues/input-system-package-argumentoutofrangeexception-error-is-thrown-when-the-callback-is-removed-while-its-being-triggered)).
 - "Invalid user" `ArgumentException` when turning the same `PlayerInput` on and off ([case 1198889](https://issuetracker.unity3d.com/issues/input-system-package-argumentexception-invalid-user-error-is-thrown-when-the-callback-disables-game-object-with-playerinput)).
 - The list of device requirements for a control scheme in the action editor no longer displays devices with their internal layout name rather than their external display name.

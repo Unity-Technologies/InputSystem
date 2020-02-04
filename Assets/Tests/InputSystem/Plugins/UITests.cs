@@ -10,11 +10,12 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.Scripting;
+using UnityEngine.Profiling;
 using UnityEngine.TestTools;
-using UnityEngine.TestTools.Utils;
+using UnityEngine.TestTools.Constraints;
 using UnityEngine.UI;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -826,6 +827,46 @@ internal class UITests : InputTestFixture
     public void TODO_UI_CanDriveIME()
     {
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("UI")]
+    [Retry(2)] // Warm up JIT
+    public void UI_MovingAndClickingMouseDoesNotAllocateGCMemory()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+
+        actions.Enable();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var uiModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.actionsAsset = actions;
+        uiModule.point = InputActionReference.Create(pointAction);
+        uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // We allow the first hit on the UI module to set up internal data structures
+        // and thus allocate something. So go and run one event with data on the mouse.
+        // Also gets rid of GC noise from the initial input system update.
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(1, 2) });
+        InputSystem.Update();
+
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "UI_MovingAndClickingMouseDoesNotAllocateMemory";
+
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            Set(mouse.position, new Vector2(123, 234));
+            Set(mouse.position, new Vector2(234, 345));
+            Press(mouse.leftButton);
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
 // The tracked device tests fail with NullReferenceException in the windows editor on yamato. I cannot reproduce this locally, so will disable them on windows for now.
