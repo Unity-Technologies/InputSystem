@@ -51,7 +51,7 @@ namespace Unity.XR.OpenVR
         }
     }
 
-    [InputControlLayout(displayName = "OpenVR Controller (Windows MR)", commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Windows MR Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class OpenVRControllerWMR : XRController
     {
