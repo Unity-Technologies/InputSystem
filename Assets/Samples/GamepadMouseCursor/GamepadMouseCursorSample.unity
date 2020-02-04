@@ -2308,7 +2308,7 @@ MonoBehaviour:
 
 
     Note that while playing, you will see a new "VirtualMouse" device in the input
-    debugger. This devices receives synthesized input from the gamepad.'
+    debugger. This device receives synthesized input from the gamepad.'
 --- !u!222 &1902495475
 CanvasRenderer:
   m_ObjectHideFlags: 0
