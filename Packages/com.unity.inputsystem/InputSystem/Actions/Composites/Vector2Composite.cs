@@ -1,10 +1,13 @@
 using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
+
+#if UNITY_EDITOR
+using UnityEngine.InputSystem.Editor;
+#endif
 
 ////TODO: add support for ramp up/down
 
