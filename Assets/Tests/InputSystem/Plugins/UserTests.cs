@@ -481,18 +481,20 @@ internal class UserTests : InputTestFixture
         var user = InputUser.PerformPairingWithDevice(gamepad1);
         InputUser.PerformPairingWithDevice(gamepad2, user: user);
 
+        var originalUser = user;
         user.UnpairDevicesAndRemoveUser();
 
+        Assert.That(user, Is.EqualTo(default(InputUser)));
         Assert.That(user.valid, Is.False);
         Assert.That(InputUser.all, Is.Empty);
         Assert.That(receivedChanges, Is.EquivalentTo(new[]
         {
-            new UserChange(user, InputUserChange.Added),
-            new UserChange(user, InputUserChange.DevicePaired, gamepad1),
-            new UserChange(user, InputUserChange.DevicePaired, gamepad2),
-            new UserChange(user, InputUserChange.DeviceUnpaired, gamepad1),
-            new UserChange(user, InputUserChange.DeviceUnpaired, gamepad2),
-            new UserChange(user, InputUserChange.Removed),
+            new UserChange(originalUser, InputUserChange.Added),
+            new UserChange(originalUser, InputUserChange.DevicePaired, gamepad1),
+            new UserChange(originalUser, InputUserChange.DevicePaired, gamepad2),
+            new UserChange(originalUser, InputUserChange.DeviceUnpaired, gamepad1),
+            new UserChange(originalUser, InputUserChange.DeviceUnpaired, gamepad2),
+            new UserChange(originalUser, InputUserChange.Removed),
         }));
     }
 
