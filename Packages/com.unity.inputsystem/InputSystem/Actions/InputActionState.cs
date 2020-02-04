@@ -1542,13 +1542,13 @@ namespace UnityEngine.InputSystem
             {
                 case InputActionPhase.Started:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted);
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted, "started");
                     break;
                 }
 
                 case InputActionPhase.Performed:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                         actionState->phase = phaseAfterPerformedOrCanceled;
                     break;
@@ -1556,7 +1556,7 @@ namespace UnityEngine.InputSystem
 
                 case InputActionPhase.Canceled:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled);
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled, "canceled");
                     if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
                         actionState->phase = phaseAfterPerformedOrCanceled;
                     break;
@@ -1572,7 +1572,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -1588,10 +1588,9 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputActionCallback");
 
             // Global callback goes first.
+            var action = context.action;
             if (s_OnActionChange.length > 0)
             {
-                var action = context.action;
-
                 InputActionChange change;
                 switch (phase)
                 {
@@ -1614,36 +1613,10 @@ namespace UnityEngine.InputSystem
             }
 
             // Run callbacks (if any) directly on action.
-            var listenerCount = listeners.length;
-            for (var i = 0; i < listenerCount; ++i)
-            {
-                try
-                {
-                    listeners[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of '{phase}' callback on action '{GetActionOrNull(ref actionStates[actionIndex])}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref listeners, context, callbackName, action);
 
             // Run callbacks (if any) on action map.
-            var listenerCountOnMap = callbacksOnMap.length;
-            for (var i = 0; i < listenerCountOnMap; ++i)
-            {
-                try
-                {
-                    callbacksOnMap[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of callback for '{phase}' phase of '{GetActionOrNull(ref actionStates[actionIndex]).name}' action in map '{actionMap.name}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref callbacksOnMap, context, callbackName, actionMap);
 
             Profiler.EndSample();
         }
