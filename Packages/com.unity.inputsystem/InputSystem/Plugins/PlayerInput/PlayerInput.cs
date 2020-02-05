@@ -256,6 +256,15 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Index of split-screen area assigned to player or -1 if the player is not
         /// using split-screen.</value>
+        /// <remarks>
+        /// Split screen areas are enumerated row by row and within rows, column by column. So, if, for example,
+        /// there are four separate split-screen areas, the upper left one is #0, the upper right one is #1,
+        /// the lower left one is #2, and the lower right one is #3.
+        ///
+        /// Split screen areas are usually assigned automatically but players can also be assigned to
+        /// areas explicitly through <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/> or
+        /// <see cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>.
+        /// </remarks>
         /// <seealso cref="camera"/>
         /// <seealso cref="PlayerInputManager.splitScreen"/>
         public int splitScreenIndex => m_SplitScreenIndex;

@@ -382,6 +382,24 @@ namespace UnityEngine.InputSystem
             JoinPlayer(pairWithDevice: device);
         }
 
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevice"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevice">Device to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        ///
+        /// To pair multiple devices, use <see cref="JoinPlayer(int,int,string,InputDevice[])"/>.
+        /// </remarks>
         public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, InputDevice pairWithDevice = null)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
@@ -392,6 +410,22 @@ namespace UnityEngine.InputSystem
                 controlScheme: controlScheme, pairWithDevice: pairWithDevice);
         }
 
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevices"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevices">Devices to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        /// </remarks>
         public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, params InputDevice[] pairWithDevices)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
