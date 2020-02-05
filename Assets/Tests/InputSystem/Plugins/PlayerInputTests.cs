@@ -1306,11 +1306,14 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
-    public void PlayerInput_CanJoinPlayersThroughButtonPress()
+    [TestCase("Gamepad", "buttonSouth", "<Gamepad>/leftStick/x", "buttonNorth")]
+    [TestCase("Keyboard", "space", "<Mouse>/position/x", "b", "Mouse")]
+    public void PlayerInput_CanJoinPlayersThroughButtonPress(string deviceLayout, string buttonControl, string nonButtonControl, string anotherButtonControl, string secondDeviceLayout = null)
     {
         var playerPrefab = new GameObject();
         playerPrefab.SetActive(false);
         playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
 
         var manager = new GameObject();
         var listener = manager.AddComponent<MessageListener>();
@@ -1318,27 +1321,34 @@ internal class PlayerInputTests : InputTestFixture
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         managerComponent.playerPrefab = playerPrefab;
 
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var device = InputSystem.AddDevice(deviceLayout);
 
-        // First wiggle stick and make sure it does NOT result in a join.
-        Set(gamepad.leftStick.x, 0.5f);
-        Set(gamepad.leftStick.y, 0.5f);
+        var secondDevice = default(InputDevice);
+        if (!string.IsNullOrEmpty(secondDeviceLayout))
+            secondDevice = InputSystem.AddDevice(secondDeviceLayout);
+
+        var devices = secondDevice == null ? new[] { device } : new[] { device, secondDevice };
+
+        // First actuate non-button control and make sure it does NOT result in a join.
+        Set((InputControl<float>)InputSystem.FindControl(nonButtonControl), 1f);
 
         Assert.That(PlayerInput.all, Is.Empty);
         Assert.That(listener.messages, Is.Empty);
 
         // Now press button and make sure it DOES result in a join.
-        Press(gamepad.buttonSouth);
+        Press((ButtonControl)device[buttonControl]);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(1));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(devices));
+        Assert.That(PlayerInput.all[0].user.valid, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerJoined", PlayerInput.all[0])}));
 
         // Press another button and make sure it does NOT result in anything.
 
         listener.messages.Clear();
 
-        Set(gamepad.buttonSouth, 0);
-        Press(gamepad.buttonNorth);
+        Release((ButtonControl)device[buttonControl]);
+        Press((ButtonControl)device[anotherButtonControl]);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(1));
         Assert.That(listener.messages, Is.Empty);
@@ -1381,6 +1391,14 @@ internal class PlayerInputTests : InputTestFixture
             InputSystem.QueueEvent(eventPtr);
             InputSystem.Update();
         }
+
+        Assert.That(listener.messages, Is.Empty);
+        Assert.That(PlayerInput.all, Is.Empty);
+
+        // Also try with just a keyboard. Without having a mouse present, this should
+        // fail the join.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        Press(keyboard.spaceKey);
 
         Assert.That(listener.messages, Is.Empty);
         Assert.That(PlayerInput.all, Is.Empty);

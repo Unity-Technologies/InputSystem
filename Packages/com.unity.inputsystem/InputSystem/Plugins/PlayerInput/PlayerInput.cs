@@ -976,6 +976,8 @@ namespace UnityEngine.InputSystem
 
         private static PlayerInput DoInstantiate(GameObject prefab)
         {
+            var destroyIfDeviceSetupUnsuccessful = s_DestroyIfDeviceSetupUnsuccessful;
+
             GameObject instance;
             try
             {
@@ -991,6 +993,7 @@ namespace UnityEngine.InputSystem
                 s_InitControlScheme = null;
                 s_InitPlayerIndex = -1;
                 s_InitSplitScreenIndex = -1;
+                s_DestroyIfDeviceSetupUnsuccessful = false;
             }
 
             var playerInput = instance.GetComponentInChildren<PlayerInput>();
@@ -998,6 +1001,12 @@ namespace UnityEngine.InputSystem
             {
                 DestroyImmediate(instance);
                 Debug.LogError("The GameObject does not have a PlayerInput component", prefab);
+                return null;
+            }
+
+            if (destroyIfDeviceSetupUnsuccessful && (!playerInput.user.valid || playerInput.hasMissingRequiredDevices))
+            {
+                DestroyImmediate(instance);
                 return null;
             }
 
@@ -1056,6 +1065,7 @@ namespace UnityEngine.InputSystem
         private static int s_InitPlayerIndex = -1;
         private static int s_InitSplitScreenIndex = -1;
         private static string s_InitControlScheme;
+        internal static bool s_DestroyIfDeviceSetupUnsuccessful;
 
         private void InitializeActions()
         {
@@ -1330,8 +1340,12 @@ namespace UnityEngine.InputSystem
                 // search for a control scheme matching the given devices.
                 if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
                 {
+                    // The devices we've been given may not be all the devices required to satisfy a given control scheme so we
+                    // want to pick any one control scheme that is the best match for the devices we have regardless of whether
+                    // we'll need additional devices. TryToActivateControlScheme will take care of that.
                     var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes);
+                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
+                        allowUnsuccesfulMatch: true);
                     if (controlScheme != null)
                         TryToActivateControlScheme(controlScheme.Value);
                 }
