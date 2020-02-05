@@ -384,6 +384,7 @@ namespace UnityEngine.InputSystem
         /// cref="SwitchCurrentControlScheme(string,InputDevice[])"/>.
         /// </remarks>
         /// <seealso cref="currentControlScheme"/>
+        /// <seealso cref="isSinglePlayer"/>
         public bool neverAutoSwitchControlSchemes
         {
             get => m_NeverAutoSwitchControlSchemes;
@@ -746,15 +747,31 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputUser.hasMissingRequiredDevices"/>
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
 
+        /// <summary>
+        /// List of all players that are currently joined. Sorted by <see cref="playerIndex"/> in
+        /// increasing order.
+        /// </summary>
+        /// <value>List of active PlayerInputs.</value>
+        /// <remarks>
+        /// While the list is sorted by <see cref="playerIndex"/>, note that this does not mean that the <see cref="playerIndex"/>
+        /// of a player corresponds to the index in this list. If, for example, three players join and then the second player leaves,
+        /// the list will contain one player with <see cref="playerIndex"/> 0 followed by one player with <see cref="playerIndex"/> 2.
+        /// </remarks>
+        /// <seealso cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>
+        /// <seealso cref="Instantiate(GameObject,int,string,int,InputDevice)"/>
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
         /// <summary>
         /// Whether PlayerInput operates in single-player mode.
         /// </summary>
-        /// <value>If true, there is only a single PlayerInput.</value>
+        /// <value>If true, there is at most a single PlayerInput.</value>
         /// <remarks>
+        /// Single-player mode is active while there is at most one PlayerInput (there can also be none) and
+        /// while joining is not enabled in <see cref="PlayerInputManager"/> (if one exists). See <see cref="PlayerInputManager.joiningEnabled"/>.
         ///
+        /// Automatic control scheme switching (if enabled) is predicated on single-player mode being active.
         /// </remarks>
+        /// <seealso cref="neverAutoSwitchControlSchemes"/>
         public static bool isSinglePlayer =>
             s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);

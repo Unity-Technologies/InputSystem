@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
 - `InputSystemUIInputModule` no longer generates GC heap garbage every time mouse events are processed.
+- Fixed a bug where an internal array helper method was corrupting array contents leading to bugs in both `InputUser` and `Touch`.
 
 #### Actions
 

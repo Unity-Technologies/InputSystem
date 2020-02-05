@@ -401,7 +401,13 @@ namespace UnityEngine.InputSystem
                     SwapElements(j, j - 1);
         }
 
-        public TControl[] ToArray()
+        /// <summary>
+        /// Convert the contents of the list to an array.
+        /// </summary>
+        /// <param name="dispose">If true, the control list will be disposed of as part of the operation, i.e.
+        /// <see cref="Dispose"/> will be called as a side-effect.</param>
+        /// <returns>An array mirroring the contents of the list. Not null.</returns>
+        public TControl[] ToArray(bool dispose = false)
         {
             // Somewhat pointless to allocate an empty array if we have no elements instead
             // of returning null, but other ToArray() implementations work that way so we do
@@ -410,6 +416,10 @@ namespace UnityEngine.InputSystem
             var result = new TControl[m_Count];
             for (var i = 0; i < m_Count; ++i)
                 result[i] = this[i];
+
+            if (dispose)
+                Dispose();
+
             return result;
         }
 
