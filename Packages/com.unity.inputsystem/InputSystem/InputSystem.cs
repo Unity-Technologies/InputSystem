@@ -1977,6 +1977,52 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Find the first control that matches the given control path.
+        /// </summary>
+        /// <param name="path">Path of a control, e.g. <c>"&lt;Gamepad&gt;/buttonSouth"</c>. See <see cref="InputControlPath"/>
+        /// for details.</param>
+        /// <returns>The first control that matches the given path or <c>null</c> if no control matches.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// If multiple controls match the given path, which result is considered the first is indeterminate.
+        ///
+        /// <example>
+        /// <code>
+        /// // Add gamepad.
+        /// InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Look up various controls on it.
+        /// var aButton = InputSystem.FindControl("&lt;Gamepad&gt;/buttonSouth");
+        /// var leftStickX = InputSystem.FindControl("*/leftStick/x");
+        /// var bButton = InputSystem.FindControl"*/{back}");
+        ///
+        /// // This one returns the gamepad itself as devices are also controls.
+        /// var gamepad = InputSystem.FindControl("&lt;Gamepad&gt;");
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="InputControl.path"/>
+        public static InputControl FindControl(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            var devices = s_Manager.devices;
+            var numDevices = devices.Count;
+
+            for (var i = 0; i < numDevices; ++i)
+            {
+                var device = devices[i];
+                var control = InputControlPath.TryFindControl(device, path);
+                if (control != null)
+                    return control;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Find all controls that match the given <see cref="InputControlPath">control path</see>.
         /// </summary>
         /// <param name="path"></param>

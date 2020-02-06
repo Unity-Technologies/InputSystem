@@ -128,6 +128,8 @@ If you use [`MultiplayerEventSystem`](UISupport.md#multiplayereventsystem-compon
 
 ## `PlayerInputManager` component
 
+>NOTE: The Input System package comes with a sample called `Simple Multiplayer` which you can install from the package manager UI in the Unity editor. The sample demonstrates how to use [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) to set up a simple local multiplayer scenario.
+
 The [`PlayerInput`](#playerinput-component) system facilitates setting up local multiplayer games, where multiple players share a single device with a single screen and multiple controllers. Set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of [`PlayerInput`](#playerinput-component) instances as players join and leave the game.
 
 ![PlayerInputManager](Images/PlayerInputManager.png)
@@ -150,7 +152,7 @@ You can use the [`Join Behavior`](../api/UnityEngine.InputSystem.PlayerInputMana
 |--------|-----------|
 |[`Join Players When Button IsPressed`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Listen for button presses on Devices that are not paired to any player. If a player presses a button and joining is allowed, join the new player using the Device they pressed the button on.|
 |[`Join Players When Join Action Is Triggered`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Similar to `Join Players When Button IsPressed`, but this only joins a player if the control they triggered matches a specific action you define. For example, you can set up players to join when pressing a specific gamepad button.|
-|[`Join Players Manually`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Don't join players automatically. Call [`JoinPlayerFromUI`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromUI) or [`JoinPlayerFromAction`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayerFromAction_UnityEngine_InputSystem_InputAction_CallbackContext_) explicitly to join new players. Alternatively, create GameObjects with [`PlayerInput`](#playerinput-component) components directly and the Input System will automatically join them.|
+|[`Join Players Manually`](../api/UnityEngine.InputSystem.PlayerJoinBehavior.html)|Don't join players automatically. Call [`JoinPlayer`](../api/UnityEngine.InputSystem.PlayerInputManager.html#UnityEngine_InputSystem_PlayerInputManager_JoinPlayer_System_Int32_System_Int32_System_String_UnityEngine_InputSystem_InputDevice_) explicitly to join new players. Alternatively, create GameObjects with [`PlayerInput`](#playerinput-component) components directly and the Input System will automatically join them.|
 
 ### Split-screen
 

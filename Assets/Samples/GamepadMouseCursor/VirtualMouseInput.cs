@@ -2,6 +2,9 @@ using System;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
 
+////TODO: investigate how driving the HW cursor behaves when FPS drops low
+////      (also, maybe we can add support where we turn the gamepad mouse on and off automatically based on whether the system mouse is used)
+
 ////TODO: add support for acceleration
 
 ////TODO: automatically scale mouse speed to resolution such that it stays constant regardless of resolution
