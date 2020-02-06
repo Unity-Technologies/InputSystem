@@ -1160,14 +1160,14 @@ namespace UnityEngine.InputSystem
                                 {
                                     // We have an action name. Show in message.
                                     Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{actions}",
+                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
                                         this);
                                 }
                                 else
                                 {
                                     // We have no action name. Best we have is ID.
                                     Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{actions}",
+                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
                                         this);
                                 }
                             }
