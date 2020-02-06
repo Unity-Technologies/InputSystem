@@ -107,12 +107,13 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Create a direction vector from the given four button states.
         /// </summary>
-        /// <param name="up"></param>
-        /// <param name="down"></param>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <param name="normalize"></param>
-        /// <returns>A normalized 2D direction vector.</returns>
+        /// <param name="up">Whether button representing the up direction is pressed.</param>
+        /// <param name="down">Whether button representing the down direction is pressed.</param>
+        /// <param name="left">Whether button representing the left direction is pressed.</param>
+        /// <param name="right">Whether button representing the right direction is pressed.</param>
+        /// <param name="normalize">Whether to normalize the resulting vector. If this is false, vectors in the diagonal
+        /// directions will have a magnitude of greater than 1. For example, up-left will be (-1,1).</param>
+        /// <returns>A 2D direction vector.</returns>
         public static Vector2 MakeDpadVector(bool up, bool down, bool left, bool right, bool normalize = true)
         {
             var upValue = up ? 1.0f : 0.0f;
@@ -132,6 +133,19 @@ namespace UnityEngine.InputSystem.Controls
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Create a direction vector from the given axis states.
+        /// </summary>
+        /// <param name="up">Axis value representing the up direction.</param>
+        /// <param name="down">Axis value representing the down direction.</param>
+        /// <param name="left">Axis value representing the left direction.</param>
+        /// <param name="right">Axis value representing the right direction.</param>
+        /// <returns>A 2D direction vector.</returns>
+        public static Vector2 MakeDpadVector(float up, float down, float left, float right)
+        {
+            return new Vector2(-left + right, up - down);
         }
 
         internal enum ButtonBits

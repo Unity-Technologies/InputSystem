@@ -9,6 +9,11 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [1.0.0-preview.5] - 2020-12-12
 
+### Changed
+
+- `Vector2Composite` now has a `mode` parameter which can be used to choose between `DigitalNormalized` (the default), `Digital` (same as `DigitalNormalized` but does not normalize the resulting vector), and `Analog` (uses float input values as is).
+  * `Vector2Composite.normalize` has been deprecated. Note that it will not work together with `Analog`. The parameter will be removed in the future.
+
 ### Fixed
 
 - XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
@@ -27,7 +32,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
-- Added a new `Simple Multiplayer` sample which demonstrates a simple, bare-bones local multiplayer setup.
+- We've added a new `Simple Multiplayer` sample which demonstrates a simple, bare-bones local multiplayer setup.
+- We've also added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
+  - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
 
 ## [1.0.0-preview.4] - 2020-01-24
 
@@ -64,7 +71,6 @@ This release includes a number of Quality-of-Life improvements for a range of co
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
-- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 #### Actions
 
@@ -122,11 +128,13 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Control schemes can now handle ambiguity.
   * This means that, for example, you can now have one control scheme for generic gamepads and another control scheme specifically for PS4 controllers and the system will reliably pick the PS4 scheme when a PS4 controller is used and fall back to the generic gamepad scheme otherwise.
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
+- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 ### Fixed
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
  * In a related change, `InputControlExtensions.GetStatePtrFromStateEvent` now works with touch events, too.
+- Stack overflow in `InputTestFixture.currentTime` getter.
 - Input that occurs in-between pressing the play button and the game starting no longer leaks into the game (case 1191342).
   * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
 - Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.

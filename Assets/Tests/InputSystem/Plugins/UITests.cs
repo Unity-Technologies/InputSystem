@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Scripting;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -12,6 +11,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.UI;
@@ -790,6 +790,44 @@ internal class UITests : InputTestFixture
         Assert.That(uiModule.actionsAsset, Is.SameAs(actions2));
         Assert.That(uiModule.move.action, Is.SameAs(actions2["ui/navigate"]));
         Assert.That(uiModule.point?.action, Is.Null);
+    }
+
+    // Right now, text input in uGUI is picked up from IMGUI events. ATM they're still out of reach for us.
+    // Hopefully something we can solve as part of getting rid of the old input system.
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveTextInput()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var canvasGO = new GameObject();
+        canvasGO.AddComponent<Canvas>();
+
+        var inputFieldGO = new GameObject();
+        inputFieldGO.transform.SetParent(canvasGO.transform);
+        var inputField = inputFieldGO.AddComponent<InputField>();
+        inputField.text = string.Empty;
+
+        InputSystem.QueueTextEvent(keyboard, 'a');
+        InputSystem.QueueTextEvent(keyboard, 'b');
+        InputSystem.QueueTextEvent(keyboard, 'c');
+        InputSystem.Update();
+
+        Assert.That(inputField.text, Is.EqualTo("abc"));
+    }
+
+    ////TODO: We need to override BaseInput which currently is still hooked to the old input system APIs.
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveIME()
+    {
+        Assert.Fail();
     }
 
     [Test]

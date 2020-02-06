@@ -5224,6 +5224,42 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateVector2Composite_FromAnalogControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Get rid of deadzoning for simpler test.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        // Lower button press threshold for digital version.
+        InputSystem.settings.defaultButtonPressPoint = 0.2f;
+
+        var analogAction = new InputAction("analog", type: InputActionType.Value);
+        var digitalAction = new InputAction("digital", type: InputActionType.Value);
+
+        analogAction.AddCompositeBinding("2DVector(mode=2)") // Mode.Analog
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+        digitalAction.AddCompositeBinding("2DVector(mode=1)") // Mode.Digital
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+
+        analogAction.Enable();
+        digitalAction.Enable();
+
+        Set(gamepad.leftStick, new Vector2(-0.234f, 0.345f));
+
+        Assert.That(analogAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(digitalAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-1, 1)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_Vector2Composite_RespectsButtonPressurePoint()
     {
         // The stick has deadzones on the up/down/left/right buttons to get rid of stick
@@ -5511,7 +5547,7 @@ partial class CoreTests
         //       the WASD and arrow block can be mixed. An alternative setup would be to set up
         //       to separate Dpad composites, one for WASD and one for the arrow block. In that setup,
         //       the two will not mix but rather produce two independent 2D vectors. Which one gets
-        //       to drive the associated action is whichver had the last input event.
+        //       to drive the associated action is whichever had the last input event.
         var action = new InputAction();
         action.AddCompositeBinding("Dpad")
             .With("Up", "/<Keyboard>/w")

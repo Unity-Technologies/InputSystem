@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.UI
         /// It also updates the internal data of the MouseModel.
         /// </summary>
         /// <param name="mouseState">The mouse state you want to forward into the UI Event System</param>
-        internal void ProcessMouse(ref MouseModel mouseState)
+        private void ProcessMouse(ref MouseModel mouseState)
         {
             if (!mouseState.changedThisFrame)
                 return;
@@ -296,7 +296,7 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        private void ProcessMouseScroll(PointerEventData eventData)
+        private static void ProcessMouseScroll(PointerEventData eventData)
         {
             var scrollDelta = eventData.scrollDelta;
             if (!Mathf.Approximately(scrollDelta.sqrMagnitude, 0.0f))
@@ -306,7 +306,7 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        internal void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
+        private void ProcessTrackedDevice(ref TrackedDeviceModel deviceState)
         {
             if (!deviceState.changedThisFrame)
                 return;
@@ -615,13 +615,12 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_TrackedDeviceSelectAction, value, m_ActionsHooked, OnAction);
         }
 
-
         protected override void Awake()
         {
             base.Awake();
 
             m_RollingPointerId = 0;
-            joystickState.Reset();
+            m_JoystickState.Reset();
         }
 
         protected override void OnDestroy()
@@ -790,15 +789,15 @@ namespace UnityEngine.InputSystem.UI
             }
             else if (action == m_MoveAction?.action)
             {
-                joystickState.move = context.ReadValue<Vector2>();
+                m_JoystickState.move = context.ReadValue<Vector2>();
             }
             else if (action == m_SubmitAction?.action)
             {
-                joystickState.submitButtonDown = context.ReadValue<float>() > 0;
+                m_JoystickState.submitButtonDown = context.ReadValue<float>() > 0;
             }
             else if (action == m_CancelAction?.action)
             {
-                joystickState.cancelButtonDown = context.ReadValue<float>() > 0;
+                m_JoystickState.cancelButtonDown = context.ReadValue<float>() > 0;
             }
             else if (action == m_TrackedDeviceOrientationAction?.action)
             {
@@ -833,7 +832,7 @@ namespace UnityEngine.InputSystem.UI
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
             if (!eventSystem.isFocused)
             {
-                joystickState.OnFrameFinished();
+                m_JoystickState.OnFrameFinished();
                 for (var i = 0; i < m_MouseStates.length; ++i)
                     m_MouseStates[i].OnFrameFinished();
                 for (var i = 0; i < m_TrackedDeviceStatesCount; ++i)
@@ -841,7 +840,7 @@ namespace UnityEngine.InputSystem.UI
             }
             else
             {
-                ProcessJoystick(ref joystickState);
+                ProcessJoystick(ref m_JoystickState);
 
                 for (var i = 0; i < m_MouseStates.length; i++)
                 {
@@ -987,7 +986,7 @@ namespace UnityEngine.InputSystem.UI
         private bool m_ActionsHooked;
         private Action<InputAction.CallbackContext> m_OnActionDelegate;
 
-        private JoystickModel joystickState;
+        private JoystickModel m_JoystickState;
         private int m_TrackedDeviceStatesCount;
         private TrackedDeviceModel[] m_TrackedDeviceStates;
         private InlinedArray<MouseModel> m_MouseStates;

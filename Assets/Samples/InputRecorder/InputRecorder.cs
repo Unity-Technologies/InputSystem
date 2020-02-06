@@ -7,6 +7,8 @@ using UnityEngine.InputSystem.LowLevel;
 
 ////TODO: streaming support
 
+////REVIEW: consider this for inclusion directly in the input system
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>

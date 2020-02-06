@@ -39,6 +39,32 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Check whether the given control is considered pressed according to the button press threshold.
+        /// </summary>
+        /// <param name="control">Control to check.</param>
+        /// <param name="buttonPressPoint">Optional custom button press point. If not supplied, <see cref="InputSettings.defaultButtonPressPoint"/>
+        /// is used.</param>
+        /// <returns>True if the actuation of the given control is high enough for it to be considered pressed.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method checks the actuation level of the control as <see cref="IsActuated"/> does. For <see cref="Controls.ButtonControl"/>s
+        /// and other <c>float</c> value controls, this will effectively check whether the float value of the control exceeds the button
+        /// point threshold. Note that if the control is an axis that can be both positive and negative, the press threshold works in
+        /// both directions, i.e. it can be crossed both in the positive direction and in the negative direction.
+        /// </remarks>
+        /// <seealso cref="IsActuated"/>
+        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+        /// <seealso cref="InputSystem.settings"/>
+        public static bool IsPressed(this InputControl control, float buttonPressPoint = 0)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (Mathf.Approximately(0, buttonPressPoint))
+                buttonPressPoint = InputSystem.settings.defaultButtonPressPoint;
+            return control.IsActuated(buttonPressPoint);
+        }
+
+        /// <summary>
         /// Return true if the given control is actuated.
         /// </summary>
         /// <param name="control"></param>
@@ -355,6 +381,79 @@ namespace UnityEngine.InputSystem
             control.WriteValueIntoState(value, statePtr);
         }
 
+        /// <summary>
+        /// Copy the state of the device to the given memory buffer.
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <param name="buffer">Buffer to copy the state of the device to.</param>
+        /// <param name="bufferSizeInBytes">Size of <paramref name="buffer"/> in bytes.</param>
+        /// <exception cref="ArgumentException"><paramref name="bufferSizeInBytes"/> is less than or equal to 0.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// The method will copy however much fits into the given buffer. This means that if the state of the device
+        /// is larger than what fits into the buffer, not all of the device's state is copied.
+        /// </remarks>
+        /// <seealso cref="InputControl.stateBlock"/>
+        public static unsafe void CopyState(this InputDevice device, void* buffer, int bufferSizeInBytes)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (bufferSizeInBytes <= 0)
+                throw new ArgumentException("bufferSizeInBytes must be positive", nameof(bufferSizeInBytes));
+
+            var stateBlock = device.m_StateBlock;
+            var sizeToCopy = Math.Min(bufferSizeInBytes, stateBlock.alignedSizeInBytes);
+
+            UnsafeUtility.MemCpy(buffer, (byte*)device.currentStatePtr + stateBlock.byteOffset, sizeToCopy);
+        }
+
+        /// <summary>
+        /// Copy the state of the device to the given struct.
+        /// </summary>
+        /// <param name="device">An input device.</param>
+        /// <param name="state">Struct to copy the state of the device into.</param>
+        /// <typeparam name="TState">A state struct type such as <see cref="MouseState"/>.</typeparam>
+        /// <exception cref="ArgumentException">The state format of <typeparamref name="TState"/> does not match
+        /// the state form of <paramref name="device"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method will copy memory verbatim into the memory of the given struct. It will copy whatever
+        /// memory of the device fits into the given struct.
+        /// </remarks>
+        /// <seealso cref="InputControl.stateBlock"/>
+        public static unsafe void CopyState<TState>(this InputDevice device, out TState state)
+            where TState : struct, IInputStateTypeInfo
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            state = default;
+            if (device.stateBlock.format != state.format)
+                throw new ArgumentException(
+                    $"Struct '{typeof(TState).Name}' has state format '{state.format}' which doesn't match device '{device}' with state format '{device.stateBlock.format}'",
+                    nameof(TState));
+
+            var stateSize = UnsafeUtility.SizeOf<TState>();
+            var statePtr = UnsafeUtility.AddressOf(ref state);
+
+            device.CopyState(statePtr, stateSize);
+        }
+
+        /// <summary>
+        /// Check whether the memory of the given control is in its default state.
+        /// </summary>
+        /// <param name="control">An input control on a device that's been added to the system (see <see cref="InputDevice.added"/>).</param>
+        /// <returns>True if the state memory of the given control corresponds to the control's default.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method is a cheaper check than actually reading out the value from the control and checking whether it
+        /// is the same value as the default value. The method bypasses all value reading and simply performs a trivial
+        /// memory comparison of the control's current state memory to the default state memory stored for the control.
+        ///
+        /// Note that the default state for the memory of a control does not necessary need to be all zeroes. For example,
+        /// a stick axis may be stored as an unsigned 8-bit value with the memory state corresponding to a 0 value being 127.
+        /// </remarks>
+        /// <seealso cref="InputControl.stateBlock"/>
         public static unsafe bool CheckStateIsAtDefault(this InputControl control)
         {
             if (control == null)

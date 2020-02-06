@@ -1,17 +1,15 @@
 {
-    "name": "Unity.InputSystem.TestFramework",
+    "name": "Unity.InputSystem.VirtualMouseInput",
     "references": [
         "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ],
+    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
-    "autoReferenced": false,
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": []
 }
