@@ -25,6 +25,20 @@ namespace UnityEngine.InputSystem.UI
     /// </remarks>
     public class InputSystemUIInputModule : BaseInputModule
     {
+        /// <summary>
+        /// Whether to clear the current selection when a click happens that does not hit any <c>GameObject</c>.
+        /// </summary>
+        /// <value>If true (default), clicking outside of any GameObject will reset the current selection.</value>
+        /// <remarks>
+        /// By toggling this behavior off, background clicks will keep the current selection. I.e.
+        /// <c>EventSystem.currentSelectedGameObject</c> will not be changed.
+        /// </remarks>
+        public bool deselectOnBackgroundClick
+        {
+            get => m_DeselectOnBackgroundClick;
+            set => m_DeselectOnBackgroundClick = value;
+        }
+
         public override void ActivateModule()
         {
             base.ActivateModule();
@@ -207,9 +221,9 @@ namespace UnityEngine.InputSystem.UI
 
                 var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
 
-                // If we have clicked something new, deselect the old thing
-                // and leave 'selection handling' up to the press event.
-                if (selectHandlerGO != eventSystem.currentSelectedGameObject)
+                // If we have clicked something new, deselect the old thing and leave 'selection handling' up
+                // to the press event (except if there's none and we're told to not deselect in that case).
+                if (selectHandlerGO != eventSystem.currentSelectedGameObject && (selectHandlerGO != null || m_DeselectOnBackgroundClick))
                     eventSystem.SetSelectedGameObject(null, eventData);
 
                 // search for the control that will receive the press.
@@ -754,6 +768,8 @@ namespace UnityEngine.InputSystem.UI
                 state.scrollDelta = context.ReadValue<Vector2>() * (1.0f / kPixelPerLine);
                 m_MouseStates[index] = state;
             }
+            ////FIXME: these are missing clicks that happen within the same frame :(
+            ////       (for these actions, perform polling rather than doing the thing here)
             else if (action == m_LeftClickAction?.action)
             {
                 var index = GetMouseDeviceIndexForCallbackContext(context);
@@ -980,6 +996,8 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField, HideInInspector] private InputActionReference m_TrackedDeviceSelectAction;
 
         [SerializeField, HideInInspector] private InputActionAsset m_ActionsAsset;
+
+        [SerializeField] private bool m_DeselectOnBackgroundClick = true;
 
         private int m_RollingPointerId;
         private bool m_OwnsEnabledState;

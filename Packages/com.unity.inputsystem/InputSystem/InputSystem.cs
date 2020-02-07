@@ -2949,6 +2949,8 @@ namespace UnityEngine.InputSystem
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
+            ////REVIEW: should we pause haptics when play mode is paused and stop haptics when play mode is exited?
+
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
