@@ -827,7 +827,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
-            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
+            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string _)
             {
                 if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                     return default;
