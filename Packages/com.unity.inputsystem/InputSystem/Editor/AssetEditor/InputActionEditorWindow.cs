@@ -836,7 +836,6 @@ namespace UnityEngine.InputSystem.Editor
                 var window = FindEditorForAssetWithGUID(guid);
                 if (window != null)
                 {
-                    window.m_ActionAssetManager.path = destinationPath;
                     window.UpdateWindowTitle();
                 }
 
