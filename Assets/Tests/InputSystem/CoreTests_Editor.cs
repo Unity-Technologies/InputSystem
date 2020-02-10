@@ -560,7 +560,7 @@ partial class CoreTests
 
         var inputActionAssetManager = new InputActionAssetManager(asset);
         inputActionAssetManager.Initialize();
-        inputActionAssetManager.onDirtyChanged = (bool dirty) => { };
+        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
 
         FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
         AssetDatabase.Refresh();

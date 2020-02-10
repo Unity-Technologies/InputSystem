@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         public string guid => m_AssetGUID;
 
         public string path
-        { 
+        {
             get
             {
                 Debug.Assert(!string.IsNullOrEmpty(m_AssetGUID), "Asset GUID is empty");
