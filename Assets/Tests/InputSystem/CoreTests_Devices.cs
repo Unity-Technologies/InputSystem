@@ -24,6 +24,8 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
+////TODO: set display name from product string only for layout builders (and give them control); for other layouts, let the layout dictate the display name
+
 ////TODO: test that device re-creation doesn't lose flags and such
 
 partial class CoreTests
