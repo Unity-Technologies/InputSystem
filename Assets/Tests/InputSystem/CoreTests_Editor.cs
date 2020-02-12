@@ -547,12 +547,14 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
-    public void Editor_InputActionAssetManager_SaveChangesToAsset_DoesNotThrow_WhenParentDirectoryWasRenamed()
+    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
     {
         const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
+        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
+        const string kDefaultContents = "{}";
 
         AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
-        File.WriteAllText(kAssetPath, "{}");
+        File.WriteAllText(kAssetPath, kDefaultContents);
         AssetDatabase.ImportAsset(kAssetPath);
 
         var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
@@ -566,6 +568,9 @@ partial class CoreTests
         AssetDatabase.Refresh();
 
         Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+
+        var fileContents = File.ReadAllText(kAssetPathAfterMove);
+        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
 
         AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
     }
