@@ -825,9 +825,11 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
+            #pragma warning disable CA1801 // unused parameters
+
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
-            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string _)
+            public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
             {
                 if (!sourcePath.EndsWith(k_FileExtension, StringComparison.InvariantCultureIgnoreCase))
                     return default;
@@ -841,6 +843,8 @@ namespace UnityEngine.InputSystem.Editor
 
                 return default;
             }
+
+            #pragma warning restore CA1801
         }
     }
 }
