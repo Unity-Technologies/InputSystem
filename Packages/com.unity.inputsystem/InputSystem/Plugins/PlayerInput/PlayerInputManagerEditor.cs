@@ -66,7 +66,7 @@ namespace UnityEngine.InputSystem.Editor
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
-                    m_EventsExpanded = EditorGUILayout.Foldout(m_EventsExpanded, m_EventsLabel);
+                    m_EventsExpanded = EditorGUILayout.Foldout(m_EventsExpanded, m_EventsLabel, toggleOnLabelClick: true);
                     if (m_EventsExpanded)
                     {
                         var playerJoinedEventProperty = serializedObject.FindProperty("m_PlayerJoinedEvent");
