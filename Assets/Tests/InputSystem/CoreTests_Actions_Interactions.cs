@@ -191,111 +191,62 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformHoldInteraction()
     {
-        const int timeOffset = 123;
-        runtime.currentTimeOffsetToRealtimeSinceStartup = timeOffset;
-        runtime.currentTime = 10 + timeOffset;
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var performedReceivedCalls = 0;
-        InputAction performedAction = null;
-        InputControl performedControl = null;
-
-        var startedReceivedCalls = 0;
-        InputAction startedAction = null;
-        InputControl startedControl = null;
-
-        var canceledReceivedCalls = 0;
-        InputAction canceledAction = null;
-        InputControl canceledControl = null;
-
         var action = new InputAction(binding: "<Gamepad>/{primaryAction}", interactions: "hold(duration=0.4)");
-        action.performed +=
-            ctx =>
-        {
-            ++performedReceivedCalls;
-            performedAction = ctx.action;
-            performedControl = ctx.control;
-
-            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(ctx.duration, Is.GreaterThanOrEqualTo(0.4));
-        };
-        action.started +=
-            ctx =>
-        {
-            ++startedReceivedCalls;
-            startedAction = ctx.action;
-            startedControl = ctx.control;
-
-            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
-            Assert.That(ctx.duration, Is.EqualTo(0.0));
-        };
-        action.canceled +=
-            ctx =>
-        {
-            ++canceledReceivedCalls;
-            canceledAction = ctx.action;
-            canceledControl = ctx.control;
-
-            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Canceled));
-            Assert.That(ctx.duration, Is.GreaterThan(0.0));
-            Assert.That(ctx.duration, Is.LessThan(0.4));
-        };
         action.Enable();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.0);
-        InputSystem.Update();
+        using (var trace = new InputActionTrace(action))
+        {
+            // Press.
+            Press(gamepad.buttonSouth, time: 10);
 
-        Assert.That(startedReceivedCalls, Is.EqualTo(1));
-        Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(canceledReceivedCalls, Is.Zero);
-        Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
+            Assert.That(trace, Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
-        startedReceivedCalls = 0;
+            trace.Clear();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState(), 10.25);
-        InputSystem.Update();
+            // Release in less than hold time.
+            Release(gamepad.buttonSouth, time: 10.25);
 
-        Assert.That(startedReceivedCalls, Is.Zero);
-        Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(canceledReceivedCalls, Is.EqualTo(1));
-        Assert.That(canceledAction, Is.SameAs(action));
-        Assert.That(canceledControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(trace, Canceled<HoldInteraction>(action, gamepad.buttonSouth, duration: 0.25, time: 10.25, value: 0.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(action.ReadValue<float>(), Is.Zero);
 
-        canceledReceivedCalls = 0;
+            trace.Clear();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South), 10.5);
-        InputSystem.Update();
+            // Press again.
+            Press(gamepad.buttonSouth, time: 10.5);
 
-        Assert.That(startedReceivedCalls, Is.EqualTo(1));
-        Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(canceledReceivedCalls, Is.Zero);
-        Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10.5, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
-        startedReceivedCalls = 0;
+            trace.Clear();
 
-        runtime.currentTime = 10.75 + timeOffset;
-        InputSystem.Update();
+            // Let time pass but stay under hold time.
+            currentTime = 10.75;
+            InputSystem.Update();
 
-        Assert.That(startedReceivedCalls, Is.Zero);
-        Assert.That(performedReceivedCalls, Is.Zero);
-        Assert.That(canceledReceivedCalls, Is.Zero);
-        Assert.That(startedAction, Is.SameAs(action));
-        Assert.That(startedControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(trace, Is.Empty);
 
-        runtime.currentTime = 11 + timeOffset;
-        InputSystem.Update();
+            // Now exceed hold time. Make sure action performs and *stays* performed.
+            currentTime = 11;
+            InputSystem.Update();
 
-        Assert.That(startedReceivedCalls, Is.Zero);
-        Assert.That(performedReceivedCalls, Is.EqualTo(1));
-        Assert.That(canceledReceivedCalls, Is.Zero);
-        Assert.That(performedAction, Is.SameAs(action));
-        Assert.That(performedControl, Is.SameAs(gamepad.buttonSouth));
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(trace,
+                Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 11, duration: 0.5, value: 1.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+
+            trace.Clear();
+
+            // Release button.
+            Release(gamepad.buttonSouth, time: 11.5);
+
+            Assert.That(trace, Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 11.5, duration: 1, value: 0.0));
+        }
     }
 
     [Test]
