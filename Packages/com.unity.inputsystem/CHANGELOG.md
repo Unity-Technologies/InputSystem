@@ -37,6 +37,7 @@ however, it has to be formatted properly to pass verification tests.
 - We've added a new `Simple Multiplayer` sample which demonstrates a simple, bare-bones local multiplayer setup.
 - We've also added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
   - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
+- Added a `Deselect On Background Click` option to `InputSystemUIInputModule`. This allows toggling the behavior off where clicking the mouse and not hitting a `GameObject` will automatically clear the current selection -- which will break keyboard and gamepad navigation.
 
 ## [1.0.0-preview.4] - 2020-01-24
 

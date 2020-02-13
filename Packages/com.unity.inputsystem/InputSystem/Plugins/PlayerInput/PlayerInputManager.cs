@@ -508,6 +508,8 @@ namespace UnityEngine.InputSystem
                 if (!IsDeviceUsableWithPlayerActions(control.device))
                     return;
 
+                ////REVIEW: should we log a warning or error when the actions for the player do not have control schemes?
+
                 JoinPlayer(pairWithDevice: control.device);
             }
         }
