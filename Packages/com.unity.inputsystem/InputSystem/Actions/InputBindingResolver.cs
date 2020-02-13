@@ -515,7 +515,7 @@ namespace UnityEngine.InputSystem
                         mapIndex = mapIndex,
                         controlIndex = InputActionState.kInvalidIndex,
                         interactionIndex = InputActionState.kInvalidIndex,
-                        passThrough = isPassThroughAction,
+                        isPassThrough = isPassThroughAction,
                         mayNeedConflictResolution = mayNeedConflictResolution,
                     };
                 }

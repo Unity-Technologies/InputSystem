@@ -129,29 +129,37 @@ namespace UnityEngine.InputSystem
 
         public void Performed()
         {
+            if (m_TriggerState.phase == InputActionPhase.Waiting)
+                m_TriggerState.startTime = time;
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState);
         }
 
         public void PerformedAndStayStarted()
         {
+            if (m_TriggerState.phase == InputActionPhase.Waiting)
+                m_TriggerState.startTime = time;
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState,
                 phaseAfterPerformed: InputActionPhase.Started);
         }
 
         public void PerformedAndStayPerformed()
         {
+            if (m_TriggerState.phase == InputActionPhase.Waiting)
+                m_TriggerState.startTime = time;
             m_State.ChangePhaseOfInteraction(InputActionPhase.Performed, ref m_TriggerState,
                 phaseAfterPerformed: InputActionPhase.Performed);
         }
 
         public void Canceled()
         {
-            m_State.ChangePhaseOfInteraction(InputActionPhase.Canceled, ref m_TriggerState);
+            if (m_TriggerState.phase != InputActionPhase.Canceled)
+                m_State.ChangePhaseOfInteraction(InputActionPhase.Canceled, ref m_TriggerState);
         }
 
         public void Waiting()
         {
-            m_State.ChangePhaseOfInteraction(InputActionPhase.Waiting, ref m_TriggerState);
+            if (m_TriggerState.phase != InputActionPhase.Waiting)
+                m_State.ChangePhaseOfInteraction(InputActionPhase.Waiting, ref m_TriggerState);
         }
 
         public void SetTimeout(float seconds)

@@ -314,9 +314,21 @@ namespace UnityEngine.InputSystem
             if (interactionType == null)
                 return interaction;
 
+            return GetDisplayName(interactionType);
+        }
+
+        public static string GetDisplayName(Type interactionType)
+        {
+            if (interactionType == null)
+                throw new ArgumentNullException(nameof(interactionType));
+
             var displayNameAttribute = interactionType.GetCustomAttribute<DisplayNameAttribute>();
             if (displayNameAttribute == null)
-                return interaction;
+            {
+                if (interactionType.Name.EndsWith("Interaction"))
+                    return interactionType.Name.Substring(0, interactionType.Name.Length - "Interaction".Length);
+                return interactionType.Name;
+            }
 
             return displayNameAttribute.DisplayName;
         }

@@ -4,10 +4,90 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.Scripting;
 
 internal partial class CoreTests
 {
+    [Preserve]
+    class InteractionThatOnlyPerforms : IInputInteraction<float>
+    {
+        public bool stayPerformed;
+
+        public void Process(ref InputInteractionContext context)
+        {
+            if (context.ControlIsActuated())
+            {
+                if (stayPerformed)
+                    context.PerformedAndStayPerformed();
+                else
+                    context.Performed();
+            }
+        }
+
+        public void Reset()
+        {
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_StartedAndCanceledAreEnforcedImplicitly()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.RegisterInteraction<InteractionThatOnlyPerforms>();
+
+        var action1 = new InputAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth", interactions: "interactionThatOnlyPerforms(stayPerformed=true)");
+        var action2 = new InputAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth", interactions: "interactionThatOnlyPerforms(stayPerformed=false)");
+        var action3 = new InputAction(name: "action3", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        var action4 = new InputAction(name: "action4", type: InputActionType.Value, binding: "<Gamepad>/buttonSouth");
+
+        // Pass-Through is special (as always).
+        var action5 = new InputAction(name: "action5", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
+        var action6 = new InputAction(name: "action6", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth", interactions: "press");
+
+        action1.Enable();
+        action2.Enable();
+        action3.Enable();
+        action4.Enable();
+        action5.Enable();
+        action6.Enable();
+
+        using (var trace1 = new InputActionTrace(action1))
+        using (var trace2 = new InputActionTrace(action2))
+        using (var trace3 = new InputActionTrace(action3))
+        using (var trace4 = new InputActionTrace(action4))
+        using (var trace5 = new InputActionTrace(action5))
+        using (var trace6 = new InputActionTrace(action6))
+        {
+            Press(gamepad.buttonSouth);
+
+            Assert.That(trace1, Started(action1).AndThen(Performed(action1)));
+            Assert.That(trace2, Started(action2).AndThen(Performed(action2)).AndThen(Canceled(action2)));
+            Assert.That(trace3, Started(action3).AndThen(Performed(action3)));
+            Assert.That(trace4, Started(action4).AndThen(Performed(action4)));
+            Assert.That(trace5, Performed(action5));
+            Assert.That(trace6, Started(action6).AndThen(Performed(action6)));
+
+            trace1.Clear();
+            trace2.Clear();
+            trace3.Clear();
+            trace4.Clear();
+            trace5.Clear();
+            trace6.Clear();
+
+            Release(gamepad.buttonSouth);
+
+            Assert.That(trace1, Is.Empty);
+            Assert.That(trace2, Is.Empty);
+            Assert.That(trace3, Canceled(action3));
+            Assert.That(trace4, Canceled(action4));
+            Assert.That(trace5, Performed(action5)); // Any value change performs.
+            Assert.That(trace6, Canceled(action6));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
@@ -49,7 +129,7 @@ internal partial class CoreTests
         InputSystem.AddDevice<Keyboard>();
 
         // Test all three press behaviors concurrently.
-        var pressOnlyAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press");
+        var pressOnlyAction = new InputAction("PressOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=0)");
         pressOnlyAction.AddBinding("<Keyboard>/a");
         var releaseOnlyAction = new InputAction("ReleaseOnly", binding: "<Gamepad>/buttonSouth", interactions: "press(behavior=1)");
         releaseOnlyAction.AddBinding("<Keyboard>/s");
@@ -60,83 +140,50 @@ internal partial class CoreTests
         releaseOnlyAction.Enable();
         pressAndReleaseAction.Enable();
 
-        using (var trace = new InputActionTrace())
+        using (var pressOnly = new InputActionTrace(pressOnlyAction))
+        using (var releaseOnly = new InputActionTrace(releaseOnlyAction))
+        using (var pressAndRelease = new InputActionTrace(pressAndReleaseAction))
         {
-            trace.SubscribeToAll();
-
             runtime.currentTime = 1;
             Press(gamepad.buttonSouth);
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(5));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
+            Assert.That(pressOnly,
+                Started<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, value: 1.0, time: 1)
+                    .AndThen(Performed<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, time: 1, duration: 0, value: 1.0)));
+            Assert.That(releaseOnly, Started<PressInteraction>(releaseOnlyAction, gamepad.buttonSouth, time: 1, value: 1.0));
+            Assert.That(pressAndRelease,
+                Started<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 1, value: 1.0)
+                    .AndThen(Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 1, duration: 0, value: 1.0)));
 
-            trace.Clear();
+            pressOnly.Clear();
+            releaseOnly.Clear();
+            pressAndRelease.Clear();
 
             runtime.currentTime = 2;
             Release(gamepad.buttonSouth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(3));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(1));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(0));
+            Assert.That(pressOnly, Canceled<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1));
+            Assert.That(releaseOnly,
+                Performed<PressInteraction>(releaseOnlyAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1)
+                    .AndThen(Canceled<PressInteraction>(releaseOnlyAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1)));
+            Assert.That(pressAndRelease,
+                Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1)
+                    .AndThen(Canceled<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, value: 0.0, time: 2, duration: 1)));
 
-            trace.Clear();
+            pressOnly.Clear();
+            releaseOnly.Clear();
+            pressAndRelease.Clear();
 
             runtime.currentTime = 5;
             Press(gamepad.buttonSouth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(5));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(pressAndReleaseAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Performed).And.With.Property("duration")
-                    .EqualTo(0));
-            Assert.That(actions,
-                Has.Exactly(1).With.Property("action").SameAs(releaseOnlyAction).And.With.Property("phase")
-                    .EqualTo(InputActionPhase.Started).And.With.Property("duration")
-                    .EqualTo(0));
+            Assert.That(pressOnly,
+                Started<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, value: 1.0, time: 5)
+                    .AndThen(Performed<PressInteraction>(pressOnlyAction, gamepad.buttonSouth, time: 5, duration: 0, value: 1.0)));
+            Assert.That(releaseOnly, Started<PressInteraction>(releaseOnlyAction, gamepad.buttonSouth, time: 5, value: 1.0));
+            Assert.That(pressAndRelease,
+                Started<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, value: 1.0)
+                    .AndThen(Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, duration: 0, value: 1.0)));
         }
     }
 
@@ -513,7 +560,7 @@ internal partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction("test", binding: "<Gamepad>/leftTrigger", interactions: "CancelingTest");
-        int performedCount = 0;
+        var performedCount = 0;
         float performedValue = -1;
         action.performed += ctx =>
         {
@@ -521,7 +568,7 @@ internal partial class CoreTests
             performedCount++;
         };
 
-        int canceledCount = 0;
+        var canceledCount = 0;
         float canceledValue = -1;
         action.canceled += ctx =>
         {

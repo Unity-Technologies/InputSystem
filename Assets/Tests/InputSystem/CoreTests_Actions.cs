@@ -1507,10 +1507,7 @@ partial class CoreTests
 
             Release(gamepad.buttonNorth);
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
 
             trace.Clear();
 
@@ -1522,10 +1519,7 @@ partial class CoreTests
 
             Release(gamepad.buttonNorth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
 
             trace.Clear();
 
@@ -1536,10 +1530,7 @@ partial class CoreTests
 
             Release(keyboard.aKey);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+            Assert.That(trace, Started(action, keyboard.aKey).AndThen(Performed(action, keyboard.aKey)).AndThen(Canceled(action, keyboard.aKey)));
 
             trace.Clear();
 
@@ -1558,19 +1549,13 @@ partial class CoreTests
 
             Release(keyboard.aKey);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+            Assert.That(trace, Started(action, keyboard.aKey).AndThen(Performed(action, keyboard.aKey)).AndThen(Canceled(action, keyboard.aKey)));
 
             trace.Clear();
 
             Release(gamepad.buttonNorth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
         }
     }
 
