@@ -649,7 +649,7 @@ namespace UnityEngine.InputSystem
             m_UsageCount = default;
         }
 
-        internal bool RequestRequest()
+        internal bool RequestReset()
         {
             var resetCommand = RequestResetCommand.Create();
             var result = device.ExecuteCommand(ref resetCommand);

@@ -1677,7 +1677,7 @@ namespace UnityEngine.InputSystem
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
-            return device.RequestRequest();
+            return device.RequestReset();
         }
 
         ////REVIEW: should there be a global pause state? what about haptics that are issued *while* paused?
