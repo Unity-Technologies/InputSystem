@@ -191,9 +191,6 @@ internal partial class CoreTests
     [Category("Actions")]
     public void Actions_CanPerformHoldInteraction()
     {
-        //rewrite this to use InputActionTrace and the new ActionConstraint stuff
-        //poll action value after action has been performed and make sure it returns the current button value
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         var action = new InputAction(binding: "<Gamepad>/{primaryAction}", interactions: "hold(duration=0.4)");
