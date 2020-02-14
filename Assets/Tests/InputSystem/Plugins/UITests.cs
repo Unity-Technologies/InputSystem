@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.Scripting;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -11,9 +10,13 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
+using UnityEngine.Scripting;
 using UnityEngine.TestTools;
+using UnityEngine.TestTools.Constraints;
 using UnityEngine.UI;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -113,8 +116,8 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
-    public IEnumerator Actions_CanDriveUIFromMouse()
+    [Category("UI")]
+    public IEnumerator UI_CanDriveUIFromMouse()
     {
         // Create devices.
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -254,8 +257,8 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
-    public IEnumerator Actions_TouchActionsCanDriveUIAndDistinguishMultipleTouches()
+    [Category("UI")]
+    public IEnumerator UI_TouchActionsCanDriveUIAndDistinguishMultipleTouches()
     {
         // Create devices.
         var touchScreen = InputSystem.AddDevice<Touchscreen>();
@@ -441,10 +444,10 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
+    [Category("UI")]
     // Check that two players can have separate UI, and that both selections will stay active when
     // clicking on UI with the mouse, using MultiPlayerEventSystem.playerRoot to match UI to the players.
-    public IEnumerator Actions_CanOperateMultiplayerUIGloballyUsingMouse()
+    public IEnumerator UI_CanOperateMultiplayerUIGloballyUsingMouse()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
@@ -523,10 +526,10 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
+    [Category("UI")]
     // Check that two players can have separate UI and control it using separate gamepads, using
     // MultiplayerEventSystem.
-    public IEnumerator Actions_CanOperateMultiplayerUILocallyUsingGamepads()
+    public IEnumerator UI_CanOperateMultiplayerUILocallyUsingGamepads()
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
@@ -540,9 +543,9 @@ internal class UITests : InputTestFixture
             // Create actions.
             var map = new InputActionMap("map");
             asset.AddActionMap(map);
-            var moveAction = map.AddAction("move");
-            var submitAction = map.AddAction("submit");
-            var cancelAction = map.AddAction("cancel");
+            var moveAction = map.AddAction("move", type: InputActionType.PassThrough);
+            var submitAction = map.AddAction("submit", type: InputActionType.PassThrough);
+            var cancelAction = map.AddAction("cancel", type: InputActionType.PassThrough);
 
             // Create bindings.
             moveAction.AddBinding(gamepads[i].leftStick);
@@ -638,8 +641,8 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
-    public IEnumerator Actions_CanDriveUIFromGamepad()
+    [Category("UI")]
+    public IEnumerator UI_CanDriveUIFromGamepad()
     {
         // Create devices.
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -658,9 +661,9 @@ internal class UITests : InputTestFixture
         // Create actions.
         var map = new InputActionMap("map");
         asset.AddActionMap(map);
-        var moveAction = map.AddAction("move");
-        var submitAction = map.AddAction("submit");
-        var cancelAction = map.AddAction("cancel");
+        var moveAction = map.AddAction("move", type: InputActionType.PassThrough);
+        var submitAction = map.AddAction("submit", type: InputActionType.PassThrough);
+        var cancelAction = map.AddAction("cancel", type: InputActionType.PassThrough);
 
         // Create bindings.
         moveAction.AddBinding(gamepad.leftStick);
@@ -741,8 +744,8 @@ internal class UITests : InputTestFixture
     }
 
     [Test]
-    [Category("Actions")]
-    public void Actions_CanReassignUIActions()
+    [Category("UI")]
+    public void UI_CanReassignUIActions()
     {
         var go = new GameObject();
         go.AddComponent<EventSystem>();
@@ -761,8 +764,8 @@ internal class UITests : InputTestFixture
                     {
                         ""name"" : ""UI"",
                         ""actions"" : [
-                            { ""name"" : ""Navigate"" },
-                            { ""name"" : ""Point"" }
+                            { ""name"" : ""Navigate"", ""type"" : ""PassThrough"" },
+                            { ""name"" : ""Point"", ""type"" : ""PassThrough"" }
                         ]
                     }
                 ]
@@ -787,6 +790,209 @@ internal class UITests : InputTestFixture
         Assert.That(uiModule.actionsAsset, Is.SameAs(actions2));
         Assert.That(uiModule.move.action, Is.SameAs(actions2["ui/navigate"]));
         Assert.That(uiModule.point?.action, Is.Null);
+    }
+
+    // Right now, text input in uGUI is picked up from IMGUI events. ATM they're still out of reach for us.
+    // Hopefully something we can solve as part of getting rid of the old input system.
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveTextInput()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var canvasGO = new GameObject();
+        canvasGO.AddComponent<Canvas>();
+
+        var inputFieldGO = new GameObject();
+        inputFieldGO.transform.SetParent(canvasGO.transform);
+        var inputField = inputFieldGO.AddComponent<InputField>();
+        inputField.text = string.Empty;
+
+        InputSystem.QueueTextEvent(keyboard, 'a');
+        InputSystem.QueueTextEvent(keyboard, 'b');
+        InputSystem.QueueTextEvent(keyboard, 'c');
+        InputSystem.Update();
+
+        Assert.That(inputField.text, Is.EqualTo("abc"));
+    }
+
+    ////TODO: We need to override BaseInput which currently is still hooked to the old input system APIs.
+    [Test]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public void TODO_UI_CanDriveIME()
+    {
+        Assert.Fail();
+    }
+
+    [Test]
+    [Category("UI")]
+    [Retry(2)] // Warm up JIT
+    public void UI_MovingAndClickingMouseDoesNotAllocateGCMemory()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+
+        actions.Enable();
+
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var uiModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+        uiModule.actionsAsset = actions;
+        uiModule.point = InputActionReference.Create(pointAction);
+        uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // We allow the first hit on the UI module to set up internal data structures
+        // and thus allocate something. So go and run one event with data on the mouse.
+        // Also gets rid of GC noise from the initial input system update.
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(1, 2) });
+        InputSystem.Update();
+
+        // Make sure we don't get an allocation from the string literal.
+        var kProfilerRegion = "UI_MovingAndClickingMouseDoesNotAllocateMemory";
+
+        Assert.That(() =>
+        {
+            Profiler.BeginSample(kProfilerRegion);
+            Set(mouse.position, new Vector2(123, 234));
+            Set(mouse.position, new Vector2(234, 345));
+            Press(mouse.leftButton);
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
+    }
+
+    // https://forum.unity.com/threads/feature-request-option-to-disable-deselect-in-ui-input-module.761531
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanPreventAutomaticDeselectionOfGameObjects()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+
+        actions.Enable();
+
+        var testObjects = CreateScene(0, 200);
+
+        testObjects.uiModule.actionsAsset = actions;
+        testObjects.uiModule.point = InputActionReference.Create(pointAction);
+        testObjects.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Deselect behavior should be on by default as this corresponds to the behavior before
+        // we introduced the switch that allows toggling the behavior off.
+        Assert.That(testObjects.uiModule.deselectOnBackgroundClick, Is.True);
+
+        // Give canvas a chance to set itself up.
+        yield return null;
+
+        // Click on left GO and make sure it gets selected.
+        Set(mouse.position, new Vector2(10, 10));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+
+        // Click outside of GOs and make sure the selection gets cleared.
+        Set(mouse.position, new Vector2(50, 250));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.Null);
+
+        testObjects.uiModule.deselectOnBackgroundClick = false;
+
+        // Click on left GO and make sure it gets selected.
+        Set(mouse.position, new Vector2(10, 10));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+
+        // Click outside of GOs and make sure our selection does NOT get cleared.
+        Set(mouse.position, new Vector2(50, 250));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+    }
+
+    ////REVIEW: While `deselectOnBackgroundClick` does solve the problem of breaking keyboard and gamepad navigation, the question
+    ////        IMO is whether navigation should even be affected that way by not having a current selection. Seems to me that the
+    ////        the system should remember the last selected object and start up navigation from there when nothing is selected.
+    ////        However, given EventSystem.lastSelectedGameObject is no longer supported (why???), it seems like this would require
+    ////        some larger changes.
+    [UnityTest]
+    [Category("UI")]
+    [Ignore("TODO")]
+    public IEnumerator TODO_UI_CanStartNavigationWhenNothingIsSelected()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("Point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var clickAction = uiActions.AddAction("Click", type: InputActionType.PassThrough, binding: "<Mouse>/leftButton");
+        var navigateAction = uiActions.AddAction("Navigate", type: InputActionType.PassThrough, binding: "<Gamepad>/dpad");
+
+        actions.Enable();
+
+        var testObjects = CreateScene(0, 200);
+
+        testObjects.uiModule.actionsAsset = actions;
+        testObjects.uiModule.point = InputActionReference.Create(pointAction);
+        testObjects.uiModule.leftClick = InputActionReference.Create(clickAction);
+        testObjects.uiModule.move = InputActionReference.Create(navigateAction);
+
+        // Give canvas a chance to set itself up.
+        yield return null;
+
+        // Select left GO.
+        Set(mouse.position, new Vector2(10, 10));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+
+        // Click on background and make sure we deselect.
+        Set(mouse.position, new Vector2(50, 250));
+        Press(mouse.leftButton);
+        yield return null;
+        Release(mouse.leftButton);
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.Null);
+
+        // Now perform a navigate-right action. Given we have no current selection, this should
+        // cause the right GO to be selected based on the fact that the left GO was selected last.
+        Press(gamepad.dpad.right);
+        yield return null;
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.rightGameObject));
+
+        // Just to make extra sure, navigate left and make sure that results in the expected selection
+        // change over to the left GO.
+        Release(gamepad.dpad.right);
+        Press(gamepad.dpad.left);
+        yield return null;
+
+        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
     }
 
 // The tracked device tests fail with NullReferenceException in the windows editor on yamato. I cannot reproduce this locally, so will disable them on windows for now.
@@ -824,8 +1030,8 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
-    public IEnumerator Actions_CanDriveUIFromTrackedDevice()
+    [Category("UI")]
+    public IEnumerator UI_CanDriveUIFromTrackedDevice()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -958,8 +1164,8 @@ internal class UITests : InputTestFixture
     }
 
     [UnityTest]
-    [Category("Actions")]
-    public IEnumerator Actions_CanDriveUIFromMultipleTrackedDevices()
+    [Category("UI")]
+    public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
     {
         // Create device.
         InputSystem.RegisterLayout<TestTrackedDevice>();
@@ -1288,6 +1494,14 @@ internal class UITests : InputTestFixture
         public void InvokeUpdate()
         {
             Update();
+        }
+
+        protected override void OnApplicationFocus(bool hasFocus)
+        {
+            // Sync our focus state to that of the test runtime rather than to the Unity test runner (where
+            // debugging may still focus and thus alter the test run).
+            hasFocus = ((InputTestRuntime)InputRuntime.s_Instance).hasFocus;
+            base.OnApplicationFocus(hasFocus);
         }
     }
 }

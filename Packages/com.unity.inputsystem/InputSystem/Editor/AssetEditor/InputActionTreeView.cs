@@ -1167,7 +1167,7 @@ namespace UnityEngine.InputSystem.Editor
             var indent = (int)(position.x / kFoldoutWidth);
             position.x = foldoutOffset + (indent + 1) * kColorTagWidth + 2;
             position.width = kFoldoutWidth;
-            return EditorGUI.Foldout(position, expandedState, GUIContent.none, style);
+            return EditorGUI.Foldout(position, expandedState, GUIContent.none, true, style);
         }
 
         protected override void RowGUI(RowGUIArgs args)

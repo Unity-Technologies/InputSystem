@@ -10,6 +10,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus VR headset (such as the Oculus Rift series of devices).
     /// </summary>
+    [InputControlLayout(displayName = "Oculus Headset")]
     [Preserve]
     public class OculusHMD : XRHMD
     {
@@ -80,7 +81,7 @@ namespace Unity.XR.Oculus.Input
     /// An Oculus Touch controller.
     /// </summary>
     [Preserve]
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
     public class OculusTouchController : XRControllerWithRumble
     {
         [Preserve]
@@ -189,6 +190,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Remote controller.
     /// </summary>
+    [InputControlLayout(displayName = "Oculus Remote")]
     [Preserve]
     public class OculusRemote : InputDevice
     {
@@ -215,6 +217,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Standalone VR headset that includes on-headset controls.
     /// </summary>
+    [InputControlLayout(displayName = "Oculus Headset (w/ on-headset controls)")]
     [Preserve]
     public class OculusHMDExtended : OculusHMD
     {
@@ -238,7 +241,7 @@ namespace Unity.XR.Oculus.Input
     /// A Gear VR controller.
     /// </summary>
     [Preserve]
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
     public class GearVRTrackedController : XRController
     {
         [Preserve]

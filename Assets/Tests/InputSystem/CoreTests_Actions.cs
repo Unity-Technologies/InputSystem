@@ -398,6 +398,35 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1192972/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanRemoveCallbackInCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value, binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var callback1Triggered = false;
+        var callback2Triggered = false;
+
+        Action<InputAction.CallbackContext> callback1 = null;
+        callback1 = _ =>
+        {
+            callback1Triggered = true;
+            action.performed -= callback1;
+        };
+
+        action.performed += callback1;
+        action.performed += _ => callback2Triggered = true;
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(callback1Triggered, Is.True);
+        Assert.That(callback2Triggered, Is.True);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanBeDisabledInCallback()
@@ -1478,10 +1507,7 @@ partial class CoreTests
 
             Release(gamepad.buttonNorth);
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
 
             trace.Clear();
 
@@ -1493,10 +1519,7 @@ partial class CoreTests
 
             Release(gamepad.buttonNorth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
 
             trace.Clear();
 
@@ -1507,10 +1530,7 @@ partial class CoreTests
 
             Release(keyboard.aKey);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+            Assert.That(trace, Started(action, keyboard.aKey).AndThen(Performed(action, keyboard.aKey)).AndThen(Canceled(action, keyboard.aKey)));
 
             trace.Clear();
 
@@ -1529,19 +1549,13 @@ partial class CoreTests
 
             Release(keyboard.aKey);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(keyboard.aKey));
+            Assert.That(trace, Started(action, keyboard.aKey).AndThen(Performed(action, keyboard.aKey)).AndThen(Canceled(action, keyboard.aKey)));
 
             trace.Clear();
 
             Release(gamepad.buttonNorth);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.buttonNorth));
+            Assert.That(trace, Started(action, gamepad.buttonNorth).AndThen(Performed(action, gamepad.buttonNorth)).AndThen(Canceled(action, gamepad.buttonNorth)));
         }
     }
 
@@ -5195,6 +5209,42 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateVector2Composite_FromAnalogControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Get rid of deadzoning for simpler test.
+        InputSystem.settings.defaultDeadzoneMin = 0;
+        InputSystem.settings.defaultDeadzoneMax = 1;
+
+        // Lower button press threshold for digital version.
+        InputSystem.settings.defaultButtonPressPoint = 0.2f;
+
+        var analogAction = new InputAction("analog", type: InputActionType.Value);
+        var digitalAction = new InputAction("digital", type: InputActionType.Value);
+
+        analogAction.AddCompositeBinding("2DVector(mode=2)") // Mode.Analog
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+        digitalAction.AddCompositeBinding("2DVector(mode=1)") // Mode.Digital
+            .With("Up", "<Gamepad>/leftStick/up")
+            .With("Down", "<Gamepad>/leftStick/down")
+            .With("Left", "<Gamepad>/leftStick/left")
+            .With("Right", "<Gamepad>/leftStick/right");
+
+        analogAction.Enable();
+        digitalAction.Enable();
+
+        Set(gamepad.leftStick, new Vector2(-0.234f, 0.345f));
+
+        Assert.That(analogAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-0.234f, 0.345f)).Using(Vector2EqualityComparer.Instance));
+        Assert.That(digitalAction.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-1, 1)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_Vector2Composite_RespectsButtonPressurePoint()
     {
         // The stick has deadzones on the up/down/left/right buttons to get rid of stick
@@ -5482,7 +5532,7 @@ partial class CoreTests
         //       the WASD and arrow block can be mixed. An alternative setup would be to set up
         //       to separate Dpad composites, one for WASD and one for the arrow block. In that setup,
         //       the two will not mix but rather produce two independent 2D vectors. Which one gets
-        //       to drive the associated action is whichver had the last input event.
+        //       to drive the associated action is whichever had the last input event.
         var action = new InputAction();
         action.AddCompositeBinding("Dpad")
             .With("Up", "/<Keyboard>/w")
@@ -6477,17 +6527,17 @@ partial class CoreTests
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of callback for 'Started' phase of 'testAction.*' action in map 'testMap'.*"));
+                ".*InvalidOperationException while executing 'started' callbacks of 'testMap'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of 'Performed' callback on action 'testMap/testAction.*'.*"));
+                ".*InvalidOperationException while executing 'performed' callbacks of 'testMap/testAction.*'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM ACTION.*"));
 
         LogAssert.Expect(LogType.Error,
             new Regex(
-                ".*InvalidOperationException thrown during execution of callback for 'Performed' phase of 'testAction.*' action in map 'testMap'.*"));
+                ".*InvalidOperationException while executing 'performed' callbacks of 'testMap'"));
         LogAssert.Expect(LogType.Exception, new Regex(".*TEST EXCEPTION FROM MAP.*"));
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));

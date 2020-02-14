@@ -7,7 +7,7 @@ using UnityEngine.Scripting;
 
 namespace Unity.XR.OpenVR
 {
-    [InputControlLayout]
+    [InputControlLayout(displayName = "OpenVR Headset")]
     [Preserve]
     public class OpenVRHMD : XRHMD
     {
@@ -51,7 +51,7 @@ namespace Unity.XR.OpenVR
         }
     }
 
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Windows MR Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class OpenVRControllerWMR : XRController
     {
@@ -115,7 +115,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An HTC Vive Wand controller.
     /// </summary>
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Vive Wand", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class ViveWand : XRControllerWithRumble
     {
@@ -172,7 +172,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An HTC Vive lighthouse.
     /// </summary>
-    [InputControlLayout]
+    [InputControlLayout(displayName = "Vive Lighthouse")]
     [Preserve]
     public class ViveLighthouse : TrackedDevice
     {
@@ -181,6 +181,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An HTC Vive tracker.
     /// </summary>
+    [InputControlLayout(displayName = "Vive Tracker")]
     [Preserve]
     public class ViveTracker : TrackedDevice
     {
@@ -200,7 +201,7 @@ namespace Unity.XR.OpenVR
         }
     }
 
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Handed Vive Tracker", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class HandedViveTracker : ViveTracker
     {
@@ -235,7 +236,7 @@ namespace Unity.XR.OpenVR
     /// <summary>
     /// An Oculus Touch controller.
     /// </summary>
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Oculus Touch Controller (OpenVR)", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class OpenVROculusTouchController : XRControllerWithRumble
     {

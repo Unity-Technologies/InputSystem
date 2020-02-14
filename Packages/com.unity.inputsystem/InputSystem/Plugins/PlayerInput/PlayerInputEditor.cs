@@ -161,7 +161,7 @@ namespace UnityEngine.InputSystem.Editor
                     break;
 
                 case PlayerNotifications.InvokeUnityEvents:
-                    m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText);
+                    m_EventsGroupUnfolded = EditorGUILayout.Foldout(m_EventsGroupUnfolded, m_EventsGroupText, toggleOnLabelClick: true);
                     if (m_EventsGroupUnfolded)
                     {
                         // Action events. Group by action map.
@@ -173,7 +173,7 @@ namespace UnityEngine.InputSystem.Editor
                                 for (var n = 0; n < m_NumActionMaps; ++n)
                                 {
                                     m_ActionMapEventsUnfolded[n] = EditorGUILayout.Foldout(m_ActionMapEventsUnfolded[n],
-                                        m_ActionMapNames[n]);
+                                        m_ActionMapNames[n], toggleOnLabelClick: true);
                                     using (new EditorGUI.IndentLevelScope())
                                     {
                                         if (m_ActionMapEventsUnfolded[n])

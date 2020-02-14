@@ -6,6 +6,8 @@ A gamepad can have additional Controls, such as a gyro, which the Device can exp
 
 Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
 
+>NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
+
 ## Controls
 
 Every gamepad has the following Controls:

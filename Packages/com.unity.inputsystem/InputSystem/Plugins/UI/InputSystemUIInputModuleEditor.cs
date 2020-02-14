@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using UnityEditor;
 
+////TODO: add button to automatically set up gamepad mouse cursor support
+
 namespace UnityEngine.InputSystem.UI.Editor
 {
     [CustomEditor(typeof(InputSystemUIInputModule))]
@@ -125,15 +127,15 @@ namespace UnityEngine.InputSystem.UI.Editor
             var numActions = s_ActionNames.Length;
             for (var i = 0; i < numActions; i++)
             {
-                if (m_AvailableActionsInAsset != null)
-                {
-                    int index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
-                    EditorGUI.BeginChangeCheck();
-                    index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
+                if (m_AvailableActionsInAsset == null)
+                    continue;
 
-                    if (EditorGUI.EndChangeCheck())
-                        m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
-                }
+                var index = Array.IndexOf(m_AvailableActionsInAsset, m_ReferenceProperties[i].objectReferenceValue) + 1;
+                EditorGUI.BeginChangeCheck();
+                index = EditorGUILayout.Popup(s_ActionNiceNames[i], index, m_AvailableActionsInAssetNames);
+
+                if (EditorGUI.EndChangeCheck())
+                    m_ReferenceProperties[i].objectReferenceValue = index > 0 ? m_AvailableActionsInAsset[index - 1] : null;
             }
 
             if (GUI.changed)

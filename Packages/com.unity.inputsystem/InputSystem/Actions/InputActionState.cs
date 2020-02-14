@@ -854,7 +854,7 @@ namespace UnityEngine.InputSystem
                 interactionIndex = kInvalidIndex,
                 time = time,
                 startTime = time,
-                passThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].passThrough,
+                isPassThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].isPassThrough,
             };
 
             // If we have pending initial state checks that will run in the next update,
@@ -1207,6 +1207,10 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// The default interaction does not have its own <see cref="InteractionState"/>. Whatever we do in here,
         /// we store directly on the action state.
+        ///
+        /// The default interaction is basically a sort of optimization where we don't require having an explicit
+        /// interaction object. Conceptually, it can be thought of, however, as putting this interaction on any
+        /// binding that doesn't have any other interaction on it.
         /// </remarks>
         private void ProcessDefaultInteraction(ref TriggerState trigger, int actionIndex)
         {
@@ -1219,7 +1223,7 @@ namespace UnityEngine.InputSystem
                 {
                     // Pass-through actions we perform on every value change and then go back
                     // to waiting.
-                    if (trigger.passThrough)
+                    if (trigger.isPassThrough)
                     {
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                             phaseAfterPerformedOrCanceled: InputActionPhase.Waiting);
@@ -1251,6 +1255,15 @@ namespace UnityEngine.InputSystem
                         ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
                             phaseAfterPerformedOrCanceled: InputActionPhase.Started);
                     }
+                    break;
+                }
+
+                case InputActionPhase.Performed:
+                {
+                    Debug.Assert(actionStates[actionIndex].isPassThrough,
+                        "Only pass-through actions should be left in performed state by default interaction");
+                    ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
+                        phaseAfterPerformedOrCanceled: InputActionPhase.Performed);
                     break;
                 }
 
@@ -1407,8 +1420,7 @@ namespace UnityEngine.InputSystem
             // Update interaction state.
             interactionStates[interactionIndex].phase = newPhase;
             interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
-            if (newPhase == InputActionPhase.Started)
-                interactionStates[interactionIndex].startTime = trigger.time;
+            interactionStates[interactionIndex].startTime = trigger.startTime;
 
             ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
@@ -1515,9 +1527,58 @@ namespace UnityEngine.InputSystem
 
             // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
-            if (actionState->phase == InputActionPhase.Disabled)
+            if (actionState->isDisabled)
                 return;
 
+            // Enforce transition constraints.
+            if (actionState->isPassThrough && trigger.interactionIndex == kInvalidIndex)
+            {
+                // No constraints on pass-through actions except if there are interactions driving the action.
+                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                if (actionState->isDisabled)
+                    return;
+            }
+            else if (newPhase == InputActionPhase.Performed && actionState->phase == InputActionPhase.Waiting)
+            {
+                // Going from waiting to performed, we make a detour via started.
+                ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Started, ref trigger);
+                if (actionState->isDisabled)
+                    return;
+
+                // Then we perform.
+                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                if (actionState->isDisabled)
+                    return;
+
+                // And finally, if we're going back to waiting, we make a detour via canceled.
+                if (phaseAfterPerformedOrCanceled == InputActionPhase.Waiting)
+                    ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Canceled, ref trigger);
+                if (actionState->isDisabled)
+                    return;
+
+                actionState->phase = phaseAfterPerformedOrCanceled;
+            }
+            else
+            {
+                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                if (actionState->isDisabled)
+                    return;
+
+                if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
+                    actionState->phase = phaseAfterPerformedOrCanceled;
+            }
+
+            // If we're now waiting, reset control state. This is important for the disambiguation code
+            // to not consider whatever control actuation happened on the action last.
+            if (actionState->phase == InputActionPhase.Waiting)
+            {
+                actionState->controlIndex = kInvalidIndex;
+                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
+            }
+        }
+
+        private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger)
+        {
             // Update action state.
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
@@ -1530,6 +1591,8 @@ namespace UnityEngine.InputSystem
                 newState.lastTriggeredInUpdate = InputUpdate.s_UpdateStepCount;
             else
                 newState.lastTriggeredInUpdate = actionState->lastTriggeredInUpdate;
+            if (newPhase == InputActionPhase.Started)
+                newState.startTime = newState.time;
             *actionState = newState;
 
             // Let listeners know.
@@ -1542,37 +1605,25 @@ namespace UnityEngine.InputSystem
             {
                 case InputActionPhase.Started:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted);
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted, "started");
                     break;
                 }
 
                 case InputActionPhase.Performed:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed);
-                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                        actionState->phase = phaseAfterPerformedOrCanceled;
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     break;
                 }
 
                 case InputActionPhase.Canceled:
                 {
-                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled);
-                    if (actionState->phase != InputActionPhase.Disabled) // Action may have been disabled in callback.
-                        actionState->phase = phaseAfterPerformedOrCanceled;
+                    CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled, "canceled");
                     break;
                 }
             }
-
-            // If we're now waiting, reset control state. This is important for the disambiguation code
-            // to not consider whatever control actuation happened on the action last.
-            if (actionState->phase == InputActionPhase.Waiting)
-            {
-                actionState->controlIndex = kInvalidIndex;
-                actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
-            }
         }
 
-        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners)
+        private void CallActionListeners(int actionIndex, InputActionMap actionMap, InputActionPhase phase, ref InlinedArray<InputActionListener> listeners, string callbackName)
         {
             // If there's no listeners, don't bother with anything else.
             var callbacksOnMap = actionMap.m_ActionCallbacks;
@@ -1588,10 +1639,9 @@ namespace UnityEngine.InputSystem
             Profiler.BeginSample("InputActionCallback");
 
             // Global callback goes first.
+            var action = context.action;
             if (s_OnActionChange.length > 0)
             {
-                var action = context.action;
-
                 InputActionChange change;
                 switch (phase)
                 {
@@ -1614,36 +1664,10 @@ namespace UnityEngine.InputSystem
             }
 
             // Run callbacks (if any) directly on action.
-            var listenerCount = listeners.length;
-            for (var i = 0; i < listenerCount; ++i)
-            {
-                try
-                {
-                    listeners[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of '{phase}' callback on action '{GetActionOrNull(ref actionStates[actionIndex])}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref listeners, context, callbackName, action);
 
             // Run callbacks (if any) on action map.
-            var listenerCountOnMap = callbacksOnMap.length;
-            for (var i = 0; i < listenerCountOnMap; ++i)
-            {
-                try
-                {
-                    callbacksOnMap[i](context);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"{exception.GetType().Name} thrown during execution of callback for '{phase}' phase of '{GetActionOrNull(ref actionStates[actionIndex]).name}' action in map '{actionMap.name}'");
-                    Debug.LogException(exception);
-                }
-            }
+            DelegateHelpers.InvokeCallbacksSafe(ref callbacksOnMap, context, callbackName, actionMap);
 
             Profiler.EndSample();
         }
@@ -2515,6 +2539,12 @@ namespace UnityEngine.InputSystem
                 set => m_Phase = (byte)value;
             }
 
+            public bool isDisabled => phase == InputActionPhase.Disabled;
+            public bool isWaiting => phase == InputActionPhase.Waiting;
+            public bool isStarted => phase == InputActionPhase.Started;
+            public bool isPerformed => phase == InputActionPhase.Performed;
+            public bool isCanceled => phase == InputActionPhase.Canceled;
+
             /// <summary>
             /// The time the binding got triggered.
             /// </summary>
@@ -2658,7 +2688,7 @@ namespace UnityEngine.InputSystem
             /// Whether the action associated with the trigger state is marked as pass-through.
             /// </summary>
             /// <seealso cref="InputActionType.PassThrough"/>
-            public bool passThrough
+            public bool isPassThrough
             {
                 get => (flags & Flags.PassThrough) != 0;
                 set
@@ -2678,7 +2708,7 @@ namespace UnityEngine.InputSystem
             /// We use this to gate some of the more expensive checks that are pointless to
             /// perform if we don't have to disambiguate input from concurrent sources.
             ///
-            /// Always disabled if <see cref="passThrough"/> is true.
+            /// Always disabled if <see cref="isPassThrough"/> is true.
             /// </remarks>
             public bool mayNeedConflictResolution
             {

@@ -733,7 +733,7 @@ namespace UnityEngine.InputSystem.Utilities
         {
             // Move elements down.
             if (count < length)
-                Array.Copy(array, index + count, array, index, count);
+                Array.Copy(array, index + count, array, index, length - index - count);
 
             // Erase now vacant slots.
             for (var i = 0; i < count; ++i)

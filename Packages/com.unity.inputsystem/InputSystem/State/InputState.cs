@@ -97,9 +97,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 throw new ArgumentException($"Cannot change state of bitfield control '{control}' using this method", nameof(control));
 
             var device = control.device;
-            var stateSize = UnsafeUtility.SizeOf<TState>();
-            if (stateSize != control.m_StateBlock.alignedSizeInBytes)
-                throw new ArgumentException($"Size {stateSize} of given state does not match size of control {control} with size {control.m_StateBlock.alignedSizeInBytes}");
+            var stateSize = Math.Min(UnsafeUtility.SizeOf<TState>(), control.m_StateBlock.alignedSizeInBytes);
             var statePtr = UnsafeUtility.AddressOf(ref state);
             var stateOffset = control.stateBlock.byteOffset - device.stateBlock.byteOffset;
 
