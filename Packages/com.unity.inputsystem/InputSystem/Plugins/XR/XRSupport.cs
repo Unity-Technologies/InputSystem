@@ -401,7 +401,6 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<Unity.XR.OpenVR.OpenVROculusTouchController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithManufacturer("HTC")
                     .WithProduct(@"^(OpenVR Controller\(Oculus)")
             );
 
