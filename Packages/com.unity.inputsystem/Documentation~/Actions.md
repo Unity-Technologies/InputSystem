@@ -40,11 +40,11 @@ You can write code that is agnostic to where the input is coming from:
         context => look = context.ReadValue<Vector2>();
 ```
 
-You can then establish the mapping using the visual editor:
+You can then use the visual editor to establish the mapping:
 
 ![Look Action Binding](Images/LookActionBinding.png)
 
-This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#run-time-rebinding).
+This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#runtime-rebinding).
 
 >__Note__:
 >* Actions are a game-time only feature. You can't use them in `EditorWindow` code.
@@ -56,34 +56,34 @@ There are three key classes for Actions in the API:
 
 |Class|Description|
 |-----|-----------|
-|`InputActionAsset`|An Asset that contains one or more Action Maps as well as, optionally, a sequence of Control Schemes. For more information about how to create, edit, and work with these Assets, see [Action Assets](ActionAssets.md).|
+|`InputActionAsset`|An Asset that contains one or more Action Maps and, optionally, a sequence of Control Schemes. For more information on how to create, edit, and work with these Assets, see [Action Assets](ActionAssets.md).|
 |`InputActionMap`|A named collection of Actions.|
 |`InputAction`|A named Action that triggers callbacks in response to input.|
 
-The key mechanism by which Actions refer to the inputs they collect is `InputBinding`. For more information about Bindings and how to use them, see [Action Bindings](ActionBindings.md).
+Actions use `InputBinding` to refer to the inputs they collect. For more information about Bindings and how to use them, see [Action Bindings](ActionBindings.md).
 
-Each Action has a name ([`InputAction.name`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_name)) which must be unique within the Action Map that the Action belongs to (if any; see [`InputAction.actionMap`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_actionMap). Each Action also has a unique ID ([`InputAction.id`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_id)) that you can use to reference the Action. The ID remains the same even if you rename the Action.
+Each Action has a name ([`InputAction.name`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_name)), which must be unique within the Action Map that the Action belongs to, if any (see [`InputAction.actionMap`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_actionMap)). Each Action also has a unique ID ([`InputAction.id`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_id)), which you can use to reference the Action. The ID remains the same even if you rename the Action.
 
-Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_name)) which must be unique within the Action Asset that the Action Map belongs to (if any; see [`InputActionMap.asset`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_asset)). Each Action Map also has a unique ID ([`InputActionMap.id`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_id)) that can be used to reference the Action Map. The ID remains the same even if you rename the Action Map.
+Each Action Map has a name ([`InputActionMap.name`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_name)), which must be unique within the Action Asset that the Action Map belongs to, if any (see [`InputActionMap.asset`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_asset)). Each Action Map also has a unique ID ([`InputActionMap.id`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_id)), which you can use to reference the Action Map. The ID remains the same even if you rename the Action Map.
 
 ## Creating Actions
 
 You can create Actions in one of the following ways:
 
-1. Using the dedicated editor for `.inputactions` Assets.
-2. By embedding them in MonoBehaviour components.
-3. By manually loading them from JSON.
-4. By creating them directly in code.
+1. Use the dedicated editor for `.inputactions` Assets.
+2. Embed them in MonoBehaviour components.
+3. Manually load them from JSON.
+4. Create them directly in code.
 
 ### Using the Action editor
 
-For information on how to create and edit Input Action Assets using the dedicated editor, see [Action Assets](ActionAssets.md).
+For information on how to create and edit Input Action Assets in the dedicated editor, see [Action Assets](ActionAssets.md).
 
 ![Action Editor Window](Images/MyGameActions.png)
 
 ### Embedding Actions in MonoBehaviours
 
-[`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) and [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) can be embedded as fields directly inside `MonoBehaviour` components.
+You can embed [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) and [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components.
 
 ```CSharp
 public MyBehavior : MonoBehaviour
@@ -99,14 +99,14 @@ These fields receive a custom editor UI in the Unity Editor:
 
 ![MyBehavior Inspector](Images/MyBehaviorInspector.png)
 
-The visual editors work similar to the [Action Asset editor](ActionAssets.md).
+The visual editors work similarly to the [Action Asset editor](ActionAssets.md).
 
-* To add or remove Actions or Bindings, click the plus or minus icon in the header.
+* To add or remove Actions or Bindings, click the Add (+) or Remove (-) icon in the header.
 * To edit Bindings, double-click them.<br>
   ![InputBinding Inspector](Images/InputBindingInspector.png)
 * To edit Actions, double-click them in an Action Map, or click the gear icon on individual Action properties.<br>
   ![InputAction Inspector](Images/InputActionInspector.png)
-* You can also right-click entries to bring up a context menu, and drag them. Hold the Alt key and drag an entry to duplicate it.
+* You can also right-click entries to bring up a context menu, and you can drag them. Hold the Alt key and drag an entry to duplicate it.
 
 You must manually [enable and disable](#using-actions) Actions and Action Maps that are embedded in MonoBehaviour components.
 
@@ -143,7 +143,7 @@ public class MyBehavior : MonoBehaviour
 
 ### Loading Actions from JSON
 
-You can load Actions as JSON in the form of a set of Action Maps or as a full [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). This also works at run time in the Player.
+You can load Actions as JSON in the form of a set of Action Maps or as a full [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). This also works at runtime in the Player.
 
 ```CSharp
 // Load a set of action maps from JSON.
@@ -155,7 +155,7 @@ var asset = InputActionAsset.FromJson(json);
 
 ### Creating Actions in code
 
-You can manually create and configure Actions. This also works at run time in the Player.
+You can manually create and configure Actions. This also works at runtime in the Player.
 
 ```CSharp
 // Create free-standing Actions.
@@ -193,25 +193,25 @@ lookAction.Enable();
 gameplayActions.Enable();
 ```
 
-When you enable an Action, the Input System resolves its bindings, if this hasn't happened already or if the set of devices that the Action can use has changed. For more details about this process, see the documentation on [binding resolution](ActionBindings.md#binding-resolution).
+When you enable an Action, the Input System resolves its bindings, unless it has done so already, or if the set of devices that the Action can use has not changed. For more details about this process, see the documentation on [binding resolution](ActionBindings.md#binding-resolution).
 
 You can't change certain aspects of the configuration, such Action Bindings, while an Action is enabled. To stop Actions or Action Maps from responding to input, call  [`Disable`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_Disable).
 
-While enabled, an Action actively monitors the [Control(s)](Controls.md) it's bound to. If a bound Control changes state, the Action processes the change and creates a response if the state change represents an [Interaction](Interactions.md) change. All of this happens during the Input System update logic. Depending on the [update mode](Settings.md#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.
+While enabled, an Action actively monitors the [Control(s)](Controls.md) it's bound to. If a bound Control changes state, the Action processes the change. If the Control's change represents an [Interaction](Interactions.md) change, the Action creates a response. All of this happens during the Input System update logic. Depending on the [update mode](Settings.md#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.
 
 ### Responding to Actions
 
-An Action doesn't represent an actual response to input by itself. Instead, an Action informs your code that a certain kind of input has occurred. Your code then responds to this information.
+An Action doesn't represent an actual response to input by itself. Instead, an Action informs your code that a certain type of input has occurred. Your code then responds to this information.
 
 There are several ways to do this:
 
 1. Each Action has a [`started`, `performed`, and `canceled` callback](#started-performed-and-canceled-callbacks).
 2. Each Action Map has an [`actionTriggered` callback](#inputactionmapactiontriggered-callback).
 3. The Input System has a global [`InputSystem.onActionChange` callback](#inputsystemonactionchange-callback).
-4. You can poll the current state of an Action whenever you need it using [`InputAction.ReadValue<>()`](#polling-actions).
+4. You can poll the current state of an Action whenever you need it; to do this, use [`InputAction.ReadValue<>()`](#polling-actions).
 5. [`InputActionTrace`](#inputactiontrace) can record changes happening on Actions.
 
-There are also two higher-level, more streamlined ways of picking up input from Actions: using [`PlayerInput`](Components.md#notification-behaviors), or [generating script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
+There are also two higher-level, more streamlined ways of picking up input from Actions: use [`PlayerInput`](Components.md#notification-behaviors), or [generate script code](ActionAssets.md#auto-generating-script-code-for-actions) that wraps around the Input Actions.
 
 #### `started`, `performed`, and `canceled` callbacks
 
@@ -221,7 +221,7 @@ Every Action has a set of distinct phases it can go through in response to recei
 |-----|-----------|
 |`Disabled`|The Action is disabled and can't receive input.|
 |`Waiting`|The Action is enabled and is actively waiting for input.|
-|`Started`|The Input System received input that started an Interaction with the Action.|
+|`Started`|The Input System has received input that started an Interaction with the Action.|
 |`Performed`|An Interaction with the Action has been completed.|
 |`Canceled`|An Interaction with the Action has been canceled.|
 
@@ -234,10 +234,10 @@ The `Started`, `Performed`, and `Canceled` phases each have a callback associate
 
     action.started += ctx => /* Action was started */;
     action.performed += ctx => /* Action was performed */;
-    action.canceled += ctx => /* Action was started */;
+    action.canceled += ctx => /* Action was canceled */;
 ```
 
-Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) structure holding context information that you can use to query the current state of the Action and to read out values from Controls that triggered the Action ([`InputAction.CallbackContext.ReadValue`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_ReadValue__1)).
+Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) structure, which holds context information that you can use to query the current state of the Action and to read out values from Controls that triggered the Action ([`InputAction.CallbackContext.ReadValue`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_ReadValue__1)).
 
 >__Note__: The contents of the structure are only valid for the duration of the callback. In particular, it isn't safe to store the received context and later access its properties from outside the callback.
 
@@ -252,7 +252,7 @@ var actionMap = new InputActionMap();
 actionMap.AddAction("action1", "<Gamepad>/buttonSouth");
 actionMap.AddAction("action2", "<Gamepad>/buttonNorth");
 
-actionMap.onActionTriggered +=
+actionMap.actionTriggered +=
     context => { ... };
 ```
 
@@ -304,7 +304,7 @@ Instead of using callbacks, it might be simpler sometimes to poll the value of a
 
 For button-type actions, you can also use [`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered), which is true if the action was performed at any time in the current frame.
 
-```
+```CSharp
     private InputAction buttonAction;
 
     void Start()
@@ -326,13 +326,13 @@ For button-type actions, you can also use [`InputAction.triggered`](../api/Unity
     }
 ```
 
-[`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) is most useful with button-type actions but can be used with any action.
+[`InputAction.triggered`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_triggered) is most useful with button-type actions, but can be used with any action.
 
 #### `InputActionTrace`
 
-You can trace Actions in order to generate a log of all activity that happened on a particular set of Actions. To do so, use [`InputActionTrace`](../api/UnityEngine.InputSystem.Utilities.InputActionTrace.html). This behaves in a similar way to [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) for events.
+You can trace Actions to generate a log of all activity that happened on a particular set of Actions. To do so, use [`InputActionTrace`](../api/UnityEngine.InputSystem.Utilities.InputActionTrace.html). This behaves in a similar way to [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) for events.
 
->__Note__: `InputActionTrace` allocates unmanaged memory and needs to be disposed of in order to not create memory leaks.
+>__Note__: `InputActionTrace` allocates unmanaged memory and needs to be disposed of so that it doesn't create memory leaks.
 
 ```CSharp
 var trace = new InputActionTrace();
@@ -396,11 +396,11 @@ This is the default Action type. Use this for any inputs which should track cont
 
 `Value` type actions continuously monitor all the Controls which are bound to the Action, and then choose the one which is the most actuated to be the Control driving the Action, and report the values from that Control in callbacks, triggered whenever the value changes. If a different bound Control actuated more, then that Control becomes the Control driving the Action, and the Action starts reporting values from that Control. This process is called [disambiguation](ActionBindings.md#disambiguation). This is useful if you want to allow different Controls to control an Action in the game, but only take input from one Control at the same time.
 
-When the Action is initially enabled, it will perform an [initial state check](ActionBindings.md#initial-state-check) of all bound Controls. If any of them is actuated, the Action then triggers a callback with the current value.
+When the Action initially enables, it performs an [initial state check](ActionBindings.md#initial-state-check) of all bound Controls. If any of them is actuated, the Action then triggers a callback with the current value.
 
 #### Button
 
-This is very similar to `Value`, but `Button` type Actions can only be bound to [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) Controls, and don't perform an initial state check like `Value` Actions do (see the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not desirable in such cases, as you don't want to trigger actions because the button was still held down from a previous press when the Action was enabled.
+This is very similar to `Value`, but `Button` type Actions can only be bound to [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html) Controls, and don't perform an initial state check like `Value` Actions do (see the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not useful in such cases,because it can trigger actions if the button is still held down from a previous press when the Action was enabled.
 
 #### Pass-Through
 
@@ -408,13 +408,13 @@ This is very similar to `Value`, but `Button` type Actions can only be bound to 
 
 ### Debugging Actions
 
-You can see currently enabled Actions and their bound Controls using the [Input Debugger](Debugging.md#debugging-actions).
+To see currently enabled Actions and their bound Controls, use the [Input Debugger](Debugging.md#debugging-actions).
 
 You can also use the [`InputActionVisualizer`](Debugging.md#inputactionvisualizer) component from the Visualizers sample to get an on-screen visualization of an Action's value and Interaction state in real-time.
 
 ### Using Actions with multiple players
 
-You can use the same Action definitions for multiple local players, for example in a local co-op game. For more information, see documentation on the [player input manager](Components.md#playerinputmanager-component) component.
+You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](Components.md#playerinputmanager-component) component.
 
 ## Terms and concepts
 

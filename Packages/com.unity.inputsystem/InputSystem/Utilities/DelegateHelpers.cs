@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.Utilities
         // InvokeCallbacksSafe protects both against the callback getting removed while being called
         // and against exceptions being thrown by the callback.
 
-        public static void InvokeCallbacksSafe(ref InlinedArray<Action> callbacks, string callbackName)
+        public static void InvokeCallbacksSafe(ref InlinedArray<Action> callbacks, string callbackName, object context = null)
         {
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
@@ -21,7 +21,10 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
 
@@ -32,7 +35,7 @@ namespace UnityEngine.InputSystem.Utilities
             Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue>(ref InlinedArray<Action<TValue>> callbacks, TValue argument, string callbackName)
+        public static void InvokeCallbacksSafe<TValue>(ref InlinedArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
         {
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
@@ -45,7 +48,10 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
 
@@ -56,7 +62,7 @@ namespace UnityEngine.InputSystem.Utilities
             Profiler.EndSample();
         }
 
-        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref InlinedArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName)
+        public static void InvokeCallbacksSafe<TValue1, TValue2>(ref InlinedArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
         {
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
@@ -69,7 +75,10 @@ namespace UnityEngine.InputSystem.Utilities
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
 

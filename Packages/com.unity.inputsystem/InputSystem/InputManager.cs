@@ -2410,7 +2410,7 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr((InputEvent*)stateEventPtr));
 
                         // Tell the backend to reset.
-                        device.RequestRequest();
+                        device.RequestReset();
                     }
                 }
             }

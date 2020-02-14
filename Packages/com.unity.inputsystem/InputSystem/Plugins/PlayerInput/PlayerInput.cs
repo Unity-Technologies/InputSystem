@@ -256,6 +256,15 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Index of split-screen area assigned to player or -1 if the player is not
         /// using split-screen.</value>
+        /// <remarks>
+        /// Split screen areas are enumerated row by row and within rows, column by column. So, if, for example,
+        /// there are four separate split-screen areas, the upper left one is #0, the upper right one is #1,
+        /// the lower left one is #2, and the lower right one is #3.
+        ///
+        /// Split screen areas are usually assigned automatically but players can also be assigned to
+        /// areas explicitly through <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/> or
+        /// <see cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>.
+        /// </remarks>
         /// <seealso cref="camera"/>
         /// <seealso cref="PlayerInputManager.splitScreen"/>
         public int splitScreenIndex => m_SplitScreenIndex;
@@ -384,6 +393,7 @@ namespace UnityEngine.InputSystem
         /// cref="SwitchCurrentControlScheme(string,InputDevice[])"/>.
         /// </remarks>
         /// <seealso cref="currentControlScheme"/>
+        /// <seealso cref="isSinglePlayer"/>
         public bool neverAutoSwitchControlSchemes
         {
             get => m_NeverAutoSwitchControlSchemes;
@@ -746,15 +756,31 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputUser.hasMissingRequiredDevices"/>
         public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
 
+        /// <summary>
+        /// List of all players that are currently joined. Sorted by <see cref="playerIndex"/> in
+        /// increasing order.
+        /// </summary>
+        /// <value>List of active PlayerInputs.</value>
+        /// <remarks>
+        /// While the list is sorted by <see cref="playerIndex"/>, note that this does not mean that the <see cref="playerIndex"/>
+        /// of a player corresponds to the index in this list. If, for example, three players join and then the second player leaves,
+        /// the list will contain one player with <see cref="playerIndex"/> 0 followed by one player with <see cref="playerIndex"/> 2.
+        /// </remarks>
+        /// <seealso cref="PlayerInputManager.JoinPlayer(int,int,string,InputDevice)"/>
+        /// <seealso cref="Instantiate(GameObject,int,string,int,InputDevice)"/>
         public static ReadOnlyArray<PlayerInput> all => new ReadOnlyArray<PlayerInput>(s_AllActivePlayers, 0, s_AllActivePlayersCount);
 
         /// <summary>
         /// Whether PlayerInput operates in single-player mode.
         /// </summary>
-        /// <value>If true, there is only a single PlayerInput.</value>
+        /// <value>If true, there is at most a single PlayerInput.</value>
         /// <remarks>
+        /// Single-player mode is active while there is at most one PlayerInput (there can also be none) and
+        /// while joining is not enabled in <see cref="PlayerInputManager"/> (if one exists). See <see cref="PlayerInputManager.joiningEnabled"/>.
         ///
+        /// Automatic control scheme switching (if enabled) is predicated on single-player mode being active.
         /// </remarks>
+        /// <seealso cref="neverAutoSwitchControlSchemes"/>
         public static bool isSinglePlayer =>
             s_AllActivePlayersCount <= 1 &&
             (PlayerInputManager.instance == null || !PlayerInputManager.instance.joiningEnabled);
@@ -976,6 +1002,8 @@ namespace UnityEngine.InputSystem
 
         private static PlayerInput DoInstantiate(GameObject prefab)
         {
+            var destroyIfDeviceSetupUnsuccessful = s_DestroyIfDeviceSetupUnsuccessful;
+
             GameObject instance;
             try
             {
@@ -991,6 +1019,7 @@ namespace UnityEngine.InputSystem
                 s_InitControlScheme = null;
                 s_InitPlayerIndex = -1;
                 s_InitSplitScreenIndex = -1;
+                s_DestroyIfDeviceSetupUnsuccessful = false;
             }
 
             var playerInput = instance.GetComponentInChildren<PlayerInput>();
@@ -998,6 +1027,12 @@ namespace UnityEngine.InputSystem
             {
                 DestroyImmediate(instance);
                 Debug.LogError("The GameObject does not have a PlayerInput component", prefab);
+                return null;
+            }
+
+            if (destroyIfDeviceSetupUnsuccessful && (!playerInput.user.valid || playerInput.hasMissingRequiredDevices))
+            {
+                DestroyImmediate(instance);
                 return null;
             }
 
@@ -1056,6 +1091,7 @@ namespace UnityEngine.InputSystem
         private static int s_InitPlayerIndex = -1;
         private static int s_InitSplitScreenIndex = -1;
         private static string s_InitControlScheme;
+        internal static bool s_DestroyIfDeviceSetupUnsuccessful;
 
         private void InitializeActions()
         {
@@ -1124,14 +1160,14 @@ namespace UnityEngine.InputSystem
                                 {
                                     // We have an action name. Show in message.
                                     Debug.LogError(
-                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{actions}",
+                                        $"Cannot find action '{actionEvent.actionName}' with ID '{actionEvent.actionId}' in '{m_Actions}",
                                         this);
                                 }
                                 else
                                 {
                                     // We have no action name. Best we have is ID.
                                     Debug.LogError(
-                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{actions}",
+                                        $"Cannot find action with ID '{actionEvent.actionId}' in '{m_Actions}",
                                         this);
                                 }
                             }
@@ -1330,8 +1366,12 @@ namespace UnityEngine.InputSystem
                 // search for a control scheme matching the given devices.
                 if (s_InitPairWithDevicesCount > 0 && (!m_InputUser.valid || m_InputUser.controlScheme == null))
                 {
+                    // The devices we've been given may not be all the devices required to satisfy a given control scheme so we
+                    // want to pick any one control scheme that is the best match for the devices we have regardless of whether
+                    // we'll need additional devices. TryToActivateControlScheme will take care of that.
                     var controlScheme = InputControlScheme.FindControlSchemeForDevices(
-                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes);
+                        new ReadOnlyArray<InputDevice>(s_InitPairWithDevices, 0, s_InitPairWithDevicesCount), m_Actions.controlSchemes,
+                        allowUnsuccesfulMatch: true);
                     if (controlScheme != null)
                         TryToActivateControlScheme(controlScheme.Value);
                 }

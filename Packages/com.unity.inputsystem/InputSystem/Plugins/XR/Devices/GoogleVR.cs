@@ -9,7 +9,7 @@ namespace Unity.XR.GoogleVr
     /// <summary>
     /// A head-mounted display powered by Google Daydream.
     /// </summary>
-    [InputControlLayout]
+    [InputControlLayout(displayName = "Daydream Headset")]
     [Preserve]
     public class DaydreamHMD : XRHMD
     {
@@ -18,7 +18,7 @@ namespace Unity.XR.GoogleVr
     /// <summary>
     /// An XR controller powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" })]
+    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" })]
     [Preserve]
     public class DaydreamController : XRController
     {

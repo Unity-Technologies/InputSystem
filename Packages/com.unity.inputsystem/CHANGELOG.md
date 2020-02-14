@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.0-preview.5] - 2020-02-14
+
+### Changed
+
+- We've changed the rules that govern how action phases have to progress:
+  * __This is a breaking change!__
+    - The primary effect is additional callbacks getting triggered.
+  * __Before__:
+    - There were no enforced rules about how an action would go through `InputAction.started`, `InputAction.performed`, and `InputAction.canceled`. Which of the callbacks were triggered and in what order depended on a number of factors, the biggest influencer of which were the different interactions that could be applied to actions (like `Press` or `Hold`).
+    - This made for unpredictable and frequently surprising results. In addition, it led to bugs where, for [example](https://issuetracker.unity3d.com/issues/input-system-ui-becomes-unresponsive-after-the-first-ui-button-press), adding a `Press` interaction to the `Click` action of `InputSystemUIInputModule` would cause the click state to get stuck because the click action would never cancel.
+  * __Now__:
+    - The system will now *always* trigger `InputAction.started` first. If this is not done explicitly, it happens implicitly.
+    - Likewise, the system will now *always* trigger `InputAction.canceled` before going back to waiting state. Like with `InputAction.started`, if this isn't done explicitly, it will happen implicitly. This implies that `InputAction.canceled` no longer signifies an action getting aborted because it stopped after it started but before it performed. It now simply means "the action has ended" whether it actually got performed or not.
+    - In-between `InputAction.started` and `InputAction.canceled`, `InputAction.performed` may be triggered arbitrary many times (including not at all).
+  * While late in the cycle for 1.0, we've opted to make this change now in order to fix a range of bugs and problems we've observed that people encountered because of the previous behavior of the system.
+- Related to the change above, the behavior of `PressInteraction` has been tweaked and now is the following:
+  * `Press Only`: Starts and immediately performs when pressed, then stays performed and cancels when button is released.
+  * `Release Only`: Starts when button is pressed and then performs and immediately cancels when the button is released.
+  * `Press And Release`: Starts and immediately performs when button is pressed, then stays performed and performs again and immediately cancels when button is released.
+- `Vector2Composite` now has a `mode` parameter which can be used to choose between `DigitalNormalized` (the default), `Digital` (same as `DigitalNormalized` but does not normalize the resulting vector), and `Analog` (uses float input values as is).
+  * `Vector2Composite.normalize` has been deprecated. Note that it will not work together with `Analog`. The parameter will be removed in the future.
+
+### Fixed
+
+- XR controllers and HMDs have proper display names in the UI again. This regressed in preview.4 such that all XR controllers were displayed as just "XR Controller" in the UI and all HMDs were displayed as "XR HMD".
+- `InputSystemUIInputModule` no longer generates GC heap garbage every time mouse events are processed.
+- Fixed a bug where an internal array helper method was corrupting array contents leading to bugs in both `InputUser` and `Touch`.
+- Fixed exception when saving changes to an Input Action asset and the parent directory has been renamed. ([case 1207527](https://issuetracker.unity3d.com/issues/input-system-console-errors-appear-when-you-save-input-action-asset-after-changing-the-name-of-the-folder-containing-it))
+
+#### Actions
+
+- The regression in 1.0.0-preview.4 of `PlayerInputManager` not joining players correctly if a scheme has more than one device requirement has been fixed.
+  * This most notably manifested itself with keyboard+mouse control schemes.
+- `PlayerInputManager` will no longer join players when control schemes are used and none of the schemes produces a successful match based on the devices available for the join.
+- When no action map is selected in action editor, plus icon to add an action is now disabled; formerly threw an exception when clicked (case 1199562).
+- Removing a callback from actions from the callback itself no longer throws `ArgumentOutOfRangeException` ([case 1192972](https://issuetracker.unity3d.com/issues/input-system-package-argumentoutofrangeexception-error-is-thrown-when-the-callback-is-removed-while-its-being-triggered)).
+- "Invalid user" `ArgumentException` when turning the same `PlayerInput` on and off ([case 1198889](https://issuetracker.unity3d.com/issues/input-system-package-argumentexception-invalid-user-error-is-thrown-when-the-callback-disables-game-object-with-playerinput)).
+- The list of device requirements for a control scheme in the action editor no longer displays devices with their internal layout name rather than their external display name.
+- `StackOverflowException` when `Invoke Unity Events` is selected in `PlayerInput` and it cannot find an action (#1033).
+- `HoldInteraction` now stays performed after timer has expired and cancels only on release of the control ([case 1195498](https://issuetracker.unity3d.com/issues/inputsystem-inputaction-dot-readvalue-returns-0-when-a-hold-action-is-performed-for-hold-time-amount-of-time)).
+- Foldouts in the various action UIs now properly toggle their expansion state when clicked in Unity 2019.3+ ([case 1213781](https://issuetracker.unity3d.com/issues/input-system-package-playerinput-component-events-menu-doesnt-expand-when-clicked-directly-on-the-arrow-icon)).
+
+### Added
+
+- We've added a new `Simple Multiplayer` sample which demonstrates a simple, bare-bones local multiplayer setup.
+- We've also added a `Gamepad Mouse Cursor` sample that shows how to drive a UI mouse cursor using the gamepad.
+  - The sample contains a reusable `VirtualMouseInput` component that does most of the work.
+- Added a `Deselect On Background Click` option to `InputSystemUIInputModule`. This allows toggling the behavior off where clicking the mouse and not hitting a `GameObject` will automatically clear the current selection -- which will break keyboard and gamepad navigation.
+
 ## [1.0.0-preview.4] - 2020-01-24
 
 This release includes a number of Quality-of-Life improvements for a range of common problems that users have reported.
@@ -42,7 +91,6 @@ This release includes a number of Quality-of-Life improvements for a range of co
     if (Keyboard.current.leftShiftKey.isPressed ||
         Keyboard.current.rightShiftKey.isPressed) /* ... */;
     ```
-- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 #### Actions
 
@@ -100,11 +148,13 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Control schemes can now handle ambiguity.
   * This means that, for example, you can now have one control scheme for generic gamepads and another control scheme specifically for PS4 controllers and the system will reliably pick the PS4 scheme when a PS4 controller is used and fall back to the generic gamepad scheme otherwise.
   * While this is exposed as a new `score` property on `InputControlScheme.MatchResult`, no code changes are necessary to take advantage of this feature.
+- `PlayerInput.active` has been renamed to `PlayerInput.inputIsActive` to avoid ambiguities with `GameObject` activation.
 
 ### Fixed
 
 - `InputUser` in combination with touchscreens no longer throws `InvalidOperationException` complaining about incorrect state format.
  * In a related change, `InputControlExtensions.GetStatePtrFromStateEvent` now works with touch events, too.
+- Stack overflow in `InputTestFixture.currentTime` getter.
 - Input that occurs in-between pressing the play button and the game starting no longer leaks into the game (case 1191342).
   * This usually manifested itself as large accumulated mouse deltas leading to such effects as the camera immediately jerking around on game start.
 - Removing a device no longer has the potential of corrupting state change monitors (and thus actions getting triggered) from other devices.

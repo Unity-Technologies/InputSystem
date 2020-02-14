@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.LabelField(bgRect, GUIContent.none, Styles.s_FoldoutBackgroundStyle);
             var foldoutRect = bgRect;
             foldoutRect.xMax -= k_PopupSize;
-            var retval = EditorGUI.Foldout(foldoutRect, folded, content, Styles.s_FoldoutStyle);
+            var retval = EditorGUI.Foldout(foldoutRect, folded, content, true, Styles.s_FoldoutStyle);
             if (addButton != null)
             {
                 var popupRect = bgRect;

@@ -400,8 +400,9 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
-    public void Events_CanCreateDeltaStateEventFromControl()
+    public unsafe void Events_CanCreateDeltaStateEventFromControl()
     {
+        InputSystem.AddDevice<Mouse>(); // Noise.
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         Set(gamepad.buttonSouth, 1);
@@ -419,6 +420,26 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(gamepad.buttonNorth.ReadValue(), Is.Zero);
+        }
+
+        // More in-depth check on whether we get the offsetting right.
+        using (DeltaStateEvent.From(gamepad.leftStick, out var eventPtr))
+        {
+            var deltaEventPtr = (DeltaStateEvent*)eventPtr.data;
+            var statePtr = (byte*)gamepad.leftStick.GetStatePtrFromStateEvent(eventPtr);
+
+            Assert.That((ulong)(statePtr + gamepad.leftStick.stateBlock.byteOffset), Is.EqualTo((ulong)deltaEventPtr->deltaState));
+
+            InputSystem.settings.defaultDeadzoneMin = 0;
+            InputSystem.settings.defaultDeadzoneMax = 1;
+
+            gamepad.leftStick.WriteValueIntoEvent(new Vector2(0.123f, 0.234f), eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(gamepad.leftStick.ReadValue(),
+                Is.EqualTo(new Vector2(0.123f, 0.234f)).Using(Vector2EqualityComparer.Instance));
         }
     }
 

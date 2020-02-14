@@ -69,16 +69,12 @@ namespace UnityEngine.InputSystem.Interactions
                         if (!isActuated)
                         {
                             m_WaitingForRelease = false;
-                            // We need to reset the action to waiting state in order to stop it from triggering
-                            // continuously. However, we do not want to cancel here as that will trigger the action.
-                            // So go back directly to waiting here.
-                            context.Waiting();
+                            context.Canceled();
                         }
                     }
                     else if (isActuated)
                     {
-                        context.Started();
-                        context.Performed();
+                        context.PerformedAndStayPerformed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -88,6 +84,7 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         m_WaitingForRelease = false;
                         context.Performed();
+                        context.Canceled();
                     }
                     else if (isActuated)
                     {
@@ -101,15 +98,14 @@ namespace UnityEngine.InputSystem.Interactions
                     {
                         if (!isActuated)
                         {
-                            context.Started();
                             context.Performed();
+                            context.Canceled();
                         }
                         m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        context.Started();
-                        context.Performed();
+                        context.PerformedAndStayPerformed();
                         m_WaitingForRelease = true;
                     }
                     break;
@@ -178,11 +174,16 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+            EditorGUILayout.HelpBox(s_HelpBoxText);
             target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
             m_PressPointSetting.OnGUI();
         }
 
         private CustomOrDefaultSetting m_PressPointSetting;
+
+        private static readonly GUIContent s_HelpBoxText = EditorGUIUtility.TrTextContent("Note that the 'Press' interaction is only "
+            + "necessary when wanting to customize button press behavior. For default press behavior, simply set the action type to 'Button' "
+            + "and use the action without interactions added to it.");
 
         private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Trigger Behavior",
             "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "

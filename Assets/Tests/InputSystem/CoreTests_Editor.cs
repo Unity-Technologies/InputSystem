@@ -545,6 +545,36 @@ partial class CoreTests
         Assert.That(map.bindings[0].groups, Is.EqualTo(""));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
+    {
+        const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
+        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
+        const string kDefaultContents = "{}";
+
+        AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
+        File.WriteAllText(kAssetPath, kDefaultContents);
+        AssetDatabase.ImportAsset(kAssetPath);
+
+        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
+        Assert.NotNull(asset, "Could not load asset: " + kAssetPath);
+
+        var inputActionAssetManager = new InputActionAssetManager(asset);
+        inputActionAssetManager.Initialize();
+        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
+
+        FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
+        AssetDatabase.Refresh();
+
+        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+
+        var fileContents = File.ReadAllText(kAssetPathAfterMove);
+        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+
+        AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
+    }
+
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
     {
         public InputAction action;

@@ -243,14 +243,27 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Reference to the prefab that the manager will instantiate when players join.
+        /// </summary>
+        /// <value>Prefab to instantiate for new players.</value>
         public GameObject playerPrefab
         {
             get => m_PlayerPrefab;
             set => m_PlayerPrefab = value;
         }
 
+        /// <summary>
+        /// Singleton instance of the manager.
+        /// </summary>
+        /// <value>Singleton instance or null.</value>
         public static PlayerInputManager instance { get; private set; }
 
+        /// <summary>
+        /// Allow players to join the game based on <see cref="joinBehavior"/>.
+        /// </summary>
+        /// <seealso cref="DisableJoining"/>
+        /// <seealso cref="joiningEnabled"/>
         public void EnableJoining()
         {
             switch (m_JoinBehavior)
@@ -291,6 +304,11 @@ namespace UnityEngine.InputSystem
             m_AllowJoining = true;
         }
 
+        /// <summary>
+        /// Inhibit players from joining the game.
+        /// </summary>
+        /// <seealso cref="EnableJoining"/>
+        /// <seealso cref="joiningEnabled"/>
         public void DisableJoining()
         {
             switch (m_JoinBehavior)
@@ -319,6 +337,7 @@ namespace UnityEngine.InputSystem
             m_AllowJoining = false;
         }
 
+        ////TODO
         /// <summary>
         /// Join a new player based on input on a UI element.
         /// </summary>
@@ -326,12 +345,12 @@ namespace UnityEngine.InputSystem
         /// This should be called directly from a UI callback such as <see cref="Button.onClick"/>. The device
         /// that the player joins with is taken from the device that was used to interact with the UI element.
         /// </remarks>
-        public void JoinPlayerFromUI()
+        internal void JoinPlayerFromUI()
         {
             if (!CheckIfPlayerCanJoin())
                 return;
 
-            //find used device
+            //find used device; InputSystemUIInputModule should probably make that available
 
             throw new NotImplementedException();
         }
@@ -363,21 +382,57 @@ namespace UnityEngine.InputSystem
             JoinPlayer(pairWithDevice: device);
         }
 
-        public void JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, InputDevice pairWithDevice = null)
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevice"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevice">Device to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        ///
+        /// To pair multiple devices, use <see cref="JoinPlayer(int,int,string,InputDevice[])"/>.
+        /// </remarks>
+        public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, InputDevice pairWithDevice = null)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
-                return;
+                return null;
 
-            PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
+            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevice: pairWithDevice);
         }
 
-        public void JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, params InputDevice[] pairWithDevices)
+        /// <summary>
+        /// Spawn a new player from <see cref="playerPrefab"/>.
+        /// </summary>
+        /// <param name="playerIndex">Optional explicit <see cref="PlayerInput.playerIndex"/> to assign to the player. Must be unique within
+        /// <see cref="PlayerInput.all"/>. If not supplied, a player index will be assigned automatically (smallest unused index will be used).</param>
+        /// <param name="splitScreenIndex">Optional <see cref="PlayerInput.splitScreenIndex"/>. If supplied, this assigns a split-screen area to the player. For example,
+        /// a split-screen index of </param>
+        /// <param name="controlScheme">Control scheme to activate on the player (optional). If not supplied, a control scheme will
+        /// be selected based on <paramref name="pairWithDevices"/>. If no device is given either, the first control scheme that matches
+        /// the currently available unpaired devices (see <see cref="InputUser.GetUnpairedInputDevices()"/>) is used.</param>
+        /// <param name="pairWithDevices">Devices to pair to the player. Also determines which control scheme to use if <paramref name="controlScheme"/>
+        /// is not given.</param>
+        /// <returns>The newly instantiated player or <c>null</c> if joining failed.</returns>
+        /// <remarks>
+        /// Joining must be enabled (see <see cref="joiningEnabled"/>) or the method will fail.
+        /// </remarks>
+        public PlayerInput JoinPlayer(int playerIndex = -1, int splitScreenIndex = -1, string controlScheme = null, params InputDevice[] pairWithDevices)
         {
             if (!CheckIfPlayerCanJoin(playerIndex))
-                return;
+                return null;
 
-            PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
+            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevices: pairWithDevices);
         }
 
@@ -452,6 +507,8 @@ namespace UnityEngine.InputSystem
                 // to join a player who's then stranded and has no way to actually interact with the game.
                 if (!IsDeviceUsableWithPlayerActions(control.device))
                     return;
+
+                ////REVIEW: should we log a warning or error when the actions for the player do not have control schemes?
 
                 JoinPlayer(pairWithDevice: control.device);
             }
@@ -580,6 +637,20 @@ namespace UnityEngine.InputSystem
             if (actions == null)
                 return true;
 
+            // If the asset has control schemes, see if there's one that works with the device plus
+            // whatever unpaired devices we have left.
+            if (actions.controlSchemes.Count > 0)
+            {
+                using (var unpairedDevices = InputUser.GetUnpairedInputDevices())
+                {
+                    if (InputControlScheme.FindControlSchemeForDevices(unpairedDevices, actions.controlSchemes,
+                        mustIncludeDevice: device) == null)
+                        return false;
+                }
+                return true;
+            }
+
+            // Otherwise just check whether any of the maps has bindings usable with the device.
             foreach (var actionMap in actions.actionMaps)
                 if (actionMap.IsUsableWithDevice(device))
                     return true;

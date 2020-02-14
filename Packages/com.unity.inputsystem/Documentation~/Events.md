@@ -1,5 +1,3 @@
->__Note__: Events are an advanced, mostly internal feature of the Input System. You don't need to understand them to use the Input System. Knowledge of the event system is mostly useful if you want to support custom Devices, or change the behavior of existing Devices.
-
 # Input events
 
 * [Types of events](#types-of-events)
@@ -12,8 +10,9 @@
     * [Creating events](#creating-events)
     * [Capturing events](#capturing-events)
 
-
 The Input System is event-driven. All input is delivered as events, and you can generate custom input by injecting events. You can also observe all source input by listening in on the events flowing through the system.
+
+>__Note__: Events are an advanced, mostly internal feature of the Input System. Knowledge of the event system is mostly useful if you want to support custom Devices, or change the behavior of existing Devices.
 
 Input events are a low-level mechanism. Usually, you don't need to deal with events if all you want to do is receive input for your app. Events are stored in unmanaged memory buffers and not converted to C# heap objects. The Input System provides wrapper APIs, but unsafe code is required for more involved event manipulations.
 
@@ -35,7 +34,7 @@ You can observe the events received for a specific input device in the [input de
 
 ### State events
 
-A state event contains input state for a Device. The Input System uses these events to feed new input to Devices.
+A state event contains the input state for a Device. The Input System uses these events to feed new input to Devices.
 
 There are two types of state events:
 
@@ -44,7 +43,7 @@ There are two types of state events:
 
 [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html) contains a full snapshot of the entire state of a Device in the format specific to that Device. The [`stateFormat`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html#UnityEngine_InputSystem_LowLevel_StateEvent_stateFormat) field identifies the type of the data in the event. You can access the raw data using the [`state`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html#UnityEngine_InputSystem_LowLevel_StateEvent_state) pointer and [`stateSizeInBytes`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html#UnityEngine_InputSystem_LowLevel_StateEvent_stateSizeInBytes).
 
-A [`DeltaStateEvent`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html) is like a [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html), but only contains a partial snapshot of the state of a Device. The backend usually sends this for Devices that require a large state record to reduce the amount of memory which needs to be updated if only some of the Controls change their state. You can access the raw data using the [`deltaState`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_deltaState) pointer and [`deltaStateSizeInBytes`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_deltaStateSizeInBytes). The data should be applied to the Device's state at the offset at [`stateOffset`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_stateOffset).
+A [`DeltaStateEvent`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html) is like a [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html), but only contains a partial snapshot of the state of a Device. The Input System usually sends this for Devices that require a large state record, to reduce the amount of memory it needs to update if only some of the Controls change their state. To access the raw data, you can use the [`deltaState`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_deltaState) pointer and [`deltaStateSizeInBytes`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_deltaStateSizeInBytes). The Input System should apply the data to the Device's state at the offset defined by [`stateOffset`](../api/UnityEngine.InputSystem.LowLevel.DeltaStateEvent.html#UnityEngine_InputSystem_LowLevel_DeltaStateEvent_stateOffset).
 
 ### Device events
 
@@ -107,7 +106,7 @@ Anyone can create and queue new input events against any existing Device. Queuei
 
 >__Note__: Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
 
-Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](Settings.md#update-mode), it can be triggered either manually via [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update), or automatically as part of the Player loop).
+Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](Settings.md#update-mode), it is triggered either manually via [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update), or automatically as part of the Player loop).
 
 #### Sending state events
 
@@ -137,7 +136,7 @@ Note that delta state events only work for Controls that are both byte-aligned a
 
 ### Capturing Events
 
->NOTE: You can find a sample using [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) called "Input Recorder" that comes with the Input System package. To install it, open the Package Manager inside Unity and click the "Input Recorder" sample that you can find when you select the Input System package. The sample contains a reusable MonoBehaviour called `InputRecorder` which can be used to capture and replay input from arbitrary devices.
+>NOTE: To download a sample project which contains a reusable MonoBehaviour called `InputRecorder`, which can capture and replay input from arbitrary devices, open the Package Manager, select the Input System Package, and choose the sample project "Input Recorder" to download.
 
 You can use the [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) class to record input events for later processing:
 
@@ -163,7 +162,7 @@ foreach (var eventPtr in trace)
 trace.Dispose();
 ```
 
-Event traces __MUST__ be disposed of after use or they will leak memory on the unmanaged (C++) memory heap.
+Dispose event traces after use, so that they do not leak memory on the unmanaged (C++) memory heap.
 
 You can also write event traces out to files/streams, load them back in, and replay recorded streams.
 

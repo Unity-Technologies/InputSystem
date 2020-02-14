@@ -4,7 +4,9 @@ A [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html) is narrowly defined a
 
 A gamepad can have additional Controls, such as a gyro, which the Device can expose. However, all gamepads are guaranteed to have at least the minimum set of Controls described above.
 
-Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. A PS4 DualShock controller, for example, is meant to look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
+Gamepad support guarantees the correct location and functioning of Controls across platforms and hardware. For example, a PS4 DualShock controller layout should look identical regardless of which platform it is supported on. A gamepad's south face button should always be the lowermost face button.
+
+>NOTE: In case you want to use the gamepad for driving mouse input, there is a sample called `Gamepad Mouse Cursor` you can install from the package manager UI when selecting the Input System package. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
 ## Controls
 
@@ -12,13 +14,13 @@ Every gamepad has the following Controls:
 
 |Control|Type|Description|
 |-------|----|-----------|
-|[`leftStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in D-pad-like fashion.|
-|[`rightStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use in D-pad-like fashion.|
+|[`leftStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the left side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use like a D-pad.|
+|[`rightStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStick)|[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|Thumbstick on the right side of the gamepad. Deadzoned. Provides a normalized 2D motion vector. X is [-1..1] from left to right, Y is [-1..1] from bottom to top. Has up/down/left/right buttons for use like a D-pad.|
 |[`dpad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_dpad)|[`DpadControl`](../api/UnityEngine.InputSystem.Controls.DpadControl.html)|The D-pad on the gamepad.|
-|[`buttonNorth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonNorth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The upper one of the four actions buttons, which are usually located on the right side of the gamepad. Labelled "Y" on Xbox controllers and "Triangle" on PlayStation controllers.|
-|[`buttonSouth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonSouth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The lower one of the four actions buttons, which are usually located on the right side of the gamepad. Labelled "A" on Xbox controllers and "Cross" on PlayStation controllers.|
-|[`buttonWest`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonWest)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left one of the four actions buttons, which are usually located on the right side of the gamepad. Labelled "X" on Xbox controllers and "Square" on PlayStation controllers.|
-|[`buttonEast`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonEast)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right one of the four actions buttons, which are usually located on the right side of the gamepad. Labelled "B" on Xbox controllers and "Circle" on PlayStation controllers.|
+|[`buttonNorth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonNorth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The upper button of the four action buttons, which are usually located on the right side of the gamepad. Labelled "Y" on Xbox controllers and "Triangle" on PlayStation controllers.|
+|[`buttonSouth`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonSouth)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The lower button of the four action buttons, which are usually located on the right side of the gamepad. Labelled "A" on Xbox controllers and "Cross" on PlayStation controllers.|
+|[`buttonWest`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonWest)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left button of the four action buttons, which are usually located on the right side of the gamepad. Labelled "X" on Xbox controllers and "Square" on PlayStation controllers.|
+|[`buttonEast`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_buttonEast)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right button of the four action buttons, which are usually located on the right side of the gamepad. Labelled "B" on Xbox controllers and "Circle" on PlayStation controllers.|
 |[`leftShoulder`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftShoulder)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left shoulder button.|
 |[`rightShoulder`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightShoulder)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The right shoulder button.|
 |[`leftTrigger`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_leftTrigger)|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|The left trigger button.|
@@ -72,6 +74,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
+
 [//]: # (TODO: are we missing any supported configs?)
 
 ### Pausing, resuming, and stopping haptics

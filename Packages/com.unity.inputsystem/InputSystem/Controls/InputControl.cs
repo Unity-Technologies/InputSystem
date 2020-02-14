@@ -22,6 +22,11 @@ using UnityEngine.InputSystem.Layouts;
 
 ////TODO: allow easier access to the default state such that you can easily create a state event containing only default state
 
+////TODO: come up with a way where we do ReadValue on the most common forms/setups of controls and not have any virtual method dispatch but
+////      rather go with minimal overhead directly to reading out memory
+////      (this should at least cover FLT, single BIT, and INT controls; and should be able to apply the common transformations
+////      as per AxisControl)
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
