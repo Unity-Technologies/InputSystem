@@ -143,7 +143,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     var editableParams = m_EditableParametersForEachListItem[i];
                     EditorGUILayout.BeginHorizontal();
                     if (editableParams.hasUIToShow)
-                        editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, Styles.s_FoldoutStyle);
+                        editableParams.visible = EditorGUILayout.Foldout(editableParams.visible, editableParams.name, true, Styles.s_FoldoutStyle);
                     else
                     {
                         GUILayout.Space(16);
