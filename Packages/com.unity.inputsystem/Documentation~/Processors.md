@@ -29,13 +29,13 @@ You can install Processors on [bindings](ActionBindings.md), [actions](Actions.m
 
 ### Processors on Bindings
 
-When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings to process the values read from the controls they bind to, before the system applies them to the Action value. For instance, you might want the `Vector2` values coming from the controls to be inverted along the Y axis before passing these values to the Action that drives the input logic for your app. You can do this by adding an [Invert Vector2](#invert-vector-2) Processor to your Binding.
+When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](#invert-vector-2) Processor to your Binding.
 
-If you're using [Input Action Assets](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor. Once you [created some Bindings](ActionAssets.md#editing-bindings), select the Binding you want to add Processors to so that the right pane of the window shows the properties for that Binding. Click on the plus icon on the __Processors__ foldout to open a list of all available Processors that match your control type. Then, choose a Processor type to add a Processor instance of that type. The Processor now shows under the __Processors__ foldout. If the Processor has any parameters, you can now edit them here as well:
+If you're using [Input Action Assets](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor. Select the Binding you want to add Processors to so that the right pane of the window displays the properties for that Binding. Select the Add (+) icon on the __Processors__ foldout to open a list of all available Processors that match your control type, then choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout. If the Processor has any parameters, you can edit them in the __Processors__ foldout.
 
 ![Binding Processors](Images/BindingProcessors.png)
 
-To remove a Processor, click the minus icon next to it. You can also click the up and down arrows to change the order of Processors. This affects the order in which the system processes values.
+To remove a Processor, click the Remove (-) icon next to it. You can also use the up and down arrows to change the order of Processors. This affects the order in which the system processes values.
 
 If you create your Bindings in code, you can add Processors like this:
 
@@ -47,7 +47,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 ### Processors on Actions
 
-Processors on Actions work in the same way as Processors on Bindings, but they affect all controls bound to an Action, not just the ones coming from a specific Binding. If there are Processors on both the Binding and the Action, the system processes the ones from the Binding first.
+Processors on Actions work in the same way as Processors on Bindings, but they affect all controls bound to an Action, rather than just the controls from a specific Binding. If there are Processors on both the Binding and the Action, the system processes the ones from the Binding first.
 
 You can add and edit Processors on Actions in [Input Action Assets](ActionAssets.md) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
 
@@ -59,11 +59,11 @@ var action = new InputAction(processors: "invertVector2(invertX=false)");
 
 ### Processors on Controls
 
-You can have any number Processors directly on an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), which then process the values read from the Control. Whenever you call [`ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) on a Control, all Processors on that Control will process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) on a Control to bypass the Processors.
+You can have any number of Processors directly on an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), which then process the values read from the Control. Whenever you call [`ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) on a Control, all Processors on that Control process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) on a Control to bypass the Processors.
 
-Processors get added to a Control during device creation, if they're specified in the Control's [layout](Layouts.md). You can't add Processors to existing Controls after they've been created, so you can only add Processors to Controls when you're [creating custom devices](Devices.md#creating-custom-devices). The devices that the Input System supports out of the box already have some useful Processors added on their Controls. For instance, sticks on gamepads have a [Stick Deadzone](#stick-deadzone) Processor.
+The Input System adds Processors to a Control during device creation, if they're specified in the Control's [layout](Layouts.md). You can't add Processors to existing Controls after they've been created, so you can only add Processors to Controls when you're [creating custom devices](Devices.md#creating-custom-devices). The devices that the Input System supports out of the box already have some useful Processors added on their Controls. For instance, sticks on gamepads have a [Stick Deadzone](#stick-deadzone) Processor.
 
-If you're using a layout generated by the Input System from a [state struct](Devices.md#step-1-the-state-struct) using [`InputControlAttributes`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), you can specify the Processors to use through the [`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors) property of the attribute, like this:
+If you're using a layout generated by the Input System from a [state struct](Devices.md#step-1-the-state-struct) using [`InputControlAttributes`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), you can specify the Processors you want to use via the [`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors) property of the attribute, like this:
 
 ```CSharp
 public struct MyDeviceState : IInputStateTypeInfo
@@ -80,7 +80,7 @@ public struct MyDeviceState : IInputStateTypeInfo
 
 If you [create a layout from JSON](Layouts.md#layout-from-json), you can specify Processors on your Controls like this:
 
-```
+```CSharp
 {
     "name" : "MyDevice",
     "extend" : "Gamepad", // Or some other thing
@@ -124,7 +124,7 @@ Clamps input values to the [`min`..`max`] range.
 |---|---|
 |__Operand Type__|`float`|
 
-Inverts (that is, multiplies by -1) the values from a Control.
+Inverts the values from a Control (that is, multiplies the values by -1).
 
 ### Invert Vector 2
 
@@ -133,7 +133,7 @@ Inverts (that is, multiplies by -1) the values from a Control.
 |__Operand Type__|`Vector2`|
 |__Parameters__|`bool invertX`<br>`bool invertY`|
 
-Inverts (that is, multiplies by -1) the values from a Control. Inverts the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
+Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
 
 ### Invert Vector 3
 
@@ -142,7 +142,7 @@ Inverts (that is, multiplies by -1) the values from a Control. Inverts the x axi
 |__Operand Type__|`Vector3`|
 |__Parameters__|`bool invertX`<br>`bool invertY`<br>`bool invertZ`|
 
-Inverts (that is, multiplies by -1) the values from a Control. Inverts the x axis of the vector if `invertX` is true, the y axis if `invertY` is true, and the z axis if `invertZ` is true.
+Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, the y axis if `invertY` is true, and the z axis if `invertZ` is true.
 
 ### Normalize
 

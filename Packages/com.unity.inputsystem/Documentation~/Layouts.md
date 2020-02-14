@@ -1,12 +1,12 @@
->__Note__: Layouts are an advanced, mostly internal feature of the Input System. You don't need to understand them to use the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
-
 # Layouts
-
-A layout describes a memory format for input, and the Input Controls to build in order to read and write data to or from that memory.
 
 Layouts are the central mechanism by which the Input System learns about types of Input Devices and Input Controls. Each layout represents a specific composition of Input Controls. By matching the description of a Device to a layout, the Input System is able to create the correct type of Device and interpret the incoming input data correctly.
 
-The Input System ships with a large set of layouts for common Control types, as well as for common Devices. For other Device types, the system automatically generates layouts on the fly based on the Device description that the Device's interface reports.
+>__Note__: Layouts are an advanced, mostly internal feature of the Input System. Knowledge of the layout system is mostly useful if you want to support custom Devices or change the behavior of existing Devices.
+
+A layout describes a memory format for input, and the Input Controls to build in order to read and write data to or from that memory.
+
+The Input System ships with a large set of layouts for common Control types and common Devices. For other Device types, the system automatically generates layouts based on the Device description that the Device's interface reports.
 
 You can browse the set of currently understood layouts from the Input Debugger.
 
@@ -19,7 +19,7 @@ A layout has two primary functions:
 
 A layout can either be for a Control on a Device (for example, `Stick`), or for a Device itself (that is, anything based on [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html)).
 
-The Input System only loads layouts when needed - usually, when creating a new Device. You can manually load a layout using [`InputSystem.LoadLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_LoadLayout_System_String_). This returns an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instance which contains the final, fully merged (that is, containing any information inherited from base layouts and/or affected by layout overrides) structure of the layout.
+The Input System only loads layouts when they are needed (usually, when creating a new Device). To manually load a layout, you can use [`InputSystem.LoadLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_LoadLayout_System_String_). This returns an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instance, which contains the final, fully merged (that is, containing any information inherited from base layouts and/or affected by layout overrides) structure of the layout.
 
 You can register new layouts through [`InputSystem.RegisterLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout_System_String_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__).
 
@@ -40,7 +40,7 @@ In its most basic form, a layout can be expressed by a C# class derived from:
 
 ```CSharp
 // The InputControlLayout attribute is not strictly necessary here.
-// However, it can be used to set additional properties (such as
+// However, you can use it to set additional properties (such as
 // a custom display name for the layout).
 [InputControlLayout]
 public class MyDevice : InputDevice
@@ -69,15 +69,15 @@ InputSystem.RegisterLayout<MyDevice>();
 When the layout is instantiated, the system looks at every field and property defined directly in the type to potentially turn it into one or more [Control items](#control-items).
 
 1. If the field or property is annotated with [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), the system applies the attribute's properties to the Control item. Some special defaults apply in this case:
-    * If no [`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset) is set and the attribute is applied to a field, [`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset) defaults to the offset of the field.
+    * If no [`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset) is set, and the attribute is applied to a field, [`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset) defaults to the offset of the field.
     * If no [`name`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_name) is set, it defaults to the name of the property/field.
     * If no [`layout`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_layout) is set, the system infers it from the type of the field/property.
 2. If the field or property has a struct type which implements [`IInputStateTypeInfo`](../api/UnityEngine.InputSystem.LowLevel.IInputStateTypeInfo.html), the field is considered to be an embedded [state struct](#using-a-state-structure) and the system recurses into the field or property to gather Controls from it.
-3. Otherwise, if the type of the field or property is based on [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), the system adds a [Control item](#control-items) similar to case 1) when the member is annotated with [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html).
+3. Otherwise, if the type of the field or property is based on [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), the system adds a [Control item](#control-items) similar to case 1, where the member is annotated with [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html).
 
 #### Using a state structure
 
-When you implement support for a new Input Device, there's usually an existing data format in which input for the Device is received. The easiest way to add support for the given data format is to describe it with a C# struct annotated with [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html).
+When you implement support for a new Input Device, there's usually an existing data format in which the Input System receives input for the Device. The easiest way to add support for the data format is to describe it with a C# struct annotated with [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html).
 
 ```CSharp
 public struct MyDeviceState : IInputStateTypeInfo
@@ -109,7 +109,7 @@ public class MyDevice : InputDevice
 
 ### Layout from JSON
 
-You can also create a layout from a JSON string that contains the same information. This is mostly useful if you want to be able to store and transfer layout information separate from your code - for instance, if you want to be able to add support for new Devices dynamically without making a new build of your app. You can use [`InputControlLayout.ToJson()`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html#UnityEngine_InputSystem_Layouts_InputControlLayout_ToJson) and [`InputControlLayout.FromJson()`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html#UnityEngine_InputSystem_Layouts_InputControlLayout_FromJson_System_String_) to convert layouts to and from the format.
+You can also create a layout from a JSON string that contains the same information. This is mostly useful if you want to be able to store and transfer layout information separate from your code - for instance, if you want to be able to add support for new Devices dynamically without making a new build of your application. You can use [`InputControlLayout.ToJson()`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html#UnityEngine_InputSystem_Layouts_InputControlLayout_ToJson) and [`InputControlLayout.FromJson()`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html#UnityEngine_InputSystem_Layouts_InputControlLayout_FromJson_System_String_) to convert layouts to and from the format.
 
 The same layout as above looks like this in JSON format:
 
@@ -257,7 +257,7 @@ The following table details the properties that a Control item can have. These c
 
 |Property|Description|
 |--------|-----------|
-|[`name`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_name)|Name of the Control.<br>Defaults to the name of the field/property that [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) is applied to.|
+|[`name`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_name)|Name of the Control.<br>By default, this is the name of the field/property that [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) is applied to.|
 |[`displayName`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_displayName)|Display name of the Control (for use in UI strings).|
 |[`shortDisplayName`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_shortDisplayName)|Short display name of the Control (for use in UI strings).|
 |[`layout`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_layout)|Layout to use for the Control.|
