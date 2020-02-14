@@ -158,6 +158,10 @@ namespace UnityEngine.InputSystem
                 {
                     var map = maps[i];
 
+                    // Remove state change monitors.
+                    if (map.enabled)
+                        DisableControls(i, mapIndices[i].controlStartIndex, mapIndices[i].controlCount);
+
                     if (map.m_Asset != null)
                         map.m_Asset.m_SharedStateForAllMaps = null;
 
@@ -3056,7 +3060,7 @@ namespace UnityEngine.InputSystem
         ///
         /// Both of these needs are served by this global list.
         /// </remarks>
-        private static InlinedArray<GCHandle> s_GlobalList;
+        internal static InlinedArray<GCHandle> s_GlobalList;
         internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
 
         private void AddToGlobaList()
