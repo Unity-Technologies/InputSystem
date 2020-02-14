@@ -1130,6 +1130,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: this path should really put the device on the list of available devices
+        ////TODO: this path should discover disconnected devices
         public InputDevice AddDevice(InputDeviceDescription description)
         {
             ////REVIEW: is throwing here really such a useful thing?

@@ -12,7 +12,10 @@ internal partial class CoreTests
     [Preserve]
     class InteractionThatOnlyPerforms : IInputInteraction<float>
     {
+        // Get rid of unused field warning.
+        #pragma warning disable CS0649
         public bool stayPerformed;
+        #pragma warning restore CS0649
 
         public void Process(ref InputInteractionContext context)
         {

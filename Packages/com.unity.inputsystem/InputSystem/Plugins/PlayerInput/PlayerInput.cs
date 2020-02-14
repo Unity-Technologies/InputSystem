@@ -407,6 +407,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: this is inconsistent; currentControlScheme is a string, this is an InputActionMap
         /// <summary>
         /// The currently enabled action map.
         /// </summary>

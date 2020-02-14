@@ -662,6 +662,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
+        ////NOTE: This must not enable only a partial set of controls on a binding (currently we have no setup that would lead to that)
         private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null, "State must have controls");
@@ -674,11 +675,18 @@ namespace UnityEngine.InputSystem
             {
                 var controlIndex = controlStartIndex + i;
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
-                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                if (bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = true;
+                // We don't want to add multiple state monitors for the same control. This can happen if enabling
+                // single actions is mixed with enabling actions maps containing them.
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (bindingStatePtr->areControlsEnabled)
+                    continue;
+
+                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    bindingStatePtr->initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+                bindingStatePtr->areControlsEnabled = true;
             }
         }
 
@@ -694,11 +702,16 @@ namespace UnityEngine.InputSystem
             {
                 var controlIndex = controlStartIndex + i;
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
-                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
-                if (bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = false;
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (!bindingStatePtr->areControlsEnabled)
+                    continue;
+
+                var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    bindingStatePtr->initialStateCheckPending = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+                bindingStatePtr->areControlsEnabled = false;
             }
         }
 
@@ -2225,6 +2238,7 @@ namespace UnityEngine.InputSystem
                 PartOfComposite = 1 << 3,
                 InitialStateCheckPending = 1 << 4,
                 WantsInitialStateCheck = 1 << 5,
+                ControlsEnabled = 1 << 6, ////REVIEW: should this one move to a separate array for just controls?
             }
 
             /// <summary>
@@ -2488,6 +2502,18 @@ namespace UnityEngine.InputSystem
                         flags |= Flags.WantsInitialStateCheck;
                     else
                         flags &= ~Flags.WantsInitialStateCheck;
+                }
+            }
+
+            public bool areControlsEnabled
+            {
+                get => (flags & Flags.ControlsEnabled) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.ControlsEnabled;
+                    else
+                        flags &= ~Flags.ControlsEnabled;
                 }
             }
 
