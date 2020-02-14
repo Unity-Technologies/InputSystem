@@ -1,11 +1,11 @@
 using System;
-using UnityEditor;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
