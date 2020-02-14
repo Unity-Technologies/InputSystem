@@ -26,7 +26,7 @@ Additional to the [Controls inherited from `Pointer`](Pointers.md#controls), tou
 |[`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches)|[`ReadOnlyArray<TouchControl>`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|An array of touch Controls that represents all the touches on the Device.|
 
 A touch screen Device consists of multiple [`TouchControls`](../api/UnityEngine.InputSystem.Controls.TouchControl.html). Each of these represents a potential finger touching the Device. The [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) Control represents the touch which is currently driving the [`Pointer`](Pointers.md) representation, and which should be used to interact with the UI. This is usually the first finger that touches the screen.
- 
+
  [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch) is always identical to one of the entries in the [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array. The [`touches`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_touches) array contains all the touches that the system can track. This array has a fixed size, regardless of how many touches are currently active. If you need an API that only represents active touches, see the higher-level [`EnhancedTouch.Touch` class](#enhancedtouchtouch-class).
 
 Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html) on the Device, including [`primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch), is made up of the following child Controls:
@@ -49,7 +49,7 @@ Each [`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)
 
 You can use touch input with Actions, like any other [`Pointer`](Pointers.md) Device. To do this, [bind](ActionBindings.md) to the [pointer Controls](Pointers.md#controls), like `<Pointer>/press` or `<Pointer>/delta`. This gets input from the primary touch, and any other non-touch pointer Devices.
 
-However, if you want to get input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`. Alternatively, use a wildcard Binding to bind one Action to all touches: `<Touchscreen>/touch*/press`. 
+However, if you want to get input from multiple touches in your Action, you can bind to individual touches by using Bindings like `<Touchscreen>/touch3/press`. Alternatively, use a wildcard Binding to bind one Action to all touches: `<Touchscreen>/touch*/press`.
 
 If you bind a single Action to input from multiple touches, you should set the Action type to [pass-through](Actions.md#pass-through) so the Action gets callbacks for each touch, instead of just one.
 

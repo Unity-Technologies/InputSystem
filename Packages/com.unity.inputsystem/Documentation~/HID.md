@@ -220,6 +220,6 @@ public DualShock4GamepadHID : Gamepad
 }
 ```
 
-Your custom layout now picks up any Device that matches the manufacturer and product name strings, or the vendor and product IDs in its HID descriptor. The Input System now represents a `DualShock4GamepadHID` Device instance. 
+Your custom layout now picks up any Device that matches the manufacturer and product name strings, or the vendor and product IDs in its HID descriptor. The Input System now represents a `DualShock4GamepadHID` Device instance.
 
 For more information, you can also read the [Device matching](Devices.md#matching) documentation.

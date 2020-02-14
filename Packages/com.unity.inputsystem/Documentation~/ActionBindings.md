@@ -292,9 +292,9 @@ You can override this behavior by restricting [`InputActionAssets`](../api/Unity
 
 ## Disambiguation
 
-If multiple Controls are bound to an Action, the Input System monitors input from each bound Control to feed the Action. The Input System must also define which of the bound controls to use for the value of the action. For example, if you have a Binding to `<Gamepad>/leftStick`, and you have multiple connected gamepads, the Input System must determine which gamepad's stick provides the input value for the Action. 
+If multiple Controls are bound to an Action, the Input System monitors input from each bound Control to feed the Action. The Input System must also define which of the bound controls to use for the value of the action. For example, if you have a Binding to `<Gamepad>/leftStick`, and you have multiple connected gamepads, the Input System must determine which gamepad's stick provides the input value for the Action.
 
-This Control is the "driving" Control; the Control which is driving the Action. Unity decides which Control is currently driving the Action in a process called disambiguation. 
+This Control is the "driving" Control; the Control which is driving the Action. Unity decides which Control is currently driving the Action in a process called disambiguation.
 
 During the disambiguation process, the Input System looks at the value of each Control bound to an Action. If the [magnitude](Controls.md#control-actuation) of the input from any Control is higher then the magnitude of the Control currently driving the Action, then the Control with the higher magnitude becomes the new Control driving the Action. In the above example of `<Gamepad>/leftStick` binding to multiple gamepads, the Control driving the Action is the left stick which is actuated the furthest of all the gamepads. You can query which Control is currently driving the Action by checking the [`InputAction.CallbackContext.control`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_control) property in an [Action callback](Actions.md#started-performed-and-canceled-callbacks).
 
@@ -308,7 +308,7 @@ Actions with the type set to [Button](Actions.md#button) don't perform any initi
 
 ## Runtime rebinding
 
-Runtime rebinding allows users of your application to set their own Bindings. 
+Runtime rebinding allows users of your application to set their own Bindings.
 
 >NOTE: To download a sample project which demonstrates how to set up a rebinding user interface with Input System APIs, open the Package Manager, select the Input System Package, and choose the sample project "Rebinding UI" to download.
 

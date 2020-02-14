@@ -243,7 +243,7 @@ public class MyWiggleInteraction : IInputInteraction
 
     // Unlike processors, Interactions can be stateful, meaning that you can keep a
     // local state that mutates over time as input is received. The system might
-    // invoke the Reset() method to ask Interactions to reset to the local state 
+    // invoke the Reset() method to ask Interactions to reset to the local state
     // at certain points.
     void Reset()
     {

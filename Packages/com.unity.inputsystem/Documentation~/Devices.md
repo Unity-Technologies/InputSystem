@@ -378,7 +378,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
 This registers the Device type with the system and makes it available in the Control picker. However, you still need a way to add an instance of the Device when it is connected.
 
-In theory, you could call [`InputSystem.AddDevice<MyDevice>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) somewhere, but in a real-world setup you likely have to correlate the Input Devices you create with their identities in the third-party API. 
+In theory, you could call [`InputSystem.AddDevice<MyDevice>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) somewhere, but in a real-world setup you likely have to correlate the Input Devices you create with their identities in the third-party API.
 
 It might be tempting to do something like this:
 
@@ -453,7 +453,7 @@ public class MyDeviceSupport : MonoBehaviour
     }
 
     // Move the registration of MyDevice from the
-    // static constructor to here, and change the 
+    // static constructor to here, and change the
     // registration to also supply a matcher.
     protected void Awake()
     {
