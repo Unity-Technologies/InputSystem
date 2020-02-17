@@ -472,9 +472,10 @@ namespace UnityEngine.InputSystem
             Debug.Assert(map.m_Actions != null, "Map must have actions");
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
+            // Enable all controls in map that aren't already enabled.
             EnableControls(map);
 
-            // Put all actions into waiting state.
+            // Put all actions that aren't already enbaled into waiting state.
             var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
             var actionCount = mapIndices[mapIndex].actionCount;
@@ -482,7 +483,8 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < actionCount; ++i)
             {
                 var actionIndex = actionStartIndex + i;
-                actionStates[actionIndex].phase = InputActionPhase.Waiting;
+                if (actionStates[actionIndex].isDisabled)
+                    actionStates[actionIndex].phase = InputActionPhase.Waiting;
             }
             map.m_EnabledActionsCount = actionCount;
 
