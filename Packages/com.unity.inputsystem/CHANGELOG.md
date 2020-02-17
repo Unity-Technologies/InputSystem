@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Mixing the enabling&disabling of single actions (as, for example, performed by `InputSystemUIInputModule`) with enabling&disabling of entire action maps (as, for example, performed by `PlayerInput`) no longer leaves to unresponsive input and `"should not reach here"` assertions ([forum thread](https://forum.unity.com/threads/error-while-switching-between-action-maps.825204/)).
 - Leaving play mode no longer leaves state change monitors lingering around from enabled actions.
+- `PressInteraction` no longer misses the next button press if it gets reset from within the `performed` callback ([case 1205285](https://issuetracker.unity3d.com/issues/inputsystem-problem-with-button-state-after-deactivating-and-reactivating-an-action-map)).
 
 ## [1.0.0-preview.5] - 2020-02-14
 

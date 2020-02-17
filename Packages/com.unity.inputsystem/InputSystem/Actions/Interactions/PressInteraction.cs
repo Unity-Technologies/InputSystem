@@ -74,8 +74,8 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        context.PerformedAndStayPerformed();
                         m_WaitingForRelease = true;
+                        context.PerformedAndStayPerformed();
                     }
                     break;
 
@@ -88,25 +88,25 @@ namespace UnityEngine.InputSystem.Interactions
                     }
                     else if (isActuated)
                     {
-                        context.Started();
                         m_WaitingForRelease = true;
+                        context.Started();
                     }
                     break;
 
                 case PressBehavior.PressAndRelease:
                     if (m_WaitingForRelease)
                     {
+                        m_WaitingForRelease = isActuated;
                         if (!isActuated)
                         {
                             context.Performed();
                             context.Canceled();
                         }
-                        m_WaitingForRelease = isActuated;
                     }
                     else if (isActuated)
                     {
-                        context.PerformedAndStayPerformed();
                         m_WaitingForRelease = true;
+                        context.PerformedAndStayPerformed();
                     }
                     break;
             }
