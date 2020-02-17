@@ -6320,7 +6320,7 @@ partial class CoreTests
         map.AddBinding("<Gamepad>/buttonNorth", action: "DoesNotExist");
 
         // Also try the same for a composite binding.
-        map.AddBinding(new InputBinding { path = "1DAxis", isComposite = true });
+        map.AddBinding(new InputBinding { path = "1DAxis", isComposite = true, action = "DoesNotExist" });
         map.AddBinding(new InputBinding { name = "Positive", path = "<Gamepad>/leftTrigger", isPartOfComposite = true });
         map.AddBinding(new InputBinding { name = "Negative", path = "<Gamepad>/rightTrigger", isPartOfComposite = true });
 
