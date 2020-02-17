@@ -1161,53 +1161,33 @@ partial class CoreTests
         var action = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/*stick");
         action.Enable();
 
-        using (var trace = new InputActionTrace())
+        using (var trace = new InputActionTrace(action))
         {
-            trace.SubscribeTo(action);
-
             Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))));
 
             trace.Clear();
 
             Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))));
 
             trace.Clear();
 
             Set(gamepad.rightStick, new Vector2(0.123f, 0.234f));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.rightStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))));
 
             trace.Clear();
 
             Set(gamepad.rightStick, Vector2.zero);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.rightStick, Vector2.zero));
         }
     }
 
@@ -5786,7 +5766,6 @@ partial class CoreTests
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
         asset.Enable();
-
 
         InputControl performedControl1 = null;
         InputControl performedControl2 = null;

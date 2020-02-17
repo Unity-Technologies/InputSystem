@@ -110,6 +110,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
+        public int* enabledControls => memory.enabledControls;
 
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
@@ -678,19 +679,20 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
-                var bindingIndex = controlIndexToBindingIndex[controlIndex];
 
                 // We don't want to add multiple state monitors for the same control. This can happen if enabling
                 // single actions is mixed with enabling actions maps containing them.
-                var bindingStatePtr = &bindingStates[bindingIndex];
-                if (bindingStatePtr->areControlsEnabled)
+                if (IsControlEnabled(controlIndex))
                     continue;
 
+                var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     bindingStatePtr->initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
-                bindingStatePtr->areControlsEnabled = true;
+
+                SetControlEnabled(controlIndex, true);
             }
         }
 
@@ -705,18 +707,36 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
-                var bindingIndex = controlIndexToBindingIndex[controlIndex];
-
-                var bindingStatePtr = &bindingStates[bindingIndex];
-                if (!bindingStatePtr->areControlsEnabled)
+                if (!IsControlEnabled(controlIndex))
                     continue;
 
+                var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     bindingStatePtr->initialStateCheckPending = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
-                bindingStatePtr->areControlsEnabled = false;
+
+                SetControlEnabled(controlIndex, false);
             }
+        }
+
+        private bool IsControlEnabled(int controlIndex)
+        {
+            var intIndex = controlIndex / 32;
+            var intMask = 1 << (controlIndex % 32);
+            return (enabledControls[intIndex] & intMask) != 0;
+        }
+
+        private void SetControlEnabled(int controlIndex, bool state)
+        {
+            var intIndex = controlIndex / 32;
+            var intMask = 1 << (controlIndex % 32);
+
+            if (state)
+                enabledControls[intIndex] |= intMask;
+            else
+                enabledControls[intIndex] &= ~intMask;
         }
 
         private void HookOnBeforeUpdate()
@@ -2242,7 +2262,6 @@ namespace UnityEngine.InputSystem
                 PartOfComposite = 1 << 3,
                 InitialStateCheckPending = 1 << 4,
                 WantsInitialStateCheck = 1 << 5,
-                ControlsEnabled = 1 << 6, ////REVIEW: should this one move to a separate array for just controls?
             }
 
             /// <summary>
@@ -2506,18 +2525,6 @@ namespace UnityEngine.InputSystem
                         flags |= Flags.WantsInitialStateCheck;
                     else
                         flags &= ~Flags.WantsInitialStateCheck;
-                }
-            }
-
-            public bool areControlsEnabled
-            {
-                get => (flags & Flags.ControlsEnabled) != 0;
-                set
-                {
-                    if (value)
-                        flags |= Flags.ControlsEnabled;
-                    else
-                        flags &= ~Flags.ControlsEnabled;
                 }
             }
 
@@ -2890,7 +2897,8 @@ namespace UnityEngine.InputSystem
                 compositeCount * sizeof(float) + // compositeMagnitudes
                 controlCount * sizeof(int) + // controlIndexToBindingIndex
                 actionCount * sizeof(ushort) * 2 + // actionBindingIndicesAndCounts
-                bindingCount * sizeof(ushort); // actionBindingIndices
+                bindingCount * sizeof(ushort) + // actionBindingIndices
+                (controlCount + 31) / 32 * sizeof(int); // enabledControlsArray
 
             /// <summary>
             /// Trigger state of all actions added to the state.
@@ -2932,6 +2940,8 @@ namespace UnityEngine.InputSystem
             public float* controlMagnitudes;
 
             public float* compositeMagnitudes;
+
+            public int* enabledControls;
 
             /// <summary>
             /// Array of pair of ints, one pair for each action (same index as <see cref="actionStates"/>). First int
@@ -2983,6 +2993,7 @@ namespace UnityEngine.InputSystem
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
+                enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
             }
 
             public void Dispose()
@@ -3027,6 +3038,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
+                UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
             }
 
             public UnmanagedMemory Clone()
