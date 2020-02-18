@@ -6308,6 +6308,28 @@ partial class CoreTests
         Assert.That(action2.enabled, Is.False);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1213085 (bindings that refer to non-existent actions should not lead to errors)
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanEnableAndDisableEntireMap_EvenWhenBindingsReferToNonExistentActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        map.AddAction("action", binding: "<Gamepad>/buttonSouth");
+        map.AddBinding("<Gamepad>/buttonNorth", action: "DoesNotExist");
+
+        // Also try the same for a composite binding.
+        map.AddBinding(new InputBinding { path = "1DAxis", isComposite = true, action = "DoesNotExist" });
+        map.AddBinding(new InputBinding { name = "Positive", path = "<Gamepad>/leftTrigger", isPartOfComposite = true });
+        map.AddBinding(new InputBinding { name = "Negative", path = "<Gamepad>/rightTrigger", isPartOfComposite = true });
+
+        Assert.That(() => map.Enable(), Throws.Nothing);
+
+        Assert.That(() => Press(gamepad.buttonNorth), Throws.Nothing);
+        Assert.That(() => Press(gamepad.leftTrigger), Throws.Nothing);
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanEnableAndDisableSingleActionFromMap()
