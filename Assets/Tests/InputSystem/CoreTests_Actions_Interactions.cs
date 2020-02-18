@@ -1,10 +1,10 @@
 using System.Linq;
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.XR;
 using UnityEngine.Scripting;
 
 internal partial class CoreTests
@@ -188,6 +188,47 @@ internal partial class CoreTests
                 Started<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, value: 1.0)
                     .AndThen(Performed<PressInteraction>(pressAndReleaseAction, gamepad.buttonSouth, time: 5, duration: 0, value: 1.0)));
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1205285/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformPressInteraction_AndTriggerInteractionResetInCallback()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        var action1 = map1.AddAction("action1");
+        var action2 = map2.AddAction("action2");
+        // PressInteraction used to set some local state *after* trigger callbacks. This meant that if the
+        // callback triggered a Reset() call, PressInteraction would then overwrite state from the reset.
+        action1.AddBinding("<Keyboard>/a", interactions: "press(behavior=0)");
+        action2.AddBinding("<Keyboard>/b", interactions: "press(behavior=0)");
+
+        action1.performed += _ => { map1.Disable(); map2.Enable(); };
+        action2.performed += _ => { map2.Disable(); map1.Enable(); };
+
+        map1.Enable();
+
+        PressAndRelease(keyboard.aKey);
+
+        Assert.That(map1.enabled, Is.False);
+        Assert.That(map2.enabled, Is.True);
+
+        PressAndRelease(keyboard.bKey);
+
+        Assert.That(map1.enabled, Is.True);
+        Assert.That(map2.enabled, Is.False);
+
+        PressAndRelease(keyboard.aKey);
+
+        Assert.That(map1.enabled, Is.False);
+        Assert.That(map2.enabled, Is.True);
     }
 
     [Test]
