@@ -3,6 +3,7 @@
 * [`Touchscreen` Device](#touchscreen-device)
 * [`Touch` class](#enhancedtouchtouch-class)
     * [Using Touch with Actions](#using-touch-with-actionsactionsmd)
+* [Touch Simulation](#touch-simulation)
 
 Touch support is divided into:
 * low-level support implemented in the [`Touchscreen`](#touchscreen-device) class.
@@ -76,3 +77,18 @@ The [`EnhancedTouch.Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.h
 See [`EnhancedTouch.Touch` API documentation](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) for more details.
 
 >__Note__: The [`Touch`](../api/UnityEngine.InputSystem.EnhancedTouch.Touch.html) and [`Finger`](../api/UnityEngine.InputSystem.EnhancedTouch.Finger.html) APIs don't generate GC garbage. The bulk of the data is stored in unmanaged memory that is indexed by wrapper structs. All arrays are pre-allocated.
+
+## Touch Simulation
+
+Touch input can be simulated from input on other kinds of [Pointer](./Pointers.md) devices such as [Mouse](./Mouse.md) and [Pen](./Pen.md) devices. To enable this, you can either add the [`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) `MonoBehaviour` to a `GameObject` in your scene or simply call [`TouchSimulation.Enable`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html#UnityEngine_InputSystem_EnhancedTouch_TouchSimulation_Enable) somewhere in your startup code.
+
+```CSharp
+    void OnEnable()
+    {
+        TouchSimulation.Enable();
+    }
+```
+
+In the editor, you can also enable touch simulation by toggling "Simulate Touch Input From Mouse or Pen" on in the "Options" dropdown of the [Input Debugger](./Debugging.md).
+
+[`TouchSimulation`](../api/UnityEngine.InputSystem.EnhancedTouch.TouchSimulation.html) will add a [`Touchscreen`](../api/UnityEngine.InputSystem.Touchscreen.html) device and automatically mirror input on any [`Pointer`](../api/UnityEngine.InputSystem.Pointer.html) device to the virtual touchscreen device.
