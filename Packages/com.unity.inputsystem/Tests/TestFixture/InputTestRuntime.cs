@@ -26,6 +26,8 @@ namespace UnityEngine.InputSystem
     {
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
+        public bool hasFocus => m_HasFocus;
+
         ~InputTestRuntime()
         {
             Dispose();
@@ -197,6 +199,7 @@ namespace UnityEngine.InputSystem
 
         public void InvokePlayerFocusChanged(bool newFocusState)
         {
+            m_HasFocus = newFocusState;
             onPlayerFocusChanged?.Invoke(newFocusState);
         }
 
@@ -365,6 +368,7 @@ namespace UnityEngine.InputSystem
 
         public int eventCount => m_EventCount;
 
+        private bool m_HasFocus = true;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;

@@ -1,0 +1,13 @@
+apiRules:
+  - exclude:
+      # inherited Object methods
+      uidRegex: ^System\.Object\..*$
+      type: Method
+  - exclude:
+      hasAttribute:
+        uid: System.ObsoleteAttribute
+      type: Member
+  - exclude:
+      hasAttribute:
+        uid: System.ObsoleteAttribute
+      type: Type

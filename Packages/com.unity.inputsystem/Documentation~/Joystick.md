@@ -1,6 +1,6 @@
 # Joystick support
 
-The Input System currently has limited support for joysticks as generic [HIDs](HID.md) only. The system makes a best effort to identify Controls based on the information provided in the HID descriptor of the Device, but might not always be accurate. These Devices often work best when allowing the user to manually [manually remap the Controls](HowDoI.md#create-a-ui-to-rebind-input-in-my-game).
+The Input System currently has limited support for joysticks as generic [HIDs](HID.md) only. The system attempts to identify Controls based on the information provided in the HID descriptor of the Device, but it might not always be accurate. These Devices often work best when you allow the user to [manually remap the Controls](HowDoI.md#create-a-ui-to-rebind-input-in-my-game).
 
 To better support specific joysticks Devices, you can also [provide your own custom mappings for those Devices](HID.md#overriding-the-hid-fallback). Unity might extend the Input System to include some mappings for common devices in the future. See the [manual page on HID](HID.md) for more information.
 

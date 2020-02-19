@@ -17,8 +17,6 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: ensure that things are aligned properly for ARM; should that be done on the reading side or in the state layouts?
 ////       (make sure that alignment works the same on *all* platforms; otherwise editor will not be able to process events from players properly)
 
-////FIXME: looks like `useStateFrom` is not working properly in combination with isModifyingExistingControl
-
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
@@ -202,28 +200,13 @@ namespace UnityEngine.InputSystem.Layouts
             // controls, assign them their blocks now.
             if (haveChildrenUsingStateFromOtherControl)
             {
-                foreach (var controlLayout in layout.controls)
+                var controls = layout.m_Controls;
+                for (var i = 0; i < controls.Length; ++i)
                 {
-                    if (string.IsNullOrEmpty(controlLayout.useStateFrom))
+                    ref var item = ref controls[i];
+                    if (string.IsNullOrEmpty(item.useStateFrom))
                         continue;
-
-                    var child = InputControlPath.TryFindChild(control, controlLayout.name);
-                    Debug.Assert(child != null, "Could not find child control which should be present at this point");
-
-                    // Find the referenced control.
-                    var referencedControl = InputControlPath.TryFindChild(control, controlLayout.useStateFrom);
-                    if (referencedControl == null)
-                        throw new InvalidOperationException(
-                            $"Cannot find control '{controlLayout.useStateFrom}' referenced in 'useStateFrom' of control '{controlLayout.name}' in layout '{layout.name}'");
-
-                    // Copy its state settings.
-                    child.m_StateBlock = referencedControl.m_StateBlock;
-
-                    // At this point, all byteOffsets are relative to parents so we need to
-                    // walk up the referenced control's parent chain and add offsets until
-                    // we are at the same level that we are at.
-                    for (var parentInChain = referencedControl.parent; parentInChain != control; parentInChain = parentInChain.parent)
-                        child.m_StateBlock.byteOffset += parentInChain.m_StateBlock.byteOffset;
+                    ApplyUseStateFrom(control, ref item, layout);
                 }
             }
 
@@ -572,6 +555,28 @@ namespace UnityEngine.InputSystem.Layouts
                 ref haveChildrenUsingStateFromOtherControls, controlItem, childIndex, controlName);
 
             return control;
+        }
+
+        private static void ApplyUseStateFrom(InputControl parent, ref InputControlLayout.ControlItem controlItem, InputControlLayout layout)
+        {
+            var child = InputControlPath.TryFindChild(parent, controlItem.name);
+            Debug.Assert(child != null, "Could not find child control which should be present at this point");
+
+            // Find the referenced control.
+            var referencedControl = InputControlPath.TryFindChild(parent, controlItem.useStateFrom);
+            if (referencedControl == null)
+                throw new InvalidOperationException(
+                    $"Cannot find control '{controlItem.useStateFrom}' referenced in 'useStateFrom' of control '{controlItem.name}' in layout '{layout.name}'");
+
+            // Copy its state settings.
+            child.m_StateBlock = referencedControl.m_StateBlock;
+
+            // At this point, all byteOffsets are relative to parents so we need to
+            // walk up the referenced control's parent chain and add offsets until
+            // we are at the same level that we are at.
+            if (child.parent != referencedControl.parent)
+                for (var parentInChain = referencedControl.parent; parentInChain != parent; parentInChain = parentInChain.parent)
+                    child.m_StateBlock.byteOffset += parentInChain.m_StateBlock.byteOffset;
         }
 
         private static void ShiftChildIndicesInHierarchyOneUp(InputDevice device, int startIndex, InputControl exceptControl)

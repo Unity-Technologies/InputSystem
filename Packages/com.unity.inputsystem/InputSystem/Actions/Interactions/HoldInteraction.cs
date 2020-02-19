@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
@@ -13,7 +12,16 @@ namespace UnityEngine.InputSystem.Interactions
     /// </summary>
     /// <remarks>
     /// The action is started when the control is pressed. If the control is released before the
-    /// set <see cref="duration"/>, the action is canceled.
+    /// set <see cref="duration"/>, the action is canceled. As soon as the hold time is reached,
+    /// the action performs. The action then stays performed until the control is released, at
+    /// which point the action cancels.
+    ///
+    /// <example>
+    /// <code>
+    /// // Action that requires A button on gamepad to be held for half a second.
+    /// var action = new InputAction(binding: "&lt;Gamepad&gt;/buttonSouth", interactions: "hold(duration=0.5)");
+    /// </code>
+    /// </example>
     /// </remarks>
     [Preserve]
     [DisplayName("Hold")]
@@ -50,7 +58,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             if (context.timerHasExpired)
             {
-                context.Performed();
+                context.PerformedAndStayPerformed();
                 return;
             }
 

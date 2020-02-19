@@ -272,53 +272,56 @@ namespace UnityEngine.InputSystem
 
         public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null)
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control, time: time);
+            return new ActionConstraint(InputActionPhase.Started, action, control, time: time, duration: 0);
         }
 
         public ActionConstraint Started<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
             where TValue : struct
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time);
+            return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time, duration: 0);
         }
 
-        public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null, double? duration = null)
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control, time: time);
+            return new ActionConstraint(InputActionPhase.Performed, action, control, time: time, duration: duration);
         }
 
-        public ActionConstraint Performed<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+        public ActionConstraint Performed<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
             where TValue : struct
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time);
+            return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time, duration: duration);
         }
 
-        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null, double? duration = null)
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time, duration: duration);
         }
 
-        public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
+        public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
             where TValue : struct
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control, value, time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, value, time: time, duration: duration);
         }
 
-        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction), time: time);
+            return new ActionConstraint(InputActionPhase.Started, action, control, interaction: typeof(TInteraction), time: time,
+                duration: 0, value: value);
         }
 
-        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction), time: time);
+            return new ActionConstraint(InputActionPhase.Performed, action, control, interaction: typeof(TInteraction), time: time,
+                duration: duration, value: value);
         }
 
-        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
             where TInteraction : IInputInteraction
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, interaction: typeof(TInteraction), time: time,
+                duration: duration, value: value);
         }
 
         // ReSharper disable once MemberCanBeProtected.Global
@@ -542,6 +545,7 @@ namespace UnityEngine.InputSystem
         {
             public InputActionPhase phase { get; set; }
             public double? time { get; set; }
+            public double? duration { get; set; }
             public InputAction action { get; set; }
             public InputControl control { get; set; }
             public object value { get; set; }
@@ -549,10 +553,11 @@ namespace UnityEngine.InputSystem
 
             private readonly List<ActionConstraint> m_AndThen = new List<ActionConstraint>();
 
-            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null, double? time = null)
+            public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null, double? time = null, double? duration = null)
             {
                 this.phase = phase;
                 this.time = time;
+                this.duration = duration;
                 this.action = action;
                 this.control = control;
                 this.value = value;
@@ -560,11 +565,23 @@ namespace UnityEngine.InputSystem
 
                 var interactionText = string.Empty;
                 if (interaction != null)
-                    interactionText = $"{InputInteraction.s_Interactions.FindNameForType(interaction).ToLower()} of ";
+                    interactionText = InputInteraction.GetDisplayName(interaction);
 
                 var actionName = action.actionMap != null ? $"{action.actionMap}/{action.name}" : action.name;
                 // Use same text format as InputActionTrace for easier comparison.
-                Description = $"{{ action={actionName} phase={phase} time={time} control={control} value={value} interaction={interactionText} }}";
+                var description = $"{{ action={actionName} phase={phase}";
+                if (time != null)
+                    description += $" time={time}";
+                if (control != null)
+                    description += $" control={control}";
+                if (value != null)
+                    description += $" value={value}";
+                if (interaction != null)
+                    description += $" interaction={interactionText}";
+                if (duration != null)
+                    description += $" duration={duration}";
+                description += " }";
+                Description = description;
             }
 
             public override ConstraintResult ApplyTo(object actual)
@@ -604,6 +621,10 @@ namespace UnityEngine.InputSystem
                 if (time != null && !Mathf.Approximately((float)time.Value, (float)eventPtr.time))
                     return false;
 
+                // Check duration.
+                if (duration != null && !Mathf.Approximately((float)duration.Value, (float)eventPtr.duration))
+                    return false;
+
                 // Check control.
                 if (control != null && eventPtr.control != control)
                     return false;
@@ -617,13 +638,27 @@ namespace UnityEngine.InputSystem
                 if (value != null)
                 {
                     var val = eventPtr.ReadValueAsObject();
-                    if (value is float f && !Mathf.Approximately(f, (float)val))
-                        return false;
-                    if (value is Vector2 v2 && !Vector2EqualityComparer.Instance.Equals(v2, (Vector2)val))
-                        return false;
-                    if (value is Vector3 v3 && !Vector3EqualityComparer.Instance.Equals(v3, (Vector3)val))
-                        return false;
-                    if (!value.Equals(val))
+                    if (value is float f)
+                    {
+                        if (!Mathf.Approximately(f, Convert.ToSingle(val)))
+                            return false;
+                    }
+                    else if (value is double d)
+                    {
+                        if (!Mathf.Approximately((float)d, (float)Convert.ToDouble(val)))
+                            return false;
+                    }
+                    else if (value is Vector2 v2)
+                    {
+                        if (!Vector2EqualityComparer.Instance.Equals(v2, (Vector2)val))
+                            return false;
+                    }
+                    else if (value is Vector3 v3)
+                    {
+                        if (!Vector3EqualityComparer.Instance.Equals(v3, (Vector3)val))
+                            return false;
+                    }
+                    else if (!value.Equals(val))
                         return false;
                 }
 

@@ -1,6 +1,6 @@
 # Supported Input Devices
 
-This page lists the types and products of Input Devices that the Input System package supports, as well as the platforms they're supported on.
+This page lists Input Device types and products that the Input System package supports, and the platforms they're supported on.
 
 ## Generic
 
@@ -30,17 +30,17 @@ Support for the following Devices doesn't require specialized support of particu
 |Switch|Yes|Yes|Yes|Yes|No|No|No|No|Yes|Sometimes (2)|
 
 >__Notes__:
->1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox at the moment.
+>1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
 >2. WebGL support varies between browsers, Devices, and operating systems.
 >3. XInput controllers on Mac currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
 >4. This includes any XInput-compatible Device.
->5. Unity doesn't support the gyro or accelerometer on PS4 controllers on platforms other than the PlayStation 4 console at the moment. Also, Unity doesn't support the DualShock 4 USB Wireless Adaptor.
+>5. Unity doesn't support the gyro or accelerometer on PS4 controllers on platforms other than the PlayStation 4 console. Unity also doesn't support the DualShock 4 USB Wireless Adaptor.
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 
 ### WebGL
 
-The Input System supports the *Standard Gamepad* mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but that support is generally limited to detecting the axes and buttons which are present, without any context as to what they mean. This means gamepads and joystics are generally only useful when [the user manually remaps them](HowDoI.md#create-a-ui-to-rebind-input-in-my-game). The Input System reports these Devices as generic [`Joysticks`](../api/UnityEngine.InputSystem.Joystick.html).
+The Input System supports the *Standard Gamepad* mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but this support is generally limited to detecting the axes and buttons which are present, without any context as to what they mean. This means gamepads and joysticks are generally only useful when [the user manually remaps them](HowDoI.md#create-a-ui-to-rebind-input-in-my-game). The Input System reports these Devices as generic [`Joysticks`](../api/UnityEngine.InputSystem.Joystick.html).
 
 Support varies between browsers, Devices, and operating systems, and further differs for different browser versions, so it's not feasible to provide an up-to-date compatibility list. At the time of this publication (September 2019), Safari, Chrome, Edge, and Firefox all support the gamepad API, but only Chrome reliably maps common gamepads (Xbox and PlayStation controllers) to the W3C Standard Gamepad mapping, which allows the Input System to correctly identify and map controls.
 

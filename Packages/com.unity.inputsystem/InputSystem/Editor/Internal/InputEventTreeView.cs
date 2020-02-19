@@ -14,7 +14,7 @@ using UnityEngine.Profiling;
 
 ////TODO: add diagnostics to immediately highlight problems with events (e.g. events getting ignored because of incorrect type codes)
 
-////TODO: implement support for sorting data by different property collumns (we currently always sort events by ID)
+////TODO: implement support for sorting data by different property columns (we currently always sort events by ID)
 
 namespace UnityEngine.InputSystem.Editor
 {

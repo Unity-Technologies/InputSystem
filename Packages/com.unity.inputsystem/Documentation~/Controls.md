@@ -11,11 +11,11 @@
 
 An Input Control represents a source of values. These values can be of any structured or primitive type. The only requirement is that the type is [blittable](https://docs.microsoft.com/en-us/dotnet/framework/interop/blittable-and-non-blittable-types).
 
->__Note__: Controls are used for input only. Output and configuration items on Input Devices are not represented as Controls.
+>__Note__: Controls are for input only. Output and configuration items on Input Devices are not represented as Controls.
 
-Each Control is identified by a name ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and can optionally have a display name ([`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)) that differs from the Control name. For example, the face button closest to the touchpad on a PlayStation DualShock 4 controller has the control name "buttonWest" and the display name "Square".
+Each Control is identified by a name ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and can optionally have a display name ([`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)) that differs from the Control name. For example, the right-hand face button closest to the touchpad on a PlayStation DualShock 4 controller has the control name "buttonWest" and the display name "Square".
 
-Additionally, a Control might be identified by one or more aliases which provide alternative names for the Control. You can access the aliases for a specific Control through its [`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases) property.
+Additionally, a Control might have one or more aliases which provide alternative names for the Control. You can access the aliases for a specific Control through its [`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases) property.
 
 Finally, a Control might also have a short display name which can be accessed through the [`InputControl.shortDisplayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_shortDisplayName) property. For example, the short display name for the left mouse button is "LMB".
 
@@ -36,8 +36,8 @@ The Input System provides the following types of controls out of the box:
 |Control Type|Description|Example|
 |------------|-----------|-------|
 |[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|A 1D floating-point axis.|[`Gamepad.leftStick.x`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html#UnityEngine_InputSystem_Controls_Vector2Control_x)|
-|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|A button expressed as a floating-point value. It depends on the underlying representation whether the button can have a value other than 0 and 1. For example, gamepad trigger buttons can have values other than 0 and 1, but gamepad face buttons generally can't.|[`Mouse.leftButton`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_leftButton)|
-|[`KeyControl`](../api/UnityEngine.InputSystem.Controls.KeyControl.html)|A specialized button representing a key on a [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html). Keys have an associated [`keyCode`](../api/UnityEngine.InputSystem.Controls.KeyControl.html#UnityEngine_InputSystem_Controls_KeyControl_keyCode) and, unlike other types of Controls, change their display name in accordance to the currently active system-wide keyboard layout. See the [Keyboard](Keyboard.md) documentation for details.|[`Keyboard.aKey`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_aKey)|
+|[`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html)|A button expressed as a floating-point value. Whether the button can have a value other than 0 or 1 depends on the underlying representation. For example, gamepad trigger buttons can have values other than 0 and 1, but gamepad face buttons generally can't.|[`Mouse.leftButton`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_leftButton)|
+|[`KeyControl`](../api/UnityEngine.InputSystem.Controls.KeyControl.html)|A specialized button that represents a key on a [`Keyboard`](../api/UnityEngine.InputSystem.Keyboard.html). Keys have an associated [`keyCode`](../api/UnityEngine.InputSystem.Controls.KeyControl.html#UnityEngine_InputSystem_Controls_KeyControl_keyCode) and, unlike other types of Controls, change their display name in accordance to the currently active system-wide keyboard layout. See the [Keyboard](Keyboard.md) documentation for details.|[`Keyboard.aKey`](../api/UnityEngine.InputSystem.Keyboard.html#UnityEngine_InputSystem_Keyboard_aKey)|
 |[`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html)|A 2D floating-point vector.|[`Pointer.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position)|
 |[`Vector3Control`](../api/UnityEngine.InputSystem.Controls.Vector3Control.html)|A 3D floating-point vector.|[`Accelerometer.acceleration`](../api/UnityEngine.InputSystem.Accelerometer.html#UnityEngine_InputSystem_Accelerometer_acceleration)|
 |[`QuaternionControl`](../api/UnityEngine.InputSystem.Controls.QuaternionControl.html)|A 3D rotation.|[`AttitudeSensor.attitude`](../api/UnityEngine.InputSystem.AttitudeSensor.html#UnityEngine_InputSystem_AttitudeSensor_attitude)|
@@ -110,7 +110,7 @@ Reading a value from a Control might apply one or more value Processors. See doc
 
 [//]: # (#### Reading State vs Reading Values - TODO)
 
-#### Recording State History
+#### Recording state history
 
 You might want to access the history of value changes on a Control (for example, in order to compute exit velocity on a touch release).
 
@@ -160,7 +160,7 @@ history.Dispose();
 
 For example, if you want to have the last 100 samples of the left stick on the gamepad available, you can use this code:
 
-```
+```CSharp
 var history = new InputStateHistory<Vector2>(Gamepad.current.leftStick);
 history.historyDepth = 100;
 history.StartRecording();
@@ -176,9 +176,9 @@ if (Gamepad.current.leftStick.IsActuated())
     Debug.Log("Left Stick is actuated");
 ```
 
-It can be useful to determine not just whether a Control is actuated at all, but also the amount by which it is actuated, that is, its magnitude. For a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html), for example, this would be the length of the vector, whereas for a button, it is the raw, absolute floating-point value.
+It can be useful to determine not just whether a Control is actuated at all, but also the amount by which it is actuated (that is, its magnitude). For example, for a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html) this would be the length of the vector, whereas for a button it is the raw, absolute floating-point value.
 
-In general, the current magnitude of a Control is always >= 0. However, a Control may not have a meaningful magnitude, in which case it will return -1. Any negative value should be considered an invalid magnitude.
+In general, the current magnitude of a Control is always >= 0. However, a Control might not have a meaningful magnitude, in which case it returns -1. Any negative value should be considered an invalid magnitude.
 
 You can query the current amount of actuation using [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude).
 
@@ -190,19 +190,19 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
 
 There are two mechanisms that most notably make use of Control actuation:
 
-- [Interactive rebinding](ActionBindings.md#run-time-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
+- [Interactive rebinding](ActionBindings.md#runtime-rebinding) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable Controls to find the one that is actuated the most.
 - [Disambiguation](ActionBindings.md#disambiguation) between multiple Controls that are bound to the same action uses it to decide which Control gets to drive the action.
 
 ## Noisy Controls
 
-The Input System can label a Control as being "noisy". You can query this using the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property.
+The Input System can label a Control as "noisy". You can query this using the  [`InputControl.noisy`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_noisy) property.
 
-Noisy Controls are those that can change value without any actual or no intentional user interaction being required. A good example of this is a gravity sensor in a cellphone (and pretty much any other kind of sensor). Even if the cellphone is perfectly still, there are usually fluctuations in gravity readings. Another example are orientation readings from an HMD.
+Noisy Controls are those that can change value without any actual or intentional user interaction required. A good example of this is a gravity sensor in a cellphone. Even if the cellphone is perfectly still, there are usually fluctuations in gravity readings. Another example are orientation readings from an HMD.
 
 If a Control is marked as noisy, it means that:
 
-1. The Control is not considered for [interactive rebinding](ActionBindings.md#run-time-rebinding). [`InputActionRebindingExceptions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) ignores the Control by default (you can bypass this using [`WithoutIgnoringNoisyControls`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html#UnityEngine_InputSystem_InputActionRebindingExtensions_RebindingOperation_WithoutIgnoringNoisyControls)).
-2. If toggled on in the project settings, the system performs additional event filtering, then calls [`InputDevice.MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent). If an input event for a Device contains no state change on a Control that is not marked noisy, then the Device will not be made current based on the event. This avoids, for example, a plugged in PS4 controller constantly making itself the current gamepad ([`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)) due to its sensors constantly feeding data into the system.
+1. The Control is not considered for [interactive rebinding](ActionBindings.md#runtime-rebinding). [`InputActionRebindingExceptions.RebindingOperation`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html) ignores the Control by default (you can bypass this using [`WithoutIgnoringNoisyControls`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.RebindingOperation.html#UnityEngine_InputSystem_InputActionRebindingExtensions_RebindingOperation_WithoutIgnoringNoisyControls)).
+2. If enabled in the Project Settings, the system performs additional event filtering, then calls [`InputDevice.MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent). If an input event for a Device contains no state change on a Control that is not marked noisy, then the Device will not be made current based on the event. This avoids, for example, a plugged in PS4 controller constantly making itself the current gamepad ([`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)) due to its sensors constantly feeding data into the system.
 3. When the application loses focus and Devices are [reset](Devices.md#device-resets) as a result, the state of noisy Controls will be preserved as is. This ensures that sensor readinds will remain at their last value rather than being reset to default values.
 
 >**Note**: If any Control on a Device is noisy, the Device itself is flagged as noisy.
@@ -215,4 +215,4 @@ A synthetic Control is a Control that doesn't correspond to an actual physical c
 
 Whether a given Control is synthetic is indicated by its [`InputControl.synthetic`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_synthetic) property.
 
-The system considers synthetic Controls for [interactive rebinding](ActionBindings.md#run-time-rebinding) but always favors non-synthetic Controls over synthetic ones. If both a synthetic and a non-synthetic Control that are a potential match exist, the non-synthetic Control wins out by default. This makes it possible to interactively bind to `<Gamepad>/leftStick/left`, for example, but also makes it possible to bind to `<Gamepad>/leftStickPress` without getting interference from the synthetic buttons on the stick.
+The system considers synthetic Controls for [interactive rebinding](ActionBindings.md#runtime-rebinding) but always favors non-synthetic Controls. If both a synthetic and a non-synthetic Control that are a potential match exist, the non-synthetic Control wins by default. This makes it possible to interactively bind to `<Gamepad>/leftStick/left`, for example, but also makes it possible to bind to `<Gamepad>/leftStickPress` without getting interference from the synthetic buttons on the stick.

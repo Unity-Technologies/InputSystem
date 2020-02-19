@@ -4,6 +4,22 @@ using System.Reflection;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
+// Idea for v2 of the input system:
+//     Separate interaction *recognition* from interaction *representation*
+//     This will likely also "solve" gestures
+//
+//     ATM, an interaction is a prebuilt thing that rolls recognition and representation of an interaction into
+//     one single thing. That limits how powerful this can be. There's only ever one interaction coming from each interaction
+//     added to a setup.
+//
+//     A much more powerful way would be to have the interactions configured on actions and bindings add *recognizers*
+//     which then *generate* interactions. This way, a single recognizer could spawn arbitrary many interactions. What the
+//     recognizer is attached to (the bindings) would simply act as triggers. Beyond that, the recognizer would have
+//     plenty freedom to start, perform, and stop interactions happening in response to input.
+//
+//     It'll likely be a breaking change as far as user-implemented interactions go but at least the data as it looks today
+//     should work with this just fine.
+
 ////TODO: allow interactions to be constrained to a specific InputActionType
 
 ////TODO: add way for parameters on interactions and processors to be driven from global value source that is NOT InputSettings
@@ -298,9 +314,21 @@ namespace UnityEngine.InputSystem
             if (interactionType == null)
                 return interaction;
 
+            return GetDisplayName(interactionType);
+        }
+
+        public static string GetDisplayName(Type interactionType)
+        {
+            if (interactionType == null)
+                throw new ArgumentNullException(nameof(interactionType));
+
             var displayNameAttribute = interactionType.GetCustomAttribute<DisplayNameAttribute>();
             if (displayNameAttribute == null)
-                return interaction;
+            {
+                if (interactionType.Name.EndsWith("Interaction"))
+                    return interactionType.Name.Substring(0, interactionType.Name.Length - "Interaction".Length);
+                return interactionType.Name;
+            }
 
             return displayNameAttribute.DisplayName;
         }

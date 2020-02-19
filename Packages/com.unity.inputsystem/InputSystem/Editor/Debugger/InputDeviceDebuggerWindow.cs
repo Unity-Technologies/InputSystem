@@ -15,8 +15,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: add diff-to-previous-event ability to event window
 
-////FIXME: doesn't survive domain reload correctly (could be, it's even leaking unmanaged memory)
-
 ////FIXME: the repaint triggered from IInputStateCallbackReceiver somehow comes with a significant delay
 
 ////TODO: Add "Remote:" field in list that also has a button for local devices that allows to mirror them and their input
@@ -39,7 +37,7 @@ namespace UnityEngine.InputSystem.Editor
     // Can also be used to alter the state of a device by making up state events.
     internal sealed class InputDeviceDebuggerWindow : EditorWindow, ISerializationCallbackReceiver, IDisposable
     {
-        internal const int kDefaultEventTraceSizeInMB = 1;
+        private const int kDefaultEventTraceSizeInMB = 1;
 
         internal static InlinedArray<Action<InputDevice>> s_OnToolbarGUIActions;
 
@@ -90,11 +88,15 @@ namespace UnityEngine.InputSystem.Editor
 
             m_EventTrace?.Dispose();
             m_EventTrace = null;
+
+            m_ReplayController?.Dispose();
+            m_ReplayController = null;
         }
 
         public void Dispose()
         {
             m_EventTrace?.Dispose();
+            m_ReplayController?.Dispose();
         }
 
         internal void OnGUI()
@@ -179,6 +181,9 @@ namespace UnityEngine.InputSystem.Editor
             GUILayout.Label("Events", GUILayout.MinWidth(100), GUILayout.ExpandWidth(true));
             GUILayout.FlexibleSpace();
 
+            if (m_ReplayController != null && !m_ReplayController.finished)
+                EditorGUILayout.LabelField("Playing...", EditorStyles.miniLabel);
+
             // Text field to determine size of event trace.
             var currentTraceSizeInBytes = m_EventTrace.allocatedSizeInBytes / (1024 * 1024);
             var oldSizeText = currentTraceSizeInBytes + " MB";
@@ -194,14 +199,18 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Button to disable event tracing.
-            var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
-            if (eventTraceDisabledNow != m_EventTraceDisabled)
+            // NOTE: We force-disable event tracing while a replay is in progress.
+            using (new EditorGUI.DisabledScope(m_ReplayController != null && !m_ReplayController.finished))
             {
-                m_EventTraceDisabled = eventTraceDisabledNow;
-                if (eventTraceDisabledNow)
-                    m_EventTrace.Disable();
-                else
-                    m_EventTrace.Enable();
+                var eventTraceDisabledNow = GUILayout.Toggle(!m_EventTraceDisabled, Contents.pauseContent, Styles.toolbarButton);
+                if (eventTraceDisabledNow != m_EventTraceDisabled)
+                {
+                    m_EventTraceDisabled = eventTraceDisabledNow;
+                    if (eventTraceDisabledNow)
+                        m_EventTrace.Disable();
+                    else
+                        m_EventTrace.Enable();
+                }
             }
 
             // Button to toggle recording of frame markers.
@@ -223,11 +232,28 @@ namespace UnityEngine.InputSystem.Editor
                 var fileName = EditorUtility.OpenFilePanel("Choose event trace to load", string.Empty, "inputtrace");
                 if (!string.IsNullOrEmpty(fileName))
                 {
+                    // If replay is in progress, stop it.
+                    if (m_ReplayController != null)
+                    {
+                        m_ReplayController.Dispose();
+                        m_ReplayController = null;
+                    }
+
+                    // Make sure event trace isn't recording while we're playing.
                     m_EventTrace.Disable();
                     m_EventTraceDisabled = true;
+
                     m_EventTrace.ReadFrom(fileName);
                     m_EventTree.Reload();
-                    m_EventTrace.Replay().PlayAllFramesOneByOne();
+
+                    m_ReplayController = m_EventTrace.Replay()
+                        .PlayAllFramesOneByOne()
+                        .OnFinished(() =>
+                        {
+                            m_ReplayController.Dispose();
+                            m_ReplayController = null;
+                            Repaint();
+                        });
                 }
             }
 
@@ -301,13 +327,15 @@ namespace UnityEngine.InputSystem.Editor
         // We will lose our device on domain reload and then look it back up the first
         // time we hit a repaint after a reload. By that time, the input system should have
         // fully come back to life as well.
-        [NonSerialized] private InputDevice m_Device;
-        [NonSerialized] private string m_DeviceIdString;
-        [NonSerialized] private string m_DeviceUsagesString;
-        [NonSerialized] private string m_DeviceFlagsString;
-        [NonSerialized] private InputControlTreeView m_ControlTree;
-        [NonSerialized] private InputEventTreeView m_EventTree;
-        [NonSerialized] private bool m_NeedControlValueRefresh;
+        private InputDevice m_Device;
+        private string m_DeviceIdString;
+        private string m_DeviceUsagesString;
+        private string m_DeviceFlagsString;
+        private InputControlTreeView m_ControlTree;
+        private InputEventTreeView m_EventTree;
+        private bool m_NeedControlValueRefresh;
+        private InputEventTrace.ReplayController m_ReplayController;
+        private InputEventTrace m_EventTrace;
 
         [SerializeField] private int m_DeviceId = InputDevice.InvalidDeviceId;
         [SerializeField] private TreeViewState m_ControlTreeState;
@@ -315,7 +343,6 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private MultiColumnHeaderState m_ControlTreeHeaderState;
         [SerializeField] private MultiColumnHeaderState m_EventTreeHeaderState;
         [SerializeField] private Vector2 m_ControlTreeScrollPosition;
-        [SerializeField] private InputEventTrace m_EventTrace;
         [SerializeField] private bool m_EventTraceDisabled;
 
         private static List<InputDeviceDebuggerWindow> s_OpenDebuggerWindows;

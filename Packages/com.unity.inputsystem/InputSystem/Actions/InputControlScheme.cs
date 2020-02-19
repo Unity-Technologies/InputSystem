@@ -127,6 +127,10 @@ namespace UnityEngine.InputSystem
         /// <param name="devices">A list of devices. If the list is empty, only schemes with
         /// empty <see cref="deviceRequirements"/> lists will get matched.</param>
         /// <param name="schemes">A list of control schemes.</param>
+        /// <param name="mustIncludeDevice">If not <c>null</c>, a successful match has to include the given device.</param>
+        /// <param name="allowUnsuccesfulMatch">If true, then allow returning a match that has unsatisfied requirements but still
+        /// matched at least some requirement. If there are several unsuccessful matches, the returned scheme is still the highest
+        /// scoring one among those.</param>
         /// <typeparam name="TDevices">Collection type to use for the list of devices.</typeparam>
         /// <typeparam name="TSchemes">Collection type to use for the list of schemes.</typeparam>
         /// <returns>The control scheme that best matched the given devices or <c>null</c> if no
@@ -191,7 +195,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
-        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes, InputDevice mustIncludeDevice = null)
+        public static InputControlScheme? FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes, InputDevice mustIncludeDevice = null, bool allowUnsuccesfulMatch = false)
             where TDevices : IReadOnlyList<InputDevice>
             where TSchemes : IEnumerable<InputControlScheme>
         {
@@ -200,7 +204,7 @@ namespace UnityEngine.InputSystem
             if (schemes == null)
                 throw new ArgumentNullException(nameof(schemes));
 
-            if (!FindControlSchemeForDevices(devices, schemes, out var controlScheme, out var matchResult, mustIncludeDevice))
+            if (!FindControlSchemeForDevices(devices, schemes, out var controlScheme, out var matchResult, mustIncludeDevice, allowUnsuccesfulMatch))
                 return null;
 
             matchResult.Dispose();
@@ -208,7 +212,7 @@ namespace UnityEngine.InputSystem
         }
 
         public static bool FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes,
-            out InputControlScheme controlScheme, out MatchResult matchResult, InputDevice mustIncludeDevice = null)
+            out InputControlScheme controlScheme, out MatchResult matchResult, InputDevice mustIncludeDevice = null, bool allowUnsuccessfulMatch = false)
             where TDevices : IReadOnlyList<InputDevice>
             where TSchemes : IEnumerable<InputControlScheme>
         {
@@ -225,7 +229,7 @@ namespace UnityEngine.InputSystem
                 var result = scheme.PickDevicesFrom(devices);
 
                 // Ignore if scheme doesn't fit devices.
-                if (!result.isSuccessfulMatch)
+                if (!result.isSuccessfulMatch && (!allowUnsuccessfulMatch || result.score <= 0))
                 {
                     result.Dispose();
                     continue;

@@ -8,6 +8,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.TestTools.Constraints;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -16,28 +17,46 @@ partial class CoreTests
 {
     [Test]
     [Category("Controls")]
-    [Ignore("TODO")]
-    public void TODO_Controls_CanFindControls_WithoutAllocatingGCMemory()
+    [Retry(2)] // Warm up JIT.
+    public void Controls_CanFindControls_WithoutAllocatingGCMemory()
     {
+        // In InputTestFixture, we enable stack traces on native leak detection. This will allocate memory for the
+        // stack trace when NativeArray creates the DisposeSentinel. Disable leak detection entirely for this test.
+        NativeLeakDetection.Mode = NativeLeakDetectionMode.Disabled;
+
         InputSystem.AddDevice<Gamepad>();
 
-        var list = new InputControlList<InputControl>();
-        try
+        // Get rid of GC heap activity from first input update.
+        InputSystem.Update();
+
+        // Avoid GC activity from string literals.
+        var kProfilerRegion = "Controls_CanFindControls_WithoutAllocatingGCMemory";
+        var kPath = "<Gamepad>/*stick";
+
+        Assert.That(() =>
         {
-            Assert.That(() =>
-            {
-                InputSystem.FindControls("<Gamepad>/*stick", ref list);
-            }, Is.Not.AllocatingGCMemory());
-        }
-        finally
-        {
+            Profiler.BeginSample(kProfilerRegion);
+            var list = new InputControlList<InputControl>();
+            InputSystem.FindControls(kPath, ref list);
             list.Dispose();
-        }
+            Profiler.EndSample();
+        }, Is.Not.AllocatingGCMemory());
     }
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanFindChildControlsByPath()
+    public void Controls_CanFindFirstMatchingControlByPath()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(InputSystem.FindControl("*/leftStick/x"), Is.SameAs(gamepad.leftStick.x));
+        Assert.That(InputSystem.FindControl("<Gamepad>"), Is.SameAs(gamepad));
+        Assert.That(InputSystem.FindControl("<Mouse>/leftButton"), Is.Null);
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_CanFindChildControlsOnDeviceByPath()
     {
         var gamepad = InputDevice.Build<Gamepad>();
         Assert.That(gamepad["leftStick"], Is.SameAs(gamepad.leftStick));
@@ -812,6 +831,20 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var matches = InputSystem.FindControls("/gamepad/{Primary2DMotion}"))
+        {
+            Assert.That(matches, Has.Count.EqualTo(1));
+            Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_FindingControlsByUsage_IgnoresUsagesOnDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.SetDeviceUsage(gamepad, "Primary2DMotion");
+
+        using (var matches = InputSystem.FindControls("<Gamepad>/{Primary2DMotion}"))
         {
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));

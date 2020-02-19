@@ -2,13 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine.Profiling;
-
-////TODO: switch to ReadValueFromState (the current value reading code dates back to very early versions of the input system)
-////      (note that doing so will have an impact on mouse coordinates which then will go through EditorWindowSpaceProcessor)
 
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
@@ -319,71 +314,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             fixed(byte* statePtr = state)
             {
-                var ptr = statePtr + control.m_StateBlock.byteOffset - m_RootControl.m_StateBlock.byteOffset;
-                var format = control.m_StateBlock.format;
-
-                object value = null;
-                if (format == InputStateBlock.FormatBit)
-                {
-                    if (control.valueSizeInBytes == 1)
-                    {
-                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "0";
-                    }
-                    else
-                    {
-                        value = MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits);
-                    }
-                }
-                else if (format == InputStateBlock.FormatSBit)
-                {
-                    if (control.valueSizeInBytes == 1)
-                    {
-                        value = MemoryHelpers.ReadSingleBit(ptr, control.m_StateBlock.bitOffset) ? "1" : "-1";
-                    }
-                    else
-                    {
-                        var halfMaxValue = ((1 << (int)control.m_StateBlock.sizeInBits) - 1) / 2;
-                        var fullValue = (MemoryHelpers.ReadIntFromMultipleBits(ptr, control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits));
-                        value = fullValue - halfMaxValue;
-                    }
-                }
-                else if (format == InputStateBlock.FormatByte || format == InputStateBlock.FormatSByte)
-                {
-                    value = *ptr;
-                }
-                else if (format == InputStateBlock.FormatShort)
-                {
-                    value = *(short*)ptr;
-                }
-                else if (format == InputStateBlock.FormatUShort)
-                {
-                    value = *(ushort*)ptr;
-                }
-                else if (format == InputStateBlock.FormatInt)
-                {
-                    value = *(int*)ptr;
-                }
-                else if (format == InputStateBlock.FormatUInt)
-                {
-                    value = *(uint*)ptr;
-                }
-                else if (format == InputStateBlock.FormatFloat)
-                {
-                    value = *(float*)ptr;
-                }
-                else if (format == InputStateBlock.FormatDouble)
-                {
-                    value = *(double*)ptr;
-                }
-
-                // Stringify enum values, for. ex., TouchPhase
-                if (value != null && control.valueType.IsEnum)
-                {
-                    var intValue = Convert.ToInt32(value);
-                    value = Enum.ToObject(control.valueType, intValue);
-                }
-
-                return value?.ToString();
+                var ptr = statePtr - m_RootControl.m_StateBlock.byteOffset;
+                return control.ReadValueFromStateAsObject(ptr).ToString();
             }
         }
 

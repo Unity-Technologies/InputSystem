@@ -2,7 +2,7 @@
 
 Unlike Unity's old Input Manager, you can use the new Input System from within `EditorWindow` code as well. For example, you can gain access to pen pressure information like this:
 
-```
+```CSharp
 class MyEditorWindow : EditorWindow
 {
     public void OnGUI()
@@ -29,4 +29,4 @@ The coordinate system differs between `EditorWindow` code and `UnityEngine.Scree
 
 The Input System compensates for that by automatically converting coordinates depending on whether you call it from your application or from Editor code. In other words, calling `Mouse.current.position.ReadValue()` from inside `EditorWindow` code returns mouse coordinates in Editor UI coordinates (Y down), and reading the position elsewhere returns it in application screen coordinates (Y up).
 
-Internally, this translation is handled by an editor-specific Processor called `AutoWindowSpace`.
+Internally, an editor-specific Processor called `AutoWindowSpace` handles this translation.

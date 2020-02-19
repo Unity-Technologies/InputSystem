@@ -449,7 +449,7 @@ namespace UnityEngine.InputSystem.Editor
             if (selectedActionMapItem == null)
             {
                 // Nothing selected. Wipe middle and right pane.
-                m_ActionsTree.onBuildTree = () => new TreeViewItem(0, -1, "");
+                m_ActionsTree.onBuildTree = null;
             }
             else
             {
@@ -825,6 +825,8 @@ namespace UnityEngine.InputSystem.Editor
                 return default;
             }
 
+            #pragma warning disable CA1801 // unused parameters
+
             // Handle .inputactions asset being moved.
             // ReSharper disable once UnusedMember.Local
             public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
@@ -836,12 +838,13 @@ namespace UnityEngine.InputSystem.Editor
                 var window = FindEditorForAssetWithGUID(guid);
                 if (window != null)
                 {
-                    window.m_ActionAssetManager.path = destinationPath;
                     window.UpdateWindowTitle();
                 }
 
                 return default;
             }
+
+            #pragma warning restore CA1801
         }
     }
 }

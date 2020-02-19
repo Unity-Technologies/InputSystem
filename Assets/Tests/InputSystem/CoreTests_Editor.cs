@@ -545,6 +545,36 @@ partial class CoreTests
         Assert.That(map.bindings[0].groups, Is.EqualTo(""));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputActionAssetManager_CanMoveAssetOnDisk()
+    {
+        const string kAssetPath = "Assets/DirectoryBeforeRename/InputAsset." + InputActionAsset.Extension;
+        const string kAssetPathAfterMove = "Assets/DirectoryAfterRename/InputAsset." + InputActionAsset.Extension;
+        const string kDefaultContents = "{}";
+
+        AssetDatabase.CreateFolder("Assets", "DirectoryBeforeRename");
+        File.WriteAllText(kAssetPath, kDefaultContents);
+        AssetDatabase.ImportAsset(kAssetPath);
+
+        var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(kAssetPath);
+        Assert.NotNull(asset, "Could not load asset: " + kAssetPath);
+
+        var inputActionAssetManager = new InputActionAssetManager(asset);
+        inputActionAssetManager.Initialize();
+        inputActionAssetManager.onDirtyChanged = (bool dirty) => {};
+
+        FileUtil.MoveFileOrDirectory("Assets/DirectoryBeforeRename", "Assets/DirectoryAfterRename");
+        AssetDatabase.Refresh();
+
+        Assert.DoesNotThrow(() => inputActionAssetManager.SaveChangesToAsset());
+
+        var fileContents = File.ReadAllText(kAssetPathAfterMove);
+        Assert.AreNotEqual(kDefaultContents, fileContents, "Expected file contents to have been modified after SaveChangesToAsset was called.");
+
+        AssetDatabase.DeleteAsset("Assets/DirectoryAfterRename");
+    }
+
     private class MonoBehaviourWithEmbeddedAction : MonoBehaviour
     {
         public InputAction action;
@@ -2178,6 +2208,31 @@ partial class CoreTests
 
         // Make sure the event was not left in the buffer.
         Assert.That(runtime.m_EventCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_DestroysAllActionStates()
+    {
+        InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        Assert.That(InputActionState.s_GlobalList.length, Is.EqualTo(1));
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
+        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
