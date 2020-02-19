@@ -4805,7 +4805,7 @@ partial class CoreTests
 
         // Can suppress.
         Assert.That(action1.GetBindingDisplayString(InputBinding.DisplayStringOptions.DontIncludeInteractions),
-            Is.EqualTo("Hold " + GamepadState.ButtonSouthShortDisplayName));
+            Is.EqualTo(GamepadState.ButtonSouthShortDisplayName));
     }
 
     [Test]

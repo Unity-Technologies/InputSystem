@@ -694,7 +694,7 @@ namespace UnityEngine.InputSystem
 
             var result = InputControlPath.ToHumanReadableString(pathToUse, out deviceLayoutName, out controlPath, readableStringOptions, control);
 
-            if (!string.IsNullOrEmpty(effectiveInteractions))
+            if (!string.IsNullOrEmpty(effectiveInteractions) && (options & DisplayStringOptions.DontIncludeInteractions) == 0)
             {
                 var interactionString = string.Empty;
                 var parsedInteractions = NameAndParameters.ParseMultiple(effectiveInteractions);
