@@ -375,7 +375,7 @@ namespace UnityEngine.InputSystem
             return new BindingSyntax(actionMap, null, bindingIndex);
         }
 
-        public static CompositeSyntax AddCompositeBinding(this InputAction action, string composite, string interactions = null)
+        public static CompositeSyntax AddCompositeBinding(this InputAction action, string composite, string interactions = null, string processors = null)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
@@ -385,7 +385,7 @@ namespace UnityEngine.InputSystem
             var actionMap = action.GetOrCreateActionMap();
 
             ////REVIEW: use 'name' instead of 'path' field here?
-            var binding = new InputBinding {path = composite, interactions = interactions, isComposite = true, action = action.name};
+            var binding = new InputBinding {path = composite, interactions = interactions, processors = processors, isComposite = true, action = action.name};
             var bindingIndex = AddBindingInternal(actionMap, binding);
             return new CompositeSyntax(actionMap, action, bindingIndex);
         }
