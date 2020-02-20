@@ -10,6 +10,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Fixed
+- Fixed CS0109 warning being generated during player build due to use of `new` with the `PlayerInput.camera property`. (case 1174688)
 
 #### Actions
 
