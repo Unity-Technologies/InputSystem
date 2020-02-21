@@ -2004,6 +2004,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 value = compositeOfType.ReadValue(ref context);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
