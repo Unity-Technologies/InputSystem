@@ -2764,6 +2764,46 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1207082/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddProcessorsToCompositeBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector", processors: "invertVector2(invertX=true,invertY=true)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        action.Enable();
+
+        // Left -> Right.
+        Press(keyboard.aKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(1, 0)));
+
+        // Right -> Left.
+        Release(keyboard.aKey);
+        Press(keyboard.dKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-1, 0)));
+
+        // Up -> Down.
+        Release(keyboard.dKey);
+        Press(keyboard.wKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, -1)));
+
+        // Down -> Up.
+        Release(keyboard.wKey);
+        Press(keyboard.sKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, 1)));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanAddScaleProcessor()

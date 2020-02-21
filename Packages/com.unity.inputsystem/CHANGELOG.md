@@ -10,6 +10,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Fixed
+- Fixed CS0109 warning being generated during player build due to use of `new` with the `PlayerInput.camera property`. (case 1174688)
 
 #### Actions
 
@@ -18,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - Enabling action maps with bindings that do not refer to an existing action in the map no longer leads to asserts and exceptions when input on the bindings is received ([case 1213085](https://issuetracker.unity3d.com/issues/input-system-input-actions-cause-exceptions-and-should-not-get-here-errors-to-appear-after-deleting-an-action-map)).
 - `PressInteraction` no longer misses the next button press if it gets reset from within the `performed` callback ([case 1205285](https://issuetracker.unity3d.com/issues/inputsystem-problem-with-button-state-after-deactivating-and-reactivating-an-action-map)).
 - `InputBinding.DisplayStringOptions.DontIncludeInteractions` is now properly respected.
+- Reading the value of a composite binding no longer causes processors from the last active part binding to be applied rather than the processors of the composite itself, if any ([case 1207082](https://issuetracker.unity3d.com/issues/input-system-invert-processors-have-no-effect-on-the-inputaction-dot-callbackcontext-value)).
 
 ## [1.0.0-preview.5] - 2020-02-14
 
