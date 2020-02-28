@@ -286,7 +286,7 @@ namespace UnityEngine.InputSystem.UI
             // Set initial cursor position.
             if (m_CursorTransform != null)
             {
-                var position = m_CursorTransform.anchoredPosition;
+                var position = m_CursorTransform.position;
                 InputState.Change(m_VirtualMouse.position, position);
                 m_SystemMouse?.WarpCursorPosition(position);
             }
@@ -440,7 +440,7 @@ namespace UnityEngine.InputSystem.UI
 
                 // Update software cursor transform, if any.
                 if (m_CursorTransform != null && m_CursorMode == CursorMode.SoftwareCursor)
-                    m_CursorTransform.anchoredPosition = newPosition;
+                    m_CursorTransform.position = newPosition;
 
                 m_LastStickValue = stickValue;
                 m_LastTime = currentTime;
