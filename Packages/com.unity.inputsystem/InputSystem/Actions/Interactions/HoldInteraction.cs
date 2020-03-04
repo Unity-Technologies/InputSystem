@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Interactions
         /// <seealso cref="InputControl.EvaluateMagnitude()"/>
         public float pressPoint;
 
-        private float durationOrDefault => duration > 0.0 ? duration : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime;
         private float pressPointOrDefault => pressPoint > 0.0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         private double m_TimePressed;
