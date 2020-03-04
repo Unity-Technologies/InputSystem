@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR || UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
