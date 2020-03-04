@@ -4,6 +4,7 @@ using System.Reflection;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
+// [GESTURES]
 // Idea for v2 of the input system:
 //     Separate interaction *recognition* from interaction *representation*
 //     This will likely also "solve" gestures

@@ -350,11 +350,51 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Set the control with the given <paramref name="path"/> on <paramref name="device"/> to the given <paramref name="state"/>
+        /// by sending a state event with the value to the device.
+        /// </summary>
+        /// <param name="device">Device on which to find a control.</param>
+        /// <param name="path">Path of the control on the device.</param>
+        /// <param name="state">New state for the control.</param>
+        /// <param name="time">Timestamp to use for the state event. If -1 (default), current time is used (see <see cref="InputTestFixture.currentTime"/>).</param>
+        /// <param name="timeOffset">Offset to apply to the current time. This is an alternative to <paramref name="time"/>. By default, no offset is applied.</param>
+        /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
+        /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
+        /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
+        /// as they will not yet see the state change.</param>
+        /// <typeparam name="TValue">Value type of the control.</typeparam>
+        /// <example>
+        /// <code>
+        /// var device = InputSystem.AddDevice("TestDevice");
+        /// Set&lt;ButtonControl&gt;(device, "button", 1);
+        /// Set&lt;AxisControl&gt;(device, "{Primary2DMotion}/x", 123.456f);
+        /// </code>
+        /// </example>
+        public void Set<TValue>(InputDevice device, string path, TValue state, double time = -1, double timeOffset = 0,
+            bool queueEventOnly = false)
+            where TValue : struct
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentNullException(nameof(path));
+
+            var control = (InputControl<TValue>)device[path];
+            Set(control, state, time, timeOffset, queueEventOnly);
+        }
+
+        /// <summary>
         /// Set the control to the given value by sending a state event with the value to the
         /// control's device.
         /// </summary>
         /// <param name="control">An input control on a device that has been added to the system.</param>
         /// <param name="state">New value for the input control.</param>
+        /// <param name="time">Timestamp to use for the state event. If -1 (default), current time is used (see <see cref="InputTestFixture.currentTime"/>).</param>
+        /// <param name="timeOffset">Offset to apply to the current time. This is an alternative to <paramref name="time"/>. By default, no offset is applied.</param>
+        /// <param name="queueEventOnly">If true, no <see cref="InputSystem.Update"/> will be performed after queueing the event. This will only put
+        /// the state event on the event queue and not do anything else. The default is to call <see cref="InputSystem.Update"/> after queuing the event.
+        /// Note that not issuing an update means the state of the device will not change yet. This may affect subsequent Set/Press/Release/etc calls
+        /// as they will not yet see the state change.</param>
         /// <typeparam name="TValue">Value type of the given control.</typeparam>
         /// <example>
         /// <code>

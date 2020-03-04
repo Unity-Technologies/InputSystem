@@ -8,6 +8,10 @@ The following is a list of known limitations that the Input System currently has
 * The Input System cannot generate input for IMGUI or UIElements.
 * The Input System does not yet support the new 2019.3 mode where domain reloads are disabled when entering play mode.
 
+### uGUI
+
+* After enabling, the UI will not react to a pointer's position until the position is changed.
+
 ## Device support
 
 * (Windows) Mouse input from remote desktop connections does not come through properly.

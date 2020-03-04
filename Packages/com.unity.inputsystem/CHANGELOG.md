@@ -9,8 +9,23 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+
+* `InputSystemUIInputModule.trackedDeviceSelect` has been removed. Simply use `InputSystemUIInputModule.leftClick` instead.
+* `InputSystemUIInputModule.repeatDelay` has been renamed to `moveRepeatDelay` and `repeatRate` has been renamed to `moveRepeatRate`.
+
 ### Fixed
+
 - Fixed CS0109 warning being generated during player build due to use of `new` with the `PlayerInput.camera property`. (case 1174688)
+- Fixed a number of issues in `InputSystemUIInputModule`.
+  * Fixed GC heap garbage when click-dragging.
+  * Fixed number of pointer states growing indefinitely if OS did not reuse touch IDs.
+  * Fixed `lastPress` on `PointerEventData` getting lost.
+  * Fixed button press&release happening in same frame resulting in no UI input.
+  * Fixed clicks initiated from non-pointer devices resulting in pointer inputs with `(0,0)` positions.
+  * Fixed huge screen deltas on pointer events from tracked devices.
+  * Fixed touch input not sending pointer exit events ([case 1213550](https://issuetracker.unity3d.com/issues/input-system-onpointerexit-does-not-work)).
+- Fixed `TrackedDeviceRaycaster` not setting `screenPosition` in `RaycastResult`.
 
 #### Actions
 
@@ -20,6 +35,13 @@ however, it has to be formatted properly to pass verification tests.
 - `PressInteraction` no longer misses the next button press if it gets reset from within the `performed` callback ([case 1205285](https://issuetracker.unity3d.com/issues/inputsystem-problem-with-button-state-after-deactivating-and-reactivating-an-action-map)).
 - `InputBinding.DisplayStringOptions.DontIncludeInteractions` is now properly respected.
 - Reading the value of a composite binding no longer causes processors from the last active part binding to be applied rather than the processors of the composite itself, if any ([case 1207082](https://issuetracker.unity3d.com/issues/input-system-invert-processors-have-no-effect-on-the-inputaction-dot-callbackcontext-value)).
+- Fixed `InputSystem.onActionChange` getting invoked too many on binding changes.
+- Pasting composite bindings while having a specific control scheme active no longer incorrectly applies the control scheme's binding group to the entire composite (fix contributed by [jamre](https://github.com/jamre) in #1024).
+- Can now have spaces in action names when using `PlayerInput` with the `SendMessages` or `BroadcastMessages` behavior. Previously an incorrect method name was generated (fix contributed by [BHSPitMonkey](https://github.com/BHSPitMonkey) in #1022).
+
+### Added
+
+- `InputSystemUIInputModule` now sends pointer events using a new `ExtendedPointerEventData` instead of using the base `PointerEventData` class. This surfaces additional input data in pointer events.
 
 ## [1.0.0-preview.5] - 2020-02-14
 

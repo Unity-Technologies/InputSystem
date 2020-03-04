@@ -2591,9 +2591,15 @@ namespace UnityEngine.InputSystem
         ///         }
         ///         else if (change == InputActionChange.BoundControlsChanged)
         ///         {
+        ///             // This is one way to deal with the fact that obj may be an InputAction
+        ///             // InputActionMap, or InputActionAsset and may be part of an InputActionAsset or not.
         ///             var action = obj as InputAction;
         ///             var actionMap = action?.actionMap ?? obj as InputActionMap;
         ///             var actionAsset = actionMap?.asset ?? obj as InputActionAsset;
+        ///
+        ///             // Note that if bound controls are changed on any map in an asset, there *will*
+        ///             // be a BoundControlsChanged notification for the entire asset.
+        ///
         ///             //...
         ///         }
         ///     };
@@ -3249,6 +3255,7 @@ namespace UnityEngine.InputSystem
 
             s_Manager.InstallRuntime(s_Manager.m_Runtime);
             s_Manager.InstallGlobals();
+            s_Manager.ApplySettings();
 
             #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
