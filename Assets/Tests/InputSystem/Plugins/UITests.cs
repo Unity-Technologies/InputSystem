@@ -1009,19 +1009,6 @@ internal class UITests : InputTestFixture
         }
     }
 
-    // Through actions, multiple pointer input sources can be connected to UI input. This leads to the question of
-    // what how pointer input is driven if there's concurrent input from multiple devices.
-    //
-    // The UI input module handles this the following way:
-    //   - There is a fixed set of pointer IDs for pointer input from mouse and pen devices. Each of these pointer IDs
-    //     is associated with a button. These are -1 for the left mouse/pen button, -2 for the right mouse/pen button,
-    //     and -3 for the middle mouse/pen button.
-    //     This means that no matter how many mice and pens are bound as inputs, they will drive a single set of three
-    //     pointer IDs that together comprise a single pointer. This is based on the assumption, that these pointers
-    //     operate around a cursor and there is a single system cursor.
-    //   - There is an unbounded set of pointer IDs for touch input. These pointer inputs are added
-
-
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
@@ -1577,9 +1564,6 @@ internal class UITests : InputTestFixture
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 31, 0)));
     }
-
-    //test for multitouch here
-    //test that switches from mouse to touch and back and makes sure we get exit events?
 
     // There's nothing preventing the user from binding actions for pointer-type input to devices that aren't pointers.
     // For example, the setup allows binding the leftClick action to the space bar. When pointer-type actions get triggered

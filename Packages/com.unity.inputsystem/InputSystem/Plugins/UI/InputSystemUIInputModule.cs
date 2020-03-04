@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType == PointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
             {
                 eventData.position = new Vector2(-1, -1);
-                ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode
+                ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
                 eventData.delta = default;
             }
             else if (pointerType == PointerType.Tracked)

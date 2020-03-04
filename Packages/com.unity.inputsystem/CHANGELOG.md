@@ -42,6 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - `InputSystemUIInputModule` now sends pointer events using a new `ExtendedPointerEventData` instead of using the base `PointerEventData` class. This surfaces additional input data in pointer events.
+- Added `InputSystemUIInputModule.pointerBehavior` to allow dictating how the UI will resolve concurrent input from multiple pointers.
 
 ## [1.0.0-preview.5] - 2020-02-14
 
