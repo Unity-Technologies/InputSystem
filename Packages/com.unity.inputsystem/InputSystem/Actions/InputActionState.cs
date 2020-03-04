@@ -2120,7 +2120,7 @@ namespace UnityEngine.InputSystem
                         else if (control is InputControl<float>)
                         {
                             var valuePtr = UnsafeUtility.AddressOf(ref value);
-                            *buttonValuePtr = *(float*)valuePtr >= InputSystem.settings.defaultButtonPressPoint;
+                            *buttonValuePtr = *(float*)valuePtr >= ButtonControl.s_GlobalDefaultButtonPressPoint;
                         }
 
                         ////REVIEW: Early out here as soon as *any* button is pressed? Technically, the comparer
@@ -2175,6 +2175,21 @@ namespace UnityEngine.InputSystem
             }
 
             return value;
+        }
+
+        internal bool ReadValueAsButton(int bindingIndex, int controlIndex)
+        {
+            var buttonControl = default(ButtonControl);
+            if (!bindingStates[bindingIndex].isPartOfComposite)
+                buttonControl = controls[controlIndex] as ButtonControl;
+
+            // Read float value.
+            var floatValue = ReadValue<float>(bindingIndex, controlIndex);
+
+            // Compare to press point.
+            if (buttonControl != null)
+                return floatValue >= buttonControl.pressPointOrDefault;
+            return floatValue >= ButtonControl.s_GlobalDefaultButtonPressPoint;
         }
 
         /// <summary>

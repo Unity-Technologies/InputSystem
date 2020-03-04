@@ -1430,6 +1430,26 @@ namespace UnityEngine.InputSystem
             }
 
             /// <summary>
+            /// Read the current value of the action as a <c>float</c> and return true if it is equal to
+            /// or greater than the button press threshold.
+            /// </summary>
+            /// <returns>True if the action is considered in "pressed" state, false otherwise.</returns>
+            /// <remarks>
+            /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
+            /// of the button will be taken into account (if set). If there is no custom button press point, the
+            /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// </remarks>
+            /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+            /// <seealso cref="ButtonControl.pressPoint"/>
+            public bool ReadValueAsButton()
+            {
+                var value = false;
+                if (m_State != null && phase != InputActionPhase.Canceled)
+                    value = m_State.ReadValueAsButton(bindingIndex, controlIndex);
+                return value;
+            }
+
+            /// <summary>
             /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to
             /// know the type of value at compile time.
             /// </summary>

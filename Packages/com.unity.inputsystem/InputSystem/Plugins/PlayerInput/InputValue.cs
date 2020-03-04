@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using UnityEngine.InputSystem.Controls;
 
 ////TODO: API to get the control and device from the internal context
 
@@ -44,7 +45,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: proper message if value type isn't right
-        public bool isPressed => Get<float>() >= InputSystem.settings.defaultButtonPressPoint;
+        public bool isPressed => Get<float>() >= ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         internal InputAction.CallbackContext? m_Context;
     }
