@@ -728,6 +728,13 @@ namespace UnityEngine.InputSystem.UI
             set => SwapAction(ref m_TrackedDevicePositionAction, value, m_ActionsHooked, m_OnTrackedDevicePositionDelegate);
         }
 
+        [Obsolete("'trackedDeviceSelect' has been obsoleted; use 'leftClick' instead.", true)]
+        public InputActionReference trackedDeviceSelect
+        {
+            get => throw new InvalidOperationException();
+            set => throw new InvalidOperationException();
+        }
+
         protected override void Awake()
         {
             base.Awake();
