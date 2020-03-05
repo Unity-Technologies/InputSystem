@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.UI
         public InputDevice device { get; set; }
 
         /// <summary>
-        /// For <see cref="PointerType.Touch"/> type pointer input, this is the touch ID as reported by the
+        /// For <see cref="UIPointerType.Touch"/> type pointer input, this is the touch ID as reported by the
         /// <see cref="Touchscreen"/> device.
         /// </summary>
         /// <remarks>
@@ -49,17 +49,17 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// Type of pointer that generated the input.
         /// </summary>
-        public PointerType pointerType { get; set; }
+        public UIPointerType pointerType { get; set; }
 
         /// <summary>
-        /// For <see cref="PointerType.Tracked"/> type pointer input, this is the world-space position of
+        /// For <see cref="UIPointerType.Tracked"/> type pointer input, this is the world-space position of
         /// the <see cref="TrackedDevice"/>.
         /// </summary>
         /// <seealso cref="InputSystemUIInputModule.trackedDevicePosition"/>
         public Vector3 trackedDevicePosition { get; set; }
 
         /// <summary>
-        /// For <see cref="PointerType.Tracked"/> type pointer input, this is the world-space orientation of
+        /// For <see cref="UIPointerType.Tracked"/> type pointer input, this is the world-space orientation of
         /// the <see cref="TrackedDevice"/>.
         /// </summary>
         /// <seealso cref="InputSystemUIInputModule.trackedDeviceOrientation"/>
@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem.UI
     /// <summary>
     /// General type of pointer that generated a <see cref="PointerEventData"/> pointer event.
     /// </summary>
-    public enum PointerType
+    public enum UIPointerType
     {
         None,
 

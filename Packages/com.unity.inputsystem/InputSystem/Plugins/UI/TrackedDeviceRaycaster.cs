@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.UI
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            if (eventData is ExtendedPointerEventData trackedEventData && trackedEventData.pointerType == PointerType.Tracked)
+            if (eventData is ExtendedPointerEventData trackedEventData && trackedEventData.pointerType == UIPointerType.Tracked)
                 PerformRaycast(trackedEventData, resultAppendList);
         }
 

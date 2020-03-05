@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.UI
     internal struct PointerModel
     {
         public bool changedThisFrame;
-        public PointerType pointerType => eventData.pointerType;
+        public UIPointerType pointerType => eventData.pointerType;
 
         public Vector2 screenPosition
         {
@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.UI
         public ButtonState middleButton;
         public ExtendedPointerEventData eventData;
 
-        public PointerModel(int pointerId, int touchId, PointerType pointerType, InputDevice device, ExtendedPointerEventData eventData)
+        public PointerModel(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, ExtendedPointerEventData eventData)
         {
             this.eventData = eventData;
 

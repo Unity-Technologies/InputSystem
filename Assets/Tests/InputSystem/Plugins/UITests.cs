@@ -127,22 +127,22 @@ internal class UITests : InputTestFixture
     // also any other input that can deliver point and click functionality.
     //
     // NOTE: ExpectedResult is required for the test to pass; the value will not actually be validated for a UnityTest.
-    [TestCase("Mouse", PointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-    [TestCase("Mouse", PointerType.MouseOrPen, PointerEventData.InputButton.Middle, ExpectedResult = 1)]
-    [TestCase("Mouse", PointerType.MouseOrPen, PointerEventData.InputButton.Right, ExpectedResult = 1)]
-    [TestCase("Pen", PointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-    [TestCase("Touchscreen", PointerType.Touch, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-    [TestCase("TrackedDeviceWithButton", PointerType.Tracked, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-    [TestCase("GenericDeviceWithPointingAbility", PointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-    public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, PointerType pointerType, PointerEventData.InputButton clickButton)
+    [TestCase("Mouse", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+    [TestCase("Mouse", UIPointerType.MouseOrPen, PointerEventData.InputButton.Middle, ExpectedResult = 1)]
+    [TestCase("Mouse", UIPointerType.MouseOrPen, PointerEventData.InputButton.Right, ExpectedResult = 1)]
+    [TestCase("Pen", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+    [TestCase("Touchscreen", UIPointerType.Touch, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+    [TestCase("TrackedDeviceWithButton", UIPointerType.Tracked, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+    [TestCase("GenericDeviceWithPointingAbility", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+    public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, UIPointerType pointerType, PointerEventData.InputButton clickButton)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
         InputSystem.RegisterLayout(kGenericDeviceWithPointingAbility);
 
         var device = InputSystem.AddDevice(deviceLayout);
 
-        var isTouch = pointerType == PointerType.Touch;
-        var isTracked = pointerType == PointerType.Tracked;
+        var isTouch = pointerType == UIPointerType.Touch;
+        var isTracked = pointerType == UIPointerType.Tracked;
         var touchId = isTouch ? 1 : 0;
         var pointerId = isTouch ? ExtendedPointerEventData.MakePointerIdForTouch(device.deviceId, touchId) : device.deviceId;
         var trackedOrientation = isTracked ? Quaternion.Euler(0, -90, 0) : default;
@@ -1263,13 +1263,13 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
@@ -1290,13 +1290,13 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
@@ -1317,19 +1317,19 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.Dragging).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
 
         scene.leftChildReceiver.events.Clear();
@@ -1349,7 +1349,7 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(123, 123)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
@@ -1370,13 +1370,13 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 205)));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 205)));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
@@ -1397,13 +1397,13 @@ internal class UITests : InputTestFixture
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(345, 195)));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == PointerType.Touch).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(345, 195)));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
@@ -1448,7 +1448,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1462,7 +1462,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1476,22 +1476,22 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(4));
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
         Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(trackedDevice1));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
         Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.PointerUp));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.device, Is.SameAs(trackedDevice1));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
         Assert.That(scene.leftChildReceiver.events[3].type, Is.EqualTo(EventType.PointerClick));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.device, Is.SameAs(trackedDevice1));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -30, 0)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1505,22 +1505,22 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(4));
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerDown));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
         Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.InitializePotentialDrag));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.device, Is.SameAs(trackedDevice2));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
         Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.PointerUp));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.device, Is.SameAs(trackedDevice2));
         Assert.That(scene.leftChildReceiver.events[2].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
         Assert.That(scene.leftChildReceiver.events[3].type, Is.EqualTo(EventType.PointerClick));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
-        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.device, Is.SameAs(trackedDevice2));
         Assert.That(scene.leftChildReceiver.events[3].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, -31, 0)));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -1535,13 +1535,13 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 30, 0)));
         Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice1.deviceId));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice1));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 30, 0)));
 
         scene.leftChildReceiver.events.Clear();
@@ -1555,13 +1555,13 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 31, 0)));
         Assert.That(scene.rightChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(scene.rightChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(trackedDevice2.deviceId));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.device, Is.SameAs(trackedDevice2));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(PointerType.Tracked));
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Tracked));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.trackedDeviceOrientation, Is.EqualTo(Quaternion.Euler(0, 31, 0)));
     }
 
@@ -1604,7 +1604,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.pointerId == mouse.deviceId).And
-                .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.pointerType == PointerType.MouseOrPen).And
+                .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.pointerType == UIPointerType.MouseOrPen).And
                 .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.clickCount == 0));
     }
 

@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem.UI
 
             // If it's an event from a tracked device, see if we have a TrackedDeviceRaycaster and give it
             // the first shot.
-            if (eventData.pointerType == PointerType.Tracked && TrackedDeviceRaycaster.s_Instances.length > 0)
+            if (eventData.pointerType == UIPointerType.Tracked && TrackedDeviceRaycaster.s_Instances.length > 0)
             {
                 for (var i = 0; i < TrackedDeviceRaycaster.s_Instances.length; ++i)
                 {
@@ -189,13 +189,13 @@ namespace UnityEngine.InputSystem.UI
 
             // Sync position.
             var pointerType = eventData.pointerType;
-            if (pointerType == PointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+            if (pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
             {
                 eventData.position = new Vector2(-1, -1);
                 ////REVIEW: This is consistent with StandaloneInputModule but having no deltas in locked mode seems wrong
                 eventData.delta = default;
             }
-            else if (pointerType == PointerType.Tracked)
+            else if (pointerType == UIPointerType.Tracked)
             {
                 eventData.trackedDeviceOrientation = state.worldOrientation;
                 eventData.trackedDevicePosition = state.worldPosition;
@@ -214,7 +214,7 @@ namespace UnityEngine.InputSystem.UI
 
             // Sync position for tracking devices. For those, we can only do this
             // after the raycast as the screen-space position is a byproduct of the raycast.
-            if (pointerType == PointerType.Tracked && eventData.pointerCurrentRaycast.isValid)
+            if (pointerType == UIPointerType.Tracked && eventData.pointerCurrentRaycast.isValid)
             {
                 var screenPos = eventData.pointerCurrentRaycast.screenPosition;
                 eventData.delta = screenPos - eventData.position;
@@ -266,8 +266,8 @@ namespace UnityEngine.InputSystem.UI
             var currentPointerTarget =
                 // If the pointer is a touch that was released this frame, we generate pointer-exit events
                 // and then later remove the pointer.
-                (eventData.pointerType == PointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
-                (eventData.pointerType == PointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
+                (eventData.pointerType == UIPointerType.Touch && pointer.leftButton.wasReleasedThisFrame) ||
+                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked)
                 ? null
                 : eventData.pointerCurrentRaycast.gameObject;
 
@@ -403,14 +403,14 @@ namespace UnityEngine.InputSystem.UI
         private void ProcessPointerButtonDrag(ref PointerModel.ButtonState button, ExtendedPointerEventData eventData)
         {
             if (!eventData.IsPointerMoving() ||
-                (eventData.pointerType == PointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked) ||
+                (eventData.pointerType == UIPointerType.MouseOrPen && Cursor.lockState == CursorLockMode.Locked) ||
                 eventData.pointerDrag == null)
                 return;
 
             if (!eventData.dragging)
             {
                 if (!eventData.useDragThreshold || (eventData.pressPosition - eventData.position).sqrMagnitude >=
-                    (double)eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold * (eventData.pointerType == PointerType.Tracked
+                    (double)eventSystem.pixelDragThreshold * eventSystem.pixelDragThreshold * (eventData.pointerType == UIPointerType.Tracked
                                                                                                ? m_TrackedDeviceDragThresholdMultiplier
                                                                                                : 1))
                 {
@@ -900,24 +900,24 @@ namespace UnityEngine.InputSystem.UI
             }
 
             // Determine pointer type.
-            var pointerType = PointerType.None;
+            var pointerType = UIPointerType.None;
             if (touchId != 0)
-                pointerType = PointerType.Touch;
+                pointerType = UIPointerType.Touch;
             else if (HaveControlForDevice(device, point))
-                pointerType = PointerType.MouseOrPen;
+                pointerType = UIPointerType.MouseOrPen;
             else if (HaveControlForDevice(device, trackedDevicePosition))
-                pointerType = PointerType.Tracked;
+                pointerType = UIPointerType.Tracked;
 
             // For SingleMouseOrPenButMultiTouchAndTrack, we keep a single pointer for mouse and pen but only for as
             // long as there is no touch or tracked input. If we get that kind, we remove the mouse/pen pointer.
-            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType != PointerType.None)
+            if (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType != UIPointerType.None)
             {
-                if (pointerType == PointerType.MouseOrPen)
+                if (pointerType == UIPointerType.MouseOrPen)
                 {
                     // We have input on a mouse or pen. Kill all touch and tracked pointers we may have.
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
-                        if (m_PointerStates[i].pointerType != PointerType.MouseOrPen)
+                        if (m_PointerStates[i].pointerType != UIPointerType.MouseOrPen)
                         {
                             SendPointerExitEventsAndRemovePointer(i);
                             --i;
@@ -929,7 +929,7 @@ namespace UnityEngine.InputSystem.UI
                     // We have touch or tracked input. Kill mouse/pen pointer, if we have it.
                     for (var i = 0; i < m_PointerStates.length; ++i)
                     {
-                        if (m_PointerStates[i].pointerType == PointerType.MouseOrPen)
+                        if (m_PointerStates[i].pointerType == UIPointerType.MouseOrPen)
                         {
                             SendPointerExitEventsAndRemovePointer(i);
                             --i;
@@ -940,8 +940,8 @@ namespace UnityEngine.InputSystem.UI
             ////REVIEW: For touch, probably makes sense to force-ignore any input other than from primaryTouch.
             // If the behavior is SingleUnifiedPointer, we only ever create a single pointer state
             // and use that for all pointer input that is coming in.
-            if ((m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer && pointerType != PointerType.None) ||
-                (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType == PointerType.MouseOrPen))
+            if ((m_PointerBehavior == UIPointerBehavior.SingleUnifiedPointer && pointerType != UIPointerType.None) ||
+                (m_PointerBehavior == UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack && pointerType == UIPointerType.MouseOrPen))
             {
                 if (m_CurrentPointerIndex == -1)
                 {
@@ -975,7 +975,7 @@ namespace UnityEngine.InputSystem.UI
             // No existing record for the device. Find out if the device has the ability to point at all.
             // If not, we need to use a pointer state from a different device (if present).
             var index = -1;
-            if (pointerType != PointerType.None)
+            if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
                 index = AllocatePointer(pointerId, touchId, pointerType, device);
@@ -1000,7 +1000,7 @@ namespace UnityEngine.InputSystem.UI
                 if (pointerDevice != null && !(pointerDevice is Touchscreen)) // Touchscreen only temporarily allocate pointer states.
                 {
                     // Create MouseOrPen style pointer.
-                    index = AllocatePointer(pointerDevice.deviceId, 0, PointerType.MouseOrPen, pointerDevice);
+                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointerDevice);
                 }
                 else
                 {
@@ -1012,13 +1012,13 @@ namespace UnityEngine.InputSystem.UI
                     if (trackedDevice != null)
                     {
                         // Create a Tracked style pointer.
-                        index = AllocatePointer(trackedDevice.deviceId, 0, PointerType.Tracked, trackedDevice);
+                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, trackedDevice);
                     }
                     else
                     {
                         // We got input from a non-pointer device and apparently there's no pointer we can route the
                         // input into. Just create a pointer state for the device and leave it at that.
-                        index = AllocatePointer(pointerId, 0, PointerType.None, device);
+                        index = AllocatePointer(pointerId, 0, UIPointerType.None, device);
                     }
                 }
             }
@@ -1030,7 +1030,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, PointerType pointerType, InputDevice device)
+        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1227,7 +1227,7 @@ namespace UnityEngine.InputSystem.UI
                     // If it's a touch and the touch has ended, release the pointer state.
                     // NOTE: We have no guarantee that the system reuses touch IDs so the touch ID we used
                     //       as a pointer ID may be a one-off thing.
-                    if (state.pointerType == PointerType.Touch && !state.leftButton.isPressed)
+                    if (state.pointerType == UIPointerType.Touch && !state.leftButton.isPressed)
                     {
                         RemovePointerAtIndex(i);
                         --i;
@@ -1390,7 +1390,7 @@ namespace UnityEngine.InputSystem.UI
         // Pointer-type input (also tracking-type).
         private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
         private int m_CurrentPointerIndex = -1;
-        private PointerType m_CurrentPointerType = PointerType.None;
+        private UIPointerType m_CurrentPointerType = UIPointerType.None;
         private InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
         private InlinedArray<PointerModel> m_PointerStates;
 
