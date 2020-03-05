@@ -637,6 +637,30 @@ namespace UnityEngine.InputSystem.UI
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
         /// used as a cursor for pointing at UI elements.
         /// </summary>
+        /// <remarks>
+        /// The values read from this action determine <see cref="PointerEventData.position"/> and <see cref="PointerEventData.delta"/>.
+        ///
+        /// Together with <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
+        /// <see cref="scrollWheel"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("Point");
+        ///
+        /// pointAction.AddBinding("&lt;Mouse&gt;/position");
+        /// pointAction.AddBinding("&lt;Touchscreen&gt;/touch*/position");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).point =
+        ///     InputActionReference.Create(pointAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="leftClick"/>
+        /// <seealso cref="rightClick"/>
+        /// <seealso cref="middleClick"/>
+        /// <seealso cref="scrollWheel"/>
         public InputActionReference point
         {
             get => m_PointAction;
@@ -644,22 +668,41 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> 2D motion vector
-        /// used for sending <see cref="AxisEventData"/> navigation events.
-        /// </summary>
-        /// <remarks>
-        /// The events generated from this input will be received by <c>IMoveHandle.OnMove</c>.
-        /// </remarks>
-        public InputActionReference move
-        {
-            get => m_MoveAction;
-            set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, m_OnMoveDelegate);
-        }
-
-        /// <summary>
         /// An <see cref="InputAction"/> delivering a <c>Vector2</c> scroll wheel value
         /// used for sending <see cref="PointerEventData"/> events.
         /// </summary>
+        /// <remarks>
+        /// The values read from this action determine <see cref="PointerEventData.scrollDelta"/>.
+        ///
+        /// Together with <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
+        /// <see cref="point"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
+        /// and <see cref="leftClick"/> alone.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("scroll");
+        /// var scrollAction = map.AddAction("scroll");
+        ///
+        /// pointAction.AddBinding("&lt;Mouse&gt;/position");
+        /// pointAction.AddBinding("&lt;Touchscreen&gt;/touch*/position");
+        ///
+        /// scrollAction.AddBinding("&lt;Mouse&gt;/scroll");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).point =
+        ///     InputActionReference.Create(pointAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).scrollWheel =
+        ///     InputActionReference.Create(scrollAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="leftClick"/>
+        /// <seealso cref="rightClick"/>
+        /// <seealso cref="middleClick"/>
+        /// <seealso cref="point"/>
         public InputActionReference scrollWheel
         {
             get => m_ScrollWheelAction;
@@ -667,9 +710,42 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
-        /// used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>float</c> button value that determines
+        /// whether the left button of a pointer is pressed.
         /// </summary>
+        /// <remarks>
+        /// Clicks on this button will use <see cref="PointerEventData.InputButton.Left"/> for <see cref="PointerEventData.button"/>.
+        ///
+        /// Together with <see cref="point"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
+        /// <see cref="scrollWheel"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// Note that together with <see cref="point"/>, this action is necessary for a pointer to be functional. The other clicks
+        /// and <see cref="scrollWheel"/> are optional, however.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("scroll");
+        /// var clickAction = map.AddAction("click");
+        ///
+        /// pointAction.AddBinding("&lt;Mouse&gt;/position");
+        /// pointAction.AddBinding("&lt;Touchscreen&gt;/touch*/position");
+        ///
+        /// clickAction.AddBinding("&lt;Mouse&gt;/leftButton");
+        /// clickAction.AddBinding("&lt;Touchscreen&gt;/touch*/press");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).point =
+        ///     InputActionReference.Create(pointAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).leftClick =
+        ///     InputActionReference.Create(clickAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="rightClick"/>
+        /// <seealso cref="middleClick"/>
+        /// <seealso cref="scrollWheel"/>
+        /// <seealso cref="point"/>
         public InputActionReference leftClick
         {
             get => m_LeftClickAction;
@@ -677,9 +753,47 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
-        /// used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>float</c> button value that determines
+        /// whether the middle button of a pointer is pressed.
         /// </summary>
+        /// <remarks>
+        /// Clicks on this button will use <see cref="PointerEventData.InputButton.Middle"/> for <see cref="PointerEventData.button"/>.
+        ///
+        /// Together with <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="scrollWheel"/>, and
+        /// <see cref="point"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
+        /// and <see cref="leftClick"/> alone.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("scroll");
+        /// var leftClickAction = map.AddAction("leftClick");
+        /// var middleClickAction = map.AddAction("middleClick");
+        ///
+        /// pointAction.AddBinding("&lt;Mouse&gt;/position");
+        /// pointAction.AddBinding("&lt;Touchscreen&gt;/touch*/position");
+        ///
+        /// leftClickAction.AddBinding("&lt;Mouse&gt;/leftButton");
+        /// leftClickAction.AddBinding("&lt;Touchscreen&gt;/touch*/press");
+        ///
+        /// middleClickAction.AddBinding("&lt;Mouse&gt;/middleButton");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).point =
+        ///     InputActionReference.Create(pointAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).leftClick =
+        ///     InputActionReference.Create(leftClickAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).middleClick =
+        ///     InputActionReference.Create(middleClickAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="leftClick"/>
+        /// <seealso cref="rightClick"/>
+        /// <seealso cref="scrollWheel"/>
+        /// <seealso cref="point"/>
         public InputActionReference middleClick
         {
             get => m_MiddleClickAction;
@@ -687,9 +801,47 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>bool"</c> button value
-        /// used for sending <see cref="PointerEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>float"</c> button value that determines
+        /// whether the right button of a pointer is pressed.
         /// </summary>
+        /// <remarks>
+        /// Clicks on this button will use <see cref="PointerEventData.InputButton.Right"/> for <see cref="PointerEventData.button"/>.
+        ///
+        /// Together with <see cref="leftClick"/>, <see cref="middleClick"/>, <see cref="scrollWheel"/>, and
+        /// <see cref="point"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
+        /// and <see cref="leftClick"/> alone.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("scroll");
+        /// var leftClickAction = map.AddAction("leftClick");
+        /// var rightClickAction = map.AddAction("rightClick");
+        ///
+        /// pointAction.AddBinding("&lt;Mouse&gt;/position");
+        /// pointAction.AddBinding("&lt;Touchscreen&gt;/touch*/position");
+        ///
+        /// leftClickAction.AddBinding("&lt;Mouse&gt;/leftButton");
+        /// leftClickAction.AddBinding("&lt;Touchscreen&gt;/touch*/press");
+        ///
+        /// rightClickAction.AddBinding("&lt;Mouse&gt;/rightButton");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).point =
+        ///     InputActionReference.Create(pointAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).leftClick =
+        ///     InputActionReference.Create(leftClickAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).rightClick =
+        ///     InputActionReference.Create(rightClickAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="leftClick"/>
+        /// <seealso cref="middleClick"/>
+        /// <seealso cref="scrollWheel"/>
+        /// <seealso cref="point"/>
         public InputActionReference rightClick
         {
             get => m_RightClickAction;
@@ -697,9 +849,79 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
-        /// used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>Vector2</c> 2D motion vector
+        /// used for sending <see cref="AxisEventData"/> navigation events.
         /// </summary>
+        /// <remarks>
+        /// The events generated from this input will be received by <see cref="IMoveHandler.OnMove"/>.
+        ///
+        /// This action together with <see cref="submit"/> and <see cref="cancel"/> form the sources for navigation-style
+        /// UI input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("move");
+        /// var submitAction = map.AddAction("submit");
+        /// var cancelAction = map.AddAction("cancel");
+        ///
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/*stick");
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/dpad");
+        /// submitAction.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// cancelAction.AddBinding("&lt;Gamepad&gt;/buttonEast");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).move =
+        ///     InputActionReference.Create(moveAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).submit =
+        ///     InputActionReference.Create(submitAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).cancelAction =
+        ///     InputActionReference.Create(cancelAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="submit"/>
+        /// <seealso cref="cancel"/>
+        public InputActionReference move
+        {
+            get => m_MoveAction;
+            set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, m_OnMoveDelegate);
+        }
+
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <c>float</c> button value that determines when <c>ISubmitHandler</c>
+        /// is triggered.
+        /// </summary>
+        /// <remarks>
+        /// The events generated from this input will be received by <see cref="ISubmitHandler"/>.
+        ///
+        /// This action together with <see cref="move"/> and <see cref="cancel"/> form the sources for navigation-style
+        /// UI input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("move");
+        /// var submitAction = map.AddAction("submit");
+        /// var cancelAction = map.AddAction("cancel");
+        ///
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/*stick");
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/dpad");
+        /// submitAction.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// cancelAction.AddBinding("&lt;Gamepad&gt;/buttonEast");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).move =
+        ///     InputActionReference.Create(moveAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).submit =
+        ///     InputActionReference.Create(submitAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).cancelAction =
+        ///     InputActionReference.Create(cancelAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="move"/>
+        /// <seealso cref="cancel"/>
         public InputActionReference submit
         {
             get => m_SubmitAction;
@@ -707,21 +929,117 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
-        /// An <see cref="InputAction"/> delivering a <c>bool</c> button value
-        /// used for sending <see cref="BaseEventData"/> events.
+        /// An <see cref="InputAction"/> delivering a <c>float</c> button value that determines when <c>ICancelHandler</c>
+        /// is triggered.
         /// </summary>
+        /// <remarks>
+        /// The events generated from this input will be received by <see cref="ICancelHandler"/>.
+        ///
+        /// This action together with <see cref="move"/> and <see cref="submit"/> form the sources for navigation-style
+        /// UI input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var pointAction = map.AddAction("move");
+        /// var submitAction = map.AddAction("submit");
+        /// var cancelAction = map.AddAction("cancel");
+        ///
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/*stick");
+        /// moveAction.AddBinding("&lt;Gamepad&gt;/dpad");
+        /// submitAction.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// cancelAction.AddBinding("&lt;Gamepad&gt;/buttonEast");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).move =
+        ///     InputActionReference.Create(moveAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).submit =
+        ///     InputActionReference.Create(submitAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).cancelAction =
+        ///     InputActionReference.Create(cancelAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="move"/>
+        /// <seealso cref="submit"/>
         public InputActionReference cancel
         {
             get => m_CancelAction;
             set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnCancelDelegate);
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <c>Quaternion</c> value reflecting the orientation of <see cref="TrackedDevice"/>s.
+        /// In combination with <see cref="trackedDevicePosition"/>, this is used to determine the transform of tracked devices from which
+        /// to raycast into the UI scene.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="trackedDeviceOrientation"/> and <see cref="trackedDevicePosition"/> together replace <see cref="point"/> for
+        /// UI input from <see cref="TrackedDevice"/>. Other than that, UI input for tracked devices is no different from "normal"
+        /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
+        /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var positionAction = map.AddAction("position");
+        /// var orientationAction = map.AddAction("orientation");
+        /// var clickAction = map.AddAction("click");
+        ///
+        /// positionAction.AddBinding("&lt;TrackedDevice&gt;/devicePosition");
+        /// orientationAction.AddBinding("&lt;TrackedDevice&gt;/deviceRotation");
+        /// clickAction.AddBinding("&lt;TrackedDevice&gt;/trigger");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).trackedDevicePosition =
+        ///     InputActionReference.Create(positionAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).trackedDeviceOrientation =
+        ///     InputActionReference.Create(orientationAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).leftClick =
+        ///     InputActionReference.Create(clickAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="trackedDevicePosition"/>
         public InputActionReference trackedDeviceOrientation
         {
             get => m_TrackedDeviceOrientationAction;
             set => SwapAction(ref m_TrackedDeviceOrientationAction, value, m_ActionsHooked, m_OnTrackedDeviceOrientationDelegate);
         }
 
+        /// <summary>
+        /// An <see cref="InputAction"/> delivering a <c>Vector3</c> value reflecting the position of <see cref="TrackedDevice"/>s.
+        /// In combination with <see cref="trackedDeviceOrientation"/>, this is used to determine the transform of tracked devices from which
+        /// to raycast into the UI scene.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="trackedDeviceOrientation"/> and <see cref="trackedDevicePosition"/> together replace <see cref="point"/> for
+        /// UI input from <see cref="TrackedDevice"/>. Other than that, UI input for tracked devices is no different from "normal"
+        /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
+        /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
+        ///
+        /// <example>
+        /// <code>
+        /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
+        /// var map = asset.AddActionMap("UI");
+        /// var positionAction = map.AddAction("position");
+        /// var orientationAction = map.AddAction("orientation");
+        /// var clickAction = map.AddAction("click");
+        ///
+        /// positionAction.AddBinding("&lt;TrackedDevice&gt;/devicePosition");
+        /// orientationAction.AddBinding("&lt;TrackedDevice&gt;/deviceRotation");
+        /// clickAction.AddBinding("&lt;TrackedDevice&gt;/trigger");
+        ///
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).trackedDevicePosition =
+        ///     InputActionReference.Create(positionAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).trackedDeviceOrientation =
+        ///     InputActionReference.Create(orientationAction);
+        /// ((InputSystemUIInputModule)EventSystem.current.currentInputModule).leftClick =
+        ///     InputActionReference.Create(clickAction);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="trackedDeviceOrientation"/>
         public InputActionReference trackedDevicePosition
         {
             get => m_TrackedDevicePositionAction;
