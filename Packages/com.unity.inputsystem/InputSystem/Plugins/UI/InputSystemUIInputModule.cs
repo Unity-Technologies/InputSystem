@@ -582,14 +582,14 @@ namespace UnityEngine.InputSystem.UI
             set => m_MoveRepeatRate = value;
         }
 
-        [Obsolete("Use moveRepeatRate")]
+        [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
         public float repeatRate
         {
             get => moveRepeatRate;
             set => moveRepeatRate = value;
         }
 
-        [Obsolete("Use moveRepeatDelay")]
+        [Obsolete("'repeatDelay' has been obsoleted; use 'moveRepeatDelay' instead. (UnityUpgradable) -> moveRepeatDelay", false)]
         public float repeatDelay
         {
             get => moveRepeatDelay;
