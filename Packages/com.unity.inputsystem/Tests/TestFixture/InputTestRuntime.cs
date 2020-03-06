@@ -322,6 +322,7 @@ namespace UnityEngine.InputSystem
         public float pollingFrequency { get; set; }
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
+        public float unscaledGameTime { get; set; } = 1;
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 

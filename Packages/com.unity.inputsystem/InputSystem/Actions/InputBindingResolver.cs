@@ -218,23 +218,38 @@ namespace UnityEngine.InputSystem
                             action = currentCompositeAction;
                         }
 
+                        // If it's a composite, start a chain.
+                        if (isComposite)
+                        {
+                            currentCompositeBindingIndex = bindingIndex;
+                            currentCompositeAction = action;
+                            currentCompositeActionIndexInMap = actionIndexInMap;
+                        }
+
                         // Determine if the binding is disabled.
                         // Disabled if path is empty.
                         var path = unresolvedBinding.effectivePath;
-                        var bindingIsDisabled = string.IsNullOrEmpty(path);
+                        var bindingIsDisabled = string.IsNullOrEmpty(path)
 
-                        // Also, disabled if binding doesn't match with our binding mask (might be empty).
-                        bindingIsDisabled |= !isComposite && bindingMask != null &&
-                            !bindingMask.Value.Matches(ref unresolvedBinding,
-                            InputBinding.MatchOptions.EmptyGroupMatchesAny);
+                            // Also, if we can't find the action to trigger for the binding, we just go and disable
+                            // the binding.
+                            || action == null
 
-                        // Also, disabled if binding doesn't match the binding mask on the map (might be empty).
-                        bindingIsDisabled |= !isComposite && bindingMaskOnThisMap != null &&
-                            !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
+                            // Also, disabled if binding doesn't match with our binding mask (might be empty).
+                            || (!isComposite && bindingMask != null &&
+                                !bindingMask.Value.Matches(ref unresolvedBinding,
+                                    InputBinding.MatchOptions.EmptyGroupMatchesAny))
 
-                        // Finally, also disabled if binding doesn't match the binding mask on the action (might be empty).
-                        bindingIsDisabled |= !isComposite && action?.m_BindingMask != null &&
-                            !action.m_BindingMask.Value.Matches(ref unresolvedBinding, InputBinding.MatchOptions.EmptyGroupMatchesAny);
+                            // Also, disabled if binding doesn't match the binding mask on the map (might be empty).
+                            || (!isComposite && bindingMaskOnThisMap != null &&
+                                !bindingMaskOnThisMap.Value.Matches(ref unresolvedBinding,
+                                    InputBinding.MatchOptions.EmptyGroupMatchesAny))
+
+                            // Finally, also disabled if binding doesn't match the binding mask on the action (might be empty).
+                            || (!isComposite && action?.m_BindingMask != null &&
+                                !action.m_BindingMask.Value.Matches(ref unresolvedBinding,
+                                    InputBinding.MatchOptions.EmptyGroupMatchesAny));
+
 
                         // If the binding isn't disabled, resolve its controls, processors, and interactions.
                         if (!bindingIsDisabled)
@@ -248,7 +263,7 @@ namespace UnityEngine.InputSystem
                                 if (firstProcessorIndex != InputActionState.kInvalidIndex)
                                     numProcessors = totalProcessorCount - firstProcessorIndex;
                             }
-                            if (action != null && !string.IsNullOrEmpty(action.m_Processors))
+                            if (!string.IsNullOrEmpty(action.m_Processors))
                             {
                                 // Add processors from action.
                                 var index = ResolveProcessors(action.m_Processors);
@@ -269,7 +284,7 @@ namespace UnityEngine.InputSystem
                                 if (firstInteractionIndex != InputActionState.kInvalidIndex)
                                     numInteractions = totalInteractionCount - firstInteractionIndex;
                             }
-                            if (action != null && !string.IsNullOrEmpty(action.m_Interactions))
+                            if (!string.IsNullOrEmpty(action.m_Interactions))
                             {
                                 // Add interactions from action.
                                 var index = ResolveInteractions(action.m_Interactions);
@@ -281,74 +296,58 @@ namespace UnityEngine.InputSystem
                                 }
                             }
 
-                            // If it's the start of a composite chain, create the composite.
+                            // If it's the start of a composite chain, create the composite. Otherwise, go and
+                            // resolve controls for the binding.
                             if (isComposite)
                             {
-                                var actionIndexForComposite = actionIndexInMap != InputActionState.kInvalidIndex
-                                    ? actionStartIndex + actionIndexInMap
-                                    : InputActionState.kInvalidIndex;
+                                // The composite binding entry itself does not resolve to any controls.
+                                // It creates a composite binding object which is then populated from
+                                // subsequent bindings.
 
                                 // Instantiate. For composites, the path is the name of the composite.
                                 var composite = InstantiateBindingComposite(unresolvedBinding.path);
                                 currentCompositeIndex =
                                     ArrayHelpers.AppendWithCapacity(ref composites, ref totalCompositeCount, composite);
-                                currentCompositeBindingIndex = bindingIndex;
-                                currentCompositeAction = action;
-                                currentCompositeActionIndexInMap = actionIndexInMap;
 
-                                *bindingState = new InputActionState.BindingState
-                                {
-                                    actionIndex = actionIndexForComposite,
-                                    compositeOrCompositeBindingIndex = currentCompositeIndex,
-                                    processorStartIndex = firstProcessorIndex,
-                                    processorCount = numProcessors,
-                                    interactionCount = numInteractions,
-                                    interactionStartIndex = firstInteractionIndex,
-                                    mapIndex = totalMapCount,
-                                    isComposite = true,
-                                    // Record where the controls for parts of the composite start.
-                                    controlStartIndex = memory.controlCount + resolvedControls.Count,
-                                };
-
-                                // The composite binding entry itself does not resolve to any controls.
-                                // It creates a composite binding object which is then populated from
-                                // subsequent bindings.
-                                continue;
-                            }
-
-                            // If we've reached the end of a composite chain, finish
-                            // off the current composite.
-                            if (!isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex)
-                            {
-                                currentCompositePartCount = 0;
-                                currentCompositeBindingIndex = InputActionState.kInvalidIndex;
-                                currentCompositeIndex = InputActionState.kInvalidIndex;
-                                currentCompositeAction = null;
-                                currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
-                            }
-
-                            // Look up controls.
-                            //
-                            // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
-                            //       pass over the bindings in the map, `resolvedControls` will have all the controls for
-                            //       the current map.
-                            firstControlIndex = memory.controlCount + resolvedControls.Count;
-                            if (devicesForThisMap != null)
-                            {
-                                // Search in devices for only this map.
-                                var list = devicesForThisMap.Value;
-                                for (var i = 0; i < list.Count; ++i)
-                                {
-                                    var device = list[i];
-                                    if (!device.added)
-                                        continue; // Skip devices that have been removed.
-                                    numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
-                                }
+                                // Record where the controls for parts of the composite start.
+                                firstControlIndex = memory.controlCount + resolvedControls.Count;
                             }
                             else
                             {
-                                // Search globally.
-                                numControls = InputSystem.FindControls(path, ref resolvedControls);
+                                // If we've reached the end of a composite chain, finish
+                                // off the current composite.
+                                if (!isPartOfComposite && currentCompositeBindingIndex != InputActionState.kInvalidIndex)
+                                {
+                                    currentCompositePartCount = 0;
+                                    currentCompositeBindingIndex = InputActionState.kInvalidIndex;
+                                    currentCompositeIndex = InputActionState.kInvalidIndex;
+                                    currentCompositeAction = null;
+                                    currentCompositeActionIndexInMap = InputActionState.kInvalidIndex;
+                                }
+
+                                // Look up controls.
+                                //
+                                // NOTE: We continuously add controls here to `resolvedControls`. Once we've completed our
+                                //       pass over the bindings in the map, `resolvedControls` will have all the controls for
+                                //       the current map.
+                                firstControlIndex = memory.controlCount + resolvedControls.Count;
+                                if (devicesForThisMap != null)
+                                {
+                                    // Search in devices for only this map.
+                                    var list = devicesForThisMap.Value;
+                                    for (var i = 0; i < list.Count; ++i)
+                                    {
+                                        var device = list[i];
+                                        if (!device.added)
+                                            continue; // Skip devices that have been removed.
+                                        numControls += InputControlPath.TryFindControls(device, path, 0, ref resolvedControls);
+                                    }
+                                }
+                                else
+                                {
+                                    // Search globally.
+                                    numControls = InputSystem.FindControls(path, ref resolvedControls);
+                                }
                             }
                         }
 
@@ -381,15 +380,17 @@ namespace UnityEngine.InputSystem
                         *bindingState = new InputActionState.BindingState
                         {
                             controlStartIndex = firstControlIndex,
+                            // For composites, this will be adjusted as we add each part.
                             controlCount = numControls,
                             interactionStartIndex = firstInteractionIndex,
                             interactionCount = numInteractions,
                             processorStartIndex = firstProcessorIndex,
                             processorCount = numProcessors,
+                            isComposite = isComposite,
                             isPartOfComposite = unresolvedBinding.isPartOfComposite,
                             partIndex = partIndex,
                             actionIndex = actionIndexForBinding,
-                            compositeOrCompositeBindingIndex = currentCompositeBindingIndex,
+                            compositeOrCompositeBindingIndex = isComposite ? currentCompositeIndex : currentCompositeBindingIndex,
                             mapIndex = totalMapCount,
                             wantsInitialStateCheck = action?.wantsInitialStateCheck ?? false
                         };

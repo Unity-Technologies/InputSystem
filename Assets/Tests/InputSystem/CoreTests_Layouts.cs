@@ -1371,6 +1371,60 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanAddChildControlToExistingControl_UsingStateFromOtherControl()
+    {
+        InputSystem.RegisterLayout(@"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""noise"", ""layout"" : ""Button"" },
+                    { ""name"" : ""scroll"", ""layout"" : ""Vector2"" },
+                    { ""name"" : ""scroll/up"", ""layout"" : ""Button"", ""useStateFrom"" : ""scroll/y"", ""parameters"" : ""clamp=1,clampMin=0,clampMax=99999"" },
+                    { ""name"" : ""scroll/down"", ""layout"" : ""Button"", ""useStateFrom"" : ""scroll/y"", ""parameters"" : ""clamp=1,clampMin=-99999,clampMax=0,invert"" },
+                    { ""name"" : ""scroll/left"", ""layout"" : ""Button"", ""useStateFrom"" : ""scroll/x"", ""parameters"" : ""clamp=1,clampMin=-99999,clampMax=0,invert"" },
+                    { ""name"" : ""scroll/right"", ""layout"" : ""Button"", ""useStateFrom"" : ""scroll/x"", ""parameters"" : ""clamp=1,clampMin=0,clampMax=99999"" }
+                ]
+            }
+        ");
+
+        var device = InputSystem.AddDevice("TestDevice");
+        var scroll = (Vector2Control)device["scroll"];
+
+        // Left.
+        Set(scroll, new Vector2(-123, 0));
+
+        Assert.That(device["scroll/up"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/down"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/left"].ReadValueAsObject(), Is.EqualTo(123).Within(0.00001));
+        Assert.That(device["scroll/right"].ReadValueAsObject(), Is.Zero);
+
+        // Right.
+        Set(scroll, new Vector2(234, 0));
+
+        Assert.That(device["scroll/up"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/down"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/left"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/right"].ReadValueAsObject(), Is.EqualTo(234).Within(0.00001));
+
+        // Up.
+        Set(scroll, new Vector2(0, 123));
+
+        Assert.That(device["scroll/up"].ReadValueAsObject(), Is.EqualTo(123).Within(0.00001));
+        Assert.That(device["scroll/down"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/left"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/right"].ReadValueAsObject(), Is.Zero);
+
+        // Down.
+        Set(scroll, new Vector2(0, -432));
+
+        Assert.That(device["scroll/up"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/down"].ReadValueAsObject(), Is.EqualTo(432).Within(0.00001));
+        Assert.That(device["scroll/left"].ReadValueAsObject(), Is.Zero);
+        Assert.That(device["scroll/right"].ReadValueAsObject(), Is.Zero);
+    }
+
+    [Test]
+    [Category("Layouts")]
     [Ignore("TODO")]
     public void TODO_Layouts_WhenModifyingChildControlsByPath_DependentControlsUsingStateFromAreUpdatedAsWell()
     {

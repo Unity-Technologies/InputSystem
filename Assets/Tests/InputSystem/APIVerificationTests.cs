@@ -512,6 +512,8 @@ class APIVerificationTests
         }
     }
 
+    ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
+    ////      be great to have some way of diagnosing links that have gone stale
     [Test]
     [Category("API")]
 #if UNITY_EDITOR_OSX

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -34,7 +35,7 @@ namespace UnityEngine.InputSystem.Interactions
         public float pressPoint;
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultTapTime;
-        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         private double m_TapStartTime;
 

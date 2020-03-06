@@ -7,6 +7,8 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// An input device that has its orientation and position in space tracked.
     /// </summary>
+    /// <seealso cref="UnityEngine.InputSystem.XR.XRController"/>
+    /// <seealso cref="UnityEngine.InputSystem.XR.XRHMD"/>
     [InputControlLayout(displayName = "Tracked Device", isGenericTypeOfDevice = true)]
     [Preserve]
     public class TrackedDevice : InputDevice

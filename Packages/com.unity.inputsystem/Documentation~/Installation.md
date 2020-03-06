@@ -26,3 +26,5 @@ To fully switch from the old Input Manager to the new Input System for a Project
 ![Switch Active Input Handling](Images/ActiveInputHandling.png)
 
 >__Note__: You must restart the Unity Editor before this setting takes effect.
+
+When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define` is added to builds. Similarly, when the old input backends are enabled, the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define` is added. Because both can be enabled at the same time, it is possible for __both__ defines to be 1 at the same time.

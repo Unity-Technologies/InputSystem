@@ -612,7 +612,7 @@ namespace UnityEngine.InputSystem.Utilities
 
             // Destroy current tail.
             if (count >= 1)
-                array[count - 1] = default(TValue);
+                array[count - 1] = default;
             --count;
         }
 

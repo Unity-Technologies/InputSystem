@@ -110,6 +110,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
+        public int* enabledControls => memory.enabledControls;
 
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
@@ -157,6 +158,10 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < totalMapCount; ++i)
                 {
                     var map = maps[i];
+
+                    // Remove state change monitors.
+                    if (map.enabled)
+                        DisableControls(i, mapIndices[i].controlStartIndex, mapIndices[i].controlCount);
 
                     if (map.m_Asset != null)
                         map.m_Asset.m_SharedStateForAllMaps = null;
@@ -467,9 +472,10 @@ namespace UnityEngine.InputSystem
             Debug.Assert(map.m_Actions != null, "Map must have actions");
             Debug.Assert(maps.Contains(map), "Map must be contained in state");
 
+            // Enable all controls in map that aren't already enabled.
             EnableControls(map);
 
-            // Put all actions into waiting state.
+            // Put all actions that aren't already enbaled into waiting state.
             var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
             var actionCount = mapIndices[mapIndex].actionCount;
@@ -477,7 +483,8 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < actionCount; ++i)
             {
                 var actionIndex = actionStartIndex + i;
-                actionStates[actionIndex].phase = InputActionPhase.Waiting;
+                if (actionStates[actionIndex].isDisabled)
+                    actionStates[actionIndex].phase = InputActionPhase.Waiting;
             }
             map.m_EnabledActionsCount = actionCount;
 
@@ -662,6 +669,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: can we have a method on InputManager doing this in bulk?
 
+        ////NOTE: This must not enable only a partial set of controls on a binding (currently we have no setup that would lead to that)
         private void EnableControls(int mapIndex, int controlStartIndex, int numControls)
         {
             Debug.Assert(controls != null, "State must have controls");
@@ -673,12 +681,20 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
+
+                // We don't want to add multiple state monitors for the same control. This can happen if enabling
+                // single actions is mixed with enabling actions maps containing them.
+                if (IsControlEnabled(controlIndex))
+                    continue;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
-
-                if (bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = true;
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    bindingStatePtr->initialStateCheckPending = true;
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+
+                SetControlEnabled(controlIndex, true);
             }
         }
 
@@ -693,13 +709,36 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
+                if (!IsControlEnabled(controlIndex))
+                    continue;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
-
-                if (bindingStates[bindingIndex].wantsInitialStateCheck)
-                    bindingStates[bindingIndex].initialStateCheckPending = false;
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (bindingStatePtr->wantsInitialStateCheck)
+                    bindingStatePtr->initialStateCheckPending = false;
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+
+                SetControlEnabled(controlIndex, false);
             }
+        }
+
+        private bool IsControlEnabled(int controlIndex)
+        {
+            var intIndex = controlIndex / 32;
+            var intMask = 1 << (controlIndex % 32);
+            return (enabledControls[intIndex] & intMask) != 0;
+        }
+
+        private void SetControlEnabled(int controlIndex, bool state)
+        {
+            var intIndex = controlIndex / 32;
+            var intMask = 1 << (controlIndex % 32);
+
+            if (state)
+                enabledControls[intIndex] |= intMask;
+            else
+                enabledControls[intIndex] &= ~intMask;
         }
 
         private void HookOnBeforeUpdate()
@@ -1965,6 +2004,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 value = compositeOfType.ReadValue(ref context);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2078,7 +2120,7 @@ namespace UnityEngine.InputSystem
                         else if (control is InputControl<float>)
                         {
                             var valuePtr = UnsafeUtility.AddressOf(ref value);
-                            *buttonValuePtr = *(float*)valuePtr >= InputSystem.settings.defaultButtonPressPoint;
+                            *buttonValuePtr = *(float*)valuePtr >= ButtonControl.s_GlobalDefaultButtonPressPoint;
                         }
 
                         ////REVIEW: Early out here as soon as *any* button is pressed? Technically, the comparer
@@ -2133,6 +2175,21 @@ namespace UnityEngine.InputSystem
             }
 
             return value;
+        }
+
+        internal bool ReadValueAsButton(int bindingIndex, int controlIndex)
+        {
+            var buttonControl = default(ButtonControl);
+            if (!bindingStates[bindingIndex].isPartOfComposite)
+                buttonControl = controls[controlIndex] as ButtonControl;
+
+            // Read float value.
+            var floatValue = ReadValue<float>(bindingIndex, controlIndex);
+
+            // Compare to press point.
+            if (buttonControl != null)
+                return floatValue >= buttonControl.pressPointOrDefault;
+            return floatValue >= ButtonControl.s_GlobalDefaultButtonPressPoint;
         }
 
         /// <summary>
@@ -2860,7 +2917,8 @@ namespace UnityEngine.InputSystem
                 compositeCount * sizeof(float) + // compositeMagnitudes
                 controlCount * sizeof(int) + // controlIndexToBindingIndex
                 actionCount * sizeof(ushort) * 2 + // actionBindingIndicesAndCounts
-                bindingCount * sizeof(ushort); // actionBindingIndices
+                bindingCount * sizeof(ushort) + // actionBindingIndices
+                (controlCount + 31) / 32 * sizeof(int); // enabledControlsArray
 
             /// <summary>
             /// Trigger state of all actions added to the state.
@@ -2902,6 +2960,8 @@ namespace UnityEngine.InputSystem
             public float* controlMagnitudes;
 
             public float* compositeMagnitudes;
+
+            public int* enabledControls;
 
             /// <summary>
             /// Array of pair of ints, one pair for each action (same index as <see cref="actionStates"/>). First int
@@ -2953,6 +3013,7 @@ namespace UnityEngine.InputSystem
                 controlIndexToBindingIndex = (int*)ptr; ptr += controlCount * sizeof(int);
                 actionBindingIndicesAndCounts = (ushort*)ptr; ptr += actionCount * sizeof(ushort) * 2;
                 actionBindingIndices = (ushort*)ptr; ptr += bindingCount * sizeof(ushort);
+                enabledControls = (int*)ptr; ptr += (controlCount + 31) / 32 * sizeof(int);
             }
 
             public void Dispose()
@@ -2997,6 +3058,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
+                UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
             }
 
             public UnmanagedMemory Clone()
@@ -3030,8 +3092,9 @@ namespace UnityEngine.InputSystem
         ///
         /// Both of these needs are served by this global list.
         /// </remarks>
-        private static InlinedArray<GCHandle> s_GlobalList;
+        internal static InlinedArray<GCHandle> s_GlobalList;
         internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
+        internal static InlinedArray<Action<object>> s_OnActionControlsChanged;
 
         private void AddToGlobaList()
         {
@@ -3084,8 +3147,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            for (var i = 0; i < s_OnActionChange.length; ++i)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            if (change == InputActionChange.BoundControlsChanged)
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }
 
         /// <summary>
@@ -3099,6 +3163,7 @@ namespace UnityEngine.InputSystem
                     s_GlobalList[i].Free();
             s_GlobalList.length = 0;
             s_OnActionChange.Clear();
+            s_OnActionControlsChanged.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.

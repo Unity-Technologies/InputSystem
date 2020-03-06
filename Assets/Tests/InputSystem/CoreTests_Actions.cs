@@ -739,6 +739,42 @@ partial class CoreTests
         Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueFromAction_InCallback_AsButton()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        bool? receivedValue = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValueAsButton();
+        };
+
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(receivedValue, Is.False);
+
+        receivedValue = null;
+
+        Set(gamepad.leftTrigger, 0.75f);
+
+        Assert.That(receivedValue, Is.True);
+
+        receivedValue = null;
+
+        Set(gamepad.leftTrigger, 0.15f);
+
+        Assert.That(receivedValue, Is.False);
+    }
+
     // Some code needs to be able to just generically transfer values from A to B. For this, the
     // generic ReadValue<TValue>() API isn't sufficient.
     [Test]
@@ -1161,53 +1197,33 @@ partial class CoreTests
         var action = new InputAction(type: InputActionType.PassThrough, binding: "<Gamepad>/*stick");
         action.Enable();
 
-        using (var trace = new InputActionTrace())
+        using (var trace = new InputActionTrace(action))
         {
-            trace.SubscribeTo(action);
-
             Set(gamepad.leftStick, new Vector2(0.123f, 0.234f));
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))));
 
             trace.Clear();
 
             Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))));
 
             trace.Clear();
 
             Set(gamepad.rightStick, new Vector2(0.123f, 0.234f));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
-                    .Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.rightStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))));
 
             trace.Clear();
 
             Set(gamepad.rightStick, Vector2.zero);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace,
+                Performed(action, gamepad.rightStick, Vector2.zero));
         }
     }
 
@@ -2784,6 +2800,46 @@ partial class CoreTests
         Assert.That(receivedVector.Value.y, Is.EqualTo(0.5678).Within(0.00001));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1207082/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddProcessorsToCompositeBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("2DVector", processors: "invertVector2(invertX=true,invertY=true)")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        action.Enable();
+
+        // Left -> Right.
+        Press(keyboard.aKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(1, 0)));
+
+        // Right -> Left.
+        Release(keyboard.aKey);
+        Press(keyboard.dKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(-1, 0)));
+
+        // Up -> Down.
+        Release(keyboard.dKey);
+        Press(keyboard.wKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, -1)));
+
+        // Down -> Up.
+        Release(keyboard.wKey);
+        Press(keyboard.sKey);
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0, 1)));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanAddScaleProcessor()
@@ -3586,6 +3642,69 @@ partial class CoreTests
 
         Assert.That(action1.enabled, Is.True);
         Assert.That(action2.enabled, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanMixEnablingSingleActionsAndEntireActionMaps()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        var action1 = map1.AddAction("action1", binding: "<Gamepad>/buttonSouth");
+        var action2 = map1.AddAction("action2", binding: "<Gamepad>/buttonNorth");
+        var action3 = map2.AddAction("action3", binding: "<Gamepad>/buttonSouth");
+        var action4 = map2.AddAction("action4", binding: "<Gamepad>/buttonNorth");
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        action3.Enable();
+        map1.Enable();
+
+        using (var trace1 = new InputActionTrace(action1))
+        using (var trace2 = new InputActionTrace(action2))
+        using (var trace3 = new InputActionTrace(action3))
+        using (var trace4 = new InputActionTrace(action4))
+        {
+            PressAndRelease(gamepad.buttonSouth);
+
+            Assert.That(trace1, Started(action1).AndThen(Performed(action1)).AndThen(Canceled(action1)));
+            Assert.That(trace2, Is.Empty);
+            Assert.That(trace3, Started(action3).AndThen(Performed(action3)).AndThen(Canceled(action3)));
+            Assert.That(trace4, Is.Empty);
+
+            trace1.Clear();
+            trace2.Clear();
+            trace3.Clear();
+            trace4.Clear();
+
+            map1.Disable();
+            map2.Enable();
+
+            PressAndRelease(gamepad.buttonSouth);
+
+            Assert.That(trace1, Is.Empty);
+            Assert.That(trace2, Is.Empty);
+            Assert.That(trace3, Started(action3).AndThen(Performed(action3)).AndThen(Canceled(action3)));
+            Assert.That(trace4, Is.Empty);
+
+            trace1.Clear();
+            trace2.Clear();
+            trace3.Clear();
+            trace4.Clear();
+
+            map1.Enable();
+            map2.Disable();
+
+            PressAndRelease(gamepad.buttonSouth);
+
+            Assert.That(trace1, Started(action1).AndThen(Performed(action1)).AndThen(Canceled(action1)));
+            Assert.That(trace2, Is.Empty);
+            Assert.That(trace3, Is.Empty);
+            Assert.That(trace4, Is.Empty);
+        }
     }
 
     [Test]
@@ -4762,7 +4881,7 @@ partial class CoreTests
 
         // Can suppress.
         Assert.That(action1.GetBindingDisplayString(InputBinding.DisplayStringOptions.DontIncludeInteractions),
-            Is.EqualTo("Hold " + GamepadState.ButtonSouthShortDisplayName));
+            Is.EqualTo(GamepadState.ButtonSouthShortDisplayName));
     }
 
     [Test]
@@ -5724,7 +5843,6 @@ partial class CoreTests
         asset.AddActionMap(map2);
         asset.Enable();
 
-
         InputControl performedControl1 = null;
         InputControl performedControl2 = null;
         action1.performed += ctx => performedControl1 = ctx.control;
@@ -6264,6 +6382,28 @@ partial class CoreTests
         Assert.That(map.enabled, Is.False);
         Assert.That(action1.enabled, Is.False);
         Assert.That(action2.enabled, Is.False);
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1213085 (bindings that refer to non-existent actions should not lead to errors)
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanEnableAndDisableEntireMap_EvenWhenBindingsReferToNonExistentActions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        map.AddAction("action", binding: "<Gamepad>/buttonSouth");
+        map.AddBinding("<Gamepad>/buttonNorth", action: "DoesNotExist");
+
+        // Also try the same for a composite binding.
+        map.AddBinding(new InputBinding { path = "1DAxis", isComposite = true, action = "DoesNotExist" });
+        map.AddBinding(new InputBinding { name = "Positive", path = "<Gamepad>/leftTrigger", isPartOfComposite = true });
+        map.AddBinding(new InputBinding { name = "Negative", path = "<Gamepad>/rightTrigger", isPartOfComposite = true });
+
+        Assert.That(() => map.Enable(), Throws.Nothing);
+
+        Assert.That(() => Press(gamepad.buttonNorth), Throws.Nothing);
+        Assert.That(() => Press(gamepad.leftTrigger), Throws.Nothing);
     }
 
     [Test]
