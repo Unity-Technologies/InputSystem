@@ -24,6 +24,8 @@ namespace UnityEngine.InputSystem.Utilities
         public TValue firstValue;
         public TValue[] additionalValues;
 
+        public int Capacity => additionalValues?.Length + 1 ?? 1;
+
         public InlinedArray(TValue value)
         {
             length = 1;

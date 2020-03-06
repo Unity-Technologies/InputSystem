@@ -2285,6 +2285,7 @@ namespace UnityEngine.InputSystem
             Touchscreen.s_TapTime = settings.defaultTapTime;
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
             Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
+            ButtonControl.s_GlobalDefaultButtonPressPoint = settings.defaultButtonPressPoint;
 
             // Let listeners know.
             for (var i = 0; i < m_SettingsChangedListeners.length; ++i)

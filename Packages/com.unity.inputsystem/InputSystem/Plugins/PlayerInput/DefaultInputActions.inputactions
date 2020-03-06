@@ -336,14 +336,6 @@
                     "expectedControlType": "Quaternion",
                     "processors": "",
                     "interactions": ""
-                },
-                {
-                    "name": "TrackedDeviceSelect",
-                    "type": "PassThrough",
-                    "id": "5d04af40-2e57-45fb-9c7f-133621fd63a3",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -636,7 +628,18 @@
                 {
                     "name": "",
                     "id": "c52c8e0b-8179-41d3-b8a1-d149033bbe86",
-                    "path": "<Pointer>/position",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Point",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e1394cbc-336e-44ce-9ea8-6007ed6193f7",
+                    "path": "<Pen>/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -684,6 +687,17 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Touch",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bb9e6b34-44bf-4381-ac63-5aa15d19f677",
+                    "path": "<XRController>/trigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "XR",
                     "action": "Click",
                     "isComposite": false,
                     "isPartOfComposite": false
@@ -740,17 +754,6 @@
                     "processors": "",
                     "groups": "XR",
                     "action": "TrackedDeviceOrientation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "932fe797-a0a9-4eef-bd2d-556b362e08d0",
-                    "path": "<XRController>/trigger",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "XR",
-                    "action": "TrackedDeviceSelect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

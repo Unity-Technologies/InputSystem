@@ -148,6 +148,11 @@ namespace UnityEngine.InputSystem.LowLevel
         double currentTimeForFixedUpdate { get; }
 
         /// <summary>
+        /// The value of <c>Time.unscaledTime</c>.
+        /// </summary>
+        float unscaledGameTime { get; }
+
+        /// <summary>
         /// The time offset that <see cref="currentTime"/> currently has to <see cref="Time.realtimeSinceStartup"/>.
         /// </summary>
         double currentTimeOffsetToRealtimeSinceStartup { get; }

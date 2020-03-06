@@ -181,6 +181,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public double currentTimeForFixedUpdate => Time.fixedUnscaledTime + currentTimeOffsetToRealtimeSinceStartup;
 
         public double currentTimeOffsetToRealtimeSinceStartup => NativeInputSystem.currentTimeOffsetToRealtimeSinceStartup;
+        public float unscaledGameTime => Time.unscaledTime;
 
         public bool runInBackground => Application.runInBackground;
 
