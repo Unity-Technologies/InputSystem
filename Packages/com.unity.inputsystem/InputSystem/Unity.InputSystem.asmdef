@@ -27,8 +27,8 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR"
         },
         {
-            "name": "com.unity.xr.openvr",
-            "expression": "1.0.0",
+            "name": "com.valve.openvr",
+            "expression": "0.9.0",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OPENVR"
         },
         {
