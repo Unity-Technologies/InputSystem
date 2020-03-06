@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [Unreleased]
+## [1.0.0-preview.6] - 2020-03-06
 
 ### Changed
 
@@ -16,7 +16,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- Fixed CS0109 warning being generated during player build due to use of `new` with the `PlayerInput.camera property`. (case 1174688)
+- Fixed CS0109 warning being generated during player build due to use of `new` with the `PlayerInput.camera property` (case 1174688).
 - Fixed a number of issues in `InputSystemUIInputModule`.
   * Fixed GC heap garbage when click-dragging.
   * Fixed number of pointer states growing indefinitely if OS did not reuse touch IDs.
@@ -42,7 +42,7 @@ however, it has to be formatted properly to pass verification tests.
 - `InputSystemUIInputModule` now sends pointer events using a new `ExtendedPointerEventData` instead of using the base `PointerEventData` class. This surfaces additional input data in pointer events.
 - Added `InputSystemUIInputModule.pointerBehavior` to allow dictating how the UI will resolve concurrent input from multiple pointers.
 
-####
+#### Actions
 
 - Added `InputAction.CallbackContext.ReadValueAsButton`.
 
