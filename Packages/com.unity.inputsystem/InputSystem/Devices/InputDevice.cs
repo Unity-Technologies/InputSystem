@@ -373,6 +373,10 @@ namespace UnityEngine.InputSystem
             m_DeviceId = InvalidDeviceId;
             m_ParticipantId = kLocalParticipantId;
             m_DeviceIndex = kInvalidDeviceIndex;
+
+            // initialize to MinValue as some device's internal times can be negative, resulting in no input
+            // being detected as this LastUpdateTime is greater than their internal time
+            m_LastUpdateTimeInternal = double.MinValue;
         }
 
         ////REVIEW: Is making devices be byte[] values really all that useful? Seems better than returning nulls but
