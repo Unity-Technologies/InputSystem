@@ -163,6 +163,10 @@ namespace UnityEngine.InputSystem.UI
                 float distance = float.MaxValue;
                 //The current TrackedDeviceRaycaster we are looking at
                 TrackedDeviceRaycaster trackedDeviceRaycaster;
+                //Owning canvas of the new comparison
+                Canvas raycastCanvas;
+                //Owning canvas of current result
+                Canvas raycastResultCanvas;
                 for (var i = 0; i < TrackedDeviceRaycaster.s_Instances.length; ++i)
                 {
                     trackedDeviceRaycaster = TrackedDeviceRaycaster.s_Instances[i];
@@ -173,7 +177,10 @@ namespace UnityEngine.InputSystem.UI
                         //Iterate through the list of result to determine the closest hit graphic
                         foreach (RaycastResult raycast in m_RaycastResultCache)
                         {
-                            if (raycast.distance < distance)
+                            raycastCanvas = raycast.gameObject.GetComponentInParent<Canvas>();
+                            raycastResultCanvas = raycastResult.gameObject?.GetComponentInParent<Canvas>();
+                            //Update result if the the new raycast's owning canvas is of a higher sorting order OR if the sorting order is the same and the new raycast is closer
+                            if (raycastResultCanvas == null || (raycastCanvas.sortingOrder > raycastResultCanvas.sortingOrder || (raycastCanvas.sortingOrder == raycastResultCanvas.sortingOrder && raycast.distance < distance)))
                             {
                                 //Update the closest distance
                                 distance = raycast.distance;
@@ -183,7 +190,6 @@ namespace UnityEngine.InputSystem.UI
                         }
                     }
                 }
-                //Clear the cache as we are done with it
                 m_RaycastResultCache.Clear();
                 //Return the closest result or default if none exist
                 return raycastResult;
