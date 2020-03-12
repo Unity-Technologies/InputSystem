@@ -157,19 +157,36 @@ namespace UnityEngine.InputSystem.UI
             // the first shot.
             if (eventData.pointerType == UIPointerType.Tracked && TrackedDeviceRaycaster.s_Instances.length > 0)
             {
+                //Store the closest result
+                RaycastResult raycastResult = default;
+                //Store the closest graphic's distance
+                float distance = float.MaxValue;
+                //The current TrackedDeviceRaycaster we are looking at
+                TrackedDeviceRaycaster trackedDeviceRaycaster;
                 for (var i = 0; i < TrackedDeviceRaycaster.s_Instances.length; ++i)
                 {
-                    var trackedDeviceRaycaster = TrackedDeviceRaycaster.s_Instances[i];
+                    trackedDeviceRaycaster = TrackedDeviceRaycaster.s_Instances[i];
                     m_RaycastResultCache.Clear();
                     trackedDeviceRaycaster.PerformRaycast(eventData, m_RaycastResultCache);
                     if (m_RaycastResultCache.Count > 0)
                     {
-                        var raycastResult = m_RaycastResultCache[0];
-                        m_RaycastResultCache.Clear();
-                        return raycastResult;
+                        //Iterate through the list of result to determine the closest hit graphic
+                        foreach (RaycastResult raycast in m_RaycastResultCache)
+                        {
+                            if (raycast.distance < distance)
+                            {
+                                //Update the closest distance
+                                distance = raycast.distance;
+                                //Store the result
+                                raycastResult = raycast;
+                            }
+                        }
                     }
                 }
-                return default;
+                //Clear the cache as we are done with it
+                m_RaycastResultCache.Clear();
+                //Return the closest result or default if none exist
+                return raycastResult;
             }
 
             // Otherwise pass it along to the normal raycasting logic.
