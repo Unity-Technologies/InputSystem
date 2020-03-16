@@ -332,7 +332,7 @@ namespace UnityEngine.InputSystem.XR
             InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.WMRSpatialController>(
                 matches: new InputDeviceMatcher()
                     .WithInterface(XRUtilities.InterfaceMatchAnyVersion)
-                    .WithProduct(@"(^(Spatial Controller))|(^(OpenVR Controller\(WindowsMR))")
+                    .WithProduct(@"(^(Spatial Controller))")
             );
             InputSystem.RegisterLayout<UnityEngine.XR.WindowsMR.Input.HololensHand>(
                 matches: new InputDeviceMatcher()
