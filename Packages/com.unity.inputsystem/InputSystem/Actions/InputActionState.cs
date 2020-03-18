@@ -319,8 +319,10 @@ namespace UnityEngine.InputSystem
         public void RestoreActionStates(UnmanagedMemory oldState)
         {
             Debug.Assert(oldState.isAllocated, "Old state contains no memory");
+
+            // This method cannot deal with actions and/or maps having been removed.
+            // It DOES cope with bindings have been added and/or removed, though!
             Debug.Assert(oldState.actionCount == memory.actionCount, "Action count in old and new state must be the same");
-            Debug.Assert(oldState.bindingCount == memory.bindingCount, "Binding count in old and new state must be the same");
             Debug.Assert(oldState.mapCount == memory.mapCount, "Map count in old and new state must be the same");
 
             // Go through the state map by map and in each map, binding by binding. Enable

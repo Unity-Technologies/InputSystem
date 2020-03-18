@@ -2435,6 +2435,27 @@ partial class CoreTests
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
     }
 
+    // Case 1218544
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddBindingsToActions_AfterActionHasBeenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(name: "test", binding: "<Gamepad>/leftStick");
+        action.Enable();
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/leftStick"));
+
+        action.AddBinding("<Gamepad>/rightStick");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick, gamepad.rightStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_BindingsHaveUniqueIDs()

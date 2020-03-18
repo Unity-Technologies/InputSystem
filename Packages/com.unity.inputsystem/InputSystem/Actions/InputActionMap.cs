@@ -994,6 +994,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal bool LazyResolveBindings()
         {
+            // Clear cached controls for actions. Don't need to necessarily clear m_BindingsForEachAction.
+            m_ControlsForEachAction = null;
+
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)

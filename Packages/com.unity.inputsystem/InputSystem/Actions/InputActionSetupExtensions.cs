@@ -405,6 +405,9 @@ namespace UnityEngine.InputSystem
             // anyone queries it.
             map.ClearPerActionCachedBindingData();
 
+            // Make sure bindings get re-resolved.
+            map.LazyResolveBindings();
+
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
             if (map.m_SingletonAction != null)
@@ -619,6 +622,7 @@ namespace UnityEngine.InputSystem
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].name = name;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
                 return this;
             }
 
@@ -632,6 +636,7 @@ namespace UnityEngine.InputSystem
             {
                 m_ActionMap.m_Bindings[m_BindingIndex].path = path;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
                 return this;
             }
 
@@ -659,6 +664,7 @@ namespace UnityEngine.InputSystem
                 // Set groups on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].groups = groups;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
 
                 return this;
             }
@@ -687,6 +693,7 @@ namespace UnityEngine.InputSystem
                 // Set interactions on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].interactions = interactions;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
 
                 return this;
             }
@@ -725,6 +732,7 @@ namespace UnityEngine.InputSystem
                 // Set processors on binding.
                 m_ActionMap.m_Bindings[m_BindingIndex].processors = processors;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
 
                 return this;
             }
@@ -747,6 +755,7 @@ namespace UnityEngine.InputSystem
                         $"Cannot change the action a binding triggers on singleton action '{action}'", nameof(action));
                 m_ActionMap.m_Bindings[m_BindingIndex].action = action.name;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
                 return this;
             }
 
@@ -754,6 +763,7 @@ namespace UnityEngine.InputSystem
             {
                 m_ActionMap.m_Bindings[m_BindingIndex] = binding;
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
 
                 // If it's a singleton action, we force the binding to stay with the action.
                 if (m_ActionMap.m_SingletonAction != null)
@@ -766,6 +776,7 @@ namespace UnityEngine.InputSystem
             {
                 ArrayHelpers.EraseAt(ref m_ActionMap.m_Bindings, m_BindingIndex);
                 m_ActionMap.ClearPerActionCachedBindingData();
+                m_ActionMap.LazyResolveBindings();
 
                 // We have switched to a different binding array. For singleton actions, we need to
                 // sync up the reference that the action itself has.
