@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+#### Actions
+
+- `PlayerInputEditor` no longer leads to the player's `InputActionAsset` mistakenly getting replaced with a clone when the inspector is open on a `PlayerInput` component ([case 1228636](https://issuetracker.unity3d.com/issues/action-map-gets-lost-on-play-when-prefab-is-highlighted-in-inspector)).
+
 ## [1.0.0-preview.6] - 2020-03-06
 
 ### Changed
