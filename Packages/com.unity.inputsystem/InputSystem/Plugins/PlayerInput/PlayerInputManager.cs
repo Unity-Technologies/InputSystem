@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
+////REVIEW: the join/leave messages should probably give a *GameObject* rather than the PlayerInput component (which can be gotten to via a simple GetComponent(InChildren) call)
+
 ////TODO: add support for reacting to players missing devices
 
 namespace UnityEngine.InputSystem
