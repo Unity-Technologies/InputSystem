@@ -359,7 +359,7 @@ namespace UnityEngine.InputSystem.Users
         /// <example>
         /// <code>
         /// // Activate support for listening to device activity.
-        /// InputUser.listenForUnpairedDeviceActivity = true;
+        /// ++InputUser.listenForUnpairedDeviceActivity;
         ///
         /// // When a button on an unpaired device is pressed, pair the device to a new
         /// // or existing user.
@@ -372,12 +372,6 @@ namespace UnityEngine.InputSystem.Users
         ///
         ///         // Pair the device to a user.
         ///         InputUser.PerformPairingWithDevice(usedControl.device);
-        ///     };
-        ///
-        /// InputUser.onChange +=
-        ///     (user, change) =>
-        ///     {
-        ///         ////TODO
         ///     };
         /// </code>
         /// </example>
