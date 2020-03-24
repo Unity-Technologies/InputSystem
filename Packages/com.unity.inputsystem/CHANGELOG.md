@@ -13,6 +13,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - `VirtualMouseInput` not moving the software cursor when set to `HardwareCursorIsAvailable` but not having a hardware cursor ()
 
+#### Actions
+
+- Adding a new action now sets `expectedControlType` to `Button` as expected ([case 1221015](https://issuetracker.unity3d.com/issues/input-system-default-value-of-expectedcontroltype-is-not-being-set-when-creating-a-new-action)).
+
 ## [1.0.0-preview.6] - 2020-03-06
 
 ### Changed
