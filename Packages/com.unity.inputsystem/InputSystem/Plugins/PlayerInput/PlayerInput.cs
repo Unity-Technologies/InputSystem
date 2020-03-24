@@ -12,6 +12,8 @@ using UnityEngine.InputSystem.Utilities;
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
 ////        and only temporarily disable them
 
+////TODO: add support for "continuous" callbacks
+
 ////TODO: add event for control scheme switches
 
 ////TODO: add ability to name players
@@ -717,7 +719,7 @@ namespace UnityEngine.InputSystem
                 if (m_UIInputModule == value)
                     return;
 
-                if (m_UIInputModule != null && this.m_UIInputModule.actionsAsset == m_Actions)
+                if (m_UIInputModule != null && m_UIInputModule.actionsAsset == m_Actions)
                     m_UIInputModule.actionsAsset = null;
 
                 m_UIInputModule = value;
@@ -853,6 +855,8 @@ namespace UnityEngine.InputSystem
             SwitchCurrentControlScheme(scheme.Value.name, devices);
             return true;
         }
+
+        ////REVIEW: these should just be SwitchControlScheme
 
         public void SwitchCurrentControlScheme(string controlScheme, params InputDevice[] devices)
         {
