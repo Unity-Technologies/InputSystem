@@ -1,4 +1,4 @@
-#if ENABLE_VR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -280,4 +280,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // ENABLE_VR
+#endif // UNITY_INPUT_SYSTEM_ENABLE_XR

@@ -1,4 +1,4 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
+#if UNITY_INPUT_SYSTEM_ENABLE_XR || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.XR;
@@ -426,4 +426,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // ENABLE_VR
+#endif // UNITY_INPUT_SYSTEM_ENABLE_XR
