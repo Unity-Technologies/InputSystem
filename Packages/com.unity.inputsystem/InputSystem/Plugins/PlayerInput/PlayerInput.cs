@@ -12,6 +12,8 @@ using UnityEngine.InputSystem.Utilities;
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
 ////        and only temporarily disable them
 
+////TODO: add support for "continuous" callbacks
+
 ////TODO: add event for control scheme switches
 
 ////TODO: add ability to name players
