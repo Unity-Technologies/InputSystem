@@ -154,8 +154,13 @@ namespace UnityEngine.InputSystem.Android
         }
 
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
-            string matchedTemplate, InputDeviceExecuteCommandDelegate executeCommandDelegate)
+            string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {
+            // If we already have a matching layout, someone registered a better match.
+            // We only want to act as a fallback.
+            if (!string.IsNullOrEmpty(matchedLayout) && matchedLayout != "AndroidGamepad" && matchedLayout != "AndroidJoystick")
+                return null;
+
             if (description.interfaceName != "Android" || string.IsNullOrEmpty(description.capabilities))
                 return null;
 

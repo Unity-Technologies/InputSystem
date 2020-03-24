@@ -1930,7 +1930,10 @@ partial class CoreTests
         // If only a device layout is given, can't know control layout.
         Assert.That(InputControlPath.TryGetControlLayout("/<gamepad>"), Is.Null);
 
-        ////TODO: make sure we can find layouts from control layout modifying child paths
+        // Try it with controls that are modifying children by path.
+        Assert.That(InputControlPath.TryGetControlLayout("<Mouse>/scroll/x"), Is.EqualTo("Axis"));
+        Assert.That(InputControlPath.TryGetControlLayout("<Touchscreen>/primaryTouch/tap"), Is.EqualTo("Button"));
+
         ////TODO: make sure that finding by usage can look arbitrarily deep into the hierarchy
     }
 
