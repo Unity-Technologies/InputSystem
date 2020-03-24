@@ -1354,6 +1354,53 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(listener.messages, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1226920/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanJoinPlayersThroughButtonPress_WithMultipleDevicesOfTypePresent()
+    {
+        var playerPrefab = new GameObject();
+        playerPrefab.SetActive(false);
+        playerPrefab.AddComponent<PlayerInput>();
+        playerPrefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+
+        var manager = new GameObject();
+        var managerComponent = manager.AddComponent<PlayerInputManager>();
+        managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
+        managerComponent.playerPrefab = playerPrefab;
+
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        InputSystem.AddDevice<Keyboard>(); // Noise.
+        InputSystem.AddDevice<Mouse>(); // Noise.
+
+        Press(gamepad2.buttonSouth);
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(1));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[0].currentControlScheme, Is.EqualTo("Gamepad"));
+
+        Press(gamepad1.buttonSouth);
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(2));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[0].currentControlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].currentControlScheme, Is.EqualTo("Gamepad"));
+
+        Press(gamepad3.buttonSouth);
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(3));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(PlayerInput.all[0].currentControlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(PlayerInput.all[1].currentControlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(PlayerInput.all[2].devices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(PlayerInput.all[2].currentControlScheme, Is.EqualTo("Gamepad"));
+    }
+
     // If a player presses a button on a device that can't be used with the player's actions, the join
     // is refused.
     [Test]

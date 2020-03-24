@@ -14,8 +14,10 @@ The following is a list of known limitations that the Input System currently has
 
 ## Device support
 
+* (Desktop) We do not yet support distinguishing input from multiple pointers (mouse, pen, touch) or keyboards. There will be a single Mouse, Pen, Touch, and Keyboard device.
 * (Windows) Mouse input from remote desktop connections does not come through properly.
 * (Windows) Pen input will not work with Wacom devices if "Windows Ink" support is turned off.
+* (Android) We only support a single Touchscreen at the moment.
 * Joy-Cons are only supported on Switch.
 * Sensors in the PS4 controller are currently only supported on PS4.
   >NOTE: Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.

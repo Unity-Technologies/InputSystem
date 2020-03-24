@@ -226,7 +226,7 @@ namespace UnityEngine.InputSystem
 
             foreach (var scheme in schemes)
             {
-                var result = scheme.PickDevicesFrom(devices);
+                var result = scheme.PickDevicesFrom(devices, favorDevice: mustIncludeDevice);
 
                 // Ignore if scheme doesn't fit devices.
                 if (!result.isSuccessfulMatch && (!allowUnsuccessfulMatch || result.score <= 0))
@@ -319,12 +319,14 @@ namespace UnityEngine.InputSystem
         /// imposed by the control scheme.
         /// </summary>
         /// <param name="devices">A list of devices to choose from.</param>
+        /// <param name="favorDevice">If not null, the device will be favored over other devices in <paramref name="devices"/>.
+        /// Note that the device must be present in the list also.</param>
         /// <returns>A <see cref="MatchResult"/> structure containing the result of the pick. Note that this structure
         /// must be manually <see cref="MatchResult.Dispose">disposed</see> or unmanaged memory will be leaked.</returns>
         /// <remarks>
         /// Does not allocate managed memory.
         /// </remarks>
-        public MatchResult PickDevicesFrom<TDevices>(TDevices devices)
+        public MatchResult PickDevicesFrom<TDevices>(TDevices devices, InputDevice favorDevice = null)
             where TDevices : IReadOnlyList<InputDevice>
         {
             // Empty device requirements match anything while not really picking anything.
@@ -380,6 +382,16 @@ namespace UnityEngine.InputSystem
                     for (var n = 0; n < devices.Count; ++n)
                     {
                         var device = devices[n];
+
+                        // If we should favor a device, we swap it in at index #0 regardless
+                        // of where in the list the device occurs (it MUST, however, occur in the list).
+                        if (favorDevice != null)
+                        {
+                            if (n == 0)
+                                device = favorDevice;
+                            else if (device == favorDevice)
+                                device = devices[0];
+                        }
 
                         // See if we have a match.
                         var matchedControl = InputControlPath.TryFindControl(device, path);
