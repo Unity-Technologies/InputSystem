@@ -3265,6 +3265,7 @@ partial class CoreTests
         public string stringCap;
         public int intCap;
         public float floatCap;
+        public float floatCapWithExponent;
         public bool boolCap;
         public NestedCaps nestedCap;
         public string[] arrayCap;
@@ -3315,6 +3316,8 @@ partial class CoreTests
             .WithCapability("intCap", "1234");
         var matchFloatCapWithString = new InputDeviceMatcher()
             .WithCapability("floatCap", "1.234");
+        var matchFloatWithExponentCapWithString = new InputDeviceMatcher()
+            .WithCapability("floatCapWithExponent", "1.234e-10");
         var matchBoolCapWithString = new InputDeviceMatcher()
             .WithCapability("boolCap", "true");
         var matchNone = new InputDeviceMatcher()
@@ -3328,6 +3331,7 @@ partial class CoreTests
                 stringCap = "string",
                 intCap = 1234,
                 floatCap = 1.234f,
+                floatCapWithExponent = 1.234e-10f,
                 boolCap = true,
                 nestedCap = new TestDeviceCapabilities.NestedCaps
                 {
@@ -3348,6 +3352,7 @@ partial class CoreTests
         Assert.That(matchIntCapWithRegex.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
         Assert.That(matchIntCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
         Assert.That(matchFloatCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
+        Assert.That(matchFloatWithExponentCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
         Assert.That(matchBoolCapWithString.MatchPercentage(description), Is.EqualTo(1 / 2.0).Within(0.0001));
         Assert.That(matchNone.MatchPercentage(description), Is.EqualTo(0).Within(0.0001));
     }
