@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Utilities
                 }
 
                 // See if we have a match.
-                if (m_Position < m_Length && m_Text[m_Position] == '"' && (pathPosition == pathLength || path[pathPosition] == '/' || path[pathPosition] == '['))
+                if (m_Position < m_Length && m_Text[m_Position] == '"' && (pathPosition >= pathLength || path[pathPosition] == '/' || path[pathPosition] == '['))
                 {
                     // Have matched a property name. Navigate to value.
                     ++m_Position;
@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.Utilities
                         return false;
 
                     // Check if we have matched everything in the path.
-                    if (pathPosition == pathLength)
+                    if (pathPosition >= pathLength)
                         return true;
                     if (path[pathPosition] == '/')
                     {

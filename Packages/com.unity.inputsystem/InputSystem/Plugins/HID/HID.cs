@@ -114,7 +114,6 @@ namespace UnityEngine.InputSystem.HID
             if (!hasUsableElements)
                 return null;
 
-
             ////TODO: we should be able to differentiate a HID joystick from other joysticks in bindings alone
             // Determine base layout.
             var baseType = typeof(HID);

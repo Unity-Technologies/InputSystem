@@ -2292,7 +2292,7 @@ namespace UnityEngine.InputSystem
                 m_SettingsChangedListeners[i]();
         }
 
-        private void AddAvailableDevicesThatAreNowRecognized()
+        internal void AddAvailableDevicesThatAreNowRecognized()
         {
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
@@ -3319,10 +3319,12 @@ namespace UnityEngine.InputSystem
             using (InputDeviceBuilder.Ref())
             {
                 DeviceState[] retainedDeviceStates = null;
+                var deviceStates = m_SavedDeviceStates;
                 var deviceCount = m_SavedDeviceStates.LengthSafe();
+                m_SavedDeviceStates = null; // Prevent layout matcher registering themselves on the fly from picking anything off this list.
                 for (var i = 0; i < deviceCount; ++i)
                 {
-                    ref var deviceState = ref m_SavedDeviceStates[i];
+                    ref var deviceState = ref deviceStates[i];
 
                     var device = TryGetDeviceById(deviceState.deviceId);
                     if (device != null)
@@ -3425,7 +3427,7 @@ namespace UnityEngine.InputSystem
             catch (Exception exception)
             {
                 Debug.LogError(
-                    $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
+                    $"Could not recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
                 Debug.LogException(exception);
                 return true; // Don't try again.
             }
