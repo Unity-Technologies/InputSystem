@@ -40,13 +40,10 @@ partial class CoreTests
         var mouse = InputSystem.AddDevice<Mouse>();
 
         Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
-        // Alternate getter.
-        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, keyboard, mouse }));
 
         InputSystem.RemoveDevice(keyboard);
 
         Assert.That(InputSystem.devices, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
-        Assert.That(InputDevice.all, Is.EquivalentTo(new InputDevice[] { gamepad1, gamepad2, mouse }));
     }
 
     [Test]
@@ -1839,6 +1836,29 @@ partial class CoreTests
 
         Assert.That(Gamepad.all, Has.Count.EqualTo(2));
         Assert.That(Gamepad.all, Has.None.SameAs(gamepad2));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanQueryAllJoysticksWithSimpleGetter()
+    {
+        var joystick1 = InputSystem.AddDevice<Joystick>();
+        var joystick2 = InputSystem.AddDevice<Joystick>();
+        InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(Joystick.all, Has.Count.EqualTo(2));
+        Assert.That(Joystick.all, Has.Exactly(1).SameAs(joystick1));
+        Assert.That(Joystick.all, Has.Exactly(1).SameAs(joystick2));
+
+        var joystick3 = InputSystem.AddDevice<Joystick>();
+
+        Assert.That(Joystick.all, Has.Count.EqualTo(3));
+        Assert.That(Joystick.all, Has.Exactly(1).SameAs(joystick3));
+
+        InputSystem.RemoveDevice(joystick2);
+
+        Assert.That(Joystick.all, Has.Count.EqualTo(2));
+        Assert.That(Joystick.all, Has.None.SameAs(joystick2));
     }
 
     [Test]
