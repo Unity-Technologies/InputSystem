@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Player joins with `PlayerInputManager` from button presses no longer fail if there are multiple devices of the same type present and the join was not on the first gamepad ([case 226920](https://fogbugz.unity3d.com/f/cases/1226920/)).
 - `PlayerInputEditor` no longer leads to the player's `InputActionAsset` mistakenly getting replaced with a clone when the inspector is open on a `PlayerInput` component ([case 1228636](https://issuetracker.unity3d.com/issues/action-map-gets-lost-on-play-when-prefab-is-highlighted-in-inspector)).
 - The control picker in the .inputactions editor will no longer incorrectly filter out layouts such as `Xbox One Gamepad (on XB1)` when using them in control schemes. Also, it will no longer filter out controls from base layouts (such as `Gamepad`) ([case 1219415](https://issuetracker.unity3d.com/issues/impossible-to-choose-gamepad-as-binding-path-when-control-scheme-is-set-as-xboxone-scheme)).
+- Drag-reordering action maps no longer throws "Should have drop target" asserts in the controls (case [1229146](https://issuetracker.unity3d.com/issues/inputsystem-reordering-of-actionmaps-in-input-action-window-fails-and-throws-should-have-drop-target-error)).
 
 ## [1.0.0-preview.6] - 2020-03-06
 
