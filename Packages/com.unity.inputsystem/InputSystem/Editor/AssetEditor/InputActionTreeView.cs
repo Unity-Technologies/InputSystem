@@ -14,6 +14,8 @@ using UnityEngine.InputSystem.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////TODO: With many actions and bindings the list becomes really hard to grok; make things more visually distinctive
+
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
 namespace UnityEngine.InputSystem.Editor
@@ -1052,7 +1054,8 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(item != null, $"Cannot find newly created item for {property.propertyPath}");
             SetExpandedRecursive(item.id, true);
             SelectItem(item);
-            SetFocusAndEnsureSelectedItem();
+            SetFocus();
+            FrameItem(item.id);
             if (item.canRename)
                 BeginRename(item);
         }
