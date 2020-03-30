@@ -1,0 +1,13 @@
+{
+    "name": "Unity.PackageManagerDocTools.EditorTests",
+    "references": [
+        "Unity.PackageManagerDocTools.Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
