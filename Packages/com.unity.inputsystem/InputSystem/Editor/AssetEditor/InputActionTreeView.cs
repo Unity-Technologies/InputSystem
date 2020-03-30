@@ -1052,6 +1052,7 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(item != null, $"Cannot find newly created item for {property.propertyPath}");
             SetExpandedRecursive(item.id, true);
             SelectItem(item);
+            SetFocusAndEnsureSelectedItem();
             if (item.canRename)
                 BeginRename(item);
         }
