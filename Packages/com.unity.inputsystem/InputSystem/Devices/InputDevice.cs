@@ -355,12 +355,9 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc/>
         public override int valueSizeInBytes => (int)m_StateBlock.alignedSizeInBytes;
 
-        /// <summary>
-        /// Return all input devices currently added to the system.
-        /// </summary>
-        /// <remarks>
-        /// This is equivalent to <see cref="InputSystem.devices"/>.
-        /// </remarks>
+        // This one just leads to confusion as you can access it from subclasses and then be surprised
+        // that it doesn't only include members of those classes.
+        [Obsolete("Use 'InputSystem.devices' instead. (UnityUpgradable) -> InputSystem.devices", error: false)]
         public static ReadOnlyArray<InputDevice> all => InputSystem.devices;
 
         /// <summary>

@@ -603,6 +603,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="InputDevice.MakeCurrent"/>
+        /// <seealso cref="all"/>
         public static Gamepad current { get; private set; }
 
         /// <summary>
@@ -616,6 +617,7 @@ namespace UnityEngine.InputSystem
         /// you need it. Whenever the gamepad setup changes, the value returned by this getter
         /// is invalidated.
         /// </remarks>
+        /// <seealso cref="current"/>
         public new static ReadOnlyArray<Gamepad> all => new ReadOnlyArray<Gamepad>(s_Gamepads, 0, s_GamepadCount);
 
         /// <inheritdoc />
@@ -682,8 +684,7 @@ namespace UnityEngine.InputSystem
             else
             {
                 Debug.Assert(false,
-                    string.Format("Gamepad {0} seems to not have been added but is being removed (gamepad list: {1})",
-                        this, string.Join(", ", all))); // Put in else to not allocate on normal path.
+                    $"Gamepad {this} seems to not have been added but is being removed (gamepad list: {string.Join(", ", all)})"); // Put in else to not allocate on normal path.
             }
         }
 
