@@ -29,7 +29,7 @@ namespace UnityEngine.InputSystem.Editor
             var asset = Provider.GetAssetByPath(path);
             if (asset == null)
                 return;
-            var task = Provider.Checkout(path, CheckoutMode.Asset);
+            var task = Provider.Checkout(asset, CheckoutMode.Asset);
             task.Wait();
             #endif
         }
