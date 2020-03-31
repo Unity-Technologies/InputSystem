@@ -892,6 +892,8 @@ namespace UnityEngine.InputSystem
         /// cached for as long as the rebind operation is not disposed of.
         ///
         /// To reset the configuration of a rebind operation without releasing its memory, call <see cref="Reset"/>.
+        /// Note that changing configuration while a rebind is in progress in not allowed and will throw
+        /// <see cref="InvalidOperationException"/>.
         ///
         /// <example>
         /// <code>
@@ -941,9 +943,37 @@ namespace UnityEngine.InputSystem
             /// <summary>
             /// The matching score for each control in <see cref="candidates"/>.
             /// </summary>
+            /// <value>A relative floating-point score for each control in <see cref="candidates"/>.</value>
             /// <remarks>
+            /// Candidates are ranked and sorted by their score. By default, a score is computed for each candidate
+            /// control automatically. However, this can be overridden using <see cref="OnComputeScore"/>.
+            ///
+            /// Default scores are directly based on magnitudes (see <see cref="InputControl.EvaluateMagnitude()"/>).
+            /// The greater the magnitude of actuation, the greater the score associated with the control. This means,
+            /// for example, that if both X and Y are actuated on a gamepad stick, the axis with the greater amount
+            /// of actuation will get scored higher and thus be more likely to get picked.
+            ///
+            /// In addition, 1 is added to each default score if the respective control is non-synthetic (see <see
+            /// cref="InputControl.synthetic"/>). This will give controls that correspond to actual controls present
+            /// on the device precedence over those added internally. For example, if both are actuated, the synthetic
+            /// <see cref="Controls.StickControl.up"/> button on stick controls will be ranked lower than the <see
+            /// cref="Gamepad.buttonSouth"/> which is an actual button on the device.
             /// </remarks>
+            /// <seealso cref="OnComputeScore"/>
+            /// <seealso cref="candidates"/>
             public ReadOnlyArray<float> scores => new ReadOnlyArray<float>(m_Scores, 0, m_Candidates.Count);
+
+            /// <summary>
+            /// The matching control actuation level (see <see cref="InputControl.EvaluateMagnitude()"/> for each control in <see cref="candidates"/>.
+            /// </summary>
+            /// <value><see cref="InputControl.EvaluateMagnitude()"/> result for each <see cref="InputControl"/> in <see cref="candidates"/>.</value>
+            /// <remarks>
+            /// This array mirrors <see cref="candidates"/>, i.e. each entry corresponds to the entry in <see cref="candidates"/> at
+            /// the same index.
+            /// </remarks>
+            /// <seealso cref="InputControl.EvaluateMagnitude()"/>
+            /// <seealso cref="candidates"/>
+            public ReadOnlyArray<float> magnitudes => new ReadOnlyArray<float>(m_Magnitudes, 0, m_Candidates.Count);
 
             /// <summary>
             /// The control currently deemed the best candidate.
@@ -1052,6 +1082,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
             {
+                ThrowIfRebindInProgress();
                 if (value)
                     m_Flags |= Flags.SuppressMatchingEvents;
                 else
@@ -1084,26 +1115,29 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithCancelingThrough(string binding)
             {
+                ThrowIfRebindInProgress();
                 m_CancelBinding = binding;
                 return this;
             }
 
             public RebindingOperation WithCancelingThrough(InputControl control)
             {
+                ThrowIfRebindInProgress();
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
-
                 return WithCancelingThrough(control.path);
             }
 
             public RebindingOperation WithExpectedControlType(string layoutName)
             {
+                ThrowIfRebindInProgress();
                 m_ExpectedLayout = new InternedString(layoutName);
                 return this;
             }
 
             public RebindingOperation WithExpectedControlType(Type type)
             {
+                ThrowIfRebindInProgress();
                 if (type != null && !typeof(InputControl).IsAssignableFrom(type))
                     throw new ArgumentException($"Type '{type.Name}' is not an InputControl", "type");
                 m_ControlType = type;
@@ -1113,6 +1147,7 @@ namespace UnityEngine.InputSystem
             public RebindingOperation WithExpectedControlType<TControl>()
                 where TControl : InputControl
             {
+                ThrowIfRebindInProgress();
                 return WithExpectedControlType(typeof(TControl));
             }
 
@@ -1191,6 +1226,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithMagnitudeHavingToBeGreaterThan(float magnitude)
             {
+                ThrowIfRebindInProgress();
                 if (magnitude < 0)
                     throw new ArgumentException($"Magnitude has to be positive but was {magnitude}",
                         nameof(magnitude));
@@ -1214,6 +1250,7 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="InputControl.noisy"/>
             public RebindingOperation WithoutIgnoringNoisyControls()
             {
+                ThrowIfRebindInProgress();
                 m_Flags |= Flags.DontIgnoreNoisyControls;
                 return this;
             }
@@ -1240,6 +1277,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithControlsHavingToMatchPath(string path)
             {
+                ThrowIfRebindInProgress();
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_IncludePathCount; ++i)
@@ -1276,6 +1314,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation WithControlsExcluding(string path)
             {
+                ThrowIfRebindInProgress();
                 if (string.IsNullOrEmpty(path))
                     throw new ArgumentNullException(nameof(path));
                 for (var i = 0; i < m_ExcludePathCount; ++i)
@@ -1389,7 +1428,7 @@ namespace UnityEngine.InputSystem
                 OnComplete();
             }
 
-            public void AddCandidate(InputControl control, float score)
+            public void AddCandidate(InputControl control, float score, float magnitude = -1)
             {
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
@@ -1403,9 +1442,11 @@ namespace UnityEngine.InputSystem
                 else
                 {
                     // Otherwise, add it.
-                    var candidateCount = m_Candidates.Count;
+                    var scoreCount = m_Candidates.Count;
+                    var magnitudeCount = m_Candidates.Count;
                     m_Candidates.Add(control);
-                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                    ArrayHelpers.AppendWithCapacity(ref m_Scores, ref scoreCount, score);
+                    ArrayHelpers.AppendWithCapacity(ref m_Magnitudes, ref magnitudeCount, magnitude);
                 }
 
                 SortCandidatesByScore();
@@ -1451,6 +1492,7 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public RebindingOperation Reset()
             {
+                Cancel();
                 m_ActionToRebind = default;
                 m_BindingMask = default;
                 m_ControlType = default;
@@ -1464,6 +1506,8 @@ namespace UnityEngine.InputSystem
                 m_Timeout = default;
                 m_WaitSecondsAfterMatch = default;
                 m_Flags = default;
+                m_StartingActuationControls.Clear();
+                m_StartingActuationsCount = 0;
                 return this;
             }
 
@@ -1494,7 +1538,14 @@ namespace UnityEngine.InputSystem
                 if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
                     return;
 
+                ////TODO: add callback that shows the candidate *and* the event to the user (this is particularly useful when we are suppressing
+                ////      and thus throwing away events)
+
                 // Go through controls and see if there's anything interesting in the event.
+                // NOTE: We go through quite a few steps and operations here. However, the chief goal here is trying to be as robust
+                //       as we can in isolating the control the user really means to single out. If this code here does its job, that
+                //       control should always pop up as the first entry in the candidates list (if the configuration of the rebind
+                //       operation is otherwise sane).
                 var controls = device.allControls;
                 var controlCount = controls.Count;
                 var haveChangedCandidates = false;
@@ -1520,7 +1571,7 @@ namespace UnityEngine.InputSystem
                     if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
                         continue;
 
-                    // If controls must not match certain path, make sure the control doesn't.
+                    // If controls must not match certain paths, make sure the control doesn't.
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
                         continue;
 
@@ -1547,16 +1598,51 @@ namespace UnityEngine.InputSystem
                     // NOTE: This is the cheapest check with respect to looking at actual state. So
                     //       do this first before looking further at the state.
                     if (control.CheckStateIsAtDefault(statePtr))
+                    {
+                        // For controls that were already actuated when we started the rebind, we record starting actuations below.
+                        // However, when such a control goes back to default state, we want to reset that recorded value. This makes
+                        // sure that if, for example, a key is down when the rebind started, when the key is released and then pressed
+                        // again, we don't compare to the previously recorded magnitude of 1 but rather to 0.
+                        var staringActuationIndex = m_StartingActuationControls.IndexOfReference(control);
+                        if (staringActuationIndex != -1)
+                            m_StaringActuationMagnitudes[staringActuationIndex] = 0;
+
                         continue;
+                    }
 
                     var magnitude = control.EvaluateMagnitude(statePtr);
-                    if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
-                        continue; // No, so skip.
+                    if (magnitude >= 0)
+                    {
+                        // Determine starting actuation.
+                        float startingMagnitude;
+                        var startingActuationIndex = m_StartingActuationControls.IndexOfReference(control);
+                        if (startingActuationIndex != -1)
+                        {
+                            // We have seen this control start actuating before and have recorded its starting actuation.
+                            startingMagnitude = m_StaringActuationMagnitudes[startingActuationIndex];
+                        }
+                        else
+                        {
+                            // Haven't seen this control changing actuation yet. Record its current actuation as its
+                            // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
+                            startingMagnitude = control.EvaluateMagnitude();
+                            var count = m_StartingActuationsCount;
+                            ArrayHelpers.AppendWithCapacity(ref m_StartingActuationControls, ref m_StartingActuationsCount, control);
+                            ArrayHelpers.AppendWithCapacity(ref m_StaringActuationMagnitudes, ref count, startingMagnitude);
+                        }
 
+                        // Ignore control if it hasn't exceeded the magnitude threshold relative to its starting actuation yet.
+                        if (Mathf.Abs(startingMagnitude - magnitude) < m_MagnitudeThreshold)
+                            continue;
+                    }
+
+                    ////REVIEW: this would be more useful by providing the default score *to* the callback (which may alter it or just replace it altogether)
                     // Compute score.
                     float score;
                     if (m_OnComputeScore != null)
+                    {
                         score = m_OnComputeScore(control, eventPtr);
+                    }
                     else
                     {
                         score = magnitude;
@@ -1586,9 +1672,11 @@ namespace UnityEngine.InputSystem
                     else
                     {
                         // No, so add it.
-                        var candidateCount = m_Candidates.Count;
+                        var scoreCount = m_Candidates.Count;
+                        var magnitudeCount = m_Candidates.Count;
                         m_Candidates.Add(control);
-                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref candidateCount, score);
+                        ArrayHelpers.AppendWithCapacity(ref m_Scores, ref scoreCount, score);
+                        ArrayHelpers.AppendWithCapacity(ref m_Magnitudes, ref magnitudeCount, magnitude);
                         haveChangedCandidates = true;
 
                         if (m_WaitSecondsAfterMatch > 0)
@@ -1635,6 +1723,7 @@ namespace UnityEngine.InputSystem
                     {
                         m_Scores.SwapElements(j, j - 1);
                         m_Candidates.SwapElements(j, j - 1);
+                        m_Magnitudes.SwapElements(i, j - 1);
                     }
                 }
             }
@@ -1778,6 +1867,8 @@ namespace UnityEngine.InputSystem
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
                 m_StartTime = -1;
+                m_StartingActuationControls.Clear();
+                m_StartingActuationsCount = 0;
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
@@ -1823,6 +1914,7 @@ namespace UnityEngine.InputSystem
             private string m_CancelBinding;
             private float m_MagnitudeThreshold = kDefaultMagnitudeThreshold;
             private float[] m_Scores; // Scores for the controls in m_Candidates.
+            private float[] m_Magnitudes;
             private double m_LastMatchTime; // Last input event time we discovered a better match.
             private double m_StartTime;
             private float m_Timeout;
@@ -1840,6 +1932,12 @@ namespace UnityEngine.InputSystem
             private InputControlLayout.Cache m_LayoutCache;
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
+
+            // Controls may already be actuated by the time we start a rebind. For those, we track starting actutations
+            // individually and require them to cross the actuation threshold WRT the starting actuation.
+            private int m_StartingActuationsCount;
+            private float[] m_StaringActuationMagnitudes;
+            private InputControl[] m_StartingActuationControls;
 
             [Flags]
             private enum Flags

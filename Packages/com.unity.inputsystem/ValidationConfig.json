@@ -1,0 +1,12 @@
+{
+    "FilenameValidation":
+    {
+        "Filenames":
+        [
+            {
+                "Filename": "Samples~/RebindingUI/Icons/*.png*",
+                "Targets": "+PS4,+XboxOne"
+            }
+        ]
+    }
+}

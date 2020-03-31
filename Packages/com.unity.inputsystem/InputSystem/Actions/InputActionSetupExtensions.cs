@@ -288,14 +288,13 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Add a new binding to the action.
         /// </summary>
-        /// <param name="action">A disabled action to add the binding to.</param>
-        /// <param name="binding"></param>
+        /// <param name="action">An action to add the binding to.</param>
+        /// <param name="binding">Binding to add to the action or default. Binding can be further configured via
+        /// the struct returned by the method.</param>
         /// <returns>
         /// Returns a fluent-style syntax structure that allows performing additional modifications
         /// based on the new binding.
         /// </returns>
-        /// <exception cref="InvalidOperationException"><paramref name="action"/> is enabled or is part
-        /// of an <see cref="InputActionMap"/> that is enabled.</exception>
         /// <remarks>
         /// This works both with actions that are part of an action set as well as with actions that aren't.
         ///
@@ -314,8 +313,6 @@ namespace UnityEngine.InputSystem
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            if (binding.path == null)
-                throw new ArgumentException("Binding path cannot be null", nameof(binding));
 
             ////REVIEW: should this reference actions by ID?
             Debug.Assert(action.m_Name != null || action.isSingletonAction);
