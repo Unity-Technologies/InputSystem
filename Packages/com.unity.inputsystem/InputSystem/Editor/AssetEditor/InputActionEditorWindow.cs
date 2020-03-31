@@ -44,6 +44,8 @@ namespace UnityEngine.InputSystem.Editor
             string actionToSelect = null;
 
             // Grab InputActionAsset.
+            // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
+            //       without forcing a checkout.
             var obj = EditorUtility.InstanceIDToObject(instanceId);
             var asset = obj as InputActionAsset;
             if (asset == null)
@@ -713,6 +715,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ActionAssetManager.dirty)
                 return;
+
+            // If our asset has disappeared from disk, just close the window.
+            if (string.IsNullOrEmpty(AssetDatabase.GUIDToAssetPath(m_ActionAssetManager.guid)))
+            {
+                Close();
+                return;
+            }
 
             // Don't touch the UI state if the serialized data is still the same.
             if (!m_ActionAssetManager.ReInitializeIfAssetHasChanged())
