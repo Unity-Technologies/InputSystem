@@ -407,17 +407,25 @@ internal partial class CoreTests
         InputSystem.RegisterLayout(layout);
         var device = InputSystem.AddDevice("TestLayout");
 
-        using (var rebind = action.PerformInteractiveRebinding().OnMatchWaitForAnother(0).Start())
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
+                   .OnMatchWaitForAnother(0)
+                   .Start())
         {
             Set((ButtonControl)device["noisyButton"], 0.678f);
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(action.bindings[0].overridePath, Is.Null);
 
+            Set((ButtonControl)device["noisyButton"], 0f);
+
             // Can disable the behavior. This is most useful in combination with a custom
             // OnPotentialMatch() callback or when the selection-by-magnitude logic will do
             // a good enough job.
-            rebind.WithoutIgnoringNoisyControls();
+            rebind.Cancel();
+            rebind
+                .WithoutIgnoringNoisyControls()
+                .Start();
 
             Set((ButtonControl)device["noisyButton"], 0.789f);
 
@@ -449,8 +457,7 @@ internal partial class CoreTests
             // a candidate as well as leftStick/x. However, leftStick/right is synthetic so X axis should
             // win. Note that if we set expectedControlType to "Button", leftStick/x will get ignored
             // and leftStick/left will get picked.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
-            InputSystem.Update();
+            Set(gamepad.leftStick, Vector2.right);
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.EquivalentTo(new[] {gamepad.leftStick.x, gamepad.leftStick.right}));
@@ -458,16 +465,15 @@ internal partial class CoreTests
             Assert.That(rebind.scores[0], Is.GreaterThan(rebind.scores[1]));
 
             // Reset.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState());
-            InputSystem.Update();
-            rebind.RemoveCandidate(gamepad.leftStick.x);
-            rebind.RemoveCandidate(gamepad.leftStick.right);
+            Set(gamepad.leftStick, Vector2.zero);
 
             // Switch to looking only for buttons. leftStick/x will no longer be a suitable pick.
-            rebind.WithExpectedControlType("Button");
+            rebind.Cancel();
+            rebind
+                .WithExpectedControlType("Button")
+                .Start();
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(1, 0)});
-            InputSystem.Update();
+            Set(gamepad.leftStick, Vector2.right);
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftStick/right"));
@@ -572,33 +578,71 @@ internal partial class CoreTests
         }
     }
 
-    // If a control is already actuated when we initiate a rebind, we first require it to go
-    // back to its default value.
+    // We want to be able to deal with controls that are already actuated when the rebinding starts and
+    // also with controls that don't usually go back to default values at all.
+    //
+    // What we require is that when we detect sufficient actuation on a control in an event, we compare
+    // it to the control's current actuation level when we first considered it. This is expected to work
+    // regardless of whether we are suppressing events or not.
+    //
+    // https://fogbugz.unity3d.com/f/cases/1215784/
     [Test]
     [Category("Actions")]
-    public void Actions_InteractiveRebinding_RequiresControlToBeActuatedStartingWithDefaultValue()
+    public void Actions_InteractiveRebinding_WhenControlAlreadyActuated_HasToCrossMagnitudeThresholdFromCurrentActuation()
     {
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        // Put buttonNorth in pressed state.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-        InputSystem.Update();
+        // Actuate some controls.
+        Press(gamepad.buttonNorth);
+        Set(gamepad.leftTrigger, 0.75f);
 
-        using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
+                   .WithMagnitudeHavingToBeGreaterThan(0.25f)
+                   .Start())
         {
-            // Reset buttonNorth to unpressed state.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState());
-            InputSystem.Update();
+            Release(gamepad.buttonNorth);
 
             Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
 
-            // Now press it again.
-            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.North));
-            InputSystem.Update();
+            Set(gamepad.leftTrigger, 0.9f);
+
+            Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0f);
+
+            Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
+
+            Set(gamepad.leftTrigger, 0.7f);
 
             Assert.That(rebind.completed, Is.True);
-            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonNorth"));
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_CanGetActuationMagnitudeOfCandidateControls()
+    {
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
+                   .WithMagnitudeHavingToBeGreaterThan(0.25f)
+                   .OnMatchWaitForAnother(1)
+                   .Start())
+        {
+            Set(gamepad.leftTrigger, 0.75f);
+
+            Assert.That(rebind.candidates, Has.Count.EqualTo(1));
+            Assert.That(rebind.magnitudes, Has.Count.EqualTo(rebind.candidates.Count));
+            Assert.That(rebind.candidates[0], Is.SameAs(gamepad.leftTrigger));
+            Assert.That(rebind.magnitudes[0], Is.EqualTo(0.75).Within(0.00001));
         }
     }
 
@@ -801,14 +845,12 @@ internal partial class CoreTests
                        .WithMagnitudeHavingToBeGreaterThan(0.5f)
                        .Start())
         {
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.4f});
-            InputSystem.Update();
+            Set(gamepad.leftTrigger, 0.4f);
 
             Assert.That(rebind.completed, Is.False);
             Assert.That(rebind.candidates, Is.Empty);
 
-            InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.6f});
-            InputSystem.Update();
+            Set(gamepad.leftTrigger, 0.6f);
 
             Assert.That(rebind.completed, Is.True);
             Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/leftTrigger"));
