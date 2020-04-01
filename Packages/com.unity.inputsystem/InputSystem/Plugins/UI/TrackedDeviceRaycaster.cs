@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_UI && (UNITY_INPUT_SYSTEM_ENABLE_XR || UNITY_EDITOR || PACKAGE_DOCS_GENERATION)
+#if PACKAGE_DOCS_GENERATION || (UNITY_INPUT_SYSTEM_ENABLE_UI && UNITY_INPUT_SYSTEM_ENABLE_XR)
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
-    /// Racyasting implementation for use with <see cref="TrackedDevice"/>s.
+    /// Raycasting implementation for use with <see cref="TrackedDevice"/>s.
     /// </summary>
     /// <remarks>
     /// This component needs to be added alongside the <c>Canvas</c> component. Usually, raycasting is
