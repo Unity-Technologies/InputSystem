@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
+#if UNITY_INPUT_SYSTEM_ENABLE_UI && (UNITY_INPUT_SYSTEM_ENABLE_XR || UNITY_EDITOR || PACKAGE_DOCS_GENERATION)
 using System;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -111,6 +111,7 @@ namespace UnityEngine.InputSystem.UI
             var ray = new Ray(eventData.trackedDevicePosition, eventData.trackedDeviceOrientation * Vector3.forward);
             var hitDistance = m_MaxDistance;
 
+            #if UNITY_INPUT_SYSTEM_ENABLE_PHYSICS
             if (m_CheckFor3DOcclusion)
             {
                 var hits = Physics.RaycastAll(ray, hitDistance, m_BlockingMask);
@@ -120,7 +121,9 @@ namespace UnityEngine.InputSystem.UI
                     hitDistance = hits[0].distance;
                 }
             }
+            #endif
 
+            #if UNITY_INPUT_SYSTEM_ENABLE_PHYSICS2D
             if (m_CheckFor2DOcclusion)
             {
                 var raycastDistance = hitDistance;
@@ -131,6 +134,7 @@ namespace UnityEngine.InputSystem.UI
                     hitDistance = hits[0].fraction * raycastDistance;
                 }
             }
+            #endif
 
             m_RaycastResultsCache.Clear();
             SortedRaycastGraphics(canvas, ray, m_RaycastResultsCache);

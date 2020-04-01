@@ -1,3 +1,4 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 
@@ -44,3 +45,4 @@ namespace UnityEngine.InputSystem.OnScreen
         }
     }
 }
+#endif

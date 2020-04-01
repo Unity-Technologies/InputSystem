@@ -1,3 +1,4 @@
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -38,3 +39,4 @@ namespace UnityEngine.InputSystem.UI
         }
     }
 }
+#endif

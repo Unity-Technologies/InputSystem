@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using UnityEngine.UI;
 
 namespace UnityEngine.InputSystem.Utilities
 {
