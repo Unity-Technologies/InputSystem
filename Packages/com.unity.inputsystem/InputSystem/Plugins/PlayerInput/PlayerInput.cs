@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// PlayerInput is a high-level wrapper around much of the input system's functionality
     /// which is meant to help getting set up with the new input system quickly. It takes
-    /// care of <see cref="InputAction"/> bookkeeping and has a custom UI(Requires UI package) to help
+    /// care of <see cref="InputAction"/> bookkeeping and has a custom UI(requires the "Unity UI" package) to help
     /// setting up input.
     ///
     /// The component supports local multiplayer implicitly. Each PlayerInput instance
