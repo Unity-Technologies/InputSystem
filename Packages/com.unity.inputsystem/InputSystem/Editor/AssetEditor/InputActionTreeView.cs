@@ -899,6 +899,13 @@ namespace UnityEngine.InputSystem.Editor
             }
             menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
             menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
+
+            if (itemType != typeof(ActionMapTreeItem))
+            {
+                menu.AddSeparator("");
+                menu.AddItem(s_ExpandAllLabel, false, ExpandAll);
+                menu.AddItem(s_CollapseAllLabel, false, CollapseAll);
+            }
         }
 
         public void BuildMenuToAddBindings(GenericMenu menu, ActionTreeItem actionItem = null)
@@ -1369,6 +1376,8 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_DeleteLabel = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent s_DuplicateLabel = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent s_RenameLabel = EditorGUIUtility.TrTextContent("Rename");
+        private static readonly GUIContent s_ExpandAllLabel = EditorGUIUtility.TrTextContent("Expand All");
+        private static readonly GUIContent s_CollapseAllLabel = EditorGUIUtility.TrTextContent("Collapse All");
 
         public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/Resources/";
         public static string ResourcesPath

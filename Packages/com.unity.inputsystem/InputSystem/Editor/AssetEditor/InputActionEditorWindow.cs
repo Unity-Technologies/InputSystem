@@ -17,6 +17,8 @@ using UnityEditor.ShortcutManagement;
 
 ////FIXME: when saving, processor/interaction selection is cleared
 
+////TODO: persist view state of asset in Library/ folder
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -321,6 +323,7 @@ namespace UnityEngine.InputSystem.Editor
             if (!schemeHasBindings)
                 return;
 
+            ////FIXME: this does not delete composites that have bindings in only one control scheme
             ////REVIEW: offer to do nothing and leave all bindings as is?
             var deleteBindings =
                 EditorUtility.DisplayDialog("Delete Bindings?",
@@ -461,7 +464,6 @@ namespace UnityEngine.InputSystem.Editor
 
             // Rebuild tree.
             m_ActionsTree.Reload();
-            m_ActionsTree.ExpandAll();
         }
 
         private void OnActionTreeSelectionChanged()

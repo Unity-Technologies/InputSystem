@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 
+////TODO: event diagnostics should have a bool here
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
