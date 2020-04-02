@@ -3,8 +3,6 @@ using System;
 using System.IO;
 using UnityEditor;
 
-////TODO: ensure that GUIDs in the asset are unique
-
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>

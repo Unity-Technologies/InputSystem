@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine.InputSystem.Utilities;
@@ -23,7 +22,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 11;
+        private const int kVersion = 10;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
@@ -91,27 +90,25 @@ namespace UnityEngine.InputSystem.Editor
             ctx.AddObjectToAsset("<root>", asset, assetIcon);
             ctx.SetMainObject(asset);
 
-            // Make sure all the elements in the asset have GUIDs and that they are indeed unique.
+            // Make sure all the elements in the asset have GUIDs.
             var maps = asset.actionMaps;
             foreach (var map in maps)
             {
                 // Make sure action map has GUID.
-                if (string.IsNullOrEmpty(map.m_Id) || asset.actionMaps.Count(x => x.m_Id == map.m_Id) > 1)
+                if (string.IsNullOrEmpty(map.m_Id))
                     map.GenerateId();
 
                 // Make sure all actions have GUIDs.
                 foreach (var action in map.actions)
                 {
-                    var actionId = action.m_Id;
-                    if (string.IsNullOrEmpty(actionId) || asset.actionMaps.Sum(m => m.actions.Count(a => a.m_Id == actionId)) > 1)
+                    if (string.IsNullOrEmpty(action.m_Id))
                         action.GenerateId();
                 }
 
                 // Make sure all bindings have GUIDs.
                 for (var i = 0; i < map.m_Bindings.LengthSafe(); ++i)
                 {
-                    var bindingId = map.m_Bindings[i].m_Id;
-                    if (string.IsNullOrEmpty(bindingId) || asset.actionMaps.Sum(m => m.bindings.Count(b => b.m_Id == bindingId)) > 1)
+                    if (string.IsNullOrEmpty(map.m_Bindings[i].m_Id))
                         map.m_Bindings[i].GenerateId();
                 }
             }
@@ -131,7 +128,7 @@ namespace UnityEngine.InputSystem.Editor
                         objectName = $"{map.name}/{action.name}";
 
                     actionReference.name = objectName;
-                    ctx.AddObjectToAsset(action.m_Id, actionReference, actionIcon);
+                    ctx.AddObjectToAsset(objectName, actionReference, actionIcon);
                 }
             }
 
