@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
-#if UNITY_INPUT_SYSTEM_ENABLE_UI
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using UnityEngine.InputSystem.UI;
 #endif
 
@@ -711,7 +711,7 @@ namespace UnityEngine.InputSystem
             set => m_Camera = value;
         }
 
-        #if UNITY_INPUT_SYSTEM_ENABLE_UI
+        #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
         /// <summary>
         /// UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.
         /// </summary>
