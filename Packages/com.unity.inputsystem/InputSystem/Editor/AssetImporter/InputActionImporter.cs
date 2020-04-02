@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 using UnityEngine.InputSystem.Utilities;
@@ -22,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 10;
+        private const int kVersion = 11;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
