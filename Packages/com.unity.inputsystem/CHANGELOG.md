@@ -20,6 +20,9 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- References to `InputActionReference` objects created by the importer for `.inputactions` files are no longer broken when the action referenced by the object is renamed ([case 1229145](https://issuetracker.unity3d.com/issues/inputsystem-inputactionreference-loses-guid-when-its-action-is-moved-or-renamed-in-the-inputaction-asset)).
+  * __THIS IS A BREAKING CHANGE__: Unfortunately, this change impacts Unity internal file IDs of `InputActionReference` objects created by the `.inputactions` file importer. This means that previously created references to `InputActionReference` objects will become missing and need to be recreated.
+  * __HOW TO FIX BROKEN REFERENCES__: Locate the sub-object in the `.inputactions` asset for the action you are referencing and replace the now missing references with the newly created objects.
 - Controls are now re-resolved after adding or removing bindings from actions ([case 1218544](https://issuetracker.unity3d.com/issues/input-system-package-does-not-re-resolve-bindings-when-adding-a-new-binding-to-a-map-that-has-already-generated-its-state)).
 - Can now have spaces and special characters in action names when using `PlayerInput` with the `SendMessages` or `BroadcastMessages` behavior. Previously, an incorrect method name was generated (fix contributed by [BHSPitMonkey](https://github.com/BHSPitMonkey) in [#1022](https://github.com/Unity-Technologies/InputSystem/pull/1022); [case 1214519](https://issuetracker.unity3d.com/issues/player-input-send-messages-wont-trigger-when-input-action-name-contains-spaces)).
 - Adding a new action now sets `expectedControlType` to `Button` as expected ([case 1221015](https://issuetracker.unity3d.com/issues/input-system-default-value-of-expectedcontroltype-is-not-being-set-when-creating-a-new-action)).
