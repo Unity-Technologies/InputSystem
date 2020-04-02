@@ -471,7 +471,7 @@ namespace UnityEngine.InputSystem.Editor
                 var assignNewIDs = !(isMove && sourceTree == this);
 
                 // Determine where we are moving/copying the data.
-                var target = (args.parentItem ?? rootItem) as ActionTreeItemBase;
+                var target = args.parentItem ?? rootItem;
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
@@ -770,7 +770,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Paste into InputActionAsset.
                 array = serializedObject.FindProperty("m_ActionMaps");
-                arrayIndex = array.arraySize;
+                arrayIndex = location.childIndex ?? array.arraySize;
             }
             else
             {
@@ -778,7 +778,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // If not given a specific index, we paste onto the end of the array.
-            if (arrayIndex == -1)
+            if (arrayIndex == -1 || arrayIndex > array.arraySize)
                 arrayIndex = array.arraySize;
 
             var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
