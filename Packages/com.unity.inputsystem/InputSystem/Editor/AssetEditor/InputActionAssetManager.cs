@@ -153,7 +153,7 @@ namespace UnityEngine.InputSystem.Editor
             var existingJson = File.ReadAllText(assetPath);
             if (m_ImportedAssetJson != existingJson)
             {
-                ////TODO: has to be made to work with version control
+                EditorHelpers.CheckOut(assetPath);
                 File.WriteAllText(assetPath, m_ImportedAssetJson);
                 AssetDatabase.ImportAsset(assetPath);
             }
