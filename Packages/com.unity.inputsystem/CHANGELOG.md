@@ -11,7 +11,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- `VirtualMouseInput` not moving the software cursor when set to `HardwareCursorIsAvailable` but not having a hardware cursor ()
+- `VirtualMouseInput` not moving the software cursor when set to `HardwareCursorIsAvailable` but not having a hardware cursor.
+- `VirtualMouseInput` not working correctly with `CanvasScaler` settings other than `ConstantPixelSize`. Fix contributed by [ad-walker](https://github.com/ad-walker) in [#1078](https://github.com/Unity-Technologies/InputSystem/pull/1078).
 - Can now override built-in Android gamepad layouts. Previously, the input system would always choose its default defaults even after registering more specific layouts using `InputSystem.RegisterLayout`.
 - `InputControlPath.TryGetControlLayout` no longer throws `NotImplementedException` for `<Mouse>/scroll/x` and similar paths where the layout is modifying a control it inherited from its base layout ([thread](https://forum.unity.com/threads/notimplementedexception-when-using-inputcontrolpath-trygetcontrollayout-on-mouse-controls.847129/)).
 - Fixed compilation errors when disabling built-in VR and XR packages. ([case 1214248](https://issuetracker.unity3d.com/issues/enable-input-system-symbol-is-not-being-updated-when-the-input-system-is-changed-in-player-settings/)).
@@ -39,6 +40,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - `InputDevice.all` has been deprecated due to the confusion it creates with other getters like `Gamepad.all`. Use `InputSystem.devices` instead ([case 1231216](https://issuetracker.unity3d.com/issues/joystick-dot-all-lists-more-than-just-joysticks)).
   * In the same vein, we added a new `Joystick.all` getter that works the same as `Gamepad.all`.
+
+### Added
+
+- Added an explicit `Disable System Mouse` setting to `VirtualMouseInput` to allow toggling the default behavior off which makes the component turn off the system mouse while it is enabled (so as to suppress the system mouse doubling the input activity on the VirtualMouse).
 
 ## [1.0.0-preview.6] - 2020-03-06
 

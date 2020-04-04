@@ -34,7 +34,7 @@
                 {
                     "name": "",
                     "id": "39af39e2-c75c-421e-84bf-1e4ff9793ab4",
-                    "path": "<VirtualMouse>/position",
+                    "path": "<Mouse>/position",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -45,7 +45,7 @@
                 {
                     "name": "",
                     "id": "f9d5a98e-68a3-44c8-a096-a1a30237ca81",
-                    "path": "<VirtualMouse>/leftButton",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -56,7 +56,7 @@
                 {
                     "name": "",
                     "id": "7ffd960c-11ef-4fc0-b91b-4cbd02eba1b8",
-                    "path": "<VirtualMouse>/scroll",
+                    "path": "<Mouse>/scroll",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
