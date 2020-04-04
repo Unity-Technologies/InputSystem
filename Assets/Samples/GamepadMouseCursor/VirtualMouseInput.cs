@@ -185,7 +185,20 @@ namespace UnityEngine.InputSystem.UI
         public bool disableSystemMouse
         {
             get => m_DisableSystemMouse;
-            set => m_DisableSystemMouse = value;
+            set
+            {
+                if (value == m_DisableSystemMouse)
+                    return;
+                m_DisableSystemMouse = value;
+
+                if (m_SystemMouse != null)
+                {
+                    if (value)
+                        InputSystem.DisableDevice(m_SystemMouse);
+                    else
+                        InputSystem.EnableDevice(m_SystemMouse);
+                }
+            }
         }
 
         /// <summary>
