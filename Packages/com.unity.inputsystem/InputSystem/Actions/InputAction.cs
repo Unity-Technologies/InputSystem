@@ -986,7 +986,6 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
-        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// Index of the action in the <see cref="InputActionState"/> associated with the
