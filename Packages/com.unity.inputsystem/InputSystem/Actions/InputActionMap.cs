@@ -1305,7 +1305,7 @@ namespace UnityEngine.InputSystem
                 {
                     name = action.m_Name,
                     type = action.m_Type.ToString(),
-                    id = action.id.ToString(),
+                    id = action.m_Id,
                     expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
@@ -1679,7 +1679,15 @@ namespace UnityEngine.InputSystem
             {
                 var actionCount = m_Actions.Length;
                 for (var i = 0; i < actionCount; ++i)
-                    m_Actions[i].m_ActionMap = this;
+                {
+                    var action = m_Actions[i];
+
+                    action.m_ActionMap = this;
+
+                    // Also clear cached GUIDs to ensure that when we change GUIDs through serialization,
+                    // we don't keep stale caches around.
+                    action.m_Guid = default;
+                }
             }
 
             // Make sure we don't retain any cached per-action data when using serialization
