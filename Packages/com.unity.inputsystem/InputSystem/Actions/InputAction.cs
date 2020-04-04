@@ -201,7 +201,7 @@ namespace UnityEngine.InputSystem
             get
             {
                 MakeSureIdIsInPlace();
-                return m_Guid;
+                return new Guid(m_Id);
             }
         }
 
@@ -209,9 +209,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
         }
 
@@ -1035,21 +1035,14 @@ namespace UnityEngine.InputSystem
 
         internal string MakeSureIdIsInPlace()
         {
-            if (m_Guid != Guid.Empty)
-                return m_Id;
-
             if (string.IsNullOrEmpty(m_Id))
                 GenerateId();
-            else
-                m_Guid = new Guid(m_Id);
-
             return m_Id;
         }
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
         internal InputActionMap GetOrCreateActionMap()

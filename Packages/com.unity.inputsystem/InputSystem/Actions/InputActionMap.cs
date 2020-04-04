@@ -100,14 +100,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty)
-                {
-                    if (m_Id == null)
-                        GenerateId();
-                    else
-                        m_Guid = new Guid(m_Id);
-                }
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    GenerateId();
+                return new Guid(m_Id);
             }
         }
 
@@ -115,9 +110,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
         }
 
@@ -401,23 +396,28 @@ namespace UnityEngine.InputSystem
 
             if (string.IsNullOrEmpty(nameOrId))
                 return -1;
-
             if (m_Actions == null)
-                return InputActionState.kInvalidIndex;
+                return -1;
+
             var actionCount = m_Actions.Length;
 
-            // If it contains hyphens, it may be a GUID so try looking up that way.
-            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
+            var isOldBracedFormat = nameOrId.StartsWith("{") && nameOrId.EndsWith("}");
+            if (isOldBracedFormat)
             {
+                var length = nameOrId.Length - 2;
                 for (var i = 0; i < actionCount; ++i)
-                    if (m_Actions[i].idDontGenerate == id)
+                {
+                    if (string.Compare(m_Actions[i].m_Id, 0, nameOrId, 1, length) == 0)
                         return i;
+                }
             }
 
-            // Default search goes by name (case insensitive).
             for (var i = 0; i < actionCount; ++i)
-                if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+            {
+                var action = m_Actions[i];
+                if (action.m_Id == nameOrId || string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
                     return i;
+            }
 
             return InputActionState.kInvalidIndex;
         }
@@ -612,10 +612,7 @@ namespace UnityEngine.InputSystem
                 var bindings = new InputBinding[bindingCount];
                 Array.Copy(m_Bindings, 0, bindings, 0, bindingCount);
                 for (var i = 0; i < bindingCount; ++i)
-                {
                     bindings[i].m_Id = default;
-                    bindings[i].m_Guid = default;
-                }
                 clone.m_Bindings = bindings;
             }
 
@@ -722,11 +719,6 @@ namespace UnityEngine.InputSystem
         /// This should only be written to by <see cref="InputActionState"/>.
         /// </remarks>
         [NonSerialized] internal int m_EnabledActionsCount;
-
-        /// <summary>
-        /// GUID converted from <see cref="m_Id"/>.
-        /// </summary>
-        [NonSerialized] private Guid m_Guid;
 
         // Action maps that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -980,8 +972,7 @@ namespace UnityEngine.InputSystem
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -1670,42 +1661,17 @@ namespace UnityEngine.InputSystem
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
 
-            // NOTE: The clearing of GUIDs we unfortunately have to do in both the player and the editor
-            //       due to the existence of JsonUtility.FromJsonOverwrite(), i.e. both the player and
-            //       the editor have the ability to retroactively change an existing object solely through
-            //       serialization.
-            //       [rene] I really wish there was a more nuanced mechanism than the rather poor ISerializationCallbackReceiver...
-
             // Restore references of actions linking back to us.
             if (m_Actions != null)
             {
                 var actionCount = m_Actions.Length;
                 for (var i = 0; i < actionCount; ++i)
-                {
-                    var action = m_Actions[i];
-
-                    action.m_ActionMap = this;
-
-                    // Also clear cached GUIDs to ensure that when we change GUIDs through serialization,
-                    // we don't keep stale caches around.
-                    action.m_Guid = default;
-                }
-            }
-
-            // Clear cached GUIDs on bindings.
-            if (m_Bindings != null)
-            {
-                var bindingCount = m_Bindings.Length;
-                for (var i = 0; i < bindingCount; ++i)
-                    m_Bindings[i].m_Guid = default;
+                    m_Actions[i].m_ActionMap = this;
             }
 
             // Make sure we don't retain any cached per-action data when using serialization
             // to doctor around in action map configurations in the editor.
             ClearPerActionCachedBindingData();
-
-            // Also clear our cached GUID for the same reason we clear it on actions and bindings.
-            m_Guid = default;
         }
 
         #endregion
