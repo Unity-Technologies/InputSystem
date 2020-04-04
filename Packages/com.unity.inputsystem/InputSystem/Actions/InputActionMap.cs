@@ -103,13 +103,9 @@ namespace UnityEngine.InputSystem
                 if (m_Guid == Guid.Empty)
                 {
                     if (m_Id == null)
-                    {
                         GenerateId();
-                    }
                     else
-                    {
                         m_Guid = new Guid(m_Id);
-                    }
                 }
                 return m_Guid;
             }
@@ -1218,12 +1214,12 @@ namespace UnityEngine.InputSystem
                 };
             }
 
-            public static BindingJson FromBinding(InputBinding binding)
+            public static BindingJson FromBinding(ref InputBinding binding)
             {
                 return new BindingJson
                 {
                     name = binding.name,
-                    id = binding.id.ToString(),
+                    id = binding.m_Id,
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,
@@ -1352,7 +1348,7 @@ namespace UnityEngine.InputSystem
                     jsonBindings = new BindingJson[bindingCount];
 
                     for (var i = 0; i < bindingCount; ++i)
-                        jsonBindings[i] = BindingJson.FromBinding(bindings[i]);
+                        jsonBindings[i] = BindingJson.FromBinding(ref bindings[i]);
                 }
 
                 return new WriteMapJson
@@ -1674,6 +1670,12 @@ namespace UnityEngine.InputSystem
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
 
+            // NOTE: The clearing of GUIDs we unfortunately have to do in both the player and the editor
+            //       due to the existence of JsonUtility.FromJsonOverwrite(), i.e. both the player and
+            //       the editor have the ability to retroactively change an existing object solely through
+            //       serialization.
+            //       [rene] I really wish there was a more nuanced mechanism than the rather poor ISerializationCallbackReceiver...
+
             // Restore references of actions linking back to us.
             if (m_Actions != null)
             {
@@ -1690,9 +1692,20 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            // Clear cached GUIDs on bindings.
+            if (m_Bindings != null)
+            {
+                var bindingCount = m_Bindings.Length;
+                for (var i = 0; i < bindingCount; ++i)
+                    m_Bindings[i].m_Guid = default;
+            }
+
             // Make sure we don't retain any cached per-action data when using serialization
             // to doctor around in action map configurations in the editor.
             ClearPerActionCachedBindingData();
+
+            // Also clear our cached GUID for the same reason we clear it on actions and bindings.
+            m_Guid = default;
         }
 
         #endregion
