@@ -3954,9 +3954,8 @@ partial class CoreTests
             Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
         };
 
-        var inputEvent = IMECompositionEvent.Create(keyboard.deviceId, imeCompositionCharacters,
+        IMECompositionEvent.QueueEvent(keyboard.deviceId, imeCompositionCharacters,
             InputRuntime.s_Instance.currentTime);
-        InputSystem.QueueEvent(ref inputEvent);
         InputSystem.Update();
 
         Assert.That(callbackWasCalled, Is.True);

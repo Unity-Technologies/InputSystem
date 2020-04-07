@@ -10,27 +10,70 @@ namespace UnityEngine.InputSystem.LowLevel
     /// A specialized event that contains the current IME Composition string, if IME is enabled and active.
     /// This event contains the entire current string to date, and once a new composition is submitted will send a blank string event.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize))]
+    [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char)))]
     public struct IMECompositionEvent : IInputEventTypeInfo
     {
-        // These needs to match the native ImeCompositionStringInputEventData settings
-        internal const int kIMECharBufferSize = 64;
-        public const int Type = 0x494D4553;
+        public const int Type = 0x494D4543;
 
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public IMECompositionString compositionString;
+        public int length;
+
+        [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
+        public char bufferStart;
 
         public FourCC typeStatic => Type;
 
-        public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
+        /// <summary>
+        /// Gets an IME Composition String.  !-- This Composition String can only be used within the <see cref="ITextInputReceiver.OnIMECompositionChanged" it was recieved on./> 
+        /// </summary>
+        /// <returns>A structure containing the current IME Composition</returns>
+        public IMECompositionString GetComposition()
         {
-            var inputEvent = new IMECompositionEvent();
-            inputEvent.baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * kIMECharBufferSize), deviceId, time);
-            inputEvent.compositionString = new IMECompositionString(compositionString);
-            return inputEvent;
+            unsafe
+            {
+                fixed(char* buffer = &bufferStart)
+                {
+                    return new IMECompositionString(new IntPtr(buffer), length);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Queues up an IME Composition Event.!-- This event is for unit testing and debug purposes, and is slow, due to the variable way that IME Composition events work.
+        /// </summary>
+        /// <param name="deviceId">The Id you'd like to send the composition event at.</param>
+        /// <param name="str">The IME composition string.</param>
+        /// <param name="time">The time that the event occurred at.</param>
+        public static void QueueEvent(int deviceId, string str, double time)
+        {
+            unsafe
+            {
+                int sizeInBytes = (InputEvent.kBaseEventSize + sizeof(int) + sizeof(char)) + (sizeof(char) * str.Length);
+                IntPtr evtPtr = Marshal.AllocHGlobal(sizeInBytes);
+                byte* ptr = (byte*)evtPtr.ToPointer();
+                InputEvent* evt = (InputEvent*)ptr;
+
+                *evt = new InputEvent(Type, sizeInBytes, deviceId, time);
+                ptr += InputEvent.kBaseEventSize;
+
+                int* lengthPtr = (int*)ptr;
+                *lengthPtr = str.Length;
+
+                ptr += sizeof(int);
+
+                fixed (char* p = str)
+                {
+                    Buffer.MemoryCopy(p, ptr, str.Length * sizeof(char), str.Length * sizeof(char));
+                }
+                
+                InputSystem.QueueEvent(new InputEventPtr(evt));
+                Marshal.FreeHGlobal(evtPtr);
+            }
+            
+            
         }
     }
 
@@ -42,35 +85,32 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <see cref="ITextInputReceiver.OnIMECompositionChanged"/> method. It can easily be converted to a normal C# string using
     ///  <see cref="ToString"/>, but is exposed as the raw struct to avoid allocating memory by default.
     /// </remarks>
-    [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize)]
     public unsafe struct IMECompositionString : IEnumerable<char>
     {
         internal struct Enumerator : IEnumerator<char>
         {
-            IMECompositionString m_CompositionString;
+            IntPtr m_BufferStart;
+            int m_CharacterCount;
             char m_CurrentCharacter;
             int m_CurrentIndex;
 
             public Enumerator(IMECompositionString compositionString)
             {
-                m_CompositionString = compositionString;
+                m_BufferStart = compositionString.m_CharBuffer;
+                m_CharacterCount = compositionString.length;
                 m_CurrentCharacter = '\0';
                 m_CurrentIndex = -1;
             }
 
             public bool MoveNext()
             {
-                int size = m_CompositionString.Count;
-
                 m_CurrentIndex++;
 
-                if (m_CurrentIndex == size)
+                if (m_CurrentIndex == m_CharacterCount)
                     return false;
 
-                fixed(char* ptr = m_CompositionString.buffer)
-                {
-                    m_CurrentCharacter = *(ptr + m_CurrentIndex);
-                }
+                char* ptr = (char*)m_BufferStart.ToPointer();
+                m_CurrentCharacter = *(ptr + m_CurrentIndex);
 
                 return true;
             }
@@ -89,48 +129,36 @@ namespace UnityEngine.InputSystem.LowLevel
             object IEnumerator.Current => Current;
         }
 
-        public int Count => size;
+        int m_Length; 
+        public int length { get { return m_Length; }}
+
+        IntPtr m_CharBuffer;
 
         public char this[int index]
         {
             get
             {
-                if (index >= Count || index < 0)
+                if (index >= m_Length || index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
 
-                fixed(char* ptr = buffer)
-                {
-                    return *(ptr + index);
-                }
+                char* ptr = (char*)m_CharBuffer.ToPointer();
+                return *(ptr + index);
             }
         }
 
-        [FieldOffset(0)]
-        int size;
 
-        [FieldOffset(sizeof(int))]
-        fixed char buffer[IMECompositionEvent.kIMECharBufferSize];
-
-        public IMECompositionString(string characters)
+        public IMECompositionString(IntPtr charBuffer, int length)
         {
-            if (string.IsNullOrEmpty(characters))
-            {
-                size = 0;
-                return;
-            }
-
-            Debug.Assert(characters.Length < IMECompositionEvent.kIMECharBufferSize);
-            size = characters.Length;
-            for (var i = 0; i < size; i++)
-                buffer[i] = characters[i];
+            m_Length = length;
+            m_CharBuffer = charBuffer;
         }
+
+        //static StringBuilder sb;
 
         public override string ToString()
         {
-            fixed(char* ptr = buffer)
-            {
-                return new string(ptr, 0, size);
-            }
+            char* ptr = (char*)m_CharBuffer.ToPointer();
+            return new string(ptr, 0, m_Length);
         }
 
         public IEnumerator<char> GetEnumerator()
