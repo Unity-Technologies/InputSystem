@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public FourCC typeStatic => Type;
 
         /// <summary>
-        /// Gets an IME Composition String.  !-- This Composition String can only be used within the <see cref="ITextInputReceiver.OnIMECompositionChanged" it was recieved on./> 
+        /// Gets an IME Composition String.  !-- This Composition String can only be used within the <see cref="ITextInputReceiver.OnIMECompositionChanged" it was recieved on./>
         /// </summary>
         /// <returns>A structure containing the current IME Composition</returns>
         public IMECompositionString GetComposition()
@@ -64,16 +64,14 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 ptr += sizeof(int);
 
-                fixed (char* p = str)
+                fixed(char* p = str)
                 {
                     Buffer.MemoryCopy(p, ptr, str.Length * sizeof(char), str.Length * sizeof(char));
                 }
-                
+
                 InputSystem.QueueEvent(new InputEventPtr(evt));
                 Marshal.FreeHGlobal(evtPtr);
             }
-            
-            
         }
     }
 
@@ -129,7 +127,7 @@ namespace UnityEngine.InputSystem.LowLevel
             object IEnumerator.Current => Current;
         }
 
-        int m_Length; 
+        int m_Length;
         public int length { get { return m_Length; }}
 
         IntPtr m_CharBuffer;
