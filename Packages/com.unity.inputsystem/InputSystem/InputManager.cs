@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.Editor;
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
-////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
+////TODO: make sure we discard events in editor updates when lockInputToGameView is true and the player isn't running or paused
 
 ////REVIEW: change the event properties over to using IObservable?
 
