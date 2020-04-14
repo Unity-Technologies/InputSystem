@@ -171,6 +171,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
+            ////FIXME: this gives us a one-frame lag
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);

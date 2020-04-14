@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Text;
 
+////REVIEW: this seems like it should be #if UNITY_EDITOR
+
 namespace UnityEngine.InputSystem.Utilities
 {
     internal static class CSharpCodeHelpers

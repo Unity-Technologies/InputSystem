@@ -1,6 +1,16 @@
 using System;
 using System.Linq;
 
+////REVIEW: Can we somehow make this a simple struct? The one problem we have is that we can't put struct instances as sub-assets into
+////        the import (i.e. InputActionImporter can't do AddObjectToAsset with them). However, maybe there's a way around that. The thing
+////        is that we really want to store the asset reference plus the action GUID on the *user* side, i.e. the referencing side. Right
+////        now, what happens is that InputActionImporter puts these objects along with the reference and GUID they contain in the
+////        *imported* object, i.e. right with the asset. This partially defeats the whole purpose of having these objects and it means
+////        that now the GUID doesn't really matter anymore. Rather, it's the file ID that now has to be stable.
+////
+////        If we always store the GUID and asset reference on the user side, we can put the serialized data *anywhere* and it'll remain
+////        save and proper no matter what we do in InputActionImporter.
+
 ////REVIEW: should this throw if you try to assign an action that is not a singleton?
 
 ////REVIEW: akin to this, also have an InputActionMapReference?
