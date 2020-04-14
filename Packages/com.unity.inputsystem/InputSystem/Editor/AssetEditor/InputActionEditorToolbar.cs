@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: better method for creating display names than InputControlPath.TryGetDeviceLayout
 
+////FIXME: Device requirements list in control scheme popup must mention explicitly that that is what it is
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>

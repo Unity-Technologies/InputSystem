@@ -625,7 +625,7 @@ namespace UnityEngine.InputSystem.Users
             var deviceCount = s_AllUserData[userIndex].deviceCount;
             var deviceStartIndex = s_AllUserData[userIndex].deviceStartIndex;
             s_AllUserData[userIndex].deviceCount = 0;
-            s_AllUserData[deviceStartIndex].deviceStartIndex = 0;
+            s_AllUserData[userIndex].deviceStartIndex = 0;
 
             // Update actions, if necessary.
             var actions = s_AllUserData[userIndex].actions;

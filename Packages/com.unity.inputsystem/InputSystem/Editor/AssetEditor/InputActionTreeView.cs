@@ -16,6 +16,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: With many actions and bindings the list becomes really hard to grok; make things more visually distinctive
 
+////TODO: add context menu items for reordering action and binging entries (like "Move Up" and "Move Down")
+
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
 namespace UnityEngine.InputSystem.Editor
