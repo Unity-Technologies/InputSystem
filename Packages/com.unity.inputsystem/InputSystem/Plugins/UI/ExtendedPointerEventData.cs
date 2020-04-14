@@ -1,3 +1,4 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System.Text;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
@@ -162,3 +163,4 @@ namespace UnityEngine.InputSystem.UI
         AllPointersAsIs,
     }
 }
+#endif

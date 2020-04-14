@@ -5,7 +5,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: some of the stuff here is really low-level; should we move it into a separate static class inside of .LowLevel?

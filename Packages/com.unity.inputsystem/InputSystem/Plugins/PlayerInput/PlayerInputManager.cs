@@ -4,7 +4,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.UI;
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 

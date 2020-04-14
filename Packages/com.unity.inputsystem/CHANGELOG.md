@@ -14,7 +14,8 @@ however, it has to be formatted properly to pass verification tests.
 - `VirtualMouseInput` not moving the software cursor when set to `HardwareCursorIsAvailable` but not having a hardware cursor ()
 - Can now override built-in Android gamepad layouts. Previously, the input system would always choose its default defaults even after registering more specific layouts using `InputSystem.RegisterLayout`.
 - `InputControlPath.TryGetControlLayout` no longer throws `NotImplementedException` for `<Mouse>/scroll/x` and similar paths where the layout is modifying a control it inherited from its base layout ([thread](https://forum.unity.com/threads/notimplementedexception-when-using-inputcontrolpath-trygetcontrollayout-on-mouse-controls.847129/)).
-- Fixed compilation errors when disabling built-in VR and XR packages. ([case 1214248](https://issuetracker.unity3d.com/issues/enable-input-system-symbol-is-not-being-updated-when-the-input-system-is-changed-in-player-settings/)).
+- Fixed compilation errors when disabling built-in VR and XR modules. ([case 1214248](https://issuetracker.unity3d.com/issues/enable-input-system-symbol-is-not-being-updated-when-the-input-system-is-changed-in-player-settings/)).
+- Fixed compilation errors when disabling built-in Physics and Physics2D modules. ([case 1191392](https://issuetracker.unity3d.com/issues/inputsystem-trackeddeviceraycaster-has-hard-references-on-both-physics-and-physics2d)).
 - No longer throws `NotImplementedException` when matching against a field of `InputDeviceDescription.capabilities` when the value of the field used scientific notation.
 - No longer incorrectly matches fields of `InputDeviceDescription.capabilities` by prefix only (i.e. previously it would find the field "foo" when actually looking for "foobar").
 
@@ -39,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - `InputDevice.all` has been deprecated due to the confusion it creates with other getters like `Gamepad.all`. Use `InputSystem.devices` instead ([case 1231216](https://issuetracker.unity3d.com/issues/joystick-dot-all-lists-more-than-just-joysticks)).
   * In the same vein, we added a new `Joystick.all` getter that works the same as `Gamepad.all`.
+- Changed UI Package to be optional dependency. Removing the package will now disable all UI relevant Input code.
 
 ## [1.0.0-preview.6] - 2020-03-06
 

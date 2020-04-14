@@ -5,10 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
-using UnityEngine.InputSystem.UI;
-using UnityEngine.InputSystem.UI.Editor;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+#if UNITY_INPUT_SYSTEM_ENABLE_UI
+using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem.UI.Editor;
+#endif
 
 ////TODO: detect if new input system isn't enabled and provide UI to enable it
 #pragma warning disable 0414
@@ -33,13 +36,16 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultControlSchemeProperty = serializedObject.FindProperty("m_DefaultControlScheme");
             m_NeverAutoSwitchControlSchemesProperty = serializedObject.FindProperty("m_NeverAutoSwitchControlSchemes");
             m_DefaultActionMapProperty = serializedObject.FindProperty("m_DefaultActionMap");
-            m_UIInputModuleProperty = serializedObject.FindProperty("m_UIInputModule");
             m_NotificationBehaviorProperty = serializedObject.FindProperty("m_NotificationBehavior");
             m_CameraProperty = serializedObject.FindProperty("m_Camera");
             m_ActionEventsProperty = serializedObject.FindProperty("m_ActionEvents");
             m_DeviceLostEventProperty = serializedObject.FindProperty("m_DeviceLostEvent");
             m_DeviceRegainedEventProperty = serializedObject.FindProperty("m_DeviceRegainedEvent");
             m_ControlsChangedEventProperty = serializedObject.FindProperty("m_ControlsChangedEvent");
+
+            #if UNITY_INPUT_SYSTEM_ENABLE_UI
+            m_UIInputModuleProperty = serializedObject.FindProperty("m_UIInputModule");
+            #endif
         }
 
         public void OnDestroy()
@@ -124,6 +130,7 @@ namespace UnityEngine.InputSystem.Editor
             --EditorGUI.indentLevel;
             DoHelpCreateAssetUI();
 
+            #if UNITY_INPUT_SYSTEM_ENABLE_UI
             // UI config section.
             if (m_UIPropertyText == null)
                 m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.tooltip);
@@ -137,11 +144,12 @@ namespace UnityEngine.InputSystem.Editor
                 var uiModule = m_UIInputModuleProperty.objectReferenceValue as InputSystemUIInputModule;
                 if (m_ActionsProperty.objectReferenceValue != null && uiModule.actionsAsset != m_ActionsProperty.objectReferenceValue)
                 {
-                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using differnet input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
+                    EditorGUILayout.HelpBox("The referenced InputSystemUIInputModule is configured using different input actions then this PlayerInput. They should match if you want to synchronize PlayerInput actions to the UI input.", MessageType.Warning);
                     if (GUILayout.Button(m_FixInputModuleText))
                         InputSystemUIInputModuleEditor.ReassignActions(uiModule, m_ActionsProperty.objectReferenceValue as InputActionAsset);
                 }
             }
+            #endif
 
             // Camera section.
             if (m_CameraPropertyText == null)
@@ -546,7 +554,9 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultActionMapProperty;
         [NonSerialized] private SerializedProperty m_NeverAutoSwitchControlSchemesProperty;
         [NonSerialized] private SerializedProperty m_NotificationBehaviorProperty;
+        #if UNITY_INPUT_SYSTEM_ENABLE_UI
         [NonSerialized] private SerializedProperty m_UIInputModuleProperty;
+        #endif
         [NonSerialized] private SerializedProperty m_ActionEventsProperty;
         [NonSerialized] private SerializedProperty m_CameraProperty;
         [NonSerialized] private SerializedProperty m_DeviceLostEventProperty;
