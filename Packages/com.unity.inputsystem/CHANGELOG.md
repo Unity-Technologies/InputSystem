@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 - No longer throws `NotImplementedException` when matching against a field of `InputDeviceDescription.capabilities` when the value of the field used scientific notation.
 - No longer incorrectly matches fields of `InputDeviceDescription.capabilities` by prefix only (i.e. previously it would find the field "foo" when actually looking for "foobar").
 - Input device debugger window slowing editor to a crawl when opened on PS4 DualShock controller.
+- `InputUser.UnpairDevices()` corrupting user device list.
 
 #### Actions
 
