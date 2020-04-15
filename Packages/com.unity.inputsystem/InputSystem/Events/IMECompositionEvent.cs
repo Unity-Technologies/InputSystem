@@ -16,21 +16,17 @@ namespace UnityEngine.InputSystem.LowLevel
         public const int Type = 0x494D4543;
 
         [FieldOffset(0)]
-        public InputEvent baseEvent;
+        internal InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
-        public int length;
+        internal int length;
 
         [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
-        public char bufferStart;
+        internal char bufferStart;
 
         public FourCC typeStatic => Type;
 
-        /// <summary>
-        /// Gets an IME Composition String.  !-- This Composition String can only be used within the <see cref="ITextInputReceiver.OnIMECompositionChanged" it was recieved on./>
-        /// </summary>
-        /// <returns>A structure containing the current IME Composition</returns>
-        public IMECompositionString GetComposition()
+        internal IMECompositionString GetComposition()
         {
             unsafe
             {
@@ -128,10 +124,19 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         int m_Length;
+        /// <summary>
+        /// The number of characters in the current IME Composition
+        /// </summary>
+        /// <value>The Length of the Composition</value>
         public int length { get { return m_Length; }}
 
         IntPtr m_CharBuffer;
 
+
+        /// <summary>
+        /// An Indexer into an individual character in the IME Composition. Will throw an out of range exception if the index is greater than the length of the composition.
+        /// </summary>
+        /// <value>The character at the requested index</value>
         public char this[int index]
         {
             get
@@ -145,20 +150,26 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
 
-        public IMECompositionString(IntPtr charBuffer, int length)
+        internal IMECompositionString(IntPtr charBuffer, int length)
         {
             m_Length = length;
             m_CharBuffer = charBuffer;
         }
 
-        //static StringBuilder sb;
-
+        /// <summary>
+        /// Returns the IME Composition as a new string
+        /// </summary>
+        /// <returns>The IME Composition as a string</returns>
         public override string ToString()
         {
             char* ptr = (char*)m_CharBuffer.ToPointer();
             return new string(ptr, 0, m_Length);
         }
 
+        /// <summary>
+        /// Gets an Enumerator that enumerates over the individual IME Composition characters
+        /// </summary>
+        /// <returns>The IME Composition Enuemrator</returns>
         public IEnumerator<char> GetEnumerator()
         {
             return new Enumerator(this);
