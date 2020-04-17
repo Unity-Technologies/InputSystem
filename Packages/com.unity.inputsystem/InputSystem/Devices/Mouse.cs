@@ -47,8 +47,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <value>Scroll wheel delta.</value>
         /// <seealso cref="Mouse.scroll"/>
         [InputControl(displayName = "Scroll")]
-        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Scroll Left/Right")]
-        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Scroll Up/Down", shortDisplayName = "Wheel")]
+        [InputControl(name = "scroll/x", aliases = new[] { "horizontal" }, usage = "ScrollHorizontal", displayName = "Left/Right")]
+        [InputControl(name = "scroll/y", aliases = new[] { "vertical" }, usage = "ScrollVertical", displayName = "Up/Down", shortDisplayName = "Wheel")]
         [FieldOffset(16)]
         public Vector2 scroll;
 

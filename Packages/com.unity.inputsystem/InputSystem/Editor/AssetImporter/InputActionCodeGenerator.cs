@@ -5,6 +5,8 @@ using System.Text;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
+////TODO: suffix map properties with Map or Actions (e.g. "PlayerMap" instead of "Player")
+
 ////TODO: unify the generated events so that performed, canceled, and started all go into a single event
 
 ////TODO: look up actions and maps by ID rather than by name
@@ -18,6 +20,8 @@ using UnityEditor;
 ////TODO: protect generated wrapper against modifications made to asset
 
 ////TODO: make capitalization consistent in the generated code
+
+////TODO: instead of loading from JSON, generate the structure in code
 
 ////REVIEW: allow putting *all* of the data from the inputactions asset into the generated class?
 
@@ -358,6 +362,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Write.
+            EditorHelpers.CheckOut(filePath);
             File.WriteAllText(filePath, code);
             return true;
         }

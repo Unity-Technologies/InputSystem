@@ -100,18 +100,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty)
-                {
-                    if (m_Id == null)
-                    {
-                        GenerateId();
-                    }
-                    else
-                    {
-                        m_Guid = new Guid(m_Id);
-                    }
-                }
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    GenerateId();
+                return new Guid(m_Id);
             }
         }
 
@@ -119,9 +110,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
         }
 
@@ -405,23 +396,28 @@ namespace UnityEngine.InputSystem
 
             if (string.IsNullOrEmpty(nameOrId))
                 return -1;
-
             if (m_Actions == null)
-                return InputActionState.kInvalidIndex;
+                return -1;
+
             var actionCount = m_Actions.Length;
 
-            // If it contains hyphens, it may be a GUID so try looking up that way.
-            if (nameOrId.Contains('-') && Guid.TryParse(nameOrId, out var id))
+            var isOldBracedFormat = nameOrId.StartsWith("{") && nameOrId.EndsWith("}");
+            if (isOldBracedFormat)
             {
+                var length = nameOrId.Length - 2;
                 for (var i = 0; i < actionCount; ++i)
-                    if (m_Actions[i].idDontGenerate == id)
+                {
+                    if (string.Compare(m_Actions[i].m_Id, 0, nameOrId, 1, length) == 0)
                         return i;
+                }
             }
 
-            // Default search goes by name (case insensitive).
             for (var i = 0; i < actionCount; ++i)
-                if (string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
+            {
+                var action = m_Actions[i];
+                if (action.m_Id == nameOrId || string.Compare(m_Actions[i].m_Name, nameOrId, StringComparison.InvariantCultureIgnoreCase) == 0)
                     return i;
+            }
 
             return InputActionState.kInvalidIndex;
         }
@@ -616,10 +612,7 @@ namespace UnityEngine.InputSystem
                 var bindings = new InputBinding[bindingCount];
                 Array.Copy(m_Bindings, 0, bindings, 0, bindingCount);
                 for (var i = 0; i < bindingCount; ++i)
-                {
                     bindings[i].m_Id = default;
-                    bindings[i].m_Guid = default;
-                }
                 clone.m_Bindings = bindings;
             }
 
@@ -726,11 +719,6 @@ namespace UnityEngine.InputSystem
         /// This should only be written to by <see cref="InputActionState"/>.
         /// </remarks>
         [NonSerialized] internal int m_EnabledActionsCount;
-
-        /// <summary>
-        /// GUID converted from <see cref="m_Id"/>.
-        /// </summary>
-        [NonSerialized] private Guid m_Guid;
 
         // Action maps that are created internally by singleton actions to hold their data
         // are never exposed and never serialized so there is no point allocating an m_Actions
@@ -984,8 +972,7 @@ namespace UnityEngine.InputSystem
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -994,6 +981,9 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal bool LazyResolveBindings()
         {
+            // Clear cached controls for actions. Don't need to necessarily clear m_BindingsForEachAction.
+            m_ControlsForEachAction = null;
+
             // If we haven't had to resolve bindings yet, we can wait until when we
             // actually have to.
             if (m_State == null)
@@ -1215,12 +1205,12 @@ namespace UnityEngine.InputSystem
                 };
             }
 
-            public static BindingJson FromBinding(InputBinding binding)
+            public static BindingJson FromBinding(ref InputBinding binding)
             {
                 return new BindingJson
                 {
                     name = binding.name,
-                    id = binding.id.ToString(),
+                    id = binding.m_Id,
                     path = binding.path,
                     action = binding.action,
                     interactions = binding.interactions,
@@ -1302,7 +1292,7 @@ namespace UnityEngine.InputSystem
                 {
                     name = action.m_Name,
                     type = action.m_Type.ToString(),
-                    id = action.id.ToString(),
+                    id = action.m_Id,
                     expectedControlType = action.m_ExpectedControlType,
                     processors = action.processors,
                     interactions = action.interactions,
@@ -1349,7 +1339,7 @@ namespace UnityEngine.InputSystem
                     jsonBindings = new BindingJson[bindingCount];
 
                     for (var i = 0; i < bindingCount; ++i)
-                        jsonBindings[i] = BindingJson.FromBinding(bindings[i]);
+                        jsonBindings[i] = BindingJson.FromBinding(ref bindings[i]);
                 }
 
                 return new WriteMapJson

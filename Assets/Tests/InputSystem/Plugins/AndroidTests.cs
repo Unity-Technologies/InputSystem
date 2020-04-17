@@ -436,5 +436,39 @@ internal class AndroidTests : InputTestFixture
             Assert.That(control.ReadValue().eulerAngles, Is.EqualTo(new Vector3(rotation.x, rotation.y, Mathf.Repeat(rotation.z - 90.0f, 360.0f))).Using(Vector3EqualityComparer.Instance));
         }
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanOverrideAndroidGamepadLayouts()
+    {
+        const string json = @"
+            {
+                ""name"" : ""CustomDevice"",
+                ""extend"" : ""Gamepad"",
+                ""device"" : {
+                    ""interface"" : ""Android"",
+                    ""deviceClass"" : ""AndroidGameController"",
+                    ""product"" : ""MyProduct""
+                }
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            product = "MyProduct",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                productId = 0x12345,
+                vendorId = 0x53421
+            }.ToJson()
+        });
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices[0].layout, Is.EqualTo("CustomDevice"));
+    }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

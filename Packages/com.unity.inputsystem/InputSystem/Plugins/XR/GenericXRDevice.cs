@@ -1,4 +1,4 @@
-#if ENABLE_VR || PACKAGE_DOCS_GENERATION
+#if UNITY_INPUT_SYSTEM_ENABLE_XR || PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.XR.Haptics;
 using UnityEngine.InputSystem.Layouts;

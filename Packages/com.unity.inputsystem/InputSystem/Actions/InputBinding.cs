@@ -98,15 +98,12 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                ////REVIEW: this is inconsistent with InputActionMap and InputAction which generate IDs, if necessary
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
-            set
-            {
-                m_Guid = value;
-                m_Id = m_Guid.ToString();
-            }
+            set => m_Id = value.ToString();
         }
 
         /// <summary>
@@ -359,7 +356,6 @@ namespace UnityEngine.InputSystem
             m_Processors = processors;
             m_Interactions = interactions;
             m_Name = name;
-            m_Guid = default;
             m_Id = default;
             m_Flags = default;
             m_OverridePath = default;
@@ -376,21 +372,7 @@ namespace UnityEngine.InputSystem
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
-        }
-
-        internal string MakeSureIdIsInPlace()
-        {
-            if (m_Guid != Guid.Empty)
-                return m_Id;
-
-            if (string.IsNullOrEmpty(m_Id))
-                GenerateId();
-            else
-                m_Guid = new Guid(m_Id);
-
-            return m_Id;
+            m_Id = Guid.NewGuid().ToString();
         }
 
         public static InputBinding MaskByGroup(string group)
@@ -415,8 +397,6 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private string m_OverridePath;
         [NonSerialized] private string m_OverrideInteractions;
         [NonSerialized] private string m_OverrideProcessors;
-        ////REVIEW: do we actually need this or should we just convert from m_Id on the fly all the time?
-        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// This is the bindings path which is effectively being used.
