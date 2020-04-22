@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.VersionControl;
 
@@ -9,6 +11,23 @@ namespace UnityEngine.InputSystem.Editor
     {
         public static Action<string> SetSystemCopyBufferContents = s => EditorGUIUtility.systemCopyBuffer = s;
         public static Func<string> GetSystemCopyBufferContents = () => EditorGUIUtility.systemCopyBuffer;
+
+        public static void RestartEditorAndRecompileScripts()
+        {
+            // The APIs here are not public. Use reflection to get to them.
+
+            // Delete compilation output.
+            var editorAssembly = AppDomain.CurrentDomain.GetAssemblies().First(x => x.ManifestModule.Name == "UnityEditor.dll");
+            var editorCompilationInterfaceType =
+                editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
+            var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
+            editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies").Invoke(editorCompilationInstance, null);
+
+            // Restart editor.
+            var editorApplicationType = typeof(EditorApplication);
+            editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments", BindingFlags.NonPublic | BindingFlags.Static)
+                .Invoke(null, null);
+        }
 
         public static void CheckOut(string path)
         {
