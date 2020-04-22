@@ -18,7 +18,7 @@ To install the new Input System, open Unity's package manager (menu: __Window > 
 
 By default, Unity's classic Input Manager (`UnityEngine.Input`) is active and support for the new Input System is inactive. This allows existing Unity Projects to keep working as they are.
 
-When the input system package is installed, the editor will ask for whether the new backends should be enabled. If you click "Yes", the new backends are disabled, the old backends are enabled, and the editor will restart.
+When the input system package is installed, the editor will ask for whether the new backends should be enabled. If you click "Yes", the new backends are enabled, the old backends are disabled, and the editor will restart.
 
 ![Editor Restart Warning](Images/EditorRestartWarning.png)
 
