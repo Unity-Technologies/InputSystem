@@ -24,6 +24,7 @@ The following is a list of known limitations that the Input System currently has
 * (Desktop) We do not yet support distinguishing input from multiple pointers (mouse, pen, touch) or keyboards. There will be a single Mouse, Pen, Touch, and Keyboard device.
 * (Windows) Pen input will not work with Wacom devices if "Windows Ink" support is turned off.
 * (Windows) HID input is not currently supported in 32-bit players. This means that devices such as the PS4 controller will not work in 32-bit standalone players. Use the 64-bit standalone player instead.
+  >NOTE: We have, for this reason, temporarily disabled support for the 32-bit Windows player altogether. We will re-enable it once the issue has been fixed.
 * (Android) We only support a single Touchscreen at the moment.
 * (Stadia) The Stadia controller is only supported __in__ the Stadia player at the moment. In the editor, use the generic `Gamepad` for bindings and use any Xbox or PS4 controller for testing.
 * Joy-Cons are only supported on Switch.
