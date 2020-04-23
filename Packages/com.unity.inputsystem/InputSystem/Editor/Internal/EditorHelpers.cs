@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Editor
         public static Action<string> SetSystemCopyBufferContents = s => EditorGUIUtility.systemCopyBuffer = s;
         public static Func<string> GetSystemCopyBufferContents = () => EditorGUIUtility.systemCopyBuffer;
 
-        public static void RestartEditorAndRecompileScripts()
+        public static void RestartEditorAndRecompileScripts(bool dryRun = false)
         {
             // The APIs here are not public. Use reflection to get to them.
 
@@ -20,12 +20,21 @@ namespace UnityEngine.InputSystem.Editor
             var editorCompilationInterfaceType =
                 editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
             var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
-            editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies").Invoke(editorCompilationInstance, null);
+            var cleanScriptAssembliesMethod = editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies");
+            if (!dryRun)
+                cleanScriptAssembliesMethod.Invoke(editorCompilationInstance, null);
+            else if (cleanScriptAssembliesMethod == null)
+                throw new MissingMethodException(editorCompilationInterfaceType.FullName, "CleanScriptAssemblies");
 
             // Restart editor.
             var editorApplicationType = typeof(EditorApplication);
-            editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments", BindingFlags.NonPublic | BindingFlags.Static)
-                .Invoke(null, null);
+            var requestCloseAndRelaunchWithCurrentArgumentsMethod =
+                editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+            if (!dryRun)
+                requestCloseAndRelaunchWithCurrentArgumentsMethod.Invoke(null, null);
+            else if (requestCloseAndRelaunchWithCurrentArgumentsMethod == null)
+                throw new MissingMethodException(editorApplicationType.FullName, "RequestCloseAndRelaunchWithCurrentArguments");
         }
 
         public static void CheckOut(string path)
