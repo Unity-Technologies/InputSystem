@@ -27,6 +27,8 @@ using UnityEngine.Scripting;
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
 
+////TODO: enable this to handle devices that split their input into multiple reports
+
 #pragma warning disable CS0649, CS0219
 namespace UnityEngine.InputSystem.HID
 {
