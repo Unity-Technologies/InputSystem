@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEditor.VersionControl;
@@ -17,7 +16,7 @@ namespace UnityEngine.InputSystem.Editor
             // The APIs here are not public. Use reflection to get to them.
 
             // Delete compilation output.
-            var editorAssembly = AppDomain.CurrentDomain.GetAssemblies().First(x => x.ManifestModule.Name == "UnityEditor.dll");
+            var editorAssembly = typeof(EditorApplication).Assembly;
             var editorCompilationInterfaceType =
                 editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
             var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
