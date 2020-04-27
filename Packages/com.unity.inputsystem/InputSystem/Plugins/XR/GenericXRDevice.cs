@@ -89,16 +89,50 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 
+    public interface IXRRumble
+    {
+        bool supportsImpulse { get; }
+        int numChannels { get; }
+
+        bool SendImpulse(float amplitude, float duration);
+        bool SendImpulse (int channel, float amplitude, float duration);
+    }
+
     /// <summary>
     /// Identifies a controller that is capable of rumble or haptics.
     /// </summary>
     [Preserve]
-    public class XRControllerWithRumble : XRController
+    public class XRControllerWithRumble : XRController, IXRRumble
     {
-        public void SendImpulse(float amplitude, float duration)
+        public bool supportsImpulse 
+        { 
+            get
+            {
+                var command = GetHapticCapabilitiesCommand.Create();
+                ExecuteCommand(ref command);
+                return command.capabilities.supportsImpulse;
+            }
+        }
+
+        public int numChannels 
+        { 
+            get
+            {
+                var command = GetHapticCapabilitiesCommand.Create();
+                ExecuteCommand(ref command);
+                return command.capabilities.numChannels;
+            }
+        }
+
+        public bool SendImpulse(float amplitude, float duration)
         {
-            var command = SendHapticImpulseCommand.Create(0, amplitude, duration);
-            ExecuteCommand(ref command);
+            return SendImpulse(0, amplitude, duration);
+        }
+
+        public bool SendImpulse(int channel, float amplitude, float duration)
+        {
+            var command = SendHapticImpulseCommand.Create(channel, amplitude, duration);
+            return ExecuteCommand(ref command) > 0;
         }
     }
 }

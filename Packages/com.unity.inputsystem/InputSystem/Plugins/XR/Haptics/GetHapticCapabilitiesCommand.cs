@@ -7,16 +7,14 @@ namespace UnityEngine.InputSystem.XR.Haptics
 {
     public struct HapticCapabilities
     {
-        public HapticCapabilities(uint numChannels, uint frequencyHz, uint maxBufferSize)
+        public HapticCapabilities(int numChannels, bool supportsImpulse)
         {
             this.numChannels = numChannels;
-            this.frequencyHz = frequencyHz;
-            this.maxBufferSize = maxBufferSize;
+            this.supportsImpulse = supportsImpulse;
         }
 
-        public uint numChannels { get; private set; }
-        public uint frequencyHz { get; private set; }
-        public uint maxBufferSize { get; private set; }
+        public int numChannels { get; private set; }
+        public bool supportsImpulse { get; private set; }
     }
 
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
@@ -24,7 +22,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
     {
         static FourCC Type => new FourCC('X', 'H', 'C', '0');
 
-        const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(uint) * 3;
+        const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(bool) * 2) + (sizeof(uint) * 3);
 
         public FourCC typeStatic => Type;
 
@@ -32,15 +30,24 @@ namespace UnityEngine.InputSystem.XR.Haptics
         InputDeviceCommand baseCommand;
 
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
-        public uint numChannels;
+        private int numChannels;
 
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(uint))]
-        public uint frequencyHz;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int))]
+        private bool supportsImpulse;
 
-        [FieldOffset(InputDeviceCommand.kBaseCommandSize + (sizeof(uint) * 2))]
-        public uint maxBufferSize;
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + sizeof(bool))]
+        private bool supportsBuffer;
 
-        public HapticCapabilities capabilities => new HapticCapabilities(numChannels, frequencyHz, maxBufferSize);
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(bool) * 2))]
+        private uint frequencyHz;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(bool) * 2) + (sizeof(uint)))]
+        private uint maxBufferSize;
+
+        [FieldOffset(InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(bool) * 2) + (sizeof(uint) * 2))]
+        private uint optimalBufferSize;
+
+        public HapticCapabilities capabilities => new HapticCapabilities(numChannels, supportsImpulse);
 
         public static GetHapticCapabilitiesCommand Create()
         {

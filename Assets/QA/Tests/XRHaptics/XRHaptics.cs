@@ -28,9 +28,9 @@ public class XRHaptics : MonoBehaviour
 
     public void Update()
     {
-        var leftHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
+        var leftHandController = InputSystem.GetDevice<InputDevice>(CommonUsages.LeftHand) as IXRRumble;
         leftHapticDetected.color = leftHandController != null ? Color.red : Color.white;
-        var rightHandController = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
+        var rightHandController = InputSystem.GetDevice<InputDevice>(CommonUsages.RightHand) as IXRRumble;
         rightHapticDetected.color = rightHandController != null ? Color.red : Color.white;
 
         UpdateTimer();
@@ -45,13 +45,13 @@ public class XRHaptics : MonoBehaviour
         {
             m_Timer -= m_RumblePeriod;
 
-            XRControllerWithRumble controller;
+            IXRRumble controller;
 
             switch (state)
             {
                 case RumbleState.Left:
-                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
-                    controller.SendImpulse(1f, m_RumblePeriod);
+                    controller = InputSystem.GetDevice<InputDevice>(CommonUsages.LeftHand) as IXRRumble;
+                    controller?.SendImpulse(1f, m_RumblePeriod);
                     leftTryingToRumble.color = Color.red;
                     leftTryingToRumbleHalf.color = Color.white;
                     rightTryingToRumble.color = Color.white;
@@ -59,9 +59,8 @@ public class XRHaptics : MonoBehaviour
                     state = RumbleState.LeftHalf;
                     break;
                 case RumbleState.LeftHalf:
-                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.LeftHand);
-                    controller.SendImpulse(0.5f, m_RumblePeriod);
-
+                    controller = InputSystem.GetDevice<InputDevice>(CommonUsages.LeftHand) as IXRRumble;
+                    controller?.SendImpulse(0.5f, m_RumblePeriod);
                     leftTryingToRumble.color = Color.white;
                     leftTryingToRumbleHalf.color = Color.red;
                     rightTryingToRumble.color = Color.white;
@@ -69,8 +68,8 @@ public class XRHaptics : MonoBehaviour
                     state = RumbleState.Right;
                     break;
                 case RumbleState.Right:
-                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
-                    controller.SendImpulse(1f, m_RumblePeriod);
+                    controller = InputSystem.GetDevice<InputDevice>(CommonUsages.RightHand) as IXRRumble;
+                    controller?.SendImpulse(1f, m_RumblePeriod);
                     leftTryingToRumble.color = Color.white;
                     leftTryingToRumbleHalf.color = Color.white;
                     rightTryingToRumble.color = Color.red;
@@ -78,8 +77,8 @@ public class XRHaptics : MonoBehaviour
                     state = RumbleState.RightHalf;
                     break;
                 case RumbleState.RightHalf:
-                    controller = InputSystem.GetDevice<XRControllerWithRumble>(CommonUsages.RightHand);
-                    controller.SendImpulse(0.5f, m_RumblePeriod);
+                    controller = InputSystem.GetDevice<InputDevice>(CommonUsages.RightHand) as IXRRumble;
+                    controller?.SendImpulse(0.5f, m_RumblePeriod);
                     leftTryingToRumble.color = Color.white;
                     leftTryingToRumbleHalf.color = Color.white;
                     rightTryingToRumble.color = Color.white;
