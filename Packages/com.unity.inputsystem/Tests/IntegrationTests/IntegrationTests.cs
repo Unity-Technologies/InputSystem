@@ -44,7 +44,7 @@ public class IntegrationTests
         }
     }
 
-    #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    #if UNITY_2019_3_OR_NEWER && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
 
     [UnityTest]
     [Category("Integration")]
@@ -88,5 +88,5 @@ public class IntegrationTests
         Assert.AreNotEqual(currentPosition, mouse.position.ReadValue(), "Expected mouse position to have moved when sending relative values.");
     }
 
-    #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    #endif // UNITY_2019_3_OR_NEWER && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
 }

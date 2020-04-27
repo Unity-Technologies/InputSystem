@@ -1,4 +1,4 @@
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+#if UNITY_2019_3_OR_NEWER && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
 
 using System;
 using System.Runtime.InteropServices;
