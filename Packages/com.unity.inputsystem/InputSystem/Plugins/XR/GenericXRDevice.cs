@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.XR
         int numChannels { get; }
 
         bool SendImpulse(float amplitude, float duration);
-        bool SendImpulse (int channel, float amplitude, float duration);
+        bool SendImpulse(int channel, float amplitude, float duration);
     }
 
     /// <summary>
@@ -104,8 +104,8 @@ namespace UnityEngine.InputSystem.XR
     [Preserve]
     public class XRControllerWithRumble : XRController, IXRRumble
     {
-        public bool supportsImpulse 
-        { 
+        public bool supportsImpulse
+        {
             get
             {
                 var command = GetHapticCapabilitiesCommand.Create();
@@ -114,8 +114,8 @@ namespace UnityEngine.InputSystem.XR
             }
         }
 
-        public int numChannels 
-        { 
+        public int numChannels
+        {
             get
             {
                 var command = GetHapticCapabilitiesCommand.Create();
