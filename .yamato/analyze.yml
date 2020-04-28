@@ -9,7 +9,7 @@ code_analyser:
     - mkdir Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - curl -L https://www.nuget.org/api/v2/package/Microsoft.CodeQuality.Analyzers/2.9.2 -o Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip
     - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
-    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.1
   triggers:
