@@ -402,6 +402,12 @@ namespace UnityEngine.InputSystem.Utilities
                 if (long.TryParse(hexDigits, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var hexResult))
                     return new PrimitiveValue(hexResult);
             }
+            
+            // vJoy may produce NaN value, so we need just to ignore it and everything should work ok.
+            if (value.Equals("NaN"))
+            {
+                return new PrimitiveValue(0);
+            }
 
             ////TODO: allow trailing width specifier
             throw new NotImplementedException();
