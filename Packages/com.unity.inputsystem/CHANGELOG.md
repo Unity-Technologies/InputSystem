@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
-## [1.0.0] - 2020-4-23
+## [1.0.0] - 2020-04-23
 
 ### Fixed
 
@@ -258,7 +258,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This was an bug in an internal data structure that impacted a number of code paths that were using the data structure.
 - Fixed `LayoutNotFoundException` being thrown when `InputControlPath.ToHumanReadableString` referenced a layout that could not be found.
 
-## [1.0.0-preview.2] - 2019-11-4
+## [1.0.0-preview.2] - 2019-11-04
 
 ### Changed
 
@@ -325,7 +325,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added a new sample called "Custom Device Usages" that shows how to use a layout override on `Gamepad` to allow distinguishing two gamepads in bindings based on which player the gamepad is assigned to.
 - Added abstract `TrackedDevice` input device class as the basis for various kinds of tracked devices.
 
-## [1.0.0-preview] - 2019-9-20
+## [1.0.0-preview] - 2019-09-20
 
 ### Fixed
 
@@ -340,7 +340,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 ### Changed
 ### Added
 
-## [0.9.6-preview] - 2019-9-6
+## [0.9.6-preview] - 2019-09-06
 
 ### Fixed
 
@@ -364,7 +364,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added `PlayerInput.neverAutoSwitchControlSchemes` to disable logic that automatically enables control scheme switching when there is only a single `PlayerInput` in the game.
 - Added `PlayerInput.SwitchControlScheme` to switch schemes manually.
 
-## [0.9.5-preview] - 2019-8-29
+## [0.9.5-preview] - 2019-08-29
 
 ### Fixed
 
@@ -411,7 +411,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * This information is helpful for us to debug problems related to specific devices.
 - If a device description has been copied to the clipboard, a new menu "Paste Device Description as Device" entry in the "Options" menu of the input debugger appears. This instantiates the device from the description as if it was reported locally by the Unity runtime.
 
-## [0.9.3-preview] - 2019-8-15
+## [0.9.3-preview] - 2019-08-15
 
 ### Fixed
 
@@ -438,7 +438,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * `ButtonWithOneModifier` can be used to represent shortcut-like bindings such as "CTRL+1".
   * `ButtonWithTwoModifiers` can be used to represent shortcut-like bindings such as "CTRL+SHIFT+1".
 
-## [0.9.2-preview] - 2019-8-9
+## [0.9.2-preview] - 2019-08-09
 
 ### Fixed
 
@@ -459,7 +459,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 - Added a new sample to the package called `SimpleDemo`. You can install the sample from the package manager. See the [README.md](https://github.com/Unity-Technologies/InputSystem/Assets/Samples/SimpleDemo/README.md) file for details about the sample.
 
-## [0.9.1-preview] - 2019-8-8
+## [0.9.1-preview] - 2019-08-08
 
 ### Fixed
 
@@ -535,7 +535,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - Added `InputAction.ReadValueAsObject` API.
 - Added `InputAction.activeControl` API.
 
-## [0.9.0-preview] - 2019-7-18
+## [0.9.0-preview] - 2019-07-18
 
 ### Fixed
 
@@ -644,7 +644,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * The previous `Initial State Check` toggle is now implicit in the action type now. `Value` actions perform an initial state check (i.e. trigger if their control is already actuated when the action is enabled). Other types of actions don't.
   * The previous `Pass Through` toggle is now rolled into the action type.
 
-## [0.2.10-preview] - 2019-5-17
+## [0.2.10-preview] - 2019-05-17
 
 ### Added
 
@@ -699,7 +699,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
 - `PlayerInput` can now handle `.inputactions` assets that have no control schemes.
   * Will pair __all__ devices mentioned by any of the bindings except if already paired to another player.
 
-## [0.2.8-preview] - 2019-4-23
+## [0.2.8-preview] - 2019-04-23
 
 ### Added
 
@@ -1080,6 +1080,6 @@ Actions:
 Misc:
 - Documentation no longer picked up as assets in user project
 
-## [0.0.13-preview] - 2018-12-5
+## [0.0.13-preview] - 2018-12-05
 
 First release from stable branch.
