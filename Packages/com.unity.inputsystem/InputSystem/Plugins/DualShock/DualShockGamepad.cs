@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem.DualShock
         {
             base.FinishSetup();
 
-            touchpadButton = GetChildControl<ButtonControl>("touchpadButton");
+            touchpadButton = TryGetChildControl<ButtonControl>("touchpadButton");
             optionsButton = startButton;
             shareButton = selectButton;
 
