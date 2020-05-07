@@ -2421,7 +2421,7 @@ namespace UnityEngine.InputSystem
             m_HasFocus = focus;
         }
 
-        private bool ShouldRunUpdate(InputUpdateType updateType)
+        internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
             // We perform a "null" update after domain reloads and on startup to get our devices
             // in place before the runtime calls MonoBehaviour callbacks. See InputSystem.RunInitialUpdate().
