@@ -154,13 +154,13 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int count = -1)
+        public static int IndexOfReference<TValue>(this TValue[] array, TValue value, int count = -1)
             where TValue : class
         {
             return IndexOfReference(array, value, 0, count);
         }
 
-        public static int IndexOfReference<TValue>(TValue[] array, TValue value, int startIndex, int count)
+        public static int IndexOfReference<TValue>(this TValue[] array, TValue value, int startIndex, int count)
             where TValue : class
         {
             if (array == null)
@@ -175,7 +175,7 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOfValue<TValue>(TValue[] array, TValue value, int startIndex = 0, int count = -1)
+        public static int IndexOfValue<TValue>(this TValue[] array, TValue value, int startIndex = 0, int count = -1)
             where TValue : struct, IEquatable<TValue>
         {
             if (array == null)
@@ -612,7 +612,7 @@ namespace UnityEngine.InputSystem.Utilities
 
             // Destroy current tail.
             if (count >= 1)
-                array[count - 1] = default(TValue);
+                array[count - 1] = default;
             --count;
         }
 

@@ -1,8 +1,5 @@
 using System;
 using UnityEngine.InputSystem.LowLevel;
-#if ENABLE_VR
-using UnityEngine.XR;
-#endif
 
 namespace UnityEngine.InputSystem.XR
 {
@@ -150,10 +147,10 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void Awake()
         {
-#if ENABLE_VR && UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR
             if (HasStereoCamera())
             {
-                XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
             }
 #endif
         }
@@ -172,10 +169,10 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void OnDestroy()
         {
-#if ENABLE_VR && UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR
             if (HasStereoCamera())
             {
-                XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
+                UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
             }
 #endif
         }

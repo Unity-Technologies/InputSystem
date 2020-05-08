@@ -106,16 +106,60 @@ internal class HIDTests : InputTestFixture
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetUnsupportedDevices()[0].product, Is.EqualTo("TestHID"));
 
         HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>(
             new[] {new HIDSupport.HIDPageUsage((HID.UsagePage) 5678, 1234)}
         );
 
-        runtime.ReportNewInputDevice(descriptionJson, deviceId);
-        InputSystem.Update();
-
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
+        Assert.That(InputSystem.devices[0], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestHID"));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>(
+            new[] {new HIDSupport.HIDPageUsage((HID.UsagePage) 5678, 1234)}
+        );
+
+        // No change.
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null);
+        Assert.That(InputSystem.devices[0], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[0].description.product, Is.EqualTo("TestHID"));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[0]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        // Add another.
+        var descriptionJson2 = new InputDeviceDescription
+        {
+            interfaceName = HID.kHIDInterface,
+            manufacturer = "TestVendor",
+            product = "OtherTestHID",
+            capabilities = hidDescriptor.ToJson()
+        }.ToJson();
+        var deviceId2 = runtime.AllocateDeviceId();
+
+        runtime.ReportNewInputDevice(descriptionJson2, deviceId2);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
+        Assert.That(InputSystem.GetDeviceById(deviceId2), Is.Not.Null);
+        Assert.That(InputSystem.devices[1], Is.TypeOf<HID>());
+        Assert.That(InputSystem.devices[1].description.product, Is.EqualTo("OtherTestHID"));
+        Assert.That(((HID)InputSystem.devices[1]).hidDescriptor.usagePage, Is.EqualTo((HID.UsagePage) 5678));
+        Assert.That(((HID)InputSystem.devices[1]).hidDescriptor.usage, Is.EqualTo(1234));
+
+        HIDSupport.supportedHIDUsages = new ReadOnlyArray<HIDSupport.HIDPageUsage>();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Null);
+        Assert.That(InputSystem.GetDeviceById(deviceId2), Is.Null);
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(2));
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Exactly(1).With.Property("product").EqualTo("TestHID"));
+        Assert.That(InputSystem.GetUnsupportedDevices(), Has.Exactly(1).With.Property("product").EqualTo("OtherTestHID"));
     }
 
     [Test]

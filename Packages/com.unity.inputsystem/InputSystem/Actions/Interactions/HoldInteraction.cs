@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -49,7 +50,7 @@ namespace UnityEngine.InputSystem.Interactions
         public float pressPoint;
 
         private float durationOrDefault => duration > 0.0 ? duration : InputSystem.settings.defaultHoldTime;
-        private float pressPointOrDefault => pressPoint > 0.0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        private float pressPointOrDefault => pressPoint > 0.0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         private double m_TimePressed;
 
@@ -114,7 +115,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.Initialize("Press Point",
                 "Float value that an axis control has to cross for it to be considered pressed.",
                 "Default Button Press Point",
-                () => target.pressPoint, v => target.pressPoint = v, () => InputSystem.settings.defaultButtonPressPoint);
+                () => target.pressPoint, v => target.pressPoint = v, () => ButtonControl.s_GlobalDefaultButtonPressPoint);
             m_DurationSetting.Initialize("Hold Time",
                 "Time (in seconds) that a control has to be held in order for it to register as a hold.",
                 "Default Hold Time",

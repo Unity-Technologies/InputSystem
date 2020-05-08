@@ -22,7 +22,7 @@ using UnityEngine.InputSystem.Editor;
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
-////TODO: merge InputManager into InputSystem and have InputSystemObject store SerializedState directly
+////TODO: make sure we discard events in editor updates when lockInputToGameView is true and the player isn't running or paused
 
 ////REVIEW: change the event properties over to using IObservable?
 
@@ -2285,13 +2285,14 @@ namespace UnityEngine.InputSystem
             Touchscreen.s_TapTime = settings.defaultTapTime;
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
             Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
+            ButtonControl.s_GlobalDefaultButtonPressPoint = settings.defaultButtonPressPoint;
 
             // Let listeners know.
             for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
                 m_SettingsChangedListeners[i]();
         }
 
-        private void AddAvailableDevicesThatAreNowRecognized()
+        internal void AddAvailableDevicesThatAreNowRecognized()
         {
             for (var i = 0; i < m_AvailableDeviceCount; ++i)
             {
@@ -3318,10 +3319,12 @@ namespace UnityEngine.InputSystem
             using (InputDeviceBuilder.Ref())
             {
                 DeviceState[] retainedDeviceStates = null;
+                var deviceStates = m_SavedDeviceStates;
                 var deviceCount = m_SavedDeviceStates.LengthSafe();
+                m_SavedDeviceStates = null; // Prevent layout matcher registering themselves on the fly from picking anything off this list.
                 for (var i = 0; i < deviceCount; ++i)
                 {
-                    ref var deviceState = ref m_SavedDeviceStates[i];
+                    ref var deviceState = ref deviceStates[i];
 
                     var device = TryGetDeviceById(deviceState.deviceId);
                     if (device != null)
@@ -3424,7 +3427,7 @@ namespace UnityEngine.InputSystem
             catch (Exception exception)
             {
                 Debug.LogError(
-                    $"Could not re-recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
+                    $"Could not recreate input device '{deviceState.description}' with layout '{deviceState.layout}' and variants '{deviceState.variants}' after domain reload");
                 Debug.LogException(exception);
                 return true; // Don't try again.
             }

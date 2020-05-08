@@ -1,4 +1,4 @@
-#if ENABLE_VR && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !PACKAGE_DOCS_GENERATION
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && !DISABLE_BUILTIN_INPUT_SYSTEM_GOOGLEVR && !PACKAGE_DOCS_GENERATION
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.XR;

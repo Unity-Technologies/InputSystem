@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -37,7 +38,7 @@ namespace UnityEngine.InputSystem.Interactions
 
         ////REVIEW: this seems stupid; shouldn't a slow tap just be anything that takes longer than TapTime?
         private float durationOrDefault => duration > 0.0f ? duration : InputSystem.settings.defaultSlowTapTime;
-        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         private double m_SlowTapStartTime;
 

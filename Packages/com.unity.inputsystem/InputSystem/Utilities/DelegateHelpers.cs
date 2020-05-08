@@ -10,6 +10,8 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static void InvokeCallbacksSafe(ref InlinedArray<Action> callbacks, string callbackName, object context = null)
         {
+            if (callbacks.length == 0)
+                return;
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -37,6 +39,8 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static void InvokeCallbacksSafe<TValue>(ref InlinedArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
         {
+            if (callbacks.length == 0)
+                return;
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
             {
@@ -64,6 +68,8 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static void InvokeCallbacksSafe<TValue1, TValue2>(ref InlinedArray<Action<TValue1, TValue2>> callbacks, TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
         {
+            if (callbacks.length == 0)
+                return;
             Profiler.BeginSample(callbackName);
             for (var i = 0; i < callbacks.length; ++i)
             {

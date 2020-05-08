@@ -1,4 +1,5 @@
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Scripting;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
 
@@ -13,7 +14,7 @@ namespace UnityEngine.InputSystem.Controls
     /// yield full floating-point values and may thus have a range of values. See
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
     public class ButtonControl : AxisControl
     {
         /// <summary>
@@ -51,7 +52,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>Effective value to use for press point thresholds.</value>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
-        public float pressPointOrDefault => pressPoint >= 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        public float pressPointOrDefault => pressPoint >= 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
         /// Default-initialize the control.
@@ -94,5 +95,9 @@ namespace UnityEngine.InputSystem.Controls
         public bool wasPressedThisFrame => device.wasUpdatedThisFrame && IsValueConsideredPressed(ReadValue()) && !IsValueConsideredPressed(ReadValueFromPreviousFrame());
 
         public bool wasReleasedThisFrame => device.wasUpdatedThisFrame && !IsValueConsideredPressed(ReadValue()) && IsValueConsideredPressed(ReadValueFromPreviousFrame());
+
+        // We make the current global default button press point available as a static so that we don't have to
+        // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
+        internal static float s_GlobalDefaultButtonPressPoint;
     }
 }

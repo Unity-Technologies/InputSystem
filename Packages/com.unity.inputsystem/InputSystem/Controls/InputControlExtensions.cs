@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -60,7 +61,12 @@ namespace UnityEngine.InputSystem
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
             if (Mathf.Approximately(0, buttonPressPoint))
-                buttonPressPoint = InputSystem.settings.defaultButtonPressPoint;
+            {
+                if (control is ButtonControl button)
+                    buttonPressPoint = button.pressPointOrDefault;
+                else
+                    buttonPressPoint = ButtonControl.s_GlobalDefaultButtonPressPoint;
+            }
             return control.IsActuated(buttonPressPoint);
         }
 

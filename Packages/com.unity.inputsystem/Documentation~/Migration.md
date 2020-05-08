@@ -4,6 +4,21 @@ This guide provides a list of APIs in `UnityEngine.Input` (and other related API
 
 >__Note__: All of the new APIs are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity. `UnityEngine.InputSystem` is referenced in full for easy disambiguation.
 
+Note that it is possible to have code for the old and the new input system at the same time using conditional compilation. When the new input system is enabled in the player preferences (see [here](./Installation.md#enabling-the-new-input-backends)), the `ENABLE_INPUT_SYSTEM` preprocessor directive is available.
+
+```CSharp
+#if ENABLE_INPUT_SYSTEM
+    // New input system backends are enabled.
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+    // Old input backends are enabled.
+#endif
+
+    // NOTE: Both can be true at the same time as it is possible to select "Both"
+    //       under "Active Input Handling".
+```
+
 ## [`UnityEngine.Input`](https://docs.unity3d.com/ScriptReference/Input.html)
 
 ### [`UnityEngine.Input.acceleration`](https://docs.unity3d.com/ScriptReference/Input-acceleration.html)

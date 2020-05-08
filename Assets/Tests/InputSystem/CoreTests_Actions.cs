@@ -739,6 +739,42 @@ partial class CoreTests
         Assert.That(receivedValue, Is.EqualTo(1).Within(0.00001));
     }
 
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanReadValueFromAction_InCallback_AsButton()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        action.Enable();
+
+        bool? receivedValue = null;
+        action.performed +=
+            ctx =>
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValueAsButton();
+        };
+
+        Set(gamepad.leftTrigger, 0.25f);
+
+        Assert.That(receivedValue, Is.False);
+
+        receivedValue = null;
+
+        Set(gamepad.leftTrigger, 0.75f);
+
+        Assert.That(receivedValue, Is.True);
+
+        receivedValue = null;
+
+        Set(gamepad.leftTrigger, 0.15f);
+
+        Assert.That(receivedValue, Is.False);
+    }
+
     // Some code needs to be able to just generically transfer values from A to B. For this, the
     // generic ReadValue<TValue>() API isn't sufficient.
     [Test]
@@ -2397,6 +2433,27 @@ partial class CoreTests
         Assert.That(action.controls, Has.Count.EqualTo(2));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.leftStick));
         Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.rightStick));
+    }
+
+    // Case 1218544
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanAddBindingsToActions_AfterActionHasBeenEnabled()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(name: "test", binding: "<Gamepad>/leftStick");
+        action.Enable();
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(1));
+        Assert.That(action.bindings[0].effectivePath, Is.EqualTo("<Gamepad>/leftStick"));
+
+        action.AddBinding("<Gamepad>/rightStick");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick, gamepad.rightStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(action.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
     }
 
     [Test]

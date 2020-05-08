@@ -14,6 +14,10 @@ using UnityEngine.InputSystem.Utilities;
 // not for the convenience of editing operations. This means that editing operations have to constantly jump through
 // hoops to map themselves onto the persistence model of the data.
 
+////TODO: With many actions and bindings the list becomes really hard to grok; make things more visually distinctive
+
+////TODO: add context menu items for reordering action and binging entries (like "Move Up" and "Move Down")
+
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
 namespace UnityEngine.InputSystem.Editor
@@ -469,7 +473,7 @@ namespace UnityEngine.InputSystem.Editor
                 var assignNewIDs = !(isMove && sourceTree == this);
 
                 // Determine where we are moving/copying the data.
-                var target = (args.parentItem ?? rootItem) as ActionTreeItemBase;
+                var target = args.parentItem ?? rootItem;
                 int? childIndex = null;
                 if (args.dragAndDropPosition == DragAndDropPosition.BetweenItems)
                     childIndex = args.insertAtIndex;
@@ -768,7 +772,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 // Paste into InputActionAsset.
                 array = serializedObject.FindProperty("m_ActionMaps");
-                arrayIndex = array.arraySize;
+                arrayIndex = location.childIndex ?? array.arraySize;
             }
             else
             {
@@ -776,7 +780,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // If not given a specific index, we paste onto the end of the array.
-            if (arrayIndex == -1)
+            if (arrayIndex == -1 || arrayIndex > array.arraySize)
                 arrayIndex = array.arraySize;
 
             var actionForNewBindings = location.item is ActionTreeItem actionItem ? actionItem.name : null;
@@ -897,6 +901,13 @@ namespace UnityEngine.InputSystem.Editor
             }
             menu.AddItem(s_DuplicateLabel, false, DuplicateSelection);
             menu.AddItem(s_DeleteLabel, false, DeleteDataOfSelectedItems);
+
+            if (itemType != typeof(ActionMapTreeItem))
+            {
+                menu.AddSeparator("");
+                menu.AddItem(s_ExpandAllLabel, false, ExpandAll);
+                menu.AddItem(s_CollapseAllLabel, false, CollapseAll);
+            }
         }
 
         public void BuildMenuToAddBindings(GenericMenu menu, ActionTreeItem actionItem = null)
@@ -1052,6 +1063,8 @@ namespace UnityEngine.InputSystem.Editor
             Debug.Assert(item != null, $"Cannot find newly created item for {property.propertyPath}");
             SetExpandedRecursive(item.id, true);
             SelectItem(item);
+            SetFocus();
+            FrameItem(item.id);
             if (item.canRename)
                 BeginRename(item);
         }
@@ -1365,6 +1378,8 @@ namespace UnityEngine.InputSystem.Editor
         private static readonly GUIContent s_DeleteLabel = EditorGUIUtility.TrTextContent("Delete");
         private static readonly GUIContent s_DuplicateLabel = EditorGUIUtility.TrTextContent("Duplicate");
         private static readonly GUIContent s_RenameLabel = EditorGUIUtility.TrTextContent("Rename");
+        private static readonly GUIContent s_ExpandAllLabel = EditorGUIUtility.TrTextContent("Expand All");
+        private static readonly GUIContent s_CollapseAllLabel = EditorGUIUtility.TrTextContent("Collapse All");
 
         public static string SharedResourcesPath = "Packages/com.unity.inputsystem/InputSystem/Editor/AssetEditor/Resources/";
         public static string ResourcesPath

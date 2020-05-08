@@ -319,8 +319,10 @@ namespace UnityEngine.InputSystem
         public void RestoreActionStates(UnmanagedMemory oldState)
         {
             Debug.Assert(oldState.isAllocated, "Old state contains no memory");
+
+            // This method cannot deal with actions and/or maps having been removed.
+            // It DOES cope with bindings have been added and/or removed, though!
             Debug.Assert(oldState.actionCount == memory.actionCount, "Action count in old and new state must be the same");
-            Debug.Assert(oldState.bindingCount == memory.bindingCount, "Binding count in old and new state must be the same");
             Debug.Assert(oldState.mapCount == memory.mapCount, "Map count in old and new state must be the same");
 
             // Go through the state map by map and in each map, binding by binding. Enable
@@ -2120,7 +2122,7 @@ namespace UnityEngine.InputSystem
                         else if (control is InputControl<float>)
                         {
                             var valuePtr = UnsafeUtility.AddressOf(ref value);
-                            *buttonValuePtr = *(float*)valuePtr >= InputSystem.settings.defaultButtonPressPoint;
+                            *buttonValuePtr = *(float*)valuePtr >= ButtonControl.s_GlobalDefaultButtonPressPoint;
                         }
 
                         ////REVIEW: Early out here as soon as *any* button is pressed? Technically, the comparer
@@ -2175,6 +2177,21 @@ namespace UnityEngine.InputSystem
             }
 
             return value;
+        }
+
+        internal bool ReadValueAsButton(int bindingIndex, int controlIndex)
+        {
+            var buttonControl = default(ButtonControl);
+            if (!bindingStates[bindingIndex].isPartOfComposite)
+                buttonControl = controls[controlIndex] as ButtonControl;
+
+            // Read float value.
+            var floatValue = ReadValue<float>(bindingIndex, controlIndex);
+
+            // Compare to press point.
+            if (buttonControl != null)
+                return floatValue >= buttonControl.pressPointOrDefault;
+            return floatValue >= ButtonControl.s_GlobalDefaultButtonPressPoint;
         }
 
         /// <summary>
@@ -3079,6 +3096,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal static InlinedArray<GCHandle> s_GlobalList;
         internal static InlinedArray<Action<object, InputActionChange>> s_OnActionChange;
+        internal static InlinedArray<Action<object>> s_OnActionControlsChanged;
 
         private void AddToGlobaList()
         {
@@ -3131,8 +3149,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(actionOrMapOrAsset is InputAction || (actionOrMapOrAsset as InputActionMap)?.m_SingletonAction == null,
                 "Must not send notifications for changes made to hidden action maps of singleton actions");
 
-            for (var i = 0; i < s_OnActionChange.length; ++i)
-                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionChange, actionOrMapOrAsset, change, "onActionChange");
+            if (change == InputActionChange.BoundControlsChanged)
+                DelegateHelpers.InvokeCallbacksSafe(ref s_OnActionControlsChanged, actionOrMapOrAsset, "onActionControlsChange");
         }
 
         /// <summary>
@@ -3146,6 +3165,7 @@ namespace UnityEngine.InputSystem
                     s_GlobalList[i].Free();
             s_GlobalList.length = 0;
             s_OnActionChange.Clear();
+            s_OnActionControlsChanged.Clear();
         }
 
         // Walk all maps with enabled actions and add all enabled actions to the given list.

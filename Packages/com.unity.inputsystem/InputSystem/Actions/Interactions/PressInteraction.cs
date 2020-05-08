@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -54,7 +55,7 @@ namespace UnityEngine.InputSystem.Interactions
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and release.")]
         public PressBehavior behavior;
 
-        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : InputSystem.settings.defaultButtonPressPoint;
+        private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
         private bool m_WaitingForRelease;
 
         public void Process(ref InputInteractionContext context)

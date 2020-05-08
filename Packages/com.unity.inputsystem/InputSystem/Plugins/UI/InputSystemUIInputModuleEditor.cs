@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_INPUT_SYSTEM_ENABLE_UI && UNITY_EDITOR
 using System;
 using System.Linq;
 using UnityEditor;
@@ -45,8 +45,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             "Submit",
             "Cancel",
             "TrackedDevicePosition",
-            "TrackedDeviceOrientation",
-            "TrackedDeviceSelect"
+            "TrackedDeviceOrientation"
         };
 
         private static readonly string[] s_ActionNiceNames =
@@ -60,8 +59,7 @@ namespace UnityEngine.InputSystem.UI.Editor
             "Submit",
             "Cancel",
             "Tracked Position",
-            "Tracked Orientation",
-            "Tracked Select"
+            "Tracked Orientation"
         };
 
         private SerializedProperty[] m_ReferenceProperties;
@@ -98,7 +96,6 @@ namespace UnityEngine.InputSystem.UI.Editor
                 module.cancel = GetActionReferenceFromAssets(assets, module.cancel?.action?.name, "Cancel", "Esc", "Escape");
                 module.trackedDevicePosition = GetActionReferenceFromAssets(assets, module.trackedDevicePosition?.action?.name, "TrackedDevicePosition", "Position");
                 module.trackedDeviceOrientation = GetActionReferenceFromAssets(assets, module.trackedDeviceOrientation?.action?.name, "TrackedDeviceOrientation", "Orientation");
-                module.trackedDeviceSelect = GetActionReferenceFromAssets(assets, module.trackedDeviceSelect?.action?.name, "TrackedDeviceSelect", "Select");
             }
         }
 

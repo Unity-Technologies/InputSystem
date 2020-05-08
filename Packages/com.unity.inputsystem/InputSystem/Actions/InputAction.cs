@@ -11,6 +11,19 @@ using UnityEngine.Serialization;
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
 ////       action based on what action the *composite* references.
 
+////REVIEW: Should we bring the checkboxes for actions back? We tried to "simplify" things by collapsing everything into a InputActionTypes
+////        and making the various behavior toggles implicit in that. However, my impression is that this has largely backfired by making
+////        it opaque what the choices actually entail and by giving no way out if the choices for one reason or another don't work out
+////        perfectly.
+////
+////        My impression is that at least two the following two checkboxes would make sense:
+////        1) Initial State Check? Whether the action should immediately sync to the current state of controls when enabled.
+////        2) Resolve Conflicting Inputs? Whether the action should try to resolve conflicts between multiple concurrent inputs.
+////
+////        I'm fine hiding this under an "Advanced" foldout or something. But IMO, control over this should be available to the user.
+////
+////        In the same vein, we probably also should expose control over how an action behaves on focus loss (https://forum.unity.com/threads/actions-canceled-when-game-loses-focus.855217/).
+
 ////REVIEW: I think the action system as it is today offers too many ways to shoot yourself in the foot. It has
 ////        flexibility but at the same time has abundant opportunity for ending up with dysfunction. Common setups
 ////        have to come preconfigured and work robustly for the user without requiring much understanding of how
@@ -188,7 +201,7 @@ namespace UnityEngine.InputSystem
             get
             {
                 MakeSureIdIsInPlace();
-                return m_Guid;
+                return new Guid(m_Id);
             }
         }
 
@@ -196,9 +209,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_Guid == Guid.Empty && !string.IsNullOrEmpty(m_Id))
-                    m_Guid = new Guid(m_Id);
-                return m_Guid;
+                if (string.IsNullOrEmpty(m_Id))
+                    return default;
+                return new Guid(m_Id);
             }
         }
 
@@ -973,7 +986,6 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal int m_BindingsCount;
         [NonSerialized] internal int m_ControlStartIndex;
         [NonSerialized] internal int m_ControlCount;
-        [NonSerialized] internal Guid m_Guid;
 
         /// <summary>
         /// Index of the action in the <see cref="InputActionState"/> associated with the
@@ -1022,21 +1034,14 @@ namespace UnityEngine.InputSystem
 
         internal string MakeSureIdIsInPlace()
         {
-            if (m_Guid != Guid.Empty)
-                return m_Id;
-
             if (string.IsNullOrEmpty(m_Id))
                 GenerateId();
-            else
-                m_Guid = new Guid(m_Id);
-
             return m_Id;
         }
 
         internal void GenerateId()
         {
-            m_Guid = Guid.NewGuid();
-            m_Id = m_Guid.ToString();
+            m_Id = Guid.NewGuid().ToString();
         }
 
         internal InputActionMap GetOrCreateActionMap()
@@ -1426,6 +1431,26 @@ namespace UnityEngine.InputSystem
                 var value = default(TValue);
                 if (m_State != null && phase != InputActionPhase.Canceled)
                     value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
+                return value;
+            }
+
+            /// <summary>
+            /// Read the current value of the action as a <c>float</c> and return true if it is equal to
+            /// or greater than the button press threshold.
+            /// </summary>
+            /// <returns>True if the action is considered in "pressed" state, false otherwise.</returns>
+            /// <remarks>
+            /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
+            /// of the button will be taken into account (if set). If there is no custom button press point, the
+            /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// </remarks>
+            /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+            /// <seealso cref="ButtonControl.pressPoint"/>
+            public bool ReadValueAsButton()
+            {
+                var value = false;
+                if (m_State != null && phase != InputActionPhase.Canceled)
+                    value = m_State.ReadValueAsButton(bindingIndex, controlIndex);
                 return value;
             }
 
