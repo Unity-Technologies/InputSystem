@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -38,35 +40,31 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         /// <summary>
-        /// Queues up an IME Composition Event.!-- This event is for unit testing and debug purposes, and is slow, due to the variable way that IME Composition events work.
+        /// Queues up an IME Composition Event.  IME Event sizes are variable, and this simplifies the process of aligning up the Input Event information and actual IME composition string.
         /// </summary>
-        /// <param name="deviceId">The Id you'd like to send the composition event at.</param>
-        /// <param name="str">The IME composition string.</param>
-        /// <param name="time">The time that the event occurred at.</param>
+        /// <param name="deviceId">ID of the device (see <see cref="InputDevice.deviceId") to which the composition event should be sent to. Should be an <see cref="ITextInputReceiver"/> device. Will trigger <see cref="ITextInputReceiver.OnIMECompositionChanged"/> call when processed.</param>
+        /// <param name="str">The IME characters to be sent. This can be any length, or left blank to represent a resetting of the IME dialog.</param>
+        /// <param name="time">The time in seconds, the event was generated at.  This uses the same timeline as <see cref="Time.realtimeSinceStartup"/></param>
         public static void QueueEvent(int deviceId, string str, double time)
         {
             unsafe
             {
                 int sizeInBytes = (InputEvent.kBaseEventSize + sizeof(int) + sizeof(char)) + (sizeof(char) * str.Length);
-                IntPtr evtPtr = Marshal.AllocHGlobal(sizeInBytes);
-                byte* ptr = (byte*)evtPtr.ToPointer();
-                InputEvent* evt = (InputEvent*)ptr;
+                NativeArray<Byte> eventBuffer = new NativeArray<byte>(sizeInBytes, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+                eventBuffer.ReinterpretStore(0, new InputEvent(Type, sizeInBytes, deviceId, time));
+                eventBuffer.ReinterpretStore(InputEvent.kBaseEventSize, str.Length);
 
-                *evt = new InputEvent(Type, sizeInBytes, deviceId, time);
-                ptr += InputEvent.kBaseEventSize;
+                //Copy string as array of characters.
+                NativeArray<char> imeCharacters = new NativeArray<char>(str.ToCharArray(), Allocator.Temp);
+                NativeArray<Byte>.Copy(imeCharacters.Reinterpret<Byte>(2), 0, eventBuffer, InputEvent.kBaseEventSize + sizeof(int), sizeof(char) * str.Length);
+                //Add Null terminator to string
+                eventBuffer.ReinterpretStore((InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * str.Length)), '\0');
 
-                int* lengthPtr = (int*)ptr;
-                *lengthPtr = str.Length;
+                byte[] eventBytes = eventBuffer.ToArray();
+                void* ptr = UnsafeUtility.PinGCArrayAndGetDataAddress(eventBytes, out ulong eventHandle);
+                InputSystem.QueueEvent(new InputEventPtr((InputEvent*)ptr));
+                UnsafeUtility.ReleaseGCObject(eventHandle);
 
-                ptr += sizeof(int);
-
-                fixed(char* p = str)
-                {
-                    Buffer.MemoryCopy(p, ptr, str.Length * sizeof(char), str.Length * sizeof(char));
-                }
-
-                InputSystem.QueueEvent(new InputEventPtr(evt));
-                Marshal.FreeHGlobal(evtPtr);
             }
         }
     }
@@ -78,6 +76,8 @@ namespace UnityEngine.InputSystem.LowLevel
     /// This is the internal representation of character strings in the event stream. It is exposed to user content through the
     /// <see cref="ITextInputReceiver.OnIMECompositionChanged"/> method. It can easily be converted to a normal C# string using
     ///  <see cref="ToString"/>, but is exposed as the raw struct to avoid allocating memory by default.
+    /// 
+    /// Because this string does not allocate, it is only valid, and can only be read within the <see cref="ITextInputReceiver.OnIMECompositionChanged"/> that it is recieved, and will otherwise return an invalid composition.
     /// </remarks>
     public unsafe struct IMECompositionString : IEnumerable<char>
     {
@@ -125,9 +125,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
         int m_Length;
         /// <summary>
-        /// The number of characters in the current IME Composition
+        /// This returns the total number of characters in the IME composition.
         /// </summary>
-        /// <value>The Length of the Composition</value>
+        /// <remarks>
+        /// If 0, this event represents a clearing of the current IME dialog.
+        /// </remarks>
         public int length { get { return m_Length; }}
 
         IntPtr m_CharBuffer;
@@ -136,7 +138,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// An Indexer into an individual character in the IME Composition. Will throw an out of range exception if the index is greater than the length of the composition.
         /// </summary>
-        /// <value>The character at the requested index</value>
+        /// <exception cref="ArgumentOutOfRangeException">The requested index is greater than the <cref="IMECompositionString.length"> of the composition.</exception>
+        /// <value>Returns the character at the requested index in UTF-32 encoding.</value>
         public char this[int index]
         {
             get
@@ -157,8 +160,11 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         /// <summary>
-        /// Returns the IME Composition as a new string
+        /// Converts the IMEComposition to a new string.
         /// </summary>
+        /// <remarks>
+        /// This will generate garbage by allocating a new string.
+        /// </remarks>
         /// <returns>The IME Composition as a string</returns>
         public override string ToString()
         {
@@ -166,10 +172,6 @@ namespace UnityEngine.InputSystem.LowLevel
             return new string(ptr, 0, m_Length);
         }
 
-        /// <summary>
-        /// Gets an Enumerator that enumerates over the individual IME Composition characters
-        /// </summary>
-        /// <returns>The IME Composition Enuemrator</returns>
         public IEnumerator<char> GetEnumerator()
         {
             return new Enumerator(this);
