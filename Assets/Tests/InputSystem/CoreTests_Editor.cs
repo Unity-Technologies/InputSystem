@@ -336,6 +336,82 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_InputAsset_CanAddAndRemoveElementThroughSerialization()
+    {
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction(name: "action1", binding: "<Gamepad>/leftStick");
+        var action2 = map.AddAction(name: "action2", binding: "<Gamepad>/rightStick");
+        action2.AddBinding("<Gamepad>/dpad");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var mapId = map.id;
+        var action1Id = action1.id;
+        var action2Id = action2.id;
+        var binding1Id = map.bindings[0].id;
+        var binding2Id = map.bindings[1].id;
+        var binding3Id = map.bindings[2].id;
+
+        var obj = new SerializedObject(asset);
+
+        var maps = obj.FindProperty("m_ActionMaps");
+        InputActionSerializationHelpers.AddElement(maps, "new map", 0);
+
+        var actions = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Actions");
+        var bindings = obj.FindProperty("m_ActionMaps").GetArrayElementAtIndex(1).FindPropertyRelative("m_Bindings");
+        InputActionSerializationHelpers.AddElement(actions, "new action", 1);
+        InputActionSerializationHelpers.AddElement(bindings, "new binding", 1);
+
+        obj.ApplyModifiedPropertiesWithoutUndo();
+
+        // By the nature of Unity serialization, only the connection to UnityEngine.Objects is maintained
+        // for C# objects. So map, action1, and action2 are all no longer the objects inside the asset.
+        map = asset.actionMaps[1];
+
+        Assert.That(asset.actionMaps.Count, Is.EqualTo(2));
+        Assert.That(asset.actionMaps[0].name, Is.EqualTo("new map"));
+        Assert.That(asset.actionMaps[1].name, Is.EqualTo("map"));
+        Assert.That(asset.actionMaps[0].id, Is.Not.EqualTo(mapId));
+        Assert.That(asset.actionMaps[1].id, Is.EqualTo(mapId));
+
+        Assert.That(map.actions, Has.Count.EqualTo(3));
+        Assert.That(map.actions[0].name, Is.EqualTo("action1"));
+        Assert.That(map.actions[1].name, Is.EqualTo("new action"));
+        Assert.That(map.actions[2].name, Is.EqualTo("action2"));
+        Assert.That(map.actions[0].id, Is.EqualTo(action1Id));
+        Assert.That(map.actions[1].id, Is.Not.EqualTo(action1Id));
+        Assert.That(map.actions[1].id, Is.Not.EqualTo(action2Id));
+        Assert.That(map.actions[2].id, Is.EqualTo(action2Id));
+        Assert.That(map.actions[0].bindings, Has.Count.EqualTo(1));
+        Assert.That(map.actions[1].bindings, Has.Count.Zero);
+        Assert.That(map.actions[2].bindings, Has.Count.EqualTo(2));
+        Assert.That(map.actions[0].bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(map.actions[2].bindings[0].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(map.actions[2].bindings[1].path, Is.EqualTo("<Gamepad>/dpad"));
+
+        Assert.That(map.bindings, Has.Count.EqualTo(4));
+        Assert.That(map.bindings[0].id, Is.EqualTo(binding1Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding1Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding2Id));
+        Assert.That(map.bindings[1].id, Is.Not.EqualTo(binding3Id));
+        Assert.That(map.bindings[2].id, Is.EqualTo(binding2Id));
+        Assert.That(map.bindings[3].id, Is.EqualTo(binding3Id));
+        Assert.That(map.bindings[0].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[1].name, Is.EqualTo("new binding"));
+        Assert.That(map.bindings[2].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[3].name, Is.Not.EqualTo("new binding"));
+        Assert.That(map.bindings[0].path, Is.EqualTo("<Gamepad>/leftStick"));
+        Assert.That(map.bindings[1].path, Is.Empty);
+        Assert.That(map.bindings[2].path, Is.EqualTo("<Gamepad>/rightStick"));
+        Assert.That(map.bindings[3].path, Is.EqualTo("<Gamepad>/dpad"));
+        Assert.That(map.bindings[0].action, Is.EqualTo("action1"));
+        Assert.That(map.bindings[1].action, Is.Empty);
+        Assert.That(map.bindings[2].action, Is.EqualTo("action2"));
+        Assert.That(map.bindings[3].action, Is.EqualTo("action2"));
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_InputAsset_CanAddAndRemoveActionThroughSerialization()
     {
         var map = new InputActionMap("set");
@@ -2235,6 +2311,13 @@ partial class CoreTests
 
         Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRestartEditorThroughReflection()
+    {
+        EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

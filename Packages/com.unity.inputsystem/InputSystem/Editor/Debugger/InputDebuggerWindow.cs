@@ -12,13 +12,14 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+////FIXME: Generate proper IDs for the individual tree view items; the current sequential numbering scheme just causes lots of
+////       weird expansion/collapsing to happen.
+
 ////TODO: add way to load and replay event traces
 
 ////TODO: refresh metrics on demand
 
 ////TODO: when an action is triggered and when a device changes state, make them bold in the list for a brief moment
-
-////TODO: add warning if input backends are not enabled
 
 ////TODO: show input users and their actions and devices
 
@@ -27,11 +28,6 @@ using UnityEngine.InputSystem.Utilities;
 ////TODO: split 'Local' and 'Remote' at root rather than inside subnodes
 
 ////TODO: refresh when unrecognized device pops up
-
-////TODO: context menu
-////      devices: open debugger window, remove device, enable/disable device (DONE)
-////      layouts: copy as json, remove layout
-////      actions: enable/disable action (have tree for all disabled actions)
 
 namespace UnityEngine.InputSystem.Editor
 {

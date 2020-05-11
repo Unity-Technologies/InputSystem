@@ -4,6 +4,8 @@ using UnityEngine.Scripting;
 
 ////TODO: speaker, touchpad
 
+////TODO: move gyro here
+
 namespace UnityEngine.InputSystem.DualShock
 {
     /// <summary>

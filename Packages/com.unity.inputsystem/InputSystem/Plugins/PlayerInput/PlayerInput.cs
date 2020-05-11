@@ -2,9 +2,17 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+using UnityEngine.InputSystem.UI;
+#endif
+
+////TODO: when joining is *off*, allow auto-switching even in multiplayer
+
+////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
+////      device as long as they are using different control schemes
 
 ////TODO: allow PlayerInput to be set up in a way where it's in an unpaired/non-functional state and expects additional configuration
 
@@ -40,7 +48,7 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// PlayerInput is a high-level wrapper around much of the input system's functionality
     /// which is meant to help getting set up with the new input system quickly. It takes
-    /// care of <see cref="InputAction"/> bookkeeping and has a custom UI to help
+    /// care of <see cref="InputAction"/> bookkeeping and has a custom UI(requires the "Unity UI" package) to help
     /// setting up input.
     ///
     /// The component supports local multiplayer implicitly. Each PlayerInput instance
@@ -49,8 +57,8 @@ namespace UnityEngine.InputSystem
     /// <see cref="UnityEngine.InputSystem.PlayerInputManager"/>.
     ///
     /// The way PlayerInput notifies script code of events is determined by <see cref="notificationBehavior"/>.
-    /// By default, this is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> which will use <see
-    /// cref="GameObject.SendMessage(string,object)"/> to send messages to the <see cref="GameObject"/>
+    /// By default, this is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> which will use
+    /// <see cref="GameObject.SendMessage(string,object)"/> to send messages to the <see cref="GameObject"/>
     /// that PlayerInput sits on.
     ///
     /// <example>
@@ -173,8 +181,8 @@ namespace UnityEngine.InputSystem
     ///
     /// Device pairings can be changed at any time by either manually controlling pairing through
     /// <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) using a PlayerInput's
-    /// assigned <see cref="user"/> or by switching control schemes (e.g. using <see
-    /// cref="SwitchCurrentControlScheme(string,InputDevice[])"/>), if any are present in the PlayerInput's
+    /// assigned <see cref="user"/> or by switching control schemes (e.g. using
+    /// <see cref="SwitchCurrentControlScheme(string,InputDevice[])"/>), if any are present in the PlayerInput's
     /// <see cref="actions"/>.
     ///
     /// When a player loses a device paired to it (e.g. when it is unplugged or loses power), <see cref="InputUser"/>
@@ -184,8 +192,8 @@ namespace UnityEngine.InputSystem
     /// which also is surfaced as a message, as <see cref="deviceRegainedEvent"/>, or <see cref="onDeviceRegained"/>
     /// (depending on <see cref="notificationBehavior"/>).
     ///
-    /// When there is only a single active PlayerInput in the game, joining is not enabled (see <see
-    /// cref="PlayerInputManager.joiningEnabled"/>), and <see cref="neverAutoSwitchControlSchemes"/> is not
+    /// When there is only a single active PlayerInput in the game, joining is not enabled (see
+    /// <see cref="PlayerInputManager.joiningEnabled"/>), and <see cref="neverAutoSwitchControlSchemes"/> is not
     /// set to <c>true</c>, device pairings for the player will also update automatically based on device usage.
     ///
     /// If control schemes are present in <see cref="actions"/>, then if a device is used (not merely plugged in
@@ -708,6 +716,7 @@ namespace UnityEngine.InputSystem
             set => m_Camera = value;
         }
 
+        #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
         /// <summary>
         /// UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.
         /// </summary>
@@ -728,6 +737,7 @@ namespace UnityEngine.InputSystem
                     m_UIInputModule.actionsAsset = m_Actions;
             }
         }
+        #endif
 
         /// <summary>
         /// The internal user tied to the player.
@@ -1054,8 +1064,12 @@ namespace UnityEngine.InputSystem
         [Tooltip("Determine how notifications should be sent when an input-related event associated with the player happens.")]
         [SerializeField] internal PlayerNotifications m_NotificationBehavior;
         [Tooltip("UI InputModule that should have it's input actions synchronized to this PlayerInput's actions.")]
+
+        #if UNITY_INPUT_SYSTEM_ENABLE_UI
         [SerializeField] internal InputSystemUIInputModule m_UIInputModule;
         [Tooltip("Event that is triggered when the PlayerInput loses a paired device (e.g. its battery runs out).")]
+        #endif
+
         [SerializeField] internal DeviceLostEvent m_DeviceLostEvent;
         [SerializeField] internal DeviceRegainedEvent m_DeviceRegainedEvent;
         [SerializeField] internal ControlsChangedEvent m_ControlsChangedEvent;
@@ -1127,8 +1141,10 @@ namespace UnityEngine.InputSystem
                     break;
                 }
 
+            #if UNITY_INPUT_SYSTEM_ENABLE_UI
             if (uiInputModule != null)
                 uiInputModule.actionsAsset = m_Actions;
+            #endif
 
             switch (m_NotificationBehavior)
             {
