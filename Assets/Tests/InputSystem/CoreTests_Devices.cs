@@ -5235,9 +5235,31 @@ partial class CoreTests
             Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
         };
 
-        var inputEvent = IMECompositionEvent.Create(keyboard.deviceId, imeCompositionCharacters,
+        IMECompositionEventVariableSize.QueueEvent(keyboard.deviceId, imeCompositionCharacters,
             InputRuntime.s_Instance.currentTime);
-        InputSystem.QueueEvent(ref inputEvent);
+        InputSystem.Update();
+
+        Assert.That(callbackWasCalled, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanReadEmptyIMECompositionEvents()
+    {
+        const string imeCompositionCharacters = "";
+        var callbackWasCalled = false;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        keyboard.onIMECompositionChange += composition =>
+        {
+            Assert.That(callbackWasCalled, Is.False);
+            callbackWasCalled = true;
+            Assert.AreEqual(composition.Count, 0);
+            Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
+        };
+
+        IMECompositionEventVariableSize.QueueEvent(keyboard.deviceId, imeCompositionCharacters,
+            InputRuntime.s_Instance.currentTime);
         InputSystem.Update();
 
         Assert.That(callbackWasCalled, Is.True);
