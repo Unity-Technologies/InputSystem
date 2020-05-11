@@ -51,20 +51,24 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 int sizeInBytes = (InputEvent.kBaseEventSize + sizeof(int) + sizeof(char)) + (sizeof(char) * str.Length);
                 NativeArray<Byte> eventBuffer = new NativeArray<byte>(sizeInBytes, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-                eventBuffer.ReinterpretStore(0, new InputEvent(Type, sizeInBytes, deviceId, time));
-                eventBuffer.ReinterpretStore(InputEvent.kBaseEventSize, str.Length);
+                
+                byte* ptr = (byte*)NativeArrayUnsafeUtility.GetUnsafePtr(eventBuffer);
+                InputEvent* evt = (InputEvent*)ptr;
 
-                //Copy string as array of characters.
-                NativeArray<char> imeCharacters = new NativeArray<char>(str.ToCharArray(), Allocator.Temp);
-                NativeArray<Byte>.Copy(imeCharacters.Reinterpret<Byte>(2), 0, eventBuffer, InputEvent.kBaseEventSize + sizeof(int), sizeof(char) * str.Length);
-                //Add Null terminator to string
-                eventBuffer.ReinterpretStore((InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char) * str.Length)), '\0');
+                *evt = new InputEvent(Type, sizeInBytes, deviceId, time);
+                ptr += InputEvent.kBaseEventSize;
 
-                byte[] eventBytes = eventBuffer.ToArray();
-                void* ptr = UnsafeUtility.PinGCArrayAndGetDataAddress(eventBytes, out ulong eventHandle);
-                InputSystem.QueueEvent(new InputEventPtr((InputEvent*)ptr));
-                UnsafeUtility.ReleaseGCObject(eventHandle);
+                int* lengthPtr = (int*)ptr;
+                *lengthPtr = str.Length;
 
+                ptr += sizeof(int);
+                
+                fixed(char* p = str)
+                {
+                    UnsafeUtility.MemCpy(ptr, p, str.Length * sizeof(char));
+                }
+
+                InputSystem.QueueEvent(new InputEventPtr(evt));
             }
         }
     }
