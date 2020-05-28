@@ -160,10 +160,12 @@ namespace UnityEngine.InputSystem.Editor
                 item.parent.children.Remove(item);
 
                 // Add to list of hidden children.
-                var parent = (ActionTreeItemBase)item.parent;
-                if (parent.m_HiddenChildren == null)
-                    parent.m_HiddenChildren = new List<ActionTreeItemBase>();
-                parent.m_HiddenChildren.Add(item);
+                if (item.parent is ActionTreeItemBase parent)
+                {
+                    if (parent.m_HiddenChildren == null)
+                        parent.m_HiddenChildren = new List<ActionTreeItemBase>();
+                    parent.m_HiddenChildren.Add(item);
+                }
 
                 return;
             }
