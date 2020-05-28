@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [Unreleased]
+
+### Fixed
+
+#### Actions
+
+- Fixed drag&drop reordering actions while having one control scheme selected causing bindings from other control schemes to be lost ([case 122800](https://issuetracker.unity3d.com/issues/input-system-bindings-get-cleared-for-other-control-scheme-actions-when-reordering-an-action-in-a-specific-control-scheme)).
 ## [1.0.0] - 2020-4-23
 
 ### Fixed
