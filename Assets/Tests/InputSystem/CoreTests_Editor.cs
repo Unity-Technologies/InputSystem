@@ -1555,6 +1555,43 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1228000/
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCutAndPasteAction_WithControlSchemeFilterActive()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddBinding("<Gamepad>/buttonSouth", groups: "scheme1");
+        action1.AddBinding("<Keyboard>/space", groups: "scheme2");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.SetItemSearchFilterAndReload("g:scheme1");
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem("map/action1");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_CutCommand));
+            tree.SelectItem("map/action2");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_PasteCommand));
+
+            Assert.That(tree.FindItemByPath("map/action1"), Is.Not.Null);
+            Assert.That(tree["map/action1"].childrenIncludingHidden.Count(), Is.EqualTo(2));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/space"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().groups, Is.EqualTo("scheme1"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().groups, Is.EqualTo("scheme2"));
+        }
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_ActionTree_CanFilterItems()

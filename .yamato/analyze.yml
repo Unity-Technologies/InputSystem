@@ -2,7 +2,7 @@ code_analyser:
   name : Code Analyzer
   agent:
     type: Unity::VM::osx
-    image: buildfarm/mac:stable
+    image: package-ci/mac:stable
     flavor: m1.mac
   commands:
     - git submodule update --init
