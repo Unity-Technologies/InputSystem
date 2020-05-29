@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
+- Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations.
 
 #### Actions
 
