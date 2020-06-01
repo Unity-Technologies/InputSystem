@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
+- Fixed a bug that prevented DualShock controllers from working on tvOS. (case 1221223).
 
 #### Actions
 
