@@ -432,6 +432,7 @@ internal class XRTests : InputTestFixture
 
     private const int kNumBaseHMDControls = 10;
 
+    #if UNITY_2019_3_OR_NEWER
     static InputDeviceCharacteristics CharacteristicsFromInputDeviceRole(InputDeviceRole role)
     {
         switch (role)
@@ -453,6 +454,7 @@ internal class XRTests : InputTestFixture
         }
         return InputDeviceCharacteristics.None;
     }
+    #endif
 
     private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {

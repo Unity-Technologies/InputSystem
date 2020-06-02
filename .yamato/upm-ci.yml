@@ -77,7 +77,6 @@ all_tests:
     {% endfor %}
     {% endfor %}
 
-
 publish:
   name: Publish to Internal Registry
   agent:
