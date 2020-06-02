@@ -69,8 +69,13 @@ internal class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShock4AsHID()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Devices_SupportsDualShock4AsHID(bool precompiled)
     {
+        if (!precompiled)
+            InputControlLayout.s_Layouts.precompiledLayouts.Clear();
+
         var gamepad = Devices_SupportsDualShockAsHID<DualShock4GamepadHID, DualShock4HIDInputReport>(
             new DualShock4HIDInputReport
             {

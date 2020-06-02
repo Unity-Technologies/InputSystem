@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -807,6 +808,260 @@ namespace UnityEngine.InputSystem
             builder.Append(controlPath, devicePath.Length + 1, controlPath.Length - devicePath.Length - 1);
 
             return builder.ToString();
+        }
+
+        public static InputControlBuilder Setup(this InputControl control)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (control.isSetupFinished)
+                throw new InvalidOperationException($"The setup of {control} cannot be modified; control is already in use");
+
+            return new InputControlBuilder { control = control };
+        }
+
+        //nuke
+        public static InputControlBuilder Setup(this InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (device.isSetupFinished)
+                throw new InvalidOperationException($"The setup of {device} cannot be modified; control is already in use");
+
+            device.m_Device = device;
+
+            return new InputControlBuilder { control = device };
+        }
+
+        public static InputControlBuilder Setup(this InputDevice device, int controlCount, int usageCount, int aliasCount)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (device.isSetupFinished)
+                throw new InvalidOperationException($"The setup of {device} cannot be modified; control is already in use");
+            if (controlCount < 1)
+                throw new ArgumentOutOfRangeException(nameof(controlCount));
+            if (usageCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(usageCount));
+            if (aliasCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(aliasCount));
+
+            device.m_Device = device;
+
+            device.m_ChildrenForEachControl = new InputControl[controlCount];
+            if (usageCount > 0)
+            {
+                device.m_UsagesForEachControl = new InternedString[usageCount];
+                device.m_UsageToControl = new InputControl[usageCount];
+            }
+            if (aliasCount > 0)
+                device.m_AliasesForEachControl = new InternedString[aliasCount];
+
+            return new InputControlBuilder { control = device };
+        }
+
+        public struct InputControlBuilder
+        {
+            public InputControl control { get; internal set; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder At(InputDevice device, int index)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (device == null)
+                    throw new ArgumentNullException(nameof(device));
+                if (index < 0 || index >= device.m_ChildrenForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+                #endif
+                device.m_ChildrenForEachControl[index] = control;
+                control.m_Device = device;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithParent(InputControl parent)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (parent == null)
+                    throw new ArgumentNullException(nameof(parent));
+                if (parent == control)
+                    throw new ArgumentException("Control cannot be its own parent", nameof(parent));
+                #endif
+                control.m_Parent = parent;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithName(string name)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (string.IsNullOrEmpty(name))
+                    throw new ArgumentNullException(nameof(name));
+                #endif
+                control.m_Name = new InternedString(name);
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithDisplayName(string displayName)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (string.IsNullOrEmpty(displayName))
+                    throw new ArgumentNullException(nameof(displayName));
+                #endif
+                control.m_DisplayNameFromLayout = new InternedString(displayName);
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithShortDisplayName(string shortDisplayName)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (string.IsNullOrEmpty(shortDisplayName))
+                    throw new ArgumentNullException(nameof(shortDisplayName));
+                #endif
+                control.m_ShortDisplayNameFromLayout = new InternedString(shortDisplayName);
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithLayout(InternedString layout)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (layout.IsEmpty())
+                    throw new ArgumentException("Layout name cannot be empty", nameof(layout));
+                #endif
+                control.m_Layout = layout;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithUsages(int startIndex, int count)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (startIndex < 0 || startIndex >= control.device.m_UsagesForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(startIndex));
+                if (count < 0 || startIndex + count > control.device.m_UsagesForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(count));
+                #endif
+                control.m_UsageStartIndex = startIndex;
+                control.m_UsageCount = count;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithAliases(int startIndex, int count)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (startIndex < 0 || startIndex >= control.device.m_AliasesForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(startIndex));
+                if (count < 0 || startIndex + count > control.device.m_AliasesForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(count));
+                #endif
+                control.m_AliasStartIndex = startIndex;
+                control.m_AliasCount = count;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithChildren(int startIndex, int count)
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (startIndex < 0 || startIndex >= control.device.m_ChildrenForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(startIndex));
+                if (count < 0 || startIndex + count > control.device.m_ChildrenForEachControl.Length)
+                    throw new ArgumentOutOfRangeException(nameof(count));
+                #endif
+                control.m_ChildStartIndex = startIndex;
+                control.m_ChildCount = count;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithStateBlock(InputStateBlock stateBlock)
+            {
+                control.m_StateBlock = stateBlock;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithFormat(FourCC format)
+            {
+                control.m_StateBlock.format = format;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithByteOffset(uint offset)
+            {
+                control.m_StateBlock.byteOffset = offset;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithBitOffset(uint offset)
+            {
+                control.m_StateBlock.bitOffset = offset;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithSizeInBits(uint sizeInBits)
+            {
+                control.m_StateBlock.sizeInBits = sizeInBits;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithDefaultState(PrimitiveValue value)
+            {
+                control.m_DefaultState = value;
+                control.m_Device.hasControlsWithDefaultState = true;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithMinAndMax(PrimitiveValue min, PrimitiveValue max)
+            {
+                control.m_MinValue = min;
+                control.m_MaxValue = max;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder WithProcessor<TProcessor, TValue>(TProcessor processor)
+                where TValue : struct
+                where TProcessor : InputProcessor<TValue>
+            {
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+                if (processor == null)
+                    throw new ArgumentNullException(nameof(processor));
+                #endif
+                ////REVIEW: have a parameterized version of InputControlBuilder<TValue> so we don't need the cast?
+                ////TODO: size array to exact needed size before-hand
+                ((InputControl<TValue>)control).m_ProcessorStack.Append(processor);
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder IsNoisy(bool value)
+            {
+                control.noisy = value;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public InputControlBuilder IsSynthetic(bool value)
+            {
+                control.synthetic = value;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Finish()
+            {
+                control.isSetupFinished = true;
+            }
         }
     }
 }

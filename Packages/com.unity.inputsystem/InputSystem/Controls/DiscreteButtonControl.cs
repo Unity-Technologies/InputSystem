@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.Controls
 
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

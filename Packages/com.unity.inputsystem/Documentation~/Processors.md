@@ -9,7 +9,6 @@ An Input Processor takes a value and returns a processed result for it. The rece
     * [Processors on Actions](#processors-on-actions)
     * [Processors on Controls](#processors-on-controls)
 * [Predefined Processors](#predefined-processors)
-    * [Axis deadzone](#axis-deadzone)
     * [Clamp](#clamp)
     * [Invert](#invert)
     * [Invert Vector 2](#invert-vector-2)
@@ -20,6 +19,7 @@ An Input Processor takes a value and returns a processed result for it. The rece
     * [Scale](#scale)
     * [Scale Vector 2](#scale-vector-2)
     * [Scale Vector 3](#scale-vector-3)
+    * [Axis deadzone](#axis-deadzone)
     * [Stick deadzone](#stick-deadzone)
 * [Writing custom Processors](#writing-custom-processors)
 
@@ -100,16 +100,7 @@ If you [create a layout from JSON](Layouts.md#layout-from-json), you can specify
 
 The Input System package comes with a set of useful Processors you can use.
 
-### Axis Deadzone
-
-|__Name__|`AxisDeadzone`|
-|---|---|
-|__Operand Type__|`float`|
-|__Parameters__|`float min`<br>`float max`|
-
-An axis deadzone Processor scales the values of a Control so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or -1. Many Controls don't have a precise resting point (that is, they don't always report exactly 0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.
-
-### Clamp
+### [Clamp](../api/UnityEngine.InputSystem.Processors.ClampProcessor.html)
 
 |__Name__|`Clamp`|
 |---|---|
@@ -118,7 +109,7 @@ An axis deadzone Processor scales the values of a Control so that any value with
 
 Clamps input values to the [`min`..`max`] range.
 
-### Invert
+### [Invert](../api/UnityEngine.InputSystem.Processors.InvertProcessor.html)
 
 |__Name__|`Invert`|
 |---|---|
@@ -126,7 +117,7 @@ Clamps input values to the [`min`..`max`] range.
 
 Inverts the values from a Control (that is, multiplies the values by -1).
 
-### Invert Vector 2
+### [Invert Vector 2](../api/UnityEngine.InputSystem.Processors.InvertVector2Processor.html)
 
 |__Name__|`InvertVector2`|
 |---|---|
@@ -135,7 +126,7 @@ Inverts the values from a Control (that is, multiplies the values by -1).
 
 Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, and the y axis if `invertY` is true.
 
-### Invert Vector 3
+### [Invert Vector 3](../api/UnityEngine.InputSystem.Processors.InvertVector3Processor.html)
 
 |__Name__|`InvertVector3`|
 |---|---|
@@ -144,7 +135,7 @@ Inverts the values from a Control (that is, multiplies the values by -1). Invert
 
 Inverts the values from a Control (that is, multiplies the values by -1). Inverts the x axis of the vector if `invertX` is true, the y axis if `invertY` is true, and the z axis if `invertZ` is true.
 
-### Normalize
+### [Normalize](../api/UnityEngine.InputSystem.Processors.NormalizeProcessor.html)
 
 |__Name__|`Normalize`|
 |---|---|
@@ -153,7 +144,7 @@ Inverts the values from a Control (that is, multiplies the values by -1). Invert
 
 Normalizes input values in the range [`min`..`max`] to unsigned normalized form [0..1] if `min` is >= `zero`, and to signed normalized form [-1..1] if `min` < `zero`.
 
-### Normalize Vector 2
+### [Normalize Vector 2](../api/UnityEngine.InputSystem.Processors.NormalizeVector2Processor.html)
 
 |__Name__|`NormalizeVector2`|
 |---|---|
@@ -161,7 +152,7 @@ Normalizes input values in the range [`min`..`max`] to unsigned normalized form 
 
 Normalizes input vectors to be of unit length (1). This is the same as calling `Vector2.normalized`.
 
-### Normalize Vector 3
+### [Normalize Vector 3](../api/UnityEngine.InputSystem.Processors.NormalizeVector3Processor.html)
 
 |__Name__|`NormalizeVector3`|
 |---|---|
@@ -169,7 +160,7 @@ Normalizes input vectors to be of unit length (1). This is the same as calling `
 
 Normalizes input vectors to be of unit length (1). This is the same as calling `Vector3.normalized`.
 
-### Scale
+### [Scale](../api/UnityEngine.InputSystem.Processors.ScaleProcessor.html)
 
 |__Name__|`Scale`|
 |---|---|
@@ -178,7 +169,7 @@ Normalizes input vectors to be of unit length (1). This is the same as calling `
 
 Multiplies all input values by `factor`.
 
-### Scale Vector 2
+### [Scale Vector 2](../api/UnityEngine.InputSystem.Processors.ScaleVector2Processor.html)
 
 |__Name__|`ScaleVector2`|
 |---|---|
@@ -187,7 +178,7 @@ Multiplies all input values by `factor`.
 
 Multiplies all input values by `x` along the X axis and by `y` along the Y axis.
 
-### Scale Vector 3
+### [Scale Vector 3](../api/UnityEngine.InputSystem.Processors.ScaleVector3Processor.html)
 
 |__Name__|`ScaleVector3`|
 |---|---|
@@ -196,7 +187,16 @@ Multiplies all input values by `x` along the X axis and by `y` along the Y axis.
 
 Multiplies all input values by `x` along the X axis, by `y` along the Y axis, and by `z` along the Z axis.
 
-### Stick deadzone
+### [Axis deadzone](../api/UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor.html)
+
+|__Name__|`AxisDeadzone`|
+|---|---|
+|__Operand Type__|`float`|
+|__Parameters__|`float min`<br>`float max`|
+
+An axis deadzone Processor scales the values of a Control so that any value with an absolute value smaller than `min` is 0, and any value with an absolute value larger than `max` is 1 or -1. Many Controls don't have a precise resting point (that is, they don't always report exactly 0 when the Control is in the center). Using the `min` value on a deadzone Processor avoids unintentional input from such Controls. Also, some Controls don't consistently report their maximum values when moving the axis all the way. Using the `max` value on a deadzone Processor ensures that you always get the maximum value in such cases.
+
+### [Stick deadzone](../api/UnityEngine.InputSystem.Processors.StickDeadzoneProcessor.html)
 
 |__Name__|`StickDeadzone`|
 |---|---|

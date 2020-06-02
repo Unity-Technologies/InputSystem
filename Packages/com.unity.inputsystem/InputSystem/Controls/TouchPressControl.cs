@@ -44,5 +44,10 @@ namespace UnityEngine.InputSystem.Controls
 
             return Preprocess(value);
         }
+
+        public override unsafe void WriteValueIntoState(float value, void* statePtr)
+        {
+            throw new NotSupportedException();
+        }
     }
 }
