@@ -56,6 +56,11 @@ platforms:
     - {{ platform.installscript }} {{ editor.version }}
     {% endif %}
     - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
+  triggers:
+    cancel_old_ci: true
+    branches:
+      only:
+        - "/.*/"
   artifacts:
     UTR_Output.zip:
       paths:
@@ -65,13 +70,7 @@ platforms:
 
 all_tests:
   name: All Tests
-    triggers:
-    cancel_old_ci: true
-    branches:
-      only:
-        - "/.*/"
   dependencies:
-    - .yamato/upm-ci.yml#pack
     {% for editor in editors %}
     {% for platform in platforms %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
