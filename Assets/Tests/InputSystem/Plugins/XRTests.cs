@@ -432,6 +432,28 @@ internal class XRTests : InputTestFixture
 
     private const int kNumBaseHMDControls = 10;
 
+    static InputDeviceCharacteristics CharacteristicsFromInputDeviceRole(InputDeviceRole role)
+    {
+        switch (role)
+        {
+            case InputDeviceRole.Generic:
+                return InputDeviceCharacteristics.HeadMounted;
+            case InputDeviceRole.LeftHanded:
+                return InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left;
+            case InputDeviceRole.RightHanded:
+                return InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Right;
+            case InputDeviceRole.GameController:
+                return InputDeviceCharacteristics.Controller;
+            case InputDeviceRole.TrackingReference:
+                return InputDeviceCharacteristics.TrackingReference;
+            case InputDeviceRole.HardwareTracker:
+                return InputDeviceCharacteristics.TrackedDevice;
+            case InputDeviceRole.LegacyController:
+                return InputDeviceCharacteristics.Controller;
+        }
+        return InputDeviceCharacteristics.None;
+    }
+
     private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
     {
         return new InputDeviceDescription
@@ -441,7 +463,9 @@ internal class XRTests : InputTestFixture
             manufacturer = "Manufacturer",
             capabilities = new XRDeviceDescriptor
             {
-#if !UNITY_2019_3_OR_NEWER
+#if UNITY_2019_3_OR_NEWER
+                characteristics = CharacteristicsFromInputDeviceRole(role),
+#else
                 deviceRole = role,
 #endif
                 inputFeatures = new List<XRFeatureDescriptor>()
