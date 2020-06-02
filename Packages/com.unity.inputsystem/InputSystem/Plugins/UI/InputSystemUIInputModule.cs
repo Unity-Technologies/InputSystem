@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
+    [HelpURL("https://docs.unity3d.com/Packages/com.unity.inputsystem@latest?subfolder=/manual/UISupport.html%23inputsystemuiinputmodule-component")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
