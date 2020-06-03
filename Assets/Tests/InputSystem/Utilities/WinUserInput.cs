@@ -461,7 +461,7 @@ public static class WinUserInput
     }
 
     /// <summary>
-    /// Emulate an event sent over RDP.
+    /// Emulate an event send over RDP.
     /// </summary>
     /// <param name="x"></param>
     /// <param name="y"></param>
