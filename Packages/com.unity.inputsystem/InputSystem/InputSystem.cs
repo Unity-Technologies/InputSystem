@@ -596,6 +596,7 @@ namespace UnityEngine.InputSystem
             return s_Manager.ListControlLayouts(basedOn: baseLayout);
         }
 
+        ////TODO: allow loading an *unmerged* layout
         /// <summary>
         /// Load a registered layout.
         /// </summary>
@@ -873,7 +874,7 @@ namespace UnityEngine.InputSystem
 
             // Flush out any precompiled layout depending on the processor.
             var precompiledLayouts = s_Manager.m_Layouts.precompiledLayouts;
-            foreach (var key in precompiledLayouts.Keys.ToList()) // Need to keep key list stable while iterating.
+            foreach (var key in new List<InternedString>(precompiledLayouts.Keys)) // Need to keep key list stable while iterating; ToList() for some reason not available with .NET Standard 2.0 on Mono.
             {
                 if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
                     s_Manager.m_Layouts.precompiledLayouts.Remove(key);
