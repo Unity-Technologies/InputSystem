@@ -48,7 +48,6 @@ public class IntegrationTests
 
     [UnityTest]
     [Category("Integration")]
-    [Ignore("Disabled due to 1252825")]
     public IEnumerator WindowsInput_RemoteDesktopMouseMovements_AreDetected()
     {
         var mouse = InputSystem.GetDevice<Mouse>();
@@ -70,7 +69,6 @@ public class IntegrationTests
 
     [UnityTest]
     [Category("Integration")]
-    [Ignore("Disabled due to 1252825")]
     public IEnumerator WindowsInput_MouseMovements_AreDetected()
     {
         var mouse = InputSystem.GetDevice<Mouse>();
