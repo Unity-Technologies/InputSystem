@@ -1,8 +1,6 @@
 editors:
   - version: 2019.1
-  - version: 2019.3
   - version: 2020.1
-  - version: 2020.2
 platforms:
   - name: win
     type: Unity::VM
