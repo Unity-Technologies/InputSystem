@@ -1,0 +1,38 @@
+editors:
+  - version: 2019.1
+  - version: 2019.3
+  - version: 2020.1
+  - version: 2020.2
+platforms:
+  - name: win
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: b1.large
+  - name: win_standalone
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: b1.large
+    runtime: StandaloneWindows64
+  - name: win_standalone_il2cpp
+    type: Unity::VM
+    image: package-ci/win10:latest
+    flavor: b1.large
+    runtime: StandaloneWindows64
+    scripting-backend: Il2Cpp
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 
+  - name: mac
+    type: Unity::VM::osx
+    image: package-ci/mac:stable
+    flavor: m1.mac
+  - name: mac_standalone
+    type: Unity::VM::osx
+    image: package-ci/mac:stable
+    flavor: m1.mac
+    runtime: StandaloneOSX
+  - name: mac_standalone_il2cpp
+    type: Unity::VM::osx
+    image: package-ci/mac:stable
+    flavor: m1.mac
+    runtime: StandaloneOSX   
+    scripting-backend: Il2Cpp 
+    installscript: unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 

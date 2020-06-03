@@ -454,6 +454,7 @@ internal class XRTests : InputTestFixture
         }
         return InputDeviceCharacteristics.None;
     }
+
     #endif
 
     private static InputDeviceDescription CreateSimpleDeviceDescriptionByRole(InputDeviceRole role)
