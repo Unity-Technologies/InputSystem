@@ -372,8 +372,10 @@ internal class XRTests : InputTestFixture
             ra.Set(rotationAction);
             ra.name = "RotationAction";
 
-            tpd.positionAction = pa;
-            tpd.rotationAction = ra;                                
+            tpd.positionAction = new InputActionProperty(pa);
+            tpd.rotationAction = new InputActionProperty(ra);
+
+            tpd.BindActions();
 
             // before render only
             var go1 = tpd.gameObject;
