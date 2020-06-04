@@ -357,11 +357,11 @@ internal class XRTests : InputTestFixture
         {
             InputActionAsset iaa = new InputActionAsset();
             var amap = iaa.AddActionMap("test");
-            
+
             var rotationAction = amap.AddAction("rotation");
             rotationAction.AddBinding("<TestHMD>/quaternion");
 
-            var positionAction = amap.AddAction("position");            
+            var positionAction = amap.AddAction("position");
             positionAction.AddBinding("<TestHMD>/vector3");
 
             var pa = new InputActionReference();

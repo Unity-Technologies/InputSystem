@@ -77,13 +77,13 @@ namespace UnityEngine.InputSystem.XR
             set
             {
                 bool rebind = false;
-                if(m_RotationBound)
+                if (m_RotationBound)
                 {
                     UnbindRotation();
                     rebind = true;
                 }
                 m_RotationAction = value;
-                if(rebind)
+                if (rebind)
                 {
                     BindRotation();
                 }
@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem.XR
         void OnDisable()
         {
             InputSystem.onAfterUpdate -= UpdateCallback;
-            UnbindActions();            
+            UnbindActions();
         }
 
         protected virtual void OnDestroy()
