@@ -704,8 +704,10 @@ partial class CoreTests
         public PrecompiledTestDevice()
         {
             this.Setup(1, 0, 0)
+                .WithName("TestDevice")
                 .WithLayout(new InternedString("TestDevice"))
                 .WithStateBlock(new InputStateBlock { format = new FourCC("TEST"), sizeInBits = 32 })
+                .WithChildren(0, 1)
                 .Finish();
 
             button = new ButtonControl();
@@ -714,6 +716,7 @@ partial class CoreTests
                 .WithName("button")
                 .WithStateBlock(new InputStateBlock { format = new FourCC("INT"), sizeInBits = 32 })
                 .WithProcessor<InvertProcessor, float>(new InvertProcessor())
+                .WithParent(this)
                 .Finish();
         }
 

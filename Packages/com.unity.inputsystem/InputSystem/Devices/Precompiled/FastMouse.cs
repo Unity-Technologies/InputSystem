@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem
         public const string metadata = "AutoWindowSpace;Vector2;Button;Axis;Digital;Integer;Mouse;Pointer";
         public FastMouse()
         {
-            var builder = this.Setup(25, 10, 2)
+            var builder = this.Setup(21, 10, 2)
                 .WithName("Mouse")
                 .WithDisplayName("Mouse")
                 .WithChildren(0, 13)
@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem
             ctrlMousescroll.Setup()
                 .At(this, 2)
                 .WithParent(this)
-                .WithChildren(17, 6)
+                .WithChildren(17, 2)
                 .WithName("scroll")
                 .WithDisplayName("Scroll")
                 .WithLayout(kVector2Layout)
@@ -232,7 +232,7 @@ namespace UnityEngine.InputSystem
             ctrlMouseradius.Setup()
                 .At(this, 10)
                 .WithParent(this)
-                .WithChildren(23, 2)
+                .WithChildren(19, 2)
                 .WithName("radius")
                 .WithDisplayName("Radius")
                 .WithLayout(kVector2Layout)
@@ -393,90 +393,10 @@ namespace UnityEngine.InputSystem
                 })
                 .Finish();
 
-            // /Mouse/scroll/up
-            var ctrlMousescrollup = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 1f };
-            ctrlMousescrollup.Setup()
-                .At(this, 19)
-                .WithParent(ctrlMousescroll)
-                .WithName("up")
-                .WithDisplayName("Scroll Up")
-                .WithShortDisplayName("Scroll Up")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 20,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
-
-            // /Mouse/scroll/down
-            var ctrlMousescrolldown = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -1f, invert = true };
-            ctrlMousescrolldown.Setup()
-                .At(this, 20)
-                .WithParent(ctrlMousescroll)
-                .WithName("down")
-                .WithDisplayName("Scroll Down")
-                .WithShortDisplayName("Scroll Down")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 20,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
-
-            // /Mouse/scroll/left
-            var ctrlMousescrollleft = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = -1f, invert = true };
-            ctrlMousescrollleft.Setup()
-                .At(this, 21)
-                .WithParent(ctrlMousescroll)
-                .WithName("left")
-                .WithDisplayName("Scroll Left")
-                .WithShortDisplayName("Scroll Left")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 16,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
-
-            // /Mouse/scroll/right
-            var ctrlMousescrollright = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 1f };
-            ctrlMousescrollright.Setup()
-                .At(this, 22)
-                .WithParent(ctrlMousescroll)
-                .WithName("right")
-                .WithDisplayName("Scroll Right")
-                .WithShortDisplayName("Scroll Right")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 16,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
-
             // /Mouse/radius/x
             var ctrlMouseradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMouseradiusx.Setup()
-                .At(this, 23)
+                .At(this, 19)
                 .WithParent(ctrlMouseradius)
                 .WithName("x")
                 .WithDisplayName("Radius X")
@@ -494,7 +414,7 @@ namespace UnityEngine.InputSystem
             // /Mouse/radius/y
             var ctrlMouseradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
             ctrlMouseradiusy.Setup()
-                .At(this, 24)
+                .At(this, 20)
                 .WithParent(ctrlMouseradius)
                 .WithName("y")
                 .WithDisplayName("Radius Y")
