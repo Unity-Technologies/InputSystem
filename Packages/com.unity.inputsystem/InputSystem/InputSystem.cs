@@ -3147,6 +3147,8 @@ namespace UnityEngine.InputSystem
             InitializeInPlayer(runtime, settings);
             #endif
 
+            Mouse.s_PlatformMouseDevice = null;
+
             InputUser.ResetGlobals();
             Profiling.Profiler.EndSample();
         }
