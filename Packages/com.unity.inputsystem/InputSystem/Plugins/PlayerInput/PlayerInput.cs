@@ -213,7 +213,7 @@ namespace UnityEngine.InputSystem
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.inputsystem@latest?subfolder=/manual/Components.html%23playerinput-component")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/Components.html#playerinput-component")]
     public class PlayerInput : MonoBehaviour
     {
         /// <summary>

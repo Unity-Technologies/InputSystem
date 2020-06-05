@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
@@ -70,7 +69,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    public static class InputSystem
+    public static partial class InputSystem
     {
         #region Layouts
 
@@ -2779,7 +2778,7 @@ namespace UnityEngine.InputSystem
         /// The current version of the input system package.
         /// </summary>
         /// <value>Current version of the input system.</value>
-        public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
+        public static Version version => new Version(kAssemblyVersion);
 
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
