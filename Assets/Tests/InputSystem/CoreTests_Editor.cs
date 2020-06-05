@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.CodeDom.Compiler;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.Scripting;
@@ -46,6 +47,41 @@ partial class CoreTests
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
         Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
+    }
+
+    // upm-ci has this as a warning; turn it into an error in our CI.
+    [Test]
+    [Category("Editor")]
+    public void Editor_ChangelogDatesConformToISO8601()
+    {
+        var changelog = File.ReadAllLines("Packages/com.unity.inputsystem/CHANGELOG.md");
+        var regex = new Regex(@"^##\s+\[.*\]\s+-\s+(?<date>[0-9\-]+)");
+        var dateRegex = new Regex(@"(?<year>[0-9][0-9][0-9][0-9])-(?<month>[0-9][0-9])-(?<day>[0-9][0-9])");
+
+        DateTime? lastDate = null;
+        foreach (var line in changelog)
+        {
+            var match = regex.Match(line);
+            if (!match.Success)
+                continue;
+
+            var date = match.Groups["date"].Value;
+            var dateMatch = dateRegex.Match(date);
+            Assert.That(dateMatch.Success, Is.True, $"'{date}' in '{line}' is not in ISO 8601 format");
+
+            Assert.That(int.Parse(dateMatch.Groups["year"].Value), Is.GreaterThanOrEqualTo(2018));
+            Assert.That(int.Parse(dateMatch.Groups["month"].Value), Is.GreaterThanOrEqualTo(1).And.LessThanOrEqualTo(12));
+            Assert.That(int.Parse(dateMatch.Groups["day"].Value), Is.GreaterThanOrEqualTo(1).And.LessThanOrEqualTo(31));
+
+            // Also ensure dates are ordered.
+            var dateTime = DateTime.ParseExact(date, "yyyy-MM-dd", null);
+            if (lastDate != null)
+                Assert.That(lastDate.Value, Is.GreaterThan(dateTime));
+
+            lastDate = dateTime;
+        }
+
+        Assert.That(lastDate, Is.Not.Null, "Could not find any changelog dates in the changelog file");
     }
 
     [Test]
@@ -1519,6 +1555,43 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1228000/
+    [Test]
+    [Category("Editor")]
+    public void Editor_ActionTree_CanCutAndPasteAction_WithControlSchemeFilterActive()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var action1 = map.AddAction("action1");
+        map.AddAction("action2");
+        asset.AddControlScheme("scheme1");
+        asset.AddControlScheme("scheme2");
+        action1.AddBinding("<Gamepad>/buttonSouth", groups: "scheme1");
+        action1.AddBinding("<Keyboard>/space", groups: "scheme2");
+
+        var so = new SerializedObject(asset);
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+        };
+        tree.SetItemSearchFilterAndReload("g:scheme1");
+
+        using (new EditorHelpers.FakeSystemCopyBuffer())
+        {
+            tree.SelectItem("map/action1");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_CutCommand));
+            tree.SelectItem("map/action2");
+            tree.HandleCopyPasteCommandEvent(EditorGUIUtility.CommandEvent(InputActionTreeView.k_PasteCommand));
+
+            Assert.That(tree.FindItemByPath("map/action1"), Is.Not.Null);
+            Assert.That(tree["map/action1"].childrenIncludingHidden.Count(), Is.EqualTo(2));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().path, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().path, Is.EqualTo("<Keyboard>/space"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[0].As<BindingTreeItem>().groups, Is.EqualTo("scheme1"));
+            Assert.That(tree["map/action1"].childrenIncludingHidden.ToList()[1].As<BindingTreeItem>().groups, Is.EqualTo("scheme2"));
+        }
+    }
+
     [Test]
     [Category("Editor")]
     public void Editor_ActionTree_CanFilterItems()
@@ -2311,6 +2384,13 @@ partial class CoreTests
 
         Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_CanRestartEditorThroughReflection()
+    {
+        EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB

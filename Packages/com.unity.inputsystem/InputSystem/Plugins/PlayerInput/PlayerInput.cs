@@ -9,6 +9,11 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: when joining is *off*, allow auto-switching even in multiplayer
+
+////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
+////      device as long as they are using different control schemes
+
 ////TODO: allow PlayerInput to be set up in a way where it's in an unpaired/non-functional state and expects additional configuration
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs

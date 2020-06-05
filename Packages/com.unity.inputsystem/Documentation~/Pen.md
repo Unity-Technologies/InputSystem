@@ -11,6 +11,7 @@ You can query the last used or last added pen with [`Pen.current`](../api/UnityE
 >__Note__:
 >* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
 >* Some devices support tracking multiple pens independently. Unity's Input System doesn't support this currently.
+>* iOS: The double-tap interaction on the side of the Apple Pencil is not surfaced as input at the moment.
 
 ## Controls
 

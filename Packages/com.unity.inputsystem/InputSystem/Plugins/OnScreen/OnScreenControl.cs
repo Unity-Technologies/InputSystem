@@ -6,6 +6,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: should we make this ExecuteInEditMode?
 
+////TODO: handle display strings for this in some form; shouldn't display generic gamepad binding strings, for example, for OSCs
+
 ////TODO: give more control over when an OSC creates a new devices; going simply by name of layout only is inflexible
 
 ////TODO: make this survive domain reloads

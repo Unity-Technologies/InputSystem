@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using Is = UnityEngine.TestTools.Constraints.Is;
@@ -1675,5 +1677,18 @@ partial class CoreTests
                 Assert.That(eventPtr->type, Is.EqualTo(new FourCC()));
             }
         }
+    }
+
+    [UnityTest]
+    [Category("Events")]
+    public IEnumerator Events_CanTestInputDistributedOverFrames()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+
+        yield return null;
+
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
     }
 }

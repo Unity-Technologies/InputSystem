@@ -1,38 +1,4 @@
-editors:
-  - version: 2019.1
-platforms:
-  - name: win
-    type: Unity::VM
-    image: package-ci/win10:latest
-    flavor: b1.large
-  - name: win_standalone
-    type: Unity::VM
-    image: package-ci/win10:latest
-    flavor: b1.large
-    runtime: StandaloneWindows64
-  - name: win_standalone_il2cpp
-    type: Unity::VM
-    image: package-ci/win10:latest
-    flavor: b1.large
-    runtime: StandaloneWindows64
-    scripting-backend: Il2Cpp
-    installscript: c:\python27\Scripts\unity-downloader-cli.exe -c editor -c StandaloneSupport-IL2CPP -w -u 
-  - name: mac
-    type: Unity::VM::osx
-    image: package-ci/mac:stable
-    flavor: m1.mac
-  - name: mac_standalone
-    type: Unity::VM::osx
-    image: package-ci/mac:stable
-    flavor: m1.mac
-    runtime: StandaloneOSX
-  - name: mac_standalone_il2cpp
-    type: Unity::VM::osx
-    image: package-ci/mac:stable
-    flavor: m1.mac
-    runtime: StandaloneOSX   
-    scripting-backend: Il2Cpp 
-    installscript: ~/Library/Python/2.7/bin/unity-downloader-cli -c editor -c StandaloneSupport-IL2CPP -w -u 
+{% metadata_file .yamato/config.metadata %}
 ---
 {% for editor in editors %}
 {% for platform in platforms %}
@@ -49,10 +15,12 @@ platforms:
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     {% if platform.installscript %}
+    - pip install unity-downloader-cli --extra-index-url https://artifactory.eu-cph-1.unityops.net/api/pypi/common-python/simple
     - {{ platform.installscript }} {{ editor.version }}
     {% endif %}
     - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
   triggers:
+    cancel_old_ci: true
     branches:
       only:
         - "/.*/"
@@ -62,6 +30,15 @@ platforms:
         - "upm-ci~/test-results/**/*"
 {% endfor %}
 {% endfor %}
+
+all_tests:
+  name: All Tests
+  dependencies:
+    {% for editor in editors %}
+    {% for platform in platforms %}
+    - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    {% endfor %}
+    {% endfor %}
 
 publish:
   name: Publish to Internal Registry

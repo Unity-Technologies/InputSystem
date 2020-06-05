@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.VersionControl;
 
@@ -9,6 +10,32 @@ namespace UnityEngine.InputSystem.Editor
     {
         public static Action<string> SetSystemCopyBufferContents = s => EditorGUIUtility.systemCopyBuffer = s;
         public static Func<string> GetSystemCopyBufferContents = () => EditorGUIUtility.systemCopyBuffer;
+
+        public static void RestartEditorAndRecompileScripts(bool dryRun = false)
+        {
+            // The APIs here are not public. Use reflection to get to them.
+
+            // Delete compilation output.
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var editorCompilationInterfaceType =
+                editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
+            var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
+            var cleanScriptAssembliesMethod = editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies");
+            if (!dryRun)
+                cleanScriptAssembliesMethod.Invoke(editorCompilationInstance, null);
+            else if (cleanScriptAssembliesMethod == null)
+                throw new MissingMethodException(editorCompilationInterfaceType.FullName, "CleanScriptAssemblies");
+
+            // Restart editor.
+            var editorApplicationType = typeof(EditorApplication);
+            var requestCloseAndRelaunchWithCurrentArgumentsMethod =
+                editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+            if (!dryRun)
+                requestCloseAndRelaunchWithCurrentArgumentsMethod.Invoke(null, null);
+            else if (requestCloseAndRelaunchWithCurrentArgumentsMethod == null)
+                throw new MissingMethodException(editorApplicationType.FullName, "RequestCloseAndRelaunchWithCurrentArguments");
+        }
 
         public static void CheckOut(string path)
         {

@@ -97,6 +97,23 @@ namespace UnityEngine.InputSystem
                 // We use native collections in a couple places. We when leak them, we want to know where exactly
                 // the allocation came from so enable full leak detection in tests.
                 NativeLeakDetection.Mode = NativeLeakDetectionMode.EnabledWithStackTrace;
+
+                // For [UnityTest]s, we need to process input in sync with the player loop. However, InputTestRuntime
+                // is divorced from the player loop by virtue of not being tied into NativeInputSystem. Listen
+                // for NativeInputSystem.Update here and trigger input processing in our isolated InputSystem.
+                // This is irrelevant for normal [Test]s but for [UnityTest]s that run over several frames, it's crucial.
+                // NOTE: We're severing the tie the previous InputManager had to NativeInputRuntime here. This means that
+                //       device removal events that happen to occur while tests are running will get lost.
+                NativeInputRuntime.instance.onUpdate =
+                    (InputUpdateType updateType, ref InputEventBuffer buffer) =>
+                {
+                    if (InputSystem.s_Manager.ShouldRunUpdate(updateType))
+                        InputSystem.Update(updateType);
+                    // We ignore any input coming from native.
+                    buffer.Reset();
+                };
+                NativeInputRuntime.instance.onShouldRunUpdate =
+                    updateType => true;
             }
             catch (Exception exception)
             {
