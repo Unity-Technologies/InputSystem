@@ -513,6 +513,30 @@ class APIVerificationTests
 
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
+
+        // Ensure the links are actually valid.
+        var docsFolder = GenerateDocsDirectory();
+        var brokenHelpUrls =
+            monoBehaviourTypesHelpUrls.Where(
+                s =>
+                {
+                    // Parse file path and anchor.
+                    var path = s.Substring(InputSystem.kDocUrl.Length);
+                    if (path.StartsWith("/"))
+                        path = path.Substring(1);
+                    var docsFileName = path.Substring(0, path.IndexOf('#'));
+                    var anchorName = path.Substring(path.IndexOf('#') + 1);
+
+                    // Load doc.
+                    var docsFilePath = Path.Combine(docsFolder, docsFileName);
+                    var doc = new HtmlDocument();
+                    doc.Load(docsFilePath);
+
+                    // Look up anchor.
+                    return doc.DocumentNode.SelectSingleNode($"//*[@id = '{anchorName}']") == null;
+                });
+
+        Assert.That(brokenHelpUrls, Is.Empty);
     }
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
