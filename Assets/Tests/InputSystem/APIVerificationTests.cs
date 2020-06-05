@@ -541,10 +541,13 @@ class APIVerificationTests
         var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;
         var existingCode = File.ReadAllText(fullPath);
 
+        // May be a git checkout with CRLF auto-conversion on. Strip all '\r' characters.
+        existingCode = existingCode.Replace("\r", "");
+
         // We need to pass it the existing file path to ensure that we respect modifications made to #defines and access modifiers.
         var generatedCode = InputLayoutCodeGenerator.GenerateCodeFileForDeviceLayout(layoutName, fullPath, prefix: "Fast");
 
-        Assert.That(generatedCode, Is.EqualTo(existingCode));
+        Assert.That(existingCode, Is.EqualTo(generatedCode));
     }
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would

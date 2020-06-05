@@ -223,7 +223,7 @@ This allows you to create your own Devices, which can be useful for testing purp
 
 ### Creating custom Devices
 
->__Note__: This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](Layouts.md#layout-builders) to build Device layouts from information you obtain at runtime.
+>__Note__: This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](Layouts.md#generated-layouts) to build Device layouts from information you obtain at runtime.
 
 There are two main situations in which you might need to create a custom Device:
 
