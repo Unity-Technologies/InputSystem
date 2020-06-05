@@ -9,25 +9,26 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+//!!DEFINES
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.DualShock
 {
-    public partial class FastDualShock4GamepadHID : DualShock4GamepadHID
+    internal partial class FastDualShock4GamepadHID : DualShock4GamepadHID
     {
         public const string metadata = "StickDeadzone;AxisDeadzone;Stick;Vector2;Dpad;Button;Axis;DpadAxis;DiscreteButton;DualShock4GamepadHID;DualShockGamepad;Gamepad";
         public FastDualShock4GamepadHID()
         {
-            this.Setup(37, 11, 8)
+            var builder = this.Setup(37, 11, 8)
                 .WithName("DualShock4GamepadHID")
                 .WithDisplayName("PS4 Controller")
                 .WithChildren(0, 19)
                 .WithLayout(new InternedString("DualShock4GamepadHID"))
-                .WithFormat(new FourCC(1212761120))
-                .WithSizeInBits(80)
-                .Finish();
+                .WithStateBlock(new InputStateBlock { format = new FourCC(1212761120), sizeInBits = 80 });
 
             var kStickLayout = new InternedString("Stick");
             var kDpadLayout = new InternedString("Dpad");
@@ -783,28 +784,17 @@ namespace UnityEngine.InputSystem.DualShock
                 .Finish();
 
             // Usages.
-            m_UsagesForEachControl[0] = new InternedString("Primary2DMotion");
-            m_UsageToControl[0] = ctrlDualShock4GamepadHIDleftStick;
-            m_UsagesForEachControl[1] = new InternedString("Secondary2DMotion");
-            m_UsageToControl[1] = ctrlDualShock4GamepadHIDrightStick;
-            m_UsagesForEachControl[2] = new InternedString("Hatswitch");
-            m_UsageToControl[2] = ctrlDualShock4GamepadHIDdpad;
-            m_UsagesForEachControl[3] = new InternedString("SecondaryAction");
-            m_UsageToControl[3] = ctrlDualShock4GamepadHIDbuttonWest;
-            m_UsagesForEachControl[4] = new InternedString("PrimaryAction");
-            m_UsageToControl[4] = ctrlDualShock4GamepadHIDbuttonSouth;
-            m_UsagesForEachControl[5] = new InternedString("Submit");
-            m_UsageToControl[5] = ctrlDualShock4GamepadHIDbuttonSouth;
-            m_UsagesForEachControl[6] = new InternedString("Back");
-            m_UsageToControl[6] = ctrlDualShock4GamepadHIDbuttonEast;
-            m_UsagesForEachControl[7] = new InternedString("Cancel");
-            m_UsageToControl[7] = ctrlDualShock4GamepadHIDbuttonEast;
-            m_UsagesForEachControl[8] = new InternedString("Menu");
-            m_UsageToControl[8] = ctrlDualShock4GamepadHIDstart;
-            m_UsagesForEachControl[9] = new InternedString("SecondaryTrigger");
-            m_UsageToControl[9] = ctrlDualShock4GamepadHIDleftTrigger;
-            m_UsagesForEachControl[10] = new InternedString("SecondaryTrigger");
-            m_UsageToControl[10] = ctrlDualShock4GamepadHIDrightTrigger;
+            builder.WithControlUsage(0, new InternedString("Primary2DMotion"), ctrlDualShock4GamepadHIDleftStick);
+            builder.WithControlUsage(1, new InternedString("Secondary2DMotion"), ctrlDualShock4GamepadHIDrightStick);
+            builder.WithControlUsage(2, new InternedString("Hatswitch"), ctrlDualShock4GamepadHIDdpad);
+            builder.WithControlUsage(3, new InternedString("SecondaryAction"), ctrlDualShock4GamepadHIDbuttonWest);
+            builder.WithControlUsage(4, new InternedString("PrimaryAction"), ctrlDualShock4GamepadHIDbuttonSouth);
+            builder.WithControlUsage(5, new InternedString("Submit"), ctrlDualShock4GamepadHIDbuttonSouth);
+            builder.WithControlUsage(6, new InternedString("Back"), ctrlDualShock4GamepadHIDbuttonEast);
+            builder.WithControlUsage(7, new InternedString("Cancel"), ctrlDualShock4GamepadHIDbuttonEast);
+            builder.WithControlUsage(8, new InternedString("Menu"), ctrlDualShock4GamepadHIDstart);
+            builder.WithControlUsage(9, new InternedString("SecondaryTrigger"), ctrlDualShock4GamepadHIDleftTrigger);
+            builder.WithControlUsage(10, new InternedString("SecondaryTrigger"), ctrlDualShock4GamepadHIDrightTrigger);
 
             // Aliases.
             m_AliasesForEachControl[0] = new InternedString("x");
@@ -862,6 +852,8 @@ namespace UnityEngine.InputSystem.DualShock
             ctrlDualShock4GamepadHIDdpad.right = ctrlDualShock4GamepadHIDdpadright;
             ctrlDualShock4GamepadHIDdpad.x = ctrlDualShock4GamepadHIDdpadx;
             ctrlDualShock4GamepadHIDdpad.y = ctrlDualShock4GamepadHIDdpady;
+            builder.Finish();
         }
     }
 }
+#endif // UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA

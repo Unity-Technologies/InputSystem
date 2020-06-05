@@ -20,14 +20,12 @@ namespace UnityEngine.InputSystem
         public const string metadata = "AutoWindowSpace;Touch;Vector2;Analog;TouchPress;Button;Axis;Integer;TouchPhase;Double;Touchscreen;Pointer";
         public FastTouchscreen()
         {
-            this.Setup(242, 5, 0)
+            var builder = this.Setup(242, 5, 0)
                 .WithName("Touchscreen")
                 .WithDisplayName("Touchscreen")
                 .WithChildren(0, 16)
                 .WithLayout(new InternedString("Touchscreen"))
-                .WithFormat(new FourCC(1414742866))
-                .WithSizeInBits(4928)
-                .Finish();
+                .WithStateBlock(new InputStateBlock { format = new FourCC(1414742866), sizeInBits = 4928 });
 
             var kTouchLayout = new InternedString("Touch");
             var kVector2Layout = new InternedString("Vector2");
@@ -4538,16 +4536,11 @@ namespace UnityEngine.InputSystem
                 .Finish();
 
             // Usages.
-            m_UsagesForEachControl[0] = new InternedString("PrimaryAction");
-            m_UsageToControl[0] = ctrlTouchscreenprimaryTouchtap;
-            m_UsagesForEachControl[1] = new InternedString("Point");
-            m_UsageToControl[1] = ctrlTouchscreenposition;
-            m_UsagesForEachControl[2] = new InternedString("Secondary2DMotion");
-            m_UsageToControl[2] = ctrlTouchscreendelta;
-            m_UsagesForEachControl[3] = new InternedString("Pressure");
-            m_UsageToControl[3] = ctrlTouchscreenpressure;
-            m_UsagesForEachControl[4] = new InternedString("Radius");
-            m_UsageToControl[4] = ctrlTouchscreenradius;
+            builder.WithControlUsage(0, new InternedString("PrimaryAction"), ctrlTouchscreenprimaryTouchtap);
+            builder.WithControlUsage(1, new InternedString("Point"), ctrlTouchscreenposition);
+            builder.WithControlUsage(2, new InternedString("Secondary2DMotion"), ctrlTouchscreendelta);
+            builder.WithControlUsage(3, new InternedString("Pressure"), ctrlTouchscreenpressure);
+            builder.WithControlUsage(4, new InternedString("Radius"), ctrlTouchscreenradius);
 
             // Control getters/arrays.
             this.touchControlArray = new UnityEngine.InputSystem.Controls.TouchControl[10];
@@ -4793,6 +4786,7 @@ namespace UnityEngine.InputSystem
             ctrlTouchscreentouch9radius.y = ctrlTouchscreentouch9radiusy;
             ctrlTouchscreentouch9startPosition.x = ctrlTouchscreentouch9startPositionx;
             ctrlTouchscreentouch9startPosition.y = ctrlTouchscreentouch9startPositiony;
+            builder.Finish();
         }
     }
 }

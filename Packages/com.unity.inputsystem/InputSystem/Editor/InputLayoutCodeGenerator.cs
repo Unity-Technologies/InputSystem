@@ -128,16 +128,14 @@ namespace UnityEngine.InputSystem.Editor
             var aliasCount = aliasesForEachControl?.Length ?? 0;
 
             // Set up device control info.
-            writer.WriteLine($"this.Setup({controlCount}, {usageCount}, {aliasCount})");
+            writer.WriteLine($"var builder = this.Setup({controlCount}, {usageCount}, {aliasCount})");
             writer.WriteLine($"    .WithName(\"{device.name}\")");
             writer.WriteLine($"    .WithDisplayName(\"{device.displayName}\")");
             writer.WriteLine($"    .WithChildren({device.m_ChildStartIndex}, {device.m_ChildCount})");
             writer.WriteLine($"    .WithLayout(new InternedString(\"{device.layout}\"))");
-            writer.WriteLine($"    .WithFormat(new FourCC({(int)device.stateBlock.format}))");
-            writer.WriteLine($"    .WithSizeInBits({device.stateBlock.sizeInBits})");
             if (device.noisy)
                 writer.WriteLine("    .IsNoisy(true)");
-            writer.WriteLine("    .Finish();");
+            writer.WriteLine($"    .WithStateBlock(new InputStateBlock {{ format = new FourCC({(int)device.stateBlock.format}), sizeInBits = {device.stateBlock.sizeInBits} }});");
 
             // Add controls to device.
             writer.WriteLine();
@@ -213,10 +211,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
                 writer.WriteLine("// Usages.");
                 for (var i = 0; i < usageCount; ++i)
-                {
-                    writer.WriteLine($"m_UsagesForEachControl[{i}] = new InternedString(\"{usagesForEachControl[i]}\");");
-                    writer.WriteLine($"m_UsageToControl[{i}] = {MakeControlVariableName(usageToControl[i])};");
-                }
+                    writer.WriteLine(
+                        $"builder.WithControlUsage({i}, new InternedString(\"{usagesForEachControl[i]}\"), {MakeControlVariableName(usageToControl[i])});");
             }
 
             // Initialize aliases array.
@@ -225,7 +221,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine();
                 writer.WriteLine("// Aliases.");
                 for (var i = 0; i < aliasCount; ++i)
-                    writer.WriteLine($"m_AliasesForEachControl[{i}] = new InternedString(\"{aliasesForEachControl[i]}\");");
+                    writer.WriteLine($"builder.WithControlAlias({i},  new InternedString(\"{aliasesForEachControl[i]}\"));");
             }
 
             // Emit initializers for control getters and control arrays. This is usually what's getting set up
@@ -247,6 +243,7 @@ namespace UnityEngine.InputSystem.Editor
                 writer.EmitControlGetterInitializers(control, controlVariableName, controlGetterProperties);
             }
 
+            writer.WriteLine("builder.Finish();");
             writer.EndBlock();
 
             writer.EndBlock();

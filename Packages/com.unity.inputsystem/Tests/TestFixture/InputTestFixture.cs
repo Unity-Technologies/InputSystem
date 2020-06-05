@@ -474,31 +474,31 @@ namespace UnityEngine.InputSystem
                 InputSystem.Update();
         }
 
-        public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
+        public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, float pressure = 1, Touchscreen screen = null,
             double time = -1, double timeOffset = 0)
         {
             SetTouch(touchId, TouchPhase.Began, position, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
-        public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+        public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, float pressure = 1, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Moved, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Moved, position, delta, pressure, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
-        public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+        public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, float pressure = 1, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Ended, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Ended, position, delta, pressure, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
-        public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
+        public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, float pressure = 1, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Canceled, position, delta, pressure, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
-        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default, bool queueEventOnly = true,
+        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default, float pressure = 1, bool queueEventOnly = true,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
             if (screen == null)
@@ -514,6 +514,7 @@ namespace UnityEngine.InputSystem
                 phase = phase,
                 position = position,
                 delta = delta,
+                pressure = pressure,
             }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();

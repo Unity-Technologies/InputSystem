@@ -9,6 +9,10 @@ using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
+using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.Editor;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
 
 class APIVerificationTests
 {
@@ -152,7 +156,9 @@ class APIVerificationTests
     {
         var types = type.Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)).Concat(typeof(APIVerificationTests).Assembly.GetTypes().Where(t => type.IsAssignableFrom(t)));
         Assert.That(types, Is.Not.Empty);
-        var typesWithoutPreserveAttribute = types.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")));
+        var typesWithoutPreserveAttribute =
+            types.Where(t => !t.CustomAttributes.Any(a => a.AttributeType.Name.Contains("PreserveAttribute")))
+                .Where(t => !IgnoreTypeWithoutPreserveAttribute(t));
         Assert.That(typesWithoutPreserveAttribute, Is.Empty);
     }
 
@@ -351,7 +357,7 @@ class APIVerificationTests
         return null;
     }
 
-    bool IgnoreTypeForDocs(TypeDefinition type)
+    private bool IgnoreTypeForDocs(TypeDefinition type)
     {
         return
             // Currently, the package documentation system is broken as it will not generate docs for any code contained
@@ -409,7 +415,7 @@ class APIVerificationTests
             false;
     }
 
-    bool IgnoreMethodForDocs(MethodDefinition method)
+    private bool IgnoreMethodForDocs(MethodDefinition method)
     {
         if (IgnoreTypeForDocs(method.DeclaringType))
             return true;
@@ -425,7 +431,19 @@ class APIVerificationTests
         return false;
     }
 
-    string GenerateDocsDirectory()
+    private bool IgnoreTypeWithoutPreserveAttribute(Type type)
+    {
+        // Precompiled layouts are not created through reflection and thus don't need [Preserve].
+        if (type == typeof(FastKeyboard)
+            || type == typeof(FastMouse)
+            || type == typeof(FastTouchscreen)
+            || type == typeof(FastDualShock4GamepadHID))
+            return true;
+
+        return false;
+    }
+
+    private string GenerateDocsDirectory()
     {
         const string docsFolder = "Temp/docstest";
         Directory.CreateDirectory(docsFolder);
@@ -510,6 +528,23 @@ class APIVerificationTests
                     unresolvedLinks.Add($"{link} in {htmlFile} (Tag Not Found)");
             }
         }
+    }
+
+    [Test]
+    [Category("API")]
+    [TestCase("Keyboard", "Devices/Precompiled/FastKeyboard.cs")]
+    [TestCase("Mouse", "Devices/Precompiled/FastMouse.cs")]
+    [TestCase("Touchscreen", "Devices/Precompiled/FastTouchscreen.cs")]
+    [TestCase("DualShock4GamepadHID", "Plugins/DualShock/FastDualShock4GamepadHID.cs")]
+    public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
+    {
+        var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;
+        var existingCode = File.ReadAllText(fullPath);
+
+        // We need to pass it the existing file path to ensure that we respect modifications made to #defines and access modifiers.
+        var generatedCode = InputLayoutCodeGenerator.GenerateCodeFileForDeviceLayout(layoutName, fullPath, prefix: "Fast");
+
+        Assert.That(generatedCode, Is.EqualTo(existingCode));
     }
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would

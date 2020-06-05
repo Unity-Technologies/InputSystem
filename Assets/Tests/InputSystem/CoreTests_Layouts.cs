@@ -546,7 +546,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
-        Assert.That(device, Is.TypeOf<Keyboard>());
+        Assert.That(device, Is.InstanceOf<Keyboard>());
     }
 
     [Test]
@@ -603,7 +603,7 @@ partial class CoreTests
                 "Keyboard";
 
         Assert.That(InputSystem.GetUnsupportedDevices(), Is.Empty);
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>().With.Property("deviceId").EqualTo(deviceId));
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Keyboard>().With.Property("deviceId").EqualTo(deviceId));
     }
 
     [Test]

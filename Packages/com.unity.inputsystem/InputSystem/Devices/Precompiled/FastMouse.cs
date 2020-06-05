@@ -20,14 +20,12 @@ namespace UnityEngine.InputSystem
         public const string metadata = "AutoWindowSpace;Vector2;Button;Axis;Digital;Integer;Mouse;Pointer";
         public FastMouse()
         {
-            this.Setup(25, 10, 2)
+            var builder = this.Setup(25, 10, 2)
                 .WithName("Mouse")
                 .WithDisplayName("Mouse")
                 .WithChildren(0, 13)
                 .WithLayout(new InternedString("Mouse"))
-                .WithFormat(new FourCC(1297044819))
-                .WithSizeInBits(344)
-                .Finish();
+                .WithStateBlock(new InputStateBlock { format = new FourCC(1297044819), sizeInBits = 344 });
 
             var kVector2Layout = new InternedString("Vector2");
             var kButtonLayout = new InternedString("Button");
@@ -512,26 +510,16 @@ namespace UnityEngine.InputSystem
                 .Finish();
 
             // Usages.
-            m_UsagesForEachControl[0] = new InternedString("Point");
-            m_UsageToControl[0] = ctrlMouseposition;
-            m_UsagesForEachControl[1] = new InternedString("Secondary2DMotion");
-            m_UsageToControl[1] = ctrlMousedelta;
-            m_UsagesForEachControl[2] = new InternedString("ScrollHorizontal");
-            m_UsageToControl[2] = ctrlMousescrollx;
-            m_UsagesForEachControl[3] = new InternedString("ScrollVertical");
-            m_UsageToControl[3] = ctrlMousescrolly;
-            m_UsagesForEachControl[4] = new InternedString("PrimaryAction");
-            m_UsageToControl[4] = ctrlMouseleftButton;
-            m_UsagesForEachControl[5] = new InternedString("SecondaryAction");
-            m_UsageToControl[5] = ctrlMouserightButton;
-            m_UsagesForEachControl[6] = new InternedString("Forward");
-            m_UsageToControl[6] = ctrlMouseforwardButton;
-            m_UsagesForEachControl[7] = new InternedString("Back");
-            m_UsageToControl[7] = ctrlMousebackButton;
-            m_UsagesForEachControl[8] = new InternedString("Pressure");
-            m_UsageToControl[8] = ctrlMousepressure;
-            m_UsagesForEachControl[9] = new InternedString("Radius");
-            m_UsageToControl[9] = ctrlMouseradius;
+            builder.WithControlUsage(0, new InternedString("Point"), ctrlMouseposition);
+            builder.WithControlUsage(1, new InternedString("Secondary2DMotion"), ctrlMousedelta);
+            builder.WithControlUsage(2, new InternedString("ScrollHorizontal"), ctrlMousescrollx);
+            builder.WithControlUsage(3, new InternedString("ScrollVertical"), ctrlMousescrolly);
+            builder.WithControlUsage(4, new InternedString("PrimaryAction"), ctrlMouseleftButton);
+            builder.WithControlUsage(5, new InternedString("SecondaryAction"), ctrlMouserightButton);
+            builder.WithControlUsage(6, new InternedString("Forward"), ctrlMouseforwardButton);
+            builder.WithControlUsage(7, new InternedString("Back"), ctrlMousebackButton);
+            builder.WithControlUsage(8, new InternedString("Pressure"), ctrlMousepressure);
+            builder.WithControlUsage(9, new InternedString("Radius"), ctrlMouseradius);
 
             // Aliases.
             m_AliasesForEachControl[0] = new InternedString("horizontal");
@@ -558,6 +546,7 @@ namespace UnityEngine.InputSystem
             ctrlMousescroll.y = ctrlMousescrolly;
             ctrlMouseradius.x = ctrlMouseradiusx;
             ctrlMouseradius.y = ctrlMouseradiusy;
+            builder.Finish();
         }
     }
 }

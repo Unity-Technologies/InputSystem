@@ -20,14 +20,12 @@ namespace UnityEngine.InputSystem
         public const string metadata = ";AnyKey;Button;Axis;Key;DiscreteButton;Keyboard";
         public FastKeyboard()
         {
-            this.Setup(115, 15, 7)
+            var builder = this.Setup(115, 15, 7)
                 .WithName("Keyboard")
                 .WithDisplayName("Keyboard")
                 .WithChildren(0, 115)
                 .WithLayout(new InternedString("Keyboard"))
-                .WithFormat(new FourCC(1262836051))
-                .WithSizeInBits(112)
-                .Finish();
+                .WithStateBlock(new InputStateBlock { format = new FourCC(1262836051), sizeInBits = 112 });
 
             var kAnyKeyLayout = new InternedString("AnyKey");
             var kKeyLayout = new InternedString("Key");
@@ -2237,36 +2235,21 @@ namespace UnityEngine.InputSystem
                 .Finish();
 
             // Usages.
-            m_UsagesForEachControl[0] = new InternedString("Back");
-            m_UsageToControl[0] = ctrlKeyboardescape;
-            m_UsagesForEachControl[1] = new InternedString("Cancel");
-            m_UsageToControl[1] = ctrlKeyboardescape;
-            m_UsagesForEachControl[2] = new InternedString("Submit");
-            m_UsageToControl[2] = ctrlKeyboardenter;
-            m_UsagesForEachControl[3] = new InternedString("Modifier");
-            m_UsageToControl[3] = ctrlKeyboardleftShift;
-            m_UsagesForEachControl[4] = new InternedString("Modifier");
-            m_UsageToControl[4] = ctrlKeyboardrightShift;
-            m_UsagesForEachControl[5] = new InternedString("Modifier");
-            m_UsageToControl[5] = ctrlKeyboardshift;
-            m_UsagesForEachControl[6] = new InternedString("Modifier");
-            m_UsageToControl[6] = ctrlKeyboardleftAlt;
-            m_UsagesForEachControl[7] = new InternedString("Modifier");
-            m_UsageToControl[7] = ctrlKeyboardrightAlt;
-            m_UsagesForEachControl[8] = new InternedString("Modifier");
-            m_UsageToControl[8] = ctrlKeyboardalt;
-            m_UsagesForEachControl[9] = new InternedString("Modifier");
-            m_UsageToControl[9] = ctrlKeyboardleftCtrl;
-            m_UsagesForEachControl[10] = new InternedString("Modifier");
-            m_UsageToControl[10] = ctrlKeyboardrightCtrl;
-            m_UsagesForEachControl[11] = new InternedString("Modifier");
-            m_UsageToControl[11] = ctrlKeyboardctrl;
-            m_UsagesForEachControl[12] = new InternedString("Modifier");
-            m_UsageToControl[12] = ctrlKeyboardleftMeta;
-            m_UsagesForEachControl[13] = new InternedString("Modifier");
-            m_UsageToControl[13] = ctrlKeyboardrightMeta;
-            m_UsagesForEachControl[14] = new InternedString("Modifier");
-            m_UsageToControl[14] = ctrlKeyboardcontextMenu;
+            builder.WithControlUsage(0, new InternedString("Back"), ctrlKeyboardescape);
+            builder.WithControlUsage(1, new InternedString("Cancel"), ctrlKeyboardescape);
+            builder.WithControlUsage(2, new InternedString("Submit"), ctrlKeyboardenter);
+            builder.WithControlUsage(3, new InternedString("Modifier"), ctrlKeyboardleftShift);
+            builder.WithControlUsage(4, new InternedString("Modifier"), ctrlKeyboardrightShift);
+            builder.WithControlUsage(5, new InternedString("Modifier"), ctrlKeyboardshift);
+            builder.WithControlUsage(6, new InternedString("Modifier"), ctrlKeyboardleftAlt);
+            builder.WithControlUsage(7, new InternedString("Modifier"), ctrlKeyboardrightAlt);
+            builder.WithControlUsage(8, new InternedString("Modifier"), ctrlKeyboardalt);
+            builder.WithControlUsage(9, new InternedString("Modifier"), ctrlKeyboardleftCtrl);
+            builder.WithControlUsage(10, new InternedString("Modifier"), ctrlKeyboardrightCtrl);
+            builder.WithControlUsage(11, new InternedString("Modifier"), ctrlKeyboardctrl);
+            builder.WithControlUsage(12, new InternedString("Modifier"), ctrlKeyboardleftMeta);
+            builder.WithControlUsage(13, new InternedString("Modifier"), ctrlKeyboardrightMeta);
+            builder.WithControlUsage(14, new InternedString("Modifier"), ctrlKeyboardcontextMenu);
 
             // Aliases.
             m_AliasesForEachControl[0] = new InternedString("AltGr");
@@ -2394,6 +2377,7 @@ namespace UnityEngine.InputSystem
             this.ctrlKey = ctrlKeyboardctrl;
             this.altKey = ctrlKeyboardalt;
             this.imeSelected = ctrlKeyboardIMESelected;
+            builder.Finish();
         }
     }
 }

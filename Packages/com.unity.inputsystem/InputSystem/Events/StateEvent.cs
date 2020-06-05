@@ -118,7 +118,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var stateFormat = device.m_StateBlock.format;
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
             var stateOffset = device.m_StateBlock.byteOffset;
-            var statePtr = (useDefaultState ? (byte*)device.defaultStatePtr : (byte*)device.currentStatePtr) + (int)stateOffset;
+            var statePtr = (byte*)(useDefaultState ? device.defaultStatePtr : device.currentStatePtr) + (int)stateOffset;
             var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);

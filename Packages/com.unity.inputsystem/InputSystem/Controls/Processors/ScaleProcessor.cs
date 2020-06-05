@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem.Processors
     /// <seealso cref="ScaleVector2Processor"/>
     /// <seealso cref="ScaleVector3Processor"/>
     [Preserve]
-    internal class ScaleProcessor : InputProcessor<float>
+    public class ScaleProcessor : InputProcessor<float>
     {
         /// <summary>
         /// Scale factor to apply to incoming input values. Defaults to 1 (no scaling).
