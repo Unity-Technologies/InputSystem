@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure")]
+        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
         public float pressure;
 
         [InputControl(layout = "Vector2", displayName = "Radius", usage = "Radius")]
@@ -232,6 +232,7 @@ namespace UnityEngine.InputSystem
         {
             var statePtr = currentStatePtr;
 
+            ////FIXME: This stuff makes pointer events too expensive; find a better way.
             delta.x.AccumulateValueInEvent(statePtr, eventPtr);
             delta.y.AccumulateValueInEvent(statePtr, eventPtr);
 

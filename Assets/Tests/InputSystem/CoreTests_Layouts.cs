@@ -698,7 +698,7 @@ partial class CoreTests
         public ButtonControl button { get; set; }
     }
 
-    [Preserve] // To make API tests happy.
+    [Preserve]
     private class PrecompiledTestDevice : TestDevice
     {
         public PrecompiledTestDevice()
@@ -756,6 +756,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanRegisterPrecompiledLayout()
     {
+        InputSystem.RegisterLayout<TestDevice>();
         InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("");
 
         // Should implicitly register TestDevice layout.
@@ -775,6 +776,7 @@ partial class CoreTests
     [TestCase(PrecompiledTestDevice.ButtonOverride)]
     public void Layouts_PrecompiledLayout_IsRemovedWhenOverrideIsApplied(string overrideJson)
     {
+        InputSystem.RegisterLayout<TestDevice>();
         InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button");
 
         Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
@@ -801,6 +803,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_PrecompiledLayout_IsRemovedWhenLayoutIsReplaced()
     {
+        InputSystem.RegisterLayout<TestDevice>();
         InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button");
 
         Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
@@ -823,6 +826,7 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_PrecompiledLayout_IsRemovedWhenProcessorIsReplaced()
     {
+        InputSystem.RegisterLayout<TestDevice>();
         InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button;Invert");
 
         Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());

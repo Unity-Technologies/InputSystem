@@ -2252,13 +2252,13 @@ namespace UnityEngine.InputSystem
             builder.WithControlUsage(14, new InternedString("Modifier"), ctrlKeyboardcontextMenu);
 
             // Aliases.
-            m_AliasesForEachControl[0] = new InternedString("AltGr");
-            m_AliasesForEachControl[1] = new InternedString("LeftWindows");
-            m_AliasesForEachControl[2] = new InternedString("LeftApple");
-            m_AliasesForEachControl[3] = new InternedString("LeftCommand");
-            m_AliasesForEachControl[4] = new InternedString("RightWindows");
-            m_AliasesForEachControl[5] = new InternedString("RightApple");
-            m_AliasesForEachControl[6] = new InternedString("RightCommand");
+            builder.WithControlAlias(0,  new InternedString("AltGr"));
+            builder.WithControlAlias(1,  new InternedString("LeftWindows"));
+            builder.WithControlAlias(2,  new InternedString("LeftApple"));
+            builder.WithControlAlias(3,  new InternedString("LeftCommand"));
+            builder.WithControlAlias(4,  new InternedString("RightWindows"));
+            builder.WithControlAlias(5,  new InternedString("RightApple"));
+            builder.WithControlAlias(6,  new InternedString("RightCommand"));
 
             // Control getters/arrays.
             this.keys = new UnityEngine.InputSystem.Controls.KeyControl[110];

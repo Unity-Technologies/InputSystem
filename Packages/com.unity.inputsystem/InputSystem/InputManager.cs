@@ -3206,6 +3206,7 @@ namespace UnityEngine.InputSystem
             // fixed updates.
             if (updateType == InputUpdateType.Editor && !gameIsPlayingAndHasFocus)
             {
+                ////REVIEW: This isn't right. The editor does have update ticks which constitute the equivalent of player frames.
                 // The editor doesn't really have a concept of frame-to-frame operation the
                 // same way the player does. So we simply flip buffers on a device whenever
                 // a new state event for it comes in.
@@ -3487,6 +3488,7 @@ namespace UnityEngine.InputSystem
             }
 
             deviceState.Restore(device);
+
             return true;
         }
 

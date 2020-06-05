@@ -797,14 +797,14 @@ namespace UnityEngine.InputSystem.DualShock
             builder.WithControlUsage(10, new InternedString("SecondaryTrigger"), ctrlDualShock4GamepadHIDrightTrigger);
 
             // Aliases.
-            m_AliasesForEachControl[0] = new InternedString("x");
-            m_AliasesForEachControl[1] = new InternedString("square");
-            m_AliasesForEachControl[2] = new InternedString("a");
-            m_AliasesForEachControl[3] = new InternedString("cross");
-            m_AliasesForEachControl[4] = new InternedString("b");
-            m_AliasesForEachControl[5] = new InternedString("circle");
-            m_AliasesForEachControl[6] = new InternedString("y");
-            m_AliasesForEachControl[7] = new InternedString("triangle");
+            builder.WithControlAlias(0,  new InternedString("x"));
+            builder.WithControlAlias(1,  new InternedString("square"));
+            builder.WithControlAlias(2,  new InternedString("a"));
+            builder.WithControlAlias(3,  new InternedString("cross"));
+            builder.WithControlAlias(4,  new InternedString("b"));
+            builder.WithControlAlias(5,  new InternedString("circle"));
+            builder.WithControlAlias(6,  new InternedString("y"));
+            builder.WithControlAlias(7,  new InternedString("triangle"));
 
             // Control getters/arrays.
             this.leftTriggerButton = ctrlDualShock4GamepadHIDleftTriggerButton;

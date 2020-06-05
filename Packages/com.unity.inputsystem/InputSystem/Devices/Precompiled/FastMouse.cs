@@ -522,8 +522,8 @@ namespace UnityEngine.InputSystem
             builder.WithControlUsage(9, new InternedString("Radius"), ctrlMouseradius);
 
             // Aliases.
-            m_AliasesForEachControl[0] = new InternedString("horizontal");
-            m_AliasesForEachControl[1] = new InternedString("vertical");
+            builder.WithControlAlias(0,  new InternedString("horizontal"));
+            builder.WithControlAlias(1,  new InternedString("vertical"));
 
             // Control getters/arrays.
             this.scroll = ctrlMousescroll;
