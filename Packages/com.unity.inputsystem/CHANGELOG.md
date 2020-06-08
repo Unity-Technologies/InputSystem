@@ -19,6 +19,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
+- Fixed clicking on help page button in Unity inspector for Input System components not going to relevant manual pages.
 
 #### Actions
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
@@ -2593,7 +2594,7 @@ namespace UnityEngine.InputSystem
             var currentEventReadPtr =
                 (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
             var remainingEventCount = eventBuffer.eventCount;
-            var processingStartTime = Time.realtimeSinceStartup;
+            var processingStartTime = Stopwatch.GetTimestamp();
 
             // When timeslicing events or in before-render updates, we may be leaving events in the buffer
             // for later processing. We do this by compacting the event buffer and moving events down such
@@ -2833,7 +2834,7 @@ namespace UnityEngine.InputSystem
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
             }
 
-            m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
+            m_Metrics.totalEventProcessingTime += ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
             m_Metrics.totalEventLagTime += totalEventLag;
 
             // Remember how much data we retained so that we don't count it against the next

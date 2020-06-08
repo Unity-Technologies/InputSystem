@@ -30,6 +30,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// </summary>
     [AddComponentMenu("Input/Debug/Touch Simulation")]
     [ExecuteInEditMode]
+    [HelpURL(InputSystem.kDocUrl + "/manual/Touch.html#touch-simulation")]
     #if UNITY_EDITOR
     [InitializeOnLoad]
     #endif
