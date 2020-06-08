@@ -532,7 +532,7 @@ class APIVerificationTests
 
         Assert.That(existingCode, Is.EqualTo(generatedCode));
     }
-    
+
     [Test]
     [Category("API")]
     public void API_MonoBehavioursHaveHelpUrls()

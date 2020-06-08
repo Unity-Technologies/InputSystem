@@ -33,7 +33,7 @@ using UnityEngine.InputSystem.Utilities;
 ////REVIEW: Can we allow aliases to be paths rather than just plain names? This would allow changing the hierarchy around while
 ////        keeping backwards-compatibility.
 
-// Q: Why the heck is there this layout system instead of just new'ing everything up in hand-written C# code?
+// Q: Why is there this layout system instead of just new'ing everything up in hand-written C# code?
 // A: The current approach has a couple advantages.
 //
 //    * Since it's data-driven, entire layouts can be represented as just data. They can be added to already deployed applications,

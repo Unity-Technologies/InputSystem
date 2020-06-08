@@ -794,7 +794,7 @@ namespace UnityEngine.InputSystem
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
             ////TODO: add matching by ID
-            
+
             ////TODO: match by name (very useful for composite parts)
 
             if (path != null)
