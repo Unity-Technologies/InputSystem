@@ -2488,17 +2488,17 @@ partial class CoreTests
         Assert.That(
             device.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
                 x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
-                .Select(x => ((Array)(x.GetValue(device)))?.ToArray<InputControl>().Select(v => v?.path)),
+                .Select(x => ((InputControl[])(x.GetValue(device))).Select(v => v?.path)),
             Is.EqualTo(original.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
                 x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
-                .Select(x => ((Array)(x.GetValue(original)))?.ToArray<InputControl>().Select(v => v?.path))));
+                .Select(x => ((InputControl[])(x.GetValue(original))).Select(v => v?.path))));
         Assert.That(
             device.allControls.Select(c => GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
                 x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
-                .Select(x => ((Array)(x.GetValue(c)))?.ToArray<InputControl>().Select(v => v?.path))),
+                .Select(x => ((InputControl[])(x.GetValue(c)))?.Select(v => v?.path))),
             Is.EqualTo(original.allControls.Select(c => GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Where(x =>
                 x.PropertyType.IsArray && typeof(InputControl).IsAssignableFrom(x.PropertyType.GetElementType()) && x.CanRead && x.GetIndexParameters().LengthSafe() == 0)
-                .Select(x => ((Array)(x.GetValue(c)))?.ToArray<InputControl>().Select(v => v?.path)))));
+                .Select(x => ((InputControl[])(x.GetValue(c)))?.Select(v => v?.path)))));
 
         // Check processors on each control.
         Assert.That(

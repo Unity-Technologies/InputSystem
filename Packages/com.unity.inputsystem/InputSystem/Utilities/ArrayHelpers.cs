@@ -754,14 +754,5 @@ namespace UnityEngine.InputSystem.Utilities
             array[index1] = array[index2];
             array[index2] = temp;
         }
-
-        public static T[] ToArray<T>(this Array array)
-        {
-            var length = array.Length;
-            var result = new T[length];
-            for (var i = 0; i < length; ++i)
-                result[i] = (T)array.GetValue(i);
-            return result;
-        }
     }
 }
