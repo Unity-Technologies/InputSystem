@@ -9,7 +9,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-//!!DEFINES
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 
 using UnityEngine.InputSystem;
@@ -18,7 +17,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.DualShock
 {
-    internal partial class FastDualShock4GamepadHID : DualShock4GamepadHID
+    internal partial class FastDualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShock4GamepadHID
     {
         public const string metadata = "StickDeadzone;AxisDeadzone;Stick;Vector2;Dpad;Button;Axis;DpadAxis;DiscreteButton;DualShock4GamepadHID;DualShockGamepad;Gamepad";
         public FastDualShock4GamepadHID()

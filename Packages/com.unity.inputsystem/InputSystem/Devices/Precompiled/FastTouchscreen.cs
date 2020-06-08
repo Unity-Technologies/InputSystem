@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    internal partial class FastTouchscreen : Touchscreen
+    internal partial class FastTouchscreen : UnityEngine.InputSystem.Touchscreen
     {
         public const string metadata = "AutoWindowSpace;Touch;Vector2;Analog;TouchPress;Button;Axis;Integer;TouchPhase;Double;Touchscreen;Pointer";
         public FastTouchscreen()

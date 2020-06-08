@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    internal partial class FastMouse : Mouse
+    internal partial class FastMouse : UnityEngine.InputSystem.Mouse
     {
         public const string metadata = "AutoWindowSpace;Vector2;Button;Axis;Digital;Integer;Mouse;Pointer";
         public FastMouse()

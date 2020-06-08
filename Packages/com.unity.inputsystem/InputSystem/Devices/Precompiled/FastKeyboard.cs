@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    internal partial class FastKeyboard : Keyboard
+    internal partial class FastKeyboard : UnityEngine.InputSystem.Keyboard
     {
         public const string metadata = ";AnyKey;Button;Axis;Key;DiscreteButton;Keyboard";
         public FastKeyboard()

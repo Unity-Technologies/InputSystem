@@ -378,11 +378,24 @@ InputSystem.RegisterLayout<ExtendedButtonControl>("Button");
 // has now been replaced with ExtendedButtonControl.
 ```
 
-Note that you can add `#if` checks to the generated code, if needed. If you add them like in the following code snippet, the checks will be preserved even if the code is regenerated. Similarly, you can change the generated class from `public` to `internal` and the modifier will be preserved when regenerating the class.
-
-```CSharp
-//!!DEFINES
-#if UNITY_EDITOR || UNITY_STANDALONE
-```
+Note that you can add `#if` checks to the generated code, if needed. The code generator will scan the start of an existing file for a line starting with `#if` and, if found, preserve it in newly generated code and generate a corresponding `#endif` at the end of the file. Similarly, you can change the generated class from `public` to `internal` and the modifier will be preserved when regenerating the class. Finally, you can change the namespace
 
 Also note that the generated class is marked as `partial`. This means you can add additional overloads and other code by simply having a parallel, `partial` class definition.
+
+```CSharp
+// The next line will be preserved when regenerating the precompiled layout. A
+// corresponding #endif will be emitted at the end of the file.
+#if UNITY_EDITOR || UNITY_STANDALONE
+
+// If you change the namespace to a different one, the name of the namespace will be
+// preserved when you regenerate the precompiled layout.
+namepace MyNamespace
+{
+    // If you changing `public` to `internal`, the change will be preserved
+    // when regenerating the precompiled layout.
+    public partial class PrecompiledMyDevice : MyDevice
+    {
+        //...
+```
+
+The namespace of the generated layout will correspond to the
