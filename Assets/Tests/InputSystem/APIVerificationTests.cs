@@ -3,12 +3,16 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
+using UnityEngine;
+using Object = System.Object;
+using TypeAttributes = Mono.Cecil.TypeAttributes;
 
 class APIVerificationTests
 {
@@ -17,7 +21,7 @@ class APIVerificationTests
         return char.IsUpper(name[0]);
     }
 
-    private bool TypeHasValidNamespace(TypeReference type)
+    private static bool TypeHasValidNamespace(TypeReference type)
     {
         // The XR stuff is putting some things in Unity.XR and UnityEngine.XR. While we still have
         // these in the input system itself, accept that namespace. Remove it when
@@ -31,7 +35,7 @@ class APIVerificationTests
 
     // Generally, public API should always expose values as properties, and not as fields.
     // We currently have quite a few exceptions, which are handled here.
-    private bool IsTypeWhichCanHavePublicFields(TypeReference type)
+    private static bool IsTypeWhichCanHavePublicFields(TypeReference type)
     {
         if (type == null)
             return false;
@@ -82,7 +86,7 @@ class APIVerificationTests
         }
     }
 
-    private IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
+    private static IEnumerable<TypeDefinition> GetInputSystemPublicTypes()
     {
         var codeBase = typeof(InputSystem).Assembly.CodeBase;
         var uri = new UriBuilder(codeBase);
@@ -173,7 +177,7 @@ class APIVerificationTests
         Assert.That(disallowedPublicFields, Is.Empty);
     }
 
-    string DocsForType(TypeDefinition type, string docsFolder)
+    private static string DocsForType(TypeDefinition type, string docsFolder)
     {
         var typeName = type.ToString().Replace('`', '-');
         var docsPath = $"{docsFolder}/api/{typeName}.html";
@@ -182,13 +186,13 @@ class APIVerificationTests
         return File.ReadAllText(docsPath);
     }
 
-    string TypeSummary(TypeDefinition type, string docsFolder)
+    private static string TypeSummary(TypeDefinition type, string docsFolder)
     {
         var docs = DocsForType(type, docsFolder);
         if (docs == null)
             return null;
-        var summaryKey = "<div class=\"markdown level0 summary\">";
-        var endKey = "</div>";
+        const string summaryKey = "<div class=\"markdown level0 summary\">";
+        const string endKey = "</div>";
         var summaryIndex = docs.IndexOf(summaryKey);
         var endIndex = docs.IndexOf(endKey, summaryIndex);
         if (summaryIndex != -1 && endIndex != -1)
@@ -196,7 +200,7 @@ class APIVerificationTests
         return null;
     }
 
-    string MethodSummary(MethodDefinition method, string docsFolder)
+    private static string MethodSummary(MethodDefinition method, string docsFolder)
     {
         var docs = DocsForType(method.DeclaringType, docsFolder);
         if (docs == null)
@@ -351,65 +355,46 @@ class APIVerificationTests
         return null;
     }
 
-    bool IgnoreTypeForDocs(TypeDefinition type)
+    private static bool IgnoreTypeForDocsByName(string fullName)
     {
         return
-            // Currently, the package documentation system is broken as it will not generate docs for any code contained
-            // in #ifdef blocks. Since the input system has a lot of platform specific code, that means that all this code
-            // is currently without docs. I'm talking to the package docs team to find a fix for this. Until then, we need
-            // to ignore any public API inside ifdefs for docs checks.
-            type.FullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLGamepad).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.WebGL.WebGLJoystick).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Switch.SwitchProControllerHID).FullName ||
 #if UNITY_EDITOR_OSX
-            type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XboxGamepadMacOS).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless).FullName ||
 #endif
 #if UNITY_EDITOR_WIN
-            type.FullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.XInput.XInputControllerWindows).FullName ||
 #endif
 #if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamAnalogActionData).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.ISteamControllerAPI).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.SteamController).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.SteamDigitalActionData).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.SteamAnalogActionData).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.SteamHandle<>).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter).FullName ||
 #endif
-            type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock3GamepadHID).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.DualShock.DualShock4GamepadHID).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidAccelerometer).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidGamepad).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidGyroscope).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidJoystick).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidProximity).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidAmbientTemperature).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidGravitySensor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidLightSensor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidPressureSensor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidMagneticFieldSensor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidLinearAccelerationSensor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRelativeHumidity).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidRotationVector).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Android.AndroidStepCounter).FullName ||
-            ////REVIEW: why are the ones in the .Editor namespace being filtered out by the docs generator?
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPathEditor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPicker).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputControlPickerState).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputEditorUserSettings).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputParameterEditor).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Editor.InputParameterEditor<>).FullName ||
-            type.FullName == typeof(UnityEngine.InputSystem.Processors.EditorWindowSpaceProcessor).FullName ||
-            // All our XR stuff completely lacks docs. Get XR team to fix this.
-            type.Namespace.StartsWith("UnityEngine.InputSystem.XR") ||
-            type.Namespace.StartsWith("UnityEngine.XR") ||
-            type.Namespace.StartsWith("Unity.XR") ||
-            false;
+            fullName == typeof(UnityEngine.InputSystem.DualShock.DualShock3GamepadHID).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.DualShock.DualShock4GamepadHID).FullName ||
+            fullName == typeof(UnityEngine.InputSystem.Editor.InputActionCodeGenerator).FullName;
     }
 
-    bool IgnoreMethodForDocs(MethodDefinition method)
+    private static bool IgnoreTypeForDocsByNamespace(string @namespace)
+    {
+        return
+            // All our XR stuff completely lacks docs. Get XR team to fix this.
+            @namespace.StartsWith("UnityEngine.InputSystem.XR") ||
+            @namespace.StartsWith("UnityEngine.XR") ||
+            @namespace.StartsWith("Unity.XR");
+    }
+
+    private static bool IgnoreTypeForDocs(TypeDefinition type)
+    {
+        return IgnoreTypeForDocsByName(type.FullName) || IgnoreTypeForDocsByNamespace(type.Namespace);
+    }
+
+    private static bool IgnoreMethodForDocs(MethodDefinition method)
     {
         if (IgnoreTypeForDocs(method.DeclaringType))
             return true;
@@ -425,7 +410,7 @@ class APIVerificationTests
         return false;
     }
 
-    string GenerateDocsDirectory()
+    private static string GenerateDocsDirectory()
     {
         const string docsFolder = "Temp/docstest";
         Directory.CreateDirectory(docsFolder);
@@ -455,7 +440,7 @@ class APIVerificationTests
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
     }
 
-    HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
+    private static HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
     {
         if (!htmlFileCache.ContainsKey(htmlFile))
         {
@@ -466,7 +451,7 @@ class APIVerificationTests
         return htmlFileCache[htmlFile];
     }
 
-    void CheckHTMLFileLinkConsistency(string htmlFile, List<string> unresolvedLinks, Dictionary<string, HtmlDocument> htmlFileCache)
+    private static void CheckHTMLFileLinkConsistency(string htmlFile, List<string> unresolvedLinks, Dictionary<string, HtmlDocument> htmlFileCache)
     {
         var dir = Path.GetDirectoryName(htmlFile);
         var doc = LoadHtmlDocument(htmlFile, htmlFileCache);
@@ -510,6 +495,48 @@ class APIVerificationTests
                     unresolvedLinks.Add($"{link} in {htmlFile} (Tag Not Found)");
             }
         }
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_MonoBehavioursHaveHelpUrls()
+    {
+        // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
+        var monoBehaviourTypes = typeof(InputSystem).Assembly.ExportedTypes.Where(t =>
+            t.IsPublic && !t.IsAbstract && !IgnoreTypeForDocsByName(t.FullName) && !IgnoreTypeForDocsByNamespace(t.Namespace) &&
+            typeof(MonoBehaviour).IsAssignableFrom(t));
+        var monoBehaviourTypesHelpUrls =
+            monoBehaviourTypes.Where(t => t.GetCustomAttribute<HelpURLAttribute>() != null)
+                .Select(t => t.GetCustomAttribute<HelpURLAttribute>().URL);
+        var monoBehaviourTypesWithoutHelpUrls =
+            monoBehaviourTypes.Where(t => t.GetCustomAttribute<HelpURLAttribute>() == null);
+
+        Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
+        Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
+
+        // Ensure the links are actually valid.
+        var docsFolder = GenerateDocsDirectory();
+        var brokenHelpUrls =
+            monoBehaviourTypesHelpUrls.Where(
+                s =>
+                {
+                    // Parse file path and anchor.
+                    var path = s.Substring(InputSystem.kDocUrl.Length);
+                    if (path.StartsWith("/"))
+                        path = path.Substring(1);
+                    var docsFileName = path.Substring(0, path.IndexOf('#'));
+                    var anchorName = path.Substring(path.IndexOf('#') + 1);
+
+                    // Load doc.
+                    var docsFilePath = Path.Combine(docsFolder, docsFileName);
+                    var doc = new HtmlDocument();
+                    doc.Load(docsFilePath);
+
+                    // Look up anchor.
+                    return doc.DocumentNode.SelectSingleNode($"//*[@id = '{anchorName}']") == null;
+                });
+
+        Assert.That(brokenHelpUrls, Is.Empty);
     }
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would

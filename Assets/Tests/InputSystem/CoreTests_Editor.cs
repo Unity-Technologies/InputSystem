@@ -29,24 +29,38 @@ partial class CoreTests
     private struct PackageJson
     {
         public string version;
+
+        public static Version ReadVersion()
+        {
+            var packageJsonFile = File.ReadAllText("Packages/com.unity.inputsystem/package.json");
+            var packageJson = JsonUtility.FromJson<PackageJson>(packageJsonFile);
+
+            // Snip -preview off the end. System.Version doesn't support semantic versioning.
+            var versionString = packageJson.version;
+            if (versionString.Contains("-preview"))
+                versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
+            return new Version(versionString);
+        }
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_PackageVersionAndAssemblyVersionAreTheSame()
     {
-        var packageJsonFile = File.ReadAllText("Packages/com.unity.inputsystem/package.json");
-        var packageJson = JsonUtility.FromJson<PackageJson>(packageJsonFile);
-
-        // Snip -preview off the end. System.Version doesn't support semantic versioning.
-        var versionString = packageJson.version;
-        if (versionString.Contains("-preview"))
-            versionString = versionString.Substring(0, versionString.IndexOf("-preview"));
-        var version = new Version(versionString);
+        var version = PackageJson.ReadVersion();
 
         Assert.That(InputSystem.version.Major, Is.EqualTo(version.Major));
         Assert.That(InputSystem.version.Minor, Is.EqualTo(version.Minor));
         Assert.That(InputSystem.version.Build, Is.EqualTo(version.Build));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_HelpUrlsPointToCurrentVersion()
+    {
+        var version = PackageJson.ReadVersion();
+
+        Assert.That(InputSystem.kDocUrl, Does.Contain($"@{version.Major}.{version.Minor}"));
     }
 
     // upm-ci has this as a warning; turn it into an error in our CI.
