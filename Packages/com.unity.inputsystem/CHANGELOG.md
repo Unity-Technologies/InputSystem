@@ -26,7 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
-- Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. for `Touchscreen`, this results in a >20x speedup for `InputSystem.AddDevice<Touchscreen>()`.
+- Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. For `Touchscreen`, this results in a >20x speed-up for `InputSystem.AddDevice<Touchscreen>()`.
 
 ## [1.0.0] - 2020-04-23
 

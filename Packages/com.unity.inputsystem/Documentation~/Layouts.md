@@ -308,19 +308,19 @@ InputSystem.RegisterLayoutOverride(json);
 
 ## Precompiled layouts
 
-Building a device at runtime from an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) is a slow process. The layout instance itself has to be built (which may involve reflection) and then interpreted in order to put the final [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance together. This process usually involves the loading of multiple [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instances each of which may be the result of merging multiple layouts together (if the layout involves [inheritance](#layout-inheritance) or [overrides](#layout-overrides)).
+Building a device at runtime from an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) is a slow process. The layout instance itself has to be built (which might involve reflection) and then interpreted in order to put the final [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instance together. This process usually involves the loading of multiple [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instances, each of which might be the result of merging multiple layouts together (if the layout involves [inheritance](#layout-inheritance) or [overrides](#layout-overrides)).
 
-You can speed this process up dramatically by "baking" the final form of a layout into a "precompiled layout". This is simply generated C# code that when run, will build the corresponding device without relying on loading and interpreting an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html). Aside from running faster, this will also create far less garbage and will not involve C# reflection (which generally causes runtime overhead by inflating the number of objects internally kept by the C# runtime).
+You can speed up this process up by "baking" the final form of a layout into a "precompiled layout". A precompiled layout is generated C# code that, when run, will build the corresponding device without relying on loading and interpreting an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html). Aside from running faster, this will also create far less garbage and will not involve C# reflection (which generally causes runtime overhead by inflating the number of objects internally kept by the C# runtime).
 
 >__NOTE__: Precompiled layouts must be device layouts. It is not possible to precompile the layout for an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html).
 
 ### Creating a precompiled layout
 
-The first step in setting up a precompiled layout is to generate it. To do so, open the [Input Debugger](./Debugging.md), navigate to the layout you want to precompile within the "Layouts" branch, right-click it and select "Generate Precompiled Layout".
+The first step in setting up a precompiled layout is to generate it. To do so, open the [Input Debugger](./Debugging.md), navigate to the layout you want to precompile within the **Layouts** branch, right-click it, and select **Generate Precompiled Layout**.
 
 ![Generate Precompiled Layout](./Images/GeneratePrecompiledLayout.png)
 
- You will be prompted for where to store the generated code. Pick a directory in your project and file name and click "Save".
+Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
 
  Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterPrecompiledLayout__1_System_String_). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
 
@@ -371,16 +371,16 @@ This causes the Input System to fall back to the non-precompiled version of the 
 
 ```CSharp
 // Let's constinue from the example above and assume that sometime
-// later, someone replaces the builtin button with an extended version.
+// later, someone replaces the built-in button with an extended version.
 InputSystem.RegisterLayout<ExtendedButtonControl>("Button");
 
 // PrecompiledMyDevice has implicitly been removed now as the ButtonControl it uses
 // has now been replaced with ExtendedButtonControl.
 ```
 
-Note that you can add `#if` checks to the generated code, if needed. The code generator will scan the start of an existing file for a line starting with `#if` and, if found, preserve it in newly generated code and generate a corresponding `#endif` at the end of the file. Similarly, you can change the generated class from `public` to `internal` and the modifier will be preserved when regenerating the class. Finally, you can change the namespace
+If needed, you can add `#if` checks to the generated code, if needed. The code generator will scan the start of an existing file for a line starting with `#if` and, if found, preserve it in newly generated code and generate a corresponding `#endif` at the end of the file. Similarly, you can change the generated class from `public` to `internal` and the modifier will be preserved when regenerating the class. Finally, you can also modify the namespace in the generated file with the change being preserved.
 
-Also note that the generated class is marked as `partial`. This means you can add additional overloads and other code by simply having a parallel, `partial` class definition.
+The generated class is marked as `partial`, which means you can add additional overloads and other code by  having a parallel, `partial` class definition.
 
 ```CSharp
 // The next line will be preserved when regenerating the precompiled layout. A
@@ -391,7 +391,7 @@ Also note that the generated class is marked as `partial`. This means you can ad
 // preserved when you regenerate the precompiled layout.
 namepace MyNamespace
 {
-    // If you changing `public` to `internal`, the change will be preserved
+    // If you change `public` to `internal`, the change will be preserved
     // when regenerating the precompiled layout.
     public partial class PrecompiledMyDevice : MyDevice
     {
