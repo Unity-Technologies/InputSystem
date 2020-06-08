@@ -2,7 +2,9 @@ using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
 using UnityEngine.InputSystem.DualShock.LowLevel;
+#endif
 using UnityEngine.InputSystem.Processors;
 using NUnit.Framework;
 using UnityEngine;
