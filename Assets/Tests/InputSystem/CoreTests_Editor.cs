@@ -2391,9 +2391,9 @@ partial class CoreTests
     [TestCase("DualShock4GamepadHID", typeof(DualShock4GamepadHID))]
     public void Editor_CanGenerateCodeForInputDeviceLayout(string layoutName, Type deviceType)
     {
-        var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST");
+        var code = InputLayoutCodeGenerator.GenerateCodeForDeviceLayout(layoutName, "FIRST", @namespace: "TestNamespace");
 
-        var type = Compile(code, deviceType.Namespace + ".Fast" + deviceType.Name, options: "-define:FIRST -define:UNITY_EDITOR");
+        var type = Compile(code,  "TestNamespace.Fast" + deviceType.Name, options: "-define:FIRST -define:UNITY_EDITOR");
         var device = (InputDevice)Activator.CreateInstance(type);
 
         Assert.That(device, Is.InstanceOf(deviceType));
