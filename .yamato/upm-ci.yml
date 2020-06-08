@@ -33,7 +33,7 @@
 
 {% for editor in editors %}
 Build_Player_With_Tests_Android_{{ editor.version }}:
-  name: Build Players with tests Android
+  name: Build Players with tests Android on {{ editor.version }}
   agent:
       type: Unity::VM
       image: mobile/android-execution-r19:stable
