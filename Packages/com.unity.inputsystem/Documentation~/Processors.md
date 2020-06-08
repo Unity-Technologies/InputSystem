@@ -102,7 +102,7 @@ The Input System package comes with a set of useful Processors you can use.
 
 ### Clamp
 
-|__Name__|[Clamp](../api/UnityEngine.InputSystem.Processors.ClampProcessor.html)|
+|__Name__|[`Clamp`](../api/UnityEngine.InputSystem.Processors.ClampProcessor.html)|
 |---|---|
 |__Operand Type__|`float`|
 |__Parameters__|`float min`<br>`float max`|
