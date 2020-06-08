@@ -374,7 +374,7 @@ This causes the Input System to fall back to the non-precompiled version of the 
 // later, someone replaces the built-in button with an extended version.
 InputSystem.RegisterLayout<ExtendedButtonControl>("Button");
 
-// PrecompiledMyDevice has implicitly been removed now as the ButtonControl it uses
+// PrecompiledMyDevice has implicitly been removed now, because the ButtonControl it uses
 // has now been replaced with ExtendedButtonControl.
 ```
 
