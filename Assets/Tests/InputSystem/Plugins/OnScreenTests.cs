@@ -52,7 +52,7 @@ internal class OnScreenTests : InputTestFixture
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "/<Keyboard>/a";
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Keyboard>());
         var keyboard = (Keyboard)InputSystem.devices.FirstOrDefault(x => x is Keyboard);
 
         Assert.That(keyboard.aKey.isPressed, Is.False);
@@ -110,14 +110,14 @@ internal class OnScreenTests : InputTestFixture
         buttonA.controlPath = "/<Keyboard>/a";
         buttonB.controlPath = "/<Keyboard>/b";
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Keyboard>());
 
         buttonA.enabled = false;
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Keyboard>());
 
         buttonB.enabled = false;
 
-        Assert.That(InputSystem.devices, Has.None.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices, Has.None.InstanceOf<Keyboard>());
     }
 }

@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="ButtonControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.PrimaryTrigger"/> usage.
         /// </remarks>
-        public ButtonControl trigger { get; private set; }
+        public ButtonControl trigger { get; protected set; }
 
         /// <summary>
         /// The 2D axis of the stick itself.
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="StickControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.Primary2DMotion"/> usage.
         /// </remarks>
-        public StickControl stick { get; private set; }
+        public StickControl stick { get; protected set; }
 
         /// <summary>
         /// An optional control representing the rotation of the stick around its
@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem
         /// This is the <see cref="AxisControl"/> type control on the joystick
         /// that has the <see cref="CommonUsages.Twist"/> usage.
         /// </remarks>
-        public AxisControl twist { get; private set; }
+        public AxisControl twist { get; protected set; }
 
         /// <summary>
         /// An optional control representing a four-way "hat switch" on the
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem
         /// If present, this is the <see cref="Vector2Control"/> type control on the
         /// joystick that has the <see cref="CommonUsages.Hatswitch"/> usage.
         /// </remarks>
-        public Vector2Control hatswitch { get; private set; }
+        public Vector2Control hatswitch { get; protected set; }
 
         /// <summary>
         /// The joystick that was added or used last. Null if there is none.

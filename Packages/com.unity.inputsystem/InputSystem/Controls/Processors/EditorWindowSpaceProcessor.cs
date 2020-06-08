@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System.ComponentModel;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
@@ -19,13 +19,21 @@ namespace UnityEngine.InputSystem.Processors
     /// <seealso cref="Pointer.position"/>
     [DesignTimeVisible(false)]
     [Scripting.Preserve]
-    internal class EditorWindowSpaceProcessor : InputProcessor<Vector2>
+    public class EditorWindowSpaceProcessor : InputProcessor<Vector2>
     {
+        /// <summary>
+        /// Transform the given player screen-space coordinate into the coordinate space of the current
+        /// <c>EditorWindow</c>.
+        /// </summary>
+        /// <param name="value">GameView screen space coordinate.</param>
+        /// <param name="control">Ignored.</param>
+        /// <returns>The given coordinate transformed into <c>EditorWindow</c> space.</returns>
+        /// <remarks>
+        /// This method will only succeed if the editor is currently in an <c>EditorWindow</c> callback such
+        /// as <c>OnGUI</c>.
+        /// </remarks>
         public override Vector2 Process(Vector2 value, InputControl control)
         {
-            if (control == null)
-                throw new System.ArgumentNullException(nameof(control));
-
             // We go and fire trigger QueryEditorWindowCoordinatesCommand regardless
             // of whether we are currently in EditorWindow code or not. The expectation
             // here is that the underlying editor code is in a better position than us
