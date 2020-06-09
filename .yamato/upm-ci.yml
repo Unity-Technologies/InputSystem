@@ -33,7 +33,7 @@
 
 {% for editor in editors %}
 build_android_{{ editor.version }}:
-  name: Build on {{ editor.version }} on android
+  name: Build Tests on {{ editor.version }} on android
   agent:
       type: Unity::VM
       image: mobile/android-execution-r19:stable
@@ -52,7 +52,7 @@ build_android_{{ editor.version }}:
           - "build/logs/**"
 		  
 run_android_{{ editor.version }}:
-  name: Run on {{ editor.version }} on android
+  name: Run Tests on {{ editor.version }} on android
   agent:
       type: Unity::mobile::shield
       image: mobile/android-execution-r19:stable
