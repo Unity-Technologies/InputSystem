@@ -8,6 +8,7 @@
     "com.unity.package-manager-ui": "2.1.2",
     "com.unity.probuilder": "4.2.3",
     "com.unity.purchasing": "2.0.6",
+    "com.unity.test-framework.performance": "1.1.2-preview",
     "com.unity.textmeshpro": "2.0.1",
     "com.unity.timeline": "1.0.0",
     "com.unity.xr.legacyinputhelpers": "2.0.2",
@@ -42,5 +43,8 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "testables" : [
+    "com.unity.test-framework.performance"
+  ]
 }
