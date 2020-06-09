@@ -128,7 +128,7 @@ internal class CorePerformanceTests : InputTestFixture
     public void Performance_CreateDevice(string layoutName)
     {
         // Nuke builtin precompiled layouts.
-        //InputControlLayout.s_Layouts.precompiledLayouts.Clear();
+        InputControlLayout.s_Layouts.precompiledLayouts.Clear();
 
         // Warm up.
         InputDevice.Build<InputDevice>(layoutName);
