@@ -115,7 +115,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 OnDeviceChange(device, InputDeviceChange.Added);
         }
 
-        private static void TearDownState()
+        internal static void TearDownState()
         {
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Removed);
@@ -129,6 +129,8 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             #if UNITY_EDITOR
             Touch.s_EditorState = default;
             #endif
+
+            s_Enabled = 0;
         }
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
