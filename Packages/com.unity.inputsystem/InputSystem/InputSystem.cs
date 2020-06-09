@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
@@ -70,7 +69,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
     [InitializeOnLoad]
 #endif
-    public static class InputSystem
+    public static partial class InputSystem
     {
         #region Layouts
 
@@ -458,6 +457,63 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Register a "baked" version of a device layout.
+        /// </summary>
+        /// <typeparam name="TDevice">C# class that represents the precompiled version of the device layout that the
+        /// class is derived from.</typeparam>
+        /// <param name="metadata">Metadata automatically generated for the precompiled layout.</param>
+        /// <remarks>
+        /// This method is used to register device implementations for which their layout has been "baked" into
+        /// a C# class. To generate such a class, right-click a device layout in the input debugger and select
+        /// "Generate Precompiled Layout". This generates a C# file containing a class that represents the precompiled
+        /// version of the device layout. The class can be registered using this method.
+        ///
+        /// Note that registering a precompiled layout will not implicitly register the "normal" version of the layout.
+        /// In other words, <see cref="RegisterLayout{TDevice}"/> must be called before calling this method.
+        ///
+        /// <example>
+        /// <code>
+        /// // Register the non-precompiled, normal version of the layout.
+        /// InputSystem.RegisterLayout&lt;MyDevice&gt;();
+        ///
+        /// // Register a precompiled version of the layout.
+        /// InputSystem.RegisterPrecompiledLayout&lt;PrecompiledMyDevice&gt;(PrecompiledMyDevice.metadata);
+        ///
+        /// // This implicitly uses the precompiled version.
+        /// InputSystem.AddDevice&lt;MyDevice&gt;();
+        /// </code>
+        /// </example>
+        ///
+        /// The main advantage of precompiled layouts is that instantiating them is many times faster than the default
+        /// device creation path. By default, when creating an <see cref="InputDevice"/>, the system will have to load
+        /// the <see cref="InputControlLayout"/> for the device as well as any layouts used directly or indirectly by
+        /// that layout. This in itself is a slow process that generates GC heap garbage and uses .NET reflection (which
+        /// itself may add additional permanent data to the GC heap). In addition, interpreting the layouts to construct
+        /// an <see cref="InputDevice"/> and populate it with <see cref="InputControl"/> children is not a fast process.
+        ///
+        /// A precompiled layout, however, has all necessary construction steps "baked" into the generated code. It will
+        /// not use reflection and will generally generate little to no GC heap garbage.
+        ///
+        /// A precompiled layout derives from the C# device class whose layout is "baked". If, for example, you generate
+        /// a precompiled version for <see cref="Keyboard"/>, the resulting class will be derived from <see cref="Keyboard"/>.
+        /// When registering the precompiled layout. If someone afterwards creates a <see cref="Keyboard"/>, the precompiled
+        /// version will implicitly be instantiated and thus skips the default device creation path that will construct
+        /// a <see cref="Keyboard"/> device from an <see cref="InputControlLayout"/> (it will thus not require the
+        /// <see cref="Keyboard"/> layout or any other layout it depends on to be loaded).
+        ///
+        /// Note that when layout overrides (see <see cref="RegisterLayoutOverride"/>) or new versions of
+        /// existing layouts are registered (e.g. if you replace the built-in "Button" layout by registering
+        /// a new layout with that name), precompiled layouts affected by the change will automatically be
+        /// <em>removed</em>. This causes the system to fall back to the default device creation path which can
+        /// take runtime layout changes into account.
+        /// </remarks>
+        public static void RegisterPrecompiledLayout<TDevice>(string metadata)
+            where TDevice : InputDevice, new()
+        {
+            s_Manager.RegisterPrecompiledLayout<TDevice>(metadata);
+        }
+
+        /// <summary>
         /// Remove an already registered layout from the system.
         /// </summary>
         /// <param name="name">Name of the layout to remove. Note that layout names are case-insensitive.</param>
@@ -539,6 +595,7 @@ namespace UnityEngine.InputSystem
             return s_Manager.ListControlLayouts(basedOn: baseLayout);
         }
 
+        ////TODO: allow loading an *unmerged* layout
         /// <summary>
         /// Load a registered layout.
         /// </summary>
@@ -806,11 +863,20 @@ namespace UnityEngine.InputSystem
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
+            // Default name to name of type without Processor suffix.
             if (string.IsNullOrEmpty(name))
             {
                 name = type.Name;
                 if (name.EndsWith("Processor"))
                     name = name.Substring(0, name.Length - "Processor".Length);
+            }
+
+            // Flush out any precompiled layout depending on the processor.
+            var precompiledLayouts = s_Manager.m_Layouts.precompiledLayouts;
+            foreach (var key in new List<InternedString>(precompiledLayouts.Keys)) // Need to keep key list stable while iterating; ToList() for some reason not available with .NET Standard 2.0 on Mono.
+            {
+                if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
+                    s_Manager.m_Layouts.precompiledLayouts.Remove(key);
             }
 
             s_Manager.processors.AddTypeRegistration(name, type);
@@ -1614,6 +1680,7 @@ namespace UnityEngine.InputSystem
         /// (Re-)enable the given device.
         /// </summary>
         /// <param name="device">Device to enable. If already enabled, the method will do nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <remarks>
         /// This can be used after a device has been disabled with <see cref="DisableDevice"/> or
         /// with devices that start out in disabled state (usually the case for all <see cref="Sensor"/>
@@ -1640,6 +1707,7 @@ namespace UnityEngine.InputSystem
         /// Disable the given device, i.e. "mute" it.
         /// </summary>
         /// <param name="device">Device to disable. If already disabled, the method will do nothing.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <remarks>
         /// A disabled device will not receive input and will remain in its default state. It will remain
         /// present in the system but without actually feeding input into it.
@@ -2779,7 +2847,7 @@ namespace UnityEngine.InputSystem
         /// The current version of the input system package.
         /// </summary>
         /// <value>Current version of the input system.</value>
-        public static Version version => Assembly.GetExecutingAssembly().GetName().Version;
+        public static Version version => new Version(kAssemblyVersion);
 
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
@@ -3146,6 +3214,8 @@ namespace UnityEngine.InputSystem
             #else
             InitializeInPlayer(runtime, settings);
             #endif
+
+            Mouse.s_PlatformMouseDevice = null;
 
             InputUser.ResetGlobals();
             Profiling.Profiler.EndSample();

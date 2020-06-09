@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
+
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like

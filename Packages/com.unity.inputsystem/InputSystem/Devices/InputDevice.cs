@@ -663,19 +663,34 @@ namespace UnityEngine.InputSystem
             OnRemoved();
         }
 
-        internal static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default)
+        internal static TDevice Build<TDevice>(string layoutName = default, string layoutVariants = default, InputDeviceDescription deviceDescription = default, bool noPrecompiledLayouts = false)
             where TDevice : InputDevice
         {
-            if (string.IsNullOrEmpty(layoutName))
+            var internedLayoutName = new InternedString(layoutName);
+
+            if (internedLayoutName.IsEmpty())
             {
-                layoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
-                if (string.IsNullOrEmpty(layoutName))
-                    layoutName = typeof(TDevice).Name;
+                internedLayoutName = InputControlLayout.s_Layouts.TryFindLayoutForType(typeof(TDevice));
+                if (internedLayoutName.IsEmpty())
+                    internedLayoutName = new InternedString(typeof(TDevice).Name);
             }
 
+            // Fast path: see if we can use a precompiled version.
+            // NOTE: We currently do not support layout variants with precompiled layouts.
+            // NOTE: We remove precompiled layouts when they are invalidated by layout changes. So, we don't have to perform
+            //       checks here.
+            if (!noPrecompiledLayouts &&
+                string.IsNullOrEmpty(layoutVariants) &&
+                InputControlLayout.s_Layouts.precompiledLayouts.TryGetValue(internedLayoutName, out var precompiledLayout))
+            {
+                // Yes. This is pretty much a direct new() of the device.
+                return (TDevice)precompiledLayout.factoryMethod();
+            }
+
+            // Slow path: use InputDeviceBuilder to construct the device from the InputControlLayout.
             using (InputDeviceBuilder.Ref())
             {
-                InputDeviceBuilder.instance.Setup(new InternedString(layoutName), new InternedString(layoutVariants),
+                InputDeviceBuilder.instance.Setup(internedLayoutName, new InternedString(layoutVariants),
                     deviceDescription: deviceDescription);
                 var device = InputDeviceBuilder.instance.Finish();
                 if (!(device is TDevice deviceOfType))

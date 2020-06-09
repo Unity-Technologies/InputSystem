@@ -546,7 +546,7 @@ partial class CoreTests
 
         var device = InputSystem.AddDevice(new InputDeviceDescription {deviceClass = "Gamepad"});
 
-        Assert.That(device, Is.TypeOf<Keyboard>());
+        Assert.That(device, Is.InstanceOf<Keyboard>());
     }
 
     [Test]
@@ -603,7 +603,7 @@ partial class CoreTests
                 "Keyboard";
 
         Assert.That(InputSystem.GetUnsupportedDevices(), Is.Empty);
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Keyboard>().With.Property("deviceId").EqualTo(deviceId));
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Keyboard>().With.Property("deviceId").EqualTo(deviceId));
     }
 
     [Test]
@@ -689,6 +689,154 @@ partial class CoreTests
         var matchers = EditorInputControlLayoutCache.GetDeviceMatchers("LayoutA");
         Assert.That(matchers, Is.Empty);
         #endif
+    }
+
+    [Preserve]
+    private class TestDevice : InputDevice
+    {
+        [InputControl(processors = "Invert")]
+        public ButtonControl button { get; set; }
+    }
+
+    [Preserve]
+    private class PrecompiledTestDevice : TestDevice
+    {
+        public PrecompiledTestDevice()
+        {
+            this.Setup(1, 0, 0)
+                .WithName("TestDevice")
+                .WithLayout(new InternedString("TestDevice"))
+                .WithStateBlock(new InputStateBlock { format = new FourCC("TEST"), sizeInBits = 32 })
+                .WithChildren(0, 1)
+                .Finish();
+
+            button = new ButtonControl();
+            button.Setup()
+                .At(this, 0)
+                .WithName("button")
+                .WithStateBlock(new InputStateBlock { format = new FourCC("INT"), sizeInBits = 32 })
+                .WithProcessor<InvertProcessor, float>(new InvertProcessor())
+                .WithParent(this)
+                .Finish();
+        }
+
+        protected override void FinishSetup()
+        {
+            Assert.Fail("FinishSetup() should not be called for precompiled layouts");
+        }
+
+        public const string TestDeviceOverride = @"
+            {
+                ""name"" : ""TestDeviceOverride"",
+                ""extend"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""newButton"", ""layout"" : ""Button"" }
+                ]
+            }
+        ";
+        public const string ButtonOverride = @"
+            {
+                ""name"" : ""ButtonOverride"",
+                ""extend"" : ""Button"",
+                ""controls"" : [
+                    { ""name"" : ""buttonChildControl"", ""layout"" : ""Axis"" }
+                ]
+            }
+        ";
+
+        [Preserve]
+        public class CustomInvertProcessor : InputProcessor<float>
+        {
+            public override float Process(float value, InputControl control)
+            {
+                // Irrelevant.
+                return 0;
+            }
+        }
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_CanRegisterPrecompiledLayout()
+    {
+        InputSystem.RegisterLayout<TestDevice>();
+        InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("");
+
+        // Should implicitly register TestDevice layout.
+        Assert.That(InputSystem.LoadLayout("TestDevice"), Is.Not.Null);
+
+        // The precompiled version should not be recognized as as separate layout.
+        Assert.That(() => InputSystem.AddDevice("PrecompiledTestDevice"), Throws.InstanceOf<InputControlLayout.LayoutNotFoundException>());
+        Assert.That(InputSystem.LoadLayout("PrecompiledTestDevice"), Is.Null);
+
+        // Adding a TestDevice should use the precompiled layout.
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    [TestCase(PrecompiledTestDevice.TestDeviceOverride)]
+    [TestCase(PrecompiledTestDevice.ButtonOverride)]
+    public void Layouts_PrecompiledLayout_IsRemovedWhenOverrideIsApplied(string overrideJson)
+    {
+        InputSystem.RegisterLayout<TestDevice>();
+        InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button");
+
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
+
+        // Add unrelated layout override. Should not affect use of precompiled device.
+        InputSystem.RegisterLayoutOverride(@"
+            {
+                ""name"" : ""MouseOverride"",
+                ""extend"" : ""Mouse"",
+                ""controls"" : [
+                    { ""name"" : ""newButton"", ""layout"" : ""Button"" }
+                ]
+            }
+        ");
+
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
+
+        // Add layout override that affects TestDevice. Should switch to *not* using the precompiled version.
+        InputSystem.RegisterLayoutOverride(overrideJson);
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<TestDevice>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_PrecompiledLayout_IsRemovedWhenLayoutIsReplaced()
+    {
+        InputSystem.RegisterLayout<TestDevice>();
+        InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button");
+
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
+
+        // Replace TestDevice wholesale.
+        InputSystem.RegisterLayout(@"
+        {
+            ""name"" : ""TestDevice"",
+            ""extend"" : ""Mouse"",
+            ""controls"" : [
+                { ""name"" : ""button"", ""layout"" : ""Button"" }
+            ]
+        }
+        ");
+
+        Assert.That(InputSystem.AddDevice("TestDevice"), Is.TypeOf<Mouse>());
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_PrecompiledLayout_IsRemovedWhenProcessorIsReplaced()
+    {
+        InputSystem.RegisterLayout<TestDevice>();
+        InputSystem.RegisterPrecompiledLayout<PrecompiledTestDevice>("Button;Invert");
+
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<PrecompiledTestDevice>());
+
+        InputSystem.RegisterProcessor<PrecompiledTestDevice.CustomInvertProcessor>("Invert");
+
+        Assert.That(InputSystem.AddDevice<TestDevice>(), Is.TypeOf<TestDevice>());
     }
 
     // At some point we may actually want to allow this. Could lead to some interesting capabilities.

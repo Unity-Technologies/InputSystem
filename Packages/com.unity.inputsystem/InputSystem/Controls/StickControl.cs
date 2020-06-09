@@ -77,19 +77,19 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(name = "x", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
         [InputControl(name = "y", minValue = -1f, maxValue = 1f, layout = "Axis", processors = "axisDeadzone")]
         [Scripting.Preserve]
-        public ButtonControl up { get; private set; }
+        public ButtonControl up { get; set; }
 
         [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
         [Scripting.Preserve]
-        public ButtonControl down { get; private set; }
+        public ButtonControl down { get; set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
         [Scripting.Preserve]
-        public ButtonControl left { get; private set; }
+        public ButtonControl left { get; set; }
 
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
         [Scripting.Preserve]
-        public ButtonControl right { get; private set; }
+        public ButtonControl right { get; set; }
 
         protected override void FinishSetup()
         {
