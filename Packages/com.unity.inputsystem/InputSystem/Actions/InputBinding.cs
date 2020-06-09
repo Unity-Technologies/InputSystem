@@ -795,6 +795,8 @@ namespace UnityEngine.InputSystem
         {
             ////TODO: add matching by ID
 
+            ////TODO: match by name (very useful for composite parts)
+
             if (path != null)
             {
                 ////REVIEW: should this use binding.effectivePath?

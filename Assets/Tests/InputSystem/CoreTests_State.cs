@@ -1113,7 +1113,7 @@ partial class CoreTests
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
-        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.0000001));
+        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.000001));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.0000001));
     }

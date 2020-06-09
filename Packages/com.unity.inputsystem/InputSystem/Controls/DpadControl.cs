@@ -20,9 +20,9 @@ namespace UnityEngine.InputSystem.Controls
     {
         [InputControlLayout(hideInUI = true)]
         [Scripting.Preserve]
-        internal class DpadAxisControl : AxisControl
+        public class DpadAxisControl : AxisControl
         {
-            public int component;
+            public int component { get; set; }
 
             protected override void FinishSetup()
             {
@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Controls
 
             public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
             {
-                var value = (m_Parent as DpadControl).ReadUnprocessedValueFromState(statePtr);
+                var value = ((DpadControl)m_Parent).ReadUnprocessedValueFromState(statePtr);
                 return value[component];
             }
         }
@@ -52,25 +52,25 @@ namespace UnityEngine.InputSystem.Controls
         /// The button representing the vertical upwards state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Up, displayName = "Up")]
-        public ButtonControl up { get; private set; }
+        public ButtonControl up { get; set; }
 
         /// <summary>
         /// The button representing the vertical downwards state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Down, displayName = "Down")]
-        public ButtonControl down { get; private set; }
+        public ButtonControl down { get; set; }
 
         /// <summary>
         /// The button representing the horizontal left state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Left, displayName = "Left")]
-        public ButtonControl left { get; private set; }
+        public ButtonControl left { get; set; }
 
         /// <summary>
         /// The button representing the horizontal right state of the D-Pad.
         /// </summary>
         [InputControl(bit = (int)ButtonBits.Right, displayName = "Right")]
-        public ButtonControl right { get; private set; }
+        public ButtonControl right { get; set; }
 
         ////TODO: should have X and Y child controls as well
 
