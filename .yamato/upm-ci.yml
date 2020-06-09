@@ -32,8 +32,8 @@
 {% endfor %}
 
 {% for editor in editors %}
-Build_Player_With_Tests_Android_{{ editor.version }}:
-  name: Build Players with tests Android on {{ editor.version }}
+build_android_{{ editor.version }}:
+  name: Build on {{ editor.version }} on android
   agent:
       type: Unity::VM
       image: mobile/android-execution-r19:stable
@@ -50,6 +50,38 @@ Build_Player_With_Tests_Android_{{ editor.version }}:
     logs:
         paths:
           - "build/logs/**"
+		  
+run_android_{{ editor.version }}:
+  name: Run on {{ editor.version }} on android
+  agent:
+      type: Unity::mobile::shield
+      image: mobile/android-execution-r19:stable
+      flavor: b1.medium
+      
+  # Skip repository cloning
+  skip_checkout: true
+  # Set a dependency on the build job
+  dependencies:
+    - .yamato/upm-ci.yml#build_android_{{ editor.version }}  
+  commands:
+    - |
+       # Download standalone UnityTestRunner
+       curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
+       # Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
+       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+       # Establish an ADB connection with the device
+       start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+       # List the connected devices
+       start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
+       ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results
+  after:
+    - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
+    - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
+  # Set uploadable artifact paths
+  artifacts:
+    logs:
+      paths:
+        - "build/test-results/**"
 {% endfor %}
 
 
