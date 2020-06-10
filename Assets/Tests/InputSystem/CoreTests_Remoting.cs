@@ -31,6 +31,9 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254567")]
+#endif
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
