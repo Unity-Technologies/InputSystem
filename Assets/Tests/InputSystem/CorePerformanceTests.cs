@@ -1,4 +1,5 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+////FIXME: ATM the tests don't run properly in players; the performance tests framework triggers a NRE
+#if UNITY_EDITOR // || DEVELOPMENT_BUILD
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
