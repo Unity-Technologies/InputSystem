@@ -9,6 +9,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+>__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
+
 ### Changed
 
 #### Actions

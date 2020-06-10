@@ -17,7 +17,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Samples.InGameHints
 {
-    public partial class @InGameHintsActions : IInputActionCollection, IDisposable
+    public partial class @InGameHintsActions: IInputActionCollection, IDisposable
     {
         public InputActionAsset asset { get; }
         public @InGameHintsActions()

@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 
-public partial class @SimpleControls : IInputActionCollection, IDisposable
+public partial class @SimpleControls: IInputActionCollection, IDisposable
 {
     public InputActionAsset asset { get; }
     public @SimpleControls()
