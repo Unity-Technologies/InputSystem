@@ -77,10 +77,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
         public iOSGameControllerState WithButton(iOSButton button, bool value = true, float rawValue = 1.0f)
         {
-            fixed(float* buttonsPtr = buttonValues)
-            {
-                buttonsPtr[(int)button] = rawValue;
-            }
+            buttonValues[(int)button] = rawValue;
 
             if (value)
                 buttons |= (uint)1 << (int)button;
@@ -92,10 +89,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
         public iOSGameControllerState WithAxis(iOSAxis axis, float value)
         {
-            fixed(float* axisPtr = this.axisValues)
-            {
-                axisPtr[(int)axis] = value;
-            }
+            axisValues[(int)axis] = value;
             return this;
         }
     }
@@ -121,7 +115,7 @@ namespace UnityEngine.InputSystem.iOS
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSGameControllerState), displayName = "iOS Xbox One Gamepad")]
     [Scripting.Preserve]
-    public class XboxOneGampadiOS : UnityEngine.InputSystem.XInput.XInputController
+    public class XboxOneGampadiOS : XInput.XInputController
     {
     }
 
