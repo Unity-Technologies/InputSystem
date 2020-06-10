@@ -102,6 +102,18 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             TearDownState();
         }
 
+        internal static void Reset()
+        {
+            Touch.s_Touchscreens = default;
+            Touch.s_PlayerState.Destroy();
+            Touch.s_PlayerState = default;
+            #if UNITY_EDITOR
+            Touch.s_EditorState.Destroy();
+            Touch.s_EditorState = default;
+            #endif
+            s_Enabled = 0;
+        }
+
         private static void SetUpState()
         {
             Touch.s_PlayerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
@@ -129,8 +141,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             #if UNITY_EDITOR
             Touch.s_EditorState = default;
             #endif
-
-            s_Enabled = 0;
         }
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)

@@ -3219,7 +3219,7 @@ namespace UnityEngine.InputSystem
             Mouse.s_PlatformMouseDevice = null;
 
             InputUser.ResetGlobals();
-            EnhancedTouchSupport.TearDownState();
+            EnhancedTouchSupport.Reset();
             Profiling.Profiler.EndSample();
         }
 
