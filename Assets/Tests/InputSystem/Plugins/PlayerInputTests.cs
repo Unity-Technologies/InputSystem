@@ -1463,6 +1463,9 @@ internal class PlayerInputTests : InputTestFixture
     // is refused.
     [Test]
     [Category("PlayerInput")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254573")]
+#endif
     public void PlayerInput_JoiningPlayerThroughButtonPress_WillFailIfDeviceIsNotUsableWithPlayerActions()
     {
         var playerPrefab = new GameObject();
