@@ -1,7 +1,7 @@
 echo off
 set EDITOR_LOCATION=Empty
 if "%EDITOR_LOCATION%" == "Empty" (
- echo Please specify Editor path, for ex., C:/Program Files/Unity/Hub/Editor/2019.3.13f1/Editor, or modify this bat file
+ echo Please specify Editor path, for ex., C:/Program Files/Unity/Hub/Editor/2019.3.13f1/Editor or modify this bat file
  set /p EDITOR_LOCATION=Editor Location:
 )
 
