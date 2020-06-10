@@ -1,4 +1,4 @@
-#if UNITY_WEBGL || UNITY_EDITOR
+#if UNITY_WEBGL || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
@@ -144,7 +144,6 @@ namespace UnityEngine.InputSystem.WebGL
     /// <summary>
     /// Gamepad on WebGL that uses the "standard" mapping.
     /// </summary>
-    ///
     /// <seealso href="https://w3c.github.io/gamepad/#remapping"/>
     [InputControlLayout(stateType = typeof(WebGLGamepadState), displayName = "WebGL Gamepad (\"standard\" mapping)")]
     [Scripting.Preserve]

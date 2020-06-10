@@ -951,7 +951,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public void SetIMEEnabled(bool enabled)
         {
-            EnableIMECompositionCommand command = EnableIMECompositionCommand.Create(enabled);
+            var command = EnableIMECompositionCommand.Create(enabled);
             ExecuteCommand(ref command);
         }
 
@@ -991,12 +991,11 @@ namespace UnityEngine.InputSystem
             protected set => m_KeyboardLayoutName = value;
         }
 
-
         /// <summary>
         /// A synthetic button control that is considered pressed if any key on the keyboard is pressed.
         /// </summary>
         /// <value>Control representing the synthetic "anyKey".</value>
-        public AnyKeyControl anyKey { get; private set; }
+        public AnyKeyControl anyKey { get; protected set; }
 
         /// <summary>
         /// The space bar key.
@@ -1889,7 +1888,7 @@ namespace UnityEngine.InputSystem
         /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right shift key is pressed.
         /// </remarks>
-        public ButtonControl shiftKey { get; private set; }
+        public ButtonControl shiftKey { get; protected set; }
 
         /// <summary>
         /// An artificial combination of <see cref="leftCtrlKey"/> and <see cref="rightCtrlKey"/> into one control.
@@ -1899,7 +1898,7 @@ namespace UnityEngine.InputSystem
         /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right ctrl key is pressed.
         /// </remarks>
-        public ButtonControl ctrlKey { get; private set; }
+        public ButtonControl ctrlKey { get; protected set; }
 
         /// <summary>
         /// An artificial combination of <see cref="leftAltKey"/> and <see cref="rightAltKey"/> into one control.
@@ -1909,7 +1908,7 @@ namespace UnityEngine.InputSystem
         /// This is a <see cref="InputControl.synthetic"/> button which is considered pressed whenever the left and/or
         /// right alt key is pressed.
         /// </remarks>
-        public ButtonControl altKey { get; private set; }
+        public ButtonControl altKey { get; protected set; }
 
         /// <summary>
         /// True when IME composition is enabled.  Requires <see cref="Keyboard.SetIMEEnabled"/> to be called to enable IME, and the user to enable it at the OS level.
@@ -1921,7 +1920,7 @@ namespace UnityEngine.InputSystem
         ///
         /// See <see cref="Keyboard.SetIMEEnabled"/> for turning IME on/off
         /// </remarks>
-        public ButtonControl imeSelected { get; private set; }
+        public ButtonControl imeSelected { get; protected set; }
 
         /// <summary>
         /// Look up a key control by its key code.
@@ -2176,5 +2175,14 @@ namespace UnityEngine.InputSystem
         private string m_KeyboardLayoutName;
         private KeyControl[] m_Keys;
         private InlinedArray<Action<IMECompositionString>> m_ImeCompositionListeners;
+
+        /// <summary>
+        /// Raw array of key controls on the keyboard.
+        /// </summary>
+        protected KeyControl[] keys
+        {
+            get => m_Keys;
+            set => m_Keys = value;
+        }
     }
 }

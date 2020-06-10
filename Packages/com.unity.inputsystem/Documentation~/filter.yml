@@ -4,6 +4,26 @@ apiRules:
       uidRegex: ^System\.Object\..*$
       type: Method
   - exclude:
+      # ControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.ControlBuilder$
+      type: Type
+  - exclude:
+      # ControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.ControlBuilder\..*$
+      type: Member
+  - exclude:
+      # DeviceBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.DeviceBuilder$
+      type: Type
+  - exclude:
+      # DeviceBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.DeviceBuilder\..*$
+      type: Member
+  - exclude:
+      # InputControlBuilder
+      uidRegex: ^UnityEngine\.InputSystem\.InputControlExtensions\.Setup.*$
+      type: Method
+  - exclude:
       hasAttribute:
         uid: System.ObsoleteAttribute
       type: Member

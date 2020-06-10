@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the sensors return values through their device
+////      (e.g. GravitySensor should itself be an InputControl returning a Vector3 value which is the gravity value)
+
 ////REVIEW: Is there a better way than having all the sensor classes?
 
 namespace UnityEngine.InputSystem.LowLevel

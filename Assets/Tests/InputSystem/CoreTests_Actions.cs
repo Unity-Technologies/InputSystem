@@ -7045,6 +7045,58 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_AxisControlWithoutLimitsCanTriggerActionsWithMultipleBindings()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""SingleAxis"", ""layout"" : ""Analog"", ""format"" : ""FLT"" }
+                ]
+            }
+        ";
+
+        // Create base device with unclamped axis
+        InputSystem.RegisterLayout(json);
+        InputDevice device = InputSystem.AddDevice("TestLayout");
+        AxisControl singleAxis = device["SingleAxis"] as AxisControl;
+
+        // Add a second device to create 2 bindings
+        InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "TestLayout/SingleAxis");
+        action.AddBinding("<Gamepad>/buttonSouth");
+
+        int performedCallCount = 0;
+        float lastPerformedValue = 0.0f;
+        action.performed += ctx =>
+        {
+            performedCallCount++;
+            lastPerformedValue = ctx.ReadValue<float>();
+        };
+
+        action.Enable();
+
+        // Assert there are multiple bindings with multiple controls
+        // This triggers conflict resolution.
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+
+        InputSystem.Update();
+
+        // Set Initial Value to start action.
+        Set(singleAxis, 0.123f);
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.123f));
+
+        // Update action to new peformed value
+        Set(singleAxis, 0.456f);
+        Assert.That(performedCallCount, Is.EqualTo(2));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.456f));
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
