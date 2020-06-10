@@ -1967,6 +1967,9 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254565")]
+#endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
     {
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
