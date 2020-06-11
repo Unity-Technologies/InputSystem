@@ -137,7 +137,7 @@ all_tests:
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
     {% endfor %}
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}
-	- .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+    - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
     {% endfor %}
 
 publish:
