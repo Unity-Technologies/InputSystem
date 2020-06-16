@@ -703,6 +703,8 @@ class APIVerificationTests
 
         if (currentVersion.Major == lastReleasedVersion.Major)
         {
+            Unity.Coding.Editor.ApiScraping.ApiScraping.Scrape();
+
             var currentApiFiles = Directory.GetFiles("Packages/com.unity.inputsystem", "*.api", SearchOption.AllDirectories);
             var lastPublicApiFiles = Directory.GetFiles(Path.Combine(kAPIDirectory, lastReleasedVersion.ToString()), "*.api");
 

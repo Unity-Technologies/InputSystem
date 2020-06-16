@@ -20,6 +20,8 @@ obj/
 .DS_Store
 docerrors.log
 
+Assets/**/*.api
+
 Packages/com.unity.inputsystem/artifacts/**
 Packages/com.unity.inputsystem/build/**
 Packages/com.unity.inputsystem/Documentation~/ApiDocs/**

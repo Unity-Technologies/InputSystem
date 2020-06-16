@@ -1,5 +1,0 @@
-[Packages/com.unity.inputsystem/InputSystem/Unity.InputSystem.asmdef]
-scrape_api = true
-
-[Packages/com.unity.inputsystem/Tests/TestFixture/Unity.InputSystem.TestFramework.asmdef]
-scrape_api = true
