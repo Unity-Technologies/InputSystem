@@ -34,6 +34,12 @@ all_tests:
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
     {% endfor %}
     {% endfor %}
+  triggers:
+    cancel_old_ci: true
+    pull_requests:
+      - targets:
+          only:
+            - "develop"
 
 publish:
   name: Publish to Internal Registry
@@ -47,10 +53,6 @@ publish:
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
-  triggers:
-    tags:
-      only:
-        - /^(r|R)(c|C)-\d+\.\d+\.\d+(-preview(\.\d+)?)?$/
   artifacts:
     artifacts:
       paths:
