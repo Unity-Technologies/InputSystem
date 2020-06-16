@@ -31,3 +31,5 @@ Packages/com.unity.package-manager-ui/
 Packages/com.unity.package-manager-doctools/
 
 .Editor
+.bin
+.download
