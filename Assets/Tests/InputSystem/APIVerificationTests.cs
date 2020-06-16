@@ -15,6 +15,7 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
+using PropertyAttribute = NUnit.Framework.PropertyAttribute;
 
 class APIVerificationTests
 {
@@ -573,6 +574,187 @@ class APIVerificationTests
                 });
 
         Assert.That(brokenHelpUrls, Is.Empty);
+    }
+
+    private const string kAPIDirectory = "Tools/API";
+
+    ////FIXME: The .api-based checks are temporary and don't account for platform-specific APIs. Nuke these tests as soon
+    ////       as we can switch back to API validation performed by the Package Validation Suite (as soon as Adriano's fix
+    ////       for the access modifier false positive has landed).
+
+    // We disable "API Verification" tests running as part of the validation suite as they give us
+    // false positives (specifically, for setters having changes accessibility from private to protected).
+    // Instead, we run our own check here which, instead of comparing to the previous artifact on the
+    // package repo (like the validation suite does), we keep a checked-in XML file with the public API
+    // that we compare against. This also makes it much easier to run this test locally (rather than
+    // having to install and run the package validation suite manually).
+    [Test]
+    [Category("API")]
+    // This is our whitelist for changes to existing APIs that we are fine with. Each exclusion
+    // starts with the version number of the API that was changed and then each line lists the API
+    // that is whitelisted for a change.
+    //
+    // NOTE: ATM we do not actually check for the right context of these definitions.
+    //
+    // The following properties have setters that changed from being private to being protected.
+    // This is not a breaking change as no existing code will fail to compile.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonEast { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonNorth { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonSouth { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonWest { get; }
+        public UnityEngine.InputSystem.Controls.DpadControl dpad { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftShoulder { get; }
+        public UnityEngine.InputSystem.Controls.StickControl leftStick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftStickButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftTrigger { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightShoulder { get; }
+        public UnityEngine.InputSystem.Controls.StickControl rightStick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightStickButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightTrigger { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl selectButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl startButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control hatswitch { get; }
+        public UnityEngine.InputSystem.Controls.StickControl stick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl trigger { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl altKey { get; }
+        public UnityEngine.InputSystem.Controls.AnyKeyControl anyKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl ctrlKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl imeSelected { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl shiftKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl backButton { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl clickCount { get; }
+        public static UnityEngine.InputSystem.Mouse current { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl forwardButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl middleButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control scroll { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl eraser { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl firstBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl fourthBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl inRange { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl secondBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl thirdBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control tilt { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl tip { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl press { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl indirectTouch { get; }
+        public UnityEngine.InputSystem.Controls.TouchPhaseControl phase { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
+        public UnityEngine.InputSystem.Controls.TouchPressControl press { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control startPosition { get; }
+        public UnityEngine.InputSystem.Controls.DoubleControl startTime { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl tap { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl tapCount { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl touchId { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl playStationButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.TouchControl primaryTouch { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl down { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl left { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl right { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl up { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl x { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl y { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl z { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L1 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L2 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L3 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl optionsButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R1 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R2 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R3 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl shareButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadButton { get; }
+    ")]
+    public void API_MinorVersionsHaveNoBreakingChanges()
+    {
+        var currentVersion = CoreTests.PackageJson.ReadVersion();
+        var apiVersions = Directory.GetDirectories(kAPIDirectory)
+            .Select(p => new Version(Path.GetFileName(p)))
+            .ToList();
+        apiVersions.Sort();
+
+        Assert.That(apiVersions, Has.Count.GreaterThanOrEqualTo(1), "Did not find a checked in .api version in " + kAPIDirectory);
+
+        var lastReleasedVersion = apiVersions[apiVersions.Count - 1];
+        Assert.That(currentVersion, Is.Not.EqualTo(lastReleasedVersion), "Must bump package version when making changes.");
+
+        var exclusions =
+            TestContext.CurrentContext.Test.Properties["Exclusions"].OfType<string>()
+                .Where(t => t.StartsWith(lastReleasedVersion.ToString())).SelectMany(t => t.Split(new[] { "\n", "\r\n", "\r" },
+                    StringSplitOptions.None)).ToArray();
+
+        if (currentVersion.Major == lastReleasedVersion.Major)
+        {
+            var currentApiFiles = Directory.GetFiles("Packages/com.unity.inputsystem", "*.api", SearchOption.AllDirectories);
+            var lastPublicApiFiles = Directory.GetFiles(Path.Combine(kAPIDirectory, lastReleasedVersion.ToString()), "*.api");
+
+            Assert.That(lastPublicApiFiles.Where(p => !currentApiFiles.Any(x => Path.GetFileName(x) == Path.GetFileName(p))),
+                Is.Empty,
+                "Any API file existing for the last published release must also exist for the current one.");
+
+            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions))
+                .ToList();
+            Assert.That(missingLines, Is.Empty);
+        }
+    }
+
+    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions)
+    {
+        var oldApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
+        var newApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
+
+        var oldApiContents = File.ReadAllLines(oldApiFile).Select(FilterIgnoredChanges).ToArray();
+        var newApiContents = File.ReadAllLines(newApiFile).Select(FilterIgnoredChanges).ToArray();
+
+        foreach (var line in oldApiContents)
+        {
+            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()))
+                yield return line;
+        }
+    }
+
+    private static string FilterIgnoredChanges(string line)
+    {
+        if (line.Length == 0)
+            return line;
+
+        var pos = 0;
+        while (true)
+        {
+            // Skip whitespace.
+            while (pos < line.Length && char.IsWhiteSpace(line[pos]))
+                ++pos;
+
+            if (pos < line.Length && line[pos] != '[')
+                return line;
+
+            var startPos = pos;
+            ++pos;
+            while (pos < line.Length + 1 && !(line[pos] == ']' && line[pos + 1] == ' '))
+                ++pos;
+            ++pos;
+
+            var length = pos - startPos - 2;
+            var attribute = line.Substring(startPos + 1, length);
+            if (!attribute.StartsWith("System.Obsolete"))
+            {
+                line = line.Substring(0, startPos) + line.Substring(pos + 1); // Snip space after ']'.
+                pos -= length + 2;
+            }
+        }
     }
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
