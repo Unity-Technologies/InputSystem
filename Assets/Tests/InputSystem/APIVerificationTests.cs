@@ -677,6 +677,7 @@ class APIVerificationTests
         public UnityEngine.InputSystem.Controls.ButtonControl R3 { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl shareButton { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl touchpadButton { get; }
+        public UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.Controls.TouchControl> touches { get; }
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
@@ -713,8 +714,8 @@ class APIVerificationTests
 
     private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions)
     {
-        var oldApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
-        var newApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
+        var oldApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
+        var newApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
 
         var oldApiContents = File.ReadAllLines(oldApiFile).Select(FilterIgnoredChanges).ToArray();
         var newApiContents = File.ReadAllLines(newApiFile).Select(FilterIgnoredChanges).ToArray();
