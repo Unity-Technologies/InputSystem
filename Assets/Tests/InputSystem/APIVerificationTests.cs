@@ -582,6 +582,10 @@ class APIVerificationTests
     ////       as we can switch back to API validation performed by the Package Validation Suite (as soon as Adriano's fix
     ////       for the access modifier false positive has landed).
 
+    // The .api files are platform-specific so we can only compare on the platform
+    // they were built on.
+    #if UNITY_EDITOR_WIN
+
     // We disable "API Verification" tests running as part of the validation suite as they give us
     // false positives (specifically, for setters having changes accessibility from private to protected).
     // Instead, we run our own check here which, instead of comparing to the previous artifact on the
@@ -757,6 +761,8 @@ class APIVerificationTests
             }
         }
     }
+
+    #endif // UNITY_EDITOR_WIN
 
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
     ////      be great to have some way of diagnosing links that have gone stale
