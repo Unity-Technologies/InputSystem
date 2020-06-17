@@ -2115,7 +2115,7 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if UNITY_ANDROID && !UNITY_EDITOR
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
     [Ignore("Case 1254565")]
 #endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()

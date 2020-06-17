@@ -19,7 +19,7 @@ using UnityEngine.TestTools.Utils;
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
 // No HID devices on Android
-#if !UNITY_ANDROID || UNITY_EDITOR
+#if (!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR
 internal class HIDTests : InputTestFixture
 {
     [Test]
