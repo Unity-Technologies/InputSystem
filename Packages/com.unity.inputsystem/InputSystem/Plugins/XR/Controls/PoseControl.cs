@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
 using TrackingState = UnityEngine.XR.InputTrackingState;
 
-namespace Unity.XR.OpenXR.Input
+namespace UnityEngine.InputSystem.XR
 {
     public struct Pose
     {
