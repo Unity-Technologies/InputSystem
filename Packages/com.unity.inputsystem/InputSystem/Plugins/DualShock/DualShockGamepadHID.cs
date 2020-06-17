@@ -210,9 +210,9 @@ namespace UnityEngine.InputSystem.DualShock
     [Scripting.Preserve]
     public class DualShock4GamepadHID : DualShockGamepad
     {
-        public ButtonControl leftTriggerButton { get; private set; }
-        public ButtonControl rightTriggerButton { get; private set; }
-        public ButtonControl playStationButton { get; private set; }
+        public ButtonControl leftTriggerButton { get; protected set; }
+        public ButtonControl rightTriggerButton { get; protected set; }
+        public ButtonControl playStationButton { get; protected set; }
 
         protected override void FinishSetup()
         {
@@ -295,7 +295,7 @@ namespace UnityEngine.InputSystem.DualShock
         private Color? m_LightBarColor;
     }
 
-    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true)]
+    [InputControlLayout(stateType = typeof(DualShock3HIDInputReport), hideInUI = true, displayName = "PS3 Controller")]
     [Scripting.Preserve]
     public class DualShock3GamepadHID : DualShockGamepad
     {

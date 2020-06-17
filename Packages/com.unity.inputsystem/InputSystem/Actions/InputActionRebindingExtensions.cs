@@ -15,6 +15,10 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
+////TODO: make RebindingOperation dispose its memory automatically; re-allocating is not a problem
+
+////TODO: add simple method to RebindingOperation that will create keyboard binding paths by character rather than by key name
+
 ////FIXME: properly work with composites
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
@@ -163,6 +167,8 @@ namespace UnityEngine.InputSystem
 
             return -1;
         }
+
+        ////TODO: add option to make it *not* take bound controls into account when creating display strings
 
         /// <summary>
         /// Return a string suitable for display in UIs that shows what the given action is currently bound to.

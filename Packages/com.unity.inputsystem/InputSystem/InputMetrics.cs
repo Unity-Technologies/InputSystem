@@ -2,6 +2,8 @@ using System;
 
 ////TODO: provide total metric for amount of unmanaged memory (device state + action state)
 
+////REVIEW: flag to turn it off? disable when analytics is off?
+
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>

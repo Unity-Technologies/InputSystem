@@ -30,6 +30,31 @@ using UnityEngine.InputSystem.Utilities;
 ////REVIEW: useStateFrom seems like a half-measure; it solves the problem of setting up state blocks but they often also
 ////        require a specific set of processors
 
+////REVIEW: Can we allow aliases to be paths rather than just plain names? This would allow changing the hierarchy around while
+////        keeping backwards-compatibility.
+
+// Q: Why is there this layout system instead of just new'ing everything up in hand-written C# code?
+// A: The current approach has a couple advantages.
+//
+//    * Since it's data-driven, entire layouts can be represented as just data. They can be added to already deployed applications,
+//      can be sent over the wire, can be analyzed by tools, etc.
+//
+//    * The layouts can be rearranged in powerful ways, even on the fly. Data can be inserted or modified all along the hierarchy
+//      both from within a layout itself as well as from outside through overrides. The resulting compositions would often be very
+//      hard/tedious to set up in a linear C# inheritance hierarchy and likely result in repeated reallocation and rearranging of
+//      already created setups.
+//
+//    * Related to that, the data-driven layouts make it possible to significantly change the data model without requiring changes
+//      to existing layouts. This, too, would be more complicated if every device would simply new up everything directly.
+//
+//    * We can generate code from them. Means we can, for example, generate code for the DOTS runtime from the same information
+//      that exists in the input system but without depending on its InputDevice C# implementation.
+//
+//    The biggest drawback, other than code complexity, is that building an InputDevice from an InputControlLayout is slow.
+//    This is somewhat offset by having a code generator that can "freeze" a specific layout into simple C# code. For these,
+//    the result is code at least as efficient (but likely *more* efficient) than the equivalent in a code-only layout approach
+//    while at the same time offering all the advantages of the data-driven approach.
+
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
@@ -156,12 +181,14 @@ namespace UnityEngine.InputSystem.Layouts
             public PrimitiveValue minValue { get; internal set; }
             public PrimitiveValue maxValue { get; internal set; }
 
-            // If true, the layout will not add a control but rather a modify a control
-            // inside the hierarchy added by 'layout'. This allows, for example, to modify
-            // just the X axis control of the left stick directly from within a gamepad
-            // layout instead of having to have a custom stick layout for the left stick
-            // than in turn would have to make use of a custom axis layout for the X axis.
-            // Instead, you can just have a control layout with the name "leftStick/x".
+            /// <summary>
+            /// If true, the item will not add a control but rather a modify a control
+            /// inside the hierarchy added by <see cref="layout"/>. This allows, for example, to modify
+            /// just the X axis control of the left stick directly from within a gamepad
+            /// layout instead of having to have a custom stick layout for the left stick
+            /// than in turn would have to make use of a custom axis layout for the X axis.
+            /// Instead, you can just have a control layout with the name <c>"leftStick/x"</c>.
+            /// </summary>
             public bool isModifyingExistingControl
             {
                 get => (flags & Flags.isModifyingExistingControl) == Flags.isModifyingExistingControl;
@@ -184,6 +211,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// (such as the device orientation) that is being measured is not changing.
             /// </remarks>
             /// <seealso cref="InputControl.noisy"/>
+            /// <seealso cref="InputControlAttribute.noisy"/>
             public bool isNoisy
             {
                 get => (flags & Flags.IsNoisy) == Flags.IsNoisy;
@@ -206,6 +234,7 @@ namespace UnityEngine.InputSystem.Layouts
             /// if any key on the keyboard is pressed.
             /// </remarks>
             /// <seealso cref="InputControl.synthetic"/>
+            /// <seealso cref="InputControlAttribute.synthetic"/>
             public bool isSynthetic
             {
                 get => (flags & Flags.IsSynthetic) == Flags.IsSynthetic;
@@ -566,7 +595,19 @@ namespace UnityEngine.InputSystem.Layouts
             /// </summary>
             /// <value>Name of base layout.</value>
             /// <seealso cref="InputControlLayout.baseLayouts"/>
-            public string extendsLayout { get; set; }
+            public string extendsLayout
+            {
+                get => m_ExtendsLayout;
+                set
+                {
+                    if (!string.IsNullOrEmpty(value))
+                        m_ExtendsLayout = value;
+                    else
+                        m_ExtendsLayout = null;
+                }
+            }
+
+            private string m_ExtendsLayout;
 
             /// <summary>
             /// For device layouts, whether the device wants an extra update
@@ -1754,12 +1795,19 @@ namespace UnityEngine.InputSystem.Layouts
                 public InputDeviceMatcher deviceMatcher;
             }
 
+            public struct PrecompiledLayout
+            {
+                public Func<InputDevice> factoryMethod;
+                public string metadata;
+            }
+
             public Dictionary<InternedString, Type> layoutTypes;
             public Dictionary<InternedString, string> layoutStrings;
             public Dictionary<InternedString, Func<InputControlLayout>> layoutBuilders;
             public Dictionary<InternedString, InternedString> baseLayoutTable;
             public Dictionary<InternedString, InternedString[]> layoutOverrides;
             public HashSet<InternedString> layoutOverrideNames;
+            public Dictionary<InternedString, PrecompiledLayout> precompiledLayouts;
             ////TODO: find a smarter approach that doesn't require linearly scanning through all matchers
             ////  (also ideally shouldn't be a List but with Collection being a struct and given how it's
             ////  stored by InputManager.m_Layouts and in s_Layouts; we can't make it a plain array)
@@ -1774,6 +1822,7 @@ namespace UnityEngine.InputSystem.Layouts
                 layoutOverrides = new Dictionary<InternedString, InternedString[]>();
                 layoutOverrideNames = new HashSet<InternedString>();
                 layoutMatchers = new List<LayoutMatcher>();
+                precompiledLayouts = new Dictionary<InternedString, PrecompiledLayout>();
             }
 
             public InternedString TryFindLayoutForType(Type layoutType)
@@ -2033,6 +2082,14 @@ namespace UnityEngine.InputSystem.Layouts
             public bool IsGeneratedLayout(InternedString layout)
             {
                 return layoutBuilders.ContainsKey(layout);
+            }
+
+            public IEnumerable<InternedString> GetBaseLayouts(InternedString layout, bool includeSelf = true)
+            {
+                if (includeSelf)
+                    yield return layout;
+                while (baseLayoutTable.TryGetValue(layout, out layout))
+                    yield return layout;
             }
 
             public bool IsBasedOn(InternedString parentLayout, InternedString childLayout)

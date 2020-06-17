@@ -867,6 +867,8 @@ namespace UnityEngine.InputSystem.Layouts
                 child.m_StateBlock.byteOffset += ourOffset;
                 FinalizeControlHierarchyRecursive(child);
             }
+
+            control.isSetupFinished = true;
         }
 
         private static InputDeviceBuilder s_Instance;

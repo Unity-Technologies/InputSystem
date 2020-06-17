@@ -474,31 +474,67 @@ namespace UnityEngine.InputSystem
                 InputSystem.Update();
         }
 
+        ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
             double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Began, position, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        public void BeginTouch(int touchId, Vector2 position, float pressure, bool queueEventOnly = false, Touchscreen screen = null,
+            double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Began, position, pressure, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Moved, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Moved, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        public void MoveTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Moved, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Ended, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        public void EndTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Ended, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
-        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default, bool queueEventOnly = true,
+        public void CancelTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
+            Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, TouchPhase.Canceled, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+        }
+
+        ////TODO: obsolete this one in 2.0 and use pressure=1 default value
+        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default,
+            bool queueEventOnly = true, Touchscreen screen = null, double time = -1, double timeOffset = 0)
+        {
+            SetTouch(touchId, phase, position, 1, delta: delta, queueEventOnly: queueEventOnly, screen: screen, time: time,
+                timeOffset: timeOffset);
+        }
+
+        public void SetTouch(int touchId, TouchPhase phase, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = true,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
             if (screen == null)
@@ -514,6 +550,7 @@ namespace UnityEngine.InputSystem
                 phase = phase,
                 position = position,
                 delta = delta,
+                pressure = pressure,
             }, (time >= 0 ? time : InputRuntime.s_Instance.currentTime) + timeOffset);
             if (!queueEventOnly)
                 InputSystem.Update();

@@ -203,6 +203,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         public FourCC format { get; set; }
 
+        ////TODO: collapse byteOffset and bitOffset into a single 'offset' field
         // Offset into state buffer. After a device is added to the system, this is relative
         // to the global buffers; otherwise it is relative to the device root.
         // During setup, this can be InvalidOffset to indicate a control that should be placed

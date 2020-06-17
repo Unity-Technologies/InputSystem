@@ -994,6 +994,31 @@ internal class PlayerInputTests : InputTestFixture
             }));
     }
 
+    // https://issuetracker.unity3d.com/issues/inputsystem-switchcurrentactionmap-causes-a-stackoverflow-when-called-by-each-pahse-of-an-action
+    // https://fogbugz.unity3d.com/f/cases/1232893/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSwitchActionMapFromActionCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInput.onActionTriggered += context => playerInput.SwitchCurrentActionMap("other");
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        Assert.That(playerInput.currentActionMap.name, Is.EqualTo("gameplay"));
+
+        // Start an action. Should immediately lead to a switch.
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.3f));
+
+        Assert.That(playerInput.currentActionMap.name, Is.EqualTo("other"));
+    }
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_PlayerIndex_IsAssignedAutomatically()

@@ -662,7 +662,7 @@ internal class EnhancedTouchTests : InputTestFixture
 
         TouchSimulation.Enable();
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).AssignableTo<Touchscreen>());
         Assert.That(TouchSimulation.instance, Is.Not.Null);
         Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.Not.Null);
         Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.SameAs(Touchscreen.current));
@@ -674,7 +674,7 @@ internal class EnhancedTouchTests : InputTestFixture
         // Make sure we can re-enable it.
         TouchSimulation.Enable();
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).AssignableTo<Touchscreen>());
 
         TouchSimulation.Destroy();
 

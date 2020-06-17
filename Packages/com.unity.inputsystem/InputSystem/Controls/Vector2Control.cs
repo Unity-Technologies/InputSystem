@@ -27,14 +27,14 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <value>Control representing horizontal motion input.</value>
         [InputControl(offset = 0, displayName = "X")]
-        public AxisControl x { get; private set; }
+        public AxisControl x { get; set; }
 
         /// <summary>
         /// Vertical position of the control.
         /// </summary>
         /// <value>Control representing vertical motion input.</value>
         [InputControl(offset = 4, displayName = "Y")]
-        public AxisControl y { get; private set; }
+        public AxisControl y { get; set; }
 
         /// <summary>
         /// Default-initialize the control.

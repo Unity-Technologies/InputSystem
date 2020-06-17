@@ -674,11 +674,11 @@ partial class CoreTests
         // instances may change.
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
-        Assert.That(InputSystem.devices[0], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[0], Is.InstanceOf<Keyboard>());
         Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(keyboardId));
-        Assert.That(InputSystem.devices[1], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[1], Is.InstanceOf<Gamepad>());
         Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(gamepadId));
-        Assert.That(InputSystem.devices[2], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[2], Is.InstanceOf<Mouse>());
         Assert.That(InputSystem.devices[2].deviceId, Is.EqualTo(mouseId));
 
         bool? receivedSettingsChange = null;
@@ -706,9 +706,9 @@ partial class CoreTests
         // kept as it has been explicitly added in code. Gamepad should have been kept as it
         // is explicitly listed as supported.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
-        Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[0], Is.InstanceOf<Gamepad>());
         Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(gamepadId));
-        Assert.That(InputSystem.devices[1], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[1], Is.InstanceOf<Mouse>());
         Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(mouseId));
         Assert.That(receivedSettingsChange, Is.True);
         Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Gamepad" }));
@@ -724,9 +724,9 @@ partial class CoreTests
 
         // Keyboard should have been re-added. Gamepad should have been removed.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(2));
-        Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[0], Is.InstanceOf<Mouse>());
         Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(mouseId));
-        Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[1], Is.InstanceOf<Keyboard>());
         Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(keyboardId));
         Assert.That(receivedSettingsChange, Is.True);
         Assert.That(InputSystem.settings.supportedDevices, Is.EquivalentTo(new[] { "Keyboard", "Mouse" }));
@@ -750,11 +750,11 @@ partial class CoreTests
 
         // Keyboard should have been re-added. Gamepad should have been removed.
         Assert.That(InputSystem.devices, Has.Count.EqualTo(3));
-        Assert.That(InputSystem.devices[0], Is.TypeOf<Mouse>());
+        Assert.That(InputSystem.devices[0], Is.InstanceOf<Mouse>());
         Assert.That(InputSystem.devices[0].deviceId, Is.EqualTo(mouseId));
-        Assert.That(InputSystem.devices[1], Is.TypeOf<Keyboard>());
+        Assert.That(InputSystem.devices[1], Is.InstanceOf<Keyboard>());
         Assert.That(InputSystem.devices[1].deviceId, Is.EqualTo(keyboardId));
-        Assert.That(InputSystem.devices[2], Is.TypeOf<Gamepad>());
+        Assert.That(InputSystem.devices[2], Is.InstanceOf<Gamepad>());
         Assert.That(InputSystem.devices[2].deviceId, Is.EqualTo(gamepadId));
 
         Assert.That(receivedSettingsChange, Is.True);
@@ -1198,7 +1198,7 @@ partial class CoreTests
         runtime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Touchscreen" }.ToJson());
         InputSystem.Update();
 
-        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Touchscreen>());
+        Assert.That(InputSystem.devices, Has.Exactly(1).InstanceOf<Touchscreen>());
 
         // Should not try to use a control layout.
         runtime.ReportNewInputDevice(new InputDeviceDescription { deviceClass = "Touch" }.ToJson());
@@ -2010,9 +2010,8 @@ partial class CoreTests
     {
         var device = InputSystem.AddDevice(layout);
 
-        Assert.That(device, Is.InstanceOf<InputDevice>());
+        Assert.That(device, Is.InstanceOf(type));
         Assert.That(device.layout, Is.EqualTo(layout));
-        Assert.That(device, Is.TypeOf(type));
     }
 
     [Test]

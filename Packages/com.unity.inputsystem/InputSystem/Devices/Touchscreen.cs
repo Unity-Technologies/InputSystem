@@ -365,6 +365,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     public enum TouchPhase
     {
+        ////REVIEW: Why have a separate None instead of just making this equivalent to either Ended or Canceled?
         /// <summary>
         /// No activity has been registered on the touch yet.
         /// </summary>
@@ -460,7 +461,7 @@ namespace UnityEngine.InputSystem
         /// of <c>primaryTouch</c> will only transition to <see cref="TouchPhase.Ended"/> once the last finger
         /// has been lifted off the screen.
         /// </remarks>
-        public TouchControl primaryTouch { get; private set; }
+        public TouchControl primaryTouch { get; protected set; }
 
         /// <summary>
         /// Array of all <see cref="TouchControl"/>s on the device.
@@ -472,7 +473,13 @@ namespace UnityEngine.InputSystem
         /// this means that this array will usually have a fixed length of 10 entries but
         /// it may deviate from that.
         /// </remarks>
-        public ReadOnlyArray<TouchControl> touches { get; private set; }
+        public ReadOnlyArray<TouchControl> touches { get; protected set; }
+
+        protected TouchControl[] touchControlArray
+        {
+            get => touches.m_Array;
+            set => touches = new ReadOnlyArray<TouchControl>(value);
+        }
 
         /// <summary>
         /// The touchscreen that was added or updated last or null if there is no

@@ -370,6 +370,7 @@ namespace UnityEngine.InputSystem.Editor
             public static readonly GUIContent copyDeviceDescription = new GUIContent("Copy Device Description");
             public static readonly GUIContent copyLayoutAsJSON = new GUIContent("Copy Layout as JSON");
             public static readonly GUIContent createDeviceFromLayout = new GUIContent("Create Device from Layout");
+            public static readonly GUIContent generateCodeFromLayout = new GUIContent("Generate Precompiled Layout");
             public static readonly GUIContent removeDevice = new GUIContent("Remove Device");
             public static readonly GUIContent enableDevice = new GUIContent("Enable Device");
             public static readonly GUIContent disableDevice = new GUIContent("Disable Device");
@@ -436,8 +437,24 @@ namespace UnityEngine.InputSystem.Editor
                         menu.AddItem(Contents.copyLayoutAsJSON, false,
                             () => EditorGUIUtility.systemCopyBuffer = layout.ToJson());
                         if (layout.isDeviceLayout)
+                        {
                             menu.AddItem(Contents.createDeviceFromLayout, false,
                                 () => InputSystem.AddDevice(layout.name));
+                            menu.AddItem(Contents.generateCodeFromLayout, false, () =>
+                            {
+                                var fileName = EditorUtility.SaveFilePanel("Generate InputDevice Code", "", "Fast" + layoutItem.layoutName, "cs");
+                                var isInAssets = fileName.StartsWith(Application.dataPath, StringComparison.OrdinalIgnoreCase);
+                                if (isInAssets)
+                                    fileName = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+                                if (!string.IsNullOrEmpty(fileName))
+                                {
+                                    var code = InputLayoutCodeGenerator.GenerateCodeFileForDeviceLayout(layoutItem.layoutName, fileName, prefix: "Fast");
+                                    File.WriteAllText(fileName, code);
+                                    if (isInAssets)
+                                        AssetDatabase.ImportAsset(fileName);
+                                }
+                            });
+                        }
                         menu.ShowAsContext();
                     }
                 }
