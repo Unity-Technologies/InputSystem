@@ -11,11 +11,13 @@ code_analyser:
     - unzip Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers/Microsoft.CodeQuality.Analyzers.zip -d Tools/CodeAnalyzerTestProject/Microsoft.CodeQuality.Analyzers
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.1
+    - upm-ci project test --project-path Tools/CodeAnalyzerTestProject -u 2019.4
   triggers:
-    branches:
-      only:
-        - "/.*/"
+    cancel_old_ci: true
+    pull_requests:
+      - targets:
+          only:
+            - "develop"
   artifacts:
     UTR_Output.zip:
       paths:

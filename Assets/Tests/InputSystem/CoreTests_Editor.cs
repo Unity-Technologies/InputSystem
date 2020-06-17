@@ -29,7 +29,7 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-    private struct PackageJson
+    internal struct PackageJson
     {
         public string version;
 

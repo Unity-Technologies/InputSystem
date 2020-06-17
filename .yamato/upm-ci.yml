@@ -19,11 +19,6 @@
     - {{ platform.installscript }} {{ editor.version }}
     {% endif %}
     - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
-  triggers:
-    cancel_old_ci: true
-    branches:
-      only:
-        - "/.*/"
   artifacts:
     UTR_Output.zip:
       paths:
@@ -39,6 +34,12 @@ all_tests:
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
     {% endfor %}
     {% endfor %}
+  triggers:
+    cancel_old_ci: true
+    pull_requests:
+      - targets:
+          only:
+            - "develop"
 
 publish:
   name: Publish to Internal Registry
@@ -52,10 +53,6 @@ publish:
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
-  triggers:
-    tags:
-      only:
-        - /^(r|R)(c|C)-\d+\.\d+\.\d+(-preview(\.\d+)?)?$/
   artifacts:
     artifacts:
       paths:
