@@ -144,6 +144,49 @@ namespace UnityEngine.InputSystem.XR
             return nameOrAlias;
         }
 
+        private bool IsSubControl(string name)
+        {
+            return name.Contains('/');
+        }
+
+        private string GetParentControlName(string name)
+        {
+            int idx = name.IndexOf('/');
+            return name.Substring(0, idx);
+        }
+
+        static readonly string[] poseSubControlNames =
+        {
+            "/isTracked",
+            "/trackingState",
+            "/position",
+            "/rotation",
+            "/velocity",
+            "/angularVelocity"
+        };
+
+        static readonly FeatureType[] poseSubControlTypes =
+        {
+            FeatureType.Binary,
+            FeatureType.DiscreteStates,
+            FeatureType.Axis3D,
+            FeatureType.Rotation,
+            FeatureType.Axis3D,
+            FeatureType.Axis3D
+        };
+
+        // A PoseControl consists of 6 subcontrols with specific names and types
+        private bool IsPoseControl(List<XRFeatureDescriptor> features, int startIndex)
+        {
+            for(int i = 0; i < 6; i++)
+            {
+                if (!features[startIndex + i].name.EndsWith(poseSubControlNames[i]) ||
+                    features[startIndex + i].featureType != poseSubControlTypes[i])
+                    return false;
+            }
+            return true;  
+        }
+
         private InputControlLayout Build()
         {
             var builder = new InputControlLayout.Builder
@@ -157,11 +200,13 @@ namespace UnityEngine.InputSystem.XR
                 ? InputSystem.LoadLayout(parentLayout)
                 : null;
 
+            var parentControls = new List<string>();
             var currentUsages = new List<string>();
 
             uint currentOffset = 0;
-            foreach (var feature in descriptor.inputFeatures)
+            for(int i = 0; i < descriptor.inputFeatures.Count; i++)
             {
+                var feature = descriptor.inputFeatures[i];
                 currentUsages.Clear();
 
                 if (feature.usageHints != null)
@@ -180,8 +225,22 @@ namespace UnityEngine.InputSystem.XR
 
                 featureName = featureName.ToLower();
 
-                uint nextOffset = GetSizeOfFeature(feature);
+                if(IsSubControl(featureName))
+                {
+                    string parentControl = GetParentControlName(featureName);
+                    if(!parentControls.Contains(parentControl))
+                    {
+                        if(IsPoseControl(descriptor.inputFeatures, i))
+                        {
+                            builder.AddControl(parentControl)
+                            .WithLayout("Pose");
+                            parentControls.Add(parentControl);
+                        }
+                        
+                    }
+                }
 
+                uint nextOffset = GetSizeOfFeature(feature);
                 if (interfaceName == XRUtilities.InterfaceV1)
                 {
 #if UNITY_ANDROID
