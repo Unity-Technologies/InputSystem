@@ -233,7 +233,8 @@ namespace UnityEngine.InputSystem.XR
                         if(IsPoseControl(descriptor.inputFeatures, i))
                         {
                             builder.AddControl(parentControl)
-                            .WithLayout("Pose");
+                            .WithLayout("Pose")
+                            .WithByteOffset(0);
                             parentControls.Add(parentControl);
                         }
                         

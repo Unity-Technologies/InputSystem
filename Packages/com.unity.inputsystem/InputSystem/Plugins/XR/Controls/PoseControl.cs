@@ -1,5 +1,4 @@
-﻿#if UNITY_INPUT_SYSTEM
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -85,4 +84,3 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif
