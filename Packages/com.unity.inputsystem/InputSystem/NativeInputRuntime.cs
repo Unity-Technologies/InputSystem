@@ -8,10 +8,6 @@ using UnityEditor;
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
-#if !UNITY_2019_2_OR_NEWER
-// The NativeInputSystem APIs are marked obsolete in 19.1, because they are becoming internal in 19.2
-#pragma warning disable 618
-#endif
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>

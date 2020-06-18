@@ -48,17 +48,7 @@ namespace UnityEngine.InputSystem.Editor
                 (path[projectPath.Length] == '/' || path[projectPath.Length] == '\\'))
                 path = path.Substring(0, projectPath.Length + 1);
 
-            #if UNITY_2019_3_OR_NEWER
             AssetDatabase.MakeEditable(path);
-            #else
-            if (!Provider.isActive)
-                return;
-            var asset = Provider.GetAssetByPath(path);
-            if (asset == null)
-                return;
-            var task = Provider.Checkout(asset, CheckoutMode.Asset);
-            task.Wait();
-            #endif
         }
 
         public static void CheckOut(Object asset)
