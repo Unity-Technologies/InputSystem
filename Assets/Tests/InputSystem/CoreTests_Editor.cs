@@ -2395,11 +2395,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
-    /// <summary>
-    /// Doesn't compile in Editor when active platform is Android
-    /// Assets\Tests\InputSystem\CoreTests_Editor.cs(2572,22): error CS1069: The type name 'CompilerParameters' could not be found in the namespace 'System.CodeDom.Compiler'. This type has been forwarded to assembly 'System.CodeDom, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' Consider adding a reference to that assembly.
-    /// </summary>
-#if !UNITY_ANDROID
+#if UNITY_STANDALONE // CodeDom API not available in most players. 
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
