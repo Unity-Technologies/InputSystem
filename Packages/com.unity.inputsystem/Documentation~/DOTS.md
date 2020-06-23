@@ -23,4 +23,3 @@ Input in the DOTS input runtime operates chiefly as a sequence of memory transfo
 Combiners are transformations that *merge* two or more sources of input into a single output. This allows, for example, to combine input both from the keyboard and the mouse into a single input. Or to take two keys (such as "SHIFT" and "B") and create a new "combined key" from them.
 
 ### Event Handling
-
