@@ -1,14 +1,12 @@
 {
-    "name": "Unity.Input",
+    "name": "ECSDemo",
     "references": [
-        "GUID:8a2eafa29b15f444eb6d74f94a930e1d",
-        "GUID:e0cd26848372d4e5c891c569017e11f1",
-        "GUID:d8b63aba1907145bea998dd612889d6b",
-        "GUID:734d92eba21c94caba915361bd5ac177"
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:96095ed5ad2cf9c42aac73741c379aa4"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

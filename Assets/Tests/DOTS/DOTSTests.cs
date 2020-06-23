@@ -38,7 +38,7 @@ public class DOTSTests
         };
 
         // Pass 1.
-        DOTSInput.Map(UnsafeUtility.AddressOf(ref hidInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass1.Length, (DOTSInput.InputMapping*)mappingsPass1.GetUnsafeReadOnlyPtr());
+        DOTSInput.Transform(UnsafeUtility.AddressOf(ref hidInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass1.Length, (DOTSInput.InputMapping*)mappingsPass1.GetUnsafeReadOnlyPtr());
 
         Assert.That(gamepadInputs.LeftStickLeft.Value, Is.Zero);
         Assert.That(gamepadInputs.ButtonLeftStickLeft.IsPressed, Is.False);
@@ -46,7 +46,7 @@ public class DOTSTests
         Assert.That(gamepadInputs.LeftStickX, Is.EqualTo(-1f).Within(0.00001));
 
         // Pass 2.
-        DOTSInput.Map(UnsafeUtility.AddressOf(ref gamepadInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass2.Length, (DOTSInput.InputMapping*)mappingsPass2.GetUnsafeReadOnlyPtr());
+        DOTSInput.Transform(UnsafeUtility.AddressOf(ref gamepadInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass2.Length, (DOTSInput.InputMapping*)mappingsPass2.GetUnsafeReadOnlyPtr());
 
         Assert.That(gamepadInputs.LeftStickLeft.Value, Is.EqualTo(1f).Within(0.00001));
         Assert.That(gamepadInputs.ButtonLeftStickLeft.IsPressed, Is.False);
@@ -54,7 +54,7 @@ public class DOTSTests
         Assert.That(gamepadInputs.LeftStickX, Is.EqualTo(-1f).Within(0.00001));
 
         // Pass 3.
-        DOTSInput.Map(UnsafeUtility.AddressOf(ref gamepadInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass3.Length, (DOTSInput.InputMapping*)mappingsPass3.GetUnsafeReadOnlyPtr());
+        DOTSInput.Transform(UnsafeUtility.AddressOf(ref gamepadInputs), UnsafeUtility.AddressOf(ref gamepadInputs), mappingsPass3.Length, (DOTSInput.InputMapping*)mappingsPass3.GetUnsafeReadOnlyPtr());
 
         Assert.That(gamepadInputs.LeftStickLeft.Value, Is.EqualTo(1f).Within(0.00001));
         Assert.That(gamepadInputs.ButtonLeftStickLeft.IsPressed, Is.True);

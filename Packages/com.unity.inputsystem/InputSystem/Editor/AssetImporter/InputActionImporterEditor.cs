@@ -29,8 +29,33 @@ namespace UnityEngine.InputSystem.Editor
 
             // Importer settings UI.
             var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
-            EditorGUILayout.PropertyField(generateWrapperCodeProperty, m_GenerateWrapperCodeLabel);
-            if (generateWrapperCodeProperty.boolValue)
+            var generateECSComponentProperty = serializedObject.FindProperty("m_GenerateECSComponent");
+            var selectedBefore = generateWrapperCodeProperty.boolValue
+                ? 1
+                : (generateECSComponentProperty.boolValue ? 2 : 0);
+            var selectedAfter = EditorGUILayout.IntPopup(m_GenerateCodeLabel, selectedBefore, m_GenerateCodeOptionLabels,
+                m_GenerateCodeOptionValues);
+            if (selectedAfter != selectedBefore)
+            {
+                switch (selectedAfter)
+                {
+                    case 0:
+                        generateWrapperCodeProperty.boolValue = false;
+                        generateECSComponentProperty.boolValue = false;
+                        break;
+
+                    case 1:
+                        generateWrapperCodeProperty.boolValue = true;
+                        generateECSComponentProperty.boolValue = false;
+                        break;
+
+                    case 2:
+                        generateWrapperCodeProperty.boolValue = false;
+                        generateECSComponentProperty.boolValue = true;
+                        break;
+                }
+            }
+            if (selectedAfter != 0)
             {
                 var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
                 var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
@@ -41,6 +66,8 @@ namespace UnityEngine.InputSystem.Editor
                 var defaultFileName = Path.ChangeExtension(assetPath, ".cs");
 
                 wrapperCodePathProperty.PropertyFieldWithDefaultText(m_WrapperCodePathLabel, defaultFileName);
+
+                ////TODO: for ECS path, this needs to point to a directory
 
                 if (GUILayout.Button("…", EditorStyles.miniButton, GUILayout.MaxWidth(20)))
                 {
@@ -57,12 +84,12 @@ namespace UnityEngine.InputSystem.Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, CSharpCodeHelpers.MakeTypeName(GetAsset().name));
+                wrapperClassNameProperty.PropertyFieldWithDefaultText(selectedAfter == 1 ? m_WrapperClassNameLabel : m_ECSComponentNameLabel, CSharpCodeHelpers.MakeTypeName(GetAsset().name));
 
                 if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
 
-                wrapperCodeNamespaceProperty.PropertyFieldWithDefaultText(m_WrapperCodeNamespaceLabel, "<Global namespace>");
+                wrapperCodeNamespaceProperty.PropertyFieldWithDefaultText(selectedAfter == 1 ? m_WrapperCodeNamespaceLabel : m_ECSComponentNamespaceLabel, "<Global namespace>");
 
                 if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
                     EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
@@ -83,10 +110,20 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
-        private readonly GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("C# Class File");
+        private readonly GUIContent m_GenerateCodeLabel = EditorGUIUtility.TrTextContent("Generate Code");
+        private readonly GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("Code Output File");
         private readonly GUIContent m_WrapperClassNameLabel = EditorGUIUtility.TrTextContent("C# Class Name");
+        private readonly GUIContent m_ECSComponentNameLabel = EditorGUIUtility.TrTextContent("Component Name Prefix");
         private readonly GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
+        private readonly GUIContent m_ECSComponentNamespaceLabel = EditorGUIUtility.TrTextContent("Component Namespace");
+
+        private readonly GUIContent[] m_GenerateCodeOptionLabels = new[]
+        {
+            new GUIContent("None"),
+            new GUIContent("C# Wrapper Class"),
+            new GUIContent("ECS Components"),
+        };
+        private readonly int[] m_GenerateCodeOptionValues = new[] { 0, 1, 2 };
     }
 }
 #endif // UNITY_EDITOR

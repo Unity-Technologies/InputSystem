@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 12;
+        private const int kVersion = 13;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private string m_WrapperCodePath;
         [SerializeField] private string m_WrapperClassName;
         [SerializeField] private string m_WrapperCodeNamespace;
+        [SerializeField] private bool m_GenerateECSComponent;
 
         private static InlinedArray<Action> s_OnImportCallbacks;
 
@@ -152,7 +153,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Generate wrapper code, if enabled.
-            if (m_GenerateWrapperCode)
+            if (m_GenerateWrapperCode || m_GenerateECSComponent)
             {
                 var wrapperFilePath = m_WrapperCodePath;
                 if (string.IsNullOrEmpty(wrapperFilePath))
@@ -189,7 +190,19 @@ namespace UnityEngine.InputSystem.Editor
                     className = m_WrapperClassName,
                 };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+                var needReimport = false;
+                if (m_GenerateWrapperCode)
+                {
+                    if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+                        needReimport = true;
+                }
+                else if (m_GenerateECSComponent)
+                {
+                    if (InputDotsCodeGenerator.GenerateECSComponents(wrapperFilePath, asset, options))
+                        needReimport = true;
+                }
+
+                if (needReimport)
                 {
                     // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
                     // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during

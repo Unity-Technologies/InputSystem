@@ -1,8 +1,6 @@
 using System;
 using System.Globalization;
-using Unity.Collections;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace Unity.Input
 {
@@ -160,13 +158,13 @@ namespace Unity.Input
         public bool Equals(AxisInput other)
         {
             ////TODO: do this with Unity.Mathematics... how?
-            return Mathf.Approximately(Value, other.Value);
+            return UnityEngine.Mathf.Approximately(Value, other.Value);
         }
 
         public bool Equals(float other)
         {
             ////TODO: do this with Unity.Mathematics... how?
-            return Mathf.Approximately(Value, other);
+            return UnityEngine.Mathf.Approximately(Value, other);
         }
 
         public override bool Equals(object obj)
@@ -196,13 +194,13 @@ namespace Unity.Input
         public bool Equals(HalfAxisInput other)
         {
             ////TODO: do this with Unity.Mathematics... how?
-            return Mathf.Approximately(Value, other.Value);
+            return UnityEngine.Mathf.Approximately(Value, other.Value);
         }
 
         public bool Equals(float other)
         {
             ////TODO: do this with Unity.Mathematics... how?
-            return Mathf.Approximately(Value, other);
+            return UnityEngine.Mathf.Approximately(Value, other);
         }
 
         public override bool Equals(object obj)
@@ -329,19 +327,6 @@ namespace Unity.Input
     }
 
     //this would be auto-generated from an .inputactions file
-    public struct GameplayInput
-    {
-        public enum Id : uint
-        {
-            Look = 0 * 8,
-            Move = 8 * 8,
-            Fire = 16 * 8,
-        }
-
-        public Float2Input Look;
-        public Float2Input Move;
-        public ButtonInput Fire;
-    }
 
     //what I need:
     // - ability to *map* inputs dynamically from source to destination
@@ -367,24 +352,6 @@ namespace Unity.Input
         //   - a reference to an output struct
         //   - a native array of mappings (may be null/empty)
         //   - a reference to a struct with parameters
-
-        //use pointers or references?
-
-        // PS4ControllerHidInput -> GamepadInput
-        public static void ConvertPs4ControllerHidInputsToGamepadInputs(ref PS4ControllerHidInput inputs, ref GamepadInput outputs)
-        {
-        }
-
-        // GamepadInput -> GameplayInput
-        public static void ConvertGamepadInputsToGameplayInputs(ref GamepadInput input, ref GameplayInput output)
-        {
-        }
-
-        public static void ConvertGamepadInputsToGameplayInputs(ref GamepadInput input, ref GameplayInput output, ref GameplayInputProcessing processing, NativeArray<int> mappings)
-        {
-            // let's say we need to map the left stick from `input` to `move` on `output` and apply deadzone processing; let's ignore mappings for now
-            // (in reality, deadzone processing would be applied inside GamepadInput)
-        }
 
         public enum Operation
         {
@@ -512,7 +479,7 @@ namespace Unity.Input
         //instead of per-combination generated function, one function plus a mappings list for each combination
         //structs are still generated
 
-        public static unsafe void Map(void* input, void* output, int mappingsCount, InputMapping* mappings)
+        public static unsafe void Transform(void* input, void* output, int mappingsCount, InputMapping* mappings)
         {
             for (var i = 0; i < mappingsCount; ++i)
             {
