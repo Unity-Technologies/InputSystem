@@ -58,7 +58,7 @@ build_android_{{ editor.version }}:
     - pip install unity-downloader-cli --extra-index-url https://artifactory.internal.unity3d.com/api/pypi/common-python/simple
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast  
     - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
-    - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=il2cpp --build-only
+    - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=mono --build-only
   artifacts:
     players:
         paths:
