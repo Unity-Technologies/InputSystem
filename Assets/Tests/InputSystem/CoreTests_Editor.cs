@@ -2395,7 +2395,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
-#if UNITY_STANDALONE // CodeDom API not available in most players. 
+#if UNITY_STANDALONE // CodeDom API not available in most players.
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -2582,6 +2582,7 @@ partial class CoreTests
         Assert.That(type, Is.Not.Null);
         return type;
     }
+
 #endif
 
     [Test]
