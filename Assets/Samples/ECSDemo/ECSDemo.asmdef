@@ -2,7 +2,9 @@
     "name": "ECSDemo",
     "references": [
         "GUID:734d92eba21c94caba915361bd5ac177",
-        "GUID:96095ed5ad2cf9c42aac73741c379aa4"
+        "GUID:96095ed5ad2cf9c42aac73741c379aa4",
+        "GUID:a5baed0c9693541a5bd947d336ec7659",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -67,7 +67,7 @@ namespace Unity.Input
         public byte LeftTrigger;
         public byte RightTrigger;
 
-        public static uint Format => CRC32.crc32("PS4ControllerHidEvent");
+        public uint Format => CRC32.crc32("PS4ControllerHidEvent");
 
         public static InputDescriptor[] Descriptors = new[]
         {
@@ -232,7 +232,7 @@ namespace Unity.Input
         public ButtonInput ButtonWest; // Primary.
         public ButtonInput ButtonEast; // Primary.
 
-        public static uint Format => CRC32.crc32("GamepadInput");
+        public uint Format => CRC32.crc32("GamepadInput");
 
         public DOTSInput.InputPipeline InputPipelineParts
         {
@@ -1109,6 +1109,7 @@ namespace Unity.Input
 
     public interface IInputData
     {
+        uint Format { get; }
         DOTSInput.InputPipeline InputPipelineParts { get; }
         //add property to get descriptions
     }
@@ -1121,13 +1122,17 @@ namespace Unity.Input
         //device assignments?
     }
 
+    //hmm, so far, this is disappointingly expensive... I'm seeing ~0.12ms spent in input processing.
+
     public abstract class InputSystem<TInputComponent> : JobComponentSystem
         where TInputComponent : struct, IComponentData, IInputData
     {
         ////NOTE: Cannot use Entities.ForEach because of generic component type.
         private struct InputJob : IJobForEach<TInputComponent>
         {
-            [ReadOnly] public uint OutputFormat;
+            public uint OutputFormat;
+            public int EventCount;
+            //[DeallocateOnJobCompletion]
             [ReadOnly] public NativeArray<byte> EventBuffer;
             [ReadOnly] public NativeArray<InputDevicePairing> DevicePairings;
             [ReadOnly] public NativeArray<DOTSInput.InputStructMapping> StructMappings;
@@ -1140,9 +1145,8 @@ namespace Unity.Input
                 var structMappingCount = StructMappings.Length;
 
                 // Go through events.
-                for (var eventPtr = new InputEventPtr((InputEvent*)EventBuffer.GetUnsafeReadOnlyPtr());
-                     eventPtr.valid;
-                     eventPtr = eventPtr.Next())
+                var eventPtr = new InputEventPtr((InputEvent*)EventBuffer.GetUnsafeReadOnlyPtr());
+                for (var n = 0; n < EventCount; ++n, eventPtr = eventPtr.Next())
                 {
                     // Only process state events for now.
                     if (!eventPtr.IsA<StateEvent>())
@@ -1186,53 +1190,55 @@ namespace Unity.Input
                             // We've found our transform pipeline that will take the given event format and
                             // spit out data in our component format.
                             var input = StateEvent.From(eventPtr)->state;
-                            DOTSInput.Transform(input, output, StructMappings, Transforms, startIndex, i - startIndex);
+                            DOTSInput.Transform(input, output, StructMappings, Transforms, startIndex, i - startIndex + 1);
                         }
                     }
                 }
-
-                EventBuffer.Dispose();
             }
         }
 
-        private DOTSInput.InputPipeline m_ComponentInputPipelines;
+        private DOTSInput.InputPipeline m_InputPipelines;
 
         protected override void OnCreate()
         {
             InputSystemHook.AddRef();
 
-            // Retrieve input pipelines specific to the component.
-            m_ComponentInputPipelines = new TInputComponent().InputPipelineParts;
+            // Set up all the processing pipelines we need based on the devices we have.
+            // In "reality", this would have to run each time our device pairings for our
+            // player change.
+            // NOTE: Hardcoded to player #0 ATM.
+            m_InputPipelines = InputSystemHook.Instance.CreateInputPipelines<TInputComponent>(0);
         }
 
         protected override void OnDestroy()
         {
             InputSystemHook.Release();
 
-            if (m_ComponentInputPipelines.Transforms.IsCreated)
-                m_ComponentInputPipelines.Transforms.Dispose();
-            if (m_ComponentInputPipelines.StructMappings.IsCreated)
-                m_ComponentInputPipelines.StructMappings.Dispose();
+            m_InputPipelines.Dispose();
         }
 
-        /*
         protected override unsafe JobHandle OnUpdate(JobHandle inputDeps)
         {
+            InputSystemHook.Instance.Update(GlobalSystemVersion);
+
             var eventBuffer = InputSystemHook.Instance.EventBuffer;
 
             // Event buffers are read-only but are re-filled every frame. So we clone
             // it here for every job we schedule.
-            var eventBufferClone = new NativeArray<byte>(eventBuffer.Length, Allocator.TempJob);
-            UnsafeUtility.MemCpy(eventBufferClone.GetUnsafePtr(), eventBuffer.GetUnsafeReadOnlyPtr(), eventBuffer.Length);
+            //var eventBufferClone = new NativeArray<byte>(eventBuffer.Length, Allocator.TempJob);
+            //UnsafeUtility.MemCpy(eventBufferClone.GetUnsafePtr(), eventBuffer.GetUnsafeReadOnlyPtr(), eventBuffer.Length);
 
             var job = new InputJob
             {
+                OutputFormat = new TInputComponent().Format,
                 DevicePairings = InputSystemHook.Instance.DevicePairings,
-                EventBuffer = eventBufferClone,
+                EventCount = InputSystemHook.Instance.EventCount,
+                EventBuffer = eventBuffer,//Clone,
+                StructMappings = m_InputPipelines.StructMappings,
+                Transforms = m_InputPipelines.Transforms,
             };
             return job.Schedule(this, inputDeps);
         }
-        */
     }
 
     // Establishes a pairing between a player number and a device ID.
@@ -1242,12 +1248,6 @@ namespace Unity.Input
         public int PlayerNumber;
         public int DeviceId;
         public uint InputFormat;
-    }
-
-    internal struct InputStructType
-    {
-        public int SizeInBytes;
-        public DOTSInput.InputPipeline Pipelines;
     }
 
     //ultimately, we want the ability to run arbitrary jobs over input event buffers, not just InputSystem<TComponent> stuff
@@ -1263,10 +1263,38 @@ namespace Unity.Input
         public int ReferenceCount;
         public uint StepCount;
         public NativeArray<InputDevicePairing> DevicePairings;
+        public int EventCount;
         public NativeArray<byte> EventBuffer;
-        public Dictionary<uint, InputStructType> StructTypeMap;
+        public DOTSInput.InputPipeline InputPipelines;
 
         private Action<InputEventBuffer> m_EventCallback;
+
+        public DOTSInput.InputPipeline CreateInputPipelines<TInputComponent>(int playerNumber)
+            where TInputComponent : struct, IInputData
+        {
+            // Create dictionary of fragments.
+            var fragments = new Dictionary<ulong, DOTSInput.InputPipelineFragment>();
+
+            DOTSInput.AddPipelineFragments<PS4ControllerHidEvent>(fragments);
+            DOTSInput.AddPipelineFragments<GamepadInput>(fragments);
+            DOTSInput.AddPipelineFragments<TInputComponent>(fragments);
+
+            var pipelines = new DOTSInput.InputPipeline();
+            var outputFormat = new TInputComponent().Format;
+
+            foreach (var pairing in DevicePairings)
+            {
+                if (pairing.PlayerNumber != playerNumber)
+                    continue;
+
+                //should fail here if we can't create a pipeline for a device
+                DOTSInput.CreateInputPipeline(fragments, pairing.InputFormat, outputFormat, ref pipelines);
+            }
+
+            DOTSInput.ReleasePipelineFragments(fragments);
+
+            return pipelines;
+        }
 
         public static void AddRef()
         {
@@ -1303,30 +1331,25 @@ namespace Unity.Input
                 ReferenceCount = 1,
                 DevicePairings = new NativeArray<InputDevicePairing>(devicePairings.ToArray(), Allocator.Persistent),
                 EventBuffer = new NativeArray<byte>(100 * 1024, Allocator.Persistent),
-                StructTypeMap = new Dictionary<uint, InputStructType>()
+            };
+            Instance.m_EventCallback =
+                eventBuffer =>
+            {
+                // Copy events.
+                var sizeInBytes = eventBuffer.sizeInBytes;
+                if (Instance.EventBuffer.Length < eventBuffer.sizeInBytes)
                 {
-                    [CRC32.crc32("PS4ControllerHidEvent")] = new InputStructType
-                    {
-                        SizeInBytes = UnsafeUtility.SizeOf<PS4ControllerHidEvent>(),
-                        //Pipelines =
-                    }
-                },
-                m_EventCallback =
-                    eventBuffer =>
-                {
-                    // Copy events.
-                    var sizeInBytes = eventBuffer.sizeInBytes;
-                    if (Instance.EventBuffer.Length < eventBuffer.sizeInBytes)
-                    {
-                        Instance.EventBuffer.Dispose();
-                        Instance.EventBuffer = new NativeArray<byte>((int)sizeInBytes, Allocator.Persistent);
-                    }
-
-                    unsafe
-                    {
-                        UnsafeUtility.MemCpy(Instance.EventBuffer.GetUnsafePtr(), eventBuffer.data.GetUnsafeReadOnlyPtr(), sizeInBytes);
-                    }
+                    Instance.EventBuffer.Dispose();
+                    Instance.EventBuffer = new NativeArray<byte>((int)sizeInBytes, Allocator.Persistent);
                 }
+
+                unsafe
+                {
+                    var sourcePtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
+                    UnsafeUtility.MemCpy(Instance.EventBuffer.GetUnsafePtr(), sourcePtr, sizeInBytes);
+                }
+
+                Instance.EventCount = eventBuffer.eventCount;
             };
 
             InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsManually;
@@ -1345,6 +1368,7 @@ namespace Unity.Input
             if (Instance.ReferenceCount <= 0)
             {
                 InputSystem.s_Manager.onUpdate -= Instance.m_EventCallback;
+                InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
                 Instance.DevicePairings.Dispose();
                 Instance.EventBuffer.Dispose();
                 Instance = null;

@@ -315,11 +315,14 @@ namespace UnityEngine.InputSystem.Editor
                 ++indentLevel;
             }
 
-            public void EndBlock()
+            public void EndBlock(bool withSemicolon = false)
             {
                 --indentLevel;
                 WriteIndent();
-                buffer.Append("}\n");
+                if (withSemicolon)
+                    buffer.Append("};\n");
+                else
+                    buffer.Append("}\n");
             }
 
             public void WriteLine()
