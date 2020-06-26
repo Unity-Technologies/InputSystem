@@ -296,6 +296,21 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public event Action<InputEventBuffer> onUpdate
+        {
+            add
+            {
+                if (!m_UpdateListeners.Contains(value))
+                    m_UpdateListeners.AppendWithCapacity(value);
+            }
+            remove
+            {
+                var index = m_UpdateListeners.IndexOf(value);
+                if (index >= 0)
+                    m_UpdateListeners.RemoveAtWithCapacity(index);
+            }
+        }
+
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
                      m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
@@ -1793,6 +1808,7 @@ namespace UnityEngine.InputSystem
         private InlinedArray<UpdateListener> m_BeforeUpdateListeners;
         private InlinedArray<UpdateListener> m_AfterUpdateListeners;
         private InlinedArray<Action> m_SettingsChangedListeners;
+        private InlinedArray<Action<InputEventBuffer>> m_UpdateListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
@@ -2514,6 +2530,9 @@ namespace UnityEngine.InputSystem
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
+            if (m_UpdateListeners.length > 0)
+                DelegateHelpers.InvokeCallbacksSafe(ref m_UpdateListeners, eventBuffer, "InputManager.onUpdate");
+
             ////TODO: switch from Profiler to CustomSampler API
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).

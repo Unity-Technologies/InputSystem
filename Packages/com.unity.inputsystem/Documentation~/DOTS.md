@@ -2,6 +2,10 @@
 
 Support for the Unity [Entities](...) package and the Unity [Job System](...) uses a separate input runtime with its own API separate from [`UnityEngine.InputSystem`](../api/UnityEngine.InputSystem.InputSystem.html). However, both the [`.inputactions`](./Actions.md) format as well as the [control layout](./Layouts.md) system (and thus all input device knowledge) are shared between the two runtimes. This means that [input actions](./Actions.md) authored in the editor as well as support for devices authored for the input system generally transfers directly to the DOTS runtime without additional work.
 
+All input in the DOTS runtime is [Action](./Actions.md)-based. Meaning that it is not support to poll device-level input directly. You can, however, correlate Action-based input back with device-level input.
+
+## Getting started with input in DOTS
+
 ## Input Devices in DOTS
 
 ## Input Actions in DOTS

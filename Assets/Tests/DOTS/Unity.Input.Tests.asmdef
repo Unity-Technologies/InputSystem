@@ -1,8 +1,11 @@
 {
     "name": "Unity.Input.Tests",
+    "rootNamespace": "",
     "references": [
         "GUID:27619889b8ba8c24980f49ee34dbb44a",
-        "GUID:96095ed5ad2cf9c42aac73741c379aa4"
+        "GUID:96095ed5ad2cf9c42aac73741c379aa4",
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
