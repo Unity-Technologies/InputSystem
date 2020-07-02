@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void Awake()
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_VR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera())
             {
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), true);
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.XR
 
         protected virtual void OnDestroy()
         {
-#if UNITY_INPUT_SYSTEM_ENABLE_VR
+#if UNITY_INPUT_SYSTEM_ENABLE_VR && ENABLE_VR
             if (HasStereoCamera())
             {
                 UnityEngine.XR.XRDevice.DisableAutoXRCameraTracking(GetComponent<Camera>(), false);
