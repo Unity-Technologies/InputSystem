@@ -9,6 +9,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+>__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
+
 ### Changed
 
 #### Actions
@@ -21,10 +23,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
 - Fixed clicking on help page button in Unity inspector for Input System components not going to relevant manual pages.
 - Fixed a bug that prevented DualShock controllers from working on tvOS. (case 1221223).
+- `GravitySensor`, `LinearAccelerationSensor`, and `AttitudeSensor` not being initialized on iOS ([case 1251382](https://issuetracker.unity3d.com/product/unity/issues/guid/1251382/)).
 
 #### Actions
 
 - Fixed drag&drop reordering actions while having one control scheme selected causing bindings from other control schemes to be lost ([case 122800](https://issuetracker.unity3d.com/issues/input-system-bindings-get-cleared-for-other-control-scheme-actions-when-reordering-an-action-in-a-specific-control-scheme)).
+- Fixed stack overflow in `PlayerInput.SwitchCurrentActionMap` when called from action callback ([case 1232893](https://issuetracker.unity3d.com/issues/inputsystem-switchcurrentactionmap-causes-a-stackoverflow-when-called-by-each-pahse-of-an-action)).
+- Fixed control picker ending up empty when listing devices in "Supported Devices" ([case 1254150](https://issuetracker.unity3d.com/product/unity/issues/guid/1254150/)).
 
 ### Added
 

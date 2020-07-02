@@ -436,7 +436,14 @@ namespace UnityEngine.InputSystem
             get => m_CurrentActionMap;
             set
             {
-                m_CurrentActionMap?.Disable();
+                // If someone switches maps from an action callback, we may get here recursively
+                // from Disable(). To avoid that, we null out the current action map while
+                // we disable it.
+                var oldMap = m_CurrentActionMap;
+                m_CurrentActionMap = null;
+                oldMap?.Disable();
+
+                // Switch to new map.
                 m_CurrentActionMap = value;
                 m_CurrentActionMap?.Enable();
             }
