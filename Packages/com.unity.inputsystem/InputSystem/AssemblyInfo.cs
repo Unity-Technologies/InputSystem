@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.TestFramework")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
+[assembly: InternalsVisibleTo("Unity.Input")]
+[assembly: InternalsVisibleTo("Unity.Input.Tests")]
 
 namespace UnityEngine.InputSystem
 {
