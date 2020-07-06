@@ -1233,7 +1233,7 @@ namespace Unity.Input
                 OutputFormat = new TInputComponent().Format,
                 DevicePairings = InputSystemHook.Instance.DevicePairings,
                 EventCount = InputSystemHook.Instance.EventCount,
-                EventBuffer = eventBuffer,//Clone,
+                EventBuffer = eventBuffer,//,Clone,
                 StructMappings = m_InputPipelines.StructMappings,
                 Transforms = m_InputPipelines.Transforms,
             };

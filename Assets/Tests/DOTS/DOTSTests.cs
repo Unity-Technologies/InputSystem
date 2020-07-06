@@ -73,7 +73,7 @@ public class DOTSTests
             DOTSInput.AddPipelineFragments<GamepadInput>(fragments);
             DOTSInput.AddPipelineFragments<ComponentInput>(fragments);
 
-            var result = DOTSInput.CreateInputPipeline(fragments, PS4ControllerHidEvent.Format, ComponentInput.Format, ref pipeline);
+            var result = DOTSInput.CreateInputPipeline(fragments, new PS4ControllerHidEvent().Format, new ComponentInput().Format, ref pipeline);
 
             Assert.That(result, Is.True);
             Assert.That(pipeline.StructMappings.Length, Is.EqualTo(3));
@@ -126,7 +126,7 @@ public class DOTSTests
             Fire = Look + 8 * 8,
         }
 
-        public static uint Format => CRC32.crc32("ComponentInput");
+        public uint Format => CRC32.crc32("ComponentInput");
 
         public DOTSInput.InputPipeline InputPipelineParts
         {
