@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
 - Fixed clicking on help page button in Unity inspector for Input System components not going to relevant manual pages.
 - `GravitySensor`, `LinearAccelerationSensor`, and `AttitudeSensor` not being initialized on iOS ([case 1251382](https://issuetracker.unity3d.com/product/unity/issues/guid/1251382/)).
+- Fixed possible `NullReferenceException`s on ARMs with controls that receive automatic memory offsets.
 
 #### Actions
 
