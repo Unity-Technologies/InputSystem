@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         public static uint updateCount => InputUpdate.s_UpdateStepCount;
 
-        public static double currentTime => InputRuntime.s_Instance.currentTime + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+        public static double currentTime => InputRuntime.s_Instance.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         /// <summary>
         /// Callback that is triggered when the state of an input device changes.
