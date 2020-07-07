@@ -113,7 +113,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
        {% if editor.version != "2020.1" or backend.name == "mono" %} ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results {% else %}echo "2020.1 Android Debug il2cpp has a bug Case 1252614" {%endif%}
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-    - if not exist build/test-results mkdir build/test-results
+    - if not exist build\test-results mkdir build\test-results
     - powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   # Set uploadable artifact paths
   artifacts:
