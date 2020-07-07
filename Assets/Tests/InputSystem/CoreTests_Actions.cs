@@ -4375,6 +4375,9 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
@@ -4474,6 +4477,9 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
