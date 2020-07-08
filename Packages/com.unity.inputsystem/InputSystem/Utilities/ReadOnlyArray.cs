@@ -81,10 +81,21 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        /// <inheritdoc />
-        public IEnumerator<TValue> GetEnumerator()
+        /// <summary>
+        /// Returns an enumerator that iterates through the read-only array.
+        /// <returns>
+        /// <see cref="ReadOnlyArray{TValue}.Enumerator"/>
+        /// An enumerator for the read-only array.
+        /// </returns>
+        /// </summary>
+        public Enumerator GetEnumerator()
         {
-            return new Enumerator<TValue>(m_Array, m_StartIndex, m_Length);
+            return new Enumerator(m_Array, m_StartIndex, m_Length);
+        }
+
+        IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -123,14 +134,17 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        internal class Enumerator<T> : IEnumerator<T>
+        /// <summary>
+        /// Enumerates the elements of a ReadOnlyArray{TValue}.
+        /// </summary>
+        public struct Enumerator : IEnumerator<TValue>
         {
-            private readonly T[] m_Array;
+            private readonly TValue[] m_Array;
             private readonly int m_IndexStart;
             private readonly int m_IndexEnd;
             private int m_Index;
 
-            public Enumerator(T[] array, int index, int length)
+            public Enumerator(TValue[] array, int index, int length)
             {
                 m_Array = array;
                 m_IndexStart = index - 1; // First call to MoveNext() moves us to first valid index.
@@ -154,7 +168,7 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Index = m_IndexStart;
             }
 
-            public T Current
+            public TValue Current
             {
                 get
                 {
