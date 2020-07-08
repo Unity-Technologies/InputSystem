@@ -1099,8 +1099,10 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = (device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
-            device3.stateBlock.alignedSizeInBytes).AlignToMultipleOf(4);
+        var combinedDeviceStateSize =
+            device1.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device2.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
 
@@ -1206,6 +1208,9 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254568")]
+#endif
     public void State_CanRecordHistory_AndGetCallbacksWhenNewStateIsRecorded()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -1247,6 +1252,9 @@ partial class CoreTests
     // onRecordAdded callback.
     [Test]
     [Category("State")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254569")]
+#endif
     public unsafe void State_CanRecordHistory_AndStoreAdditionalCustomDataForEachStateChange()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
