@@ -760,7 +760,7 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
-    public void State_CurrentTimeCalculatedCorrectly()
+    public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
     {
         runtime.currentTime += 2;
         runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
