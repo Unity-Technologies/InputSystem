@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - `GravitySensor`, `LinearAccelerationSensor`, and `AttitudeSensor` not being initialized on iOS ([case 1251382](https://issuetracker.unity3d.com/product/unity/issues/guid/1251382/)).
 - Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations.
 - Fixed possible `NullReferenceException`s on ARMs with controls that receive automatic memory offsets.
+- Fixed `TouchControl.tapCount` resetting to 0 when "Script Debugging" is enabled (case 1194636).
 
 #### Actions
 

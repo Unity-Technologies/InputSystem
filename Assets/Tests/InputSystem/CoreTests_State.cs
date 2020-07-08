@@ -758,6 +758,17 @@ partial class CoreTests
         Assert.That(positionMonitorFired);
     }
 
+    [Test]
+    [Category("State")]
+    public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
+    {
+        runtime.currentTime += 2;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
+
+        Assert.That(InputState.currentTime, Is.EqualTo(1));
+        Assert.Greater(InputRuntime.s_Instance.currentTime, InputState.currentTime);
+    }
+
     // For certain actions, we want to be able to tell whether a specific input arrives in time.
     // For example, we may want to only trigger an action if a specific button was released within
     // a certain amount of time. To support this, the system allows putting timeouts on individual
