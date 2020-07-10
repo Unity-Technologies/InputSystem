@@ -1519,6 +1519,9 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254563")]
+#endif
     public void Layouts_CanAddChildControlToExistingControl_UsingStateFromOtherControl()
     {
         InputSystem.RegisterLayout(@"
@@ -1951,6 +1954,29 @@ partial class CoreTests
         Assert.That(device["fourth"].stateBlock.sizeInBits, Is.EqualTo(1));
     }
 
+    [Preserve]
+    private class DeviceWithMisalignedAutomaticControl : InputDevice
+    {
+        [Preserve]
+        [InputControl(offset = 0, sizeInBits = 8)]
+        public AxisControl control1;
+
+        // 4-byte control. Must be aligned to 4 bytes.
+        [Preserve]
+        [InputControl(offset = InputStateBlock.AutomaticOffset, sizeInBits = 32)]
+        public AxisControl control2;
+    }
+
+    [Test]
+    [Category("Layouts")]
+    public void Layouts_WhenPlacingControlsAutomatically_MemoryAlignmentConstraintsAreRespected()
+    {
+        var device = InputSystem.AddDevice<DeviceWithMisalignedAutomaticControl>();
+
+        Assert.That(device.stateBlock.alignedSizeInBytes, Is.EqualTo(8));
+        Assert.That(device["control2"].stateBlock.byteOffset, Is.EqualTo(4));
+    }
+
     [Test]
     [Category("Layouts")]
     public void Layouts_CanBuildLayoutsInCode()
@@ -2100,6 +2126,9 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254566")]
+#endif
     public void Layouts_CanGetNameOfBaseLayout()
     {
         Assert.That(InputSystem.GetNameOfBaseLayout("DualShockGamepad"), Is.EqualTo("Gamepad"));
@@ -2109,6 +2138,9 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1254565")]
+#endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
     {
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
