@@ -3836,9 +3836,6 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254562")]
-#endif
     public unsafe void Devices_WhenFocusIsLost_DevicesAreForciblyReset_ExceptThoseMarkedAsReceivingInputInBackground()
     {
         // TrackedDevice is all noisy controls. We need at least one non-noisy control to fully
