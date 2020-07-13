@@ -220,6 +220,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public string pathRelativeToDevice
+        {
+            get
+            {
+                if (this == m_Device)
+                    return string.Empty;
+                return path.Substring(m_Device.path.Length + 1); // Skip leading slash.
+            }
+        }
+
         /// <summary>
         /// Layout the control is based on.
         /// </summary>

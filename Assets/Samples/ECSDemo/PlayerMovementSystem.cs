@@ -17,8 +17,9 @@ public class PlayerMovementSystem : JobComponentSystem
         {
             if (input.Jump.WasJustPressed)
                 translation.Value += Random.NextFloat3(0, 10 * Time.DeltaTime);
-            else
-                translation.Value += new float3(input.Move.X * 5 * Time.DeltaTime, input.Move.Y * 5 * Time.DeltaTime, 0);
+
+            translation.Value += new float3(input.LeftRight.Value * 5 * Time.DeltaTime, input.UpDown.Value * 5 * Time.DeltaTime, 0);
+            translation.Value += new float3(input.Move.X * 5 * Time.DeltaTime, input.Move.Y * 5 * Time.DeltaTime, 0);
         }
     }
 
@@ -38,7 +39,7 @@ public class PlayerMovementSystem : JobComponentSystem
         var job = new MovementJob
         {
             Time = Time,
-            Random = m_Random,
+            Random = m_Random
         };
 
         return job.Schedule(this, inputDeps);

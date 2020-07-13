@@ -1,4 +1,4 @@
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR || UNITY_WSA
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;

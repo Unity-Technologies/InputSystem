@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Input state memory is restricted to a maximum of 4GB in size. Offsets are recorded in 32 bits.
     /// </remarks>
     /// <seealso cref="InputControl.stateBlock"/>
-    public unsafe struct InputStateBlock
+    public unsafe struct InputStateBlock : IEquatable<InputStateBlock>
     {
         public const uint InvalidOffset = 0xffffffff;
         public const uint AutomaticOffset = 0xfffffffe;
@@ -160,6 +160,31 @@ namespace UnityEngine.InputSystem.LowLevel
             if (type == FormatVector3Byte)
                 return 3 * 1 * 8;
             return -1;
+        }
+
+        public static Type GetTypeFromPrimitiveFormat(FourCC format)
+        {
+            if (format == FormatByte)
+                return typeof(byte);
+            if (format == FormatSByte)
+                return typeof(sbyte);
+            if (format == FormatShort)
+                return typeof(short);
+            if (format == FormatUShort)
+                return typeof(ushort);
+            if (format == FormatInt)
+                return typeof(int);
+            if (format == FormatUInt)
+                return typeof(uint);
+            if (format == FormatLong)
+                return typeof(long);
+            if (format == FormatULong)
+                return typeof(ulong);
+            if (format == FormatDouble)
+                return typeof(double);
+            if (format == FormatFloat)
+                return typeof(float);
+            return null;
         }
 
         public static FourCC GetPrimitiveFormatFromType(Type type)
@@ -800,6 +825,38 @@ namespace UnityEngine.InputSystem.LowLevel
             var to = (byte*)toStatePtr + byteOffset;
 
             UnsafeUtility.MemCpy(to, from, alignedSizeInBytes);
+        }
+
+        public bool Equals(InputStateBlock other)
+        {
+            return format == other.format && byteOffset == other.byteOffset && bitOffset == other.bitOffset && sizeInBits == other.sizeInBits;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is InputStateBlock other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = format.GetHashCode();
+                hashCode = (hashCode * 397) ^ (int)byteOffset;
+                hashCode = (hashCode * 397) ^ (int)bitOffset;
+                hashCode = (hashCode * 397) ^ (int)sizeInBits;
+                return hashCode;
+            }
+        }
+
+        public static bool operator==(InputStateBlock left, InputStateBlock right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator!=(InputStateBlock left, InputStateBlock right)
+        {
+            return !left.Equals(right);
         }
     }
 }

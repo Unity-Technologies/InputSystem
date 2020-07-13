@@ -2084,6 +2084,16 @@ namespace UnityEngine.InputSystem.Layouts
                 return layoutBuilders.ContainsKey(layout);
             }
 
+            public IEnumerable<InternedString> GetAllLayouts()
+            {
+                foreach (var name in layoutTypes.Keys)
+                    yield return name;
+                foreach (var name in layoutStrings.Keys)
+                    yield return name;
+                foreach (var name in layoutBuilders.Keys)
+                    yield return name;
+            }
+
             public IEnumerable<InternedString> GetBaseLayouts(InternedString layout, bool includeSelf = true)
             {
                 if (includeSelf)

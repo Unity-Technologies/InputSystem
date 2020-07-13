@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.XInput
             InputSystem.RegisterLayout<XInputController>();
 
             ////FIXME: layouts should always be available in the editor (mac/win/linux)
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR || UNITY_WSA
             InputSystem.RegisterLayout<XInputControllerWindows>(
                 matches: new InputDeviceMatcher().WithInterface("XInput"));
 #endif

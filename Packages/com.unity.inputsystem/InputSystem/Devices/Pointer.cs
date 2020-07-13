@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
+        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f, minValue = 0f, maxValue = 1f)]
         public float pressure;
 
         [InputControl(layout = "Vector2", displayName = "Radius", usage = "Radius")]

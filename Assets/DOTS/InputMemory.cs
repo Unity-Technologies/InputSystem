@@ -11,7 +11,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+//for touch, may make more sense to treat each individual touch as its own separate device?
+
 //is all input state kept on components? (no system internal memory?)
+
+//how do we support making up input for tests in the ECS setup?
 
 namespace Unity.Input
 {
@@ -152,254 +156,14 @@ namespace Unity.Input
         }
     }
 
-    public struct PS4ControllerInput
-    {
-    }
-
-    public struct PSControllerInput
-    {
-    }
-
-    public struct GamepadInput : IComponentData, IInputData
-    {
-        public enum Id
-        {
-            LeftStick = 0 * 8,
-            RightStick = 8 * 8,
-
-            LeftStickX = 16 * 8,
-            LeftStickY = 20 * 8,
-            RightStickX = 24 * 8,
-            RightStickY = 28 * 8,
-
-            LeftStickUp = 32 * 8,
-            LeftStickDown = 36 * 8,
-            LeftStickLeft = 40 * 8,
-            LeftStickRight = 44 * 8,
-
-            RightStickUp = 48 * 8,
-            RightStickDown = 52 * 8,
-            RightStickLeft = 56 * 8,
-            RightStickRight = 60 * 8,
-
-            ButtonLeftStickUp = 64 * 8,
-            ButtonLeftStickDown = 65 * 8,
-            ButtonLeftStickLeft = 66 * 8,
-            ButtonLeftStickRight = 67 * 8,
-
-            ButtonRightStickUp = 68 * 8,
-            ButtonRightStickDown = 69 * 8,
-            ButtonRightStickLeft = 70 * 8,
-            ButtonRightStickRight = 71 * 8,
-
-            ButtonSouth = 72 * 8,
-            ButtonNorth = 73 * 8,
-            ButtonWest = 74 * 8,
-            ButtonEast = 75 * 8,
-        }
-
-        public Float2Input LeftStick;
-        public Float2Input RightStick;
-
-        public AxisInput LeftStickX; // Primary.
-        public AxisInput LeftStickY; // Primary.
-
-        public AxisInput RightStickX; // Primary.
-        public AxisInput RightStickY; // Primary.
-
-        public HalfAxisInput LeftStickUp;
-        public HalfAxisInput LeftStickDown;
-        public HalfAxisInput LeftStickLeft;
-        public HalfAxisInput LeftStickRight;
-
-        public HalfAxisInput RightStickUp;
-        public HalfAxisInput RightStickDown;
-        public HalfAxisInput RightStickLeft;
-        public HalfAxisInput RightStickRight;
-
-        public ButtonInput ButtonLeftStickUp;
-        public ButtonInput ButtonLeftStickDown;
-        public ButtonInput ButtonLeftStickLeft;
-        public ButtonInput ButtonLeftStickRight;
-
-        public ButtonInput ButtonRightStickUp;
-        public ButtonInput ButtonRightStickDown;
-        public ButtonInput ButtonRightStickLeft;
-        public ButtonInput ButtonRightStickRight;
-
-        public ButtonInput ButtonSouth; // Primary.
-        public ButtonInput ButtonNorth; // Primary.
-        public ButtonInput ButtonWest; // Primary.
-        public ButtonInput ButtonEast; // Primary.
-
-        public uint Format => CRC32.crc32("GamepadInput");
-
-        public DOTSInput.InputPipeline InputPipelineParts
-        {
-            get
-            {
-                var structMappings = new NativeArray<DOTSInput.InputStructMapping>(1, Allocator.Persistent)
-                {
-                    // Struct mapping to self which fills out all secondary inputs based on primary ones.
-                    [0] = new DOTSInput.InputStructMapping
-                    {
-                        InputFormat = CRC32.crc32("GamepadInput"),
-                        OutputFormat = CRC32.crc32("GamepadInput"),
-                        InputSizeInBytes = (uint)UnsafeUtility.SizeOf<GamepadInput>(),
-                        OutputSizeInBytes = (uint)UnsafeUtility.SizeOf<GamepadInput>(),
-                        TransformStartIndex = 0,
-                        TransformCount = 18,
-                    }
-                };
-
-                var transforms = new NativeArray<DOTSInput.InputTransform>(18, Allocator.Persistent)
-                {
-                    [0] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Combination.TwoAxesToOneFloat2),
-                        InputId1 = (uint)Id.LeftStickX,
-                        InputId2 = (uint)Id.LeftStickY,
-                        OutputId = (uint)Id.LeftStick,
-                    },
-                    [1] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Combination.TwoAxesToOneFloat2),
-                        InputId1 = (uint)Id.RightStickX,
-                        InputId2 = (uint)Id.RightStickY,
-                        OutputId = (uint)Id.RightStick,
-                    },
-                    [2] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.NegativeAxisToHalfAxis),
-                        InputId1 = (uint)Id.LeftStickX,
-                        OutputId = (uint)Id.LeftStickLeft,
-                    },
-                    [3] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.LeftStickLeft,
-                        OutputId = (uint)Id.ButtonLeftStickLeft,
-                    },
-                    [4] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.PositiveAxisToHalfAxis),
-                        InputId1 = (uint)Id.LeftStickX,
-                        OutputId = (uint)Id.LeftStickRight,
-                    },
-                    [5] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.LeftStickRight,
-                        OutputId = (uint)Id.ButtonLeftStickRight,
-                    },
-                    [6] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.NegativeAxisToHalfAxis),
-                        InputId1 = (uint)Id.LeftStickY,
-                        OutputId = (uint)Id.LeftStickDown,
-                    },
-                    [7] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.LeftStickDown,
-                        OutputId = (uint)Id.ButtonLeftStickDown,
-                    },
-                    [8] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.PositiveAxisToHalfAxis),
-                        InputId1 = (uint)Id.LeftStickY,
-                        OutputId = (uint)Id.LeftStickUp,
-                    },
-                    [9] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.LeftStickUp,
-                        OutputId = (uint)Id.ButtonLeftStickUp,
-                    },
-                    [10] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.NegativeAxisToHalfAxis),
-                        InputId1 = (uint)Id.RightStickX,
-                        OutputId = (uint)Id.RightStickLeft,
-                    },
-                    [11] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.RightStickLeft,
-                        OutputId = (uint)Id.ButtonRightStickLeft,
-                    },
-                    [12] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.PositiveAxisToHalfAxis),
-                        InputId1 = (uint)Id.RightStickX,
-                        OutputId = (uint)Id.RightStickRight,
-                    },
-                    [13] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.RightStickRight,
-                        OutputId = (uint)Id.ButtonRightStickRight,
-                    },
-                    [14] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.NegativeAxisToHalfAxis),
-                        InputId1 = (uint)Id.RightStickY,
-                        OutputId = (uint)Id.RightStickDown,
-                    },
-                    [15] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.RightStickDown,
-                        OutputId = (uint)Id.ButtonRightStickDown,
-                    },
-                    [16] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.PositiveAxisToHalfAxis),
-                        InputId1 = (uint)Id.RightStickY,
-                        OutputId = (uint)Id.RightStickUp,
-                    },
-                    [17] = new DOTSInput.InputTransform
-                    {
-                        Operation = DOTSInput.ToTransformOperation(DOTSInput.Conversion.HalfAxisToButton),
-                        InputId1 = (uint)Id.RightStickUp,
-                        OutputId = (uint)Id.ButtonRightStickUp,
-                    },
-                };
-
-                return new DOTSInput.InputPipeline
-                {
-                    StructMappings = structMappings,
-                    Transforms = transforms
-                };
-            }
-        }
-    }
-
-    public struct MouseInput
-    {
-        public AxisInput x;
-        public AxisInput y;
-        public AxisInput deltaX;
-        public AxisInput deltaY;
-        public ButtonInput leftButton;
-        public ButtonInput rightButton;
-        public ButtonInput middleButton;
-    }
-
-    public struct KeyboardInput
-    {
-    }
-
-    public struct GameplayInputProcessing
-    {
-    }
-
     /// <summary>
     /// A [-1..1] floating-point input.
     /// </summary>
     public struct AxisInput : IEquatable<AxisInput>, IEquatable<float>
     {
         public float Value;
+
+        public bool IsZero => Equals(0f);
 
         public bool Equals(AxisInput other)
         {
@@ -436,6 +200,8 @@ namespace Unity.Input
     public struct HalfAxisInput : IEquatable<HalfAxisInput>, IEquatable<float>
     {
         public float Value;
+
+        public bool IsZero => Equals(0f);
 
         public bool Equals(HalfAxisInput other)
         {
@@ -672,12 +438,17 @@ namespace Unity.Input
         public enum Combination
         {
             Invalid,
+            TwoButtonsToOneAxis,
             TwoButtonsToOneButton,
             ThreeButtonsToOneButton,
+            FourButtonsToOneFloat2,
             OneButtonAndOneAxisToOneAxis,
             TwoButtonsAndOneAxisToOneAxis,
             TwoAxesToOneFloat2,
             ThreeAxesToOneFloat3,
+            TwoAxesToOneAxis, // Greater magnitude.
+            ThreeAxesToOneAxis, // Greater magnitude.
+            FourAxesToOneAxis, // Greater magnitude.
         }
 
         //the operations need to be extensible! (do it by registering entirely new functions?)
@@ -899,6 +670,18 @@ namespace Unity.Input
                                 break;
                             }
 
+                            case Conversion.ByteToButton:
+                            {
+                                var inputPtr = (byte*)Ptr(input, mapping.InputId1);
+                                var outputPtr = (ButtonInput*)Ptr(output, mapping.OutputId);
+                                var wasPressed = outputPtr->IsPressed;
+                                var isPressed = *inputPtr >= 127;///TODO: configurable press points
+                                outputPtr->IsPressed = isPressed;
+                                outputPtr->WasJustPressed = isPressed && !wasPressed;
+                                outputPtr->WasJustReleased = !isPressed && wasPressed;
+                                break;
+                            }
+
                             default:
                                 throw new NotImplementedException("conversion type");
                         }
@@ -920,6 +703,40 @@ namespace Unity.Input
                                 var inputPtr2 = (AxisInput*)Ptr(input, mapping.InputId2);
                                 var outputPtr = (Float2Input*)Ptr(output, mapping.OutputId);
                                 outputPtr->Value = new float2(inputPtr1->Value, inputPtr2->Value);
+                                break;
+                            }
+
+                            case Combination.TwoButtonsToOneAxis:
+                            {
+                                var inputPtr1 = (ButtonInput*)Ptr(input, mapping.InputId1);
+                                var inputPtr2 = (ButtonInput*)Ptr(input, mapping.InputId2);
+                                var outputPtr = (AxisInput*)Ptr(output, mapping.OutputId);
+                                var negativePressed = inputPtr1->IsPressed;
+                                var positivePressed = inputPtr2->IsPressed;
+                                if (negativePressed && !positivePressed)
+                                    outputPtr->Value = -1;
+                                else if (positivePressed && !negativePressed)
+                                    outputPtr->Value = 1;
+                                else
+                                    outputPtr->Value = 0;
+                                break;
+                            }
+
+                            case Combination.FourButtonsToOneFloat2:
+                            {
+                                var inputPtr1 = (ButtonInput*)Ptr(input, mapping.InputId1);
+                                var inputPtr2 = (ButtonInput*)Ptr(input, mapping.InputId2);
+                                var inputPtr3 = (ButtonInput*)Ptr(input, mapping.InputId3);
+                                var inputPtr4 = (ButtonInput*)Ptr(input, mapping.InputId4);
+                                var outputPtr = (Float2Input*)Ptr(output, mapping.OutputId);
+                                // Follows WASD ordering.
+                                var upPressed = inputPtr1->IsPressed;
+                                var leftPressed = inputPtr2->IsPressed;
+                                var downPressed = inputPtr3->IsPressed;
+                                var rightPressed = inputPtr4->IsPressed;
+                                var x = leftPressed && !rightPressed ? -1 : (rightPressed && !leftPressed ? 1 : 0);
+                                var y = upPressed && !downPressed ? 1 : (downPressed && !upPressed ? -1 : 0);
+                                outputPtr->Value = new float2(x, y);
                                 break;
                             }
 
@@ -951,31 +768,34 @@ namespace Unity.Input
             }
         }
 
-        public static unsafe void AddPipelineFragments<TInput>(Dictionary<ulong, InputPipelineFragment> fragments)
+        public static void AddPipelineFragments<TInput>(Dictionary<ulong, InputPipelineFragment> fragments)
             where TInput : struct, IInputData
         {
             using (var pipelineParts = new TInput().InputPipelineParts)
+                AddPipelineFragments(pipelineParts, fragments);
+        }
+
+        public static unsafe void AddPipelineFragments(InputPipeline pipelineParts, Dictionary<ulong, InputPipelineFragment> fragments)
+        {
+            for (var i = 0; i < pipelineParts.StructMappings.Length; ++i)
             {
-                for (var i = 0; i < pipelineParts.StructMappings.Length; ++i)
+                var structMapping = pipelineParts.StructMappings[i];
+
+                // Copy transforms.
+                var transforms = new NativeArray<InputTransform>((int)structMapping.TransformCount, Allocator.Persistent);
+                UnsafeUtility.MemCpy(transforms.GetUnsafePtr(),
+                    (InputTransform*)pipelineParts.Transforms.GetUnsafeReadOnlyPtr() + structMapping.TransformStartIndex,
+                    structMapping.TransformCount * UnsafeUtility.SizeOf<InputTransform>());
+                structMapping.TransformStartIndex = 0;
+
+                var fragment = new InputPipelineFragment
                 {
-                    var structMapping = pipelineParts.StructMappings[i];
+                    StructMapping = structMapping,
+                    Transforms = transforms,
+                };
 
-                    // Copy transforms.
-                    var transforms = new NativeArray<InputTransform>((int)structMapping.TransformCount, Allocator.Persistent);
-                    UnsafeUtility.MemCpy(transforms.GetUnsafePtr(),
-                        (InputTransform*)pipelineParts.Transforms.GetUnsafeReadOnlyPtr() + structMapping.TransformStartIndex,
-                        structMapping.TransformCount * UnsafeUtility.SizeOf<InputTransform>());
-                    structMapping.TransformStartIndex = 0;
-
-                    var fragment = new InputPipelineFragment
-                    {
-                        StructMapping = structMapping,
-                        Transforms = transforms,
-                    };
-
-                    var key = ToInputOutputKey(structMapping.InputFormat, structMapping.OutputFormat);
-                    fragments[key] = fragment;
-                }
+                var key = ToInputOutputKey(structMapping.InputFormat, structMapping.OutputFormat);
+                fragments[key] = fragment;
             }
         }
 
@@ -1004,6 +824,8 @@ namespace Unity.Input
             array.Dispose();
             array = newArray;
         }
+
+        //ideally, this would only include transforms that are relevant for the final output
 
         // Tries to find the shortest sequence of transformations going from the given input format to
         // the given output format. If no such transformation exists, returns false.
@@ -1223,6 +1045,10 @@ namespace Unity.Input
 
             var eventBuffer = InputSystemHook.Instance.EventBuffer;
 
+            // Don't both spawning a job if there's no input.
+            if (eventBuffer.Length == 0)
+                return inputDeps;
+
             // Event buffers are read-only but are re-filled every frame. So we clone
             // it here for every job we schedule.
             //var eventBufferClone = new NativeArray<byte>(eventBuffer.Length, Allocator.TempJob);
@@ -1275,8 +1101,7 @@ namespace Unity.Input
             // Create dictionary of fragments.
             var fragments = new Dictionary<ulong, DOTSInput.InputPipelineFragment>();
 
-            DOTSInput.AddPipelineFragments<PS4ControllerHidEvent>(fragments);
-            DOTSInput.AddPipelineFragments<GamepadInput>(fragments);
+            DOTSInput.AddDevicePipelineFragments(fragments);
             DOTSInput.AddPipelineFragments<TInputComponent>(fragments);
 
             var pipelines = new DOTSInput.InputPipeline();
@@ -1309,15 +1134,7 @@ namespace Unity.Input
             var devicePairings = new List<InputDevicePairing>();
             foreach (var device in InputSystem.devices)
             {
-                uint inputFormat;
-                switch (device.layout)
-                {
-                    case "DualShock4GamepadHID": inputFormat = CRC32.crc32("PS4ControllerHidEvent");
-                        break;
-                    default:
-                        continue;
-                }
-
+                var inputFormat = CRC32.crc32(device.layout + "Event");
                 devicePairings.Add(new InputDevicePairing
                 {
                     PlayerNumber = 0,
