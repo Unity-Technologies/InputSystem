@@ -123,6 +123,7 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+
         internal class Enumerator<T> : IEnumerator<T>
         {
             private readonly T[] m_Array;
