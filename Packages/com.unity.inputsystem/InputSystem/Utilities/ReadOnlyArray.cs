@@ -153,12 +153,12 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Index = m_IndexStart;
             }
 
-            /// <inheritdoc/>>
+            /// <inheritdoc/>
             public void Dispose()
             {
             }
 
-            /// <inheritdoc/>>
+            /// <inheritdoc/>
             public bool MoveNext()
             {
                 if (m_Index < m_IndexEnd)
@@ -166,13 +166,13 @@ namespace UnityEngine.InputSystem.Utilities
                 return (m_Index != m_IndexEnd);
             }
 
-            /// <inheritdoc/>>
+            /// <inheritdoc/>
             public void Reset()
             {
                 m_Index = m_IndexStart;
             }
 
-            /// <inheritdoc/>>
+            /// <inheritdoc/>
             public TValue Current
             {
                 get
