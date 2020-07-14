@@ -135,7 +135,8 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         /// <summary>
-        /// Enumerates the elements of a ReadOnlyArray{TValue}.
+        /// <see cref="ReadOnlyArray{TValue}"/>
+        /// Enumerates the elements of a read-only array.
         /// </summary>
         public struct Enumerator : IEnumerator<TValue>
         {
