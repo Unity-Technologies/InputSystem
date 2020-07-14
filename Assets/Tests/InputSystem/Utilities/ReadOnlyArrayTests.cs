@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
