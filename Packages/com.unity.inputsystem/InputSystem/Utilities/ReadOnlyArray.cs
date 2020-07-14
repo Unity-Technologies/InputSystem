@@ -145,7 +145,7 @@ namespace UnityEngine.InputSystem.Utilities
             private readonly int m_IndexEnd;
             private int m_Index;
 
-            public Enumerator(TValue[] array, int index, int length)
+            internal Enumerator(TValue[] array, int index, int length)
             {
                 m_Array = array;
                 m_IndexStart = index - 1; // First call to MoveNext() moves us to first valid index.
@@ -153,10 +153,12 @@ namespace UnityEngine.InputSystem.Utilities
                 m_Index = m_IndexStart;
             }
 
+            /// <inheritdoc/>>
             public void Dispose()
             {
             }
 
+            /// <inheritdoc/>>
             public bool MoveNext()
             {
                 if (m_Index < m_IndexEnd)
@@ -164,11 +166,13 @@ namespace UnityEngine.InputSystem.Utilities
                 return (m_Index != m_IndexEnd);
             }
 
+            /// <inheritdoc/>>
             public void Reset()
             {
                 m_Index = m_IndexStart;
             }
 
+            /// <inheritdoc/>>
             public TValue Current
             {
                 get
