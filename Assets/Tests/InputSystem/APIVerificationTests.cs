@@ -682,6 +682,7 @@ class APIVerificationTests
         public UnityEngine.InputSystem.Controls.ButtonControl shareButton { get; }
         public UnityEngine.InputSystem.Controls.ButtonControl touchpadButton { get; }
         public UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.Controls.TouchControl> touches { get; }
+        public virtual System.Collections.Generic.IEnumerator<TValue> GetEnumerator();
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
