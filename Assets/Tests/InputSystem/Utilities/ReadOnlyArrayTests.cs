@@ -14,13 +14,13 @@ public class ReadOnlyArrayTests
         foreach (var element in array)
             foo1 = element + 1;
         Assert.That(() =>
-            {
-                var foo = 1.0f;
-                foreach (var element in array)
-                    foo = element + 1;
-            },
-            Is.Not.AllocatingGCMemory());
+        {
+            var foo = 1.0f;
+            foreach (var element in array)
+                foo = element + 1;
+        }, Is.Not.AllocatingGCMemory());
     }
+
     [Test]
     public void WithoutForEach()
     {
@@ -30,11 +30,10 @@ public class ReadOnlyArrayTests
         for (var i = 0; i < array.Count; ++i)
             foo1 = array[i] + 1;
         Assert.That(() =>
-            {
-                var foo = 1.0f;
-                for (var i = 0; i < array.Count; ++i)
-                    foo = array[i] + 1;
-            },
-            Is.Not.AllocatingGCMemory());
+        {
+            var foo = 1.0f;
+            for (var i = 0; i < array.Count; ++i)
+                foo = array[i] + 1;
+        }, Is.Not.AllocatingGCMemory());
     }
 }
