@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Android.LowLevel;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
@@ -185,6 +186,15 @@ namespace UnityEngine.InputSystem.Android
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantJoystick)]
     [Scripting.Preserve]
     public class AndroidJoystick : Joystick
+    {
+    }
+
+    /// <summary>
+    /// A PlayStation DualShock 4 controller connected to an Android device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(AndroidGameControllerState), displayName = "Android DualShock 4 Gamepad")]
+    [Scripting.Preserve]
+    public class DualShock4GamepadAndroid : DualShockGamepad
     {
     }
 }
