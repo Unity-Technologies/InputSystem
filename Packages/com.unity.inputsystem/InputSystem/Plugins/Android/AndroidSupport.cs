@@ -182,13 +182,17 @@ namespace UnityEngine.InputSystem.Android
                     // Vendor Ids, Product Ids can be found here http://www.linux-usb.org/usb.ids
                     const int kVendorMicrosoft = 0x045e;
 
-                    if (caps.vendorId == kVendorMicrosoft &&
-                        caps.motionAxes != null &&
-                        caps.motionAxes.Contains(AndroidAxis.Rx) &&
-                        caps.motionAxes.Contains(AndroidAxis.Ry) &&
+                    // Tested with controllers: PS4 DualShock; XboxOne; Nvidia Shield
+                    // // Tested on devices: Shield console Android 9; Galaxy s9+ Android 10
+                    if (caps.motionAxes.Contains(AndroidAxis.Z) &&
+                        caps.motionAxes.Contains(AndroidAxis.Rz) &&
                         caps.motionAxes.Contains(AndroidAxis.HatX) &&
                         caps.motionAxes.Contains(AndroidAxis.HatY))
-                        return "AndroidGamepadXboxController";
+                    {
+                        if (caps.vendorId == kVendorMicrosoft)
+                            return "AndroidGamepadXboxController";
+                    }
+
 
                     // Fallback to generic gamepads
                     if (caps.motionAxes.Contains(AndroidAxis.HatX) &&
