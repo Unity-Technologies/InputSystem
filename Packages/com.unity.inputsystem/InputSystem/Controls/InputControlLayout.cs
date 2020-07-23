@@ -651,6 +651,13 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder WithRange(float minValue, float maxValue)
+                {
+                    builder.m_Controls[index].minValue = minValue;
+                    builder.m_Controls[index].maxValue = maxValue;
+                    return this;
+                }
+
                 public ControlBuilder WithUsages(params InternedString[] usages)
                 {
                     if (usages == null || usages.Length == 0)
