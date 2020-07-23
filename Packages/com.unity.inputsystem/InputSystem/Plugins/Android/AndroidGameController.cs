@@ -272,5 +272,15 @@ namespace UnityEngine.InputSystem.Android
     public class DualShock4GamepadAndroid : DualShockGamepad
     {
     }
+
+    /// <summary>
+    /// A PlayStation DualShock 4 controller connected to an Android device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(AndroidGameControllerDpadAxisState), displayName = "Android Xbox One controller", variants = AndroidGameControllerDpadAxisState.kVariantGamepad)]
+    [Scripting.Preserve]
+    public class XboxOneGamepadAndroid : XInput.XInputController
+    {
+    }
+
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

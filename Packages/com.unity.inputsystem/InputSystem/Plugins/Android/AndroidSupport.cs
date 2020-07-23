@@ -33,6 +33,10 @@ namespace UnityEngine.InputSystem.Android
                 matches: new InputDeviceMatcher()
                     .WithInterface("Android")
                     .WithDeviceClass("AndroidGameController"));
+            InputSystem.RegisterLayout<XboxOneGamepadAndroid>("XboxOneGamepadAndroid",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("Android")
+                    .WithDeviceClass("AndroidGameController"));
 
             ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
 
@@ -67,27 +71,6 @@ namespace UnityEngine.InputSystem.Android
     ]
 }
             ");
-
-            ////TODO: why do I have to set layout here for leftTrigger, shouldn't it come from child control ?
-            InputSystem.RegisterLayout(string.Format(@"
-{{
-    ""name"" : ""AndroidGamepadXboxController"",
-    ""extend"" : ""AndroidGamepad"",
-    ""displayName"" : ""Android Xbox Gamepad"",
-    ""controls"" : [
-        {0},
-        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {1}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightStick"", ""layout"" : ""Stick"", ""offset"" : {3}, ""format"" : ""VEC2"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightStick/x"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""variant"" : ""{4}""  }},
-        {{ ""name"" : ""rightStick/y"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""variant"" : ""{4}"" }}
-    ]
-}}"
-                , kDpadHatSettings
-                , (uint)AndroidAxis.Z * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidAxis.Rz * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , AndroidGameControllerState.kVariantGamepad));
 
             InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
             InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();
@@ -195,7 +178,7 @@ namespace UnityEngine.InputSystem.Android
                         caps.motionAxes.Contains(AndroidAxis.HatY))
                     {
                         if (caps.vendorId == kVendorMicrosoft)
-                            return "AndroidGamepadXboxController";
+                            return "XboxOneGamepadAndroid";
                         if (caps.vendorId == kVendorSony)
                             return "DualShock4GamepadAndroid";
                     }
