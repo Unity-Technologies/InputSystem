@@ -234,13 +234,13 @@ namespace UnityEngine.InputSystem.XR
                             .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
 
-                            builder.AddControl(featureName + "/x")
-                                .WithLayout("Analog")
-                                .WithRange(-1, 1);
-                            builder.AddControl(featureName + "/y")
-                                .WithLayout("Analog")
-                                .WithRange(-1, 1);
-                            break;
+                        builder.AddControl(featureName + "/x")
+                            .WithLayout("Analog")
+                            .WithRange(-1, 1);
+                        builder.AddControl(featureName + "/y")
+                            .WithLayout("Analog")
+                            .WithRange(-1, 1);
+                        break;
                     }
                     case FeatureType.Axis3D:
                     {
