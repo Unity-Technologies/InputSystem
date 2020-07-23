@@ -220,6 +220,7 @@ namespace UnityEngine.InputSystem.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
+                            .WithParameters("clamp = 2, clampMin = -1, clampMax = 1")
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatFloat)
                             .WithUsages(currentUsages);
@@ -232,7 +233,14 @@ namespace UnityEngine.InputSystem.XR
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
-                        break;
+
+                            builder.AddControl(featureName + "/x")
+                                .WithLayout("Analog")
+                                .WithParameters("clamp = 2, clampMin = -1, clampMax = 1");
+                            builder.AddControl(featureName + "/y")
+                                .WithLayout("Analog")
+                                .WithParameters("clamp = 2, clampMin = -1, clampMax = 1");
+                            break;
                     }
                     case FeatureType.Axis3D:
                     {
