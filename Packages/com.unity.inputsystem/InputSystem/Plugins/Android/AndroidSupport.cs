@@ -29,6 +29,10 @@ namespace UnityEngine.InputSystem.Android
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidGameController"));
+            InputSystem.RegisterLayout<DualShock4GamepadAndroid>("DualShock4GamepadAndroid",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("Android")
+                    .WithDeviceClass("AndroidGameController"));
 
             ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
 
@@ -181,6 +185,7 @@ namespace UnityEngine.InputSystem.Android
 
                     // Vendor Ids, Product Ids can be found here http://www.linux-usb.org/usb.ids
                     const int kVendorMicrosoft = 0x045e;
+                    const int kVendorSony = 0x054c;
 
                     // Tested with controllers: PS4 DualShock; XboxOne; Nvidia Shield
                     // // Tested on devices: Shield console Android 9; Galaxy s9+ Android 10
@@ -191,6 +196,8 @@ namespace UnityEngine.InputSystem.Android
                     {
                         if (caps.vendorId == kVendorMicrosoft)
                             return "AndroidGamepadXboxController";
+                        if (caps.vendorId == kVendorSony)
+                            return "DualShock4GamepadAndroid";
                     }
 
 

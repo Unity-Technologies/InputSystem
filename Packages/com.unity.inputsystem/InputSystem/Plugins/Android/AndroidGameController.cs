@@ -5,12 +5,83 @@ using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Android.LowLevel;
+using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Android.LowLevel
 {
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct AndroidGameControllerState : IInputStateTypeInfo
+    {
+        public const int MaxAxes = 48;
+        public const int MaxButtons = 220;
+
+        internal const string kVariantGamepad = "Gamepad";
+        internal const string kVariantJoystick = "Joystick";
+
+        internal const uint kAxisOffset = sizeof(uint) * (uint) ((MaxButtons + 31) / 32);
+
+        public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
+
+        [InputControl(name = "buttonSouth", bit = (uint) AndroidKeyCode.ButtonA, variants = kVariantGamepad)]
+        [InputControl(name = "buttonWest", bit = (uint) AndroidKeyCode.ButtonX, variants = kVariantGamepad)]
+        [InputControl(name = "buttonNorth", bit = (uint) AndroidKeyCode.ButtonY, variants = kVariantGamepad)]
+        [InputControl(name = "buttonEast", bit = (uint) AndroidKeyCode.ButtonB, variants = kVariantGamepad)]
+        [InputControl(name = "leftStickPress", bit = (uint) AndroidKeyCode.ButtonThumbl, variants = kVariantGamepad)]
+        [InputControl(name = "rightStickPress", bit = (uint) AndroidKeyCode.ButtonThumbr, variants = kVariantGamepad)]
+        [InputControl(name = "leftShoulder", bit = (uint) AndroidKeyCode.ButtonL1, variants = kVariantGamepad)]
+        [InputControl(name = "rightShoulder", bit = (uint) AndroidKeyCode.ButtonR1, variants = kVariantGamepad)]
+        [InputControl(name = "start", bit = (uint) AndroidKeyCode.ButtonStart, variants = kVariantGamepad)]
+        [InputControl(name = "select", bit = (uint) AndroidKeyCode.ButtonSelect, variants = kVariantGamepad)]
+        public fixed uint buttons[(MaxButtons + 31) / 32];
+
+        [InputControl(name = "leftTrigger", offset = (uint) AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
+        [InputControl(name = "rightTrigger", offset = (uint) AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
+        [InputControl(name = "leftStick", variants = kVariantGamepad)]
+        [InputControl(name = "leftStick/y", variants = kVariantGamepad, parameters = "invert")]
+        [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "leftStick/down", variants = kVariantGamepad, parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
+        ////FIXME: state for this control is not contiguous
+        [InputControl(name = "rightStick", offset = (uint) AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint) AndroidAxis.Rz - (uint) AndroidAxis.Z) * sizeof(float) * 8,
+            variants = kVariantGamepad)]
+        [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
+        [InputControl(name = "rightStick/y", offset = ((uint) AndroidAxis.Rz - (uint) AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
+        [InputControl(name = "rightStick/up", offset = ((uint) AndroidAxis.Rz - (uint) AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad,
+            parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "rightStick/down", offset = ((uint) AndroidAxis.Rz - (uint) AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad,
+            parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
+        public fixed float axis[MaxAxes];
+
+        public FourCC format
+        {
+            get { return kFormat; }
+        }
+
+        public AndroidGameControllerState WithButton(AndroidKeyCode code, bool value = true)
+        {
+            fixed (uint* buttonsPtr = buttons)
+            {
+                if (value)
+                    buttonsPtr[(int) code / 32] |= (uint) 1 << ((int) code % 32);
+                else
+                    buttonsPtr[(int) code / 32] &= ~((uint) 1 << ((int) code % 32));
+            }
+
+            return this;
+        }
+
+        public AndroidGameControllerState WithAxis(AndroidAxis axis, float value)
+        {
+            fixed (float* axisPtr = this.axis)
+            {
+                axisPtr[(int) axis] = value;
+            }
+
+            return this;
+        }
+    }
+
+    internal unsafe struct AndroidGameControllerDpadAxisState : IInputStateTypeInfo
     {
         public const int MaxAxes = 48;
         public const int MaxButtons = 220;
@@ -34,6 +105,11 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "select", bit = (uint)AndroidKeyCode.ButtonSelect, variants = kVariantGamepad)]
         public fixed uint buttons[(MaxButtons + 31) / 32];
 
+        [InputControl(name = "dpad", offset=(uint)AndroidAxis.HatX * sizeof(float) + kAxisOffset, format="VEC2", sizeInBits=64, variants = kVariantGamepad)]
+        [InputControl(name = "dpad/right", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantGamepad)]
+        [InputControl(name = "dpad/left", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantGamepad)]
+        [InputControl(name = "dpad/down", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantGamepad)]
+        [InputControl(name = "dpad/up", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantGamepad)]
         [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "leftStick", variants = kVariantGamepad)]
@@ -53,7 +129,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             get { return kFormat; }
         }
 
-        public AndroidGameControllerState WithButton(AndroidKeyCode code, bool value = true)
+        public AndroidGameControllerDpadAxisState WithButton(AndroidKeyCode code, bool value = true)
         {
             fixed(uint* buttonsPtr = buttons)
             {
@@ -65,7 +141,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             return this;
         }
 
-        public AndroidGameControllerState WithAxis(AndroidAxis axis, float value)
+        public AndroidGameControllerDpadAxisState WithAxis(AndroidAxis axis, float value)
         {
             fixed(float* axisPtr = this.axis)
             {
@@ -185,6 +261,15 @@ namespace UnityEngine.InputSystem.Android
     [InputControlLayout(stateType = typeof(AndroidGameControllerState), variants = AndroidGameControllerState.kVariantJoystick)]
     [Scripting.Preserve]
     public class AndroidJoystick : Joystick
+    {
+    }
+
+    /// <summary>
+    /// A PlayStation DualShock 4 controller connected to an Android device.
+    /// </summary>
+    [InputControlLayout(stateType = typeof(AndroidGameControllerDpadAxisState), displayName = "Android DualShock 4 Gamepad", variants = AndroidGameControllerDpadAxisState.kVariantGamepad)]
+    [Scripting.Preserve]
+    public class DualShock4GamepadAndroid : DualShockGamepad
     {
     }
 }
