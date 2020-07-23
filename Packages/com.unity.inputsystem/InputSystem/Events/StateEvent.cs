@@ -54,12 +54,68 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public FourCC typeStatic => Type;
 
+        /// <summary>
+        /// Retrieve the state stored in the event.
+        /// </summary>
+        /// <typeparam name="TState">Type of state expected to be stored in the event. <see cref="IInputStateTypeInfo.format"/>
+        /// must match <see cref="stateFormat"/>.</typeparam>
+        /// <returns>Copy of the state stored in the event.</returns>
+        /// <exception cref="InvalidOperationException"><see cref="stateFormat"/> does not match <see cref="IInputStateTypeInfo.format"/>
+        /// of <typeparamref name="TState"/>.</exception>
+        /// <remarks>
+        /// The event may contain less or more data than what is found in the struct. Only the data found in the event
+        /// is copied. The remainder of the struct is left at default values.
+        /// </remarks>
+        /// <seealso cref="GetState{T}(InputEventPtr)"/>
+        public TState GetState<TState>()
+            where TState : struct, IInputStateTypeInfo
+        {
+            var result = default(TState);
+            if (stateFormat != result.format)
+                throw new InvalidOperationException($"Expected state format '{result.format}' but got '{stateFormat}' instead");
+
+            UnsafeUtility.MemCpy(UnsafeUtility.AddressOf(ref result), state, Math.Min(stateSizeInBytes, UnsafeUtility.SizeOf<TState>()));
+
+            return result;
+        }
+
+        /// <summary>
+        /// Retrieve the state stored in the event.
+        /// </summary>
+        /// <typeparam name="TState">Type of state expected to be stored in the event. <see cref="IInputStateTypeInfo.format"/>
+        /// must match <see cref="stateFormat"/>.</typeparam>
+        /// <param name="ptr">A pointer to an input event. The pointer is checked for <c>null</c> and
+        /// for whether the type of event it refers to is indeed a StateEvent.</param>
+        /// <returns>Copy of the state stored in the event.</returns>
+        /// <remarks>
+        /// The event may contain less or more data than what is found in the struct. Only the data found in the event
+        /// is copied. The remainder of the struct is left at default values.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"><see cref="stateFormat"/> does not match <see cref="IInputStateTypeInfo.format"/>
+        /// of <typeparamref name="TState"/>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="ptr"/> is <c>default(InputEventPtr)</c>.</exception>
+        /// <exception cref="InvalidCastException"><paramref name="ptr"/> does not refer to a StateEvent.</exception>
+        /// <seealso cref="GetState{T}()"/>
+        public static TState GetState<TState>(InputEventPtr ptr)
+            where TState : struct, IInputStateTypeInfo
+        {
+            return From(ptr)->GetState<TState>();
+        }
+
         public static int GetEventSizeWithPayload<TState>()
             where TState : struct
         {
             return UnsafeUtility.SizeOf<TState>() + InputEvent.kBaseEventSize + sizeof(int);
         }
 
+        /// <summary>
+        /// Return the given <see cref="InputEventPtr"/> as a StateEvent pointer.
+        /// </summary>
+        /// <param name="ptr">A pointer to an input event. The pointer is checked for <c>null</c> and
+        /// for whether the type of event it refers to is indeed a StateEvent.</param>
+        /// <returns>Pointer <paramref name="ptr"/> converted to a StateEvent pointer.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="ptr"/> is <c>default(InputEventPtr)</c>.</exception>
+        /// <exception cref="InvalidCastException"><paramref name="ptr"/> does not refer to a StateEvent.</exception>
         public static StateEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
@@ -67,6 +123,11 @@ namespace UnityEngine.InputSystem.LowLevel
             if (!ptr.IsA<StateEvent>())
                 throw new InvalidCastException($"Cannot cast event with type '{ptr.type}' into StateEvent");
 
+            return FromUnchecked(ptr);
+        }
+
+        internal static StateEvent* FromUnchecked(InputEventPtr ptr)
+        {
             return (StateEvent*)ptr.data;
         }
 

@@ -27,6 +27,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations.
 - Fixed possible `NullReferenceException`s on ARMs with controls that receive automatic memory offsets.
 - Fixed `TouchControl.tapCount` resetting to 0 when "Script Debugging" is enabled (case 1194636).
+- Fixed `Touch.activeTouches` not having a `TouchPhase.Began` entry for touches that moved in the same frame that they began in ([case 1230656](https://issuetracker.unity3d.com/issues/input-system-mobile-enhancedtouch-screen-taps-start-with-moved-or-stationary-phase-instead-of-began)).
+- Fixed sequential taps causing touches to get stuck in `Touch.activeTouches`.
+- Improved performance of `Touch.activeTouches` (most notably, a lot of time was spent in endlessly repetitive safety checks).
+- Fixed `EnhancedTouch` APIs not indicating that they need to be enabled with `EnhancedTouchSupport.Enable()`.
+  - The APIs now throw `InvalidOperationException` when used without being enabled.
 
 #### Actions
 
