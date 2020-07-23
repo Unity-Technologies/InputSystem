@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem.Android
                     const int kVendorSony = 0x054c;
 
                     // Tested with controllers: PS4 DualShock; XboxOne; Nvidia Shield
-                    // // Tested on devices: Shield console Android 9; Galaxy s9+ Android 10
+                    // Tested on devices: Shield console Android 9; Galaxy s9+ Android 10
                     if (caps.motionAxes.Contains(AndroidAxis.Z) &&
                         caps.motionAxes.Contains(AndroidAxis.Rz) &&
                         caps.motionAxes.Contains(AndroidAxis.HatX) &&
