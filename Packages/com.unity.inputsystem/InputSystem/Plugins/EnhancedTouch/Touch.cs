@@ -724,7 +724,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                     var currentTouchId = 0;
                     var currentTouchState = default(TouchState*);
                     var touchRecordIndex = history.UserIndexToRecordIndex(touchRecordCount - 1); // Start with last record.
-                    var touchRecordHeader = history.GetRecordHeaderUnchecked(touchRecordIndex);
+                    var touchRecordHeader = history.GetRecordUnchecked(touchRecordIndex);
                     var touchRecordSize = history.bytesPerRecord;
                     var extraMemoryOffset = touchRecordSize - history.extraMemoryPerRecord;
                     for (var n = 0; n < touchRecordCount; ++n)
@@ -737,7 +737,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                                 // We're wrapping around so buffer must be full. Go to last record in buffer.
                                 //touchRecordIndex = history.historyDepth - history.m_HeadIndex - 1;
                                 touchRecordIndex = history.historyDepth - 1;
-                                touchRecordHeader = history.GetRecordHeaderUnchecked(touchRecordIndex);
+                                touchRecordHeader = history.GetRecordUnchecked(touchRecordIndex);
                             }
                             else
                             {

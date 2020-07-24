@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         private unsafe void OnTouchRecorded(InputStateHistory.Record record)
         {
             var recordIndex = record.recordIndex;
-            var touchHeader = m_StateHistory.GetRecordHeaderUnchecked(recordIndex);
+            var touchHeader = m_StateHistory.GetRecordUnchecked(recordIndex);
             var touchState = (TouchState*)touchHeader->statePtrWithoutControlIndex; // m_StateHistory is bound to a single TouchControl.
             touchState->updateStepCount = InputUpdate.s_UpdateStepCount;
 
@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 if (recordIndex != m_StateHistory.m_HeadIndex)
                 {
                     var previousRecordIndex = recordIndex == 0 ? m_StateHistory.historyDepth - 1 : recordIndex - 1;
-                    var previousTouchHeader = m_StateHistory.GetRecordHeaderUnchecked(previousRecordIndex);
+                    var previousTouchHeader = m_StateHistory.GetRecordUnchecked(previousRecordIndex);
                     var previousTouchState = (TouchState*)previousTouchHeader->statePtrWithoutControlIndex;
                     touchState->delta -= previousTouchState->delta;
                     touchState->beganInSameFrame = previousTouchState->beganInSameFrame &&

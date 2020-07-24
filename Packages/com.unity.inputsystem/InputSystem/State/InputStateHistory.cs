@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         $"Index {index} is out of range for history with {m_RecordCount} entries", nameof(index));
 
                 var recordIndex = UserIndexToRecordIndex(index);
-                return new Record(this, recordIndex, GetRecordHeader(recordIndex));
+                return new Record(this, recordIndex, GetRecord(recordIndex));
             }
             set
             {
@@ -144,7 +144,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         $"Index {index} is out of range for history with {m_RecordCount} entries", nameof(index));
 
                 var recordIndex = UserIndexToRecordIndex(index);
-                new Record(this, recordIndex, GetRecordHeader(recordIndex)).CopyFrom(value);
+                new Record(this, recordIndex, GetRecord(recordIndex)).CopyFrom(value);
             }
         }
 
@@ -337,16 +337,16 @@ namespace UnityEngine.InputSystem.LowLevel
             return (m_HeadIndex + index) % m_HistoryDepth;
         }
 
-        protected internal unsafe RecordHeader* GetRecordHeader(int index)
+        protected internal unsafe RecordHeader* GetRecord(int index)
         {
             if (!m_RecordBuffer.IsCreated)
                 throw new InvalidOperationException("History buffer has been disposed");
             if (index < 0 || index >= m_HistoryDepth)
                 throw new ArgumentOutOfRangeException(nameof(index));
-            return GetRecordHeaderUnchecked(index);
+            return GetRecordUnchecked(index);
         }
 
-        internal unsafe RecordHeader* GetRecordHeaderUnchecked(int index)
+        internal unsafe RecordHeader* GetRecordUnchecked(int index)
         {
             return (RecordHeader*)((byte*)m_RecordBuffer.GetUnsafePtr() + index * bytesPerRecord);
         }
@@ -522,7 +522,7 @@ namespace UnityEngine.InputSystem.LowLevel
             private readonly int m_IndexPlusOne; // Plus one so that default(int) works for us.
             private uint m_Version;
 
-            internal RecordHeader* header => m_Owner.GetRecordHeader(recordIndex);
+            internal RecordHeader* header => m_Owner.GetRecord(recordIndex);
             internal int recordIndex => m_IndexPlusOne - 1;
             internal uint version => m_Version;
 
@@ -569,7 +569,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (userIndex + 1 >= m_Owner.Count)
                         return default;
                     var recordIndex = m_Owner.UserIndexToRecordIndex(userIndex + 1);
-                    return new Record(m_Owner, recordIndex, m_Owner.GetRecordHeader(recordIndex));
+                    return new Record(m_Owner, recordIndex, m_Owner.GetRecord(recordIndex));
                 }
             }
 
@@ -582,7 +582,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (userIndex - 1 < 0)
                         return default;
                     var recordIndex = m_Owner.UserIndexToRecordIndex(userIndex - 1);
-                    return new Record(m_Owner, recordIndex, m_Owner.GetRecordHeader(recordIndex));
+                    return new Record(m_Owner, recordIndex, m_Owner.GetRecord(recordIndex));
                 }
             }
 
@@ -803,7 +803,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         $"Index {index} is out of range for history with {Count} entries", nameof(index));
 
                 var recordIndex = UserIndexToRecordIndex(index);
-                return new Record(this, recordIndex, GetRecordHeader(recordIndex));
+                return new Record(this, recordIndex, GetRecord(recordIndex));
             }
             set
             {
@@ -811,7 +811,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new ArgumentOutOfRangeException(
                         $"Index {index} is out of range for history with {Count} entries", nameof(index));
                 var recordIndex = UserIndexToRecordIndex(index);
-                new Record(this, recordIndex, GetRecordHeader(recordIndex)).CopyFrom(value);
+                new Record(this, recordIndex, GetRecord(recordIndex)).CopyFrom(value);
             }
         }
 
@@ -854,7 +854,7 @@ namespace UnityEngine.InputSystem.LowLevel
             private readonly int m_IndexPlusOne;
             private uint m_Version;
 
-            internal RecordHeader* header => m_Owner.GetRecordHeader(recordIndex);
+            internal RecordHeader* header => m_Owner.GetRecord(recordIndex);
             internal int recordIndex => m_IndexPlusOne - 1;
 
             public bool valid => m_Owner != default && m_IndexPlusOne != default && header->version == m_Version;
@@ -900,7 +900,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (userIndex + 1 >= m_Owner.Count)
                         return default;
                     var recordIndex = m_Owner.UserIndexToRecordIndex(userIndex + 1);
-                    return new Record(m_Owner, recordIndex, m_Owner.GetRecordHeader(recordIndex));
+                    return new Record(m_Owner, recordIndex, m_Owner.GetRecord(recordIndex));
                 }
             }
 
@@ -913,7 +913,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (userIndex - 1 < 0)
                         return default;
                     var recordIndex = m_Owner.UserIndexToRecordIndex(userIndex - 1);
-                    return new Record(m_Owner, recordIndex, m_Owner.GetRecordHeader(recordIndex));
+                    return new Record(m_Owner, recordIndex, m_Owner.GetRecord(recordIndex));
                 }
             }
 
