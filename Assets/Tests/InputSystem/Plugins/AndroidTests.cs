@@ -273,6 +273,68 @@ internal class AndroidTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_SupportsAndroidXboxConttrollerWithDpad()
+    {
+        var gamepad = (Gamepad)InputSystem.AddDevice(new InputDeviceDescription
+        {
+            interfaceName = "Android",
+            deviceClass = "AndroidGameController",
+            capabilities = new AndroidDeviceCapabilities
+            {
+                inputSources = AndroidInputSource.Gamepad | AndroidInputSource.Joystick,
+                // http://www.linux-usb.org/usb.ids
+                vendorId = 0x045e,
+                productId = 0x02dd,
+                motionAxes = new[]
+                {
+                    AndroidAxis.Rx,
+                    AndroidAxis.Ry,
+                    AndroidAxis.Z,
+                    AndroidAxis.Rz,
+                    AndroidAxis.HatX,
+                    AndroidAxis.HatY
+                }
+            }.ToJson()
+        });
+
+        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 1)
+                .WithAxis(AndroidAxis.HatY, 1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.True);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.True);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, -1)
+                .WithAxis(AndroidAxis.HatY, -1));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.True);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.True);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+
+        InputSystem.QueueStateEvent(gamepad,
+            new AndroidGameControllerState()
+                .WithAxis(AndroidAxis.HatX, 0)
+                .WithAxis(AndroidAxis.HatY, 0));
+        InputSystem.Update();
+
+        Assert.That(gamepad.dpad.left.isPressed, Is.False);
+        Assert.That(gamepad.dpad.right.isPressed, Is.False);
+        Assert.That(gamepad.dpad.up.isPressed, Is.False);
+        Assert.That(gamepad.dpad.down.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_DualshockTriggersHaveCorrectDefaultValues()
     {
         // Trigger on Dualshock has -1.0 value when in rest mode (not touched by user)

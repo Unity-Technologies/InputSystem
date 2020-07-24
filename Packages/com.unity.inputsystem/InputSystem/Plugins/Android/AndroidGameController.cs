@@ -36,11 +36,11 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "select", bit = (uint) AndroidKeyCode.ButtonSelect, variants = kVariantGamepad)]
         public fixed uint buttons[(MaxButtons + 31) / 32];
 
-        [InputControl(name = "dpad", offset=(uint)AndroidAxis.HatX * sizeof(float) + kAxisOffset, format="VEC2", sizeInBits=64, variants = kVariantGamepad + "," + kVariantDPad)]
-        [InputControl(name = "dpad/right", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantGamepad + "," + kVariantDPad)]
-        [InputControl(name = "dpad/left", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantGamepad + "," + kVariantDPad)]
-        [InputControl(name = "dpad/down", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantGamepad + "," + kVariantDPad)]
-        [InputControl(name = "dpad/up", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantGamepad + "," + kVariantDPad)]
+        [InputControl(name = "dpad", offset=(uint)AndroidAxis.HatX * sizeof(float) + kAxisOffset, format="VEC2", sizeInBits=64, variants = kVariantDPad)]
+        [InputControl(name = "dpad/right", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantDPad)]
+        [InputControl(name = "dpad/left", offset=0, bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantDPad)]
+        [InputControl(name = "dpad/down", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantDPad)]
+        [InputControl(name = "dpad/up", offset=((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit=0, format="FLT", parameters="clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantDPad)]
         [InputControl(name = "leftTrigger", offset = (uint) AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "rightTrigger", offset = (uint) AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
         [InputControl(name = "leftStick", variants = kVariantGamepad)]
