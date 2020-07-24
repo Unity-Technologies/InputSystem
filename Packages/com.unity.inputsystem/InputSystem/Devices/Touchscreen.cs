@@ -29,11 +29,11 @@ namespace UnityEngine.InputSystem.LowLevel
     [Flags]
     internal enum TouchFlags : byte
     {
+        IndirectTouch = 1 << 0,
+
         // NOTE: Leaving the first 3 bits for native.
 
-        IndirectTouch = 1 << 0,
         PrimaryTouch = 1 << 3,
-
         TapPress = 1 << 4,
         TapRelease = 1 << 5,
 
@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true, dontReset = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position of the touch.</value>
         /// <seealso cref="TouchControl.position"/>
-        [InputControl(displayName = "Position")]
+        [InputControl(displayName = "Position", dontReset = true)]
         [FieldOffset(4)]
         public Vector2 position;
 
@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem.LowLevel
         byte displayIndex;
 
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
-        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 5)]
+        [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 4)]
         [FieldOffset(35)]
         public byte flags;
 
@@ -215,9 +215,8 @@ namespace UnityEngine.InputSystem.LowLevel
         phase == TouchPhase.Stationary;
 
         /// <summary>
-        /// Whether  TODO
+        /// Whether, after not having any touch contacts, this is part of the first touch contact that started.
         /// </summary>
-        /// <value>Whether the touch is the first TODO</value>
         /// <remarks>
         /// This flag will be set internally by <see cref="Touchscreen"/>. Generally, it is
         /// not necessary to set this bit manually when feeding data to Touchscreens.
@@ -276,7 +275,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public bool isTapRelease
+        internal bool isTapRelease
         {
             get => (flags & (byte)TouchFlags.TapRelease) != 0;
             set
@@ -851,10 +850,10 @@ namespace UnityEngine.InputSystem
                     if (primaryTouchState->isNoneEndedOrCanceled)
                     {
                         newTouchState.isPrimaryTouch = true;
-                        InputState.Change(primaryTouch, newTouchState, eventPtr: eventPtr);
+                        InputState.Change(primaryTouch, ref newTouchState, eventPtr: eventPtr);
                     }
 
-                    InputState.Change(touches[i], newTouchState, eventPtr: eventPtr);
+                    InputState.Change(touches[i], ref newTouchState, eventPtr: eventPtr);
 
                     Profiler.EndSample();
                     return;
@@ -927,12 +926,12 @@ namespace UnityEngine.InputSystem
             // Press.
             state.isTapPress = true;
             state.isTapRelease = false;
-            InputState.Change(control, state, eventPtr: eventPtr);
+            InputState.Change(control, ref state, eventPtr: eventPtr);
 
             // Release.
             state.isTapPress = false;
             state.isTapRelease = true;
-            InputState.Change(control, state, eventPtr: eventPtr);
+            InputState.Change(control, ref state, eventPtr: eventPtr);
             state.isTapRelease = false;
         }
 
