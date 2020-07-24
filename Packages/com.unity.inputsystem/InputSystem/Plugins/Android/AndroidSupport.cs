@@ -29,14 +29,8 @@ namespace UnityEngine.InputSystem.Android
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidGameController"));
-            InputSystem.RegisterLayout<DualShock4GamepadAndroid>("DualShock4GamepadAndroid",
-                matches: new InputDeviceMatcher()
-                    .WithInterface("Android")
-                    .WithDeviceClass("AndroidGameController"));
-            InputSystem.RegisterLayout<XboxOneGamepadAndroid>("XboxOneGamepadAndroid",
-                matches: new InputDeviceMatcher()
-                    .WithInterface("Android")
-                    .WithDeviceClass("AndroidGameController"));
+            InputSystem.RegisterLayout<DualShock4GamepadAndroid>();
+            InputSystem.RegisterLayout<XboxOneGamepadAndroid>();
 
             ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
 
