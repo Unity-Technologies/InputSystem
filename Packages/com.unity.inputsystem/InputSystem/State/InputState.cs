@@ -2,6 +2,8 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: method to get raw state pointer for device/control
+
 ////REVIEW: allow to restrict state change monitors to specific updates?
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -30,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         public static uint updateCount => InputUpdate.s_UpdateStepCount;
 
-        public static double currentTime => InputRuntime.s_Instance.currentTime + InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+        public static double currentTime => InputRuntime.s_Instance.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         /// <summary>
         /// Callback that is triggered when the state of an input device changes.
@@ -55,10 +57,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
             // Make sure event is a StateEvent or DeltaStateEvent and has a format matching the device.
             FourCC stateFormat;
-            if (eventPtr.IsA<StateEvent>())
-                stateFormat = StateEvent.From(eventPtr)->stateFormat;
-            else if (eventPtr.IsA<DeltaStateEvent>())
-                stateFormat = DeltaStateEvent.From(eventPtr)->stateFormat;
+            var eventType = eventPtr.type;
+            if (eventType == StateEvent.Type)
+                stateFormat = StateEvent.FromUnchecked(eventPtr)->stateFormat;
+            else if (eventType == DeltaStateEvent.Type)
+                stateFormat = DeltaStateEvent.FromUnchecked(eventPtr)->stateFormat;
             else
             {
                 #if UNITY_EDITOR
@@ -87,7 +90,25 @@ namespace UnityEngine.InputSystem.LowLevel
         /// also performs related tasks such as checking state change monitors, flipping buffers, or making the respective
         /// device current.
         /// </remarks>
-        public static unsafe void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default,
+        public static void Change<TState>(InputControl control, TState state, InputUpdateType updateType = default,
+            InputEventPtr eventPtr = default)
+            where TState : struct
+        {
+            Change(control, ref state, updateType, eventPtr);
+        }
+
+        /// <summary>
+        /// Perform one update of input state.
+        /// </summary>
+        /// <remarks>
+        /// Incorporates the given state and triggers all state change monitors as needed.
+        ///
+        /// Note that input state changes performed with this method will not be visible on remotes as they will bypass
+        /// event processing. It is effectively equivalent to directly writing into input state memory except that it
+        /// also performs related tasks such as checking state change monitors, flipping buffers, or making the respective
+        /// device current.
+        /// </remarks>
+        public static unsafe void Change<TState>(InputControl control, ref TState state, InputUpdateType updateType = default,
             InputEventPtr eventPtr = default)
             where TState : struct
         {

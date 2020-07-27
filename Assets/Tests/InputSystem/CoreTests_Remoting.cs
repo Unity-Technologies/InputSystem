@@ -23,14 +23,17 @@ partial class CoreTests
         using (var remote = new FakeRemote())
         {
             Assert.That(remote.manager.devices, Has.Count.EqualTo(2));
-            Assert.That(remote.manager.devices, Has.Exactly(1).TypeOf<Gamepad>().With.Property("layout").EqualTo("Gamepad"));
-            Assert.That(remote.manager.devices, Has.Exactly(1).TypeOf<Keyboard>().With.Property("layout").EqualTo("Keyboard"));
+            Assert.That(remote.manager.devices, Has.Exactly(1).InstanceOf<Gamepad>().With.Property("layout").EqualTo("Gamepad"));
+            Assert.That(remote.manager.devices, Has.Exactly(1).InstanceOf<Keyboard>().With.Property("layout").EqualTo("Keyboard"));
             Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
         }
     }
 
     [Test]
     [Category("Remote")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254567")]
+#endif
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

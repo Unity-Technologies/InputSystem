@@ -1,19 +1,25 @@
-test_sample_projects:
-  name : Test Sample Projects
+{% metadata_file .yamato/config.metadata %}
+---
+{% for editor in editors %}
+test_sample_projects_{{ editor.version }}:
+  name : Test Sample Projects {{ editor.version }}
   agent:
     type: Unity::VM::osx
-    image: buildfarm/mac:stable
+    image: package-ci/mac:stable
     flavor: m1.mac
   commands:
-    - npm install upm-ci-utils@stable -g --registry https://api.bintray.com/npm/unity/unity-npm
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
-    branches:
-      only:
-        - "/.*/"
+    cancel_old_ci: true
+    pull_requests:
+      - targets:
+          only:
+            - "develop"
   artifacts:
     UTR_Output.zip:
       paths:
         - "upm-ci~/**/*"
+{% endfor %}

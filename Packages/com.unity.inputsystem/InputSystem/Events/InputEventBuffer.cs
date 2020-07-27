@@ -244,7 +244,14 @@ namespace UnityEngine.InputSystem.LowLevel
             // end up overwriting the data we need to find the next event in memory.
             var newReadPos = currentReadPos;
             if (numRemainingEvents > 1)
+            {
+                // Don't perform safety check in non-debug builds.
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 newReadPos = InputEvent.GetNextInMemoryChecked(currentReadPos, ref this);
+                #else
+                newReadPos = InputEvent.GetNextInMemory(currentReadPos);
+                #endif
+            }
 
             // If the current event should be left in the buffer, advance write position.
             if (leaveEventInBuffer)

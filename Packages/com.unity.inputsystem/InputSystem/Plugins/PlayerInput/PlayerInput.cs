@@ -9,6 +9,11 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.UI;
 #endif
 
+////TODO: when joining is *off*, allow auto-switching even in multiplayer
+
+////TODO: differentiate not only by already paired devices but rather take control schemes into account; allow two players to be on the same
+////      device as long as they are using different control schemes
+
 ////TODO: allow PlayerInput to be set up in a way where it's in an unpaired/non-functional state and expects additional configuration
 
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
@@ -208,6 +213,7 @@ namespace UnityEngine.InputSystem
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
+    [HelpURL(InputSystem.kDocUrl + "/manual/Components.html#playerinput-component")]
     public class PlayerInput : MonoBehaviour
     {
         /// <summary>
@@ -430,7 +436,14 @@ namespace UnityEngine.InputSystem
             get => m_CurrentActionMap;
             set
             {
-                m_CurrentActionMap?.Disable();
+                // If someone switches maps from an action callback, we may get here recursively
+                // from Disable(). To avoid that, we null out the current action map while
+                // we disable it.
+                var oldMap = m_CurrentActionMap;
+                m_CurrentActionMap = null;
+                oldMap?.Disable();
+
+                // Switch to new map.
                 m_CurrentActionMap = value;
                 m_CurrentActionMap?.Enable();
             }

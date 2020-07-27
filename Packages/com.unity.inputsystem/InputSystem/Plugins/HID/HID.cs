@@ -9,6 +9,11 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
 
+// HID support is currently broken in 32-bit Windows standalone players. Consider 32bit Windows players unsupported for now.
+#if UNITY_STANDALONE_WIN && !UNITY_64
+#warning The 32-bit Windows player is not currently supported by the Input System. HID input will not work in the player. Please use x86_64, if possible.
+#endif
+
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
 
@@ -21,6 +26,8 @@ using UnityEngine.Scripting;
 ////TODO: add blacklist for devices we really don't want to use (like apple's internal trackpad)
 
 ////TODO: add a way to mark certain layouts (such as HID layouts) as fallbacks; ideally, affect the layout matching score
+
+////TODO: enable this to handle devices that split their input into multiple reports
 
 #pragma warning disable CS0649, CS0219
 namespace UnityEngine.InputSystem.HID

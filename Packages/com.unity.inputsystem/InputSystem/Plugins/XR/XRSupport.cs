@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR || PACKAGE_DOCS_GENERATION
+#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
 using System;
 using System.Collections.Generic;
 using UnityEngine.XR;
@@ -101,17 +101,10 @@ namespace UnityEngine.InputSystem.XR
         /// The serial number of the device.  An empty string if no serial number is available.
         /// </summary>
         public string serialNumber;
-#if UNITY_2019_3_OR_NEWER
         /// <summary>
         /// The capabilities of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
         /// </summary>
         public InputDeviceCharacteristics characteristics;
-#else //UNITY_2019_3_OR_NEWER
-        /// <summary>
-        /// The role of the device, used to help filter and identify devices that server a certain purpose (e.g. controller, or headset, or hardware tracker).
-        /// </summary>
-        public InputDeviceRole deviceRole;
-#endif //UNITY_2019_3_OR_NEWER
         /// <summary>
         /// The underlying deviceId, this can be used with <see cref="UnityEngine.XR.InputDevices"/> to create a device.
         /// </summary>
@@ -427,4 +420,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // UNITY_INPUT_SYSTEM_ENABLE_XR
+#endif // (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
