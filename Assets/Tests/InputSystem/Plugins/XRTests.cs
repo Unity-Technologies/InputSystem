@@ -226,7 +226,7 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 9));
 
         var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
