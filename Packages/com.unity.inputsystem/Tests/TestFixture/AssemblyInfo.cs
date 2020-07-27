@@ -7,3 +7,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyVersion("1.0.0")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
+[assembly: InternalsVisibleTo("Unity.InputSystem.IntegrationTests")]
