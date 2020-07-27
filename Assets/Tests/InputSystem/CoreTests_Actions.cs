@@ -4375,8 +4375,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
     {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
         var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -4416,6 +4420,7 @@ partial class CoreTests
             // from the base PS4 gamepad layout.
             Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
         }
+#endif
     }
 
     [Test]
@@ -4472,8 +4477,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
     {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepadScheme = new InputControlScheme("GenericGamepad")
             .WithRequiredDevice("<Gamepad>");
         var ps4GamepadScheme = new InputControlScheme("PS4")
@@ -4493,6 +4502,7 @@ partial class CoreTests
             Is.EqualTo(ps4GamepadScheme));
         Assert.That(InputControlScheme.FindControlSchemeForDevice(xboxController, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
             Is.EqualTo(xboxGamepadScheme));
+#endif
     }
 
     // The bindings targeting an action can be masked out such that only specific
@@ -7041,6 +7051,58 @@ partial class CoreTests
                 Performed(positionAction, mouse.position, new Vector2(100, 200), time: 0.6)
                     .AndThen(Performed(positionAction, pen.position, new Vector2(300, 400), time: 0.7)));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_AxisControlWithoutLimitsCanTriggerActionsWithMultipleBindings()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""SingleAxis"", ""layout"" : ""Analog"", ""format"" : ""FLT"" }
+                ]
+            }
+        ";
+
+        // Create base device with unclamped axis
+        InputSystem.RegisterLayout(json);
+        InputDevice device = InputSystem.AddDevice("TestLayout");
+        AxisControl singleAxis = device["SingleAxis"] as AxisControl;
+
+        // Add a second device to create 2 bindings
+        InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "TestLayout/SingleAxis");
+        action.AddBinding("<Gamepad>/buttonSouth");
+
+        int performedCallCount = 0;
+        float lastPerformedValue = 0.0f;
+        action.performed += ctx =>
+        {
+            performedCallCount++;
+            lastPerformedValue = ctx.ReadValue<float>();
+        };
+
+        action.Enable();
+
+        // Assert there are multiple bindings with multiple controls
+        // This triggers conflict resolution.
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+
+        InputSystem.Update();
+
+        // Set Initial Value to start action.
+        Set(singleAxis, 0.123f);
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.123f));
+
+        // Update action to new peformed value
+        Set(singleAxis, 0.456f);
+        Assert.That(performedCallCount, Is.EqualTo(2));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.456f));
     }
 
     [Test]

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
@@ -52,7 +51,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(layout = "Vector2", displayName = "Delta", usage = "Secondary2DMotion")]
         public Vector2 delta;
 
-        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure")]
+        [InputControl(layout = "Analog", displayName = "Pressure", usage = "Pressure", defaultState = 1f)]
         public float pressure;
 
         [InputControl(layout = "Vector2", displayName = "Radius", usage = "Radius")]
@@ -100,7 +99,7 @@ namespace UnityEngine.InputSystem
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <c>Event.mousePosition</c>).
         /// </remarks>
-        public Vector2Control position { get; private set; }
+        public Vector2Control position { get; protected set; }
 
         /// <summary>
         /// The current window-space motion delta of the pointer.
@@ -145,7 +144,7 @@ namespace UnityEngine.InputSystem
         /// not <c>(2,2)</c> even though that's the value received from the event.
         /// </remarks>
         /// <seealso cref="InputControlExtensions.AccumulateValueInEvent"/>
-        public Vector2Control delta { get; private set; }
+        public Vector2Control delta { get; protected set; }
 
         ////REVIEW: move this down to only TouchScreen?
         /// <summary>
@@ -156,7 +155,7 @@ namespace UnityEngine.InputSystem
         /// Usually, only touch input has radius detection.
         /// </remarks>
         /// <seealso cref="TouchControl.radius"/>
-        public Vector2Control radius { get; private set; }
+        public Vector2Control radius { get; protected set; }
 
         /// <summary>
         /// Normalized pressure with which the pointer is currently pressed while in contact with the pointer surface.
@@ -169,7 +168,7 @@ namespace UnityEngine.InputSystem
         /// Note that it is possible for the value to go above 1 even though it is considered normalized. The reason is
         /// that calibration on the system can put the maximum pressure point below the physically supported maximum value.
         /// </remarks>
-        public AxisControl pressure { get; private set; }
+        public AxisControl pressure { get; protected set; }
 
         /// <summary>
         /// Whether the pointer is pressed down.
@@ -180,7 +179,7 @@ namespace UnityEngine.InputSystem
         /// the screen/tablet surface. For touchscreens (<see cref="Touchscreen"/>), it means that there is at least
         /// one finger touching the screen.
         /// </remarks>
-        public ButtonControl press { get; private set; }
+        public ButtonControl press { get; protected set; }
 
         /// <summary>
         /// The pointer that was added or used last by the user or <c>null</c> if there is no pointer
@@ -233,6 +232,7 @@ namespace UnityEngine.InputSystem
         {
             var statePtr = currentStatePtr;
 
+            ////FIXME: This stuff makes pointer events too expensive; find a better way.
             delta.x.AccumulateValueInEvent(statePtr, eventPtr);
             delta.y.AccumulateValueInEvent(statePtr, eventPtr);
 

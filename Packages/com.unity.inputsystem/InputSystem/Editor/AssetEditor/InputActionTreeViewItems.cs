@@ -1,5 +1,7 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -18,6 +20,24 @@ namespace UnityEngine.InputSystem.Editor
         public abstract GUIStyle colorTagStyle { get; }
         public string name { get; }
         public Guid guid { get; }
+
+        // For some operations (like copy-paste), we want to include information that we have filtered out.
+        internal List<ActionTreeItemBase> m_HiddenChildren;
+        public bool hasChildrenIncludingHidden => hasChildren || (m_HiddenChildren != null && m_HiddenChildren.Count > 0);
+        public IEnumerable<ActionTreeItemBase> hiddenChildren => m_HiddenChildren ?? Enumerable.Empty<ActionTreeItemBase>();
+        public IEnumerable<ActionTreeItemBase> childrenIncludingHidden
+        {
+            get
+            {
+                if (hasChildren)
+                    foreach (var child in children)
+                        if (child is ActionTreeItemBase item)
+                            yield return item;
+                if (m_HiddenChildren != null)
+                    foreach (var child in m_HiddenChildren)
+                        yield return child;
+            }
+        }
 
         // Action data is generally stored in arrays. Action maps are stored in m_ActionMaps arrays in assets,
         // actions are stored in m_Actions arrays on maps and bindings are stored in m_Bindings arrays on maps.

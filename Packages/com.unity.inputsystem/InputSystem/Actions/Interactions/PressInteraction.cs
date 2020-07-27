@@ -6,6 +6,9 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////TODO: protect against the control *hovering* around the press point; this should not fire the press repeatedly; probably need a zone around the press point
+////TODO: also, for analog controls, we probably want a deadzone that gives just a tiny little buffer at the low end before the action starts
+
 ////REVIEW: shouldn't it use Canceled for release on PressAndRelease instead of triggering Performed again?
 
 namespace UnityEngine.InputSystem.Interactions

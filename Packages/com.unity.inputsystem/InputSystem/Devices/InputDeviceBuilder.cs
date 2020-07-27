@@ -704,7 +704,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
-        private InputControlLayout FindOrLoadLayout(string name)
+        private static InputControlLayout FindOrLoadLayout(string name)
         {
             Debug.Assert(InputControlLayout.s_CacheInstanceRef > 0, "Should have acquired layout cache reference");
             return InputControlLayout.cache.FindOrLoadLayout(name);
@@ -826,6 +826,10 @@ namespace UnityEngine.InputSystem.Layouts
 
                     if (child.m_StateBlock.bitOffset == InputStateBlock.InvalidOffset)
                         child.m_StateBlock.bitOffset = 0;
+
+                    // Conform to memory addressing constraints of CPU architecture. If we don't do
+                    // this, ARMs will end up choking on misaligned memory accesses.
+                    runningByteOffset = MemoryHelpers.AlignNatural(runningByteOffset, child.m_StateBlock.alignedSizeInBytes);
                 }
 
                 ////FIXME: seems like this should take bitOffset into account
@@ -867,6 +871,8 @@ namespace UnityEngine.InputSystem.Layouts
                 child.m_StateBlock.byteOffset += ourOffset;
                 FinalizeControlHierarchyRecursive(child);
             }
+
+            control.isSetupFinished = true;
         }
 
         private static InputDeviceBuilder s_Instance;

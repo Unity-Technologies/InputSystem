@@ -1,4 +1,4 @@
-#if UNITY_INPUT_SYSTEM_ENABLE_XR
+#if UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
@@ -92,18 +92,11 @@ namespace UnityEngine.InputSystem.XR
 
             if (string.IsNullOrEmpty(matchedLayout))
             {
-#if UNITY_2019_3_OR_NEWER
                 const InputDeviceCharacteristics controllerCharacteristics = InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
                 if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
                     matchedLayout = "XRHMD";
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
                     matchedLayout = "XRController";
-#else //UNITY_2019_3_OR_NEWER
-                if (deviceDescriptor.deviceRole == InputDeviceRole.LeftHanded || deviceDescriptor.deviceRole == InputDeviceRole.RightHanded)
-                    matchedLayout = "XRController";
-                else if (deviceDescriptor.deviceRole == InputDeviceRole.Generic)
-                    matchedLayout = "XRHMD";
-#endif //UNITY_2019_3_OR_NEWER
             }
 
             string layoutName;
@@ -288,4 +281,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
-#endif // UNITY_INPUT_SYSTEM_ENABLE_XR
+#endif // UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR

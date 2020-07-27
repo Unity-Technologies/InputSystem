@@ -466,5 +466,11 @@ namespace UnityEngine.InputSystem.Utilities
             a = b;
             b = temp;
         }
+
+        public static uint AlignNatural(uint offset, uint sizeInBytes)
+        {
+            var alignment = Math.Min(8, sizeInBytes);
+            return offset.AlignToMultipleOf(alignment);
+        }
     }
 }

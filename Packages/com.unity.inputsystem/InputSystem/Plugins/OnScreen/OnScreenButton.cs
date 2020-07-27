@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.OnScreen
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Button")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-buttons")]
     public class OnScreenButton : OnScreenControl, IPointerDownHandler, IPointerUpHandler
     {
         public void OnPointerUp(PointerEventData eventData)
