@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem.XR
         // A PoseControl consists of 6 subcontrols with specific names and types
         private bool IsPoseControl(List<XRFeatureDescriptor> features, int startIndex)
         {
-            for(int i = 0; i < 6; i++)
+            for(var i = 0; i < 6; i++)
             {
                 if (!features[startIndex + i].name.EndsWith(poseSubControlNames[i]) ||
                     features[startIndex + i].featureType != poseSubControlTypes[i])
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.XR
             var currentUsages = new List<string>();
 
             uint currentOffset = 0;
-            for(int i = 0; i < descriptor.inputFeatures.Count; i++)
+            for(var i = 0; i < descriptor.inputFeatures.Count; i++)
             {
                 var feature = descriptor.inputFeatures[i];
                 currentUsages.Clear();
