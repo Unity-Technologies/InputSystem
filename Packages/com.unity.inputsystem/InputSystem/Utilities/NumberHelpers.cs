@@ -13,6 +13,15 @@ namespace UnityEngine.InputSystem.Utilities
             return number + alignment - remainder;
         }
 
+        public static long AlignToMultipleOf(this long number, long alignment)
+        {
+            var remainder = number % alignment;
+            if (remainder == 0)
+                return number;
+
+            return number + alignment - remainder;
+        }
+
         public static uint AlignToMultipleOf(this uint number, uint alignment)
         {
             var remainder = number % alignment;
