@@ -32,6 +32,8 @@ however, it has to be formatted properly to pass verification tests.
 - Improved performance of `Touch.activeTouches` (most notably, a lot of time was spent in endlessly repetitive safety checks).
 - Fixed `EnhancedTouch` APIs not indicating that they need to be enabled with `EnhancedTouchSupport.Enable()`.
   - The APIs now throw `InvalidOperationException` when used without being enabled.
+- Fixed memory corruption in `InputEventTrace.AllocateEvent` ([case 1262496](https://issuetracker.unity3d.com/issues/input-system-crash-with-various-stack-traces-when-using-inputactiontrace-dot-subscribetoall))
+  * Manifested itself, for example, as crashes when using `InputActionTrace.SubscribeToAll`.
 
 #### Actions
 

@@ -1763,6 +1763,8 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace())
         {
+            Assert.That(trace.buffer.capacityInBytes, Is.Zero);
+
             action.performed += trace.RecordAction;
 
             var state = new GamepadState {leftStick = new Vector2(0.123f, 0.234f)};
@@ -1772,6 +1774,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W), 0.0987);
             InputSystem.Update();
 
+            Assert.That(trace.buffer.capacityInBytes, Is.EqualTo(2048)); // Default capacity increment.
             Assert.That(trace.count, Is.EqualTo(3));
 
             var events = trace.ToArray();
