@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.XR
         public Vector3 angularVelocity => m_AngularVelocity;
     }
 
-    [InputControlLayout(stateType = typeof(PoseState))]
+    [Preserve, InputControlLayout(stateType = typeof(PoseState))]
     public class PoseControl : InputControl<PoseState>
     {
         [Preserve]
