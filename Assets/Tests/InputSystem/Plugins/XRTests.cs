@@ -444,7 +444,6 @@ internal class XRTests : InputTestFixture
         // A Pose control parent was created based off subcontrols
         var pose = generatedLayout["PoseControl"];
         Assert.That(pose.layout, Is.EqualTo(new InternedString("Pose")));
-
     }
 
     private const int kNumBaseHMDControls = 10;

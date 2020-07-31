@@ -171,13 +171,13 @@ namespace UnityEngine.InputSystem.XR
         // A PoseControl consists of 6 subcontrols with specific names and types
         private bool IsPoseControl(List<XRFeatureDescriptor> features, int startIndex)
         {
-            for(var i = 0; i < 6; i++)
+            for (var i = 0; i < 6; i++)
             {
                 if (!features[startIndex + i].name.EndsWith(poseSubControlNames[i]) ||
                     features[startIndex + i].featureType != poseSubControlTypes[i])
                     return false;
             }
-            return true;  
+            return true;
         }
 
         private InputControlLayout Build()
@@ -197,7 +197,7 @@ namespace UnityEngine.InputSystem.XR
             var currentUsages = new List<string>();
 
             uint currentOffset = 0;
-            for(var i = 0; i < descriptor.inputFeatures.Count; i++)
+            for (var i = 0; i < descriptor.inputFeatures.Count; i++)
             {
                 var feature = descriptor.inputFeatures[i];
                 currentUsages.Clear();
@@ -218,19 +218,18 @@ namespace UnityEngine.InputSystem.XR
 
                 featureName = featureName.ToLower();
 
-                if(IsSubControl(featureName))
+                if (IsSubControl(featureName))
                 {
                     string parentControl = GetParentControlName(featureName);
-                    if(!parentControls.Contains(parentControl))
+                    if (!parentControls.Contains(parentControl))
                     {
-                        if(IsPoseControl(descriptor.inputFeatures, i))
+                        if (IsPoseControl(descriptor.inputFeatures, i))
                         {
                             builder.AddControl(parentControl)
-                            .WithLayout("Pose")
-                            .WithByteOffset(0);
+                                .WithLayout("Pose")
+                                .WithByteOffset(0);
                             parentControls.Add(parentControl);
                         }
-                        
                     }
                 }
 

@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -26,7 +26,6 @@ namespace UnityEngine.InputSystem.XR
             m_Rotation = rotation;
             m_Velocity = velocity;
             m_AngularVelocity = angularVelocity;
-
         }
 
         [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button")]
