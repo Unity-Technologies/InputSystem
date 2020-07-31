@@ -748,9 +748,9 @@ internal class XRTests : InputTestFixture
         [FieldOffset(0)] public byte isTracked;
         [FieldOffset(4)] public uint trackingState;
         [FieldOffset(8)] public Vector3 position;
-        [FieldOffset(12)] public Quaternion rotation;
-        [FieldOffset(20)] public Vector3 velocity;
-        [FieldOffset(32)] public Vector3 angularVelocity;
+        [FieldOffset(20)] public Quaternion rotation;
+        [FieldOffset(36)] public Vector3 velocity;
+        [FieldOffset(48)] public Vector3 angularVelocity;
 
         public static InputDeviceDescription CreateDeviceDescription()
         {

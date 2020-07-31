@@ -1,52 +1,81 @@
-﻿using UnityEngine;
+﻿using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 using TrackingState = UnityEngine.XR.InputTrackingState;
 
 namespace UnityEngine.InputSystem.XR
 {
-    public struct Pose
+    [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
+    public struct PoseState : IInputStateTypeInfo
     {
-        public bool isTracked { get; set; }
-        public TrackingState trackingState { get; set; }
+        internal const int kSizeInBytes = 60;
 
-        public Vector3 position { get; set; }
-        public Quaternion rotation { get; set; }
+        public FourCC format => new FourCC('P', 'o', 's', 'e');
 
-        public Vector3 velocity { get; set; }
-        public Vector3 angularVelocity { get; set; }
+        public PoseState(bool isTracked, TrackingState trackingState, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 angularVelocity)
+        {
+            m_IsTracked = isTracked;
+            m_TrackingState = trackingState;
+            m_Position = position;
+            m_Rotation = rotation;
+            m_Velocity = velocity;
+            m_AngularVelocity = angularVelocity;
+
+        }
+
+        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button")]
+        public bool m_IsTracked;
+
+        [FieldOffset(4), InputControl(displayName = "Tracking State", layout = "Integer")]
+        public TrackingState m_TrackingState;
+
+        [FieldOffset(8), InputControl(displayName = "Position", noisy = true)]
+        public Vector3 m_Position;
+
+        [FieldOffset(20), InputControl(displayName = "Rotation", noisy = true)]
+        public Quaternion m_Rotation;
+
+        [FieldOffset(36), InputControl(displayName = "Velocity", noisy = true)]
+        public Vector3 m_Velocity;
+
+        [FieldOffset(48), InputControl(displayName = "Angular Velocity", noisy = true)]
+        public Vector3 m_AngularVelocity;
+
+        public bool isTracked => m_IsTracked;
+        public TrackingState trackingState => m_TrackingState;
+        public Vector3 position => m_Position;
+        public Quaternion rotation => m_Rotation;
+        public Vector3 velocity => m_Velocity;
+        public Vector3 angularVelocity => m_AngularVelocity;
     }
 
-    public class PoseControl : InputControl<Pose>
+    [InputControlLayout(stateType = typeof(PoseState))]
+    public class PoseControl : InputControl<PoseState>
     {
         [Preserve]
-        [InputControl(offset = 0)]
         public ButtonControl isTracked { get; private set; }
 
         [Preserve]
-        [InputControl(offset = 4)]
         public IntegerControl trackingState { get; private set; }
 
-        [Preserve]
-        [InputControl(offset = 8, noisy = true)]
         public Vector3Control position { get; private set; }
 
-        [Preserve]
-        [InputControl(offset = 20, noisy = true)]
         public QuaternionControl rotation { get; private set; }
 
-        [Preserve]
-        [InputControl(offset = 36, noisy = true)]
         public Vector3Control velocity { get; private set; }
 
-        [Preserve]
-        [InputControl(offset = 48, noisy = true)]
         public Vector3Control angularVelocity { get; private set; }
 
         public PoseControl()
-        { }
+        {
+            m_StateBlock.format = new FourCC('P', 'o', 's', 'e');
+        }
 
         protected override void FinishSetup()
         {
@@ -60,27 +89,16 @@ namespace UnityEngine.InputSystem.XR
             base.FinishSetup();
         }
 
-        public override unsafe Pose ReadUnprocessedValueFromState(void* statePtr)
+        public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
-            return new Pose()
-            {
-                isTracked = isTracked.ReadUnprocessedValueFromState(statePtr) > 0.5f,
-                trackingState = (TrackingState)trackingState.ReadUnprocessedValueFromState(statePtr),
-                position = position.ReadUnprocessedValueFromState(statePtr),
-                rotation = rotation.ReadUnprocessedValueFromState(statePtr),
-                velocity = velocity.ReadUnprocessedValueFromState(statePtr),
-                angularVelocity = angularVelocity.ReadUnprocessedValueFromState(statePtr),
-            };
+            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+            return *valuePtr;
         }
 
-        public override unsafe void WriteValueIntoState(Pose value, void* statePtr)
+        public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
-            isTracked.WriteValueIntoState(value.isTracked, statePtr);
-            trackingState.WriteValueIntoState((uint)value.trackingState, statePtr);
-            position.WriteValueIntoState(value.position, statePtr);
-            rotation.WriteValueIntoState(value.rotation, statePtr);
-            velocity.WriteValueIntoState(value.velocity, statePtr);
-            angularVelocity.WriteValueIntoState(value.angularVelocity, statePtr);
+            var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
+            UnsafeUtility.MemCpy(valuePtr, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<PoseState>());
         }
     }
 }
