@@ -272,6 +272,7 @@ namespace UnityEngine.InputSystem.XR
                     {
                         builder.AddControl(featureName)
                             .WithLayout("Analog")
+                            .WithRange(-1, 1)
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatFloat)
                             .WithUsages(currentUsages);
@@ -284,6 +285,13 @@ namespace UnityEngine.InputSystem.XR
                             .WithByteOffset(currentOffset)
                             .WithFormat(InputStateBlock.FormatVector2)
                             .WithUsages(currentUsages);
+
+                        builder.AddControl(featureName + "/x")
+                            .WithLayout("Analog")
+                            .WithRange(-1, 1);
+                        builder.AddControl(featureName + "/y")
+                            .WithLayout("Analog")
+                            .WithRange(-1, 1);
                         break;
                     }
                     case FeatureType.Axis3D:

@@ -226,7 +226,7 @@ internal class XRTests : InputTestFixture
 
         var generatedLayout = InputSystem.LoadLayout("XRInputV1::XRManufacturer::XRDevice");
         Assert.That(generatedLayout, Is.Not.Null);
-        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 7));
+        Assert.That(generatedLayout.controls.Count, Is.EqualTo(kNumBaseHMDControls + 9));
 
         var binaryControl = generatedLayout["Button"];
         Assert.That(binaryControl.name, Is.EqualTo(new InternedString("Button")));
@@ -816,6 +816,33 @@ internal class XRTests : InputTestFixture
         {
             get { return new FourCC('X', 'R', 'S', '0'); }
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_XRAxisControls_AreClampedToOneMagnitude()
+    {
+        runtime.ReportNewInputDevice(TestXRDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+
+        InputSystem.QueueStateEvent(device, new TestXRDeviceState
+        {
+            button = 0,
+            discreteState = 0,
+            axis = -2f,
+            axis2D = -Vector2.one,
+            axis3D = Vector3.zero,
+            rotation = Quaternion.identity,
+            lastElement = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That((device["Axis"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/x"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
+        Assert.That((device["Vector2/y"] as AxisControl).EvaluateMagnitude(), Is.EqualTo(1f).Within(0.0001f));
     }
 }
 #endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA

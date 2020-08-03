@@ -32,6 +32,7 @@ however, it has to be formatted properly to pass verification tests.
 - Improved performance of `Touch.activeTouches` (most notably, a lot of time was spent in endlessly repetitive safety checks).
 - Fixed `EnhancedTouch` APIs not indicating that they need to be enabled with `EnhancedTouchSupport.Enable()`.
   - The APIs now throw `InvalidOperationException` when used without being enabled.
+- AxisControls and Vector2Controls' X and Y subcontrols on XR devices now have a minimum range of -1 and a maximum range of 1. This means they can now properly respond to modifiers and interactions in the binding system.
 
 #### Actions
 
