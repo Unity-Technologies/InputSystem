@@ -28,22 +28,22 @@ namespace UnityEngine.InputSystem.XR
             m_AngularVelocity = angularVelocity;
         }
 
-        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button")]
+        [FieldOffset(0), InputControl(name = "isTracked", displayName = "Is Tracked", layout = "Button")]
         public bool m_IsTracked;
 
-        [FieldOffset(4), InputControl(displayName = "Tracking State", layout = "Integer")]
+        [FieldOffset(4), InputControl(name = "trackingState", displayName = "Tracking State", layout = "Integer")]
         public TrackingState m_TrackingState;
 
-        [FieldOffset(8), InputControl(displayName = "Position", noisy = true)]
+        [FieldOffset(8), InputControl(name = "position", displayName = "Position", noisy = true)]
         public Vector3 m_Position;
 
-        [FieldOffset(20), InputControl(displayName = "Rotation", noisy = true)]
+        [FieldOffset(20), InputControl(name = "rotation", displayName = "Rotation", noisy = true)]
         public Quaternion m_Rotation;
 
-        [FieldOffset(36), InputControl(displayName = "Velocity", noisy = true)]
+        [FieldOffset(36), InputControl(name = "velocity", displayName = "Velocity", noisy = true)]
         public Vector3 m_Velocity;
 
-        [FieldOffset(48), InputControl(displayName = "Angular Velocity", noisy = true)]
+        [FieldOffset(48), InputControl(name = "angularVelocity", displayName = "Angular Velocity", noisy = true)]
         public Vector3 m_AngularVelocity;
 
         public bool isTracked => m_IsTracked;
@@ -57,10 +57,8 @@ namespace UnityEngine.InputSystem.XR
     [Preserve, InputControlLayout(stateType = typeof(PoseState))]
     public class PoseControl : InputControl<PoseState>
     {
-        [Preserve]
         public ButtonControl isTracked { get; private set; }
 
-        [Preserve]
         public IntegerControl trackingState { get; private set; }
 
         public Vector3Control position { get; private set; }
