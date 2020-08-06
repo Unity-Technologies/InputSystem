@@ -3067,8 +3067,6 @@ namespace UnityEngine.InputSystem
                 this.controlCount = controlCount;
                 this.compositeCount = compositeCount;
 
-                var ptr = (byte*)UnsafeUtility.Malloc(sizeInBytes, 4, Allocator.Persistent);
-                UnsafeUtility.MemClear(ptr, sizeInBytes);
                 var numBytes = sizeInBytes;
                 var ptr = (byte*)UnsafeUtility.Malloc(numBytes, 4, Allocator.Persistent);
                 UnsafeUtility.MemClear(ptr, numBytes);
