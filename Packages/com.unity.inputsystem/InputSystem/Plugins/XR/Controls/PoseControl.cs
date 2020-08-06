@@ -11,69 +11,189 @@ using TrackingState = UnityEngine.XR.InputTrackingState;
 
 namespace UnityEngine.InputSystem.XR
 {
+    /// <summary>
+    /// State layout for a single pose.
+    /// </summary>
+    /// <remarks>
+    /// This is the low-level memory representation of a single pose, i.e the
+    /// way poses are internally transmitted and stored in the system. PoseStates are used on devices containing <see cref="PoseControl"/>s.
+    /// </remarks>
+    /// <seealso cref="PoseControl"/>
     [StructLayout(LayoutKind.Explicit, Size = kSizeInBytes)]
     public struct PoseState : IInputStateTypeInfo
     {
         internal const int kSizeInBytes = 60;
 
+        /// <summary>
+        /// Memory format tag for PoseState.
+        /// </summary>
+        /// <value>Returns "Pose".</value>
+        /// <seealso cref="InputStateBlock.format"/>
         public FourCC format => new FourCC('P', 'o', 's', 'e');
 
+        /// <summary>
+        /// Constructor for PoseStates.
+        /// 
+        /// Useful for creating PoseStates locally (not from <see cref="PoseControl"/>).
+        /// </summary>
+        /// <param name="isTracked">Value to use for <see cref="isTracked"/></param>
+        /// <param name="trackingState">Value to use for <see cref="trackingState"/></param>
+        /// <param name="position">Value to use for <see cref="position"/></param>
+        /// <param name="rotation">Value to use for <see cref="rotation"/></param>
+        /// <param name="velocity">Value to use for <see cref="velocity"/></param>
+        /// <param name="angularVelocity">Value to use for <see cref="angularVelocity"/></param>
         public PoseState(bool isTracked, TrackingState trackingState, Vector3 position, Quaternion rotation, Vector3 velocity, Vector3 angularVelocity)
         {
-            m_IsTracked = isTracked;
-            m_TrackingState = trackingState;
-            m_Position = position;
-            m_Rotation = rotation;
-            m_Velocity = velocity;
-            m_AngularVelocity = angularVelocity;
+            this.isTracked = isTracked;
+            this.trackingState = trackingState;
+            this.position = position;
+            this.rotation = rotation;
+            this.velocity = velocity;
+            this.angularVelocity = angularVelocity;
         }
 
-        [FieldOffset(0), InputControl(name = "isTracked", displayName = "Is Tracked", layout = "Button")]
-        public bool m_IsTracked;
+        /// <summary>
+        /// Whether the pose is currently being fully tracked. Otherwise, the tracking is either unavailable, or simulated.
+        /// </summary>
+        /// <remarks>
+        /// Fully tracked means that the pose is accurate and not using any simulated or extrapolated positions, and the system tracking this pose is able to confidently track this object.
+        /// </remarks>
+        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button")]
+        public bool isTracked;
 
-        [FieldOffset(4), InputControl(name = "trackingState", displayName = "Tracking State", layout = "Integer")]
-        public TrackingState m_TrackingState;
+        /// <summary>
+        /// A Flags Enumeration specifying which other fields in the pose state are valid.
+        /// </summary>
+        [FieldOffset(4), InputControl( displayName = "Tracking State", layout = "Integer")]
+        public TrackingState trackingState;
 
-        [FieldOffset(8), InputControl(name = "position", displayName = "Position", noisy = true)]
-        public Vector3 m_Position;
+        /// <summary>
+        /// The position in 3D space, relative to the tracking origin where this pose represents.
+        /// </summary>
+        /// <remarks>
+        /// Positions are represented in meters.
+        /// This field is only valid if <see cref="trackingState"/> contains the <see cref="UnityEngine.XR.InputTrackingState.Position"/> value.
+        /// See <seealso cref="UnityEngine.XR.TrackingOriginModeFlags"/> for information on tracking origins.
+        /// </remarks>
+        [FieldOffset(8), InputControl(displayName = "Position", noisy = true)]
+        public Vector3 position;
 
-        [FieldOffset(20), InputControl(name = "rotation", displayName = "Rotation", noisy = true)]
-        public Quaternion m_Rotation;
+        /// <summary>
+        /// The rotation in 3D space, relative to the tracking origin where this pose represents.
+        /// </summary>
+        /// <remarks>
+        /// This field is only valid if <see cref="trackingState"/> contains the <see cref="UnityEngine.XR.InputTrackingState.Rotation"/> value.
+        /// See <seealso cref="UnityEngine.XR.TrackingOriginModeFlags"/> for information on tracking origins.
+        /// </remarks>
+        [FieldOffset(20), InputControl(displayName = "Rotation", noisy = true)]
+        public Quaternion rotation;
 
-        [FieldOffset(36), InputControl(name = "velocity", displayName = "Velocity", noisy = true)]
-        public Vector3 m_Velocity;
+        /// <summary>
+        /// The velocity in 3D space, relative to the tracking origin where this pose represents.
+        /// </summary>
+        /// <remarks>
+        /// Velocities are represented in meters per second.
+        /// This field is only valid if <see cref="trackingState"/> contains the <see cref="UnityEngine.XR.InputTrackingState.Velocity"/> value.
+        /// See <seealso cref="UnityEngine.XR.TrackingOriginModeFlags"/> for information on tracking origins.
+        /// </remarks>
+        [FieldOffset(36), InputControl(displayName = "Velocity", noisy = true)]
+        public Vector3 velocity;
 
-        [FieldOffset(48), InputControl(name = "angularVelocity", displayName = "Angular Velocity", noisy = true)]
-        public Vector3 m_AngularVelocity;
-
-        public bool isTracked => m_IsTracked;
-        public TrackingState trackingState => m_TrackingState;
-        public Vector3 position => m_Position;
-        public Quaternion rotation => m_Rotation;
-        public Vector3 velocity => m_Velocity;
-        public Vector3 angularVelocity => m_AngularVelocity;
+        /// <summary>
+        /// The angular velocity in 3D space, relative to the tracking origin where this pose represents.
+        /// </summary>
+        /// <remarks>
+        /// This field is only valid if <see cref="trackingState"/> contains the <see cref="UnityEngine.XR.InputTrackingState.AngularVelocity"/> value.
+        /// See <seealso cref="UnityEngine.XR.TrackingOriginModeFlags"/> for information on tracking origins.
+        /// </remarks>
+        [FieldOffset(48), InputControl(displayName = "Angular Velocity", noisy = true)]
+        public Vector3 angularVelocity;
     }
 
+    /// <summary>
+    /// A control representing a Pose in 3D space, relative to an XR tracking origin
+    /// </summary>
+    /// <remarks>
+    /// Note that unlike most other control types, <c>PoseControls</c> do not have
+    /// a flexible memory layout. They are hardwired to <see cref="PoseState"/> and
+    /// will not work correctly with a different memory layouts. Additional fields may
+    /// be appended to the struct but what's there in the struct has to be located
+    /// at exactly those memory addresses.
+    /// 
+    /// For more information on tracking origins see <see cref="UnityEngine.XR.TrackingOriginModeFlags"/>.
+    /// </remarks>
     [Preserve, InputControlLayout(stateType = typeof(PoseState))]
     public class PoseControl : InputControl<PoseState>
     {
+        /// <summary>
+        /// Represents whether this pose is fully tracked or unavailable/simulated.
+        /// </summary>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.isTracked"/> value.</value>
+        /// <seealso cref="PoseState.isTracked"/>
         public ButtonControl isTracked { get; private set; }
 
+        /// <summary>
+        /// The other controls on this <see cref="PoseControl"/> that are currently reporting data.
+        /// </summary>
+        /// <remarks>
+        /// This can be missing values when the device tracking this pose is restricted or not tracking properly.
+        /// </remarks>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.trackingState"/> value of the pose retrieved from this control.</value>
+        /// <seealso cref="PoseState.trackingState"/>
         public IntegerControl trackingState { get; private set; }
 
+        /// <summary>
+        /// The position, in meters, of this tracked pose relative to the tracking origin.
+        /// </summary>
+        /// <remarks>
+        /// The data for this control is only valid if the value returned from <see cref="trackingState"/> contains <see cref="UnityEngine.XR.InputTrackingState.Position"/> value.
+        /// </remarks>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.position"/> value of the pose retrieved from this control.</value>
+        /// <seealso cref="PoseState.position"/>
         public Vector3Control position { get; private set; }
 
+        /// <summary>
+        /// The rotation of this tracked pose relative to the tracking origin.
+        /// </summary>
+        /// <remarks>
+        /// The data for this control is only valid if the value returned from <see cref="trackingState"/> contains <see cref="UnityEngine.XR.InputTrackingState.Rotation"/> value.
+        /// </remarks>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.rotation"/> value of the pose retrieved from this control.</value>
+        /// <seealso cref="PoseState.rotation"/>
         public QuaternionControl rotation { get; private set; }
 
+        /// <summary>
+        /// The velocity, in meters per second, of this tracked pose relative to the tracking origin.
+        /// </summary>
+        /// <remarks>
+        /// The data for this control is only valid if the value returned from <see cref="trackingState"/> contains <see cref="UnityEngine.XR.InputTrackingState.Velocity"/> value.
+        /// </remarks>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.velocity"/> value of the pose retrieved from this control.</value>
+        /// <seealso cref="PoseState.velocity"/>
         public Vector3Control velocity { get; private set; }
 
+        /// <summary>
+        /// The angular velocity of this tracked pose relative to the tracking origin.
+        /// </summary>
+        /// <remarks>
+        /// The data for this control is only valid if the value returned from <see cref="trackingState"/> contains <see cref="UnityEngine.XR.InputTrackingState.AngularVelocity"/> value.
+        /// </remarks>
+        /// <value>Control representing whether the pose is being fully tracked. Maps to the <see cref="PoseState.angularVelocity"/> value of the pose retrieved from this control.</value>
+        /// <seealso cref="PoseState.angularVelocity"/>
         public Vector3Control angularVelocity { get; private set; }
 
+        /// <summary>
+        /// Default-initialize the pose control.
+        /// </summary>
+        /// <remarks>
+        /// Sets the <see cref="InputStateBlock.format"/> to <c>"Pose"</c>.
+        /// </remarks>
         public PoseControl()
         {
             m_StateBlock.format = new FourCC('P', 'o', 's', 'e');
         }
 
+        /// <inheritdoc />
         protected override void FinishSetup()
         {
             isTracked = GetChildControl<ButtonControl>("isTracked");
@@ -86,12 +206,14 @@ namespace UnityEngine.InputSystem.XR
             base.FinishSetup();
         }
 
+        /// <inheritdoc />
         public override unsafe PoseState ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
             return *valuePtr;
         }
 
+        /// <inheritdoc />
         public override unsafe void WriteValueIntoState(PoseState value, void* statePtr)
         {
             var valuePtr = (PoseState*)((byte*)statePtr + (int)m_StateBlock.byteOffset);
