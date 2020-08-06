@@ -16,6 +16,8 @@ using UnityEngine.InputSystem.UI;
 
 ////TODO: allow PlayerInput to be set up in a way where it's in an unpaired/non-functional state and expects additional configuration
 
+////REVIEW: callback behaviors have been very confusing for users; simplify&clarify this
+
 ////REVIEW: having everything coupled to component enable/disable is quite restrictive; can we allow PlayerInputs
 ////        to be disabled without them leaving the game? would help when wanting to keep players around in the background
 ////        and only temporarily disable them
@@ -780,7 +782,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputControlScheme.deviceRequirements"/>
         /// <seealso cref="InputUser.hasMissingRequiredDevices"/>
-        public bool hasMissingRequiredDevices => user.hasMissingRequiredDevices;
+        public bool hasMissingRequiredDevices => user.valid && user.hasMissingRequiredDevices;
 
         /// <summary>
         /// List of all players that are currently joined. Sorted by <see cref="playerIndex"/> in
@@ -1568,10 +1570,13 @@ namespace UnityEngine.InputSystem
         {
             m_Enabled = true;
 
-            AssignPlayerIndex();
-            InitializeActions();
-            AssignUserAndDevices();
-            ActivateInput();
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                AssignPlayerIndex();
+                InitializeActions();
+                AssignUserAndDevices();
+                ActivateInput();
+            }
 
             // Split-screen index defaults to player index.
             if (s_InitSplitScreenIndex >= 0)
@@ -1671,9 +1676,15 @@ namespace UnityEngine.InputSystem
             // Trigger leave event.
             PlayerInputManager.instance?.NotifyPlayerLeft(this);
 
-            DeactivateInput();
-            UnassignUserAndDevices();
-            UninitializeActions();
+            ////TODO: ideally, this shouldn't have to resolve at all and instead wait for someone to need the updated setup
+            // Avoid re-resolving bindings over and over while we disassemble
+            // the configuration.
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                DeactivateInput();
+                UnassignUserAndDevices();
+                UninitializeActions();
+            }
 
             m_PlayerIndex = -1;
         }
