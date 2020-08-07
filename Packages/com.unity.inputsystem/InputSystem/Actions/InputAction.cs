@@ -7,6 +7,8 @@ using UnityEngine.Serialization;
 
 ////TODO: add way to retrieve the currently ongoing interaction and also add way to know how long it's been going on
 
+////FIXME: control goes back to invalid when the action ends, so there's no guarantee you can get to the control through the polling API
+
 ////FIXME: Whether a control from a binding that's part of a composite appears on an action is currently not consistently enforced.
 ////       If it mentions the action, it appears on the action. Otherwise it doesn't. The controls should consistently appear on the
 ////       action based on what action the *composite* references.

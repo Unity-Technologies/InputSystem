@@ -473,34 +473,31 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
             /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
             /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
             /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInFixedUpdate,
 
             /// <summary>
             /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
-            /// </summary>
-            /// <remarks>
+            ///
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
             /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
-            /// </remarks>
+            /// </summary>
             ProcessEventsManually,
         }
     }

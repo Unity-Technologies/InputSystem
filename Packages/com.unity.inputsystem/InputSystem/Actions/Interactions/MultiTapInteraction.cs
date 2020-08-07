@@ -4,6 +4,10 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
+
+////TODO: add ability to perform on final press rather than on release
+
 ////TODO: change this so that the interaction stays performed when the tap count is reached until the button is released
 
 namespace UnityEngine.InputSystem.Interactions
