@@ -43,6 +43,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Added
 
 - Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. For `Touchscreen`, this results in a >20x speed-up for `InputSystem.AddDevice<Touchscreen>()`.
+- Added Pose Control layout. The Pose Control is used on XR Devices and wraps tracking state, position, rotation, and velocity information.
 
 ## [1.0.0] - 2020-04-23
 
