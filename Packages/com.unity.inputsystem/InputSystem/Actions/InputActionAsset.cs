@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem
     /// <code>
     /// // Create and configure an asset in code.
     /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
-    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// var actionMap1 = asset1.AddActionMap("map1");
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>

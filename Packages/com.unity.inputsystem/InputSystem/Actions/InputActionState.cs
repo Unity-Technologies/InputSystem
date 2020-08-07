@@ -112,8 +112,11 @@ namespace UnityEngine.InputSystem
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
         public int* enabledControls => memory.enabledControls;
 
+        public bool isProcessingControlStateChange => m_InProcessControlStateChange;
+
         private bool m_OnBeforeUpdateHooked;
         private bool m_OnAfterUpdateHooked;
+        private bool m_InProcessControlStateChange;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
 
@@ -153,6 +156,8 @@ namespace UnityEngine.InputSystem
 
         private void Destroy(bool isFinalizing = false)
         {
+            Debug.Assert(!isProcessingControlStateChange, "Must not destroy InputActionState while executing an action callback within it");
+
             if (!isFinalizing)
             {
                 for (var i = 0; i < totalMapCount; ++i)
@@ -438,16 +443,19 @@ namespace UnityEngine.InputSystem
             }
 
             // Wipe state.
-            var state = *actionState;
-            state.phase = toPhase;
-            state.controlIndex = kInvalidIndex;
-            state.bindingIndex = 0;
-            state.interactionIndex = kInvalidIndex;
-            state.startTime = 0;
-            state.time = 0;
-            state.hasMultipleConcurrentActuations = false;
-            state.lastTriggeredInUpdate = default;
-            *actionState = state;
+            actionState->phase = toPhase;
+            actionState->controlIndex = kInvalidIndex;
+            actionState->bindingIndex = 0;
+            actionState->interactionIndex = kInvalidIndex;
+            actionState->startTime = 0;
+            actionState->time = 0;
+            actionState->hasMultipleConcurrentActuations = false;
+            actionState->lastTriggeredInUpdate = default;
+            actionState->inProcessing = false;
+
+            Debug.Assert(!actionState->isStarted, "Cannot reset an action to started phase");
+            Debug.Assert(!actionState->isPerformed, "Cannot reset an action to performed phase");
+            Debug.Assert(!actionState->isCanceled, "Cannot reset an action to canceled phase");
         }
 
         public ref TriggerState FetchActionState(InputAction action)
@@ -477,7 +485,7 @@ namespace UnityEngine.InputSystem
             // Enable all controls in map that aren't already enabled.
             EnableControls(map);
 
-            // Put all actions that aren't already enbaled into waiting state.
+            // Put all actions that aren't already enabled into waiting state.
             var mapIndex = map.m_MapIndexInState;
             Debug.Assert(mapIndex >= 0 && mapIndex < totalMapCount, "Map index on InputActionMap is out of range");
             var actionCount = mapIndices[mapIndex].actionCount;
@@ -485,8 +493,10 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < actionCount; ++i)
             {
                 var actionIndex = actionStartIndex + i;
-                if (actionStates[actionIndex].isDisabled)
-                    actionStates[actionIndex].phase = InputActionPhase.Waiting;
+                var actionState = &actionStates[actionIndex];
+                if (actionState->isDisabled)
+                    actionState->phase = InputActionPhase.Waiting;
+                actionState->inProcessing = false;
             }
             map.m_EnabledActionsCount = actionCount;
 
@@ -884,72 +894,93 @@ namespace UnityEngine.InputSystem
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 
-            var bindingStatePtr = &bindingStates[bindingIndex];
-            var actionIndex = bindingStatePtr->actionIndex;
-
-            var trigger = new TriggerState
+            using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                mapIndex = mapIndex,
-                controlIndex = controlIndex,
-                bindingIndex = bindingIndex,
-                interactionIndex = kInvalidIndex,
-                time = time,
-                startTime = time,
-                isPassThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].isPassThrough,
-            };
+                // Callbacks can do pretty much anything and thus trigger arbitrary state/configuration
+                // changes in the system. We have to ensure that while we're executing callbacks, our
+                // current InputActionState is not getting changed from under us. We dictate that while
+                // m_InProcessControlStateChange is true, no binding resolution can be triggered on the state and
+                // it cannot be destroyed.
+                //
+                // This is also why we defer binding resolution above. If there is a configuration change
+                // triggered by an action callback, the state will be marked dirty and re-resolved after
+                // we have completed the callback.
+                m_InProcessControlStateChange = true;
 
-            // If we have pending initial state checks that will run in the next update,
-            // force-reset the flag on the control that just triggered. This ensures that we're
-            // not triggering an action twice from the same state change in case the initial state
-            // check happens later (see Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice).
-            if (m_OnBeforeUpdateHooked)
-                bindingStatePtr->initialStateCheckPending = false;
-
-            // If the binding is part of a composite, check for interactions on the composite
-            // itself and give them a first shot at processing the value change.
-            var haveInteractionsOnComposite = false;
-            if (bindingStatePtr->isPartOfComposite)
-            {
-                var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
-                var compositeBindingPtr = &bindingStates[compositeBindingIndex];
-
-                // If the composite has already been triggered from the very same event, ignore it.
-                // Example: KeyboardState change that includes both A and W key state changes and we're looking
-                //          at a WASD composite binding. There's a state change monitor on both the A and the W
-                //          key and thus the manager will notify us individually of both changes. However, we
-                //          want to perform the action only once.
-                if (ShouldIgnoreControlStateChangeOnCompositeBinding(compositeBindingPtr, eventPtr))
-                    return;
-
-                // Common conflict resolution. We do this *after* the check above as it is more expensive.
-                if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
-                    return;
-
-                // Run through interactions on composite.
-                var interactionCountOnComposite = compositeBindingPtr->interactionCount;
-                if (interactionCountOnComposite > 0)
+                try
                 {
-                    haveInteractionsOnComposite = true;
-                    ProcessInteractions(ref trigger,
-                        compositeBindingPtr->interactionStartIndex,
-                        interactionCountOnComposite);
-                }
-            }
-            else if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
-            {
-                return;
-            }
+                    var bindingStatePtr = &bindingStates[bindingIndex];
+                    var actionIndex = bindingStatePtr->actionIndex;
 
-            // If we have interactions, let them do all the processing. The presence of an interaction
-            // essentially bypasses the default phase progression logic of an action.
-            var interactionCount = bindingStatePtr->interactionCount;
-            if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
-            {
-                ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
-            }
-            else if (!haveInteractionsOnComposite)
-            {
-                ProcessDefaultInteraction(ref trigger, actionIndex);
+                    var trigger = new TriggerState
+                    {
+                        mapIndex = mapIndex,
+                        controlIndex = controlIndex,
+                        bindingIndex = bindingIndex,
+                        interactionIndex = kInvalidIndex,
+                        time = time,
+                        startTime = time,
+                        isPassThrough = actionIndex != kInvalidIndex && actionStates[actionIndex].isPassThrough,
+                    };
+
+                    // If we have pending initial state checks that will run in the next update,
+                    // force-reset the flag on the control that just triggered. This ensures that we're
+                    // not triggering an action twice from the same state change in case the initial state
+                    // check happens later (see Actions_ValueActionsEnabledInOnEvent_DoNotReactToCurrentStateOfControlTwice).
+                    if (m_OnBeforeUpdateHooked)
+                        bindingStatePtr->initialStateCheckPending = false;
+
+                    // If the binding is part of a composite, check for interactions on the composite
+                    // itself and give them a first shot at processing the value change.
+                    var haveInteractionsOnComposite = false;
+                    if (bindingStatePtr->isPartOfComposite)
+                    {
+                        var compositeBindingIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
+                        var compositeBindingPtr = &bindingStates[compositeBindingIndex];
+
+                        // If the composite has already been triggered from the very same event, ignore it.
+                        // Example: KeyboardState change that includes both A and W key state changes and we're looking
+                        //          at a WASD composite binding. There's a state change monitor on both the A and the W
+                        //          key and thus the manager will notify us individually of both changes. However, we
+                        //          want to perform the action only once.
+                        if (ShouldIgnoreControlStateChangeOnCompositeBinding(compositeBindingPtr, eventPtr))
+                            return;
+
+                        // Common conflict resolution. We do this *after* the check above as it is more expensive.
+                        if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
+                            return;
+
+                        // Run through interactions on composite.
+                        var interactionCountOnComposite = compositeBindingPtr->interactionCount;
+                        if (interactionCountOnComposite > 0)
+                        {
+                            haveInteractionsOnComposite = true;
+                            ProcessInteractions(ref trigger,
+                                compositeBindingPtr->interactionStartIndex,
+                                interactionCountOnComposite);
+                        }
+                    }
+                    else if (ShouldIgnoreControlStateChange(ref trigger, actionIndex))
+                    {
+                        return;
+                    }
+
+                    // If we have interactions, let them do all the processing. The presence of an interaction
+                    // essentially bypasses the default phase progression logic of an action.
+                    var interactionCount = bindingStatePtr->interactionCount;
+                    if (interactionCount > 0 && !bindingStatePtr->isPartOfComposite)
+                    {
+                        ProcessInteractions(ref trigger, bindingStatePtr->interactionStartIndex, interactionCount);
+                    }
+                    else if (!haveInteractionsOnComposite)
+                    {
+                        ProcessDefaultInteraction(ref trigger, actionIndex);
+                    }
+                }
+                finally
+                {
+                    m_InProcessControlStateChange = false;
+                }
             }
         }
 
@@ -1471,15 +1502,17 @@ namespace UnityEngine.InputSystem
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
                 {
                     // We're the first interaction to go to the start phase.
-                    ChangePhaseOfAction(newPhase, ref trigger,
-                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger,
+                        phaseAfterPerformedOrCanceled: phaseAfterPerformedOrCanceled))
+                        return;
                 }
                 else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     // We're canceling but maybe there's another interaction ready
                     // to go into start phase.
 
-                    ChangePhaseOfAction(newPhase, ref trigger);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger))
+                        return;
 
                     var interactionStartIndex = bindingStates[bindingIndex].interactionStartIndex;
                     var numInteractions = bindingStates[bindingIndex].interactionCount;
@@ -1498,7 +1531,8 @@ namespace UnityEngine.InputSystem
                                 time = startTime,
                                 startTime = startTime,
                             };
-                            ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction);
+                            if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction))
+                                return;
                             break;
                         }
                     }
@@ -1507,7 +1541,8 @@ namespace UnityEngine.InputSystem
                 {
                     // Any other phase change goes to action if we're the interaction driving
                     // the current phase.
-                    ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled);
+                    if (!ChangePhaseOfAction(newPhase, ref trigger, phaseAfterPerformedOrCanceled))
+                        return;
 
                     // We're the interaction driving the action and we performed the action,
                     // so reset any other interaction to waiting state.
@@ -1554,7 +1589,7 @@ namespace UnityEngine.InputSystem
         /// (<see cref="InputActionPhase.Waiting"/> by default). This change is not visible to observers, i.e. there won't
         /// be another run through callbacks.
         /// </remarks>
-        private void ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
+        private bool ChangePhaseOfAction(InputActionPhase newPhase, ref TriggerState trigger,
             InputActionPhase phaseAfterPerformedOrCanceled = InputActionPhase.Waiting)
         {
             Debug.Assert(newPhase != InputActionPhase.Disabled, "Should not disable an action using this method");
@@ -1564,49 +1599,62 @@ namespace UnityEngine.InputSystem
 
             var actionIndex = bindingStates[trigger.bindingIndex].actionIndex;
             if (actionIndex == kInvalidIndex)
-                return; // No action associated with binding.
+                return true; // No action associated with binding.
+
 
             // Ignore if action is disabled.
             var actionState = &actionStates[actionIndex];
             if (actionState->isDisabled)
-                return;
+                return true;
 
-            // Enforce transition constraints.
-            if (actionState->isPassThrough && trigger.interactionIndex == kInvalidIndex)
+            // We mark the action as in-processing while we execute its phase transitions and perform
+            // callbacks. The callbacks may alter system state such that the action may get disabled
+            // (and potentially re-enabled) while the callback is in progress. We need to make sure that
+            // if that happens, we don't go and then do more processing on the action.
+            actionState->inProcessing = true;
+            try
             {
-                // No constraints on pass-through actions except if there are interactions driving the action.
-                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
-                if (actionState->isDisabled)
-                    return;
-            }
-            else if (newPhase == InputActionPhase.Performed && actionState->phase == InputActionPhase.Waiting)
-            {
-                // Going from waiting to performed, we make a detour via started.
-                ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Started, ref trigger);
-                if (actionState->isDisabled)
-                    return;
+                // Enforce transition constraints.
+                if (actionState->isPassThrough && trigger.interactionIndex == kInvalidIndex)
+                {
+                    // No constraints on pass-through actions except if there are interactions driving the action.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+                }
+                else if (newPhase == InputActionPhase.Performed && actionState->phase == InputActionPhase.Waiting)
+                {
+                    // Going from waiting to performed, we make a detour via started.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Started, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
 
-                // Then we perform.
-                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
-                if (actionState->isDisabled)
-                    return;
+                    // Then we perform.
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
 
-                // And finally, if we're going back to waiting, we make a detour via canceled.
-                if (phaseAfterPerformedOrCanceled == InputActionPhase.Waiting)
-                    ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Canceled, ref trigger);
-                if (actionState->isDisabled)
-                    return;
+                    // And finally, if we're going back to waiting, we make a detour via canceled.
+                    if (phaseAfterPerformedOrCanceled == InputActionPhase.Waiting)
+                        ChangePhaseOfActionInternal(actionIndex, actionState, InputActionPhase.Canceled, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
 
-                actionState->phase = phaseAfterPerformedOrCanceled;
-            }
-            else
-            {
-                ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
-                if (actionState->isDisabled)
-                    return;
-
-                if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
                     actionState->phase = phaseAfterPerformedOrCanceled;
+                }
+                else if (actionState->phase != newPhase || newPhase == InputActionPhase.Performed) // We allow Performed to trigger repeatedly.
+                {
+                    ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger);
+                    if (!actionState->inProcessing)
+                        return false;
+
+                    if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
+                        actionState->phase = phaseAfterPerformedOrCanceled;
+                }
+            }
+            finally
+            {
+                actionState->inProcessing = false;
             }
 
             // If we're now waiting, reset control state. This is important for the disambiguation code
@@ -1616,15 +1664,18 @@ namespace UnityEngine.InputSystem
                 actionState->controlIndex = kInvalidIndex;
                 actionState->flags &= ~TriggerState.Flags.HaveMagnitude;
             }
+
+            return true;
         }
 
         private void ChangePhaseOfActionInternal(int actionIndex, TriggerState* actionState, InputActionPhase newPhase, ref TriggerState trigger)
         {
-            // Update action state.
             Debug.Assert(trigger.mapIndex == actionState->mapIndex,
                 "Map index on trigger does not correspond to map index of trigger state");
+
+            // Update action state.
             var newState = trigger;
-            newState.flags = actionState->flags;
+            newState.flags = actionState->flags; // Preserve flags.
             newState.phase = newPhase;
             if (!newState.haveMagnitude)
                 newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
@@ -1646,18 +1697,21 @@ namespace UnityEngine.InputSystem
             {
                 case InputActionPhase.Started:
                 {
+                    Debug.Assert(trigger.controlIndex != -1, "Must have control to start an action");
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnStarted, "started");
                     break;
                 }
 
                 case InputActionPhase.Performed:
                 {
+                    Debug.Assert(trigger.controlIndex != -1, "Must have control to perform an action");
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnPerformed, "performed");
                     break;
                 }
 
                 case InputActionPhase.Canceled:
                 {
+                    Debug.Assert(trigger.controlIndex != -1, "When canceling, must have control that started action");
                     CallActionListeners(actionIndex, map, newPhase, ref action.m_OnCanceled, "canceled");
                     break;
                 }
@@ -2799,6 +2853,18 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            public bool inProcessing
+            {
+                get => (flags & Flags.InProcessing) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.InProcessing;
+                    else
+                        flags &= ~Flags.InProcessing;
+                }
+            }
+
             public Flags flags
             {
                 get => (Flags)m_Flags;
@@ -2836,6 +2902,8 @@ namespace UnityEngine.InputSystem
                 /// This is only used if <see cref="TriggerState.mayNeedConflictResolution"/> is true.
                 /// </remarks>
                 HasMultipleConcurrentActuations = 1 << 3,
+
+                InProcessing = 1 << 4,
             }
         }
 
@@ -2999,8 +3067,9 @@ namespace UnityEngine.InputSystem
                 this.controlCount = controlCount;
                 this.compositeCount = compositeCount;
 
-                var ptr = (byte*)UnsafeUtility.Malloc(sizeInBytes, 4, Allocator.Persistent);
-                UnsafeUtility.MemClear(ptr, sizeInBytes);
+                var numBytes = sizeInBytes;
+                var ptr = (byte*)UnsafeUtility.Malloc(numBytes, 4, Allocator.Persistent);
+                UnsafeUtility.MemClear(ptr, numBytes);
 
                 basePtr = ptr;
 
@@ -3275,22 +3344,30 @@ namespace UnityEngine.InputSystem
 
         internal static void DeferredResolutionOfBindings()
         {
-            for (var i = 0; i < s_GlobalList.length; ++i)
+            ++InputActionMap.s_DeferBindingResolution;
+            try
             {
-                var handle = s_GlobalList[i];
-                if (!handle.IsAllocated || handle.Target == null)
+                for (var i = 0; i < s_GlobalList.length; ++i)
                 {
-                    // Stale entry in the list. State has already been reclaimed by GC. Remove it.
-                    if (handle.IsAllocated)
-                        s_GlobalList[i].Free();
-                    s_GlobalList.RemoveAtWithCapacity(i);
-                    --i;
-                    continue;
-                }
+                    var handle = s_GlobalList[i];
+                    if (!handle.IsAllocated || handle.Target == null)
+                    {
+                        // Stale entry in the list. State has already been reclaimed by GC. Remove it.
+                        if (handle.IsAllocated)
+                            s_GlobalList[i].Free();
+                        s_GlobalList.RemoveAtWithCapacity(i);
+                        --i;
+                        continue;
+                    }
 
-                var state = (InputActionState)handle.Target;
-                for (var n = 0; n < state.totalMapCount; ++n)
-                    state.maps[n].ResolveBindingsIfNecessary();
+                    var state = (InputActionState)handle.Target;
+                    for (var n = 0; n < state.totalMapCount; ++n)
+                        state.maps[n].ResolveBindingsIfNecessary();
+                }
+            }
+            finally
+            {
+                --InputActionMap.s_DeferBindingResolution;
             }
         }
 
