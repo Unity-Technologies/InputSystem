@@ -233,7 +233,7 @@ public class CustomComposite : InputBindingComposite<float>
         InputSystem.RegisterBindingComposite<CustomComposite>();
     }
 
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Init() {} // Trigger static constructor.
 }
 ```

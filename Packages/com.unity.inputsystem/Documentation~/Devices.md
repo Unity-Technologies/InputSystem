@@ -371,7 +371,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
     // You still need a way to trigger execution of the static constructor
     // in the Player. To do this, you can add the RuntimeInitializeOnLoadMethod
     // to an empty method.
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void InitializeInPlayer() {}
 }
 ```

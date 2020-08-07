@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem
     ///
     ///     // This is only to trigger the static class constructor to automatically run
     ///     // in the player.
-    ///     [RuntimeInitializeOnLoadMethod]
+    ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     ///     private static void InitializeInPlayer() {}
     ///
     ///     protected override void FinishSetup()

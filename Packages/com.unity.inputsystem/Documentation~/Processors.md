@@ -237,7 +237,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
     }
     #endif
 
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Initialize()
     {
         InputSystem.RegisterProcessor<MyValueShiftProcessor>();
