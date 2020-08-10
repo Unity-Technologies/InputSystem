@@ -1,4 +1,4 @@
-#if UNITY_WEBGL || UNITY_EDITOR
+#if UNITY_WEBGL || UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 
 namespace UnityEngine.InputSystem.WebGL
 {

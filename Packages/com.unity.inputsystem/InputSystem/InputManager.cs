@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.Composites;
@@ -451,6 +452,33 @@ namespace UnityEngine.InputSystem
                     m_Layouts.baseLayoutTable[layoutName] = baseLayoutName;
             }
 
+            // Nuke any precompiled layouts that are invalidated by the layout registration.
+            m_Layouts.precompiledLayouts.Remove(layoutName);
+            if (m_Layouts.precompiledLayouts.Count > 0)
+            {
+                foreach (var layout in m_Layouts.precompiledLayouts.Keys.ToArray())
+                {
+                    var metadata = m_Layouts.precompiledLayouts[layout].metadata;
+
+                    // If it's an override, we remove any precompiled layouts to which overrides are applied.
+                    if (isOverride)
+                    {
+                        for (var i = 0; i < baseLayouts.length; ++i)
+                            if (layout == baseLayouts[i] ||
+                                StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(metadata,
+                                    baseLayouts[i], ';'))
+                                m_Layouts.precompiledLayouts.Remove(layout);
+                    }
+                    else
+                    {
+                        // Otherwise, we remove any precompile layouts that use the layout we just changed.
+                        if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(metadata,
+                            layoutName, ';'))
+                            m_Layouts.precompiledLayouts.Remove(layout);
+                    }
+                }
+            }
+
             // Recreate any devices using the layout. If it's an override, recreate devices using any of the base layouts.
             if (isOverride)
             {
@@ -488,6 +516,22 @@ namespace UnityEngine.InputSystem
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](layoutName.ToString(), change);
+        }
+
+        public void RegisterPrecompiledLayout<TDevice>(string metadata)
+            where TDevice : InputDevice, new()
+        {
+            if (metadata == null)
+                throw new ArgumentNullException(nameof(metadata));
+
+            var deviceType = typeof(TDevice).BaseType;
+            var layoutName = FindOrRegisterDeviceLayoutForType(deviceType);
+
+            m_Layouts.precompiledLayouts[layoutName] = new InputControlLayout.Collection.PrecompiledLayout
+            {
+                factoryMethod = () => new TDevice(),
+                metadata = metadata
+            };
         }
 
         private void RecreateDevicesUsingLayout(InternedString layout, bool isKnownToBeDeviceLayout = false)
@@ -827,6 +871,22 @@ namespace UnityEngine.InputSystem
             return layoutName;
         }
 
+        private InternedString FindOrRegisterDeviceLayoutForType(Type type)
+        {
+            var layoutName = m_Layouts.TryFindLayoutForType(type);
+            if (layoutName.IsEmpty())
+            {
+                // Automatically register the given type as a layout.
+                if (layoutName.IsEmpty())
+                {
+                    layoutName = new InternedString(type.Name);
+                    RegisterControlLayout(type.Name, type);
+                }
+            }
+
+            return layoutName;
+        }
+
         /// <summary>
         /// Return true if the given device layout is supported by the game according to <see cref="InputSettings.supportedDevices"/>.
         /// </summary>
@@ -988,17 +1048,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(type));
 
             // Find the layout name that the given type was registered with.
-            var layoutName = m_Layouts.TryFindLayoutForType(type);
-            if (layoutName.IsEmpty())
-            {
-                // Automatically register the given type as a layout.
-                if (layoutName.IsEmpty())
-                {
-                    layoutName = new InternedString(type.Name);
-                    RegisterControlLayout(type.Name, type);
-                }
-            }
-
+            var layoutName = FindOrRegisterDeviceLayoutForType(type);
             Debug.Assert(!layoutName.IsEmpty(), name);
 
             // Note that since we go through the normal by-name lookup here, this will
@@ -1573,6 +1623,11 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
             RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
+
+            // Precompiled layouts.
+            RegisterPrecompiledLayout<FastKeyboard>(FastKeyboard.metadata);
+            RegisterPrecompiledLayout<FastTouchscreen>(FastTouchscreen.metadata);
+            RegisterPrecompiledLayout<FastMouse>(FastMouse.metadata);
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
@@ -2421,7 +2476,7 @@ namespace UnityEngine.InputSystem
             m_HasFocus = focus;
         }
 
-        private bool ShouldRunUpdate(InputUpdateType updateType)
+        internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
             // We perform a "null" update after domain reloads and on startup to get our devices
             // in place before the runtime calls MonoBehaviour callbacks. See InputSystem.RunInitialUpdate().
@@ -2539,7 +2594,7 @@ namespace UnityEngine.InputSystem
             var currentEventReadPtr =
                 (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
             var remainingEventCount = eventBuffer.eventCount;
-            var processingStartTime = Time.realtimeSinceStartup;
+            var processingStartTime = Stopwatch.GetTimestamp();
 
             // When timeslicing events or in before-render updates, we may be leaving events in the buffer
             // for later processing. We do this by compacting the event buffer and moving events down such
@@ -2779,7 +2834,7 @@ namespace UnityEngine.InputSystem
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
             }
 
-            m_Metrics.totalEventProcessingTime += Time.realtimeSinceStartup - processingStartTime;
+            m_Metrics.totalEventProcessingTime += ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
             m_Metrics.totalEventLagTime += totalEventLag;
 
             // Remember how much data we retained so that we don't count it against the next
@@ -3152,6 +3207,7 @@ namespace UnityEngine.InputSystem
             // fixed updates.
             if (updateType == InputUpdateType.Editor && !gameIsPlayingAndHasFocus)
             {
+                ////REVIEW: This isn't right. The editor does have update ticks which constitute the equivalent of player frames.
                 // The editor doesn't really have a concept of frame-to-frame operation the
                 // same way the player does. So we simply flip buffers on a device whenever
                 // a new state event for it comes in.
@@ -3433,6 +3489,7 @@ namespace UnityEngine.InputSystem
             }
 
             deviceState.Restore(device);
+
             return true;
         }
 

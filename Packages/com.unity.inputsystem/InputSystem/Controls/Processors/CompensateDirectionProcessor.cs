@@ -21,5 +21,10 @@ namespace UnityEngine.InputSystem.Processors
             }
             return rotation * value;
         }
+
+        public override string ToString()
+        {
+            return "CompensateDirection()";
+        }
     }
 }

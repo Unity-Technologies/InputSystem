@@ -514,7 +514,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     // If there's no device filter coming from a control scheme, filter by supported
                     // devices as given by settings.
-                    controlPathsToMatch = InputSystem.settings.supportedDevices;
+                    controlPathsToMatch = InputSystem.settings.supportedDevices.Select(x => $"<{x}>");
                 }
 
                 // Show properties for binding.

@@ -20,6 +20,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: context menu cannot be brought up when there's no items in the tree
 
+////FIXME: RMB context menu for actions displays composites that aren't applicable to the action
+
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -156,6 +158,15 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ItemFilterCriteria.Any(x => x.Matches(item) == FilterCriterion.Match.Failure))
             {
                 item.parent.children.Remove(item);
+
+                // Add to list of hidden children.
+                if (item.parent is ActionTreeItemBase parent)
+                {
+                    if (parent.m_HiddenChildren == null)
+                        parent.m_HiddenChildren = new List<ActionTreeItemBase>();
+                    parent.m_HiddenChildren.Add(item);
+                }
+
                 return;
             }
 
@@ -497,9 +508,20 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 // Paste items onto target.
-                PasteItems(copyBuffer.ToString(),
-                    new[] { new InsertLocation {item = target, childIndex = childIndex} },
-                    assignNewIDs: assignNewIDs);
+                var oldBindingGroupForNewBindings = bindingGroupForNewBindings;
+                try
+                {
+                    // With drag&drop, preserve binding groups.
+                    bindingGroupForNewBindings = null;
+
+                    PasteItems(copyBuffer.ToString(),
+                        new[] { new InsertLocation { item = target, childIndex = childIndex } },
+                        assignNewIDs: assignNewIDs);
+                }
+                finally
+                {
+                    bindingGroupForNewBindings = oldBindingGroupForNewBindings;
+                }
 
                 DragAndDrop.AcceptDrag();
             }
@@ -639,14 +661,8 @@ namespace UnityEngine.InputSystem.Editor
             buffer.Append(item.property.CopyToJson(ignoreObjectReferences: true));
             buffer.Append(k_EndOfTransmissionBlock);
 
-            ////FIXME: Relying on serialization this way to snapshot an entire object has the downside that
-            ////       these items work differently for copy-paste than others. For example, copying an action
-            ////       map will always copy its entire data, regardless of the current filter state. In contrast,
-            ////       copying an action will only copy the bindings that are visible according to the current
-            ////       view filter. This could be fixed by removing serializedDataIncludesChildren and allowing
-            ////       CopyToJson() to optionally ignore child properties.
-            if (!item.serializedDataIncludesChildren && item.hasChildren)
-                foreach (var child in item.children.OfType<ActionTreeItemBase>())
+            if (!item.serializedDataIncludesChildren && item.hasChildrenIncludingHidden)
+                foreach (var child in item.childrenIncludingHidden)
                     CopyItemData(child, buffer);
         }
 

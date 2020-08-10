@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
+
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
@@ -29,7 +31,7 @@ namespace UnityEngine.InputSystem
     /// <code>
     /// // Create and configure an asset in code.
     /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
-    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// var actionMap1 = asset1.AddActionMap("map1");
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>

@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.Editor;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed held for at least the set
+    /// Performs the action if the control is pressed and held for at least the set
     /// duration (which defaults to <see cref="InputSettings.defaultSlowTapTime"/>)
     /// and then released.
     /// </summary>

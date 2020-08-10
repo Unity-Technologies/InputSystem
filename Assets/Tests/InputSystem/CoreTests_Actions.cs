@@ -401,7 +401,7 @@ partial class CoreTests
     // https://fogbugz.unity3d.com/f/cases/1192972/
     [Test]
     [Category("Actions")]
-    public void Actions_CanRemoveCallbackInCallback()
+    public void Actions_CanRemoveCallback_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -429,7 +429,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanBeDisabledInCallback()
+    public void Actions_CanDisableAction_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -451,9 +451,48 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1242406/
+    // Binding resolution destroys/recreates InputActionState data. When triggering this from within
+    // an action callback, we must ensure that we're not pulling the rug from under an InputActionState
+    // while it is still processing or we'll risk corrupting memory.
     [Test]
     [Category("Actions")]
-    public void Actions_CanDisableAndEnableOtherActionInCallback()
+    [TestCase(true)]
+    [TestCase(false)]
+    public unsafe void Actions_CanTriggerBindingResolutionOnAction_FromCallback(bool withEnableDisable)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Mouse>/delta");
+
+        Mouse mouse = null;
+        action.performed += _ =>
+        {
+            Assert.That(action.GetOrCreateActionMap().m_State.isProcessingControlStateChange, Is.True);
+            var basePtrBefore = new IntPtr(action.GetOrCreateActionMap().m_State.memory.basePtr);
+
+            if (withEnableDisable)
+                action.Disable();
+            mouse = InputSystem.AddDevice<Mouse>();
+            if (withEnableDisable)
+                action.Enable();
+
+            Assert.That(basePtrBefore, Is.EqualTo(new IntPtr(action.GetOrCreateActionMap().m_State.memory.basePtr)),
+                "Unmanaged memory must not have been touched while action is executing");
+        };
+
+        action.Enable();
+
+        Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftStick, mouse.delta}));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnableOtherAction_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1763,6 +1802,8 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace())
         {
+            Assert.That(trace.buffer.capacityInBytes, Is.Zero);
+
             action.performed += trace.RecordAction;
 
             var state = new GamepadState {leftStick = new Vector2(0.123f, 0.234f)};
@@ -1772,6 +1813,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W), 0.0987);
             InputSystem.Update();
 
+            Assert.That(trace.buffer.capacityInBytes, Is.EqualTo(2048)); // Default capacity increment.
             Assert.That(trace.count, Is.EqualTo(3));
 
             var events = trace.ToArray();
@@ -4375,8 +4417,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
     {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
         var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -4416,6 +4462,7 @@ partial class CoreTests
             // from the base PS4 gamepad layout.
             Assert.That(ps4ToPS4.score, Is.EqualTo(1 + 0.5f));
         }
+#endif
     }
 
     [Test]
@@ -4472,8 +4519,12 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
+#endif
     public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
     {
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepadScheme = new InputControlScheme("GenericGamepad")
             .WithRequiredDevice("<Gamepad>");
         var ps4GamepadScheme = new InputControlScheme("PS4")
@@ -4493,6 +4544,7 @@ partial class CoreTests
             Is.EqualTo(ps4GamepadScheme));
         Assert.That(InputControlScheme.FindControlSchemeForDevice(xboxController, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
             Is.EqualTo(xboxGamepadScheme));
+#endif
     }
 
     // The bindings targeting an action can be masked out such that only specific
@@ -4778,7 +4830,7 @@ partial class CoreTests
         var action1 = map1.AddAction("action1");
         var action2 = map1.AddAction("action2");
         var action3 = map2.AddAction("action3");
-        var action4 = map2.AddAction("action4");
+        map2.AddAction("action4");
 
         map1.AddBinding("<Gamepad>/buttonSouth", action: "action1");
         map2.AddBinding("<Gamepad>/buttonSouth", action: "action3");
@@ -7041,6 +7093,58 @@ partial class CoreTests
                 Performed(positionAction, mouse.position, new Vector2(100, 200), time: 0.6)
                     .AndThen(Performed(positionAction, pen.position, new Vector2(300, 400), time: 0.7)));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_AxisControlWithoutLimitsCanTriggerActionsWithMultipleBindings()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout"",
+                ""controls"" : [
+                    { ""name"" : ""SingleAxis"", ""layout"" : ""Analog"", ""format"" : ""FLT"" }
+                ]
+            }
+        ";
+
+        // Create base device with unclamped axis
+        InputSystem.RegisterLayout(json);
+        InputDevice device = InputSystem.AddDevice("TestLayout");
+        AxisControl singleAxis = device["SingleAxis"] as AxisControl;
+
+        // Add a second device to create 2 bindings
+        InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "TestLayout/SingleAxis");
+        action.AddBinding("<Gamepad>/buttonSouth");
+
+        int performedCallCount = 0;
+        float lastPerformedValue = 0.0f;
+        action.performed += ctx =>
+        {
+            performedCallCount++;
+            lastPerformedValue = ctx.ReadValue<float>();
+        };
+
+        action.Enable();
+
+        // Assert there are multiple bindings with multiple controls
+        // This triggers conflict resolution.
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+
+        InputSystem.Update();
+
+        // Set Initial Value to start action.
+        Set(singleAxis, 0.123f);
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.123f));
+
+        // Update action to new peformed value
+        Set(singleAxis, 0.456f);
+        Assert.That(performedCallCount, Is.EqualTo(2));
+        Assert.That(lastPerformedValue, Is.EqualTo(0.456f));
     }
 
     [Test]

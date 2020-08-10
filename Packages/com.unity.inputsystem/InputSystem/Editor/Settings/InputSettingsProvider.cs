@@ -261,6 +261,8 @@ namespace UnityEngine.InputSystem.Editor
                         new InputControlPickerState(),
                         path =>
                         {
+                            ////REVIEW: Why are we converting from a layout into a plain string here instead of just using path strings in supportedDevices?
+                            ////        Why not just have InputSettings.supportedDevices be a list of paths?
                             var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
                             var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
                             if (existingIndex != -1)

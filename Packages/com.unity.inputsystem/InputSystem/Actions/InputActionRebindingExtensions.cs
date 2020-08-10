@@ -15,6 +15,10 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
+////TODO: make RebindingOperation dispose its memory automatically; re-allocating is not a problem
+
+////TODO: add simple method to RebindingOperation that will create keyboard binding paths by character rather than by key name
+
 ////FIXME: properly work with composites
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
@@ -163,6 +167,8 @@ namespace UnityEngine.InputSystem
 
             return -1;
         }
+
+        ////TODO: add option to make it *not* take bound controls into account when creating display strings
 
         /// <summary>
         /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
@@ -2082,7 +2088,7 @@ namespace UnityEngine.InputSystem
         /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
         /// is complete and the final binding setup is in place.
         /// </remarks>
-        internal static IDisposable DeferBindingResolution()
+        internal static DeferBindingResolutionWrapper DeferBindingResolution()
         {
             if (s_DeferBindingResolutionWrapper == null)
                 s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
@@ -2092,7 +2098,7 @@ namespace UnityEngine.InputSystem
 
         private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
 
-        private class DeferBindingResolutionWrapper : IDisposable
+        internal class DeferBindingResolutionWrapper : IDisposable
         {
             public void Acquire()
             {
@@ -2103,7 +2109,8 @@ namespace UnityEngine.InputSystem
             {
                 if (InputActionMap.s_DeferBindingResolution > 0)
                     --InputActionMap.s_DeferBindingResolution;
-                InputActionState.DeferredResolutionOfBindings();
+                if (InputActionMap.s_DeferBindingResolution == 0)
+                    InputActionState.DeferredResolutionOfBindings();
             }
         }
     }
