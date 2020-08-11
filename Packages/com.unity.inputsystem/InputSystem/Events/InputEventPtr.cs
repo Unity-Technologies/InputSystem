@@ -140,10 +140,11 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             get
             {
-                if (IsA<StateEvent>())
-                    return StateEvent.From(this)->stateFormat;
-                if (IsA<DeltaStateEvent>())
-                    return DeltaStateEvent.From(this)->stateFormat;
+                var eventType = type;
+                if (eventType == StateEvent.Type)
+                    return StateEvent.FromUnchecked(this)->stateFormat;
+                if (eventType == DeltaStateEvent.Type)
+                    return DeltaStateEvent.FromUnchecked(this)->stateFormat;
                 throw new InvalidOperationException("Event must be a StateEvent or DeltaStateEvent but is " + this);
             }
         }

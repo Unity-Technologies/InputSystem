@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 throw new ArgumentNullException(nameof(pointer));
 
             // Ignore if not added.
-            var index = ArrayHelpers.IndexOfReference(m_Sources, pointer, m_NumSources);
+            var index = m_Sources.IndexOfReference(pointer, m_NumSources);
             if (index == -1)
                 return;
 

@@ -1,11 +1,18 @@
+using System;
+using System.Diagnostics;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.Utilities;
+
+////REVIEW: this *really* should be renamed to TouchPolling or something like that
+
+////REVIEW: Should this auto-enable itself when the API is used? Problem with this is that it means the first touch inputs will get missed
+////        as by the time the API is polled, we're already into the first frame.
 
 ////TODO: gesture support
-////TODO: mouse/touch simulation support
 ////TODO: high-frequency touch support
 
 ////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
+
+////TODO: as soon as we can break the API, remove the EnhancedTouchSupport class altogether and rename UnityEngine.InputSystem.EnhancedTouch to TouchPolling
 
 namespace UnityEngine.InputSystem.EnhancedTouch
 {
@@ -158,6 +165,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 return;
             TearDownState();
             SetUpState();
+        }
+
+        [Conditional("DEVELOPMENT_BUILD")]
+        [Conditional("UNITY_EDITOR")]
+        internal static void CheckEnabled()
+        {
+            if (!enabled)
+                throw new InvalidOperationException("EnhancedTouch API is not enabled; call EnhancedTouchSupport.Enable()");
         }
     }
 }

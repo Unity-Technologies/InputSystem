@@ -451,7 +451,7 @@ namespace UnityEngine.InputSystem.Editor
                                     var code = InputLayoutCodeGenerator.GenerateCodeFileForDeviceLayout(layoutItem.layoutName, fileName, prefix: "Fast");
                                     File.WriteAllText(fileName, code);
                                     if (isInAssets)
-                                        AssetDatabase.ImportAsset(fileName);
+                                        AssetDatabase.Refresh();
                                 }
                             });
                         }
