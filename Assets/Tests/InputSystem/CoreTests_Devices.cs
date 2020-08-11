@@ -3978,7 +3978,7 @@ partial class CoreTests
         {
             Assert.That(callbackWasCalled, Is.False);
             callbackWasCalled = true;
-            Assert.AreEqual(composition.length, 0);
+            Assert.AreEqual(composition.Count, 0);
             Assert.AreEqual(composition.ToString(), imeCompositionCharacters);
         };
 

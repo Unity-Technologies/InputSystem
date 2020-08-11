@@ -9,16 +9,33 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
+    /// Helper methods to convert NativeArray objects to C# strings.
+    /// </summary>
+    static class NativeArrayStringExtension
+    {
+        /// <summary>
+        /// Extension method to convert a NativeArray/<char/> to a C# string.
+        /// </summary>
+        /// <param name="c">The NativeArray containing the string data.</param>
+        /// <returns>A string representation of the Native Array character buffer.</returns>
+        public static unsafe string ToString(this NativeArray<char> c)
+        {
+            return new string((char*)NativeArrayUnsafeUtility.GetUnsafePtr(c), 0, c.Length);
+        }
+    }
+
+    /// <summary>
     /// A specialized event that contains the current IME Composition string, if IME is enabled and active.
     /// This event contains the entire current string to date, and once a new composition is submitted will send a blank string event.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + sizeof(int) + (sizeof(char)))]
     public struct IMECompositionEvent : IInputEventTypeInfo
     {
+        internal const int kIMECharBufferSize = 64;
         public const int Type = 0x494D4543;
 
         [FieldOffset(0)]
-        internal InputEvent baseEvent;
+        public InputEvent baseEvent;
 
         [FieldOffset(InputEvent.kBaseEventSize)]
         internal int length;
@@ -30,13 +47,28 @@ namespace UnityEngine.InputSystem.LowLevel
 
         internal IMECompositionString GetComposition()
         {
-            unsafe
+            var nativeArray = GetCharacters();
+            var str = new IMECompositionString(nativeArray);
+            nativeArray.Dispose();
+            return str;
+        }
+
+        /// <summary>
+        /// Gets the IME characters packed into a variable sized NativeArray.
+        /// </summary>
+        /// <remarks>
+        /// It is the callers responsibility to dispose of the NativeArray.
+        /// </remarks>
+        /// <returns>The IME Characters for this event.</returns>
+        public unsafe NativeArray<char> GetCharacters()
+        {
+            var characters = new NativeArray<char>(length + sizeof(char), Allocator.Temp);
+            var ptr = NativeArrayUnsafeUtility.GetUnsafePtr(characters);
+            fixed(char* buffer = &bufferStart)
             {
-                fixed(char* buffer = &bufferStart)
-                {
-                    return new IMECompositionString(new IntPtr(buffer), length);
-                }
+                UnsafeUtility.MemCpy(ptr, buffer, length + sizeof(char));
             }
+            return characters;
         }
 
         /// <summary>
@@ -80,35 +112,36 @@ namespace UnityEngine.InputSystem.LowLevel
     /// This is the internal representation of character strings in the event stream. It is exposed to user content through the
     /// <see cref="ITextInputReceiver.OnIMECompositionChanged"/> method. It can easily be converted to a normal C# string using
     ///  <see cref="ToString"/>, but is exposed as the raw struct to avoid allocating memory by default.
-    ///
-    /// Because this string does not allocate, it is only valid, and can only be read within the <see cref="ITextInputReceiver.OnIMECompositionChanged"/> that it is recieved, and will otherwise return an invalid composition.
     /// </remarks>
+    [StructLayout(LayoutKind.Explicit, Size = sizeof(int) + sizeof(char) * LowLevel.IMECompositionEvent.kIMECharBufferSize)]
     public unsafe struct IMECompositionString : IEnumerable<char>
     {
         internal struct Enumerator : IEnumerator<char>
         {
-            IntPtr m_BufferStart;
-            int m_CharacterCount;
+            IMECompositionString m_CompositionString;
             char m_CurrentCharacter;
             int m_CurrentIndex;
 
             public Enumerator(IMECompositionString compositionString)
             {
-                m_BufferStart = compositionString.m_CharBuffer;
-                m_CharacterCount = compositionString.length;
+                m_CompositionString = compositionString;
                 m_CurrentCharacter = '\0';
                 m_CurrentIndex = -1;
             }
 
             public bool MoveNext()
             {
+                int size = m_CompositionString.Count;
+
                 m_CurrentIndex++;
 
-                if (m_CurrentIndex == m_CharacterCount)
+                if (m_CurrentIndex == size)
                     return false;
 
-                char* ptr = (char*)m_BufferStart.ToPointer();
-                m_CurrentCharacter = *(ptr + m_CurrentIndex);
+                fixed (char* ptr = m_CompositionString.buffer)
+                {
+                    m_CurrentCharacter = *(ptr + m_CurrentIndex);
+                }
 
                 return true;
             }
@@ -127,53 +160,59 @@ namespace UnityEngine.InputSystem.LowLevel
             object IEnumerator.Current => Current;
         }
 
-        int m_Length;
-        /// <summary>
-        /// This returns the total number of characters in the IME composition.
-        /// </summary>
-        /// <remarks>
-        /// If 0, this event represents a clearing of the current IME dialog.
-        /// </remarks>
-        public int length { get { return m_Length; }}
+        public int Count => size;
 
-        IntPtr m_CharBuffer;
-
-
-        /// <summary>
-        /// An Indexer into an individual character in the IME Composition. Will throw an out of range exception if the index is greater than the length of the composition.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">The requested index is greater than the <cref="IMECompositionString.length"> of the composition.</exception>
-        /// <value>Returns the character at the requested index in UTF-32 encoding.</value>
         public char this[int index]
         {
             get
             {
-                if (index >= m_Length || index < 0)
+                if (index >= Count || index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
 
-                char* ptr = (char*)m_CharBuffer.ToPointer();
-                return *(ptr + index);
+                fixed (char* ptr = buffer)
+                {
+                    return *(ptr + index);
+                }
             }
         }
 
+        [FieldOffset(0)]
+        int size;
 
-        internal IMECompositionString(IntPtr charBuffer, int length)
+        [FieldOffset(sizeof(int))]
+        fixed char buffer[IMECompositionEvent.kIMECharBufferSize];
+
+        public IMECompositionString(NativeArray<char> characters)
         {
-            m_Length = length;
-            m_CharBuffer = charBuffer;
+            int copySize = IMECompositionEvent.kIMECharBufferSize < characters.Length ? IMECompositionEvent.kIMECharBufferSize : characters.Length;
+            fixed (char* ptr = buffer)
+            {
+                void* arrayPtr = NativeArrayUnsafeUtility.GetUnsafePtr(characters);
+                UnsafeUtility.MemCpy(ptr, arrayPtr, copySize * sizeof(char));
+            }
+            size = copySize;
         }
 
-        /// <summary>
-        /// Converts the IMEComposition to a new string.
-        /// </summary>
-        /// <remarks>
-        /// This will generate garbage by allocating a new string.
-        /// </remarks>
-        /// <returns>The IME Composition as a string</returns>
+        public IMECompositionString(string characters)
+        {
+            if (string.IsNullOrEmpty(characters))
+            {
+                size = 0;
+                return;
+            }
+
+            Debug.Assert(characters.Length < IMECompositionEvent.kIMECharBufferSize);
+            size = characters.Length;
+            for (var i = 0; i < size; i++)
+                buffer[i] = characters[i];
+        }
+
         public override string ToString()
         {
-            char* ptr = (char*)m_CharBuffer.ToPointer();
-            return new string(ptr, 0, m_Length);
+            fixed (char* ptr = buffer)
+            {
+                return new string(ptr, 0, size);
+            }
         }
 
         public IEnumerator<char> GetEnumerator()
