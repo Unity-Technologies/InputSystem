@@ -138,7 +138,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (m_CurrentIndex == size)
                     return false;
 
-                fixed (char* ptr = m_CompositionString.buffer)
+                fixed(char* ptr = m_CompositionString.buffer)
                 {
                     m_CurrentCharacter = *(ptr + m_CurrentIndex);
                 }
@@ -169,7 +169,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (index >= Count || index < 0)
                     throw new ArgumentOutOfRangeException(nameof(index));
 
-                fixed (char* ptr = buffer)
+                fixed(char* ptr = buffer)
                 {
                     return *(ptr + index);
                 }
@@ -185,7 +185,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public IMECompositionString(NativeArray<char> characters)
         {
             int copySize = IMECompositionEvent.kIMECharBufferSize < characters.Length ? IMECompositionEvent.kIMECharBufferSize : characters.Length;
-            fixed (char* ptr = buffer)
+            fixed(char* ptr = buffer)
             {
                 void* arrayPtr = NativeArrayUnsafeUtility.GetUnsafePtr(characters);
                 UnsafeUtility.MemCpy(ptr, arrayPtr, copySize * sizeof(char));
@@ -209,7 +209,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public override string ToString()
         {
-            fixed (char* ptr = buffer)
+            fixed(char* ptr = buffer)
             {
                 return new string(ptr, 0, size);
             }
