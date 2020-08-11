@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 int sizeInBytes = (InputEvent.kBaseEventSize + sizeof(int) + sizeof(char)) + (sizeof(char) * str.Length);
                 NativeArray<Byte> eventBuffer = new NativeArray<byte>(sizeInBytes, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
-                
+
                 byte* ptr = (byte*)NativeArrayUnsafeUtility.GetUnsafePtr(eventBuffer);
                 InputEvent* evt = (InputEvent*)ptr;
 
@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 *lengthPtr = str.Length;
 
                 ptr += sizeof(int);
-                
+
                 fixed(char* p = str)
                 {
                     UnsafeUtility.MemCpy(ptr, p, str.Length * sizeof(char));
@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// This is the internal representation of character strings in the event stream. It is exposed to user content through the
     /// <see cref="ITextInputReceiver.OnIMECompositionChanged"/> method. It can easily be converted to a normal C# string using
     ///  <see cref="ToString"/>, but is exposed as the raw struct to avoid allocating memory by default.
-    /// 
+    ///
     /// Because this string does not allocate, it is only valid, and can only be read within the <see cref="ITextInputReceiver.OnIMECompositionChanged"/> that it is recieved, and will otherwise return an invalid composition.
     /// </remarks>
     public unsafe struct IMECompositionString : IEnumerable<char>
