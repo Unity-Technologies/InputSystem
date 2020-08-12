@@ -883,6 +883,230 @@ namespace UnityEngine.InputSystem
             return numMatchingControls;
         }
 
+        /// <summary>
+        /// Return a JSON string containing all overrides applied to bindings in the given set of <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A collection of <see cref="InputAction"/>s such as an <see cref="InputActionAsset"/> or
+        /// an <see cref="InputActionMap"/>.</param>
+        /// <returns>A JSON string containing a serialized version of the overrides applied to bindings in the given set of actions.</returns>
+        /// <remarks>
+        /// This method can be used to serialize the overrides, i.e. <see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/>, applied to
+        /// bindings in the set of actions. Only overrides will be saved.
+        ///
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        public static string SaveBindingOverridesAsJson(this IInputActionCollection2 actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            var overrides = new List<InputActionMap.BindingOverrideJson>();
+            foreach (var binding in actions.bindings)
+                actions.AddBindingOverrideJsonTo(binding, overrides);
+
+            if (overrides.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = overrides});
+        }
+
+        /// <summary>
+        /// Return a string in JSON format that contains all overrides applied <see cref="InputAction.bindings"/>
+        /// of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">An action for which to extract binding overrides.</param>
+        /// <returns>A string in JSON format containing binding overrides for <paramref name="action"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This overrides can be restored using <seealso cref="LoadBindingOverridesFromJson(InputAction,string,bool)"/>.
+        /// </remarks>
+        public static string SaveBindingOverridesAsJson(this InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var isSingletonAction = action.isSingletonAction;
+            var actionMap = action.GetOrCreateActionMap();
+            var list = new List<InputActionMap.BindingOverrideJson>();
+
+            foreach (var binding in action.bindings)
+            {
+                // If we're not looking at a singleton action, the bindings in the map may be
+                // for other actions. Skip all that are.
+                if (!isSingletonAction && !binding.TriggersAction(action))
+                    continue;
+
+                actionMap.AddBindingOverrideJsonTo(binding, list, isSingletonAction ? action : null);
+            }
+
+            if (list.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = list});
+        }
+
+        private static void AddBindingOverrideJsonTo(this IInputActionCollection2 actions, InputBinding binding,
+            List<InputActionMap.BindingOverrideJson> list, InputAction action = null)
+        {
+            if (!binding.hasOverrides)
+                return;
+
+            ////REVIEW: should this throw if there's no existing GUID on the binding? or should we rather have
+            ////        move avenues for locating a binding on an action?
+
+            if (action == null)
+                action = actions.FindAction(binding.action);
+
+            var @override = new InputActionMap.BindingOverrideJson
+            {
+                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
+                id = binding.id.ToString(),
+                path = binding.overridePath,
+                interactions = binding.overrideInteractions,
+                processors = binding.overrideProcessors
+            };
+
+            list.Add(@override);
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings in <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A set of actions and their bindings, such as an <see cref="InputActionMap"/>, an
+        /// <see cref="InputActionAsset"/>, or a C# wrapper class generated from an .inputactions asset.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="actions"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this IInputActionCollection2 actions, string json, bool removeExisting = true)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    actions.RemoveAllBindingOverrides();
+
+                actions.LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">Action to restore bindings on.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(InputAction)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="action"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this InputAction action, string json, bool removeExisting = true)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    action.RemoveAllBindingOverrides();
+
+                action.GetOrCreateActionMap().LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        private static void LoadBindingOverridesFromJsonInternal(this IInputActionCollection2 actions, string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            var overrides = JsonUtility.FromJson<InputActionMap.BindingOverrideListJson>(json);
+            foreach (var entry in overrides.bindings)
+            {
+                // Try to find the binding by ID.
+                if (!string.IsNullOrEmpty(entry.id))
+                {
+                    var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
+                    if (bindingIndex != -1)
+                    {
+                        action.ApplyBindingOverride(bindingIndex, new InputBinding
+                        {
+                            overridePath = entry.path,
+                            overrideInteractions = entry.interactions,
+                            overrideProcessors = entry.processors,
+                        });
+                        continue;
+                    }
+                }
+
+                throw new NotImplementedException();
+            }
+        }
+
         ////TODO: allow overwriting magnitude with custom values; maybe turn more into an overall "score" for a control
 
         /// <summary>

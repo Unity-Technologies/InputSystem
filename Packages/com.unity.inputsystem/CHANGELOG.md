@@ -49,6 +49,23 @@ however, it has to be formatted properly to pass verification tests.
 - Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. For `Touchscreen`, this results in a >20x speed-up for `InputSystem.AddDevice<Touchscreen>()`.
 - Added Pose Control layout. The Pose Control is used on XR Devices and wraps tracking state, position, rotation, and velocity information.
 
+#### Actions
+
+- Can now save binding overrides as JSON strings and restore them from such using the newly added `SaveBindingOverridesAsJson` and `LoadBindingOverridesFromJson` extension methods.
+  ```CSharp
+  void SaveUserRebinds(PlayerInput player)
+  {
+      var rebinds = player.actions.SaveBindingOverridesAsJson();
+      PlayerPrefs.SetString("rebinds", rebinds);
+  }
+
+  void LoadUserRebinds(PlayerInput player)
+  {
+      var rebinds = PlayerPrefs.GetString("rebinds");
+      player.actions.LoadBindingOverridesFromJson(rebinds);
+  }
+  ```
+
 ## [1.0.0] - 2020-04-23
 
 ### Fixed
