@@ -1546,9 +1546,6 @@ internal class PlayerInputTests : InputTestFixture
     // is refused.
     [Test]
     [Category("PlayerInput")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1254573")]
-#endif
     public void PlayerInput_JoiningPlayerThroughButtonPress_WillFailIfDeviceIsNotUsableWithPlayerActions()
     {
         var playerPrefab = new GameObject();
@@ -1562,11 +1559,10 @@ internal class PlayerInputTests : InputTestFixture
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         managerComponent.playerPrefab = playerPrefab;
 
-        // Create a device based on the HID layout with a single button control.
+        // Create a device with a single button control.
         const string kLayout = @"
             {
                 ""name"" : ""TestDevice"",
-                ""extend"" : ""HID"",
                 ""controls"" : [
                     { ""name"" : ""button"", ""layout"" : ""Button"" }
                 ]
