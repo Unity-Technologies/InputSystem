@@ -471,7 +471,7 @@ namespace UnityEngine.InputSystem
 
         ////TODO: AddCompositeBinding<T>
 
-        private static int AddBindingInternal(InputActionMap map, InputBinding binding)
+        private static int AddBindingInternal(InputActionMap map, InputBinding binding, int bindingIndex = -1)
         {
             Debug.Assert(map != null);
 
@@ -480,7 +480,10 @@ namespace UnityEngine.InputSystem
                 binding.GenerateId();
 
             // Append to bindings in set.
-            var bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
+            if (bindingIndex < 0)
+                bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
+            else
+                ArrayHelpers.InsertAt(ref map.m_Bindings, bindingIndex, binding);
 
             // Invalidate per-action binding sets so that this gets refreshed if
             // anyone queries it.
@@ -981,9 +984,12 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <param name="name">Name for the binding.</param>
             /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is not <see cref="valid"/>.</exception>
             /// <seealso cref="InputBinding.name"/>
             public BindingSyntax WithName(string name)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].name = name;
                 m_ActionMap.ClearPerActionCachedBindingData();
                 m_ActionMap.LazyResolveBindings();
@@ -995,9 +1001,12 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <param name="path">Path for the binding.</param>
             /// <returns>The same binding syntax for further configuration.</returns>
+            /// <exception cref="InvalidOperationException">The binding accessor is not <see cref="valid"/>.</exception>
             /// <seealso cref="InputBinding.path"/>
             public BindingSyntax WithPath(string path)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 m_ActionMap.m_Bindings[m_BindingIndexInMap].path = path;
                 m_ActionMap.ClearPerActionCachedBindingData();
                 m_ActionMap.LazyResolveBindings();
@@ -1013,6 +1022,8 @@ namespace UnityEngine.InputSystem
             /// a <see cref="InputBinding.Separator"/> character.</exception>
             public BindingSyntax WithGroup(string group)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(group))
                     throw new ArgumentException("Group name cannot be null or empty", nameof(group));
                 if (group.IndexOf(InputBinding.Separator) != -1)
@@ -1024,6 +1035,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithGroups(string groups)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(groups))
                     return this;
 
@@ -1042,6 +1055,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithInteraction(string interaction)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(interaction))
                     throw new ArgumentException("Interaction cannot be null or empty", nameof(interaction));
                 if (interaction.IndexOf(InputBinding.Separator) != -1)
@@ -1053,6 +1068,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithInteractions(string interactions)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(interactions))
                     return this;
 
@@ -1072,6 +1089,9 @@ namespace UnityEngine.InputSystem
             public BindingSyntax WithInteraction<TInteraction>()
                 where TInteraction : IInputInteraction
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
+
                 var interactionName = InputProcessor.s_Processors.FindNameForType(typeof(TInteraction));
                 if (interactionName.IsEmpty())
                     throw new NotSupportedException($"Type '{typeof(TInteraction)}' has not been registered as a processor");
@@ -1081,6 +1101,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithProcessor(string processor)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(processor))
                     throw new ArgumentException("Processor cannot be null or empty", nameof(processor));
                 if (processor.IndexOf(InputBinding.Separator) != -1)
@@ -1092,6 +1114,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithProcessors(string processors)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (string.IsNullOrEmpty(processors))
                     return this;
 
@@ -1110,6 +1134,9 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax WithProcessor<TProcessor>()
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
+
                 var processorName = InputProcessor.s_Processors.FindNameForType(typeof(TProcessor));
                 if (processorName.IsEmpty())
                     throw new NotSupportedException($"Type '{typeof(TProcessor)}' has not been registered as a processor");
@@ -1119,6 +1146,8 @@ namespace UnityEngine.InputSystem
 
             public BindingSyntax Triggering(InputAction action)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
                 if (action == null)
                     throw new ArgumentNullException(nameof(action));
                 if (action.isSingletonAction)
@@ -1142,6 +1171,9 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public BindingSyntax To(InputBinding binding)
             {
+                if (!valid)
+                    throw new InvalidOperationException("Accessor is not valid");
+
                 m_ActionMap.m_Bindings[m_BindingIndexInMap] = binding;
                 m_ActionMap.ClearPerActionCachedBindingData();
                 m_ActionMap.LazyResolveBindings();
@@ -1163,7 +1195,7 @@ namespace UnityEngine.InputSystem
             /// be be invalid if there is no next binding in the map.</remarks>
             public BindingSyntax NextBinding()
             {
-                return Iterate(1);
+                return Iterate(true);
             }
 
             /// <summary>
@@ -1176,7 +1208,7 @@ namespace UnityEngine.InputSystem
             /// be be invalid if there is no previous binding in the map.</remarks>
             public BindingSyntax PreviousBinding()
             {
-                return Iterate(-1);
+                return Iterate(false);
             }
 
             /// <summary>
@@ -1208,7 +1240,7 @@ namespace UnityEngine.InputSystem
             {
                 if (string.IsNullOrEmpty(partName))
                     throw new ArgumentNullException(nameof(partName));
-                return IteratePartBinding(1, partName);
+                return IteratePartBinding(true, partName);
             }
 
             /// <summary>
@@ -1232,7 +1264,7 @@ namespace UnityEngine.InputSystem
             {
                 if (string.IsNullOrEmpty(partName))
                     throw new ArgumentNullException(nameof(partName));
-                return IteratePartBinding(-1, partName);
+                return IteratePartBinding(false, partName);
             }
 
             /// <summary>
@@ -1253,15 +1285,15 @@ namespace UnityEngine.InputSystem
             /// </remarks>
             public BindingSyntax NextCompositeBinding(string compositeName = null)
             {
-                return IterateCompositeBinding(1, compositeName);
+                return IterateCompositeBinding(true, compositeName);
             }
 
             public BindingSyntax PreviousCompositeBinding(string compositeName = null)
             {
-                return IterateCompositeBinding(-1, compositeName);
+                return IterateCompositeBinding(false, compositeName);
             }
 
-            private BindingSyntax Iterate(int count)
+            private BindingSyntax Iterate(bool next)
             {
                 if (m_ActionMap == null)
                     return default;
@@ -1270,59 +1302,70 @@ namespace UnityEngine.InputSystem
                 if (bindings == null)
                     return default;
 
-                var index = m_BindingIndexInMap + count;
-                if (index < 0 || index >= bindings.Length)
-                    return default;
+                // To find the next binding for a specific action, we may have to jump
+                // over unrelated bindings in-between.
+                var index = m_BindingIndexInMap;
+                while (true)
+                {
+                    index += next ? 1 : -1;
+                    if (index < 0 || index >= bindings.Length)
+                        return default;
 
-                if (m_Action != null &&
-                    !bindings[index].action.Equals(m_Action.name, StringComparison.InvariantCultureIgnoreCase) &&
-                    bindings[index].action != m_Action.m_Id)
-                    return default;
+                    if (m_Action == null || bindings[index].TriggersAction(m_Action))
+                        break;
+                }
 
                 return new BindingSyntax(m_ActionMap, index, m_Action);
             }
 
-            private BindingSyntax IterateCompositeBinding(int count, string compositeName)
+            private BindingSyntax IterateCompositeBinding(bool next, string compositeName)
             {
-                while (true)
+                for (var accessor = Iterate(next); accessor.valid; accessor = accessor.Iterate(next))
                 {
-                    var accessor = Iterate(count);
-                    if (!accessor.valid)
-                        return default;
-                    if (accessor.binding.isComposite)
-                    {
-                        if (compositeName == null)
-                            return accessor;
+                    if (!accessor.binding.isComposite)
+                        continue;
 
-                        // Try name of binding.
-                        if (compositeName.Equals(accessor.binding.name, StringComparison.InvariantCultureIgnoreCase))
-                            return accessor;
+                    if (compositeName == null)
+                        return accessor;
 
-                        // Try composite type name.
-                        var name = NameAndParameters.ParseName(accessor.binding.path);
-                        if (compositeName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                            return accessor;
-                    }
+                    // Try name of binding.
+                    if (compositeName.Equals(accessor.binding.name, StringComparison.InvariantCultureIgnoreCase))
+                        return accessor;
+
+                    // Try composite type name.
+                    var name = NameAndParameters.ParseName(accessor.binding.path);
+                    if (compositeName.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                        return accessor;
                 }
+
+                return default;
             }
 
-            private BindingSyntax IteratePartBinding(int count, string partName)
+            private BindingSyntax IteratePartBinding(bool next, string partName)
             {
                 if (!valid)
                     return default;
 
-                if (!binding.isPartOfComposite)
+                if (binding.isComposite)
+                {
+                    // If we're at the composite, only proceed if we're iterating down
+                    // instead of up.
+                    if (!next)
+                        return default;
+                }
+                else if (!binding.isPartOfComposite)
                     return default;
 
-                while (true)
+                for (var accessor = Iterate(next); accessor.valid; accessor = accessor.Iterate(next))
                 {
-                    var accessor = Iterate(count);
-                    if (!accessor.valid || !accessor.binding.isPartOfComposite)
+                    if (!accessor.binding.isPartOfComposite)
                         return default;
 
                     if (partName.Equals(accessor.binding.name, StringComparison.InvariantCultureIgnoreCase))
                         return accessor;
                 }
+
+                return default;
             }
 
             ////TODO: allow setting overrides through this accessor
@@ -1373,11 +1416,9 @@ namespace UnityEngine.InputSystem
                 if (!binding.isPartOfComposite && !binding.isComposite)
                     throw new InvalidOperationException("Binding accessor must point to composite or part binding");
 
-                ArrayHelpers.InsertAt(ref m_ActionMap.m_Bindings, m_BindingIndexInMap + 1,
-                    new InputBinding {path = path});
-
-                m_ActionMap.ClearPerActionCachedBindingData();
-                m_ActionMap.LazyResolveBindings();
+                AddBindingInternal(m_ActionMap,
+                    new InputBinding { path = path, isPartOfComposite = true, name = partName },
+                    m_BindingIndexInMap + 1);
 
                 return new BindingSyntax(m_ActionMap, m_BindingIndexInMap + 1, m_Action);
             }

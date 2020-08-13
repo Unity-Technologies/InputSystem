@@ -816,7 +816,8 @@ namespace UnityEngine.InputSystem
                 // Dead simple case: map is internally owned by action. The entire
                 // list of bindings is specific to the action.
 
-                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings);
+                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings,
+                    "For singleton action, bindings array must match that of the action");
 
                 m_BindingsForEachAction = m_Bindings;
                 m_ControlsForEachAction = m_State?.controls;
@@ -832,7 +833,7 @@ namespace UnityEngine.InputSystem
 
                 // Go through all bindings and slice them out to individual actions.
 
-                Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
+                Debug.Assert(m_Actions != null, "Action map is associated with action but action map has no array of actions"); // Action isn't a singleton so this has to be true.
                 var mapIndices = m_State?.FetchMapIndices(this) ?? new InputActionState.ActionMapIndices();
 
                 // Reset state on each action. Important if we have actions that are no longer

@@ -2506,10 +2506,21 @@ partial class CoreTests
         composite.InsertPartBinding("Positive", "<Keyboard>/rightArrow");
 
         Assert.That(action.bindings, Has.Count.EqualTo(5));
-        Assert.That(action.bindings[3].isPartOfComposite, Is.True);
-        Assert.That(action.bindings[4].isPartOfComposite, Is.True);
-        Assert.That(action.bindings[3].path, Is.EqualTo("<Keyboard>/leftArrow"));
-        Assert.That(action.bindings[4].path, Is.EqualTo("<Keyboard>/leftArrow"));
+        Assert.That(action.bindings,
+            Has.Exactly(1).With.Property("isComposite").EqualTo(true).And.With.Property("isPartOfComposite").EqualTo(false).And.With
+                .Property("path").EqualTo("Axis"));
+        Assert.That(action.bindings,
+            Has.Exactly(1).With.Property("isComposite").EqualTo(false).And.With.Property("isPartOfComposite").EqualTo(true).And.With
+                .Property("path").EqualTo("<Keyboard>/a"));
+        Assert.That(action.bindings,
+            Has.Exactly(1).With.Property("isComposite").EqualTo(false).And.With.Property("isPartOfComposite").EqualTo(true).And.With
+                .Property("path").EqualTo("<Keyboard>/d"));
+        Assert.That(action.bindings,
+            Has.Exactly(1).With.Property("isComposite").EqualTo(false).And.With.Property("isPartOfComposite").EqualTo(true).And.With
+                .Property("path").EqualTo("<Keyboard>/leftArrow"));
+        Assert.That(action.bindings,
+            Has.Exactly(1).With.Property("isComposite").EqualTo(false).And.With.Property("isPartOfComposite").EqualTo(true).And.With
+                .Property("path").EqualTo("<Keyboard>/rightArrow"));
     }
 
     // Case 1218544
@@ -3942,7 +3953,7 @@ partial class CoreTests
         accessor = accessor.NextBinding();
 
         Assert.That(accessor.valid, Is.True);
-        Assert.That(accessor.bindingIndex, Is.EqualTo(1));
+        Assert.That(accessor.bindingIndex, Is.EqualTo(2));
         Assert.That(accessor.binding.path, Is.EqualTo("<Keyboard>/a"));
         Assert.That(accessor.binding.isComposite, Is.False);
         Assert.That(accessor.binding.isPartOfComposite, Is.True);
@@ -3950,7 +3961,7 @@ partial class CoreTests
         accessor = accessor.NextBinding();
 
         Assert.That(accessor.valid, Is.True);
-        Assert.That(accessor.bindingIndex, Is.EqualTo(2));
+        Assert.That(accessor.bindingIndex, Is.EqualTo(3));
         Assert.That(accessor.binding.path, Is.EqualTo("<Keyboard>/d"));
         Assert.That(accessor.binding.isComposite, Is.False);
         Assert.That(accessor.binding.isPartOfComposite, Is.True);
@@ -3958,7 +3969,7 @@ partial class CoreTests
         accessor = accessor.NextBinding();
 
         Assert.That(accessor.valid, Is.True);
-        Assert.That(accessor.bindingIndex, Is.EqualTo(3));
+        Assert.That(accessor.bindingIndex, Is.EqualTo(4));
         Assert.That(accessor.binding.path, Is.EqualTo("<Mouse>/scroll/x"));
         Assert.That(accessor.binding.isComposite, Is.False);
         Assert.That(accessor.binding.isPartOfComposite, Is.False);
@@ -3966,7 +3977,7 @@ partial class CoreTests
         accessor = accessor.PreviousBinding();
 
         Assert.That(accessor.valid, Is.True);
-        Assert.That(accessor.bindingIndex, Is.EqualTo(2));
+        Assert.That(accessor.bindingIndex, Is.EqualTo(3));
         Assert.That(accessor.binding.path, Is.EqualTo("<Keyboard>/d"));
         Assert.That(accessor.binding.isComposite, Is.False);
         Assert.That(accessor.binding.isPartOfComposite, Is.True);
@@ -4163,8 +4174,8 @@ partial class CoreTests
             .NextPartBinding("Negative").WithPath("<Keyboard>/downArrow")
             .NextPartBinding("Positive").WithPath("<Keyboard>/upArrow");
 
-        Assert.That(action.bindings[4].path, Is.EqualTo("<Keyboard>/q"));
-        Assert.That(action.bindings[5].path, Is.EqualTo("<Keyboard>/e"));
+        Assert.That(action.bindings[5].path, Is.EqualTo("<Keyboard>/downArrow"));
+        Assert.That(action.bindings[6].path, Is.EqualTo("<Keyboard>/upArrow"));
 
         Assert.That(action.controls, Has.None.SameAs(keyboard.aKey));
         Assert.That(action.controls, Has.None.SameAs(keyboard.dKey));
@@ -5121,10 +5132,12 @@ partial class CoreTests
         Assert.That(action.GetBindingIndex(path: "<Keyboard>/space"), Is.EqualTo(0));
         Assert.That(action.GetBindingIndex(path: "<Gamepad>/buttonSouth"), Is.EqualTo(1));
         Assert.That(action.GetBindingIndex(path: "<Mouse>/leftButton"), Is.EqualTo(2));
+        Assert.That(action.GetBindingIndex(path: "<Keyboard>/leftArrow"), Is.EqualTo(4));
+        Assert.That(action.GetBindingIndex(path: "<Keyboard>/rightArrow"), Is.EqualTo(5));
+        Assert.That(action.GetBindingIndex(path: "<Keyboard>/upArrow"), Is.EqualTo(7));
+        Assert.That(action.GetBindingIndex(path: "<Keyboard>/downArrow"), Is.EqualTo(8));
 
         Assert.That(action.GetBindingIndex("DoesNotExist"), Is.EqualTo(-1));
-
-        Assert.Fail();
     }
 
     [Test]
@@ -5144,7 +5157,7 @@ partial class CoreTests
 
         Assert.That(actionMap.GetBindingIndex(new InputBinding { groups = "Keyboard" }), Is.EqualTo(0));
         Assert.That(actionMap.GetBindingIndex(new InputBinding { groups = "Gamepad" }), Is.EqualTo(1));
-        Assert.That(actionMap.GetBindingIndex(new InputBinding { path = "<Mouse>/leftButton" }), Is.EqualTo(3));
+        Assert.That(actionMap.GetBindingIndex(new InputBinding { path = "<Mouse>/leftButton" }), Is.EqualTo(2));
 
         Assert.That(actionMap.GetBindingIndex(new InputBinding { groups = "DoesNotExist" }), Is.EqualTo(-1));
     }
