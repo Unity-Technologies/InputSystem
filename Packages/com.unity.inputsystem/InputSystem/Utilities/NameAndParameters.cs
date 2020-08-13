@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Utilities
             return true;
         }
 
-        public static string ParseName(string text)
+        internal static string ParseName(string text)
         {
             if (text == null)
                 throw new ArgumentNullException(nameof(text));
