@@ -21,6 +21,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: put default gamepad polling frequency here?
 
+////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -185,6 +187,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMin;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMin == value)
                     return;
                 m_DefaultDeadzoneMin = value;
@@ -229,6 +232,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMax;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMax == value)
                     return;
                 m_DefaultDeadzoneMax = value;
@@ -289,6 +293,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultButtonPressPoint;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
                 m_DefaultButtonPressPoint = value;
@@ -310,12 +315,13 @@ namespace UnityEngine.InputSystem
         ///
         /// The default tap time is 0.2 seconds.
         /// </remarks>
-        /// <seealso cref="TapInteraction"/>
+        /// <seealso cref="Interactions.TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultTapTime == value)
                     return;
                 m_DefaultTapTime = value;
@@ -328,6 +334,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultSlowTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultSlowTapTime == value)
                     return;
                 m_DefaultSlowTapTime = value;
@@ -340,6 +347,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultHoldTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultHoldTime == value)
                     return;
                 m_DefaultHoldTime = value;
@@ -352,6 +360,7 @@ namespace UnityEngine.InputSystem
             get => m_TapRadius;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_TapRadius == value)
                     return;
                 m_TapRadius = value;
@@ -364,6 +373,7 @@ namespace UnityEngine.InputSystem
             get => m_MultiTapDelayTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_MultiTapDelayTime == value)
                     return;
                 m_MultiTapDelayTime = value;

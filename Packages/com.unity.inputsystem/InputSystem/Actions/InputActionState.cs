@@ -3228,7 +3228,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal static void ResetGlobals()
         {
-            DestroyAllActionMapStates();
+            DestroyAllActionMapStatesAndResetOverrides();
             for (var i = 0; i < s_GlobalList.length; ++i)
                 if (s_GlobalList[i].IsAllocated)
                     s_GlobalList[i].Free();
@@ -3391,13 +3391,14 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Forcibly destroy all states currently on the global list.
+        /// Forcibly destroy all states currently on the global list and reset their binding
+        /// overrides.
         /// </summary>
         /// <remarks>
         /// We do this when exiting play mode in the editor to make sure we are cleaning up our
         /// unmanaged memory allocations.
         /// </remarks>
-        internal static void DestroyAllActionMapStates()
+        internal static void DestroyAllActionMapStatesAndResetOverrides()
         {
             while (s_GlobalList.length > 0)
             {
@@ -3413,6 +3414,15 @@ namespace UnityEngine.InputSystem
                 }
 
                 var state = (InputActionState)handle.Target;
+
+                // Remove overrides.
+                for (var i = 0; i < state.totalMapCount; ++i)
+                {
+                    var map = state.maps[i];
+                    map.RemoveAllBindingOverrides();
+                }
+
+                // Release memory.
                 state.Destroy();
             }
         }

@@ -102,6 +102,8 @@ InputSystem.AddDevice(new InputDeviceDescription
 });
 ```
 
+When a device is added, the Input System automatically issues a [sync request](../api/UnityEngine.LowLevel.RequestSyncCommand.html) on the device. This instructs the device to send an event representing its current state. Whether this request succeeds depends on the whether the given device supports the sync command.
+
 #### Device removal
 
 When a Device is disconnected, it is removed from the system. A notification appears for [`InputDeviceChange.Removed`](../api/UnityEngine.InputSystem.InputDeviceChange.html) (sent via [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange)) and the Devices are removed from the [`devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) list. The system also calls [`InputDevice.OnRemoved`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_OnRemoved_).
@@ -111,6 +113,8 @@ The [`InputDevice.added`](../api/UnityEngine.InputSystem.InputDevice.html#UnityE
 Note that Devices are not destroyed when removed. Device instances remain valid and you can still access them in code. However, trying to read values from the controls of these Devices leads to exceptions.
 
 #### Device resets
+
+//////CHANGE THIS!!!!!!!!!!!!!!
 
 In the player, Devices are reset when the window loses focus. Each reset sets the state of a Device back to its default state. An exception to this are noisy controls which are left at their current value, based on the assumption that they represent sensor readings that should be left at the last sample rather than snapped back to default values.
 

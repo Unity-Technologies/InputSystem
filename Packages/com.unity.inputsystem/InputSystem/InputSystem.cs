@@ -3047,7 +3047,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredEditMode:
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
-                    InputActionState.DestroyAllActionMapStates();
+                    InputActionState.DestroyAllActionMapStatesAndResetOverrides();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_SystemObject.settings))

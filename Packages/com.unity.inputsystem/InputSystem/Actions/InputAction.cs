@@ -1093,9 +1093,7 @@ namespace UnityEngine.InputSystem
             {
                 ref var binding = ref bindingsInMap[i];
 
-                // Match both name and ID on binding.
-                if (string.Compare(binding.action, actionName, StringComparison.InvariantCultureIgnoreCase) != 0 &&
-                    binding.action != m_Id)
+                if (!binding.TriggersAction(this))
                     continue;
 
                 ++currentBindingIndexOnAction;

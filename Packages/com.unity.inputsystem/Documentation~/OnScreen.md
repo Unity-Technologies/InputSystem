@@ -22,7 +22,7 @@ To create an on-screen button:
 
 1. Add a UI `Button` object.
 2. Add the [`OnScreenButton`](../api/UnityEngine.InputSystem.OnScreen.OnScreenButton.html) component to it.
-3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#controlPath) to refer to a [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html). For example, `<Gamepad>/buttonSouth`. The type of device referenced by the control path determines the type of virtual device created by the component.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`ButtonControl`](../api/UnityEngine.InputSystem.Controls.ButtonControl.html). For example, `<Gamepad>/buttonSouth`. The type of device referenced by the control path determines the type of virtual device created by the component.
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
@@ -34,7 +34,7 @@ To create an on-screen stick:
 
 1. Create a UI `Image` object.
 2. Add the [`OnScreenStick`](../api/UnityEngine.InputSystem.OnScreen.OnScreenStick.html) component to it.
-3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#controlPath) to refer to a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html). For example, `<Gamepad>/leftStick`. The type of device referenced by the control path determines the type of virtual device created by the component.
+3. Set the [`Control Path`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_controlPath) to refer to a [`Vector2Control`](../api/UnityEngine.InputSystem.Controls.Vector2Control.html). For example, `<Gamepad>/leftStick`. The type of device referenced by the control path determines the type of virtual device created by the component.
 
 ![OnScreenStick](Images/OnScreenStick.png)
 

@@ -44,7 +44,7 @@ You can then use the visual editor to establish the mapping:
 
 ![Look Action Binding](Images/LookActionBinding.png)
 
-This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#runtime-rebinding).
+This also makes it easier to let players [customize bindings at runtime](ActionBindings.md#interactive-rebinding).
 
 >__Note__:
 >* Actions are a game-time only feature. You can't use them in `EditorWindow` code.
