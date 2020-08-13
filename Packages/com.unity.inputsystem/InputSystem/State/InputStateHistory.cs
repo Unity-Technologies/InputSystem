@@ -438,11 +438,11 @@ namespace UnityEngine.InputSystem.LowLevel
         internal readonly bool m_AddNewControls;
 
         internal int bytesPerRecord =>
-           (m_StateSizeInBytes +
-            m_ExtraMemoryPerRecord +
-            (m_ControlCount == 1 && !m_AddNewControls
-                ? RecordHeader.kSizeWithoutControlIndex
-                : RecordHeader.kSizeWithControlIndex)).AlignToMultipleOf(4);
+            (m_StateSizeInBytes +
+                m_ExtraMemoryPerRecord +
+                (m_ControlCount == 1 && !m_AddNewControls
+                    ? RecordHeader.kSizeWithoutControlIndex
+                    : RecordHeader.kSizeWithControlIndex)).AlignToMultipleOf(4);
 
         private struct Enumerator : IEnumerator<Record>
         {
