@@ -2088,7 +2088,7 @@ namespace UnityEngine.InputSystem
         /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
         /// is complete and the final binding setup is in place.
         /// </remarks>
-        internal static IDisposable DeferBindingResolution()
+        internal static DeferBindingResolutionWrapper DeferBindingResolution()
         {
             if (s_DeferBindingResolutionWrapper == null)
                 s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
@@ -2098,7 +2098,7 @@ namespace UnityEngine.InputSystem
 
         private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
 
-        private class DeferBindingResolutionWrapper : IDisposable
+        internal class DeferBindingResolutionWrapper : IDisposable
         {
             public void Acquire()
             {
@@ -2109,7 +2109,8 @@ namespace UnityEngine.InputSystem
             {
                 if (InputActionMap.s_DeferBindingResolution > 0)
                     --InputActionMap.s_DeferBindingResolution;
-                InputActionState.DeferredResolutionOfBindings();
+                if (InputActionMap.s_DeferBindingResolution == 0)
+                    InputActionState.DeferredResolutionOfBindings();
             }
         }
     }

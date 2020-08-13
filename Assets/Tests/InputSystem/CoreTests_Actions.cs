@@ -401,7 +401,7 @@ partial class CoreTests
     // https://fogbugz.unity3d.com/f/cases/1192972/
     [Test]
     [Category("Actions")]
-    public void Actions_CanRemoveCallbackInCallback()
+    public void Actions_CanRemoveCallback_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -429,7 +429,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanBeDisabledInCallback()
+    public void Actions_CanDisableAction_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -451,9 +451,48 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1242406/
+    // Binding resolution destroys/recreates InputActionState data. When triggering this from within
+    // an action callback, we must ensure that we're not pulling the rug from under an InputActionState
+    // while it is still processing or we'll risk corrupting memory.
     [Test]
     [Category("Actions")]
-    public void Actions_CanDisableAndEnableOtherActionInCallback()
+    [TestCase(true)]
+    [TestCase(false)]
+    public unsafe void Actions_CanTriggerBindingResolutionOnAction_FromCallback(bool withEnableDisable)
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Gamepad>/leftStick");
+        action.AddBinding("<Mouse>/delta");
+
+        Mouse mouse = null;
+        action.performed += _ =>
+        {
+            Assert.That(action.GetOrCreateActionMap().m_State.isProcessingControlStateChange, Is.True);
+            var basePtrBefore = new IntPtr(action.GetOrCreateActionMap().m_State.memory.basePtr);
+
+            if (withEnableDisable)
+                action.Disable();
+            mouse = InputSystem.AddDevice<Mouse>();
+            if (withEnableDisable)
+                action.Enable();
+
+            Assert.That(basePtrBefore, Is.EqualTo(new IntPtr(action.GetOrCreateActionMap().m_State.memory.basePtr)),
+                "Unmanaged memory must not have been touched while action is executing");
+        };
+
+        action.Enable();
+
+        Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {gamepad.leftStick, mouse.delta}));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnableOtherAction_FromCallback()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1763,6 +1802,8 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace())
         {
+            Assert.That(trace.buffer.capacityInBytes, Is.Zero);
+
             action.performed += trace.RecordAction;
 
             var state = new GamepadState {leftStick = new Vector2(0.123f, 0.234f)};
@@ -1772,6 +1813,7 @@ partial class CoreTests
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.W), 0.0987);
             InputSystem.Update();
 
+            Assert.That(trace.buffer.capacityInBytes, Is.EqualTo(2048)); // Default capacity increment.
             Assert.That(trace.count, Is.EqualTo(3));
 
             var events = trace.ToArray();
@@ -4788,7 +4830,7 @@ partial class CoreTests
         var action1 = map1.AddAction("action1");
         var action2 = map1.AddAction("action2");
         var action3 = map2.AddAction("action3");
-        var action4 = map2.AddAction("action4");
+        map2.AddAction("action4");
 
         map1.AddBinding("<Gamepad>/buttonSouth", action: "action1");
         map2.AddBinding("<Gamepad>/buttonSouth", action: "action3");
