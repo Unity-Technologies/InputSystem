@@ -684,6 +684,22 @@ class APIVerificationTests
         public UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.Controls.TouchControl> touches { get; }
         public virtual System.Collections.Generic.IEnumerator<TValue> GetEnumerator();
     ")]
+    // InputActionAsset and InputActionMap changed from IInputActionCollection to IInputActionCollection2 with
+    // the latter just being based on the former.
+    [Property("Exclusions", @"1.0.0
+        public class InputActionAsset : UnityEngine.ScriptableObject, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, UnityEngine.InputSystem.IInputActionCollection
+        public sealed class InputActionMap : System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, System.ICloneable, System.IDisposable, UnityEngine.InputSystem.IInputActionCollection, UnityEngine.ISerializationCallbackReceiver
+    ")]
+    // FindAction is now defined at the IInputActionCollection2 level and thus no longer introduced separately
+    // by InputActionMap and InputActionAsset.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.InputAction FindAction(string actionNameOrId, bool throwIfNotFound = False);
+        public UnityEngine.InputSystem.InputAction FindAction(string nameOrId, bool throwIfNotFound = False);
+    ")]
+    // RemoveAllBindingOverrides(InputActionMap) is now RemoveAllBindingOverrides (IInputActionCollection2).
+    [Property("Exclusions", @"1.0.0
+        public static void RemoveAllBindingOverrides(UnityEngine.InputSystem.InputActionMap actionMap);
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

@@ -689,24 +689,24 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Get write access to the binding on <paramref name="action"/> that matches the given
-        /// <paramref name="bindingMask"/>.
+        /// <paramref name="match"/>.
         /// </summary>
         /// <param name="action">Action whose bindings to match against.</param>
-        /// <param name="bindingMask">A binding mask. See <see cref="InputBinding.Matches"/> for
+        /// <param name="match">A binding mask. See <see cref="InputBinding.Matches"/> for
         /// details.</param>
-        /// <returns>A write-accessor to the first binding matching <paramref name="bindingMask"/> or
+        /// <returns>A write-accessor to the first binding matching <paramref name="match"/> or
         /// an invalid accessor (see <see cref="BindingSyntax.valid"/>) if no binding was found to
         /// match the mask.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
-        public static BindingSyntax ChangeBinding(this InputAction action, InputBinding bindingMask)
+        public static BindingSyntax ChangeBinding(this InputAction action, InputBinding match)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
 
-            bindingMask.action = action.name;
+            match.action = action.name;
 
             var actionMap = action.GetOrCreateActionMap();
-            var bindingIndex = actionMap.FindBinding(bindingMask, out _);
+            var bindingIndex = actionMap.FindBinding(match, out _);
             if (bindingIndex == -1)
                 return default;
 
