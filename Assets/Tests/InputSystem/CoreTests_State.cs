@@ -1249,9 +1249,6 @@ partial class CoreTests
     // onRecordAdded callback.
     [Test]
     [Category("State")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254569")]
-#endif
     public unsafe void State_CanRecordHistory_AndStoreAdditionalCustomDataForEachStateChange()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
