@@ -77,7 +77,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
       image: mobile/android-execution-r19:stable
       flavor: b1.xlarge
   commands:
-    - pip install unity-downloader-cli --extra-index-url https://artifactory.internal.unity3d.com/api/pypi/common-python/simple
+    - pip install unity-downloader-cli --extra-index-url https://artifactory.internal.unity3d.com/api/pypi/common-python/simple --upgrade
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast  
     - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
     - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only
