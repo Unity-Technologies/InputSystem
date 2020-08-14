@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem
         ///
         ///     // This is only to trigger the static class constructor to automatically run
         ///     // in the player.
-        ///     [RuntimeInitializeOnLoadMethod]
+        ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         ///     private static void InitializeInPlayer() {}
         ///
         ///     protected override void FinishSetup()
@@ -813,7 +813,7 @@ namespace UnityEngine.InputSystem
         ///     // NOTE: This will also get called when going into play mode in the editor. In that
         ///     //       case we get two calls to Register instead of one. We don't bother with that
         ///     //       here. Calling RegisterProcessor twice here doesn't do any harm.
-        ///     [RuntimeInitializeOnLoadMethod]
+        ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         ///     static void Register()
         ///     {
         ///         // We don't supply a name here. The input system will take "JitterProcessor"

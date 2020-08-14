@@ -303,10 +303,10 @@ namespace UnityEngine.InputSystem
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
 
-            var valueSize = valueSizeInBytes;
+            var valueSize = UnsafeUtility.SizeOf<TValue>();
             if (bufferSize < valueSize)
                 throw new ArgumentException(
-                    $"Expected buffer of at least {valueSizeInBytes} bytes but got buffer of only {bufferSize} bytes instead",
+                    $"Expected buffer of at least {UnsafeUtility.SizeOf<TValue>()} bytes but got buffer of only {bufferSize} bytes instead",
                     nameof(bufferSize));
 
             var value = ReadValue(ref context);

@@ -119,6 +119,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public int playerCount => PlayerInput.s_AllActivePlayersCount;
 
+        ////FIXME: this needs to be settable
         /// <summary>
         /// Maximum number of players allowed concurrently in the game.
         /// </summary>

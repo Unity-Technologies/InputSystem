@@ -12,6 +12,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: find better way to present controls when filtering to specific devices
 
+////REVIEW: if there's only a single device in the picker, automatically go into it?
+
 namespace UnityEngine.InputSystem.Editor
 {
     internal class InputControlPickerDropdown : AdvancedDropdown, IDisposable
