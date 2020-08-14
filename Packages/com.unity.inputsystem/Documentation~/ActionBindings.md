@@ -428,7 +428,7 @@ playerInput.actions["fire"].AddBinding("<Mouse>/leftButton");
 
 // Add a WASD composite binding to the "move" action.
 playerInput.actions["move"]
-    .AddCompositeBinding<Vector2Composite>()
+    .AddCompositeBinding("2DVector")
         .With("Up", "<Keyboard>/w")
         .With("Left", "<Keyboard>/a")
         .With("Down", "<Keyboard>/s")

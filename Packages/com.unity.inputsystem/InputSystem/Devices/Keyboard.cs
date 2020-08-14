@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// Named according to the US keyboard layout which is used as a reference layout. Note, however,
-    /// that keys are identified by physical location, not by the characters they generated. This means,
+    /// that keys are identified by physical location, not by the characters they generate. This means,
     /// for example, that <see cref="A"/> is always the key to the right of <see cref="CapsLock"/>,
     /// regardless of which key (if any) produces the "a" character on the current keyboard layout.
     ///
