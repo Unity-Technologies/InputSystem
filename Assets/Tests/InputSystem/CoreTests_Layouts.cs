@@ -1519,9 +1519,6 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254563")]
-#endif
     public void Layouts_CanAddChildControlToExistingControl_UsingStateFromOtherControl()
     {
         InputSystem.RegisterLayout(@"

@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.XR
 
         /// <summary>
         /// Constructor for PoseStates.
-        /// 
+        ///
         /// Useful for creating PoseStates locally (not from <see cref="PoseControl"/>).
         /// </summary>
         /// <param name="isTracked">Value to use for <see cref="isTracked"/></param>
@@ -64,7 +64,7 @@ namespace UnityEngine.InputSystem.XR
         /// <summary>
         /// A Flags Enumeration specifying which other fields in the pose state are valid.
         /// </summary>
-        [FieldOffset(4), InputControl( displayName = "Tracking State", layout = "Integer")]
+        [FieldOffset(4), InputControl(displayName = "Tracking State", layout = "Integer")]
         public TrackingState trackingState;
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.XR
     /// will not work correctly with a different memory layouts. Additional fields may
     /// be appended to the struct but what's there in the struct has to be located
     /// at exactly those memory addresses.
-    /// 
+    ///
     /// For more information on tracking origins see <see cref="UnityEngine.XR.TrackingOriginModeFlags"/>.
     /// </remarks>
     [Preserve, InputControlLayout(stateType = typeof(PoseState))]
