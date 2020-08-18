@@ -2035,6 +2035,7 @@ partial class CoreTests
         Assert.That(set1Instance, Is.Not.Null);
         var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
         Assert.That(set1map, Is.Not.Null);
+        Assert.That(typeof(IInputActionCollection2).IsAssignableFrom(type));
 
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }

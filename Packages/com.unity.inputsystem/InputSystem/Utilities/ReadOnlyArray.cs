@@ -163,7 +163,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 if (m_Index < m_IndexEnd)
                     ++m_Index;
-                return (m_Index != m_IndexEnd);
+                return m_Index != m_IndexEnd;
             }
 
             /// <inheritdoc/>

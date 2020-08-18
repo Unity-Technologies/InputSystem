@@ -518,7 +518,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 35,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -998,7 +998,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 91,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -1370,7 +1370,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 147,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -1742,7 +1742,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 203,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -2114,7 +2114,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 259,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -2486,7 +2486,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 315,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -2858,7 +2858,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 371,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -3230,7 +3230,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 427,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -3602,7 +3602,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 483,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -3974,7 +3974,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 539,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
@@ -4346,7 +4346,7 @@ namespace UnityEngine.InputSystem
                 {
                     format = new FourCC(1112101920),
                     byteOffset = 595,
-                    bitOffset = 5,
+                    bitOffset = 4,
                     sizeInBits = 1
                 })
                 .WithMinAndMax(0, 1)
