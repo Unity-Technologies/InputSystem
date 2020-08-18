@@ -1,9 +1,11 @@
 #if UNITY_EDITOR || UNITY_ANDROID
 using System;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Android
 {
+
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
         class ScreenKeyboardCallbacks : AndroidJavaProxy
@@ -24,6 +26,8 @@ namespace UnityEngine.InputSystem.Android
             {
                 var information = m_Parent.m_KeyboardProperties;
                 information.State = (ScreenKeyboardState)state;
+
+                // DON"T , instead let this be captured via queue input event
                 m_Parent.OnScreenKeyboardPropertiesChanged(information);
             }
         }

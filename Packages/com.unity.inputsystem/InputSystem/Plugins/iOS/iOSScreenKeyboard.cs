@@ -51,6 +51,7 @@ namespace UnityEngine.InputSystem.iOS
 
             var props = screenKeyboard.m_KeyboardProperties;
             props.State = state;
+            // DON"T
             screenKeyboard.OnScreenKeyboardPropertiesChanged(props);
         }
 

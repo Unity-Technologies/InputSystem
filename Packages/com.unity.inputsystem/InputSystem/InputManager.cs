@@ -2807,6 +2807,14 @@ namespace UnityEngine.InputSystem
                         break;
                     }
 
+                    case ScreenKeyboardEvent.Type:
+                    {
+                        var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
+                        var callbackReceiver = device as IScreenKeyboardCallbackReceiver;
+                        callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
+                        break;
+                    }
+
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device, keepOnListOfAvailableDevices: false);

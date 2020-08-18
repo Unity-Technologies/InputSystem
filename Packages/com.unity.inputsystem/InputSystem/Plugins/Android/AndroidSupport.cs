@@ -1,5 +1,7 @@
 #if UNITY_EDITOR || UNITY_ANDROID
+using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Android.LowLevel;
@@ -18,6 +20,8 @@ namespace UnityEngine.InputSystem.Android
     class AndroidSupport
     {
         internal const string kAndroidInterface = "Android";
+
+        private static AndroidJavaClass m_InputSystemClass;
 
         public static void Initialize()
         {
@@ -154,7 +158,19 @@ namespace UnityEngine.InputSystem.Android
 
             // Create an instance of screen keyboard
             InputSystem.RegisterLayout<AndroidScreenKeyboard>();
-            InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
+
+
+#if !UNITY_EDITOR
+            m_InputSystemClass = new AndroidJavaClass("com.unity.inputsystem.AndroidInputSystem");
+            m_InputSystemClass.CallStatic("initialize", new InputSystemCallbacks());
+#endif
+        }
+
+        public static void Shutdown()
+        {
+#if !UNITY_EDITOR
+            m_InputSystemClass.CallStatic("shutdown", new InputSystemCallbacks());
+#endif
         }
 
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,

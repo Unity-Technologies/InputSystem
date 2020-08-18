@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem
     public class ScreenKeyboard : Keyboard, IScreenKeyboardCallbackReceiver
     {
         protected ScreenKeyboardProperties m_KeyboardProperties;
-        private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
+        private InlinedArray<Action<ScreenKeyboardState>> m_StateChangedListeners;
 
         protected ScreenKeyboard()
         {
@@ -66,10 +66,10 @@ namespace UnityEngine.InputSystem
             };
         }
 
-        public event Action<ScreenKeyboardState> statusChanged
+        public event Action<ScreenKeyboardState> stateChanged
         {
-            add { m_StatusChangedListeners.Append(value); }
-            remove { m_StatusChangedListeners.Remove(value); }
+            add { m_StateChangedListeners.Append(value); }
+            remove { m_StateChangedListeners.Remove(value); }
         }
 
         public virtual void Show(ScreenKeyboardShowParams showParams)
@@ -101,10 +101,14 @@ namespace UnityEngine.InputSystem
 
         public void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties)
         {
-            var statusChanged = keyboardProperties.State != m_KeyboardProperties.State;
+            var stateChanged = keyboardProperties.State != m_KeyboardProperties.State;
             m_KeyboardProperties = keyboardProperties;
-            foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(m_KeyboardProperties.State);
+
+            if (stateChanged)
+            {
+                foreach (var statusListener in m_StateChangedListeners)
+                    statusListener(m_KeyboardProperties.State);
+            }
         }
 
         /// <summary>
@@ -116,23 +120,11 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Returns portion of the screen which is covered by the keyboard.
         /// </summary>
-        public virtual Rect occludingArea
-        {
-            get
-            {
-                return m_KeyboardProperties.OccludingArea;
-            }
-        }
+        public virtual Rect occludingArea => m_KeyboardProperties.OccludingArea;
 
         /// <summary>
         /// Returns the state of the screen keyboard.
         /// </summary>
-        public ScreenKeyboardState state
-        {
-            get
-            {
-                return m_KeyboardProperties.State;
-            }
-        }
+        public ScreenKeyboardState state => m_KeyboardProperties.State;
     }
 }

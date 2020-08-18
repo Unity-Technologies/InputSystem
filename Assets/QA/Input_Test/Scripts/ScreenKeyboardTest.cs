@@ -57,7 +57,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
 
-        m_ScreenKeyboard.statusChanged += StatusChangedCallback;
+        m_ScreenKeyboard.stateChanged += StateChangedCallback;
         m_ScreenKeyboard.onIMECompositionChange += IMECompositionChange;
 
 
@@ -100,7 +100,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_InputField.text = text;
     }
 
-    private void StatusChangedCallback(ScreenKeyboardState state)
+    private void StateChangedCallback(ScreenKeyboardState state)
     {
         m_LogText.text += "Status: " + state + Environment.NewLine;
     }
