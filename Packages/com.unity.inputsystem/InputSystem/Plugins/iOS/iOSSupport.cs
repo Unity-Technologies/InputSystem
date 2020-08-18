@@ -41,6 +41,10 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
+
+            // Create an instance of screen keyboard
+            InputSystem.RegisterLayout<iOSScreenKeyboard>();
+            InputSystem.AddDevice(InputDevice.Build<iOSScreenKeyboard>());
         }
     }
 }

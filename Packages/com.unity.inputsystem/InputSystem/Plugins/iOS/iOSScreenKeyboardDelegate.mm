@@ -73,16 +73,16 @@ enum iOSScreenKeyboardStatus
     if (m_Status == StatusVisible)
     {
         m_Status = StatusDone;
-        m_ShowParams.callbacks.statusChangedCallback(m_Status);
+        m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     }
-    [self Hide];
+    [self hide];
 }
 
 - (void)textInputCancel:(id)sender
 {
     m_Status = StatusCanceled;
-    m_ShowParams.callbacks.statusChangedCallback(m_Status);
-    [self Hide];
+    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
+    [self hide];
 }
 
 - (void)textInputLostFocus
@@ -90,15 +90,15 @@ enum iOSScreenKeyboardStatus
     if (m_Status == StatusVisible)
     {
         m_Status = StatusLostFocus;
-        m_ShowParams.callbacks.statusChangedCallback(m_Status);
+        m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     }
-    [self Hide];
+    [self hide];
 }
 
 - (void)textViewDidChange:(UITextView *)textView
 {
     if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback([textView.text UTF8String]);
+        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textView.text UTF8String]);
     else
         NSLog(@"textViewDidChange: Missing callback");
 }
@@ -106,7 +106,7 @@ enum iOSScreenKeyboardStatus
 - (void)textFieldDidChange:(UITextField*)textField
 {
     if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback([textField.text UTF8String]);
+        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
     else
         NSLog(@"textFieldDidChange: Missing callback");
 }
@@ -161,7 +161,7 @@ enum iOSScreenKeyboardStatus
 
 #endif
 
-+ (iOSScreenKeyboardDelegate*)GetInstanceOrCreate
++ (iOSScreenKeyboardDelegate*)getInstanceOrCreate
 {
     if (!s_Keyboard)
     {
@@ -173,12 +173,12 @@ enum iOSScreenKeyboardStatus
     return s_Keyboard;
 }
 
-+ (iOSScreenKeyboardDelegate*)GetInstance
++ (iOSScreenKeyboardDelegate*)getInstance
 {
     return s_Keyboard;
 }
 
-- (void)Show:(iOSScreenKeyboardShowParamsNative)param:(const char*)initialTextCStr:(const char*)placeholderTextCStr
+- (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr
 {
     if (!m_EditView.hidden)
     {
@@ -195,7 +195,7 @@ enum iOSScreenKeyboardStatus
     m_ShowParams = param;
 
     if (m_Active)
-        [self Hide];
+        [self hide];
 
     m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
 
@@ -245,13 +245,13 @@ enum iOSScreenKeyboardStatus
     //[self shouldHideInput: m_ShouldHideInput];
 
     m_Status     = StatusVisible;
-    m_ShowParams.callbacks.statusChangedCallback(m_Status);
+    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     m_Active     = YES;
 
     [self showUI];
 }
 
-- (void)Hide
+- (void)hide
 {
     [self hideUI];
 }

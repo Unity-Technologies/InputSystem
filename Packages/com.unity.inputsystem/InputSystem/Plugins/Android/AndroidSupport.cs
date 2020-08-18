@@ -151,6 +151,10 @@ namespace UnityEngine.InputSystem.Android
                     .WithCapability("sensorType", AndroidSensorType.StepCounter));
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
+
+            // Create an instance of screen keyboard
+            InputSystem.RegisterLayout<AndroidScreenKeyboard>();
+            InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
         }
 
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,

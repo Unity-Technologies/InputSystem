@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-
+using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem
 {
@@ -19,14 +21,13 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardStatus
+    public enum ScreenKeyboardState : uint
     {
         Visible,
         Done,
         Canceled,
         LostFocus
     }
-
 
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
@@ -50,69 +51,26 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
-
-    public class InputFieldEventArgs
-    {
-        public string text { set; get; }
-    }
     ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
-    public class ScreenKeyboard : Keyboard
+    public class ScreenKeyboard : Keyboard, IScreenKeyboardCallbackReceiver
     {
-        private static ScreenKeyboard m_ScreenKeyboard;
-
-        internal ScreenKeyboardStatus m_Status;
-        internal InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
-        internal InlinedArray<Action<InputFieldEventArgs>> m_InputFieldTextListeners;
-
-        public static ScreenKeyboard GetInstance()
-        {
-            if (m_ScreenKeyboard != null)
-                return m_ScreenKeyboard;
-#if UNITY_ANDROID
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.Android.AndroidScreenKeyboard>();
-#elif UNITY_WSA
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.WSA.WSAScreenKeyboard>();
-#elif UNITY_IOS || UNITY_TVOS
-            m_ScreenKeyboard = InputSystem.AddDevice<UnityEngine.InputSystem.iOS.iOSScreenKeyboard>();
-#elif UNITY_EDITOR
-            // ToDo: Should we show something for Editor?
-            m_ScreenKeyboard = new ScreenKeyboard();
-#else
-            throw new NotImplementedException("ScreenKeyboard is not implemented for this platform.");
-#endif
-            return m_ScreenKeyboard;
-        }
+        protected ScreenKeyboardProperties m_KeyboardProperties;
+        private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
 
         protected ScreenKeyboard()
         {
-            m_Status = ScreenKeyboardStatus.Done;
+            m_KeyboardProperties = new ScreenKeyboardProperties()
+            {
+                State = ScreenKeyboardState.Done,
+                OccludingArea = Rect.zero
+            };
         }
 
-        protected void ChangeStatus(ScreenKeyboardStatus newStatus)
-        {
-            m_Status = newStatus;
-            foreach (var statusListener in m_StatusChangedListeners)
-                statusListener(newStatus);
-        }
-
-        public event Action<ScreenKeyboardStatus> statusChanged
+        public event Action<ScreenKeyboardState> statusChanged
         {
             add { m_StatusChangedListeners.Append(value); }
             remove { m_StatusChangedListeners.Remove(value); }
         }
-
-        protected void ChangeInputField(InputFieldEventArgs text)
-        {
-            foreach (var inputFieldTextListener in m_InputFieldTextListeners)
-                inputFieldTextListener(text);
-        }
-
-        public event Action<InputFieldEventArgs> inputFieldTextChanged
-        {
-            add { m_InputFieldTextListeners.Append(value); }
-            remove { m_InputFieldTextListeners.Remove(value); }
-        }
-
 
         public virtual void Show(ScreenKeyboardShowParams showParams)
         {
@@ -127,12 +85,26 @@ namespace UnityEngine.InputSystem
         {
         }
 
-        public ScreenKeyboardStatus status
+        protected void OnChangeInputField(string text)
         {
-            get
-            {
-                return m_Status;
-            }
+            // TODO: Put this input field inside ScreenKeyboardEvent or reuse IMEComposition. 
+            //       Probably worth waiting for Rene's change for big events with string
+            var e = IMECompositionEvent.Create(deviceId, text, -1);
+            InputSystem.QueueEvent(ref e);
+        }
+
+        protected void OnInformationChange(ScreenKeyboardProperties newState)
+        {
+            var e = ScreenKeyboardEvent.Create(deviceId, newState);
+            InputSystem.QueueEvent(ref e);
+        }
+
+        public void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties)
+        {
+            var statusChanged = keyboardProperties.State != m_KeyboardProperties.State;
+            m_KeyboardProperties = keyboardProperties;
+            foreach (var statusListener in m_StatusChangedListeners)
+                statusListener(m_KeyboardProperties.State);
         }
 
         /// <summary>
@@ -148,7 +120,18 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                return Rect.zero;
+                return m_KeyboardProperties.OccludingArea;
+            }
+        }
+
+        /// <summary>
+        /// Returns the state of the screen keyboard.
+        /// </summary>
+        public ScreenKeyboardState state
+        {
+            get
+            {
+                return m_KeyboardProperties.State;
             }
         }
     }

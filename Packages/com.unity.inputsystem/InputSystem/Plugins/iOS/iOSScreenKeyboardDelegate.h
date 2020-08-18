@@ -1,10 +1,11 @@
 #pragma once
 
-typedef void (*OnTextChangedCallback) (const char* text);
-typedef void (*OnStatusChangedCallback) (int status);
+typedef void (*OnTextChangedCallback) (int deviceId, const char* text);
+typedef void (*OnStatusChangedCallback) (int deviceId, int status);
 
 struct iOSScreenKeyboardCallbacks
 {
+	int deviceId;
     OnTextChangedCallback textChangedCallback;
     OnStatusChangedCallback statusChangedCallback;
 };
@@ -23,11 +24,11 @@ struct iOSScreenKeyboardShowParamsNative
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
 
-+ (iOSScreenKeyboardDelegate*)GetInstanceOrCreate;
-+ (iOSScreenKeyboardDelegate*)GetInstance;
++ (iOSScreenKeyboardDelegate*)getInstanceOrCreate;
++ (iOSScreenKeyboardDelegate*)getInstance;
 
-- (void)Show:(iOSScreenKeyboardShowParamsNative)param:(const char*)initialTextCStr:(const char*)placeholderTextCStr;
-- (void)Hide;
+- (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
+- (void)hide;
 
 // These are all privates
 /*
@@ -51,10 +52,9 @@ struct iOSScreenKeyboardShowParamsNative
 + (void)StartReorientation;
 + (void)FinishReorientation;
 
-
+*/
 - (NSString*)getText;
 - (void)setText:(NSString*)newText;
- */
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
 //@property (readonly, nonatomic)                                 BOOL            active;
