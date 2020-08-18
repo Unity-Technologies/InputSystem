@@ -9,6 +9,14 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Fixed
+
+#### Actions
+
+- Fixed context menu in action editor not filtering out composites the same way that the `+` icon menu does. This led to, for example, a "2D Vector" composite being shown as an option for a button type action.
+
+## [Unreleased]
+
 >__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
 
 ### Changed

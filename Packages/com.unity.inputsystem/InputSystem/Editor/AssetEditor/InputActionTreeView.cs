@@ -880,7 +880,7 @@ namespace UnityEngine.InputSystem.Editor
 
         #region Context Menus
 
-        public void BuildContextMenuFor(Type itemType, GenericMenu menu, bool multiSelect)
+        public void BuildContextMenuFor(Type itemType, GenericMenu menu, bool multiSelect, ActionTreeItem actionItem = null)
         {
             var canRename = false;
             if (itemType == typeof(ActionMapTreeItem))
@@ -890,7 +890,7 @@ namespace UnityEngine.InputSystem.Editor
             else if (itemType == typeof(ActionTreeItem))
             {
                 canRename = true;
-                BuildMenuToAddBindings(menu);
+                BuildMenuToAddBindings(menu, actionItem);
             }
             else if (itemType == typeof(CompositeBindingTreeItem))
             {
@@ -976,7 +976,10 @@ namespace UnityEngine.InputSystem.Editor
             if (mixedSelection)
                 BuildContextMenuFor(typeof(ActionTreeItemBase), menu, true);
             else
-                BuildContextMenuFor(GetSelectedItems().First().GetType(), menu, GetSelection().Count > 1);
+            {
+                var item = GetSelectedItems().First();
+                BuildContextMenuFor(item.GetType(), menu, GetSelection().Count > 1, actionItem: item as ActionTreeItem);
+            }
             menu.ShowAsContext();
         }
 
