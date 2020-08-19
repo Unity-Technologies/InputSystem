@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem
     ///         InputSystem.RegisterInteraction&lt;MyInteraction&gt;();
     ///     }
     ///
-    ///     [RuntimeInitializeOnLoad]
+    ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     ///     private static void Initialize()
     ///     {
     ///         // Will execute the static constructor as a side effect.

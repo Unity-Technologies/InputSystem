@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -1098,5 +1099,178 @@ internal partial class CoreTests
             Assert.That(gamepad.buttonSouth.isPressed, Is.False);
             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanSaveAndLoadRebinds()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var joystick = InputSystem.AddDevice<Joystick>();
+
+        var action = new InputAction();
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Keyboard>/space");
+
+        var actionMap = new InputActionMap();
+        var firstActionInMap = actionMap.AddAction("action1");
+        var secondActionInMap = actionMap.AddAction("action2");
+
+        firstActionInMap.AddBinding("<Mouse>/leftButton");
+        firstActionInMap.AddBinding("<Pen>/tip");
+        secondActionInMap.AddBinding("<Touchscreen>/press");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var firstActionMapInAsset = asset.AddActionMap("map1");
+        var secondActionMapInAsset = asset.AddActionMap("map2");
+        var firstActionInAsset = firstActionMapInAsset.AddAction("actionInAsset1");
+        var secondActionInAsset = secondActionMapInAsset.AddAction("actionInAsset2");
+
+        firstActionInAsset.AddBinding("<Pen>/tip");
+        secondActionInAsset.AddBinding("<Mouse>/rightButton");
+        secondActionInAsset.AddBinding("<Joystick>/trigger");
+
+        var actionWithoutRebinds = new InputAction(binding: "<Gamepad>/leftStick");
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.spaceKey));
+
+        Assert.That(firstActionInMap.controls, Has.Count.EqualTo(2));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInMap.controls, Has.Count.EqualTo(1));
+        Assert.That(secondActionInMap.controls, Has.Exactly(1).SameAs(touch.press));
+
+        Assert.That(firstActionInAsset.controls, Has.Count.EqualTo(1));
+        Assert.That(firstActionInAsset.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInAsset.controls, Has.Count.EqualTo(2));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(mouse.rightButton));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
+
+        action.ApplyBindingOverride(1, "<Keyboard>/a");
+        firstActionInMap.ApplyBindingOverride(0, "<Mouse>/middleButton");
+        secondActionInMap.ApplyBindingOverride("<Touchscreen>/touch1/press");
+        secondActionInAsset.ApplyBindingOverride(0,
+            new InputBinding
+            {
+                overridePath = "<Mouse>/forwardButton",
+                overrideInteractions = "tap",
+                overrideProcessors = "invert"
+            });
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+
+        Assert.That(firstActionInMap.controls, Has.Count.EqualTo(2));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(mouse.middleButton));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInMap.controls, Has.Count.EqualTo(1));
+        Assert.That(secondActionInMap.controls, Has.Exactly(1).SameAs(touch.touches[1].press));
+
+        Assert.That(firstActionInAsset.controls, Has.Count.EqualTo(1));
+        Assert.That(firstActionInAsset.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInAsset.controls, Has.Count.EqualTo(2));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(mouse.forwardButton));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
+
+        var actionRebindsJson = action.SaveBindingOverridesAsJson();
+        var actionMapRebindsJson = actionMap.SaveBindingOverridesAsJson();
+        var assetRebindsJson = asset.SaveBindingOverridesAsJson();
+        var actionWithoutRebindsJson = actionWithoutRebinds.SaveBindingOverridesAsJson();
+
+        Assert.That(actionRebindsJson, Is.Not.Empty);
+        Assert.That(actionMapRebindsJson, Is.Not.Empty);
+        Assert.That(assetRebindsJson, Is.Not.Empty);
+        Assert.That(actionWithoutRebindsJson, Is.Empty);
+
+        Assert.That(actionRebindsJson, Does.Not.Contain(action.bindings[0].id.ToString()));
+        Assert.That(actionRebindsJson, Does.Contain(action.bindings[1].id.ToString()));
+        Assert.That(actionRebindsJson, Does.Contain("<Keyboard>/a"));
+        Assert.That(actionRebindsJson, Does.Not.Contain("<Gamepad>/buttonSouth"));
+        Assert.That(actionRebindsJson, Does.Not.Contain("<Keyboard>/space"));
+
+        Assert.That(actionMapRebindsJson, Does.Contain(firstActionInMap.bindings[0].id.ToString()));
+        Assert.That(actionMapRebindsJson, Does.Contain(secondActionInMap.bindings[0].id.ToString()));
+        Assert.That(actionMapRebindsJson, Does.Not.Contain(firstActionInMap.bindings[1].id.ToString()));
+        Assert.That(actionMapRebindsJson, Does.Contain("<Mouse>/middleButton"));
+        Assert.That(actionMapRebindsJson, Does.Contain("<Touchscreen>/touch1/press"));
+        Assert.That(actionMapRebindsJson, Does.Not.Contain("<Mouse>/leftButton"));
+        Assert.That(actionMapRebindsJson, Does.Not.Contain("<Pen>/tip"));
+        Assert.That(actionMapRebindsJson, Does.Not.Contain("<Touchscreen>/press"));
+
+        Assert.That(assetRebindsJson, Does.Contain(secondActionInAsset.bindings[0].id.ToString()));
+        Assert.That(assetRebindsJson, Does.Contain("<Mouse>/forwardButton"));
+        Assert.That(assetRebindsJson, Does.Contain("tap"));
+        Assert.That(assetRebindsJson, Does.Contain("invert"));
+        Assert.That(assetRebindsJson, Does.Not.Contain("<Pen>/tip"));
+        Assert.That(assetRebindsJson, Does.Not.Contain("<Mouse>/rightButton"));
+        Assert.That(assetRebindsJson, Does.Not.Contain("<Joystick>/trigger"));
+
+        action.RemoveAllBindingOverrides();
+        actionMap.RemoveAllBindingOverrides();
+        asset.RemoveAllBindingOverrides();
+
+        Assert.That(action.bindings.Any(x => x.overridePath != null), Is.False);
+        Assert.That(actionMap.bindings.Any(x => x.overridePath != null), Is.False);
+        Assert.That(asset.actionMaps.Any(m => m.bindings.Any(x => x.overridePath != null)), Is.False);
+        Assert.That(actionWithoutRebinds.bindings.Any(x => x.overridePath != null), Is.False);
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.spaceKey));
+
+        Assert.That(firstActionInMap.controls, Has.Count.EqualTo(2));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(mouse.leftButton));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInMap.controls, Has.Count.EqualTo(1));
+        Assert.That(secondActionInMap.controls, Has.Exactly(1).SameAs(touch.press));
+
+        Assert.That(firstActionInAsset.controls, Has.Count.EqualTo(1));
+        Assert.That(firstActionInAsset.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInAsset.controls, Has.Count.EqualTo(2));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(mouse.rightButton));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
+
+        action.LoadBindingOverridesFromJson(actionRebindsJson);
+        actionMap.LoadBindingOverridesFromJson(actionMapRebindsJson);
+        asset.LoadBindingOverridesFromJson(assetRebindsJson);
+        actionWithoutRebinds.LoadBindingOverridesFromJson(actionWithoutRebindsJson);
+
+        Assert.That(action.bindings.Any(x => x.overridePath != null), Is.True);
+        Assert.That(actionMap.bindings.Any(x => x.overridePath != null), Is.True);
+        Assert.That(asset.actionMaps.Any(m => m.bindings.Any(x => x.overridePath != null)), Is.True);
+        Assert.That(actionWithoutRebinds.bindings.Any(x => x.overridePath != null), Is.False);
+
+        Assert.That(action.controls, Has.Count.EqualTo(2));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action.controls, Has.Exactly(1).SameAs(keyboard.aKey));
+
+        Assert.That(firstActionInMap.controls, Has.Count.EqualTo(2));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(mouse.middleButton));
+        Assert.That(firstActionInMap.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInMap.controls, Has.Count.EqualTo(1));
+        Assert.That(secondActionInMap.controls, Has.Exactly(1).SameAs(touch.touches[1].press));
+
+        Assert.That(firstActionInAsset.controls, Has.Count.EqualTo(1));
+        Assert.That(firstActionInAsset.controls, Has.Exactly(1).SameAs(pen.tip));
+
+        Assert.That(secondActionInAsset.controls, Has.Count.EqualTo(2));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(mouse.forwardButton));
+        Assert.That(secondActionInAsset.controls, Has.Exactly(1).SameAs(joystick.trigger));
+        Assert.That(secondActionInAsset.bindings[0].overrideInteractions, Is.EqualTo("tap"));
+        Assert.That(secondActionInAsset.bindings[0].overrideProcessors, Is.EqualTo("invert"));
     }
 }

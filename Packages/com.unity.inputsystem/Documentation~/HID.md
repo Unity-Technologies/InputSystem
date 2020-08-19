@@ -215,7 +215,7 @@ public DualShock4GamepadHID : Gamepad
 
     // In the Player, to trigger the calling of the static constructor,
     // create an empty method annotated with RuntimeInitializeOnLoadMethod.
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Init() {}
 }
 ```

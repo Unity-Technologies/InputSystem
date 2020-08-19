@@ -58,7 +58,7 @@ public class CustomComposite : InputBindingComposite<Vector2>
 
     // In the player, [RuntimeInitializeOnLoadMethod] will make sure our
     // initialization code gets called during startup.
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Initialize()
     {
         // This registers the composite with the input system. After calling this
