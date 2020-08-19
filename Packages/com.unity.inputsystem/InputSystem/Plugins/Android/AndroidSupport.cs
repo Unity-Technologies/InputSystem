@@ -158,21 +158,9 @@ namespace UnityEngine.InputSystem.Android
 
             // Create an instance of screen keyboard
             InputSystem.RegisterLayout<AndroidScreenKeyboard>();
-
-
-#if !UNITY_EDITOR
-            m_InputSystemClass = new AndroidJavaClass("com.unity.inputsystem.AndroidInputSystem");
-            m_InputSystemClass.CallStatic("initialize", new InputSystemCallbacks());
-#endif
+            InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
         }
-
-        public static void Shutdown()
-        {
-#if !UNITY_EDITOR
-            m_InputSystemClass.CallStatic("shutdown", new InputSystemCallbacks());
-#endif
-        }
-
+        
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
             string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {

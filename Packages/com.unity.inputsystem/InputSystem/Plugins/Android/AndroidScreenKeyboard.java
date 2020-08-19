@@ -37,7 +37,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     interface IScreenKeyboardCallbacks
     {
         void OnTextChanged(String text);
-        void OnStatusChanged(int status);
+        void OnStateChanged(int status);
     }
 
     private enum ScreenKeyboardStatus
@@ -139,7 +139,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         setOnDismissListener(this);
 
         show();
-        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
+        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Visible.value);
     }
 
     public void setHideInputField(boolean isInputFieldHidden)
@@ -234,7 +234,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     @Override public void onDismiss(DialogInterface dialog)
     {
         Log.v("Unity", "onDismiss");
-        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
+        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Done.value);
     }
 
 
@@ -255,7 +255,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                     // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
                     if (keyCode == KeyEvent.KEYCODE_BACK)
                     {
-                        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Canceled.value);
+                        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Canceled.value);
                         return true;
                     }
                     if (keyCode == KeyEvent.KEYCODE_SEARCH)
@@ -312,7 +312,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             public boolean onEditorAction (TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_DONE)
                 {
-                    m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Done.value);
+                    m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Done.value);
                 }
 
                 return false; // We never consume the action we get

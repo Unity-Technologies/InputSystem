@@ -3168,13 +3168,6 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
-        private static void PerformDefaultPluginShutdown()
-        {
-#if UNITY_EDITOR || UNITY_ANDROID
-            Android.AndroidSupport.Shutdown();
-#endif
-        }
-
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 
         // For testing, we want the ability to push/pop system state even in the player.
@@ -3239,9 +3232,6 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
-            PerformDefaultPluginShutdown();
-            #endif
             InputActionState.ResetGlobals();
             s_Manager.Destroy();
             if (s_RemoteConnection != null)

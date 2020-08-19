@@ -8,16 +8,16 @@ namespace UnityEngine.InputSystem.iOS
 {
     public class iOSScreenKeyboard : ScreenKeyboard
     {
-        internal delegate void OnTextChanged(int deviceId, string text);
+        internal delegate void OnTextChangedDelegate(int deviceId, string text);
 
-        internal delegate void OnStatusChanged(int deviceId, ScreenKeyboardState status);
+        internal delegate void OnStateChangedDelegate(int deviceId, ScreenKeyboardState status);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct iOSScreenKeyboardCallbacks
         {
             internal int deviceId;
-            internal OnTextChanged onTextChanged;
-            internal OnStatusChanged onStatusChanged;
+            internal OnTextChangedDelegate onTextChanged;
+            internal OnStateChangedDelegate onStateChanged;
         }
 
         [DllImport("__Internal")]
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.iOS
         [DllImport("__Internal")]
         private static extern string _iOSScreenKeyboardGetInputFieldText();
 
-        [MonoPInvokeCallback(typeof(OnTextChanged))]
+        [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
         private static void OnTextChangedCallback(int deviceId, string text)
         {
             var screenKeyboard = (iOSScreenKeyboard)InputSystem.GetDeviceById(deviceId);
@@ -42,17 +42,14 @@ namespace UnityEngine.InputSystem.iOS
             screenKeyboard.OnChangeInputField(text);
         }
 
-        [MonoPInvokeCallback(typeof(OnStatusChanged))]
-        private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardState state)
+        [MonoPInvokeCallback(typeof(OnStateChangedDelegate))]
+        private static void OnStateChangedCallback(int deviceId, ScreenKeyboardState state)
         {
             var screenKeyboard = (iOSScreenKeyboard)InputSystem.GetDeviceById(deviceId);
             if (screenKeyboard == null)
-                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
+                throw new Exception("OnStateChangedCallback: Failed to get iOSScreenKeyboard instance");
 
-            var props = screenKeyboard.m_KeyboardProperties;
-            props.State = state;
-            // DON"T
-            screenKeyboard.OnScreenKeyboardPropertiesChanged(props);
+            screenKeyboard.OnStateChanged(state);
         }
 
         public override void Show(ScreenKeyboardShowParams showParams)
@@ -61,7 +58,7 @@ namespace UnityEngine.InputSystem.iOS
             {
                 deviceId = deviceId,
                 onTextChanged = OnTextChangedCallback,
-                onStatusChanged = OnStatusChangedCallback
+                onStateChanged = OnStateChangedCallback
             };
             _iOSScreenKeyboardShow(ref showParams, Marshal.SizeOf(showParams), ref callbacks, Marshal.SizeOf(callbacks));
         }
@@ -82,14 +79,7 @@ namespace UnityEngine.InputSystem.iOS
             }
         }
 
-        public override Rect occludingArea
-        {
-            get 
-            {
-                m_KeyboardProperties.OccludingArea = _iOSScreenKeyboardOccludingArea();
-                return base.occludingArea;
-            }
-        }
+        public override Rect occludingArea => _iOSScreenKeyboardOccludingArea();
     }
 }
 #endif

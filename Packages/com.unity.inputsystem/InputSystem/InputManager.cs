@@ -2806,7 +2806,7 @@ namespace UnityEngine.InputSystem
                         textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
                     }
-
+/*
                     case ScreenKeyboardEvent.Type:
                     {
                         var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
@@ -2814,7 +2814,7 @@ namespace UnityEngine.InputSystem
                         callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
                         break;
                     }
-
+*/
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device, keepOnListOfAvailableDevices: false);

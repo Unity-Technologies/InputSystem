@@ -1,11 +1,10 @@
-#if UNITY_EDITOR || UNITY_ANDROID
-using System;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
+#if UNITY_EDITOR || UNITY_ANDROID
+
 namespace UnityEngine.InputSystem.Android
 {
-
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
         class ScreenKeyboardCallbacks : AndroidJavaProxy
@@ -22,13 +21,9 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.OnChangeInputField(text);
             }
 
-            void OnStatusChanged(int state)
+            void OnStateChanged(int state)
             {
-                var information = m_Parent.m_KeyboardProperties;
-                information.State = (ScreenKeyboardState)state;
-
-                // DON"T , instead let this be captured via queue input event
-                m_Parent.OnScreenKeyboardPropertiesChanged(information);
+                m_Parent.OnStateChanged((ScreenKeyboardState)state);
             }
         }
 

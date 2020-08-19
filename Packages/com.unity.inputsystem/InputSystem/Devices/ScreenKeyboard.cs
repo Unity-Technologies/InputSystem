@@ -1,9 +1,11 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.InputSystem.Layouts;
+
 
 namespace UnityEngine.InputSystem
 {
@@ -51,19 +53,20 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
-    ////TODO: probably need a better name, so not to collide with com.unity.inputsystem\InputSystem\Plugins\OnScreen\OnScreenKeyboard.cs
-    public class ScreenKeyboard : Keyboard, IScreenKeyboardCallbackReceiver
+    [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
+    public class ScreenKeyboard : InputDevice
     {
-        protected ScreenKeyboardProperties m_KeyboardProperties;
+        private const long kCommandReturnSuccess = 1;
+        private const long kCommandReturnFailure = 0;
+
+        protected ScreenKeyboardState m_KeyboardState;
+
         private InlinedArray<Action<ScreenKeyboardState>> m_StateChangedListeners;
+        private InlinedArray<Action<string>> m_InputFieldTextListeners;
 
         protected ScreenKeyboard()
         {
-            m_KeyboardProperties = new ScreenKeyboardProperties()
-            {
-                State = ScreenKeyboardState.Done,
-                OccludingArea = Rect.zero
-            };
+            m_KeyboardState = ScreenKeyboardState.Done;
         }
 
         public event Action<ScreenKeyboardState> stateChanged
@@ -72,8 +75,10 @@ namespace UnityEngine.InputSystem
             remove { m_StateChangedListeners.Remove(value); }
         }
 
-        public virtual void Show(ScreenKeyboardShowParams showParams)
+        public event Action<string> inputFieldTextChanged
         {
+            add { m_InputFieldTextListeners.Append(value); }
+            remove { m_InputFieldTextListeners.Remove(value); }
         }
 
         public void Show()
@@ -81,33 +86,53 @@ namespace UnityEngine.InputSystem
             Show(new ScreenKeyboardShowParams());
         }
 
+        public virtual void Show(ScreenKeyboardShowParams showParams)
+        {
+        }
+
         public virtual void Hide()
         {
         }
 
+        public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
+        {
+            if (command.typeStatic == EnableDeviceCommand.Type)
+            {
+                Show();
+                return kCommandReturnSuccess;
+            }
+
+            if (command.typeStatic == DisableDeviceCommand.Type)
+            {
+                Hide();
+                return kCommandReturnSuccess;
+            }
+
+            if (command.typeStatic == QueryEnabledStateCommand.Type)
+            {
+                var cmd = (QueryEnabledStateCommand*) UnsafeUtility.AddressOf(ref command);
+                cmd->isEnabled = m_KeyboardState == ScreenKeyboardState.Visible;
+
+                return kCommandReturnSuccess;
+            }
+
+            return kCommandReturnFailure;
+        }
+
         protected void OnChangeInputField(string text)
         {
-            // TODO: Put this input field inside ScreenKeyboardEvent or reuse IMEComposition. 
-            //       Probably worth waiting for Rene's change for big events with string
-            var e = IMECompositionEvent.Create(deviceId, text, -1);
-            InputSystem.QueueEvent(ref e);
+            foreach (var listener in m_InputFieldTextListeners)
+                listener(text);
         }
 
-        protected void OnInformationChange(ScreenKeyboardProperties newState)
+        protected void OnStateChanged(ScreenKeyboardState keyboardState)
         {
-            var e = ScreenKeyboardEvent.Create(deviceId, newState);
-            InputSystem.QueueEvent(ref e);
-        }
-
-        public void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties)
-        {
-            var stateChanged = keyboardProperties.State != m_KeyboardProperties.State;
-            m_KeyboardProperties = keyboardProperties;
+            var stateChanged = keyboardState != m_KeyboardState;
 
             if (stateChanged)
             {
-                foreach (var statusListener in m_StateChangedListeners)
-                    statusListener(m_KeyboardProperties.State);
+                foreach (var listener in m_StateChangedListeners)
+                    listener(keyboardState);
             }
         }
 
@@ -120,11 +145,17 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Returns portion of the screen which is covered by the keyboard.
         /// </summary>
-        public virtual Rect occludingArea => m_KeyboardProperties.OccludingArea;
+        public virtual Rect occludingArea => Rect.zero;
 
         /// <summary>
         /// Returns the state of the screen keyboard.
         /// </summary>
-        public ScreenKeyboardState state => m_KeyboardProperties.State;
+        public ScreenKeyboardState state => m_KeyboardState;
+
+        protected override void FinishSetup()
+        {
+            GetChildControl<ButtonControl>("alt");
+            base.FinishSetup();
+        }
     }
 }

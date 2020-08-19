@@ -1,4 +1,4 @@
-namespace UnityEngine.InputSystem.LowLevel
+/*namespace UnityEngine.InputSystem.LowLevel
 {
     // TODO: is this needed
     public interface IScreenKeyboardCallbackReceiver
@@ -6,3 +6,4 @@ namespace UnityEngine.InputSystem.LowLevel
         void OnScreenKeyboardPropertiesChanged(ScreenKeyboardProperties keyboardProperties);
     }
 }
+*/

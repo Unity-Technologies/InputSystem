@@ -58,7 +58,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_AutomaticOperation.ClearOptions();
 
         m_ScreenKeyboard.stateChanged += StateChangedCallback;
-        m_ScreenKeyboard.onIMECompositionChange += IMECompositionChange;
+        m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextCallback;
 
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
@@ -76,9 +76,8 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_LogText.text = "";
     }
 
-    private void IMECompositionChange(UnityEngine.InputSystem.LowLevel.IMECompositionString obj)
+    private void InputFieldTextCallback(string text)
     {
-        var text = obj.ToString();
         var oldText = text;
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)
