@@ -4748,14 +4748,11 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
-#endif
     public void Actions_CanPickDevicesThatMatchGivenControlScheme_ReturningAccurateScoreForEachMatch()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
-        var ps4Gamepad = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var ps4Gamepad = InputSystem.AddDevice<DualShockGamepad>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
         var genericGamepadScheme = new InputControlScheme("GenericGamepad")
@@ -4850,9 +4847,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1261423 DualShock4GamepadHID is not implemented on Android/iOS")]
-#endif
     public void Actions_WhenFindingControlSchemeUsingGivenDevice_MostSpecificControlSchemeIsChosen()
     {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
@@ -4866,7 +4860,7 @@ partial class CoreTests
             .WithRequiredDevice("<Mouse>");
 
         var genericGamepad = InputSystem.AddDevice<Gamepad>();
-        var ps4Controller = InputSystem.AddDevice<DualShock4GamepadHID>();
+        var ps4Controller = InputSystem.AddDevice<DualShockGamepad>();
         var xboxController = InputSystem.AddDevice<XInputController>();
 
         Assert.That(InputControlScheme.FindControlSchemeForDevice(genericGamepad, new[] { genericGamepadScheme, ps4GamepadScheme, xboxGamepadScheme, mouseScheme }),
