@@ -99,16 +99,16 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_InputField.text = text;
     }
 
-    private void StateChangedCallback(ScreenKeyboardState state)
+    private void StateChangedCallback(ScreenKeyboardStatus status)
     {
-        m_LogText.text += "Status: " + state + Environment.NewLine;
+        m_LogText.text += "Status: " + status + Environment.NewLine;
     }
 
     // Update is called once per frame
     void Update()
     {
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
-        m_KeyboardStatus.text = m_ScreenKeyboard.state.ToString();
+        m_KeyboardStatus.text = m_ScreenKeyboard.status.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
 
         if (m_OldScreenKeyboard != null)

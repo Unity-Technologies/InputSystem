@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Android
 
             void OnStateChanged(int state)
             {
-                m_Parent.OnStateChanged((ScreenKeyboardState)state);
+                m_Parent.OnStateChanged((ScreenKeyboardStatus)state);
             }
         }
 

@@ -10,14 +10,14 @@ namespace UnityEngine.InputSystem.iOS
     {
         internal delegate void OnTextChangedDelegate(int deviceId, string text);
 
-        internal delegate void OnStateChangedDelegate(int deviceId, ScreenKeyboardState status);
+        internal delegate void OnStatusChangedDelegate(int deviceId, ScreenKeyboardStatus status);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct iOSScreenKeyboardCallbacks
         {
             internal int deviceId;
             internal OnTextChangedDelegate onTextChanged;
-            internal OnStateChangedDelegate onStateChanged;
+            internal OnStatusChangedDelegate onStatusChanged;
         }
 
         [DllImport("__Internal")]
@@ -42,14 +42,14 @@ namespace UnityEngine.InputSystem.iOS
             screenKeyboard.OnChangeInputField(text);
         }
 
-        [MonoPInvokeCallback(typeof(OnStateChangedDelegate))]
-        private static void OnStateChangedCallback(int deviceId, ScreenKeyboardState state)
+        [MonoPInvokeCallback(typeof(OnStatusChangedDelegate))]
+        private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardStatus status)
         {
             var screenKeyboard = (iOSScreenKeyboard)InputSystem.GetDeviceById(deviceId);
             if (screenKeyboard == null)
-                throw new Exception("OnStateChangedCallback: Failed to get iOSScreenKeyboard instance");
+                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
 
-            screenKeyboard.OnStateChanged(state);
+            screenKeyboard.OnStatusChanged(status);
         }
 
         public override void Show(ScreenKeyboardShowParams showParams)
@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.iOS
             {
                 deviceId = deviceId,
                 onTextChanged = OnTextChangedCallback,
-                onStateChanged = OnStateChangedCallback
+                onStatusChanged = OnStatusChangedCallback
             };
             _iOSScreenKeyboardShow(ref showParams, Marshal.SizeOf(showParams), ref callbacks, Marshal.SizeOf(callbacks));
         }

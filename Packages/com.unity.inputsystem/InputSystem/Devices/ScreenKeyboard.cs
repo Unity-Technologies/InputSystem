@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardState : uint
+    public enum ScreenKeyboardStatus : uint
     {
         Visible,
         Done,
@@ -59,20 +59,20 @@ namespace UnityEngine.InputSystem
         private const long kCommandReturnSuccess = 1;
         private const long kCommandReturnFailure = 0;
 
-        protected ScreenKeyboardState m_KeyboardState;
+        protected ScreenKeyboardStatus KeyboardStatus;
 
-        private InlinedArray<Action<ScreenKeyboardState>> m_StateChangedListeners;
+        private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
 
         protected ScreenKeyboard()
         {
-            m_KeyboardState = ScreenKeyboardState.Done;
+            KeyboardStatus = ScreenKeyboardStatus.Done;
         }
 
-        public event Action<ScreenKeyboardState> stateChanged
+        public event Action<ScreenKeyboardStatus> stateChanged
         {
-            add { m_StateChangedListeners.Append(value); }
-            remove { m_StateChangedListeners.Remove(value); }
+            add { m_StatusChangedListeners.Append(value); }
+            remove { m_StatusChangedListeners.Remove(value); }
         }
 
         public event Action<string> inputFieldTextChanged
@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem
             if (command.typeStatic == QueryEnabledStateCommand.Type)
             {
                 var cmd = (QueryEnabledStateCommand*) UnsafeUtility.AddressOf(ref command);
-                cmd->isEnabled = m_KeyboardState == ScreenKeyboardState.Visible;
+                cmd->isEnabled = KeyboardStatus == ScreenKeyboardStatus.Visible;
 
                 return kCommandReturnSuccess;
             }
@@ -125,14 +125,14 @@ namespace UnityEngine.InputSystem
                 listener(text);
         }
 
-        protected void OnStateChanged(ScreenKeyboardState keyboardState)
+        protected void OnStatusChanged(ScreenKeyboardStatus keyboardStatus)
         {
-            var stateChanged = keyboardState != m_KeyboardState;
+            var stateChanged = keyboardStatus != KeyboardStatus;
 
             if (stateChanged)
             {
-                foreach (var listener in m_StateChangedListeners)
-                    listener(keyboardState);
+                foreach (var listener in m_StatusChangedListeners)
+                    listener(keyboardStatus);
             }
         }
 
@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Returns the state of the screen keyboard.
         /// </summary>
-        public ScreenKeyboardState state => m_KeyboardState;
+        public ScreenKeyboardStatus status => KeyboardStatus;
 
         protected override void FinishSetup()
         {
