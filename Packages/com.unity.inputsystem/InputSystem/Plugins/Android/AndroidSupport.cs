@@ -157,10 +157,20 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
 
             // Create an instance of screen keyboard
+            // REM
             InputSystem.RegisterLayout<AndroidScreenKeyboard>();
+#if !UNITY_EDITOR
             InputSystem.AddDevice(InputDevice.Build<AndroidScreenKeyboard>());
+#endif
         }
-        
+
+        public static void Shutdown()
+        {
+#if !UNITY_EDITOR
+            InputSystem.RemoveDevice(InputSystem.GetDevice<AndroidScreenKeyboard>());
+#endif
+        }
+
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
             string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {

@@ -53,31 +53,35 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
+    // Input device requires us specifying none zero size state, otherwise you get
+    // InvalidOperationException: Control '/AndroidScreenKeyboard' with layout 'AndroidScreenKeyboard' has no size set and has no children to compute size from
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardState : IInputStateTypeInfo
     {
         public static FourCC Format => new FourCC('S', 'K', 'S', 'T');
         public FourCC format => Format;
 
-        [InputControl(name = "status", displayName = "Status", layout = "ScreenKeyboardStatus")]
-        public int status;
+        [InputControl(name = "dummy", layout = "Button")]
+        public uint dummy;
     }
 
-    [InputControlLayout(stateType = typeof(ScreenKeyboardState))]
-    public class ScreenKeyboard : InputDevice
+    // TODO: in case ScreenKeyboard doesn't have input field, it basically behaves the same as normal Keyboard
+    //       the only difference only onTextInput is working, you won't get response from key control
+    //       Nevertheless maybe it makes sense to derive from Keyboard here. Rene?
+    public abstract class ScreenKeyboard : InputDevice
     {
         private const long kCommandReturnSuccess = 1;
         private const long kCommandReturnFailure = 0;
 
-        public ScreenKeyboardStatusControl status { get; set; }
+        // Note: Status cannot be a part of ScreenKeyboardState, since it defines if device is enabled or disabled
+        //       If device is disabled, it cannot receive any events
+        protected ScreenKeyboardStatus m_KeyboardStatus;
+        protected RangeInt m_Selection;
+        protected ScreenKeyboardShowParams m_ShowParams;
 
         private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
-
-        protected ScreenKeyboard()
-        {
-
-        }
+        private InlinedArray<Action<RangeInt>> m_SelectionChangedListeners;
 
         public event Action<ScreenKeyboardStatus> stateChanged
         {
@@ -91,37 +95,56 @@ namespace UnityEngine.InputSystem
             remove { m_InputFieldTextListeners.Remove(value); }
         }
 
+        public event Action<RangeInt> selectionChanged
+        {
+            add { m_SelectionChangedListeners.Append(value); }
+            remove { m_SelectionChangedListeners.Remove(value); }
+        }
+
+        public ScreenKeyboardStatus status
+        {
+            get => m_KeyboardStatus;
+        }
+
         public void Show()
         {
             Show(new ScreenKeyboardShowParams());
         }
 
-        public virtual void Show(ScreenKeyboardShowParams showParams)
+        public void Show(ScreenKeyboardShowParams showParams)
         {
+            m_ShowParams = showParams;
+            InputSystem.EnableDevice(this);
         }
 
-        public virtual void Hide()
+        public void Hide()
         {
+            InputSystem.DisableDevice(this);
         }
+
+        protected abstract void InternalShow();
+
+        protected abstract void InternalHide();
 
         public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
         {
             if (command.typeStatic == EnableDeviceCommand.Type)
             {
-                Show();
+                m_Selection = new RangeInt(0, 0);
+                InternalShow();
                 return kCommandReturnSuccess;
             }
 
             if (command.typeStatic == DisableDeviceCommand.Type)
             {
-                Hide();
+                InternalHide();
                 return kCommandReturnSuccess;
             }
 
             if (command.typeStatic == QueryEnabledStateCommand.Type)
             {
-                var cmd = (QueryEnabledStateCommand*) UnsafeUtility.AddressOf(ref command);
-                cmd->isEnabled = status.ReadValue() == ScreenKeyboardStatus.Visible;
+                var cmd = (QueryEnabledStateCommand*)UnsafeUtility.AddressOf(ref command);
+                cmd->isEnabled = m_KeyboardStatus == ScreenKeyboardStatus.Visible;
 
                 return kCommandReturnSuccess;
             }
@@ -129,21 +152,30 @@ namespace UnityEngine.InputSystem
             return kCommandReturnFailure;
         }
 
-        protected void OnChangeInputField(string text)
+        protected void ReportInputFieldChange(string text)
         {
             foreach (var listener in m_InputFieldTextListeners)
                 listener(text);
         }
 
-        protected void OnStatusChanged(ScreenKeyboardStatus keyboardStatus)
+        protected void ReportStatusChange(ScreenKeyboardStatus keyboardStatus)
         {
-            var stateChanged = keyboardStatus != status.ReadValue();
-
-            if (stateChanged)
+            if (keyboardStatus != m_KeyboardStatus)
             {
+                m_KeyboardStatus = keyboardStatus;
                 foreach (var listener in m_StatusChangedListeners)
                     listener(keyboardStatus);
             }
+
+            // OnConfigurationChanged is required for properties like enabled, since they need requery enabled value
+            OnConfigurationChanged();
+        }
+
+        protected void ReportSelectionChange(int start, int length)
+        {
+            m_Selection = new RangeInt(start, length);
+            foreach (var listener in m_SelectionChangedListeners)
+                listener(m_Selection);
         }
 
         /// <summary>
@@ -156,11 +188,7 @@ namespace UnityEngine.InputSystem
         /// Returns portion of the screen which is covered by the keyboard.
         /// </summary>
         public virtual Rect occludingArea => Rect.zero;
-        
-        protected override void FinishSetup()
-        {
-            status = GetChildControl<ScreenKeyboardStatusControl>("status");
-            base.FinishSetup();
-        }
+
+        public RangeInt selection => m_Selection;
     }
 }

@@ -32,12 +32,13 @@ import com.unity3d.player.*;
 import java.text.MessageFormat;
 import java.util.Locale;
 
-public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher, OnDismissListener
+public class AndroidScreenKeyboard extends Dialog implements OnClickListener, TextWatcher, OnDismissListener, OnShowListener
 {
     interface IScreenKeyboardCallbacks
     {
         void OnTextChanged(String text);
-        void OnStateChanged(int status);
+        void OnStatusChanged(int status);
+        void OnSelectionChanged(int start, int length);
     }
 
     private enum ScreenKeyboardStatus
@@ -78,12 +79,14 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private Context m_Context = null;
     private IScreenKeyboardCallbacks m_Callbacks;
+    private ScreenKeyboardStatus m_DismissReturnValue;
+
 
     public AndroidScreenKeyboard ()
     {
         super (UnityPlayer.currentActivity);
         m_Context = UnityPlayer.currentActivity;
-
+        m_DismissReturnValue = ScreenKeyboardStatus.Done;
         Window window = getWindow();
         window.requestFeature(Window.FEATURE_NO_TITLE);
         // Set transparent background
@@ -107,7 +110,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             boolean inputFieldHidden)
     {
         m_Callbacks = callbacks;
-
+        m_DismissReturnValue = ScreenKeyboardStatus.Done;
         setHideInputField(inputFieldHidden);
 
         setContentView (createSoftInputView ());
@@ -137,9 +140,9 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         okButton.setOnClickListener (this);
 
         setOnDismissListener(this);
+        setOnShowListener(this);
 
         show();
-        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Visible.value);
     }
 
     public void setHideInputField(boolean isInputFieldHidden)
@@ -231,12 +234,17 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         dismiss();
     }
 
-    @Override public void onDismiss(DialogInterface dialog)
+    @Override public void onShow(DialogInterface dialog)
     {
-        Log.v("Unity", "onDismiss");
-        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Done.value);
+        Log.v("Unity", "onShow");
+        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
     }
 
+    @Override public void onDismiss(DialogInterface dialog)
+    {
+        Log.v("Unity", "onDismiss " + m_DismissReturnValue);
+        m_Callbacks.OnStatusChanged(m_DismissReturnValue.value);
+    }
 
     protected View createSoftInputView ()
     {
@@ -247,80 +255,57 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         rl.setBackgroundColor(0xFFFFFFFF);
         RelativeLayout.LayoutParams lp = null;
 
-        {   // create text input field
-            EditText et = new EditText (m_Context)
-            {
-                public boolean onKeyPreIme(int keyCode, KeyEvent event)
-                {
-                    // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
-                    if (keyCode == KeyEvent.KEYCODE_BACK)
-                    {
-                        m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Canceled.value);
-                        return true;
-                    }
-                    if (keyCode == KeyEvent.KEYCODE_SEARCH)
-                        return true;
-                    return super.onKeyPreIme(keyCode, event);
+        EditText et = new EditText (m_Context) {
+            public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+                // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    m_DismissReturnValue = ScreenKeyboardStatus.Canceled;
+                    dismiss();
+                    return true;
                 }
-
-                public void onWindowFocusChanged(boolean hasWindowFocus)
-                {
-                    super.onWindowFocusChanged(hasWindowFocus);
-                    // for some reason this code can NOT be in the OnFocusChangeListener; go figure..
-                    if (hasWindowFocus)
-                    {
-                        InputMethodManager imm = (InputMethodManager)m_Context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.showSoftInput(this, 0);
-                    }
-                }
-
-                @Override
-                protected void onSelectionChanged(int start, int end)
-                {
-                    Log.v("Unity", String.format("Selection %d %d", start, end));
-                    //TODO
-                   // mUnityPlayer.reportSoftInputSelection (start, end - start);
-                }
-            };
-            lp = new RelativeLayout.LayoutParams (matchParent, wrapContent);
-            lp.addRule (RelativeLayout.CENTER_VERTICAL);
-            lp.addRule (RelativeLayout.LEFT_OF, id.okButton);
-            et.setLayoutParams (lp);
-            et.setId (id.txtInput);
-            rl.addView (et);
-        }
-
-        {   // create ok button
-            Button b = new Button (m_Context);
-            b.setText (m_Context.getResources ().getIdentifier ("ok", "string", "android"));
-            lp = new RelativeLayout.LayoutParams (wrapContent, wrapContent);
-            lp.addRule (RelativeLayout.CENTER_VERTICAL);
-            lp.addRule (RelativeLayout.ALIGN_PARENT_RIGHT);
-            b.setLayoutParams (lp);
-            b.setId (id.okButton);
-            // Transparent background
-            b.setBackgroundColor(0);
-            rl.addView (b);
-        }
-
-        View view = rl;
-
-        // This will be called when "Done" button gets pressed. Unfortunately,
-        // not when soft keyb is dismissed with back button...
-        EditText txtInput = (EditText) view.findViewById (id.txtInput);
-        txtInput.setOnEditorActionListener (new TextView.OnEditorActionListener () {
-            public boolean onEditorAction (TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_DONE)
-                {
-                    m_Callbacks.OnStateChanged(ScreenKeyboardStatus.Done.value);
-                }
-
-                return false; // We never consume the action we get
+                if (keyCode == KeyEvent.KEYCODE_SEARCH)
+                    return true;
+                return super.onKeyPreIme(keyCode, event);
             }
-        });
-        view.setPadding(16, 16, 16, 16);
 
-        return view;
+            public void onWindowFocusChanged(boolean hasWindowFocus) {
+                super.onWindowFocusChanged(hasWindowFocus);
+                // for some reason this code can NOT be in the OnFocusChangeListener; go figure..
+                if (hasWindowFocus) {
+                    InputMethodManager imm = (InputMethodManager) m_Context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.showSoftInput(this, 0);
+                }
+            }
+
+            @Override
+            protected void onSelectionChanged(int start, int end) 
+            {
+                m_Callbacks.OnSelectionChanged(start, end - start);
+            }
+        };
+
+        lp = new RelativeLayout.LayoutParams (matchParent, wrapContent);
+        lp.addRule (RelativeLayout.CENTER_VERTICAL);
+        lp.addRule (RelativeLayout.LEFT_OF, id.okButton);
+        et.setLayoutParams (lp);
+        et.setId (id.txtInput);
+        rl.addView (et);
+
+        Button b = new Button (m_Context);
+        b.setText (m_Context.getResources ().getIdentifier ("ok", "string", "android"));
+        lp = new RelativeLayout.LayoutParams (wrapContent, wrapContent);
+        lp.addRule (RelativeLayout.CENTER_VERTICAL);
+        lp.addRule (RelativeLayout.ALIGN_PARENT_RIGHT);
+        b.setLayoutParams (lp);
+        b.setId (id.okButton);
+        // Transparent background
+        b.setBackgroundColor(0);
+        rl.addView (b);
+
+
+        rl.setPadding(16, 16, 16, 16);
+        et.requestFocus();
+        return rl;
     }
 
     public String getText ()
