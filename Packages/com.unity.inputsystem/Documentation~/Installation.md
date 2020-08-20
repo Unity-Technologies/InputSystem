@@ -6,7 +6,7 @@
 
 This guide describes how to install and activate the Input System package for your Unity Project.
 
->__Note__: The new Input System requires Unity 2019.1+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
+>__Note__: The new Input System requires Unity 2019.4+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
 
 ## Installing the package
 

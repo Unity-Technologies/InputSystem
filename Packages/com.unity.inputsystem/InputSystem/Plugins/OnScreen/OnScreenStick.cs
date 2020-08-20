@@ -12,6 +12,7 @@ namespace UnityEngine.InputSystem.OnScreen
     /// input.
     /// </summary>
     [AddComponentMenu("Input/On-Screen Stick")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
         public void OnPointerDown(PointerEventData eventData)

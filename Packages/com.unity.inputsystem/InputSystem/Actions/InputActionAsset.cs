@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
+
 ////TODO: control schemes, like actions and maps, should have stable IDs so that they can be renamed
 
 ////REVIEW: have some way of expressing 'contracts' on action maps? I.e. something like
@@ -29,7 +31,7 @@ namespace UnityEngine.InputSystem
     /// <code>
     /// // Create and configure an asset in code.
     /// var asset1 = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
-    /// var actionMap1 = asset1.CreateActionMap("map1");
+    /// var actionMap1 = asset1.AddActionMap("map1");
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>
@@ -63,7 +65,7 @@ namespace UnityEngine.InputSystem
     /// Note also that all action maps in an asset share binding state. This means that if
     /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
-    public class InputActionAsset : ScriptableObject, IInputActionCollection
+    public class InputActionAsset : ScriptableObject, IInputActionCollection2
     {
         /// <summary>
         /// File extension (without the dot) for InputActionAssets in JSON format.
@@ -110,6 +112,34 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionSetupExtensions.AddControlScheme(InputActionAsset,string)"/>
         /// <seealso cref="InputActionSetupExtensions.RemoveControlScheme"/>
         public ReadOnlyArray<InputControlScheme> controlSchemes => new ReadOnlyArray<InputControlScheme>(m_ControlSchemes);
+
+        /// <summary>
+        /// Iterate over all bindings in the asset.
+        /// </summary>
+        /// <remarks>
+        /// This iterates over all action maps in <see cref="actionMaps"/> and, within each
+        /// map, over the set of <see cref="InputActionMap.bindings"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.bindings"/>
+        public IEnumerable<InputBinding> bindings
+        {
+            get
+            {
+                var numActionMaps = m_ActionMaps.LengthSafe();
+                if (numActionMaps == 0)
+                    yield break;
+
+                for (var i = 0; i < numActionMaps; ++i)
+                {
+                    var actionMap = m_ActionMaps[i];
+                    var bindings = actionMap.m_Bindings;
+                    var numBindings = bindings.LengthSafe();
+
+                    for (var n = 0; n < numBindings; ++n)
+                        yield return bindings[n];
+                }
+            }
+        }
 
         /// <summary>
         /// Binding mask to apply to all action maps and actions in the asset.
@@ -570,6 +600,24 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'");
 
             return null;
+        }
+
+        /// <inheritdoc/>
+        public int FindBinding(InputBinding mask, out InputAction action)
+        {
+            var numMaps = m_ActionMaps.LengthSafe();
+
+            for (var i = 0; i < numMaps; ++i)
+            {
+                var actionMap = m_ActionMaps[i];
+
+                var bindingIndex = actionMap.FindBinding(mask, out action);
+                if (bindingIndex >= 0)
+                    return bindingIndex;
+            }
+
+            action = null;
+            return -1;
         }
 
         /// <summary>

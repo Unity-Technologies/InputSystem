@@ -21,6 +21,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: put default gamepad polling frequency here?
 
+////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -185,6 +187,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMin;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMin == value)
                     return;
                 m_DefaultDeadzoneMin = value;
@@ -229,6 +232,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMax;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMax == value)
                     return;
                 m_DefaultDeadzoneMax = value;
@@ -289,6 +293,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultButtonPressPoint;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
                 m_DefaultButtonPressPoint = value;
@@ -310,12 +315,13 @@ namespace UnityEngine.InputSystem
         ///
         /// The default tap time is 0.2 seconds.
         /// </remarks>
-        /// <seealso cref="TapInteraction"/>
+        /// <seealso cref="Interactions.TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultTapTime == value)
                     return;
                 m_DefaultTapTime = value;
@@ -328,6 +334,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultSlowTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultSlowTapTime == value)
                     return;
                 m_DefaultSlowTapTime = value;
@@ -340,6 +347,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultHoldTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultHoldTime == value)
                     return;
                 m_DefaultHoldTime = value;
@@ -352,6 +360,7 @@ namespace UnityEngine.InputSystem
             get => m_TapRadius;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_TapRadius == value)
                     return;
                 m_TapRadius = value;
@@ -364,6 +373,7 @@ namespace UnityEngine.InputSystem
             get => m_MultiTapDelayTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_MultiTapDelayTime == value)
                     return;
                 m_MultiTapDelayTime = value;
@@ -473,34 +483,31 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
             /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
             /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
             /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInFixedUpdate,
 
             /// <summary>
             /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
-            /// </summary>
-            /// <remarks>
+            ///
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
             /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
-            /// </remarks>
+            /// </summary>
             ProcessEventsManually,
         }
     }

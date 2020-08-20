@@ -74,6 +74,8 @@ namespace UnityEngine.InputSystem
         public void StartWithArraysFrom(InputActionState state)
         {
             Debug.Assert(state != null, "Received null state");
+            Debug.Assert(!state.isProcessingControlStateChange,
+                "Cannot re-resolve bindings for an InputActionState that is currently executing an action callback; binding resolution must be deferred to until after the callback has completed");
 
             maps = state.maps;
             interactions = state.interactions;

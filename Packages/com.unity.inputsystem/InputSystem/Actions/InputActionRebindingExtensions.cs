@@ -15,6 +15,10 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: allow rebinding by GUIDs now that we have IDs on bindings
 
+////TODO: make RebindingOperation dispose its memory automatically; re-allocating is not a problem
+
+////TODO: add simple method to RebindingOperation that will create keyboard binding paths by character rather than by key name
+
 ////FIXME: properly work with composites
 
 ////REVIEW: how well are we handling the case of rebinding to joysticks? (mostly auto-generated HID layouts)
@@ -55,6 +59,29 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(action));
 
             var bindings = action.bindings;
+            for (var i = 0; i < bindings.Count; ++i)
+                if (bindingMask.Matches(bindings[i]))
+                    return i;
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Get the index of the first binding in <see cref="InputActionMap.bindings"/> on <paramref name="actionMap"/>
+        /// that matches the given binding mask.
+        /// </summary>
+        /// <param name="actionMap">An input action map.</param>
+        /// <param name="bindingMask">Binding mask to match (see <see cref="InputBinding.Matches"/>).</param>
+        /// <returns>The first binding on the action matching <paramref name="bindingMask"/> or -1 if no binding
+        /// on the action matches the mask.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputBinding.Matches"/>
+        public static int GetBindingIndex(this InputActionMap actionMap, InputBinding bindingMask)
+        {
+            if (actionMap == null)
+                throw new ArgumentNullException(nameof(actionMap));
+
+            var bindings = actionMap.bindings;
             for (var i = 0; i < bindings.Count; ++i)
                 if (bindingMask.Matches(bindings[i]))
                     return i;
@@ -142,27 +169,33 @@ namespace UnityEngine.InputSystem
             var state = actionMap.m_State;
             Debug.Assert(state != null, "Bindings are expected to have been resolved at this point");
 
-            // Find index of control in state.
-            var controlIndex = Array.IndexOf(state.controls, control);
-            if (controlIndex == -1)
-                return -1;
-
-            // Map to binding index.
+            var controls = state.controls;
+            var controlCount = state.totalControlCount;
+            var bindingStates = state.bindingStates;
+            var controlIndexToBindingIndex = state.controlIndexToBindingIndex;
             var actionIndex = action.m_ActionIndexInState;
-            var bindingCount = state.totalBindingCount;
-            for (var i = 0; i < bindingCount; ++i)
+
+            // Go through all controls in the state until we find our control.
+            for (var i = 0; i < controlCount; ++i)
             {
-                var bindingStatePtr = &state.bindingStates[i];
-                if (bindingStatePtr->actionIndex == actionIndex && bindingStatePtr->controlStartIndex <= controlIndex &&
-                    controlIndex < bindingStatePtr->controlStartIndex + bindingStatePtr->controlCount)
-                {
-                    var bindingIndexInMap = state.GetBindingIndexInMap(i);
-                    return action.BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
-                }
+                if (controls[i] != control)
+                    continue;
+
+                // The control may be the same one we're looking for but may be bound to a completely
+                // different action. Skip anything that isn't related to our action.
+                var bindingIndexInState = controlIndexToBindingIndex[i];
+                if (bindingStates[bindingIndexInState].actionIndex != actionIndex)
+                    continue;
+
+                // Got it.
+                var bindingIndexInMap = state.GetBindingIndexInMap(bindingIndexInState);
+                return action.BindingIndexOnMapToBindingIndexOnAction(bindingIndexInMap);
             }
 
             return -1;
         }
+
+        ////TODO: add option to make it *not* take bound controls into account when creating display strings
 
         /// <summary>
         /// Return a string suitable for display in UIs that shows what the given action is currently bound to.
@@ -447,7 +480,7 @@ namespace UnityEngine.InputSystem
                 control = actionState.controls[bindingStatePtr->controlStartIndex];
             }
 
-            // Take interactions applied to the action into account.
+            // Take interactions applied to the action into account (except if explicitly forced off).
             var binding = bindings[bindingIndex];
             if (string.IsNullOrEmpty(binding.effectiveInteractions))
                 binding.overrideInteractions = action.interactions;
@@ -625,10 +658,17 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Apply the given binding override to all bindings in the map that are matched by the override.
         /// </summary>
-        /// <param name="actionMap"></param>
-        /// <param name="bindingOverride"></param>
+        /// <param name="actionMap">An action map. Overrides will be applied to its <see cref="InputActionMap.bindings"/>.</param>
+        /// <param name="bindingOverride">Binding that is matched (see <see cref="InputBinding.Matches"/>) against
+        /// the <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>. The binding's
+        /// <see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideInteractions"/>, and
+        /// <see cref="InputBinding.overrideProcessors"/> properties will be copied over to any matching binding.</param>
         /// <returns>The number of bindings overridden in the given map.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <seealso cref="InputActionMap.bindings"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
         public static int ApplyBindingOverride(this InputActionMap actionMap, InputBinding bindingOverride)
         {
             if (actionMap == null)
@@ -662,10 +702,24 @@ namespace UnityEngine.InputSystem
             return matchCount;
         }
 
+        /// <summary>
+        /// Copy the override properties (<see cref="InputBinding.overridePath"/>, <see cref="InputBinding.overrideProcessors"/>,
+        /// and <see cref="InputBinding.overrideInteractions"/>) from <paramref name="bindingOverride"/> over to the
+        /// binding at index <paramref name="bindingIndex"/> in <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>.
+        /// </summary>
+        /// <param name="actionMap">Action map whose bindings to modify.</param>
+        /// <param name="bindingIndex">Index of the binding to modify in <see cref="InputActionMap.bindings"/> of
+        /// <paramref name="actionMap"/>.</param>
+        /// <param name="bindingOverride">Binding whose override properties (<see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/>) to copy.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="bindingIndex"/> is not a valid index for
+        /// <see cref="InputActionMap.bindings"/> of <paramref name="actionMap"/>.</exception>
         public static void ApplyBindingOverride(this InputActionMap actionMap, int bindingIndex, InputBinding bindingOverride)
         {
             if (actionMap == null)
                 throw new ArgumentNullException(nameof(actionMap));
+
             var bindingsCount = actionMap.m_Bindings?.Length ?? 0;
             if (bindingIndex < 0 || bindingIndex >= bindingsCount)
                 throw new ArgumentOutOfRangeException(nameof(bindingIndex),
@@ -737,12 +791,56 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Restore all bindings in the map to their defaults.
+        /// </summary>
+        /// <param name="actions">Collection of actions to remove overrides from.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
+        public static void RemoveAllBindingOverrides(this IInputActionCollection2 actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            using (DeferBindingResolution())
+            {
+                // Go through all actions and then through the bindings in their action maps
+                // and reset the bindings for those actions. Bit of a roundabout and inefficient
+                // way but should be okay. Problem is that IInputActionCollection2 doesn't give
+                // us quite the same level of access as InputActionMap and InputActionAsset do.
+                foreach (var action in actions)
+                {
+                    var actionMap = action.GetOrCreateActionMap();
+                    var bindings = actionMap.m_Bindings;
+                    var numBindings = bindings.LengthSafe();
+
+                    for (var i = 0; i < numBindings; ++i)
+                    {
+                        ref var binding = ref bindings[i];
+                        if (!binding.TriggersAction(action))
+                            continue;
+                        binding.RemoveOverrides();
+                    }
+
+                    actionMap.ClearPerActionCachedBindingData();
+                    actionMap.LazyResolveBindings();
+                }
+            }
+        }
+
+        /// <summary>
         /// Remove all binding overrides on <paramref name="action"/>, i.e. clear all <see cref="InputBinding.overridePath"/>,
         /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/> set on bindings
         /// for the given action.
         /// </summary>
         /// <param name="action">Action to remove overrides from.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <seealso cref="ApplyBindingOverride(InputAction,int,InputBinding)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        /// <seealso cref="InputBinding.overrideInteractions"/>
+        /// <seealso cref="InputBinding.overrideProcessors"/>
         public static void RemoveAllBindingOverrides(this InputAction action)
         {
             if (action == null)
@@ -795,44 +893,54 @@ namespace UnityEngine.InputSystem
                 RemoveBindingOverride(actionMap, binding);
         }
 
-        /// <summary>
-        /// Restore all bindings in the map to their defaults.
-        /// </summary>
-        /// <param name="actionMap">Action map to remove overrides from.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c>.</exception>
-        public static void RemoveAllBindingOverrides(this InputActionMap actionMap)
-        {
-            if (actionMap == null)
-                throw new ArgumentNullException(nameof(actionMap));
-
-            if (actionMap.m_Bindings == null)
-                return; // No bindings in map.
-
-            var emptyBinding = new InputBinding();
-            var bindingCount = actionMap.m_Bindings.Length;
-            for (var i = 0; i < bindingCount; ++i)
-                ApplyBindingOverride(actionMap, i, emptyBinding);
-        }
-
-        ////REVIEW: how does this system work in combination with actual user overrides
-        ////        (answer: we rebind based on the base path not the override path; thus user overrides are unaffected;
-        ////        and hopefully operate on more than just the path; probably action+path or something)
         ////TODO: add option to suppress any non-matching binding by setting its override to an empty path
         ////TODO: need ability to do this with a list of controls
-        // For all bindings in the given action, if a binding matches a control in the given control
-        // hierarchy, set an override on the binding to refer specifically to that control.
-        //
-        // Returns the number of overrides that have been applied.
-        //
-        // Use case: Say you have a local co-op game and a single action map that represents the
-        //           actions of any single player. To end up with action maps that are specific to
-        //           a certain player, you could, for example, clone the action map four times, and then
-        //           take four gamepad devices and use the methods here to have bindings be overridden
-        //           on each map to refer to a specific gamepad instance.
-        //
-        //           Another example is having two XRControllers and two action maps can be on either hand.
-        //           At runtime you can dynamically override and re-override the bindings on the action maps
-        //           to use them with the controllers as desired.
+
+        /// <summary>
+        /// For all bindings in the <paramref name="action"/>, if a binding matches a control in the given control
+        /// hierarchy, set an override on the binding to refer specifically to that control.
+        /// </summary>
+        /// <param name="action">An action whose bindings to modify.</param>
+        /// <param name="control">A control hierarchy or an entire <see cref="InputDevice"/>.</param>
+        /// <returns>The number of binding overrides that have been applied to the given action.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method can be used to restrict bindings that otherwise apply to a wide set of possible
+        /// controls.
+        ///
+        /// <example>
+        /// <code>
+        /// // Create two gamepads.
+        /// var gamepad1 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var gamepad2 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Create an action that binds to the A button on gamepads.
+        /// var action = new InputAction();
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        ///
+        /// // When we enable the action now, it will bind to both
+        /// // gamepad1.buttonSouth and gamepad2.buttonSouth.
+        /// action.Enable();
+        ///
+        /// // But let's say we want the action to specifically work
+        /// // only with the first gamepad. One way to do it is like
+        /// // this:
+        /// action.ApplyBindingOverridesOnMatchingControls(gamepad1);
+        ///
+        /// // As "&lt;Gamepad&gt;/buttonSouth" matches the gamepad1.buttonSouth
+        /// // control, an override will automatically be applied such that
+        /// // the binding specifically refers to that button on that gamepad.
+        /// </code>
+        /// </example>
+        ///
+        /// Note that for actions that are part of <see cref="InputActionMap"/>s and/or
+        /// <see cref="InputActionAsset"/>s, it is possible to restrict actions to
+        /// specific device without having to set overrides. See <see cref="InputActionMap.bindingMask"/>
+        /// and <see cref="InputActionAsset.bindingMask"/>.
+        /// </remarks>
+        /// <seealso cref="InputActionMap.devices"/>
+        /// <seealso cref="InputActionAsset.devices"/>
         public static int ApplyBindingOverridesOnMatchingControls(this InputAction action, InputControl control)
         {
             if (action == null)
@@ -857,6 +965,58 @@ namespace UnityEngine.InputSystem
             return numMatchingControls;
         }
 
+        /// <summary>
+        /// For all bindings in the <paramref name="actionMap"/>, if a binding matches a control in the given control
+        /// hierarchy, set an override on the binding to refer specifically to that control.
+        /// </summary>
+        /// <param name="actionMap">An action map whose bindings to modify.</param>
+        /// <param name="control">A control hierarchy or an entire <see cref="InputDevice"/>.</param>
+        /// <returns>The number of binding overrides that have been applied to the given action.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c> -or- <paramref name="control"/>
+        /// is <c>null</c>.</exception>
+        /// <remarks>
+        /// This method can be used to restrict bindings that otherwise apply to a wide set of possible
+        /// controls. It will go through <see cref="InputActionMap.bindings"/> and apply overrides to
+        /// <example>
+        /// <code>
+        /// // Create two gamepads.
+        /// var gamepad1 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        /// var gamepad2 = InputSystem.AddDevice&lt;Gamepad&gt;();
+        ///
+        /// // Create an action map with an action for the A and B buttons
+        /// // on gamepads.
+        /// var actionMap = new InputActionMap();
+        /// var aButtonAction = actionMap.AddAction("a", binding: "&lt;Gamepad&gt;/buttonSouth");
+        /// var bButtonAction = actionMap.AddAction("b", binding: "&lt;Gamepad&gt;/buttonEast");
+        ///
+        /// // When we enable the action map now, the actions will bind
+        /// // to the buttons on both gamepads.
+        /// actionMap.Enable();
+        ///
+        /// // But let's say we want the actions to specifically work
+        /// // only with the first gamepad. One way to do it is like
+        /// // this:
+        /// actionMap.ApplyBindingOverridesOnMatchingControls(gamepad1);
+        ///
+        /// // Now binding overrides on the actions will be set to specifically refer
+        /// // to the controls on the first gamepad.
+        /// </code>
+        /// </example>
+        ///
+        /// Note that for actions that are part of <see cref="InputActionMap"/>s and/or
+        /// <see cref="InputActionAsset"/>s, it is possible to restrict actions to
+        /// specific device without having to set overrides. See <see cref="InputActionMap.bindingMask"/>
+        /// and <see cref="InputActionAsset.bindingMask"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // For an InputActionMap, we could alternatively just do:
+        /// actionMap.devices = new InputDevice[] { gamepad1 };
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.devices"/>
+        /// <seealso cref="InputActionAsset.devices"/>
         public static int ApplyBindingOverridesOnMatchingControls(this InputActionMap actionMap, InputControl control)
         {
             if (actionMap == null)
@@ -875,6 +1035,230 @@ namespace UnityEngine.InputSystem
             }
 
             return numMatchingControls;
+        }
+
+        /// <summary>
+        /// Return a JSON string containing all overrides applied to bindings in the given set of <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A collection of <see cref="InputAction"/>s such as an <see cref="InputActionAsset"/> or
+        /// an <see cref="InputActionMap"/>.</param>
+        /// <returns>A JSON string containing a serialized version of the overrides applied to bindings in the given set of actions.</returns>
+        /// <remarks>
+        /// This method can be used to serialize the overrides, i.e. <see cref="InputBinding.overridePath"/>,
+        /// <see cref="InputBinding.overrideProcessors"/>, and <see cref="InputBinding.overrideInteractions"/>, applied to
+        /// bindings in the set of actions. Only overrides will be saved.
+        ///
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="LoadBindingOverridesFromJson(IInputActionCollection2,string,bool)"/>
+        public static string SaveBindingOverridesAsJson(this IInputActionCollection2 actions)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            var overrides = new List<InputActionMap.BindingOverrideJson>();
+            foreach (var binding in actions.bindings)
+                actions.AddBindingOverrideJsonTo(binding, overrides);
+
+            if (overrides.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = overrides});
+        }
+
+        /// <summary>
+        /// Return a string in JSON format that contains all overrides applied <see cref="InputAction.bindings"/>
+        /// of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">An action for which to extract binding overrides.</param>
+        /// <returns>A string in JSON format containing binding overrides for <paramref name="action"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// This overrides can be restored using <seealso cref="LoadBindingOverridesFromJson(InputAction,string,bool)"/>.
+        /// </remarks>
+        public static string SaveBindingOverridesAsJson(this InputAction action)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            var isSingletonAction = action.isSingletonAction;
+            var actionMap = action.GetOrCreateActionMap();
+            var list = new List<InputActionMap.BindingOverrideJson>();
+
+            foreach (var binding in action.bindings)
+            {
+                // If we're not looking at a singleton action, the bindings in the map may be
+                // for other actions. Skip all that are.
+                if (!isSingletonAction && !binding.TriggersAction(action))
+                    continue;
+
+                actionMap.AddBindingOverrideJsonTo(binding, list, isSingletonAction ? action : null);
+            }
+
+            if (list.Count == 0)
+                return string.Empty;
+
+            return JsonUtility.ToJson(new InputActionMap.BindingOverrideListJson {bindings = list});
+        }
+
+        private static void AddBindingOverrideJsonTo(this IInputActionCollection2 actions, InputBinding binding,
+            List<InputActionMap.BindingOverrideJson> list, InputAction action = null)
+        {
+            if (!binding.hasOverrides)
+                return;
+
+            ////REVIEW: should this throw if there's no existing GUID on the binding? or should we rather have
+            ////        move avenues for locating a binding on an action?
+
+            if (action == null)
+                action = actions.FindAction(binding.action);
+
+            var @override = new InputActionMap.BindingOverrideJson
+            {
+                action = action != null && !action.isSingletonAction ? $"{action.actionMap.name}/{action.name}" : null,
+                id = binding.id.ToString(),
+                path = binding.overridePath,
+                interactions = binding.overrideInteractions,
+                processors = binding.overrideProcessors
+            };
+
+            list.Add(@override);
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings in <paramref name="actions"/>.
+        /// </summary>
+        /// <param name="actions">A set of actions and their bindings, such as an <see cref="InputActionMap"/>, an
+        /// <see cref="InputActionAsset"/>, or a C# wrapper class generated from an .inputactions asset.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="actions"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this IInputActionCollection2 actions, string json, bool removeExisting = true)
+        {
+            if (actions == null)
+                throw new ArgumentNullException(nameof(actions));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    actions.RemoveAllBindingOverrides();
+
+                actions.LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        /// <summary>
+        /// Restore all binding overrides stored in the given JSON string to the bindings of <paramref name="action"/>.
+        /// </summary>
+        /// <param name="action">Action to restore bindings on.</param>
+        /// <param name="json">A string persisting binding overrides in JSON format. See
+        /// <see cref="SaveBindingOverridesAsJson(InputAction)"/>.</param>
+        /// <param name="removeExisting">If true (default), all existing overrides present on the bindings
+        /// of <paramref name="action"/> will be removed first. If false, existing binding overrides will be left
+        /// in place but may be overwritten by overrides present in <paramref name="json"/>.</param>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// void SaveUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = player.actions.SaveBindingOverridesAsJson();
+        ///     PlayerPrefs.SetString("rebinds", rebinds);
+        /// }
+        ///
+        /// void LoadUserRebinds(PlayerInput player)
+        /// {
+        ///     var rebinds = PlayerPrefs.GetString("rebinds");
+        ///     player.actions.LoadBindingOverridesFromJson(rebinds);
+        /// }
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this method can also be used with C# wrapper classes generated from .inputactions assets.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="actions"/> is <c>null</c>.</exception>
+        /// <seealso cref="SaveBindingOverridesAsJson(IInputActionCollection2)"/>
+        /// <seealso cref="InputBinding.overridePath"/>
+        public static void LoadBindingOverridesFromJson(this InputAction action, string json, bool removeExisting = true)
+        {
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+
+            using (DeferBindingResolution())
+            {
+                if (removeExisting)
+                    action.RemoveAllBindingOverrides();
+
+                action.GetOrCreateActionMap().LoadBindingOverridesFromJsonInternal(json);
+            }
+        }
+
+        private static void LoadBindingOverridesFromJsonInternal(this IInputActionCollection2 actions, string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            var overrides = JsonUtility.FromJson<InputActionMap.BindingOverrideListJson>(json);
+            foreach (var entry in overrides.bindings)
+            {
+                // Try to find the binding by ID.
+                if (!string.IsNullOrEmpty(entry.id))
+                {
+                    var bindingIndex = actions.FindBinding(new InputBinding { m_Id = entry.id }, out var action);
+                    if (bindingIndex != -1)
+                    {
+                        action.ApplyBindingOverride(bindingIndex, new InputBinding
+                        {
+                            overridePath = entry.path,
+                            overrideInteractions = entry.interactions,
+                            overrideProcessors = entry.processors,
+                        });
+                        continue;
+                    }
+                }
+
+                throw new NotImplementedException();
+            }
         }
 
         ////TODO: allow overwriting magnitude with custom values; maybe turn more into an overall "score" for a control
@@ -1880,6 +2264,7 @@ namespace UnityEngine.InputSystem
                     throw new InvalidOperationException("Cannot reconfigure rebinding while operation is in progress");
             }
 
+            ////TODO: this *must* be publicly accessible
             /// <summary>
             /// Based on the chosen control, generate an override path to rebind to.
             /// </summary>
@@ -2082,7 +2467,7 @@ namespace UnityEngine.InputSystem
         /// Using this struct, this can be avoided and binding resolution can be deferred to after the whole operation
         /// is complete and the final binding setup is in place.
         /// </remarks>
-        internal static IDisposable DeferBindingResolution()
+        internal static DeferBindingResolutionWrapper DeferBindingResolution()
         {
             if (s_DeferBindingResolutionWrapper == null)
                 s_DeferBindingResolutionWrapper = new DeferBindingResolutionWrapper();
@@ -2092,7 +2477,7 @@ namespace UnityEngine.InputSystem
 
         private static DeferBindingResolutionWrapper s_DeferBindingResolutionWrapper;
 
-        private class DeferBindingResolutionWrapper : IDisposable
+        internal class DeferBindingResolutionWrapper : IDisposable
         {
             public void Acquire()
             {
@@ -2103,7 +2488,8 @@ namespace UnityEngine.InputSystem
             {
                 if (InputActionMap.s_DeferBindingResolution > 0)
                     --InputActionMap.s_DeferBindingResolution;
-                InputActionState.DeferredResolutionOfBindings();
+                if (InputActionMap.s_DeferBindingResolution == 0)
+                    InputActionState.DeferredResolutionOfBindings();
             }
         }
     }

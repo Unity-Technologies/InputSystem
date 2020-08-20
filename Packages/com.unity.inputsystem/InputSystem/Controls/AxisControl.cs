@@ -244,10 +244,10 @@ namespace UnityEngine.InputSystem.Controls
         /// <inheritdoc />
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
-            if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
-                return -1;
-
             var value = ReadValueFromState(statePtr);
+            if (m_MinValue.isEmpty || m_MaxValue.isEmpty)
+                return Mathf.Abs(value);
+
             var min = m_MinValue.ToSingle();
             var max = m_MaxValue.ToSingle();
 

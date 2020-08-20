@@ -781,6 +781,7 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        ////TODO: drop protected access
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
@@ -855,6 +856,19 @@ namespace UnityEngine.InputSystem
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
+            SetupFinished = 1 << 5, // Can't be modified once this is set.
+        }
+
+        internal bool isSetupFinished
+        {
+            get => (m_ControlFlags & ControlFlags.SetupFinished) == ControlFlags.SetupFinished;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.SetupFinished;
+                else
+                    m_ControlFlags &= ~ControlFlags.SetupFinished;
+            }
         }
 
         internal bool isConfigUpToDate
@@ -909,6 +923,14 @@ namespace UnityEngine.InputSystem
         internal virtual void AddProcessor(object first)
         {
         }
+
+        #if UNITY_EDITOR
+        internal virtual IEnumerable<object> GetProcessors()
+        {
+            yield return null;
+        }
+
+        #endif
     }
 
     /// <summary>
@@ -1129,6 +1151,15 @@ namespace UnityEngine.InputSystem
                     $"Cannot add processor of type '{processor.GetType().Name}' to control of type '{GetType().Name}'", nameof(processor));
             m_ProcessorStack.Append(processorOfType);
         }
+
+        #if UNITY_EDITOR
+        internal override IEnumerable<object> GetProcessors()
+        {
+            foreach (var processor in m_ProcessorStack)
+                yield return processor;
+        }
+
+        #endif
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
     }

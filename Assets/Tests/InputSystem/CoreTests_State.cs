@@ -758,6 +758,17 @@ partial class CoreTests
         Assert.That(positionMonitorFired);
     }
 
+    [Test]
+    [Category("State")]
+    public void State_CurrentTimeTakesOffsetToRealtimeSinceStartupIntoAccount()
+    {
+        runtime.currentTime += 2;
+        runtime.currentTimeOffsetToRealtimeSinceStartup = 1;
+
+        Assert.That(InputState.currentTime, Is.EqualTo(1));
+        Assert.Greater(InputRuntime.s_Instance.currentTime, InputState.currentTime);
+    }
+
     // For certain actions, we want to be able to tell whether a specific input arrives in time.
     // For example, we may want to only trigger an action if a specific button was released within
     // a certain amount of time. To support this, the system allows putting timeouts on individual
@@ -1088,8 +1099,10 @@ partial class CoreTests
         // Manually compute the size of the combined state buffer so that we
         // have a check that catches if the size changes (for good or no good reason).
         var overheadPerBuffer = 3 * sizeof(void*) * 2; // Mapping table with front and back buffer pointers for three devices.
-        var combinedDeviceStateSize = (device1.stateBlock.alignedSizeInBytes + device2.stateBlock.alignedSizeInBytes +
-            device3.stateBlock.alignedSizeInBytes).AlignToMultipleOf(4);
+        var combinedDeviceStateSize =
+            device1.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device2.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4) +
+            device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
 
@@ -1113,7 +1126,7 @@ partial class CoreTests
         Assert.That(metrics.totalEventBytes, Is.EqualTo(eventByteCount));
         Assert.That(metrics.totalEventCount, Is.EqualTo(3));
         Assert.That(metrics.totalUpdateCount, Is.EqualTo(1));
-        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.0000001));
+        Assert.That(metrics.totalEventProcessingTime, Is.GreaterThan(0.000001));
         Assert.That(metrics.averageEventBytesPerFrame, Is.EqualTo(eventByteCount).Within(0.00001));
         Assert.That(metrics.averageProcessingTimePerEvent, Is.GreaterThan(0.0000001));
     }

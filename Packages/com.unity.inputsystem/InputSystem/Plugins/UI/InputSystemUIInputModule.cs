@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.UI
     /// what devices and types of devices input is coming from. Instead, the actions hide the actual
     /// sources of input from the module.
     /// </remarks>
+    [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#inputsystemuiinputmodule-component")]
     public class InputSystemUIInputModule : BaseInputModule
     {
         /// <summary>
@@ -51,7 +52,16 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// How to deal with the presence of pointer-type input from multiple devices.
         /// </summary>
-        /// <value>Wh </value>
+        /// <remarks>
+        /// By default, this is set to <see cref="UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack"/> which will
+        /// treat input from <see cref="Mouse"/> and <see cref="Pen"/> devices as coming from a single on-screen pointer
+        /// but will treat input from devices such as <see cref="XR.XRController"/> and <see cref="Touchscreen"/> as
+        /// their own discrete pointers.
+        ///
+        /// The primary effect of this setting is to determine whether the user can concurrently point at more than
+        /// a single UI element or not. Whenever multiple pointers are allowed, more than one element may have a pointer
+        /// over it at any one point and thus several elements can be interacted with concurrently.
+        /// </remarks>
         public UIPointerBehavior pointerBehavior
         {
             get => m_PointerBehavior;

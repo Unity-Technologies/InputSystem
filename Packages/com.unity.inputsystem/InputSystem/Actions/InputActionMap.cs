@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputActionAsset"/>
     /// <seealso cref="InputAction"/>
     [Serializable]
-    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection, IDisposable
+    public sealed class InputActionMap : ICloneable, ISerializationCallbackReceiver, IInputActionCollection2, IDisposable
     {
         /// <summary>
         /// Name of the action map.
@@ -153,6 +153,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputAction.bindings"/>
         public ReadOnlyArray<InputBinding> bindings => new ReadOnlyArray<InputBinding>(m_Bindings);
+
+        IEnumerable<InputBinding> IInputActionCollection2.bindings => bindings;
 
         /// <summary>
         /// Control schemes defined for the action map.
@@ -437,21 +439,21 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Find an action in the map by name or ID.
         /// </summary>
-        /// <param name="nameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
+        /// <param name="actionNameOrId">Name (as in <see cref="InputAction.name"/>) or ID (as in <see cref="InputAction.id"/>)
         /// of the action. Note that matching of names is case-insensitive.</param>
         /// <returns>The action with the given name or ID or <c>null</c> if no matching action
         /// was found.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="nameOrId"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c>.</exception>
         /// <seealso cref="FindAction(Guid)"/>
-        public InputAction FindAction(string nameOrId, bool throwIfNotFound = false)
+        public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
-            if (nameOrId == null)
-                throw new ArgumentNullException(nameof(nameOrId));
-            var index = FindActionIndex(nameOrId);
+            if (actionNameOrId == null)
+                throw new ArgumentNullException(nameof(actionNameOrId));
+            var index = FindActionIndex(actionNameOrId);
             if (index == -1)
             {
                 if (throwIfNotFound)
-                    throw new ArgumentException($"No action '{nameOrId}' in '{this}'", nameof(nameOrId));
+                    throw new ArgumentException($"No action '{actionNameOrId}' in '{this}'", nameof(actionNameOrId));
                 return null;
             }
             return m_Actions[index];
@@ -814,7 +816,8 @@ namespace UnityEngine.InputSystem
                 // Dead simple case: map is internally owned by action. The entire
                 // list of bindings is specific to the action.
 
-                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings);
+                Debug.Assert(m_Bindings == m_SingletonAction.m_SingletonActionBindings,
+                    "For singleton action, bindings array must match that of the action");
 
                 m_BindingsForEachAction = m_Bindings;
                 m_ControlsForEachAction = m_State?.controls;
@@ -830,7 +833,7 @@ namespace UnityEngine.InputSystem
 
                 // Go through all bindings and slice them out to individual actions.
 
-                Debug.Assert(m_Actions != null); // Action isn't a singleton so this has to be true.
+                Debug.Assert(m_Actions != null, "Action map is associated with action but action map has no array of actions"); // Action isn't a singleton so this has to be true.
                 var mapIndices = m_State?.FetchMapIndices(this) ?? new InputActionState.ActionMapIndices();
 
                 // Reset state on each action. Important if we have actions that are no longer
@@ -1013,7 +1016,15 @@ namespace UnityEngine.InputSystem
             //       this will still resolve bindings for *all* maps in the asset.
 
             if (m_State == null || m_NeedToResolveBindings)
+            {
+                if (m_State != null && m_State.isProcessingControlStateChange)
+                {
+                    Debug.Assert(s_DeferBindingResolution > 0);
+                    return;
+                }
+
                 ResolveBindings();
+            }
         }
 
         /// <summary>
@@ -1035,141 +1046,191 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void ResolveBindings()
         {
-            // In case we have actions that are currently enabled, we temporarily retain the
-            // UnmanagedMemory of our InputActionState so that we can sync action states after
-            // we have re-resolved bindings.
-            var tempMemory = new InputActionState.UnmanagedMemory();
-            try
+            // Make sure that if we trigger callbacks as part of disabling and re-enabling actions,
+            // we don't trigger a re-resolve while we're already resolving bindings.
+            using (InputActionRebindingExtensions.DeferBindingResolution())
             {
-                OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
-
-                // Start resolving.
-                var resolver = new InputBindingResolver();
-
-                // If we're part of an asset, we share state and thus binding resolution with
-                // all maps in the asset.
-                if (m_Asset != null)
+                // In case we have actions that are currently enabled, we temporarily retain the
+                // UnmanagedMemory of our InputActionState so that we can sync action states after
+                // we have re-resolved bindings.
+                var tempMemory = new InputActionState.UnmanagedMemory();
+                try
                 {
-                    actionMaps = m_Asset.actionMaps;
-                    Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
+                    OneOrMore<InputActionMap, ReadOnlyArray<InputActionMap>> actionMaps;
 
-                    // If there's a binding mask set on the asset, apply it.
-                    resolver.bindingMask = m_Asset.m_BindingMask;
-                }
-                else
-                {
-                    // Standalone action map (possibly a hidden one created for a singleton action).
-                    // Gets its own private state.
+                    // Start resolving.
+                    var resolver = new InputBindingResolver();
 
-                    actionMaps = this;
-                }
-
-                // If we already have a state, re-use the arrays we have already allocated.
-                // NOTE: We will install the arrays on the very same InputActionState instance below. In the
-                //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
-                //       here.
-                var hasEnabledActions = false;
-                if (m_State != null)
-                {
-                    // Grab a clone of the current memory. We clone because disabling all the actions
-                    // in the map will alter the memory state and we want the state before we start
-                    // touching it.
-                    //
-                    // Technically, ATM we only need the phase values in the action states but duplicating
-                    // the unmanaged memory is cheap and avoids having to add yet more complication to the
-                    // code paths here.
-                    tempMemory = m_State.memory.Clone();
-
-                    // If the state has enabled actions, temporarily disable them.
-                    hasEnabledActions = m_State.HasEnabledActions();
-                    for (var i = 0; i < actionMaps.Count; ++i)
-                    {
-                        var map = actionMaps[i];
-                        if (hasEnabledActions)
-                            m_State.DisableAllActions(map);
-
-                        // Let listeners know we are about to modify bindings. Do this *after* we disabled the
-                        // actions so that cancellations happen first.
-                        if (map.m_SingletonAction != null)
-                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map.m_SingletonAction);
-                        else if (m_Asset == null)
-                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
-                    }
-                    if (m_Asset != null)
-                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, m_Asset);
-
-                    // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
-                    resolver.StartWithArraysFrom(m_State);
-
-                    // Throw away old memory.
-                    m_State.memory.Dispose();
-                }
-
-                // Resolve all maps in the asset.
-                for (var i = 0; i < actionMaps.Count; ++i)
-                    resolver.AddActionMap(actionMaps[i]);
-
-                // Install state.
-                if (m_State == null)
-                {
+                    // If we're part of an asset, we share state and thus binding resolution with
+                    // all maps in the asset.
                     if (m_Asset != null)
                     {
-                        var state = new InputActionState();
+                        actionMaps = m_Asset.actionMaps;
+                        Debug.Assert(actionMaps.Count > 0, "Asset referred to by action map does not have action maps");
+
+                        // If there's a binding mask set on the asset, apply it.
+                        resolver.bindingMask = m_Asset.m_BindingMask;
+
                         for (var i = 0; i < actionMaps.Count; ++i)
-                            actionMaps[i].m_State = state;
-                        m_Asset.m_SharedStateForAllMaps = state;
+                            actionMaps[i].m_NeedToResolveBindings = false;
                     }
                     else
                     {
-                        m_State = new InputActionState();
+                        // Standalone action map (possibly a hidden one created for a singleton action).
+                        // Gets its own private state.
+
+                        actionMaps = this;
+                        m_NeedToResolveBindings = false;
                     }
-                    m_State.Initialize(resolver);
+
+                    // If we already have a state, re-use the arrays we have already allocated.
+                    // NOTE: We will install the arrays on the very same InputActionState instance below. In the
+                    //       case where we didn't have to grow the arrays, we should end up with zero GC allocations
+                    //       here.
+                    var hasEnabledActions = false;
+                    if (m_State != null)
+                    {
+                        // Grab a clone of the current memory. We clone because disabling all the actions
+                        // in the map will alter the memory state and we want the state before we start
+                        // touching it.
+                        //
+                        // Technically, ATM we only need the phase values in the action states but duplicating
+                        // the unmanaged memory is cheap and avoids having to add yet more complication to the
+                        // code paths here.
+                        tempMemory = m_State.memory.Clone();
+
+                        // If the state has enabled actions, temporarily disable them.
+                        hasEnabledActions = m_State.HasEnabledActions();
+                        for (var i = 0; i < actionMaps.Count; ++i)
+                        {
+                            var map = actionMaps[i];
+
+                            if (hasEnabledActions)
+                                m_State.DisableAllActions(map);
+
+                            // Let listeners know we are about to modify bindings. Do this *after* we disabled the
+                            // actions so that cancellations happen first.
+                            if (map.m_SingletonAction != null)
+                                InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map.m_SingletonAction);
+                            else if (m_Asset == null)
+                                InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, map);
+                        }
+                        if (m_Asset != null)
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsAboutToChange, m_Asset);
+
+                        // Reuse the arrays we have so that we can avoid managed memory allocations, if possible.
+                        resolver.StartWithArraysFrom(m_State);
+
+                        // Throw away old memory.
+                        m_State.memory.Dispose();
+                    }
+
+                    // Resolve all maps in the asset.
+                    for (var i = 0; i < actionMaps.Count; ++i)
+                        resolver.AddActionMap(actionMaps[i]);
+
+                    // Install state.
+                    if (m_State == null)
+                    {
+                        if (m_Asset != null)
+                        {
+                            var state = new InputActionState();
+                            for (var i = 0; i < actionMaps.Count; ++i)
+                                actionMaps[i].m_State = state;
+                            m_Asset.m_SharedStateForAllMaps = state;
+                        }
+                        else
+                        {
+                            m_State = new InputActionState();
+                        }
+                        m_State.Initialize(resolver);
+                    }
+                    else
+                    {
+                        m_State.ClaimDataFrom(resolver);
+                    }
+
+                    // Wipe caches.
+                    for (var i = 0; i < actionMaps.Count; ++i)
+                    {
+                        var map = actionMaps[i];
+
+                        ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
+                        map.m_ControlsForEachAction = null;
+
+                        if (map.m_SingletonAction != null)
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
+                        else if (m_Asset == null)
+                            InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
+                    }
+                    if (m_Asset != null)
+                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
+
+                    // Re-enable actions.
+                    if (hasEnabledActions)
+                        m_State.RestoreActionStates(tempMemory);
                 }
-                else
+                finally
                 {
-                    m_State.ClaimDataFrom(resolver);
+                    tempMemory.Dispose();
                 }
-
-                // Wipe caches.
-                for (var i = 0; i < actionMaps.Count; ++i)
-                {
-                    var map = actionMaps[i];
-                    map.m_NeedToResolveBindings = false;
-
-                    ////TODO: determine whether we really need to wipe this; keep them if nothing has changed
-                    map.m_ControlsForEachAction = null;
-
-                    if (map.m_SingletonAction != null)
-                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map.m_SingletonAction);
-                    else if (m_Asset == null)
-                        InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, map);
-                }
-                if (m_Asset != null)
-                    InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
-
-                // Re-enable actions.
-                if (hasEnabledActions)
-                    m_State.RestoreActionStates(tempMemory);
-            }
-            finally
-            {
-                tempMemory.Dispose();
             }
         }
 
-        internal int FindBinding(InputBinding match)
+        /// <inheritdoc/>
+        public int FindBinding(InputBinding mask, out InputAction action)
         {
-            var numBindings = m_Bindings.LengthSafe();
-            for (var i = 0; i < numBindings; ++i)
+            var bindings = m_Bindings;
+            var bindingsCount = bindings.LengthSafe();
+
+            for (var n = 0; n < bindingsCount; ++n)
             {
-                ref var binding = ref m_Bindings[i];
-                if (match.Matches(ref binding))
-                    return i;
+                ref var binding = ref bindings[n];
+                if (mask.Matches(ref binding))
+                {
+                    action = m_SingletonAction ?? FindAction(binding.action);
+                    return action.BindingIndexOnMapToBindingIndexOnAction(n);
+                }
             }
+
+            action = null;
             return -1;
         }
 
         #region Serialization
+
+        ////REVIEW: when GetParameter/SetParameter is coming, should these also be considered part of binding override data?
+
+        [Serializable]
+        internal struct BindingOverrideListJson
+        {
+            public List<BindingOverrideJson> bindings;
+        }
+
+        [Serializable]
+        internal struct BindingOverrideJson
+        {
+            // We save both the "map/action" path of the action as well as the binding ID.
+            // This gives us two avenues into finding our target binding to apply the override
+            // to.
+            public string action;
+            public string id;
+            public string path;
+            public string interactions;
+            public string processors;
+
+            public static BindingOverrideJson FromBinding(InputBinding binding)
+            {
+                return new BindingOverrideJson
+                {
+                    action = binding.action,
+                    id = binding.m_Id,
+                    path = binding.overridePath,
+                    interactions = binding.overrideInteractions,
+                    processors = binding.overrideProcessors,
+                };
+            }
+        }
 
         // Action maps are serialized in two different ways. For storage as imported assets in Unity's Library/ folder
         // and in player data and asset bundles as well as for surviving domain reloads, InputActionMaps are serialized

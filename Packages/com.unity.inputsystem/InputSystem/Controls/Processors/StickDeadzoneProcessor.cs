@@ -14,6 +14,7 @@ namespace UnityEngine.InputSystem.Processors
     /// Processes a Vector2 to apply deadzoning according to the magnitude of the vector (rather
     /// than just clamping individual axes). Normalizes to the min/max range.
     /// </summary>
+    /// <seealso cref="AxisDeadzoneProcessor"/>
     [Preserve]
     public class StickDeadzoneProcessor : InputProcessor<Vector2>
     {
@@ -53,6 +54,11 @@ namespace UnityEngine.InputSystem.Processors
                 return Mathf.Sign(value);
 
             return Mathf.Sign(value) * ((absValue - min) / (max - min));
+        }
+
+        public override string ToString()
+        {
+            return $"StickDeadzone(min={minOrDefault},max={maxOrDefault})";
         }
     }
 

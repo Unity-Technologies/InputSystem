@@ -394,7 +394,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="xButton"/>
         /// <seealso cref="squareButton"/>
-        public ButtonControl buttonWest { get; private set; }
+        public ButtonControl buttonWest { get; protected set; }
 
         /// <summary>
         /// The top face button of the gamepad.
@@ -406,7 +406,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="yButton"/>
         /// <seealso cref="triangleButton"/>
-        public ButtonControl buttonNorth { get; private set; }
+        public ButtonControl buttonNorth { get; protected set; }
 
         /// <summary>
         /// The bottom face button of the gamepad.
@@ -418,7 +418,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="aButton"/>
         /// <seealso cref="crossButton"/>
-        public ButtonControl buttonSouth { get; private set; }
+        public ButtonControl buttonSouth { get; protected set; }
 
         /// <summary>
         /// The right face button of the gamepad.
@@ -430,39 +430,39 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="bButton"/>
         /// <seealso cref="circleButton"/>
-        public ButtonControl buttonEast { get; private set; }
+        public ButtonControl buttonEast { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="leftStick"/> is pressed down.
         /// </summary>
         /// <value>Control representing a click with the left stick.</value>
-        public ButtonControl leftStickButton { get; private set; }
+        public ButtonControl leftStickButton { get; protected set; }
 
         /// <summary>
         /// The button that gets triggered when <see cref="rightStick"/> is pressed down.
         /// </summary>
         /// <value>Control representing a click with the right stick.</value>
-        public ButtonControl rightStickButton { get; private set; }
+        public ButtonControl rightStickButton { get; protected set; }
 
         /// <summary>
         /// The right button in the middle section of the gamepad (called "menu" on Xbox
         /// controllers and "options" on PS4 controllers).
         /// </summary>
         /// <value>Control representing the right button in midsection.</value>
-        public ButtonControl startButton { get; private set; }
+        public ButtonControl startButton { get; protected set; }
 
         /// <summary>
         /// The left button in the middle section of the gamepad (called "view" on Xbox
         /// controllers and "share" on PS4 controllers).
         /// </summary>
         /// <value>Control representing the left button in midsection.</value>
-        public ButtonControl selectButton { get; private set; }
+        public ButtonControl selectButton { get; protected set; }
 
         /// <summary>
         /// The 4-way directional pad on the gamepad.
         /// </summary>
         /// <value>Control representing the d-pad.</value>
-        public DpadControl dpad { get; private set; }
+        public DpadControl dpad { get; protected set; }
 
         /// <summary>
         /// The left shoulder/bumper button that sits on top of <see cref="leftTrigger"/>.
@@ -472,7 +472,7 @@ namespace UnityEngine.InputSystem
         /// On Xbox controllers, this is usually called "left bumper" whereas on PS4
         /// controllers, this button is referred to as "L1".
         /// </remarks>
-        public ButtonControl leftShoulder { get; private set; }
+        public ButtonControl leftShoulder { get; protected set; }
 
         /// <summary>
         /// The right shoulder/bumper button that sits on top of <see cref="rightTrigger"/>.
@@ -482,19 +482,19 @@ namespace UnityEngine.InputSystem
         /// On Xbox controllers, this is usually called "right bumper" whereas on PS4
         /// controllers, this button is referred to as "R1".
         /// </remarks>
-        public ButtonControl rightShoulder { get; private set; }
+        public ButtonControl rightShoulder { get; protected set; }
 
         /// <summary>
         /// The left thumbstick on the gamepad.
         /// </summary>
         /// <value>Control representing the left thumbstick.</value>
-        public StickControl leftStick { get; private set; }
+        public StickControl leftStick { get; protected set; }
 
         /// <summary>
         /// The right thumbstick on the gamepad.
         /// </summary>
         /// <value>Control representing the right thumbstick.</value>
-        public StickControl rightStick { get; private set; }
+        public StickControl rightStick { get; protected set; }
 
         /// <summary>
         /// The left trigger button sitting below <see cref="leftShoulder"/>.
@@ -503,7 +503,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On PS4 controllers, this button is referred to as "L2".
         /// </remarks>
-        public ButtonControl leftTrigger { get; private set; }
+        public ButtonControl leftTrigger { get; protected set; }
 
         /// <summary>
         /// The right trigger button sitting below <see cref="rightShoulder"/>.
@@ -512,7 +512,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// On PS4 controllers, this button is referred to as "R2".
         /// </remarks>
-        public ButtonControl rightTrigger { get; private set; }
+        public ButtonControl rightTrigger { get; protected set; }
 
         /// <summary>
         /// Same as <see cref="buttonSouth"/>. Xbox-style alias.

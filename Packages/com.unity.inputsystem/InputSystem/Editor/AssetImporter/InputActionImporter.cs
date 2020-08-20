@@ -3,7 +3,11 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+#if UNITY_2020_2_OR_NEWER
+using UnityEditor.AssetImporters;
+#else
 using UnityEditor.Experimental.AssetImporters;
+#endif
 using UnityEngine.InputSystem.Utilities;
 
 ////FIXME: The importer accesses icons through the asset db (which EditorGUIUtility.LoadIcon falls back on) which will
@@ -23,7 +27,7 @@ namespace UnityEngine.InputSystem.Editor
     [ScriptedImporter(kVersion, InputActionAsset.Extension)]
     internal class InputActionImporter : ScriptedImporter
     {
-        private const int kVersion = 11;
+        private const int kVersion = 13;
 
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
