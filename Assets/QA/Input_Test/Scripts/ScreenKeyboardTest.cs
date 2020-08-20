@@ -20,12 +20,19 @@ public enum AutomaticOperation
 
 public class ScreenKeyboardTest : MonoBehaviour
 {
+    private const int kTextLimit = 5;
+
+    public Dropdown m_Properties;
+    public GameObject m_ShowParams;
+    public GameObject m_SpecialBehavior;
+
     public Dropdown m_KeyboardTypeDropDown;
     public Toggle m_KeyboardAutocorrection;
     public Toggle m_KeyboardMultiline;
     public Toggle m_KeyboardSecure;
     public Toggle m_KeyboardAlert;
     public Toggle m_KeyboardInputFieldHidden;
+    public InputField m_InputDeviceInfo;
     public InputField m_InputField;
     public InputField m_OccludingAreaField;
     public InputField m_KeyboardStatus;
@@ -36,6 +43,7 @@ public class ScreenKeyboardTest : MonoBehaviour
     public InputField m_OldKeyboardInputField;
 
     public Dropdown m_AutomaticOperation;
+    public Text m_SpecialBehaviorInfo;
 
     public GameObject m_Info;
     public GameObject m_Log;
@@ -56,10 +64,17 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
+        
 
         m_ScreenKeyboard.stateChanged += StateChangedCallback;
         m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextCallback;
+        m_ScreenKeyboard.selectionChanged += SelectionChanged;
 
+        m_Properties.ClearOptions();
+        m_Properties.options.Add(new Dropdown.OptionData("Show Params"));
+        m_Properties.options.Add(new Dropdown.OptionData("Special Behavior"));
+        m_Properties.RefreshShownValue();
+        m_Properties.onValueChanged.AddListener(PropertiesSelectionChanged);
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
@@ -76,6 +91,25 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_LogText.text = "";
     }
 
+    private void PropertiesSelectionChanged(int value)
+    {
+        if (value == 0)
+        {
+            m_ShowParams.SetActive(true);
+            m_SpecialBehavior.SetActive(false);
+        }
+        else
+        {
+            m_ShowParams.SetActive(false);
+            m_SpecialBehavior.SetActive(true);
+        }
+    }
+
+    private void SelectionChanged(RangeInt obj)
+    {
+        m_LogText.text += $"Selection: {obj.start}, {obj.length}" + Environment.NewLine;;
+    }
+
     private void InputFieldTextCallback(string text)
     {
         var oldText = text;
@@ -83,8 +117,8 @@ public class ScreenKeyboardTest : MonoBehaviour
         switch (op)
         {
             case AutomaticOperation.CharacterLimit:
-                if (text.Length > 5)
-                    text = text.Substring(0, 5);
+                if (text.Length > kTextLimit)
+                    text = text.Substring(0, kTextLimit);
                 break;
             case AutomaticOperation.LetterReplacement:
                 text = text.Replace("a", "c");
@@ -95,7 +129,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         {
             m_ScreenKeyboard.inputFieldText = text;
         }
-        m_LogText.text += "IME:" + text + Environment.NewLine;
+        m_LogText.text += "Text:" + text + Environment.NewLine;
         m_InputField.text = text;
     }
 
@@ -116,6 +150,20 @@ public class ScreenKeyboardTest : MonoBehaviour
             m_OldOccludingAreaField.text = TouchScreenKeyboard.area.ToString();
             m_OldKeyboardStatus.text = m_OldScreenKeyboard.status.ToString();
             m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
+        }
+
+        m_InputDeviceInfo.text = $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
+Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}
+";
+        AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
+        switch (op)
+        {
+            case AutomaticOperation.CharacterLimit:
+                m_SpecialBehaviorInfo.text = "Character length will be limited to " + kTextLimit;
+                break;
+            case AutomaticOperation.LetterReplacement:
+                m_SpecialBehaviorInfo.text = "a letter will be replaced by c";
+                break;
         }
     }
 
