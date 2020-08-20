@@ -3168,6 +3168,17 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
+        private static void PerformDefaultPluginShutdown()
+        {
+            #if UNITY_EDITOR || UNITY_ANDROID
+            Android.AndroidSupport.Shutdown();
+            #endif
+
+            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            iOS.iOSSupport.Shutdown();
+            #endif
+        }
+
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
 
         // For testing, we want the ability to push/pop system state even in the player.
@@ -3229,6 +3240,10 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         private static void Destroy()
         {
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            PerformDefaultPluginShutdown();
+            #endif
+
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
