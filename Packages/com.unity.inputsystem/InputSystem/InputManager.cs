@@ -1602,6 +1602,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Touch", typeof(TouchControl));
             RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
             RegisterControlLayout("TouchPress", typeof(TouchPressControl));
+            RegisterControlLayout("ScreenKeyboardStatus", typeof(ScreenKeyboardStatusControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));

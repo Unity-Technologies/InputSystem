@@ -31,6 +31,8 @@ namespace UnityEngine.InputSystem
         LostFocus
     }
 
+
+
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
     {
@@ -53,20 +55,30 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
-    [InputControlLayout(stateType = typeof(KeyboardState), isGenericTypeOfDevice = true)]
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ScreenKeyboardState : IInputStateTypeInfo
+    {
+        public static FourCC Format => new FourCC('S', 'K', 'S', 'T');
+        public FourCC format => Format;
+
+        [InputControl(name = "status", displayName = "Status", layout = "ScreenKeyboardStatus")]
+        public int status;
+    }
+
+    [InputControlLayout(stateType = typeof(ScreenKeyboardState))]
     public class ScreenKeyboard : InputDevice
     {
         private const long kCommandReturnSuccess = 1;
         private const long kCommandReturnFailure = 0;
 
-        protected ScreenKeyboardStatus KeyboardStatus;
+        public ScreenKeyboardStatusControl status { get; set; }
 
         private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
 
         protected ScreenKeyboard()
         {
-            KeyboardStatus = ScreenKeyboardStatus.Done;
+
         }
 
         public event Action<ScreenKeyboardStatus> stateChanged
@@ -111,7 +123,7 @@ namespace UnityEngine.InputSystem
             if (command.typeStatic == QueryEnabledStateCommand.Type)
             {
                 var cmd = (QueryEnabledStateCommand*) UnsafeUtility.AddressOf(ref command);
-                cmd->isEnabled = KeyboardStatus == ScreenKeyboardStatus.Visible;
+                cmd->isEnabled = status.ReadValue() == ScreenKeyboardStatus.Visible;
 
                 return kCommandReturnSuccess;
             }
@@ -127,7 +139,7 @@ namespace UnityEngine.InputSystem
 
         protected void OnStatusChanged(ScreenKeyboardStatus keyboardStatus)
         {
-            var stateChanged = keyboardStatus != KeyboardStatus;
+            var stateChanged = keyboardStatus != status.ReadValue();
 
             if (stateChanged)
             {
@@ -146,15 +158,10 @@ namespace UnityEngine.InputSystem
         /// Returns portion of the screen which is covered by the keyboard.
         /// </summary>
         public virtual Rect occludingArea => Rect.zero;
-
-        /// <summary>
-        /// Returns the state of the screen keyboard.
-        /// </summary>
-        public ScreenKeyboardStatus status => KeyboardStatus;
-
+        
         protected override void FinishSetup()
         {
-            GetChildControl<ButtonControl>("alt");
+            status = GetChildControl<ScreenKeyboardStatusControl>("status");
             base.FinishSetup();
         }
     }

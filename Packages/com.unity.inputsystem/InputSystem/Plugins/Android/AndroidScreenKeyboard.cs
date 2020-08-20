@@ -5,6 +5,7 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Android
 {
+    [InputControlLayout(stateType = typeof(ScreenKeyboardState))]
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
         class ScreenKeyboardCallbacks : AndroidJavaProxy
@@ -21,9 +22,9 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.OnChangeInputField(text);
             }
 
-            void OnStateChanged(int state)
+            void OnStatusChanged(int status)
             {
-                m_Parent.OnStateChanged((ScreenKeyboardStatus)state);
+                m_Parent.OnStatusChanged((ScreenKeyboardStatus)status);
             }
         }
 

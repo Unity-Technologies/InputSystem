@@ -2,10 +2,12 @@
 using System;
 using System.Runtime.InteropServices;
 using AOT;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.iOS
 {
+    [InputControlLayout(stateType = typeof(ScreenKeyboardState))]
     public class iOSScreenKeyboard : ScreenKeyboard
     {
         internal delegate void OnTextChangedDelegate(int deviceId, string text);
