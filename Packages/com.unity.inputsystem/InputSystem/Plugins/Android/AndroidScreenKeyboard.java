@@ -42,8 +42,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private enum ScreenKeyboardStatus
     {
-        Visible(0),
-        Done(1),
+        Done(0),
+        Visible(1),
         Canceled(2);
 
         private final int value;

@@ -25,13 +25,11 @@ namespace UnityEngine.InputSystem
 
     public enum ScreenKeyboardStatus : uint
     {
-        Visible,
         Done,
+        Visible,
         Canceled,
         LostFocus
     }
-
-
 
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams

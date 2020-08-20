@@ -11,8 +11,8 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 // Must be in sync with com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs ScreenKeyboardStatus
 enum iOSScreenKeyboardStatus
 {
-    StatusVisible     = 0,
-    StatusDone        = 1,
+    StatusDone        = 0,
+    StatusVisible     = 1,
     StatusCanceled    = 2,
     StatusLostFocus   = 3,
 };
