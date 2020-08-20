@@ -180,7 +180,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var stateSize = device.m_StateBlock.alignedSizeInBytes;
             var stateOffset = device.m_StateBlock.byteOffset;
             var statePtr = (byte*)(useDefaultState ? device.defaultStatePtr : device.currentStatePtr) + (int)stateOffset;
-            var eventSize = InputEvent.kBaseEventSize + sizeof(int) + stateSize;
+            var eventSize = (InputEvent.kBaseEventSize + sizeof(int) + stateSize).AlignToMultipleOf(4);
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (StateEvent*)buffer.GetUnsafePtr();

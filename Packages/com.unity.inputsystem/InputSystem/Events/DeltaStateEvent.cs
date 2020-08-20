@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.LowLevel
             stateSize += controlStateBlock.bitOffset / 8;
             var stateOffset = controlStateBlock.byteOffset;
             var statePtr = (byte*)control.currentStatePtr + (int)stateOffset;
-            var eventSize = InputEvent.kBaseEventSize + sizeof(int) * 2 + stateSize;
+            var eventSize = (InputEvent.kBaseEventSize + sizeof(int) * 2 + stateSize).AlignToMultipleOf(4);
 
             var buffer = new NativeArray<byte>((int)eventSize, allocator);
             var stateEventPtr = (DeltaStateEvent*)buffer.GetUnsafePtr();
