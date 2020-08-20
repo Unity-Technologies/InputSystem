@@ -98,6 +98,11 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
     }
 
+    private void debugLog(String format, Object... args)
+    {
+        Log.v("Unity", String.format(format, args));
+    }
+
     public void show(
             IScreenKeyboardCallbacks callbacks,
             int keyboardType,
@@ -181,7 +186,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         String currentLanguage = locale.getDisplayLanguage();
 
         EditText txtInput = (EditText) findViewById (id.txtInput);
-        Log.v("Unity", MessageFormat.format("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage));
+        debugLog("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage);
 
         // TODO: For IME SelectionEnd and Start doesn't return what you would expect
         m_Callbacks.OnTextChanged(s.toString());
@@ -189,12 +194,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void beforeTextChanged (CharSequence s, int start, int count, int after)
     {
-        Log.v("Unity", MessageFormat.format("beforeTextChanged {0} start {1}, count {2}, after {3}", s.toString(), start, count, after));
+        debugLog("beforeTextChanged {0} start {1}, count {2}, after {3}", s.toString(), start, count, after);
     }
 
     public void onTextChanged (CharSequence s, int start, int before, int count)
     {
-        Log.v("Unity", MessageFormat.format("onTextChanged {0} start {1}, before {2}, count {3}", s.toString(), start, before, count));
+        debugLog("onTextChanged {0} start {1}, before {2}, count {3}", s.toString(), start, before, count);
     }
 
     private int convertInputType (ScreenKeyboardType keyboardType, boolean correction, boolean multiline, boolean secure)
@@ -236,13 +241,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     @Override public void onShow(DialogInterface dialog)
     {
-        Log.v("Unity", "onShow");
+        debugLog("onShow");
         m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
     }
 
     @Override public void onDismiss(DialogInterface dialog)
     {
-        Log.v("Unity", "onDismiss " + m_DismissReturnValue);
+        debugLog("onDismiss " + m_DismissReturnValue);
         m_Callbacks.OnStatusChanged(m_DismissReturnValue.value);
     }
 
