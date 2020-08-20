@@ -5,7 +5,7 @@ typedef void (*OnStatusChangedCallback) (int deviceId, int status);
 
 struct iOSScreenKeyboardCallbacks
 {
-	int deviceId;
+    int deviceId;
     OnTextChangedCallback textChangedCallback;
     OnStatusChangedCallback statusChangedCallback;
 };

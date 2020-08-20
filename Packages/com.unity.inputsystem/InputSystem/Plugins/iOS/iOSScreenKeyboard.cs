@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.iOS
             if (screenKeyboard == null)
                 throw new Exception("OnTextChangedCallback: Failed to get iOSScreenKeyboard instance");
 
-            screenKeyboard.OnChangeInputField(text);
+            screenKeyboard.ReportInputFieldChange(text);
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChangedDelegate))]
@@ -51,10 +51,10 @@ namespace UnityEngine.InputSystem.iOS
             if (screenKeyboard == null)
                 throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
 
-            screenKeyboard.OnStatusChanged(status);
+            screenKeyboard.ReportStatusChange(status);
         }
 
-        public override void Show(ScreenKeyboardShowParams showParams)
+        protected override void InternalShow()
         {
             var callbacks = new iOSScreenKeyboardCallbacks()
             {
@@ -62,10 +62,10 @@ namespace UnityEngine.InputSystem.iOS
                 onTextChanged = OnTextChangedCallback,
                 onStatusChanged = OnStatusChangedCallback
             };
-            _iOSScreenKeyboardShow(ref showParams, Marshal.SizeOf(showParams), ref callbacks, Marshal.SizeOf(callbacks));
+            _iOSScreenKeyboardShow(ref m_ShowParams, Marshal.SizeOf(m_ShowParams), ref callbacks, Marshal.SizeOf(callbacks));
         }
 
-        public override void Hide()
+        protected override void InternalHide()
         {
         }
 

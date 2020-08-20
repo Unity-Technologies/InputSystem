@@ -44,7 +44,16 @@ namespace UnityEngine.InputSystem.iOS
 
             // Create an instance of screen keyboard
             InputSystem.RegisterLayout<iOSScreenKeyboard>();
+#if !UNITY_EDITOR
             InputSystem.AddDevice(InputDevice.Build<iOSScreenKeyboard>());
+#endif
+        }
+
+        public static void Shutdown()
+        {
+#if !UNITY_EDITOR
+            InputSystem.RemoveDevice(InputSystem.GetDevice<iOSScreenKeyboard>());
+#endif
         }
     }
 }

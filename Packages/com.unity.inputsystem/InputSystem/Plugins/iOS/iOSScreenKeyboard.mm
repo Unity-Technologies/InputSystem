@@ -98,7 +98,7 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         *callbacks
     };
 
-    [[iOSScreenKeyboardDelegate getInstanceOrCreate] show:param withInitialTextCStr:showParams->initialText withPlaceholderTextCStr:showParams->placeholderText];
+    [[iOSScreenKeyboardDelegate getInstanceOrCreate] show: param withInitialTextCStr: showParams->initialText withPlaceholderTextCStr: showParams->placeholderText];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
@@ -128,7 +128,6 @@ extern "C" const char* _iOSScreenKeyboardGetInputFieldText()
     iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
     if (keyboard == NULL)
         return NULL;
-    
+
     return strdup([[keyboard getText] UTF8String]);
 }
-
