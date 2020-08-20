@@ -1602,7 +1602,6 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Touch", typeof(TouchControl));
             RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
             RegisterControlLayout("TouchPress", typeof(TouchPressControl));
-            RegisterControlLayout("ScreenKeyboardStatus", typeof(ScreenKeyboardStatusControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
@@ -2807,15 +2806,15 @@ namespace UnityEngine.InputSystem
                         textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
                     }
-/*
-                    case ScreenKeyboardEvent.Type:
-                    {
-                        var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
-                        var callbackReceiver = device as IScreenKeyboardCallbackReceiver;
-                        callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
-                        break;
-                    }
-*/
+                    /*
+                                        case ScreenKeyboardEvent.Type:
+                                        {
+                                            var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
+                                            var callbackReceiver = device as IScreenKeyboardCallbackReceiver;
+                                            callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
+                                            break;
+                                        }
+                    */
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device, keepOnListOfAvailableDevices: false);
