@@ -125,7 +125,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         if (value < 0.0)
             value = 0.0f;
 
-        m_VerticalScrollbar.value = 1.0f - value;
+        //m_VerticalScrollbar.value = 1.0f - value;
     }
 
     private void SelectionChanged(RangeInt obj)
@@ -148,11 +148,11 @@ public class ScreenKeyboardTest : MonoBehaviour
                 break;
         }
 
-        if (text != oldText)
+        if (!text.Equals(oldText))
         {
             m_ScreenKeyboard.inputFieldText = text;
         }
-
+        Log($"Frame:{Time.frameCount}");
         Log($"Text: {text}");
         m_InputField.text = text;
     }
@@ -179,24 +179,27 @@ public class ScreenKeyboardTest : MonoBehaviour
         var oldVisible = TouchScreenKeyboard.visible;
         var newVisible = m_ScreenKeyboard.enabled;
 
+        var infoMessage = $"FrameCount: {Time.frameCount}\n";
         if (oldVisible && newVisible)
         {
-            m_InputDeviceInfo.text = "ERROR: both new and old screen keyboards are visible ?";
+            infoMessage += "ERROR: both new and old screen keyboards are visible ?";
         }
         else if (oldVisible)
         {
-            m_InputDeviceInfo.text = "Showing old TouchscreenKeyboard";
+            infoMessage += "Showing old TouchscreenKeyboard";
         }
         else if (newVisible)
         {
-            m_InputDeviceInfo.text = $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
+            infoMessage += $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
 Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}
 ";
         }
         else
         {
-            m_InputDeviceInfo.text = "No keyboard is shown";
+            infoMessage += "No keyboard is shown";
         }
+
+        m_InputDeviceInfo.text = infoMessage;
 
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)

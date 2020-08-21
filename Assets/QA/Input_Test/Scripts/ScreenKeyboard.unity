@@ -539,6 +539,7 @@ MonoBehaviour:
   m_SpecialBehaviorInfo: {fileID: 1166493106}
   m_Info: {fileID: 438411048}
   m_Log: {fileID: 1462136155}
+  m_VerticalScrollbar: {fileID: 672366961}
   m_LogText: {fileID: 845111339}
 --- !u!1 &69707332
 GameObject:
@@ -2638,7 +2639,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -135.05054, y: 183.05005}
-  m_SizeDelta: {x: 270, y: 1981.1}
+  m_SizeDelta: {x: 270, y: 1980}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &421405283
 GameObject:
@@ -3564,8 +3565,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1696809416}
   m_HandleRect: {fileID: 1696809415}
   m_Direction: 2
-  m_Value: 0.99999994
-  m_Size: 0.18479632
+  m_Value: 1
+  m_Size: 0.184899
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4762,69 +4763,61 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: 'A
+  m_Text: 'sdasasaaaaaaaaaaaaaaa
 
-    B
+    sdasasaaaaaaaaaaaaaaa
 
-    C
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    D
+    sdasasaaaaaaaaaaaaaaa
 
-    E
+    sdasasaaaaaaaaaaaaaaa
 
-    F
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sds
+    sdasasaaaaaaaaaaaaaaa
 
-    d
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaa
 
-    s
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    ds
+    sdasasaaaaaaaaaaaaaaa
 
-    d
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    s
+    sdasasaaaaaaaaaaaaaaa
 
-    ds
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    d
+    sdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    s
+    sdasasaaaaaaaaaaaaaaa
 
-    ds
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sds
+    sdasasaaaaaaaaaaaaaaa
 
-    d
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaa
 
-    sd
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa
 
-    s
+    sdasasaaaaaaaaaaaaaaa
 
-    ds
-
-    d
-
-    sd
-
-    sd
-
-'
+    sdasasaaaaaaaaaaaaaaasdasasaaaaaaaaaaaaaaa'
 --- !u!222 &845111340
 CanvasRenderer:
   m_ObjectHideFlags: 0
