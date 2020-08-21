@@ -334,4 +334,29 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             txtInput.setSelection(text.length());
         }
     }
+
+    public void setSelection(int start, int length)
+    {
+        EditText txtInput = (EditText) findViewById(id.txtInput);
+        if (txtInput != null && txtInput.getText().length() >= start + length)
+            txtInput.setSelection(start, start + length);
+    }
+
+    public long getSelection()
+    {
+        EditText txtInput = (EditText) findViewById(id.txtInput);
+        if (txtInput == null)
+            return 0;
+        long start = txtInput.getSelectionStart();
+        long end = txtInput.getSelectionEnd();
+        // Saw cases where end is actually smaller than start
+        if (end < start)
+        {
+            long tmp = start;
+            start = end;
+            end = tmp;
+        }
+        long length = end - start;
+        return start | (length << 32);
+    }
 }

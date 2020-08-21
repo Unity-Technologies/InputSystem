@@ -76,7 +76,6 @@ namespace UnityEngine.InputSystem
         // Note: Status cannot be a part of ScreenKeyboardState, since it defines if device is enabled or disabled
         //       If device is disabled, it cannot receive any events
         protected ScreenKeyboardStatus m_KeyboardStatus;
-        protected RangeInt m_Selection;
         protected ScreenKeyboardShowParams m_ShowParams;
 
         private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
@@ -130,7 +129,6 @@ namespace UnityEngine.InputSystem
         {
             if (command.typeStatic == EnableDeviceCommand.Type)
             {
-                m_Selection = new RangeInt(0, 0);
                 InternalShow();
                 return kCommandReturnSuccess;
             }
@@ -173,9 +171,9 @@ namespace UnityEngine.InputSystem
 
         protected void ReportSelectionChange(int start, int length)
         {
-            m_Selection = new RangeInt(start, length);
+            var selection = new RangeInt(start, length);
             foreach (var listener in m_SelectionChangedListeners)
-                listener(m_Selection);
+                listener(selection);
         }
 
         /// <summary>
@@ -189,6 +187,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public virtual Rect occludingArea => Rect.zero;
 
-        public RangeInt selection => m_Selection;
+        public virtual RangeInt selection { set; get; }
     }
 }

@@ -85,6 +85,28 @@ namespace UnityEngine.InputSystem.Android
                     m_KeyboardObject.Call("setText", value);
             }
         }
+
+        public override RangeInt selection
+        {
+            get
+            {
+                if (m_KeyboardObject != null)
+                {
+                    var combined = m_KeyboardObject.Call<long>("getSelection");
+                    unchecked
+                    {
+                        return new RangeInt((int)(0xFFFFFFFF & combined), (int)(combined >> 32));
+                    }
+                }
+
+                return new RangeInt(0, 0);
+            }
+            set
+            {
+                if (m_KeyboardObject != null)
+                    m_KeyboardObject.Call("setSelection", value.start, value.length);
+            }
+        }
     }
 }
 #endif
