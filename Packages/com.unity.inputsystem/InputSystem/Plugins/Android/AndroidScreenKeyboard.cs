@@ -26,9 +26,7 @@ namespace UnityEngine.InputSystem.Android
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
                     throw new Exception("OnTextChanged was executed from incorrect thread");
-               // m_Parent.ReportInputFieldChange(text);
-                Debug.Log($"Queueing {m_Parent.deviceId} {text} {InputRuntime.s_Instance.currentTime}");
-                ScreenKeyboardEvent.QueueEvent(m_Parent.deviceId, text, InputRuntime.s_Instance.currentTime);
+                m_Parent.ReportInputFieldChange(text);
             }
 
             void OnStatusChanged(int status)

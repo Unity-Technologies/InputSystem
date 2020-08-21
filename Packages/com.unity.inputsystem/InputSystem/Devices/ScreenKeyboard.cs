@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem
             return kCommandReturnFailure;
         }
 
-        internal /*protected*/ void ReportInputFieldChange(string text)
+        protected void ReportInputFieldChange(string text)
         {
             foreach (var listener in m_InputFieldTextListeners)
                 listener(text);
