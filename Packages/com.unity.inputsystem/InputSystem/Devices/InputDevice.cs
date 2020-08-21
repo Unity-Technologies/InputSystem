@@ -522,7 +522,6 @@ namespace UnityEngine.InputSystem
         public virtual unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
-    
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
             var callbacks = manager.m_DeviceCommandCallbacks;
