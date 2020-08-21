@@ -47,6 +47,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     public GameObject m_Info;
     public GameObject m_Log;
+    public Scrollbar m_VerticalScrollbar;
 
     public Text m_LogText;
 
@@ -61,6 +62,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 #if UNITY_WSA
         canvasScaler.enabled = false;
 #endif
+        Log("sds");
         m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
@@ -105,9 +107,30 @@ public class ScreenKeyboardTest : MonoBehaviour
         }
     }
 
+    private int CountOccurences(string text, char letter)
+    {
+        int count = 0;
+        foreach (char c in text)
+            if (c == letter) count++;
+        return count;
+    }
+
+    private void Log(string format, params object[] list)
+    {
+        m_LogText.text += string.Format(format, list) + "\n";
+        var lineCount = CountOccurences(m_LogText.text, '\n');
+        float lineHeight = 16.0f;
+        // Has to be a better way
+        var value = (lineCount - (366 / lineHeight) + 4) * (lineHeight / 1980.0f);
+        if (value < 0.0)
+            value = 0.0f;
+        
+        m_VerticalScrollbar.value = 1.0f - value;
+    }
+
     private void SelectionChanged(RangeInt obj)
     {
-        m_LogText.text += $"Selection: {obj.start}, {obj.length}" + Environment.NewLine;;
+        Log($"Selection: {obj.start}, {obj.length}");
     }
 
     private void InputFieldTextCallback(string text)
@@ -129,13 +152,14 @@ public class ScreenKeyboardTest : MonoBehaviour
         {
             m_ScreenKeyboard.inputFieldText = text;
         }
-        m_LogText.text += "Text:" + text + Environment.NewLine;
+
+        Log($"Text: {text}");
         m_InputField.text = text;
     }
 
     private void StateChangedCallback(ScreenKeyboardStatus status)
     {
-        m_LogText.text += "Status: " + status + Environment.NewLine;
+        Log($"Status: {status}");
     }
 
     // Update is called once per frame
