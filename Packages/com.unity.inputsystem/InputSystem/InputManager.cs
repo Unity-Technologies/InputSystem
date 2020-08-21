@@ -2806,15 +2806,15 @@ namespace UnityEngine.InputSystem
                         textInputReceiver?.OnIMECompositionChanged(imeEventPtr->compositionString);
                         break;
                     }
-                    /*
+            
                                         case ScreenKeyboardEvent.Type:
                                         {
                                             var screenKeyboardEventPtr = (ScreenKeyboardEvent*)currentEventReadPtr;
-                                            var callbackReceiver = device as IScreenKeyboardCallbackReceiver;
-                                            callbackReceiver?.OnScreenKeyboardPropertiesChanged(screenKeyboardEventPtr->keyboardProperties);
+                                            var callbackReceiver = device as ScreenKeyboard;
+                                            callbackReceiver?.ReportInputFieldChange(screenKeyboardEventPtr->GetComposition().ToString());
                                             break;
                                         }
-                    */
+                   
                     case DeviceRemoveEvent.Type:
                     {
                         RemoveDevice(device, keepOnListOfAvailableDevices: false);
