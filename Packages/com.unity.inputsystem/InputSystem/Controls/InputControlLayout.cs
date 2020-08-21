@@ -1630,7 +1630,7 @@ namespace UnityEngine.InputSystem.Layouts
                 return new LayoutJson
                 {
                     name = layout.m_Name,
-                    type = layout.type.AssemblyQualifiedName,
+                    type = layout.type?.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
                     description = layout.m_Description,

@@ -74,6 +74,249 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
+    public void Remote_AddingNewOverrideLayout_WillSendLayoutToRemotes()
+    {
+        const string overrideJson = @"
+            {
+                ""name"" : ""MyOverride"",
+                ""extend"" : ""Gamepad"",
+                ""commonUsages"" : [ ""LeftHand"", ""RightHand"" ]
+            }
+        ";
+
+        using (var remote = new FakeRemote())
+        {
+            InputSystem.RegisterLayoutOverride(overrideJson);
+
+            InputSystem.AddDevice("Gamepad");
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+
+            var layout = InputSystem.LoadLayout("Gamepad");
+
+            Assert.That(layout.appliedOverrides, Is.EquivalentTo(new[] {new InternedString("MyOverride")}));
+            Assert.That(layout.commonUsages.Count, Is.EqualTo(2));
+            Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("LeftHand")));
+            Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("RightHand")));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_GeneratedLayoutsAreSentToRemote()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""MyControl"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        InputSystem.AddDevice("MyDevice");
+
+        using (var remote = new FakeRemote())
+        {
+            var layouts = remote.manager.ListControlLayouts().ToList();
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyDevice"));
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("layout").EqualTo("MyDevice"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_GeneratedDerivedLayoutsAreSentToRemote()
+    {
+        const string baseLayout = @"
+            {
+                ""name"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""layout"" : ""Stick"",
+                        ""usage"" : ""BaseUsage""
+                    },
+                    {
+                        ""name"" : ""axis"",
+                        ""layout"" : ""Axis"",
+                        ""usage"" : ""BaseUsage""
+                    }
+                ]
+            }
+        ";
+
+        const string derivedLayout = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""BaseLayout"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""stick"",
+                        ""usage"" : ""DerivedUsage""
+                    },
+                    {
+                        ""name"" : ""button"",
+                        ""layout"" : ""Button"",
+                        ""usage"" : ""DerivedUsage""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(baseLayout);
+        InputSystem.RegisterLayout(derivedLayout);
+        InputSystem.AddDevice("MyDevice");
+
+        using (var remote = new FakeRemote())
+        {
+            var layouts = remote.manager.ListControlLayouts().ToList();
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyDevice"));
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("layout").EqualTo("MyDevice"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+
+            var layout = InputSystem.LoadLayout("MyDevice");
+
+            Assert.That(layout["stick"].usages.Count, Is.EqualTo(1));
+            Assert.That(layout["stick"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
+            Assert.That(layout["axis"].usages.Count, Is.EqualTo(1));
+            Assert.That(layout["axis"].usages, Has.Exactly(1).EqualTo(new InternedString("BaseUsage")));
+            Assert.That(layout["button"].usages.Count, Is.EqualTo(1));
+            Assert.That(layout["button"].usages, Has.Exactly(1).EqualTo(new InternedString("DerivedUsage")));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_GeneratedControlLayoutsAreSentToRemote()
+    {
+        const string controlJson = @"
+            {
+                ""name"" : ""MyControl"",
+                ""extend"" : ""Vector2""
+            }
+        ";
+        const string deviceJson = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""myThing"",
+                        ""layout"" : ""MyControl"",
+                        ""usage"" : ""LeftStick""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(controlJson);
+        InputSystem.RegisterLayout(deviceJson);
+        InputSystem.AddDevice("MyDevice");
+
+        using (var remote = new FakeRemote())
+        {
+            var layouts = remote.manager.ListControlLayouts().ToList();
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyDevice"));
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("layout").EqualTo("MyDevice"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_InitiallyUnusedGeneratedLayoutsAreSentToRemote()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""MyControl"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        using (var remote = new FakeRemote())
+        {
+            InputSystem.AddDevice("MyDevice");
+
+            var layouts = remote.manager.ListControlLayouts().ToList();
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyDevice"));
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("layout").EqualTo("MyDevice"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_InitiallyUnusedGeneratedOverrideLayoutsAreSentToRemote()
+    {
+        const string json = @"
+            {
+                ""name"" : ""MyDevice"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    {
+                        ""name"" : ""MyControl"",
+                        ""layout"" : ""Button""
+                    }
+                ]
+            }
+        ";
+
+        const string overrideJson = @"
+            {
+                ""name"" : ""MyOverride"",
+                ""extend"" : ""MyDevice"",
+                ""commonUsages"" : [ ""LeftHand"", ""RightHand"" ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        InputSystem.RegisterLayoutOverride(overrideJson);
+
+        using (var remote = new FakeRemote())
+        {
+            InputSystem.AddDevice("MyDevice");
+
+            var layouts = remote.manager.ListControlLayouts().ToList();
+            Assert.That(layouts, Has.Exactly(1).EqualTo("MyDevice"));
+
+            Assert.That(remote.manager.devices, Has.Count.EqualTo(1));
+            Assert.That(remote.manager.devices, Has.All.With.Property("layout").EqualTo("MyDevice"));
+            Assert.That(remote.manager.devices, Has.All.With.Property("remote").True);
+
+            var layout = InputSystem.LoadLayout("MyDevice");
+
+            Assert.That(layout.appliedOverrides, Is.EquivalentTo(new[] {new InternedString("MyOverride")}));
+            Assert.That(layout.commonUsages.Count, Is.EqualTo(2));
+            Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("LeftHand")));
+            Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("RightHand")));
+        }
+    }
+
+    [Test]
+    [Category("Remote")]
     public void Remote_RemovingDevice_WillRemoveItFromRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
