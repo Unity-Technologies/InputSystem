@@ -283,7 +283,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             }
 
             @Override
-            protected void onSelectionChanged(int start, int end) 
+            protected void onSelectionChanged(int start, int end)
             {
                 debugLog("onSelectionChanged {0} {1}", start, end - start);
                 m_Callbacks.OnSelectionChanged(start, end - start);
