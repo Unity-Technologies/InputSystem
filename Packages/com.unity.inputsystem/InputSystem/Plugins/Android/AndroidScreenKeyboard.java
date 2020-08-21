@@ -100,7 +100,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private void debugLog(String format, Object... args)
     {
-        Log.v("Unity", String.format(format, args));
+        Log.v("Unity", "ScreenKeyboard - " + MessageFormat.format(format, args));
     }
 
     public void show(
@@ -285,6 +285,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             @Override
             protected void onSelectionChanged(int start, int end) 
             {
+                debugLog("onSelectionChanged {0} {1}", start, end - start);
                 m_Callbacks.OnSelectionChanged(start, end - start);
             }
         };
