@@ -66,7 +66,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
-        
+
 
         m_ScreenKeyboard.stateChanged += StateChangedCallback;
         m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextCallback;
@@ -124,7 +124,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         var value = (lineCount - (366 / lineHeight) + 4) * (lineHeight / 1980.0f);
         if (value < 0.0)
             value = 0.0f;
-        
+
         m_VerticalScrollbar.value = 1.0f - value;
     }
 
@@ -176,9 +176,28 @@ public class ScreenKeyboardTest : MonoBehaviour
             m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
         }
 
-        m_InputDeviceInfo.text = $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
+        var oldVisible = TouchScreenKeyboard.visible;
+        var newVisible = m_ScreenKeyboard.enabled;
+
+        if (oldVisible && newVisible)
+        {
+            m_InputDeviceInfo.text = "ERROR: both new and old screen keyboards are visible ?";
+        }
+        else if (oldVisible)
+        {
+            m_InputDeviceInfo.text = "Showing old TouchscreenKeyboard";
+        }
+        else if (newVisible)
+        {
+            m_InputDeviceInfo.text = $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
 Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}
 ";
+        }
+        else
+        {
+            m_InputDeviceInfo.text = "No keyboard is shown";
+        }
+
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)
         {
