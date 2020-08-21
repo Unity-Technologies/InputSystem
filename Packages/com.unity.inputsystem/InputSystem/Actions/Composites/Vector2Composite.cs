@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -28,6 +29,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </remarks>
     [Preserve]
     [DisplayStringFormat("{up}/{left}/{down}/{right}")] // This results in WASD.
+    [DisplayName("Up/Down/Left/Right Composite")]
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>
@@ -149,7 +151,7 @@ namespace UnityEngine.InputSystem.Composites
         }
 
         /// <summary>
-        /// Determines how a Vector2 is synthesized from part controls.
+        /// Determines how a <c>Vector2</c> is synthesized from part controls.
         /// </summary>
         public enum Mode
         {

@@ -287,7 +287,7 @@ namespace UnityEngine.InputSystem
             });
         }
 
-        public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null)
+        public ActionConstraint Started(InputAction action, InputControl control = null, object value = null, double? time = null)
         {
             return new ActionConstraint(InputActionPhase.Started, action, control, time: time, duration: 0);
         }
@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time, duration: 0);
         }
 
-        public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null, double? duration = null)
+        public ActionConstraint Performed(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
         {
             return new ActionConstraint(InputActionPhase.Performed, action, control, time: time, duration: duration);
         }
@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time, duration: duration);
         }
 
-        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null, double? duration = null)
+        public ActionConstraint Canceled(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
         {
             return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time, duration: duration);
         }
