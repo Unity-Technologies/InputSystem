@@ -176,10 +176,19 @@ public class ScreenKeyboardTest : MonoBehaviour
             m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
         }
 
-        var oldVisible = TouchScreenKeyboard.visible;
+        
         var newVisible = m_ScreenKeyboard.enabled;
+        var oldVisible = TouchScreenKeyboard.visible;
+        #if UNITY_IOS
+        // On iOS TouchScreenKeyboard.visible checks for keyboard availability globally
+        // That means if we show our input system screen keyboard, it will return true
+        // This doesn't happen on Android
+        // Workaround this issue for now...
+        if (newVisible)
+            oldVisible = false;
+        #endif
 
-        var infoMessage = $"FrameCount: {Time.frameCount}\n";
+        var infoMessage = $"FrameCount: {Time.frameCount}";
         if (oldVisible && newVisible)
         {
             infoMessage += "ERROR: both new and old screen keyboards are visible ?";
