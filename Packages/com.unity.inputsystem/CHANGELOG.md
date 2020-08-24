@@ -39,6 +39,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed memory corruption in `InputEventTrace.AllocateEvent` ([case 1262496](https://issuetracker.unity3d.com/issues/input-system-crash-with-various-stack-traces-when-using-inputactiontrace-dot-subscribetoall))
   * Manifested itself, for example, as crashes when using `InputActionTrace.SubscribeToAll`.
 - AxisControls and Vector2Controls' X and Y subcontrols on XR devices now have a minimum range of -1 and a maximum range of 1. This means they can now properly respond to modifiers and interactions in the binding system.
+- Fixed Action with multiple bindings becoming unresponsive after a Hold interaction was performed. ([case 1239551](https://issuetracker.unity3d.com/issues/input-system-hold-interaction-makes-an-input-action-unresponsive-when-2-or-more-binding-are-attached-to-the-same-input-action))
 
 #### Actions
 
