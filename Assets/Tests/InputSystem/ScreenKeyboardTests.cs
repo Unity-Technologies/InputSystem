@@ -42,6 +42,8 @@ internal class ScreenKeybordTests : InputTestFixture
 
     // TODO:
     // See if callbacks are received at the same frame, callback count
+    // Disable selection callbacks, when no input field is present
+    // Return selection 0, 0, whhen inmput field is not present
     [Test]
     public void DeviceCanBeEnabledDisabled()
     {
