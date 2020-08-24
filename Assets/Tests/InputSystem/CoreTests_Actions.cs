@@ -1966,19 +1966,33 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
-        action.Enable();
+        var action1 = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var action2 = new InputAction();
+        action2.AddCompositeBinding("Axis")
+            .With("Negative", "<Gamepad>/leftTrigger")
+            .With("Positive", "<Gamepad>/rightTrigger");
+
+        action1.Enable();
+        action2.Enable();
 
         using (var trace = new InputActionTrace())
         {
-            action.performed += trace.RecordAction;
+            action1.performed += trace.RecordAction;
+            action2.performed += trace.RecordAction;
 
             Set(gamepad.leftTrigger, 0.123f);
 
+            // Disable actions and alter trigger value to make sure
+            // we're not picking up values from the control.
+            action1.Disable();
+            action2.Disable();
+            Set(gamepad.leftTrigger, 0.234f);
+
             var actions = trace.ToArray();
 
-            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions, Has.Length.EqualTo(2));
             Assert.That(actions[0].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(actions[1].ReadValueAsObject(), Is.EqualTo(-0.123).Within(0.00001));
         }
     }
 

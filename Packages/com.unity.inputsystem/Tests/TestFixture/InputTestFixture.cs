@@ -744,12 +744,12 @@ namespace UnityEngine.InputSystem
                     }
                     else if (value is Vector2 v2)
                     {
-                        if (!Vector2EqualityComparer.Instance.Equals(v2, (Vector2)val))
+                        if (!Vector2EqualityComparer.Instance.Equals(v2, val.As<Vector2>()))
                             return false;
                     }
                     else if (value is Vector3 v3)
                     {
-                        if (!Vector3EqualityComparer.Instance.Equals(v3, (Vector3)val))
+                        if (!Vector3EqualityComparer.Instance.Equals(v3, val.As<Vector3>()))
                             return false;
                     }
                     else if (!value.Equals(val))
