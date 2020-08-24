@@ -2,12 +2,14 @@
 
 typedef void (*OnTextChangedCallback) (int deviceId, const char* text);
 typedef void (*OnStatusChangedCallback) (int deviceId, int status);
+typedef void (*OnSelectionChangedCallback) (int deviceId, int start, int length);
 
 struct iOSScreenKeyboardCallbacks
 {
     int deviceId;
     OnTextChangedCallback textChangedCallback;
     OnStatusChangedCallback statusChangedCallback;
+    OnSelectionChangedCallback selectionChanagedCallback;
 };
 
 struct iOSScreenKeyboardShowParamsNative
@@ -55,6 +57,8 @@ struct iOSScreenKeyboardShowParamsNative
 */
 - (NSString*)getText;
 - (void)setText:(NSString*)newText;
+- (NSRange)getSelection;
+- (void)setSelection:(NSRange)newSelection;
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
 //@property (readonly, nonatomic)                                 BOOL            active;

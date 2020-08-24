@@ -456,45 +456,6 @@ i = res.items;                                              \
     return m_EditView.hidden ? m_Area : CGRectUnion(m_Area, m_EditView.frame);
 }
 
-- (NSRange)querySelection
-{
-    UIView<UITextInput>* textInput;
-
-#if PLATFORM_TVOS
-    textInput = m_TextField;
-#else
-    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
-#endif
-
-    UITextPosition* beginning = textInput.beginningOfDocument;
-
-    UITextRange* selectedRange = textInput.selectedTextRange;
-    UITextPosition* selectionStart = selectedRange.start;
-    UITextPosition* selectionEnd = selectedRange.end;
-
-    const NSInteger location = [textInput offsetFromPosition: beginning toPosition: selectionStart];
-    const NSInteger length = [textInput offsetFromPosition: selectionStart toPosition: selectionEnd];
-
-    return NSMakeRange(location, length);
-}
-
-- (void)assignSelection:(NSRange)range
-{
-    UIView<UITextInput>* textInput;
-
-#if PLATFORM_TVOS
-    textInput = m_TextField;
-#else
-    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
-#endif
-
-    UITextPosition* begin = [textInput beginningOfDocument];
-    UITextPosition* caret = [textInput positionFromPosition: begin offset: range.location];
-    UITextPosition* select = [textInput positionFromPosition: caret offset: range.length];
-    UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
-
-    [textInput setSelectedTextRange: textRange];
-}
 
 // TODO
 /*
@@ -530,12 +491,58 @@ i = res.items;                                              \
 {
 #if PLATFORM_IOS
     if (m_ShowParams.multiline)
+    {
         m_TextView.text = newText;
-    else
-        m_TextField.text = newText;
-#else
-    m_TextField.text = newText;
+        return;
+    }
 #endif
+    m_TextField.text = newText;
+}
+
+- (NSRange)getSelection
+{
+    // TODO
+    //if (_inputHidden && _hiddenSelection.length > 0)
+     //   return _hiddenSelection;
+    UIView<UITextInput>* textInput;
+
+#if PLATFORM_TVOS
+    textInput = m_TextField;
+#else
+    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
+#endif
+
+    UITextPosition* beginning = textInput.beginningOfDocument;
+
+    UITextRange* selectedRange = textInput.selectedTextRange;
+    UITextPosition* selectionStart = selectedRange.start;
+    UITextPosition* selectionEnd = selectedRange.end;
+
+    const NSInteger location = [textInput offsetFromPosition: beginning toPosition: selectionStart];
+    const NSInteger length = [textInput offsetFromPosition: selectionStart toPosition: selectionEnd];
+
+    return NSMakeRange(location, length);
+}
+
+- (void)setSelection:(NSRange)newSelection
+{
+    UIView<UITextInput>* textInput;
+
+#if PLATFORM_TVOS
+    textInput = m_TextField;
+#else
+    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
+#endif
+
+    UITextPosition* begin = [textInput beginningOfDocument];
+    UITextPosition* caret = [textInput positionFromPosition: begin offset: newSelection.location];
+    UITextPosition* select = [textInput positionFromPosition: caret offset: newSelection.length];
+    UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
+
+    [textInput setSelectedTextRange: textRange];
+    //TODO
+    //if (_inputHidden)
+    //    _hiddenSelection = newSelection;
 }
 
 - (void)shouldHideInput:(BOOL)hide

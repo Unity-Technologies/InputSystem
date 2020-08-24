@@ -14,12 +14,15 @@ namespace UnityEngine.InputSystem.iOS
 
         internal delegate void OnStatusChangedDelegate(int deviceId, ScreenKeyboardStatus status);
 
+        internal delegate void OnSelectionChangedDelegate(int deviceId,int start, int length);
+
         [StructLayout(LayoutKind.Sequential)]
         private struct iOSScreenKeyboardCallbacks
         {
             internal int deviceId;
             internal OnTextChangedDelegate onTextChanged;
             internal OnStatusChangedDelegate onStatusChanged;
+            internal OnSelectionChangedDelegate onSelectionChanaged;
         }
 
         [DllImport("__Internal")]
@@ -33,6 +36,12 @@ namespace UnityEngine.InputSystem.iOS
 
         [DllImport("__Internal")]
         private static extern string _iOSScreenKeyboardGetInputFieldText();
+        
+        [DllImport("__Internal")]
+        private static extern void _iOSScreenKeyboardSetSelection(int start, int length);
+
+        [DllImport("__Internal")]
+        private static extern long _iOSScreenKeyboardGetSelection();
 
         [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
         private static void OnTextChangedCallback(int deviceId, string text)
@@ -53,6 +62,16 @@ namespace UnityEngine.InputSystem.iOS
 
             screenKeyboard.ReportStatusChange(status);
         }
+        
+        [MonoPInvokeCallback(typeof(OnSelectionChangedDelegate))]
+        private static void OnSelectionChangedCallback(int deviceId, int start, int length)
+        {
+            var screenKeyboard = (iOSScreenKeyboard)InputSystem.GetDeviceById(deviceId);
+            if (screenKeyboard == null)
+                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
+
+            screenKeyboard.ReportSelectionChange(start,length);
+        }
 
         protected override void InternalShow()
         {
@@ -60,7 +79,8 @@ namespace UnityEngine.InputSystem.iOS
             {
                 deviceId = deviceId,
                 onTextChanged = OnTextChangedCallback,
-                onStatusChanged = OnStatusChangedCallback
+                onStatusChanged = OnStatusChangedCallback,
+                onSelectionChanaged = OnSelectionChangedCallback
             };
             _iOSScreenKeyboardShow(ref m_ShowParams, Marshal.SizeOf(m_ShowParams), ref callbacks, Marshal.SizeOf(callbacks));
         }
@@ -78,6 +98,22 @@ namespace UnityEngine.InputSystem.iOS
             set
             {
                 _iOSScreenKeyboardSetInputFieldText(value);
+            }
+        }
+        
+        public override RangeInt selection
+        {
+            get
+            {
+                var combined = _iOSScreenKeyboardGetSelection();
+                unchecked
+                {
+                    return new RangeInt((int)(0xFFFFFFFF & combined), (int)(combined >> 32));
+                }
+            }
+            set
+            {
+                _iOSScreenKeyboardSetSelection(value.start, value.length);
             }
         }
 
