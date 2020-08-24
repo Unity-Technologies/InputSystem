@@ -1675,10 +1675,10 @@ namespace UnityEngine.InputSystem
 
             // Update action state.
             var newState = trigger;
-            newState.flags = actionState->flags; // Preserve flags.
-            newState.phase = newPhase;
             if (!newState.haveMagnitude)
                 newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            newState.flags = actionState->flags; // Preserve flags.
+            newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
                 newState.lastTriggeredInUpdate = InputUpdate.s_UpdateStepCount;
             else
