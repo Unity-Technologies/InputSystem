@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
-- Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1267805](https://issuetracker.unity3d.com/issues/input-system-multi-tap-interaction-doesnt-get-triggered-when-there-are-2-or-more-bindings-in-the-active-control-scheme)).
+- Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1261462](https://issuetracker.unity3d.com/issues/multi-tap-and-tap-interactions-in-the-same-action-doesnt-work-properly)).
 
 ## [1.1.0-preview.1] - 2020-08-20
 
