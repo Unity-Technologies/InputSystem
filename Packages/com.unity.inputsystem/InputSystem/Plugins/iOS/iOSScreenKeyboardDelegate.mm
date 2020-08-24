@@ -17,6 +17,11 @@ enum iOSScreenKeyboardStatus
     StatusLostFocus   = 3,
 };
 
+@interface iOSScreenKeyboardDelegate()
++ (NSRange)getSelectionFromTextInput: (UIView<UITextInput>*) textInput;
+- (void)textFieldDidChangeSelectionImpl:(UITextField *)textField;
+@end
+
 @implementation iOSScreenKeyboardDelegate
 {
     // UI handling
@@ -102,9 +107,50 @@ enum iOSScreenKeyboardStatus
     else
         NSLog(@"textViewDidChange: Missing callback");
 }
+- (void)textViewDidChangeSelection:(UITextView *)textView
+{
+    if (m_ShowParams.callbacks.selectionChanagedCallback)
+    {
+        NSRange range = [iOSScreenKeyboardDelegate getSelectionFromTextInput: textView];
+        m_ShowParams.callbacks.selectionChanagedCallback(m_ShowParams.callbacks.deviceId, (int)range.location, (int)range.length);
+    }
+    else
+        NSLog(@"selectionChanagedCallback: Missing callback");
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"selectedTextRange"] && m_TextField == object)
+        [self textFieldDidChangeSelectionImpl: m_TextField];
+}
+
+- (void)textFieldDidChangeSelectionImpl:(UITextField *)textField
+{
+    if (m_ShowParams.callbacks.selectionChanagedCallback)
+    {
+        NSRange range = [iOSScreenKeyboardDelegate getSelectionFromTextInput: textField];
+        m_ShowParams.callbacks.selectionChanagedCallback(m_ShowParams.callbacks.deviceId, (int)range.location, (int)range.length);
+    }
+    else
+        NSLog(@"selectionChanagedCallback: Missing callback");
+}
+
+- (void)textFieldDidChangeSelection:(UITextField *)textField
+{
+    [self textFieldDidChangeSelectionImpl: textField];
+}
 
 - (void)textFieldDidChange:(UITextField*)textField
 {
+    if (@available(iOS 13.0, tvOS 13.0, *))
+    {
+        // Empty on purpose
+    }
+    else
+    {
+        [self textFieldDidChangeSelectionImpl:textField];
+    }
+    
     if (m_ShowParams.callbacks.textChangedCallback)
         m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
     else
@@ -217,6 +263,7 @@ enum iOSScreenKeyboardStatus
         [m_TextView setSelectedTextRange: endTextRange];
     }
     else
+#endif
     {
         m_TextField.text = m_InitialText;
         [self setTextInputTraits: m_TextField withParam: param withCap: capitalization];
@@ -226,28 +273,21 @@ enum iOSScreenKeyboardStatus
         UITextRange* endTextRange = [m_TextField textRangeFromPosition: end toPosition: end];
         [m_TextField setSelectedTextRange: endTextRange];
     }
+    
+#if PLATFORM_IOS
     m_InputView = m_ShowParams.multiline ? m_TextView : m_TextField;
     m_EditView = m_ShowParams.multiline ? m_TextView : m_FieldToolbar;
-
-#else // PLATFORM_TVOS
-    m_TextField.text = m_InitialText;
-    [self setTextInputTraits: m_TextField withParam: param withCap: capitalization];
-    m_TextField.placeholder = [NSString stringWithUTF8String: param.placeholder];
+#else
     m_InputView = m_TextField;
     m_EditView = m_TextField;
-
-    UITextPosition* end = [m_TextField endOfDocument];
-    UITextRange* endTextRange = [m_TextField textRangeFromPosition: end toPosition: end];
-    [m_TextField setSelectedTextRange: endTextRange];
 #endif
-
     // TODO
     //[self shouldHideInput: m_ShouldHideInput];
 
     m_Status     = StatusVisible;
     m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     m_Active     = YES;
-
+    
     [self showUI];
 }
 
@@ -311,6 +351,15 @@ struct CreateToolbarResult
 #endif
         [m_TextField addTarget: self action: @selector(textFieldDidChange:) forControlEvents: UIControlEventEditingChanged];
 
+        // Workaround missing textFieldDidChangeSelection callback on earlier versions
+        if (@available(iOS 13.0, tvOS 13.0, *))
+        {
+            // Empty on purpose
+        }
+        else
+        {
+            [m_TextField addObserver:self forKeyPath:@"selectedTextRange" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld  context:nil];
+        }
 #define CREATE_TOOLBAR(t, i, v)                                 \
 do {                                                            \
 CreateToolbarResult res = [self createToolbarWithView:v];   \
@@ -456,45 +505,6 @@ i = res.items;                                              \
     return m_EditView.hidden ? m_Area : CGRectUnion(m_Area, m_EditView.frame);
 }
 
-- (NSRange)querySelection
-{
-    UIView<UITextInput>* textInput;
-
-#if PLATFORM_TVOS
-    textInput = m_TextField;
-#else
-    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
-#endif
-
-    UITextPosition* beginning = textInput.beginningOfDocument;
-
-    UITextRange* selectedRange = textInput.selectedTextRange;
-    UITextPosition* selectionStart = selectedRange.start;
-    UITextPosition* selectionEnd = selectedRange.end;
-
-    const NSInteger location = [textInput offsetFromPosition: beginning toPosition: selectionStart];
-    const NSInteger length = [textInput offsetFromPosition: selectionStart toPosition: selectionEnd];
-
-    return NSMakeRange(location, length);
-}
-
-- (void)assignSelection:(NSRange)range
-{
-    UIView<UITextInput>* textInput;
-
-#if PLATFORM_TVOS
-    textInput = m_TextField;
-#else
-    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
-#endif
-
-    UITextPosition* begin = [textInput beginningOfDocument];
-    UITextPosition* caret = [textInput positionFromPosition: begin offset: range.location];
-    UITextPosition* select = [textInput positionFromPosition: caret offset: range.length];
-    UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
-
-    [textInput setSelectedTextRange: textRange];
-}
 
 // TODO
 /*
@@ -530,12 +540,63 @@ i = res.items;                                              \
 {
 #if PLATFORM_IOS
     if (m_ShowParams.multiline)
+    {
         m_TextView.text = newText;
-    else
-        m_TextField.text = newText;
-#else
-    m_TextField.text = newText;
+        return;
+    }
 #endif
+    m_TextField.text = newText;
+}
+                                                         
++ (NSRange)getSelectionFromTextInput: (UIView<UITextInput>*) textInput
+{
+    UITextPosition* beginning = textInput.beginningOfDocument;
+
+    UITextRange* selectedRange = textInput.selectedTextRange;
+    UITextPosition* selectionStart = selectedRange.start;
+    UITextPosition* selectionEnd = selectedRange.end;
+
+    const NSInteger location = [textInput offsetFromPosition: beginning toPosition: selectionStart];
+    const NSInteger length = [textInput offsetFromPosition: selectionStart toPosition: selectionEnd];
+
+    return NSMakeRange(location, length);
+}
+
+- (NSRange)getSelection
+{
+    // TODO
+    //if (_inputHidden && _hiddenSelection.length > 0)
+     //   return _hiddenSelection;
+    UIView<UITextInput>* textInput;
+
+#if PLATFORM_TVOS
+    textInput = m_TextField;
+#else
+    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
+#endif
+
+    return [iOSScreenKeyboardDelegate getSelectionFromTextInput: textInput];
+}
+
+- (void)setSelection:(NSRange)newSelection
+{
+    UIView<UITextInput>* textInput;
+
+#if PLATFORM_TVOS
+    textInput = m_TextField;
+#else
+    textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
+#endif
+
+    UITextPosition* begin = [textInput beginningOfDocument];
+    UITextPosition* caret = [textInput positionFromPosition: begin offset: newSelection.location];
+    UITextPosition* select = [textInput positionFromPosition: caret offset: newSelection.length];
+    UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
+
+    [textInput setSelectedTextRange: textRange];
+    //TODO
+    //if (_inputHidden)
+    //    _hiddenSelection = newSelection;
 }
 
 - (void)shouldHideInput:(BOOL)hide
