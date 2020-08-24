@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -240,30 +241,49 @@ internal partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/{primaryAction}", interactions: "hold(duration=0.4)");
         action.Enable();
 
+        TestHoldInteraction(action, gamepad.buttonSouth);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanPerformHoldInteraction_WithMultipleBindings()
+    {
+        //var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(binding: "<Keyboard>/space", interactions: "hold(duration=0.4)");
+        action.AddBinding("<Keyboard>/s");
+        action.Enable();
+
+        TestHoldInteraction(action, keyboard.spaceKey);
+    }
+
+    void TestHoldInteraction(InputAction action, ButtonControl button)
+    {
         using (var trace = new InputActionTrace(action))
         {
             // Press.
-            Press(gamepad.buttonSouth, time: 10);
+            Press(button, time: 10);
 
-            Assert.That(trace, Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10, value: 1.0));
+            Assert.That(trace, Started<HoldInteraction>(action, button, time: 10, value: 1.0));
             Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
             trace.Clear();
 
             // Release in less than hold time.
-            Release(gamepad.buttonSouth, time: 10.25);
+            Release(button, time: 10.25);
 
-            Assert.That(trace, Canceled<HoldInteraction>(action, gamepad.buttonSouth, duration: 0.25, time: 10.25, value: 0.0));
+            Assert.That(trace, Canceled<HoldInteraction>(action, button, duration: 0.25, time: 10.25, value: 0.0));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
             Assert.That(action.ReadValue<float>(), Is.Zero);
 
             trace.Clear();
 
             // Press again.
-            Press(gamepad.buttonSouth, time: 10.5);
+            Press(button, time: 10.5);
 
-            Assert.That(trace, Started<HoldInteraction>(action, gamepad.buttonSouth, time: 10.5, value: 1.0));
+            Assert.That(trace, Started<HoldInteraction>(action, button, time: 10.5, value: 1.0));
             Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
 
@@ -280,16 +300,16 @@ internal partial class CoreTests
             InputSystem.Update();
 
             Assert.That(trace,
-                Performed<HoldInteraction>(action, gamepad.buttonSouth, time: 11, duration: 0.5, value: 1.0));
+                Performed<HoldInteraction>(action, button, time: 11, duration: 0.5, value: 1.0));
             Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
             Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
 
             trace.Clear();
 
             // Release button.
-            Release(gamepad.buttonSouth, time: 11.5);
+            Release(button, time: 11.5);
 
-            Assert.That(trace, Canceled<HoldInteraction>(action, gamepad.buttonSouth, time: 11.5, duration: 1, value: 0.0));
+            Assert.That(trace, Canceled<HoldInteraction>(action, button, time: 11.5, duration: 1, value: 0.0));
         }
     }
 
