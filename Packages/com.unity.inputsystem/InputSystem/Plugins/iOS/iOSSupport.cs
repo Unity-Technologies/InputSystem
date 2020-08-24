@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.iOS
 {
@@ -42,18 +43,13 @@ namespace UnityEngine.InputSystem.iOS
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
 
-            // Create an instance of screen keyboard
-            InputSystem.RegisterLayout<iOSScreenKeyboard>();
-#if !UNITY_EDITOR
-            InputSystem.AddDevice(InputDevice.Build<iOSScreenKeyboard>());
-#endif
+            #if !UNITY_EDITOR
+            InputRuntime.s_Instance.screenKeyboard = new iOSScreenKeyboard();
+            #endif
         }
 
         public static void Shutdown()
         {
-#if !UNITY_EDITOR
-            InputSystem.RemoveDevice(InputSystem.GetDevice<iOSScreenKeyboard>());
-#endif
         }
     }
 }

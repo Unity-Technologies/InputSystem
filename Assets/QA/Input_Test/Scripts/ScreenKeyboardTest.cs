@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 
 #if UNITY_ANDROID
 using UnityEngine.InputSystem.Android;
@@ -63,7 +64,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         canvasScaler.enabled = false;
 #endif
         Log("sds");
-        m_ScreenKeyboard = InputSystem.GetDevice<ScreenKeyboard>();
+        m_ScreenKeyboard = InputRuntime.s_Instance.screenKeyboard;
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
 
@@ -77,6 +78,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_Properties.options.Add(new Dropdown.OptionData("Special Behavior"));
         m_Properties.RefreshShownValue();
         m_Properties.onValueChanged.AddListener(PropertiesSelectionChanged);
+        PropertiesSelectionChanged(m_Properties.value);
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
@@ -176,8 +178,8 @@ public class ScreenKeyboardTest : MonoBehaviour
             m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
         }
 
-        
-        var newVisible = m_ScreenKeyboard.enabled;
+
+        var newVisible = m_ScreenKeyboard.status == ScreenKeyboardStatus.Visible;
         var oldVisible = TouchScreenKeyboard.visible;
         #if UNITY_IOS
         // On iOS TouchScreenKeyboard.visible checks for keyboard availability globally
@@ -199,7 +201,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         }
         else if (newVisible)
         {
-            infoMessage += $@"Name: {m_ScreenKeyboard.name} Enabled: {m_ScreenKeyboard.enabled}
+            infoMessage += $@"Name: ScreenKeyboard Status: {m_ScreenKeyboard.status}
 Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}
 ";
         }

@@ -53,22 +53,11 @@ namespace UnityEngine.InputSystem
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
-    // Input device requires us specifying none zero size state, otherwise you get
-    // InvalidOperationException: Control '/AndroidScreenKeyboard' with layout 'AndroidScreenKeyboard' has no size set and has no children to compute size from
-    [StructLayout(LayoutKind.Sequential)]
-    public struct ScreenKeyboardState : IInputStateTypeInfo
-    {
-        public static FourCC Format => new FourCC('S', 'K', 'S', 'T');
-        public FourCC format => Format;
-
-        [InputControl(name = "dummy", layout = "Button")]
-        public uint dummy;
-    }
 
     // TODO: in case ScreenKeyboard doesn't have input field, it basically behaves the same as normal Keyboard
     //       the only difference only onTextInput is working, you won't get response from key control
     //       Nevertheless maybe it makes sense to derive from Keyboard here. Rene?
-    public abstract class ScreenKeyboard : InputDevice
+    public abstract class ScreenKeyboard
     {
         private const long kCommandReturnSuccess = 1;
         private const long kCommandReturnFailure = 0;
@@ -113,42 +102,17 @@ namespace UnityEngine.InputSystem
         public void Show(ScreenKeyboardShowParams showParams)
         {
             m_ShowParams = showParams;
-            InputSystem.EnableDevice(this);
+            InternalShow();
         }
 
         public void Hide()
         {
-            InputSystem.DisableDevice(this);
+            InternalHide();
         }
 
         protected abstract void InternalShow();
 
         protected abstract void InternalHide();
-
-        public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
-        {
-            if (command.typeStatic == EnableDeviceCommand.Type)
-            {
-                InternalShow();
-                return kCommandReturnSuccess;
-            }
-
-            if (command.typeStatic == DisableDeviceCommand.Type)
-            {
-                InternalHide();
-                return kCommandReturnSuccess;
-            }
-
-            if (command.typeStatic == QueryEnabledStateCommand.Type)
-            {
-                var cmd = (QueryEnabledStateCommand*)UnsafeUtility.AddressOf(ref command);
-                cmd->isEnabled = m_KeyboardStatus == ScreenKeyboardStatus.Visible;
-
-                return kCommandReturnSuccess;
-            }
-
-            return kCommandReturnFailure;
-        }
 
         protected void ReportInputFieldChange(string text)
         {
@@ -164,9 +128,6 @@ namespace UnityEngine.InputSystem
                 foreach (var listener in m_StatusChangedListeners)
                     listener(keyboardStatus);
             }
-
-            // OnConfigurationChanged is required for properties like enabled, since they need requery enabled value
-            OnConfigurationChanged();
         }
 
         protected void ReportSelectionChange(int start, int length)

@@ -161,6 +161,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         ScreenOrientation screenOrientation { get; }
 
+        ScreenKeyboard screenKeyboard { get; set; }
+
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
         #if UNITY_ANALYTICS || UNITY_EDITOR

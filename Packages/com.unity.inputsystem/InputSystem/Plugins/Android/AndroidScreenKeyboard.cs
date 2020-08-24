@@ -1,14 +1,12 @@
 using System;
 using System.Threading;
-using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Scripting;
 
 #if UNITY_EDITOR || UNITY_ANDROID
 
 namespace UnityEngine.InputSystem.Android
 {
-    [InputControlLayout(stateType = typeof(ScreenKeyboardState))]
-
+    // TODO: check if stripping doesn't remove these methods
     public class AndroidScreenKeyboard : ScreenKeyboard
     {
         class ScreenKeyboardCallbacks : AndroidJavaProxy
@@ -22,6 +20,9 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent = parent;
             }
 
+#if UNITY_ANDROID
+            [Preserve]
+#endif
             void OnTextChanged(string text)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
@@ -29,6 +30,9 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.ReportInputFieldChange(text);
             }
 
+#if UNITY_ANDROID
+            [Preserve]
+#endif
             void OnStatusChanged(int status)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
@@ -36,6 +40,9 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.ReportStatusChange((ScreenKeyboardStatus)status);
             }
 
+#if UNITY_ANDROID
+            [Preserve]
+#endif
             void OnSelectionChanged(int start, int length)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)

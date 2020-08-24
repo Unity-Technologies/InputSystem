@@ -6,6 +6,8 @@ using UnityEngine.InputSystem;
 [assembly: InternalsVisibleTo("Unity.InputSystem.TestFramework")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests.Editor")]
 [assembly: InternalsVisibleTo("Unity.InputSystem.Tests")]
+// TODO: Remove this once ScreenKeyboard class becomes public and users can access it directly
+[assembly: InternalsVisibleTo("Unity.InputSystem.ScreenKeyboardTests")]
 
 namespace UnityEngine.InputSystem
 {

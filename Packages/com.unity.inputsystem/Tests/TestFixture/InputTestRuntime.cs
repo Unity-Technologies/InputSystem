@@ -28,6 +28,8 @@ namespace UnityEngine.InputSystem
 
         public bool hasFocus => m_HasFocus;
 
+        private FakeScreenKeyboard m_ScreenKeyboard = new FakeScreenKeyboard();
+
         ~InputTestRuntime()
         {
             Dispose();
@@ -331,6 +333,12 @@ namespace UnityEngine.InputSystem
         public bool runInBackground { get; set; } = false;
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
+
+        public ScreenKeyboard screenKeyboard
+        {
+            get => m_ScreenKeyboard;
+            set => throw new NotImplementedException("You cannot set screen keyboard for test runtime");
+        }
 
         public List<PairedUser> userAccountPairings
         {

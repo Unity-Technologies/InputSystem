@@ -17,6 +17,8 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static readonly NativeInputRuntime instance = new NativeInputRuntime();
 
+        internal ScreenKeyboard m_ScreenKeyboard;
+
         public int AllocateDeviceId()
         {
             return NativeInputSystem.AllocateDeviceId();
@@ -218,6 +220,18 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         public ScreenOrientation screenOrientation => Screen.orientation;
+
+        public ScreenKeyboard screenKeyboard
+        {
+            get => m_ScreenKeyboard;
+            set
+            {
+                if (m_ScreenKeyboard != null)
+                    throw new Exception("ScreenKeyboard was already set");
+                m_ScreenKeyboard = value;
+            }
+        }
+
 
         public bool isInBatchMode => Application.isBatchMode;
 
