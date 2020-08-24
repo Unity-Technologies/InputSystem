@@ -21,19 +21,31 @@ namespace UnityEngine.InputSystem.Composites
     /// <remarks>
     /// This composite allows to grab arbitrary buttons from a device and arrange them in
     /// a D-Pad like configuration. Based on button presses, the composite will return a
-    /// normalized direction vector (normalization can be turned off via <see cref="normalize"/>).
+    /// normalized direction vector (normalization can be turned off via <see cref="mode"/>).
     ///
     /// Opposing motions cancel each other out. Meaning that if, for example, both the left
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
+    ///
+    /// <example>
+    /// <code>
+    /// // Set up WASD style keyboard controls.
+    /// action.AddCompositeBinding("2DVector")
+    ///     .With("Up", "&lt;Keyboard&gt;/w")
+    ///     .With("Left", "&lt;Keyboard&gt;/a")
+    ///     .With("Down", "&lt;Keyboard&gt;/s")
+    ///     .With("Right", "&lt;Keyboard&gt;/d");
+    /// </code>
+    /// </example>
     /// </remarks>
+    /// <seealso cref="Vector3Composite"/>
     [Preserve]
     [DisplayStringFormat("{up}/{left}/{down}/{right}")] // This results in WASD.
     [DisplayName("Up/Down/Left/Right Composite")]
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>
-        /// Binding for the button that up (i.e. <c>(0,1)</c>) direction of the vector.
+        /// Binding for the button that represents the up (i.e. <c>(0,1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -43,7 +55,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int up = 0;
 
         /// <summary>
-        /// Binding for the button that down (i.e. <c>(0,-1)</c>) direction of the vector.
+        /// Binding for the button represents the the down (i.e. <c>(0,-1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -53,7 +65,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int down = 0;
 
         /// <summary>
-        /// Binding for the button that left (i.e. <c>(-1,0)</c>) direction of the vector.
+        /// Binding for the button represents the the left (i.e. <c>(-1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -63,7 +75,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int left = 0;
 
         /// <summary>
-        /// Binding for the button that right (i.e. <c>(1,0)</c>) direction of the vector.
+        /// Binding for the button that represents the right (i.e. <c>(1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -74,10 +86,10 @@ namespace UnityEngine.InputSystem.Composites
         public bool normalize = true;
 
         /// <summary>
-        /// How to synthesize a Vector2 from the values read from <see cref="up"/>, <see cref="down"/>,
+        /// How to synthesize a <c>Vector2</c> from the values read from <see cref="up"/>, <see cref="down"/>,
         /// <see cref="left"/>, and <see cref="right"/>.
         /// </summary>
-        /// <value>Determines how X and Y of the resulting Vector2 are formed from input values.</value>
+        /// <value>Determines how X and Y of the resulting <c>Vector2</c> are formed from input values.</value>
         /// <remarks>
         /// <example>
         /// <code>

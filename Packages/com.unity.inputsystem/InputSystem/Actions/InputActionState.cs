@@ -313,7 +313,7 @@ namespace UnityEngine.InputSystem
             for (var i = 0; i < totalBindingCount; ++i)
             {
                 ref var binding = ref bindingStates[i];
-                if (!binding.isComposite)
+                if (!binding.isComposite || binding.compositeOrCompositeBindingIndex == -1)
                     continue;
 
                 var composite = composites[binding.compositeOrCompositeBindingIndex];

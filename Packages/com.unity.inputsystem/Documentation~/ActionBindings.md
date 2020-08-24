@@ -80,7 +80,7 @@ Composites can have parameters, just like [Interactions](Interactions.md) and [P
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently four Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [Button With One Modifier](#button-with-one-modifier) and [Button With Two Modifiers](#button-with-two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
+There are currently five Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [3D-Vector](#3d-vector), [One Modifier](#one-modifier) and [Two Modifiers](#two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
 
 ### 1D axis
 

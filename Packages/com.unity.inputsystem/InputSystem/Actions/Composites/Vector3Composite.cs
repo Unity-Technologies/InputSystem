@@ -10,31 +10,100 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Composites
 {
+    /// <summary>
+    /// A 3D vector formed from six floating-point inputs.
+    /// </summary>
+    /// <remarks>
+    /// Depending on the setting of <see cref="mode"/>, the vector is either in  the [-1..1]
+    /// range on each axis (normalized or not depending on <see cref="mode"/>) or is in the
+    /// full value range of the input controls.
+    ///
+    /// <example>
+    /// <code>
+    /// action.AddCompositeBinding("3DVector")
+    ///     .With("Forward", "&lt;Keyboard&gt;/w")
+    ///     .With("Backward", "&lt;Keyboard&gt;/s")
+    ///     .With("Left", "&lt;Keyboard&gt;/a")
+    ///     .With("Right", "&lt;Keyboard&gt;/d")
+    ///     .With("Up", "&lt;Keyboard&gt;/q")
+    ///     .With("Down", "&lt;Keyboard&gt;/e");
+    /// </code>
+    /// </example>
+    /// </remarks>
+    /// <seealso cref="Vector2Composite"/>
     [Preserve]
     [DisplayStringFormat("{up}+{down}/{left}+{right}/{forward}+{backward}")]
     [DisplayName("Up/Down/Left/Right/Forward/Backward Composite")]
     public class Vector3Composite : InputBindingComposite<Vector3>
     {
-        [InputControl(layout = "Button")]
-        public int up;
+        /// <summary>
+        /// Binding for the button that represents the up (i.e. <c>(0,1,0)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int up;
 
-        [InputControl(layout = "Button")]
-        public int down;
+        /// <summary>
+        /// Binding for the button that represents the down (i.e. <c>(0,-1,0)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int down;
 
-        [InputControl(layout = "Button")]
-        public int left;
+        /// <summary>
+        /// Binding for the button that represents the left (i.e. <c>(-1,0,0)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int left;
 
-        [InputControl(layout = "Button")]
-        public int right;
+        /// <summary>
+        /// Binding for the button that represents the right (i.e. <c>(1,0,0)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int right;
 
-        [InputControl(layout = "Button")]
-        public int forward;
+        /// <summary>
+        /// Binding for the button that represents the right (i.e. <c>(0,0,1)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int forward;
 
-        [InputControl(layout = "Button")]
-        public int backward;
+        /// <summary>
+        /// Binding for the button that represents the right (i.e. <c>(0,0,-1)</c>) direction of the vector.
+        /// </summary>
+        /// <remarks>
+        /// This property is automatically assigned by the input system.
+        /// </remarks>
+        // ReSharper disable once MemberCanBePrivate.Global
+        // ReSharper disable once FieldCanBeMadeReadOnly.Global
+        [InputControl(layout = "Button")] public int backward;
 
+        /// <summary>
+        /// How to synthesize a <c>Vector3</c> from the values read from <see cref="up"/>, <see cref="down"/>,
+        /// <see cref="left"/>, <see cref="right"/>, <see cref="forward"/>, and <see cref="backward"/>.
+        /// </summary>
+        /// <value>Determines how X, Y, and Z of the resulting <c>Vector3</c> are formed from input values.</value>
         public Mode mode = Mode.Analog;
 
+        /// <inheritdoc/>
         public override Vector3 ReadValue(ref InputBindingCompositeContext context)
         {
             if (mode == Mode.Analog)
@@ -79,16 +148,15 @@ namespace UnityEngine.InputSystem.Composites
 
             /// <summary>
             /// Part controls are treated as buttons (on/off) and the resulting vector is normalized. This means
-            /// that if, for example, both left and up are pressed, instead of returning a vector (-1,1), a vector
-            /// of roughly (-0.7,0.7) (i.e. corresponding to <c>new Vector2(-1,1).normalized</c>) is returned instead.
-            /// The resulting 2D area is diamond-shaped.
+            /// that if, for example, both left and up are pressed, instead of returning a vector (-1,1,0), a vector
+            /// of roughly (-0.7,0.7,0) (i.e. corresponding to <c>new Vector3(-1,1,0).normalized</c>) is returned instead.
             /// </summary>
             DigitalNormalized,
 
             /// <summary>
             /// Part controls are treated as buttons (on/off) and the resulting vector is not normalized. This means
-            /// that if, for example, both left and up are pressed, the resulting vector is (-1,1) and has a length
-            /// greater than 1. The resulting 2D area is box-shaped.
+            /// that if, for example, both left and up are pressed, the resulting vector is (-1,1,0) and has a length
+            /// greater than 1.
             /// </summary>
             Digital,
         }

@@ -287,9 +287,9 @@ namespace UnityEngine.InputSystem
             });
         }
 
-        public ActionConstraint Started(InputAction action, InputControl control = null, object value = null, double? time = null)
+        public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null, object value = null)
         {
-            return new ActionConstraint(InputActionPhase.Started, action, control, time: time, duration: 0);
+            return new ActionConstraint(InputActionPhase.Started, action, control, time: time, duration: 0, value: value);
         }
 
         public ActionConstraint Started<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
@@ -298,9 +298,9 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time, duration: 0);
         }
 
-        public ActionConstraint Performed(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
+        public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null, double? duration = null, object value = null)
         {
-            return new ActionConstraint(InputActionPhase.Performed, action, control, time: time, duration: duration);
+            return new ActionConstraint(InputActionPhase.Performed, action, control, time: time, duration: duration, value: value);
         }
 
         public ActionConstraint Performed<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
@@ -309,9 +309,9 @@ namespace UnityEngine.InputSystem
             return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time, duration: duration);
         }
 
-        public ActionConstraint Canceled(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
+        public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null, double? duration = null, object value = null)
         {
-            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time, duration: duration);
+            return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time, duration: duration, value: value);
         }
 
         public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
