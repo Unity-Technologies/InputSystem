@@ -1675,8 +1675,12 @@ namespace UnityEngine.InputSystem
 
             // Update action state.
             var newState = trigger;
+
+            // We need to update the magnitude before we copy the flags across as the copied flags may contain
+            // the `HaveMagnitude` flag which would give us an incorrect magnitude value. (case 1239551)
             if (!newState.haveMagnitude)
                 newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+
             newState.flags = actionState->flags; // Preserve flags.
             newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
