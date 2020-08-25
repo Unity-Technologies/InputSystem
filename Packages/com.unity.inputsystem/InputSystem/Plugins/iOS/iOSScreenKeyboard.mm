@@ -145,7 +145,7 @@ extern "C" long _iOSScreenKeyboardGetSelection()
     iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
     if (keyboard == NULL)
         return 0;
-    
+
     NSRange range = keyboard.getSelection;
     return range.location | (range.length << 32);
 }

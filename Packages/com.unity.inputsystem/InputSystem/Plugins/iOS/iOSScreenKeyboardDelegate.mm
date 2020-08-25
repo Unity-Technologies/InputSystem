@@ -17,8 +17,8 @@ enum iOSScreenKeyboardStatus
     StatusLostFocus   = 3,
 };
 
-@interface iOSScreenKeyboardDelegate()
-+ (NSRange)getSelectionFromTextInput: (UIView<UITextInput>*) textInput;
+@interface iOSScreenKeyboardDelegate ()
++ (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput;
 - (void)textFieldDidChangeSelectionImpl:(UITextField *)textField;
 @end
 
@@ -107,6 +107,7 @@ enum iOSScreenKeyboardStatus
     else
         NSLog(@"textViewDidChange: Missing callback");
 }
+
 - (void)textViewDidChangeSelection:(UITextView *)textView
 {
     if (m_ShowParams.callbacks.selectionChanagedCallback)
@@ -120,7 +121,7 @@ enum iOSScreenKeyboardStatus
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ([keyPath isEqualToString:@"selectedTextRange"] && m_TextField == object)
+    if ([keyPath isEqualToString: @"selectedTextRange"] && m_TextField == object)
         [self textFieldDidChangeSelectionImpl: m_TextField];
 }
 
@@ -148,9 +149,9 @@ enum iOSScreenKeyboardStatus
     }
     else
     {
-        [self textFieldDidChangeSelectionImpl:textField];
+        [self textFieldDidChangeSelectionImpl: textField];
     }
-    
+
     if (m_ShowParams.callbacks.textChangedCallback)
         m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
     else
@@ -273,7 +274,7 @@ enum iOSScreenKeyboardStatus
         UITextRange* endTextRange = [m_TextField textRangeFromPosition: end toPosition: end];
         [m_TextField setSelectedTextRange: endTextRange];
     }
-    
+
 #if PLATFORM_IOS
     m_InputView = m_ShowParams.multiline ? m_TextView : m_TextField;
     m_EditView = m_ShowParams.multiline ? m_TextView : m_FieldToolbar;
@@ -287,7 +288,7 @@ enum iOSScreenKeyboardStatus
     m_Status     = StatusVisible;
     m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     m_Active     = YES;
-    
+
     [self showUI];
 }
 
@@ -358,7 +359,7 @@ struct CreateToolbarResult
         }
         else
         {
-            [m_TextField addObserver:self forKeyPath:@"selectedTextRange" options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld  context:nil];
+            [m_TextField addObserver: self forKeyPath: @"selectedTextRange" options: NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld  context: nil];
         }
 #define CREATE_TOOLBAR(t, i, v)                                 \
 do {                                                            \
@@ -505,7 +506,6 @@ i = res.items;                                              \
     return m_EditView.hidden ? m_Area : CGRectUnion(m_Area, m_EditView.frame);
 }
 
-
 // TODO
 /*
 + (void)StartReorientation
@@ -547,8 +547,8 @@ i = res.items;                                              \
 #endif
     m_TextField.text = newText;
 }
-                                                         
-+ (NSRange)getSelectionFromTextInput: (UIView<UITextInput>*) textInput
+
++ (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput
 {
     UITextPosition* beginning = textInput.beginningOfDocument;
 
@@ -566,7 +566,7 @@ i = res.items;                                              \
 {
     // TODO
     //if (_inputHidden && _hiddenSelection.length > 0)
-     //   return _hiddenSelection;
+    //   return _hiddenSelection;
     UIView<UITextInput>* textInput;
 
 #if PLATFORM_TVOS
