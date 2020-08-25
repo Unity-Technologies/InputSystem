@@ -1,32 +1,64 @@
+using System.Collections;
+
 namespace UnityEngine.InputSystem
 {
     // TODO: Maybe have it input system package as a placeholder if no implementation is provided
     class FakeScreenKeyboard : ScreenKeyboard
     {
+        string m_InputFieldText;
+        class FakeScreenKeyboardDispatcher : MonoBehaviour
+        {
+        }
+
+        private FakeScreenKeyboardDispatcher Dispatcher
+        {
+            get
+            {
+                var go = GameObject.Find(nameof(FakeScreenKeyboard));
+                if (go == null)
+                {
+                    go = new GameObject(nameof(FakeScreenKeyboard));
+                    go.AddComponent<FakeScreenKeyboardDispatcher>();
+                }
+                return go.GetComponent<FakeScreenKeyboardDispatcher>();
+            }
+        }
+
+
         protected override void InternalShow()
         {
+            m_InputFieldText = string.Empty;
+            // Delay keyboard show
+            Dispatcher.StartCoroutine(QueueStatusChangeVisible());
+        }
+
+        private IEnumerator QueueStatusChangeVisible()
+        {
+            yield return new WaitForEndOfFrame();
             ReportStatusChange(ScreenKeyboardStatus.Visible);
         }
 
         protected override void InternalHide()
         {
+            // Delay keyboard hide
+            Dispatcher.StartCoroutine(QueueStatusChangeDone());
+        }
+
+        private IEnumerator QueueStatusChangeDone()
+        {
+            yield return new WaitForEndOfFrame();
             ReportStatusChange(ScreenKeyboardStatus.Done);
         }
 
-        /// <summary>
-        /// Simulates a method as if user would close the keyboard from UI
-        /// </summary>
-        internal void SimulateKeybordClose()
+        public override string inputFieldText
         {
-            ReportStatusChange(ScreenKeyboardStatus.Done);
-        }
-
-        /// <summary>
-        /// Simulates a method as if user would would open the keyboard from UI
-        /// </summary>
-        internal void SimulateKeybordOpen()
-        {
-            ReportStatusChange(ScreenKeyboardStatus.Visible);
+            get => m_InputFieldText;
+            set
+            {
+                m_InputFieldText = value;
+                ReportInputFieldChange(value);
+                ReportSelectionChange(0, m_InputFieldText.Length);
+            }
         }
     }
 }

@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem
         private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
         private InlinedArray<Action<RangeInt>> m_SelectionChangedListeners;
-
+        // TODO: Status to state
         public event Action<ScreenKeyboardStatus> stateChanged
         {
             add { m_StatusChangedListeners.Append(value); }

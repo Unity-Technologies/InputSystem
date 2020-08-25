@@ -226,12 +226,11 @@ namespace UnityEngine.InputSystem.LowLevel
             get => m_ScreenKeyboard;
             set
             {
-                if (m_ScreenKeyboard != null)
-                    throw new Exception("ScreenKeyboard was already set");
+                if (value != null && m_ScreenKeyboard != null && value.GetType() != m_ScreenKeyboard.GetType())
+                    throw new Exception($"Only one keyboard type is allowed to be set, but you're trying to set ${value.GetType().FullName} and ${m_ScreenKeyboard.GetType().FullName}");
                 m_ScreenKeyboard = value;
             }
         }
-
 
         public bool isInBatchMode => Application.isBatchMode;
 

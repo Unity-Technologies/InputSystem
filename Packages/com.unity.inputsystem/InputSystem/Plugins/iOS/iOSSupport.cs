@@ -11,6 +11,8 @@ namespace UnityEngine.InputSystem.iOS
 #endif
     static class iOSSupport
     {
+        private static iOSScreenKeyboard m_iOSScreenKeyboard;
+
         public static void Initialize()
         {
             InputSystem.RegisterLayout<iOSGameController>("iOSGameController",
@@ -44,12 +46,19 @@ namespace UnityEngine.InputSystem.iOS
                     .WithDeviceClass("LinearAcceleration"));
 
             #if !UNITY_EDITOR
-            InputRuntime.s_Instance.screenKeyboard = new iOSScreenKeyboard();
+            // iOSSupport.Initialize can be called multiple times when running tests
+            // Reuse screen keyboard
+            if (m_iOSScreenKeyboard == null)
+                m_iOSScreenKeyboard = new iOSScreenKeyboard();
+            NativeInputRuntime.instance.screenKeyboard = m_iOSScreenKeyboard();
             #endif
         }
 
         public static void Shutdown()
         {
+            #if !UNITY_EDITOR
+            NativeInputRuntime.instance.screenKeyboard = null;
+            #endif
         }
     }
 }
