@@ -17,7 +17,12 @@ if [ ! -d "$EDITOR_LOCATION" ]; then
 fi
 
 echo Editor location is $EDITOR_LOCATION
-
-./utr --suite=playmode --platform=iOS --editor-location="$EDITOR_LOCATION" --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=il2cpp --build-only
+# After Unity creates xCode project
+# UTR compiles generated xCode project to produce iOS binary and deletes xCode project afterwards
+# For debugging purposes we want xCode project to stay, but there's no option which would allow this
+# Instead specify UNITY_XCODEFORIOSTESTS, this will tell UTR to try to use xCode from this folder to compile the project
+# Since xCode doesn't exist in the folder, this process will fail, but at the same time, the generated xCode project will remain
+export UNITY_XCODEFORIOSTESTS=.
+./utr --suite=playmode --platform=iOS --editor-location="$EDITOR_LOCATION" --testproject=. --testfilter=ScreenKeyboardTests --player-save-path=build/players --artifacts_path=build/logs --scripting-backend=il2cpp --build-only
 
 read -p 'Press Any Key to Exit'
