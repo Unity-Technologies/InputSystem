@@ -32,24 +32,25 @@ namespace UnityEngine.InputSystem
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct ScreenKeyboardShowParams
+    public class ScreenKeyboardShowParams
     {
-        public ScreenKeyboardType type;
-        public string initialText;
-        public string placeholderText;
-        public bool autocorrection;
-        public bool multiline;
-        public bool secure;
+        public ScreenKeyboardType type { set; get; } = ScreenKeyboardType.Default;
+        public string initialText { set; get; } = string.Empty;
+        public string placeholderText { set; get; } = string.Empty;
+        public bool autocorrection { set; get; } = false;
+        public bool multiline { set; get; } = false;
+        public bool secure { set; get; } = false;
 
         ////TODO: this one is iPhone specific?
-        public bool alert;
+        public bool alert { set; get; } = false;
 
         /// <summary>
         /// Show keyboard without input field?
         /// Only supported on iOS and Android.
         /// Note: TODO, review this If input field is hidden, you won't receive inputFieldTextChanged callback, instead you'll be receiving onTextInput
         /// </summary>
-        public bool inputFieldHidden;
+        public bool inputFieldHidden { set; get; } = false;
+
         ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
     }
 
@@ -59,9 +60,6 @@ namespace UnityEngine.InputSystem
     //       Nevertheless maybe it makes sense to derive from Keyboard here. Rene?
     public abstract class ScreenKeyboard
     {
-        private const long kCommandReturnSuccess = 1;
-        private const long kCommandReturnFailure = 0;
-
         // Note: Status cannot be a part of ScreenKeyboardState, since it defines if device is enabled or disabled
         //       If device is disabled, it cannot receive any events
         protected ScreenKeyboardStatus m_KeyboardStatus;
@@ -141,13 +139,13 @@ namespace UnityEngine.InputSystem
         /// Modifies text in screen keyboard's input field.
         /// If screen keyboard doesn't have an input field, this property does nothing.
         /// </summary>
-        public virtual string inputFieldText { set; get; }
+        public abstract string inputFieldText { set; get; }
 
         /// <summary>
         /// Returns portion of the screen which is covered by the keyboard.
         /// </summary>
         public virtual Rect occludingArea => Rect.zero;
 
-        public virtual RangeInt selection { set; get; }
+        public abstract RangeInt selection { set; get; }
     }
 }

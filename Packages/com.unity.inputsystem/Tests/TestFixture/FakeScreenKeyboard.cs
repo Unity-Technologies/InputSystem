@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 
 namespace UnityEngine.InputSystem
@@ -6,6 +7,7 @@ namespace UnityEngine.InputSystem
     class FakeScreenKeyboard : ScreenKeyboard
     {
         string m_InputFieldText;
+        RangeInt m_Selection;
         class FakeScreenKeyboardDispatcher : MonoBehaviour
         {
         }
@@ -27,7 +29,8 @@ namespace UnityEngine.InputSystem
 
         protected override void InternalShow()
         {
-            m_InputFieldText = string.Empty;
+            m_InputFieldText = m_ShowParams.initialText;
+            m_Selection = new RangeInt(m_InputFieldText.Length, 0);
             // Delay keyboard show
             Dispatcher.StartCoroutine(QueueStatusChangeVisible());
         }
@@ -57,7 +60,20 @@ namespace UnityEngine.InputSystem
             {
                 m_InputFieldText = value;
                 ReportInputFieldChange(value);
-                ReportSelectionChange(0, m_InputFieldText.Length);
+                m_Selection = new RangeInt(m_InputFieldText.Length, 0);
+                ReportSelectionChange(m_Selection.start, m_Selection.length);
+            }
+        }
+
+        public override RangeInt selection
+        {
+            get => m_Selection;
+            set
+            {
+                m_Selection = value;
+                m_Selection.start = Math.Min(m_InputFieldText.Length, m_Selection.start);
+                m_Selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
+                ReportSelectionChange(m_Selection.start, m_Selection.length);
             }
         }
     }
