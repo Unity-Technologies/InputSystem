@@ -20,6 +20,7 @@ enum iOSScreenKeyboardStatus
 @interface iOSScreenKeyboardDelegate ()
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput;
 - (void)textFieldDidChangeSelectionImpl:(UITextField *)textField;
+- (void)textFieldDidChangeImpl:(UITextField *)textField;
 @end
 
 @implementation iOSScreenKeyboardDelegate
@@ -136,12 +137,7 @@ enum iOSScreenKeyboardStatus
         NSLog(@"selectionChanagedCallback: Missing callback");
 }
 
-- (void)textFieldDidChangeSelection:(UITextField *)textField
-{
-    [self textFieldDidChangeSelectionImpl: textField];
-}
-
-- (void)textFieldDidChange:(UITextField*)textField
+- (void)textFieldDidChangeImpl:(UITextField *)textField
 {
     if (@available(iOS 13.0, tvOS 13.0, *))
     {
@@ -156,6 +152,16 @@ enum iOSScreenKeyboardStatus
         m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
     else
         NSLog(@"textFieldDidChange: Missing callback");
+}
+
+- (void)textFieldDidChangeSelection:(UITextField *)textField
+{
+    [self textFieldDidChangeSelectionImpl: textField];
+}
+
+- (void)textFieldDidChange:(UITextField*)textField
+{
+    [self textFieldDidChangeImpl: textField];
 }
 
 - (BOOL)textViewShouldBeginEditing:(UITextView*)view
@@ -524,20 +530,18 @@ i = res.items;                                              \
 
 - (NSString*)getText
 {
-    if (m_Status == StatusCanceled)
-        return m_InitialText;
-    else
-    {
 #if PLATFORM_TVOS
-        return [m_TextField text];
+    return [m_TextField text];
 #else
-        return m_ShowParams.multiline ? [m_TextView text] : [m_TextField text];
+    return m_ShowParams.multiline ? [m_TextView text] : [m_TextField text];
 #endif
-    }
 }
 
 - (void)setText:(NSString*)newText
 {
+    NSString* originalText = self.getText;
+    if ([originalText isEqualToString: newText])
+        return;
 #if PLATFORM_IOS
     if (m_ShowParams.multiline)
     {
@@ -546,6 +550,7 @@ i = res.items;                                              \
     }
 #endif
     m_TextField.text = newText;
+    [self textFieldDidChangeImpl: m_TextField];
 }
 
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput
