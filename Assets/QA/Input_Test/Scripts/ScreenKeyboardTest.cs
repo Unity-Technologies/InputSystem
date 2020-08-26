@@ -16,7 +16,8 @@ public enum AutomaticOperation
 {
     None,
     CharacterLimit,
-    LetterReplacement
+    LetterReplacement,
+    DismissOnCharacter0
 }
 
 public class ScreenKeyboardTest : MonoBehaviour
@@ -148,6 +149,13 @@ public class ScreenKeyboardTest : MonoBehaviour
             case AutomaticOperation.LetterReplacement:
                 text = text.Replace("a", "c");
                 break;
+            case AutomaticOperation.DismissOnCharacter0:
+                if (text.Contains("0"))
+                {
+                    Log($"Disable on 0, frame: {Time.frameCount}");
+                    m_ScreenKeyboard.Hide();
+                }
+                break;
         }
 
         if (!text.Equals(oldText))
@@ -161,7 +169,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     private void StateChangedCallback(ScreenKeyboardStatus status)
     {
-        Log($"Status: {status}");
+        Log($"Status: {status}, Frame: {Time.frameCount}");
     }
 
     // Update is called once per frame
@@ -243,6 +251,8 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
         };
 
         m_ScreenKeyboard.Show(showParams);
+
+        Log($"Requesting keyboard to show, frame {Time.frameCount}");
     }
 
     private TouchScreenKeyboardType ToTouchScreenKeyboardType(string value)
