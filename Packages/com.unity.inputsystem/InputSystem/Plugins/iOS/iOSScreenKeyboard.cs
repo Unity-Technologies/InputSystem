@@ -89,6 +89,7 @@ namespace UnityEngine.InputSystem.iOS
 
         protected override void InternalHide()
         {
+            _iOSScreenKeyboardHide();
         }
 
         public override string inputFieldText
