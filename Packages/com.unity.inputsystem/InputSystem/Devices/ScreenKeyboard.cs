@@ -113,6 +113,16 @@ namespace UnityEngine.InputSystem
             InternalHide();
         }
 
+        /// <summary>
+        /// Used by internal testing only. From user perspective you should always clean up your listeners.
+        /// </summary>
+        internal void ClearListeners()
+        {
+            m_StatusChangedListeners.Clear();
+            m_InputFieldTextListeners.Clear();
+            m_SelectionChangedListeners.Clear();
+        }
+
         protected abstract void InternalShow();
 
         protected abstract void InternalHide();
@@ -135,6 +145,9 @@ namespace UnityEngine.InputSystem
 
         protected void ReportSelectionChange(int start, int length)
         {
+            if (m_KeyboardStatus != ScreenKeyboardStatus.Visible)
+                return;
+
             var selection = new RangeInt(start, length);
             foreach (var listener in m_SelectionChangedListeners)
                 listener(selection);

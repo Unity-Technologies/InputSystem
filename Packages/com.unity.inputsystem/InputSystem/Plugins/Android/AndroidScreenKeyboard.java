@@ -326,12 +326,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void setText (String text)
     {
+        if (text.equals(getText()))
+            return;
         EditText txtInput = (EditText) findViewById (id.txtInput);
         if (txtInput != null)
         {
-            // Don't call txtInput.setText directly, because it causes issues like "endBatchEdit on inactive InputConnection"
-            txtInput.getText().clear();
-            txtInput.append(text);
+            txtInput.setText(text);
             txtInput.setSelection(text.length());
         }
     }

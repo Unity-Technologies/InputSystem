@@ -12,21 +12,29 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
+/// <summary>
+/// Android: Regarding selection callbacks, when we set the text via inputFieldText, there are two selection callbacks:
+///          1. With values (0, 0) that's the default Android Screen keyboard behavior, when setting the text manually
+///          2. The code inside AndroidScreenKeyboard.java in setText function puts cursor at the end of the text, this triggers a second selection callback
+/// </summary>
 public class ScreenKeyboardTests : InputTestFixture
 {
     static ScreenKeyboard s_TargetKeyboard;
     const int kFrameTimeout = 30;
 
+    // TODO: call count
     public class CallbackInfo<T>
     {
         public T Data { private set; get; }
         public int Frame { private set; get; }
         public int ThreadId { private set; get; }
+        public int CalledCount { private set; get; }
 
         public CallbackInfo()
         {
             Frame = -1;
             ThreadId = -1;
+            CalledCount = 0;
         }
 
         public CallbackInfo(T initialData)
@@ -34,6 +42,7 @@ public class ScreenKeyboardTests : InputTestFixture
             Data = initialData;
             Frame = -1;
             ThreadId = -1;
+            CalledCount = 0;
         }
 
         public void CallbackInvoked(T data)
@@ -41,6 +50,7 @@ public class ScreenKeyboardTests : InputTestFixture
             Data = data;
             Frame = Time.frameCount;
             ThreadId = Thread.CurrentThread.ManagedThreadId;
+            CalledCount++;
         }
     }
 
@@ -92,6 +102,14 @@ public class ScreenKeyboardTests : InputTestFixture
         }
     }
 
+    private IEnumerator ResetKeyboard()
+    {
+        // If there's a failure in test, the callbacks might not be properly cleaned up
+        // So it's easier to clean them up before starting test
+        keyboard.ClearListeners();
+        return HideKeyboard();
+    }
+
     private IEnumerator HideKeyboard()
     {
         if (keyboard.status != ScreenKeyboardStatus.Done)
@@ -118,13 +136,11 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(ScreenKeyboardStatus.Visible, keyboard.status, "Couldn't show keyboard");
     }
 
-    // TODO:
-    // Disable selection callbacks, when no input field is present. Since there's nothing to select
-    // See that callbacks are not called when keyboard is not shown. ??? Do we really need this
+    // TODO See that callbacks are not called when keyboard is not shown. ??? Do we really need this
     [UnityTest]
     public IEnumerator CheckShowHideOperations()
     {
-        yield return HideKeyboard();
+        yield return ResetKeyboard();
         yield return ShowKeyboard();
         yield return HideKeyboard();
     }
@@ -132,7 +148,7 @@ public class ScreenKeyboardTests : InputTestFixture
     [UnityTest]
     public IEnumerator CheckStateCallback()
     {
-        yield return HideKeyboard();
+        yield return ResetKeyboard();
 
         var stateCallbackInfo = new CallbackInfo<ScreenKeyboardStatus>(ScreenKeyboardStatus.Canceled);
         var stateCallback = new Action<ScreenKeyboardStatus>(
@@ -146,25 +162,26 @@ public class ScreenKeyboardTests : InputTestFixture
 
         Assert.AreEqual(ScreenKeyboardStatus.Visible, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
+        Assert.AreEqual(1, stateCallbackInfo.CalledCount);
         // Don't check frame, since when you call Show the keyboard can appear only in next frame
 
         yield return HideKeyboard();
 
         Assert.AreEqual(ScreenKeyboardStatus.Done, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
-        keyboard.stateChanged -= stateCallback;
+        Assert.AreEqual(2, stateCallbackInfo.CalledCount);
     }
 
     [UnityTest]
     public IEnumerator CheckInputFieldTextCallback()
     {
-        yield return HideKeyboard();
+        yield return ResetKeyboard();
 
         var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
         var inputFieldCallback = new Action<string>(
             (text) =>
             {
-                inputFieldTextCallbackInfo.CallbackInvoked(text);;
+                inputFieldTextCallbackInfo.CallbackInvoked(text);
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
@@ -178,8 +195,47 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(targetText, inputFieldTextCallbackInfo.Data);
         Assert.AreEqual(Time.frameCount, inputFieldTextCallbackInfo.Frame);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, inputFieldTextCallbackInfo.ThreadId);
+        Assert.AreEqual(1, inputFieldTextCallbackInfo.CalledCount);
 
-        keyboard.inputFieldTextChanged -= inputFieldCallback;
+        yield return HideKeyboard();
+    }
+
+    private static string ModifyText(string text)
+    {
+        return text.Replace('l', 'a');;
+    }
+
+    [UnityTest]
+    public IEnumerator ChangeTextInsideInputFieldCallback()
+    {
+        yield return ResetKeyboard();
+
+        var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
+        var selectionCallback = new Action<RangeInt>((range) => { selectionCallbackInfo.CallbackInvoked(range); });
+
+        keyboard.selectionChanged += selectionCallback;
+        var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
+        var inputFieldCallback = new Action<string>(
+            (text) =>
+            {
+                inputFieldTextCallbackInfo.CallbackInvoked(text);
+                // Note: This also tests that we don't enter infinite loop
+                //       Setting same text shouldn't trigger inputFieldTextChanged
+                keyboard.inputFieldText = ModifyText(text);
+            });
+        keyboard.inputFieldTextChanged += inputFieldCallback;
+
+        yield return ShowKeyboard();
+        
+        var targetText = "Hello";
+        keyboard.inputFieldText = targetText;
+        targetText = ModifyText(targetText);
+
+        Assert.AreEqual(targetText, inputFieldTextCallbackInfo.Data);
+        Assert.AreEqual(targetText, keyboard.inputFieldText);
+        Assert.AreEqual(2, inputFieldTextCallbackInfo.CalledCount);
+        // See comment at top of this class explaining why this is 3 and not 2
+        Assert.AreEqual(3, selectionCallbackInfo.CalledCount);
 
         yield return HideKeyboard();
     }
@@ -187,7 +243,7 @@ public class ScreenKeyboardTests : InputTestFixture
     [UnityTest]
     public IEnumerator CheckInputFieldText()
     {
-        yield return HideKeyboard();
+        yield return ResetKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
         yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText });
@@ -206,10 +262,12 @@ public class ScreenKeyboardTests : InputTestFixture
     [UnityTest]
     public IEnumerator CheckSelectionCallbacks()
     {
-        yield return HideKeyboard();
-
+        yield return ResetKeyboard();
         var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
-        var selectionCallback = new Action<RangeInt>((range) => { selectionCallbackInfo.CallbackInvoked(range); });
+        var selectionCallback = new Action<RangeInt>((range) =>
+        {
+            selectionCallbackInfo.CallbackInvoked(range);
+        });
 
         keyboard.selectionChanged += selectionCallback;
 
@@ -223,8 +281,10 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
         Assert.AreEqual(Time.frameCount, selectionCallbackInfo.Frame);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, selectionCallbackInfo.ThreadId);
+        // See comment at top of this class explaining why this is 2 and not 1
+        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
 
-        //TODO: call selection directly, see that text callback is not called
+        // Assign inputFieldTextChanged, and see that setting selection doesn't trigger it
         var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
         var inputFieldCallback = new Action<string>(
             (text) =>
@@ -235,14 +295,12 @@ public class ScreenKeyboardTests : InputTestFixture
 
         keyboard.selection = new RangeInt(1, 0);
         Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
+        Assert.AreEqual(3, selectionCallbackInfo.CalledCount);
 
         // Calling selection shouldn't trigger inputFieldText callback
-        Assert.AreEqual(-1, inputFieldTextCallbackInfo.Frame);
-        keyboard.inputFieldTextChanged -= inputFieldCallback;
-        keyboard.selectionChanged -= selectionCallback;
+        Assert.AreEqual(0, inputFieldTextCallbackInfo.CalledCount);
 
         // TODO: check selection out of bounds behavior
-
         keyboard.selection = new RangeInt(targetText.Length, 0);
 
         yield return HideKeyboard();
