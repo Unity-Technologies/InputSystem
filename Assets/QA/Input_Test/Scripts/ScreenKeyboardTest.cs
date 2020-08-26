@@ -138,6 +138,7 @@ public class ScreenKeyboardTest : MonoBehaviour
 
     private void InputFieldTextCallback(string text)
     {
+        Log($"Frame:{Time.frameCount} Text: {text}");
         var oldText = text;
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)
@@ -158,12 +159,7 @@ public class ScreenKeyboardTest : MonoBehaviour
                 break;
         }
 
-        if (!text.Equals(oldText))
-        {
-            m_ScreenKeyboard.inputFieldText = text;
-        }
-        Log($"Frame:{Time.frameCount}");
-        Log($"Text: {text}");
+        m_ScreenKeyboard.inputFieldText = text;
         m_InputField.text = text;
     }
 
