@@ -35,6 +35,7 @@ public class ScreenKeyboardTests : InputTestFixture
             Frame = -1;
             ThreadId = -1;
         }
+
         public void CallbackInvoked(T data)
         {
             Data = data;
@@ -111,16 +112,15 @@ public class ScreenKeyboardTests : InputTestFixture
     {
         Assert.IsTrue(keyboard.status != ScreenKeyboardStatus.Visible, "Expected keybard to be not visible");
 
-        keyboard.Show();
+        keyboard.Show(showParams);
         for (int i = 0; i < kFrameTimeout && keyboard.status != ScreenKeyboardStatus.Visible; i++)
             yield return new WaitForFixedUpdate();
         Assert.AreEqual(ScreenKeyboardStatus.Visible, keyboard.status, "Couldn't show keyboard");
-        
     }
 
     // TODO:
-    // Disable selection callbacks, when no input field is present
-    // See that callbacks are not called when keyboard is not shown
+    // Disable selection callbacks, when no input field is present. Since there's nothing to select
+    // See that callbacks are not called when keyboard is not shown. ??? Do we really need this
     [UnityTest]
     public IEnumerator CheckShowHideOperations()
     {
@@ -147,7 +147,7 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(ScreenKeyboardStatus.Visible, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
         // Don't check frame, since when you call Show the keyboard can appear only in next frame
-        
+
         yield return HideKeyboard();
 
         Assert.AreEqual(ScreenKeyboardStatus.Done, stateCallbackInfo.Data);
@@ -164,7 +164,7 @@ public class ScreenKeyboardTests : InputTestFixture
         var inputFieldCallback = new Action<string>(
             (text) =>
             {
-                inputFieldTextCallbackInfo.CallbackInvoked(text); ;
+                inputFieldTextCallbackInfo.CallbackInvoked(text);;
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
@@ -190,7 +190,7 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return HideKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
-        yield return ShowKeyboard(new ScreenKeyboardShowParams{initialText = initiaText });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText });
 
         Assert.AreEqual(initiaText, keyboard.inputFieldText);
         keyboard.inputFieldText = targetText;
@@ -199,8 +199,9 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return HideKeyboard();
 
         Assert.AreEqual(targetText, keyboard.inputFieldText);
-    }
 
+        // TODO: multiline
+    }
 
     [UnityTest]
     public IEnumerator CheckSelectionCallbacks()
@@ -228,7 +229,7 @@ public class ScreenKeyboardTests : InputTestFixture
         var inputFieldCallback = new Action<string>(
             (text) =>
             {
-                inputFieldTextCallbackInfo.CallbackInvoked(text); ;
+                inputFieldTextCallbackInfo.CallbackInvoked(text);;
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
@@ -238,8 +239,9 @@ public class ScreenKeyboardTests : InputTestFixture
         // Calling selection shouldn't trigger inputFieldText callback
         Assert.AreEqual(-1, inputFieldTextCallbackInfo.Frame);
         keyboard.inputFieldTextChanged -= inputFieldCallback;
-
         keyboard.selectionChanged -= selectionCallback;
+
+        // TODO: check selection out of bounds behavior
 
         keyboard.selection = new RangeInt(targetText.Length, 0);
 
