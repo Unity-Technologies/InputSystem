@@ -198,7 +198,7 @@ public class ScreenKeyboardTest : MonoBehaviour
             oldVisible = false;
         #endif
 
-        var infoMessage = $"FrameCount: {Time.frameCount}";
+        var infoMessage = $"FrameCount: {Time.frameCount} ";
         if (oldVisible && newVisible)
         {
             infoMessage += "ERROR: both new and old screen keyboards are visible ?";
@@ -210,7 +210,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         else if (newVisible)
         {
             infoMessage += $@"Name: ScreenKeyboard Status: {m_ScreenKeyboard.status}
-Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}
+Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}, {m_ScreenKeyboard.inputFieldText}
 ";
         }
         else
