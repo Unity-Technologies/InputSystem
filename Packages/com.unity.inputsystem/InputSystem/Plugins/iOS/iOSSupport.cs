@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.iOS
             // Reuse screen keyboard
             if (m_iOSScreenKeyboard == null)
                 m_iOSScreenKeyboard = new iOSScreenKeyboard();
-            NativeInputRuntime.instance.screenKeyboard = m_iOSScreenKeyboard();
+            NativeInputRuntime.instance.screenKeyboard = m_iOSScreenKeyboard;
             #endif
         }
 
