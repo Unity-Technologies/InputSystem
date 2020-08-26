@@ -81,6 +81,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     private IScreenKeyboardCallbacks m_Callbacks;
     private ScreenKeyboardStatus m_DismissReturnValue;
 
+    private boolean m_MoveSelectionToEnd;
 
     public AndroidScreenKeyboard ()
     {
@@ -178,15 +179,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void afterTextChanged (Editable s)
     {
-        // TODO remove this
-        InputMethodManager imm = (InputMethodManager)UnityPlayer.currentActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        InputMethodSubtype ims = imm.getCurrentInputMethodSubtype();
-        String localeString = ims.getLocale();
-        Locale locale = new Locale(localeString);
-        String currentLanguage = locale.getDisplayLanguage();
-
         EditText txtInput = (EditText) findViewById (id.txtInput);
-        debugLog("afterTextChanged: {0} Start {1} End {2} Lang {3}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd(), currentLanguage);
+        debugLog("afterTextChanged: {0} Start {1} End {2}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd());
 
         // TODO: For IME SelectionEnd and Start doesn't return what you would expect
         m_Callbacks.OnTextChanged(s.toString());
@@ -286,7 +280,19 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             protected void onSelectionChanged(int start, int end)
             {
                 debugLog("onSelectionChanged {0} {1}", start, end - start);
-                m_Callbacks.OnSelectionChanged(start, end - start);
+
+                boolean moveSelectionToEnd = m_MoveSelectionToEnd;
+                m_MoveSelectionToEnd = false;
+                if (moveSelectionToEnd && start != length() && end != length())
+                {
+                    debugLog("moving selection to {0} {1}", length(), 0);
+                    // This will implicitly invoke onSelectionChanged again
+                    setSelection(length());
+                }
+                else
+                {
+                    m_Callbacks.OnSelectionChanged(start, end - start);
+                }
             }
         };
 
@@ -331,13 +337,15 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         EditText txtInput = (EditText) findViewById (id.txtInput);
         if (txtInput != null)
         {
+			debugLog("setText {0}", text);
+            m_MoveSelectionToEnd = true;
             txtInput.setText(text);
-            txtInput.setSelection(text.length());
         }
     }
 
     public void setSelection(int start, int length)
     {
+        debugLog("set selection {0}, {1}", start, length);
         EditText txtInput = (EditText) findViewById(id.txtInput);
         if (txtInput != null && txtInput.getText().length() >= start + length)
             txtInput.setSelection(start, start + length);

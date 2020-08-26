@@ -12,11 +12,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
-/// <summary>
-/// Android: Regarding selection callbacks, when we set the text via inputFieldText, there are two selection callbacks:
-///          1. With values (0, 0) that's the default Android Screen keyboard behavior, when setting the text manually
-///          2. The code inside AndroidScreenKeyboard.java in setText function puts cursor at the end of the text, this triggers a second selection callback
-/// </summary>
 public class ScreenKeyboardTests : InputTestFixture
 {
     static ScreenKeyboard s_TargetKeyboard;
@@ -184,7 +179,7 @@ public class ScreenKeyboardTests : InputTestFixture
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
-
+        // TODO: keyboard show should trigger inputFieldTextChanged
         yield return ShowKeyboard();
 
         Assert.AreEqual(string.Empty, keyboard.inputFieldText);
@@ -234,8 +229,7 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(targetText, inputFieldTextCallbackInfo.Data);
         Assert.AreEqual(targetText, keyboard.inputFieldText);
         Assert.AreEqual(2, inputFieldTextCallbackInfo.CalledCount);
-        // See comment at top of this class explaining why this is 3 and not 2
-        Assert.AreEqual(3, selectionCallbackInfo.CalledCount);
+        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
 
         yield return HideKeyboard();
     }
@@ -272,6 +266,7 @@ public class ScreenKeyboardTests : InputTestFixture
         keyboard.selectionChanged += selectionCallback;
 
         yield return ShowKeyboard();
+        // TODO: keyboard show should trigger selection
 
         Assert.AreEqual(new MyRangeInt(0, 0), (MyRangeInt)keyboard.selection);
 
@@ -281,8 +276,7 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
         Assert.AreEqual(Time.frameCount, selectionCallbackInfo.Frame);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, selectionCallbackInfo.ThreadId);
-        // See comment at top of this class explaining why this is 2 and not 1
-        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
+        Assert.AreEqual(1, selectionCallbackInfo.CalledCount);
 
         // Assign inputFieldTextChanged, and see that setting selection doesn't trigger it
         var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
@@ -295,7 +289,7 @@ public class ScreenKeyboardTests : InputTestFixture
 
         keyboard.selection = new RangeInt(1, 0);
         Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
-        Assert.AreEqual(3, selectionCallbackInfo.CalledCount);
+        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
 
         // Calling selection shouldn't trigger inputFieldText callback
         Assert.AreEqual(0, inputFieldTextCallbackInfo.CalledCount);
