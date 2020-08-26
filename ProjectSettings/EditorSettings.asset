@@ -14,7 +14,7 @@ EditorSettings:
   m_EtcTextureFastCompressor: 1
   m_EtcTextureNormalCompressor: 2
   m_EtcTextureBestCompressor: 4
-  m_ProjectGenerationIncludedExtensions: txt;xml;fnt;cd;asmdef
+  m_ProjectGenerationIncludedExtensions: txt;xml;fnt;cd;asmdef;asmref;java;mm;h
   m_ProjectGenerationRootNamespace: 
   m_UserGeneratedProjectSuffix: 
   m_CollabEditorSettings:
