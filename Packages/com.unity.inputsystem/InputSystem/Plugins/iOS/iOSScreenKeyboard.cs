@@ -40,6 +40,9 @@ namespace UnityEngine.InputSystem.iOS
         private static extern void _iOSScreenKeyboardShow(ref ScreenKeyboardShowParams showParams, int sizeOfShowParams, ref iOSScreenKeyboardCallbacks callbacks, int sizeOfCallbacks);
 
         [DllImport("__Internal")]
+        private static extern void _iOSScreenKeyboardHide();
+        
+        [DllImport("__Internal")]
         private static extern Rect _iOSScreenKeyboardOccludingArea();
 
         [DllImport("__Internal")]

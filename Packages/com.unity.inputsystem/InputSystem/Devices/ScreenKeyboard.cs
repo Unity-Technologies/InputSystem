@@ -31,27 +31,28 @@ namespace UnityEngine.InputSystem
         LostFocus
     }
 
+    // Note: ScreenKeyboardShowParams has to be a struct otherwise when passing it to objective C on iOS the data is all wrong, interestingly
+    //       the size is correct 
     [StructLayout(LayoutKind.Sequential)]
-    public class ScreenKeyboardShowParams
+    public struct ScreenKeyboardShowParams
     {
-        public ScreenKeyboardType type { set; get; } = ScreenKeyboardType.Default;
-        public string initialText { set; get; } = string.Empty;
-        public string placeholderText { set; get; } = string.Empty;
-        public bool autocorrection { set; get; } = false;
-        public bool multiline { set; get; } = false;
-        public bool secure { set; get; } = false;
+        public ScreenKeyboardType type;
+        public string initialText;
+        public string placeholderText;
+        public bool autocorrection;
+        public bool multiline;
+        public bool secure;
 
         ////TODO: this one is iPhone specific?
-        public bool alert { set; get; } = false;
+        public bool alert;
 
         /// <summary>
         /// Show keyboard without input field?
         /// Only supported on iOS and Android.
         /// Note: TODO, review this If input field is hidden, you won't receive inputFieldTextChanged callback, instead you'll be receiving onTextInput
         /// </summary>
-        public bool inputFieldHidden { set; get; } = false;
-
-        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callbac
+        public bool inputFieldHidden;
+        ////TODO: no characterLimit here, because the logic for characterLimit is too complex when IME composition occurs, instead let user manage the text from OnTextChanged callback
     }
 
 
@@ -100,6 +101,10 @@ namespace UnityEngine.InputSystem
         public void Show(ScreenKeyboardShowParams showParams)
         {
             m_ShowParams = showParams;
+            if (m_ShowParams.initialText == null)
+                m_ShowParams.initialText = String.Empty;
+            if (m_ShowParams.placeholderText == null)
+                m_ShowParams.placeholderText = String.Empty;
             InternalShow();
         }
 

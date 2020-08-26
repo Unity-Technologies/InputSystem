@@ -101,6 +101,11 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
     [[iOSScreenKeyboardDelegate getInstanceOrCreate] show: param withInitialTextCStr: showParams->initialText withPlaceholderTextCStr: showParams->placeholderText];
 }
 
+extern "C" void _iOSScreenKeyboardHide()
+{
+    [[iOSScreenKeyboardDelegate getInstanceOrCreate] hide];
+}
+
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 {
     iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
