@@ -7,8 +7,20 @@ using UnityEngine.Scripting;
 namespace UnityEngine.InputSystem.Android
 {
     // TODO: check if stripping doesn't remove these methods
-    public class AndroidScreenKeyboard : ScreenKeyboard
+    internal class AndroidScreenKeyboard : ScreenKeyboard
     {
+        private static AndroidScreenKeyboard ms_Instance;
+
+        public static AndroidScreenKeyboard instance
+        {
+            get
+            {
+                if (ms_Instance == null)
+                    ms_Instance = new AndroidScreenKeyboard();
+                return ms_Instance;
+            }
+        }
+
         class ScreenKeyboardCallbacks : AndroidJavaProxy
         {
             AndroidScreenKeyboard m_Parent;

@@ -158,9 +158,7 @@ namespace UnityEngine.InputSystem.Android
             #if !UNITY_EDITOR
             // AndroidSupport.Initialize can be called multiple times when running tests
             // Don't recreate keyboard
-            if (m_AndroidScreenKeyboard == null)
-                m_AndroidScreenKeyboard = new AndroidScreenKeyboard();
-            NativeInputRuntime.instance.screenKeyboard = m_AndroidScreenKeyboard;
+            NativeInputRuntime.instance.screenKeyboard = AndroidScreenKeyboard.instance;
             #endif
         }
 

@@ -45,13 +45,9 @@ namespace UnityEngine.InputSystem.iOS
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
 
-            #if !UNITY_EDITOR
-            // iOSSupport.Initialize can be called multiple times when running tests
-            // Reuse screen keyboard
-            if (m_iOSScreenKeyboard == null)
-                m_iOSScreenKeyboard = new iOSScreenKeyboard();
-            NativeInputRuntime.instance.screenKeyboard = m_iOSScreenKeyboard;
-            #endif
+        #if !UNITY_EDITOR
+            NativeInputRuntime.instance.screenKeyboard = iOSScreenKeyboard.instance;
+        #endif
         }
 
         public static void Shutdown()

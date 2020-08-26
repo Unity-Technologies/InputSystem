@@ -7,8 +7,20 @@ using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.iOS
 {
-    public class iOSScreenKeyboard : ScreenKeyboard
+    internal class iOSScreenKeyboard : ScreenKeyboard
     {
+        private static iOSScreenKeyboard ms_Instance;
+
+        public static iOSScreenKeyboard instance
+        {
+            get
+            {
+                if (ms_Instance == null)
+                    ms_Instance = new iOSScreenKeyboard();
+                return ms_Instance;
+            }
+        }
+
         internal delegate void OnTextChangedDelegate(int deviceId, string text);
 
         internal delegate void OnStatusChangedDelegate(int deviceId, ScreenKeyboardStatus status);
@@ -45,31 +57,19 @@ namespace UnityEngine.InputSystem.iOS
         [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
         private static void OnTextChangedCallback(int deviceId, string text)
         {
-            var screenKeyboard = (iOSScreenKeyboard)InputRuntime.s_Instance.screenKeyboard;
-            if (screenKeyboard == null)
-                throw new Exception("OnTextChangedCallback: Failed to get iOSScreenKeyboard instance");
-
-            screenKeyboard.ReportInputFieldChange(text);
+            instance.ReportInputFieldChange(text);
         }
 
         [MonoPInvokeCallback(typeof(OnStatusChangedDelegate))]
         private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardStatus status)
         {
-            var screenKeyboard = (iOSScreenKeyboard)InputRuntime.s_Instance.screenKeyboard;
-            if (screenKeyboard == null)
-                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
-
-            screenKeyboard.ReportStatusChange(status);
+            instance.ReportStatusChange(status);
         }
 
         [MonoPInvokeCallback(typeof(OnSelectionChangedDelegate))]
         private static void OnSelectionChangedCallback(int deviceId, int start, int length)
         {
-            var screenKeyboard = (iOSScreenKeyboard)InputRuntime.s_Instance.screenKeyboard;
-            if (screenKeyboard == null)
-                throw new Exception("OnStatusChangedCallback: Failed to get iOSScreenKeyboard instance");
-
-            screenKeyboard.ReportSelectionChange(start, length);
+            instance.ReportSelectionChange(start, length);
         }
 
         protected override void InternalShow()
