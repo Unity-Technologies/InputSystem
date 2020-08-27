@@ -76,6 +76,14 @@ namespace UnityEngine.InputSystem
             public byte[] data;
         }
 
+        /// <summary>
+        /// Delegate for a method that generates the namespace for added layouts.
+        /// </summary>
+        /// <param name="senderId">Unique numeric ID of the sender that we receive input data from.</param>
+        /// <returns>Returns the namespace used for added device layouts.</returns>
+        /// <seealso cref="layoutNamespaceBuilder"/>
+        public delegate InternedString LayoutNamespaceBuilderDelegate(int senderId);
+
         public bool sending
         {
             get => (m_Flags & Flags.Sending) == Flags.Sending;
@@ -87,6 +95,12 @@ namespace UnityEngine.InputSystem
                     m_Flags &= ~Flags.Sending;
             }
         }
+
+        /// <summary>
+        /// Method that generates the namespace for added layouts.
+        /// </summary>
+        /// <seealso cref="LayoutNamespaceBuilderDelegate"/>
+        public LayoutNamespaceBuilderDelegate layoutNamespaceBuilder { get; set; } = BuildLayoutNamespace;
 
         internal InputRemoting(InputManager manager, bool startSendingOnConnect = false)
         {
@@ -119,6 +133,7 @@ namespace UnityEngine.InputSystem
 
             sending = true;
 
+            SendAllGeneratedLayouts();
             SendAllDevices();
         }
 
@@ -190,6 +205,23 @@ namespace UnityEngine.InputSystem
             return subscriber;
         }
 
+        private void SendAllGeneratedLayouts()
+        {
+            var layouts = m_LocalManager.m_Layouts.layoutBuilders;
+            foreach (var entry in layouts)
+                SendLayout(entry.Key);
+        }
+
+        private void SendLayout(string layoutName)
+        {
+            if (m_Subscribers == null)
+                return;
+
+            var message = NewLayoutMsg.Create(this, layoutName);
+            if (message != null)
+                Send(message.Value);
+        }
+
         private void SendAllDevices()
         {
             var devices = m_LocalManager.devices;
@@ -206,7 +238,7 @@ namespace UnityEngine.InputSystem
             if (device.remote)
                 return;
 
-            var message = NewDeviceMsg.Create(this, device);
+            var message = NewDeviceMsg.Create(device);
             Send(message);
         }
 
@@ -238,7 +270,7 @@ namespace UnityEngine.InputSystem
             switch (change)
             {
                 case InputDeviceChange.Added:
-                    msg = NewDeviceMsg.Create(this, device);
+                    msg = NewDeviceMsg.Create(device);
                     break;
                 case InputDeviceChange.Removed:
                     msg = RemoveDeviceMsg.Create(device);
@@ -300,8 +332,14 @@ namespace UnityEngine.InputSystem
             var sender = new RemoteSender
             {
                 senderId = senderId,
+                layoutNamespace = layoutNamespaceBuilder(senderId),
             };
             return ArrayHelpers.Append(ref m_Senders, sender);
+        }
+
+        private static InternedString BuildLayoutNamespace(int senderId)
+        {
+            return new InternedString($"Remote({senderId})");
         }
 
         private int FindLocalDeviceId(int remoteDeviceId, int senderIndex)
@@ -346,7 +384,8 @@ namespace UnityEngine.InputSystem
         internal struct RemoteSender
         {
             public int senderId;
-            public InternedString[] layouts;
+            public InternedString layoutNamespace;
+            public InternedString[] layouts; // Each item is the unqualified name of the layout (without namespace)
             public RemoteInputDevice[] devices;
         }
 
@@ -355,7 +394,6 @@ namespace UnityEngine.InputSystem
         {
             public int remoteId; // Device ID used by sender.
             public int localId; // Device ID used by us in local system.
-            public string layoutName;
 
             public InputDeviceDescription description;
         }
@@ -415,7 +453,16 @@ namespace UnityEngine.InputSystem
                 }
             }
 
-            ////TODO: remove layouts added by remote
+            // Remove layouts added by remote.
+            var layouts = m_Senders[senderIndex].layouts;
+            var layoutNamespace = m_Senders[senderIndex].layoutNamespace;
+            if (layouts != null)
+            {
+                foreach (var remoteLayout in layouts)
+                {
+                    m_LocalManager.RemoveControlLayout(remoteLayout, layoutNamespace);
+                }
+            }
 
             ArrayHelpers.EraseAt(ref m_Senders, senderIndex);
         }
@@ -439,6 +486,7 @@ namespace UnityEngine.InputSystem
             {
                 public string name;
                 public string layoutJson;
+                public bool isOverride;
             }
 
             public static Message? Create(InputRemoting sender, string layoutName)
@@ -468,7 +516,8 @@ namespace UnityEngine.InputSystem
                 var data = new Data
                 {
                     name = layoutName,
-                    layoutJson = layout.ToJson()
+                    layoutJson = layout.ToJson(),
+                    isOverride = layout.isOverride
                 };
 
                 return new Message
@@ -484,7 +533,7 @@ namespace UnityEngine.InputSystem
                 var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
 
                 var internedLayoutName = new InternedString(data.name);
-                receiver.m_LocalManager.RegisterControlLayout(data.layoutJson, data.name);
+                receiver.m_LocalManager.RegisterControlLayout(data.layoutJson, data.name, receiver.m_Senders[senderIndex].layoutNamespace, data.isOverride);
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].layouts, internedLayoutName);
             }
         }
@@ -504,8 +553,9 @@ namespace UnityEngine.InputSystem
             public static void Process(InputRemoting receiver, Message msg)
             {
                 ////REVIEW: we probably don't want to do this blindly
+                var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
                 var layoutName = Encoding.UTF8.GetString(msg.data);
-                receiver.m_LocalManager.RemoveControlLayout(layoutName);
+                receiver.m_LocalManager.RemoveControlLayout(layoutName, receiver.m_Senders[senderIndex].layoutNamespace);
             }
         }
 
@@ -517,40 +567,18 @@ namespace UnityEngine.InputSystem
             {
                 public string name;
                 public string layout;
-                public string layoutJson;
                 public int deviceId;
                 public InputDeviceDescription description;
             }
 
-            public static Message Create(InputRemoting sender, InputDevice device)
+            public static Message Create(InputDevice device)
             {
                 Debug.Assert(!device.remote, "Device being sent to remotes should be a local device, not a remote one");
-
-                // Try to load the layout. Ignore the layout if it couldn't
-                // be loaded.
-                InputControlLayout layout = null;
-                try
-                {
-                    layout = sender.m_LocalManager.TryLoadControlLayout(new InternedString(device.layout));
-                    if (layout == null)
-                    {
-                        Debug.Log(string.Format(
-                            "Could not find layout '{0}' associated with device '{1}' meant to be sent through remote connection; this should not happen",
-                            device.layout, device.name));
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Debug.Log(string.Format(
-                        "Could not load layout '{0}' associated with device '{1}'; not sending to remote listeners (exception: {2})",
-                        device.layout, device.name, exception));
-                }
 
                 var data = new Data
                 {
                     name = device.name,
                     layout = device.layout,
-                    layoutJson = layout?.ToJson(),
                     deviceId = device.deviceId,
                     description = device.description
                 };
@@ -582,38 +610,21 @@ namespace UnityEngine.InputSystem
                         }
                 }
 
-                // Create layout (if necessary).
-                if (!string.IsNullOrEmpty(data.layoutJson))
-                {
-                    var internedLayoutName = new InternedString(data.layout);
-
-                    var layoutAlreadyRegistered = false;
-                    var layouts = receiver.m_Senders[senderIndex].layouts;
-                    if (layouts != null)
-                    {
-                        foreach (var entry in layouts)
-                        {
-                            if (entry == internedLayoutName)
-                            {
-                                layoutAlreadyRegistered = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!layoutAlreadyRegistered)
-                    {
-                        receiver.m_LocalManager.RegisterControlLayout(data.layoutJson, data.layout);
-                        ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].layouts, internedLayoutName);
-                    }
-                }
+                // Qualify the name of the layout used by the device.
+                // If the device uses a layout that was sent, it will be within a remote namespace.
+                // However, not all layouts are sent, with the assumption that the layout is already present on
+                // the receiver side. For those layouts, the remote namespace should not be prepended.
+                var internedLayoutName = new InternedString(data.layout);
+                var isRemoteLayout = ArrayHelpers.Contains(receiver.m_Senders[senderIndex].layouts, internedLayoutName);
+                if (isRemoteLayout)
+                    internedLayoutName = InputControlLayout.GetQualifiedLayoutName(internedLayoutName, receiver.m_Senders[senderIndex].layoutNamespace);
 
                 // Create device.
                 InputDevice device;
                 try
                 {
                     ////REVIEW: this gives remote devices names the same way that local devices receive them; should we make remote status visible in the name?
-                    device = receiver.m_LocalManager.AddDevice(data.layout, data.name);
+                    device = receiver.m_LocalManager.AddDevice(internedLayoutName, data.name);
                     device.m_ParticipantId = msg.participantId;
                 }
                 catch (Exception exception)
@@ -631,7 +642,6 @@ namespace UnityEngine.InputSystem
                     remoteId = data.deviceId,
                     localId = device.deviceId,
                     description = data.description,
-                    layoutName = data.layout
                 };
                 ArrayHelpers.Append(ref receiver.m_Senders[senderIndex].devices, record);
             }

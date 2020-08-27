@@ -151,12 +151,8 @@ namespace UnityEngine.InputSystem.Layouts
             // Name defaults to name of layout.
             if (name.IsEmpty())
             {
-                name = layout.name;
-
                 // If there's a namespace in the layout name, snip it out.
-                var indexOfLastColon = name.ToString().LastIndexOf(':');
-                if (indexOfLastColon != -1)
-                    name = new InternedString(name.ToString().Substring(indexOfLastColon + 1));
+                name = InputControlLayout.TrimNamespace(layout.name);
             }
 
             // Variant defaults to variants of layout.

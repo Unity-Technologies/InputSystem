@@ -1488,6 +1488,49 @@ namespace UnityEngine.InputSystem.Layouts
             return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, VariantSeparator[0]);
         }
 
+        /// <summary>
+        /// Gets the fully qualified name of the layout.
+        /// </summary>
+        /// <param name="layout">The name of the layout.</param>
+        /// <param name="namespace">The optional namespace of the layout.</param>
+        /// <returns>Returns the fully qualified name of the layout.</returns>
+        /// <seealso cref="TrimNamespace"/>
+        internal static InternedString GetQualifiedLayoutName(string layout, string @namespace = null)
+        {
+            if (string.IsNullOrEmpty(layout))
+                throw new ArgumentNullException(nameof(layout));
+
+            return !string.IsNullOrEmpty(@namespace) ? new InternedString($"{@namespace}::{layout}") : new InternedString(layout);
+        }
+
+        /// <summary>
+        /// Gets the fully qualified name of the layout.
+        /// </summary>
+        /// <param name="layout">The name of the layout.</param>
+        /// <param name="namespace">The optional namespace of the layout.</param>
+        /// <returns>Returns the fully qualified name of the layout.</returns>
+        /// <seealso cref="TrimNamespace"/>
+        internal static InternedString GetQualifiedLayoutName(InternedString layout, string @namespace = null)
+        {
+            if (layout.IsEmpty())
+                throw new ArgumentNullException(nameof(layout));
+
+            return !string.IsNullOrEmpty(@namespace) ? new InternedString($"{@namespace}::{layout}") : layout;
+        }
+
+        /// <summary>
+        /// Gets a new string in which the leading namespace is removed.
+        /// </summary>
+        /// <param name="layout">The fully qualified name of the layout.</param>
+        /// <returns>Returns the name of the layout without a namespace.</returns>
+        /// <seealso cref="GetQualifiedLayoutName(InternedString, string)"/>
+        /// <seealso cref="GetQualifiedLayoutName(string, string)"/>
+        internal static InternedString TrimNamespace(InternedString layout)
+        {
+            var indexOfLastColon = layout.ToString().LastIndexOf(':');
+            return indexOfLastColon != -1 ? new InternedString(layout.ToString().Substring(indexOfLastColon + 1)) : layout;
+        }
+
         private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
             IEnumerable<ControlItem> controlLayouts, string layoutName)
         {
@@ -1535,7 +1578,8 @@ namespace UnityEngine.InputSystem.Layouts
             public string extend;
             public string[] extendMultiple;
             public string format;
-            public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
+            public bool beforeRenderHasValue;
+            public bool beforeRenderValue;
             public string[] commonUsages;
             public string displayName;
             public string description;
@@ -1579,7 +1623,9 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Description = description,
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
-                    m_Variants = new InternedString(variant)
+                    m_Variants = new InternedString(variant),
+                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
+                    m_UpdateBeforeRender = beforeRenderHasValue ? beforeRenderValue : (bool?)null,
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1590,22 +1636,6 @@ namespace UnityEngine.InputSystem.Layouts
                 if (extendMultiple != null)
                     foreach (var element in extendMultiple)
                         layout.m_BaseLayouts.Append(new InternedString(element));
-
-                // Before render behavior.
-                if (!string.IsNullOrEmpty(beforeRender))
-                {
-                    var beforeRenderLowerCase = beforeRender.ToLower();
-                    if (beforeRenderLowerCase == "ignore")
-                        layout.m_UpdateBeforeRender = false;
-                    else if (beforeRenderLowerCase == "update")
-                        layout.m_UpdateBeforeRender = true;
-                    else
-                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
-                }
-
-                // Add common usages.
-                if (commonUsages != null)
-                    layout.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
 
                 // Add controls.
                 if (controls != null)
@@ -1639,7 +1669,10 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
+                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
+                    beforeRenderHasValue = layout.m_UpdateBeforeRender.HasValue,
+                    beforeRenderValue = layout.updateBeforeRender,
                 };
             }
         }
