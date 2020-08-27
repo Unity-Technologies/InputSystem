@@ -12,6 +12,11 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
+/// <summary>
+/// Behavioral tests for Screen Keyboard
+/// These tests ensure that screen keyboard is behaving in the same manner on all platforms
+/// Most likely, some OS' might have a different behavior, in that case if possible, the backend must simulate the behavior described in these tests
+/// </summary>
 public class ScreenKeyboardTests : InputTestFixture
 {
     static ScreenKeyboard s_TargetKeyboard;
