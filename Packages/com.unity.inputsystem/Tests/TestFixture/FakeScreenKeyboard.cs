@@ -72,6 +72,8 @@ namespace UnityEngine.InputSystem
             get => m_Selection;
             set
             {
+                if (m_Selection.Equals(value))
+                    return;
                 m_Selection = value;
                 m_Selection.start = Math.Min(m_InputFieldText.Length, m_Selection.start);
                 m_Selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
