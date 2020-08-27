@@ -1578,8 +1578,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string extend;
             public string[] extendMultiple;
             public string format;
-            public bool beforeRenderHasValue;
-            public bool beforeRenderValue;
+            public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string[] commonUsages;
             public string displayName;
             public string description;
@@ -1625,7 +1624,6 @@ namespace UnityEngine.InputSystem.Layouts
                     hideInUI = hideInUI,
                     m_Variants = new InternedString(variant),
                     m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
-                    m_UpdateBeforeRender = beforeRenderHasValue ? beforeRenderValue : (bool?)null,
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1636,6 +1634,18 @@ namespace UnityEngine.InputSystem.Layouts
                 if (extendMultiple != null)
                     foreach (var element in extendMultiple)
                         layout.m_BaseLayouts.Append(new InternedString(element));
+
+                // Before render behavior.
+                if (!string.IsNullOrEmpty(beforeRender))
+                {
+                    var beforeRenderLowerCase = beforeRender.ToLower();
+                    if (beforeRenderLowerCase == "ignore")
+                        layout.m_UpdateBeforeRender = false;
+                    else if (beforeRenderLowerCase == "update")
+                        layout.m_UpdateBeforeRender = true;
+                    else
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
+                }
 
                 // Add controls.
                 if (controls != null)
@@ -1671,8 +1681,7 @@ namespace UnityEngine.InputSystem.Layouts
                     format = layout.stateFormat.ToString(),
                     commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
-                    beforeRenderHasValue = layout.m_UpdateBeforeRender.HasValue,
-                    beforeRenderValue = layout.updateBeforeRender,
+                    beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };
             }
         }

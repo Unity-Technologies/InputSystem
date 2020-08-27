@@ -10,6 +10,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Networking.PlayerConnection;
+using UnityEngine.Scripting;
 
 ////TODO: have to decide what to do if a layout is removed
 
@@ -647,6 +648,7 @@ partial class CoreTests
         }
     }
 
+    [Preserve]
     private class MyDevice : InputDevice
     {
         public ButtonControl myControl { get; private set; }
