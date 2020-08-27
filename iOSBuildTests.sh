@@ -4,7 +4,7 @@ curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-stand
 chmod +x utr
 EDITOR_LOCATION=
 # Keep this for informational purposes
-#EDITOR_LOCATION=/Applications/Unity/Hub/Editor/2020.1.2f1
+EDITOR_LOCATION=/Applications/Unity/Hub/Editor/2020.1.2f1
 
 if [ ! -d "$EDITOR_LOCATION" ]; then
     echo Specify Editor location, for ex., /Applications/Unity/Hub/Editor/2020.1.2f1

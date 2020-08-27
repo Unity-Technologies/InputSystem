@@ -194,11 +194,6 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return HideKeyboard();
     }
 
-    private static string ModifyText(string text)
-    {
-        return text.Replace('l', 'a');;
-    }
-
     [UnityTest]
     public IEnumerator ChangeTextInsideInputFieldCallback([Values(true, false)] bool multiline)
     {
@@ -213,21 +208,34 @@ public class ScreenKeyboardTests : InputTestFixture
             (text) =>
             {
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
-                // Note: This also tests that we don't enter infinite loop
-                //       Setting same text shouldn't trigger inputFieldTextChanged
-                keyboard.inputFieldText = ModifyText(text);
+                if (text.Equals("12345"))
+                {
+                    // Change to text with same length
+                    keyboard.inputFieldText = "11111";
+                }
+                else if (text.Equals("11111"))
+                {
+                    // Change to text with different length
+                    keyboard.inputFieldText = "123456";
+                }
+                else
+                {
+                    // Change to same text, this shouldn't trigger a callback, since text didn't change
+                    keyboard.inputFieldText = text;
+                }
+                
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
         yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline });
         
-        var targetText = "Hello";
+        var targetText = "12345";
         keyboard.inputFieldText = targetText;
-        targetText = ModifyText(targetText);
+        targetText = "123456";
 
         Assert.AreEqual(targetText, inputFieldTextCallbackInfo.Data);
         Assert.AreEqual(targetText, keyboard.inputFieldText);
-        Assert.AreEqual(2, inputFieldTextCallbackInfo.CalledCount);
+        Assert.AreEqual(3, inputFieldTextCallbackInfo.CalledCount);
         Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
 
         yield return HideKeyboard();
@@ -269,8 +277,6 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return HideKeyboard();
 
         Assert.AreEqual(targetText, keyboard.inputFieldText);
-
-        // TODO: multiline
     }
 
     [UnityTest]

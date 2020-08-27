@@ -23,14 +23,22 @@ struct iOSScreenKeyboardShowParamsNative
     iOSScreenKeyboardCallbacks  callbacks;
 };
 
+// Must be in sync with com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs ScreenKeyboardStatus
+enum iOSScreenKeyboardStatus
+{
+    StatusDone        = 0,
+    StatusVisible     = 1,
+    StatusCanceled    = 2,
+    StatusLostFocus   = 3,
+};
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
 
 + (iOSScreenKeyboardDelegate*)getInstanceOrCreate;
 + (iOSScreenKeyboardDelegate*)getInstance;
 
-- (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
-- (void)hide;
+- (void)show: (iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
+- (void)hide: (iOSScreenKeyboardStatus)hideStatus;
 
 // These are all privates
 /*

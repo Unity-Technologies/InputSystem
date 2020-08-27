@@ -4,23 +4,23 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
+
+#define ENABLE_KEYBOARD_LOG 0
+#if ENABLE_KEYBOARD_LOG
+#define KEYBOARD_LOG(...) NSLog(@__VA_ARGS__)
+#else
+#define KEYBOARD_LOG(...) {}
+#endif
+
+
 static iOSScreenKeyboardDelegate* s_Keyboard = nil;
 static const unsigned kToolBarHeight = 40;
 static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value, there is no way to know the exact widths of the system bar buttons
 
-// Must be in sync with com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs ScreenKeyboardStatus
-enum iOSScreenKeyboardStatus
-{
-    StatusDone        = 0,
-    StatusVisible     = 1,
-    StatusCanceled    = 2,
-    StatusLostFocus   = 3,
-};
-
 @interface iOSScreenKeyboardDelegate ()
+- (void)textDidChangeImpl: (NSString*) text;
+- (void)selectionChangeImpl: (NSRange) range;
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput;
-- (void)textFieldDidChangeSelectionImpl:(UITextField *)textField;
-- (void)textFieldDidChangeImpl:(UITextField *)textField;
 @end
 
 @implementation iOSScreenKeyboardDelegate
@@ -59,6 +59,8 @@ enum iOSScreenKeyboardStatus
     BOOL                m_Rotating;
     bool                m_ShouldHideInput;
     bool                m_ShouldHideInputChanged;
+    
+    NSRange             m_LastSelection;
 }
 
 @synthesize area;
@@ -76,92 +78,92 @@ enum iOSScreenKeyboardStatus
 
 - (void)textInputDone:(id)sender
 {
-    if (m_Status == StatusVisible)
-    {
-        m_Status = StatusDone;
-        m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
-    }
-    [self hide];
+    if (m_Status != StatusVisible)
+        return;
+    
+    [self hide: StatusDone];
 }
 
 - (void)textInputCancel:(id)sender
 {
-    m_Status = StatusCanceled;
-    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
-    [self hide];
+    [self hide: StatusCanceled];
 }
 
 - (void)textInputLostFocus
 {
-    if (m_Status == StatusVisible)
-    {
-        m_Status = StatusLostFocus;
-        m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
-    }
-    [self hide];
+    if (m_Status != StatusVisible)
+        return;
+
+    [self hide: StatusLostFocus];
 }
 
-- (void)textViewDidChange:(UITextView *)textView
+- (void)textDidChangeImpl: (NSString*) text
 {
+    KEYBOARD_LOG("textDidChangeImpl %@", text);
     if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textView.text UTF8String]);
+        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [text UTF8String]);
     else
         NSLog(@"textViewDidChange: Missing callback");
 }
 
-- (void)textViewDidChangeSelection:(UITextView *)textView
+- (void)selectionChangeImpl: (NSRange) range
 {
+    KEYBOARD_LOG("selectionChangeImpl %u, %u", (unsigned int) range.location, (unsigned int) range.length);
+    
+    if (NSEqualRanges(m_LastSelection, range))
+    {
+        KEYBOARD_LOG("    selection hasn't changed, will not invoke callback");
+        return;
+    }
+    m_LastSelection = range;
     if (m_ShowParams.callbacks.selectionChanagedCallback)
     {
-        NSRange range = [iOSScreenKeyboardDelegate getSelectionFromTextInput: textView];
         m_ShowParams.callbacks.selectionChanagedCallback(m_ShowParams.callbacks.deviceId, (int)range.location, (int)range.length);
     }
     else
         NSLog(@"selectionChanagedCallback: Missing callback");
+}
+
+- (void)textViewDidChange:(UITextView *)textView
+{
+    [self textDidChangeImpl: [textView text]];
+}
+
+- (void)textViewDidChangeSelection:(UITextView *)textView
+{
+    [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: textView]];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
     if ([keyPath isEqualToString: @"selectedTextRange"] && m_TextField == object)
-        [self textFieldDidChangeSelectionImpl: m_TextField];
+        [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: m_TextField]];
 }
 
-- (void)textFieldDidChangeSelectionImpl:(UITextField *)textField
+// Note: This callback is available only from iOS 14.0 or higher
+- (void)textFieldDidChangeSelection:(UITextField *)textField
 {
-    if (m_ShowParams.callbacks.selectionChanagedCallback)
-    {
-        NSRange range = [iOSScreenKeyboardDelegate getSelectionFromTextInput: textField];
-        m_ShowParams.callbacks.selectionChanagedCallback(m_ShowParams.callbacks.deviceId, (int)range.location, (int)range.length);
-    }
-    else
-        NSLog(@"selectionChanagedCallback: Missing callback");
+    [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: textField]];
 }
 
-- (void)textFieldDidChangeImpl:(UITextField *)textField
+- (void)textFieldDidChange:(UITextField*)textField
 {
+    // Note: Regarding selections
+    //       When text changes in text view, textViewDidChangeSelection is triggered
+    //       When text changes in text field, observeValueForKeyPath with selectedTextRange doesn't get triggered.
+    //       When selection changes in text view, textViewDidChangeSelection is triggered
+    //       When selection changes in text field, observeValueForKeyPath with selectedTextRange is triggered
+    
+    // Workaround issue with selection not being triggered
     if (@available(iOS 13.0, tvOS 13.0, *))
     {
         // Empty on purpose
     }
     else
     {
-        [self textFieldDidChangeSelectionImpl: textField];
+        [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: m_TextField]];
     }
-
-    if (m_ShowParams.callbacks.textChangedCallback)
-        m_ShowParams.callbacks.textChangedCallback(m_ShowParams.callbacks.deviceId, [textField.text UTF8String]);
-    else
-        NSLog(@"textFieldDidChange: Missing callback");
-}
-
-- (void)textFieldDidChangeSelection:(UITextField *)textField
-{
-    [self textFieldDidChangeSelectionImpl: textField];
-}
-
-- (void)textFieldDidChange:(UITextField*)textField
-{
-    [self textFieldDidChangeImpl: textField];
+    [self textDidChangeImpl: textField.text];
 }
 
 - (BOOL)textViewShouldBeginEditing:(UITextView*)view
@@ -248,7 +250,7 @@ enum iOSScreenKeyboardStatus
     m_ShowParams = param;
 
     if (m_Active)
-        [self hide];
+        [self hide: StatusDone];
 
     m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
 
@@ -291,6 +293,9 @@ enum iOSScreenKeyboardStatus
     // TODO
     //[self shouldHideInput: m_ShouldHideInput];
 
+    m_LastSelection.length = 0;
+    m_LastSelection.location = m_InitialText.length;
+    
     m_Status     = StatusVisible;
     m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     m_Active     = YES;
@@ -298,8 +303,10 @@ enum iOSScreenKeyboardStatus
     [self showUI];
 }
 
-- (void)hide
+-(void)hide: (iOSScreenKeyboardStatus)hideStatus
 {
+    m_Status     = hideStatus;
+    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     [self hideUI];
 }
 
@@ -542,15 +549,31 @@ i = res.items;                                              \
     NSString* originalText = self.getText;
     if ([originalText isEqualToString: newText])
         return;
+    UIView<UITextInput>* textInput;
 #if PLATFORM_IOS
     if (m_ShowParams.multiline)
     {
         m_TextView.text = newText;
-        return;
+        textInput = m_TextView;
     }
+    else
 #endif
-    m_TextField.text = newText;
-    [self textFieldDidChangeImpl: m_TextField];
+    {
+        m_TextField.text = newText;
+        textInput = m_TextField;
+        
+        if (@available(iOS 13.0, tvOS 13.0, *))
+        {
+            // Empty on purpose
+        }
+        else
+        {
+            [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: textInput]];
+        }
+    }
+    
+    // Setting text doesn't trigger callbacks, do it manually
+    [self textDidChangeImpl: newText];
 }
 
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput
@@ -585,6 +608,8 @@ i = res.items;                                              \
 
 - (void)setSelection:(NSRange)newSelection
 {
+    if (NSEqualRanges(self.getSelection, newSelection))
+        return;
     UIView<UITextInput>* textInput;
 
 #if PLATFORM_TVOS
