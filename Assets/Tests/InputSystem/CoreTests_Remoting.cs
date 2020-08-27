@@ -158,14 +158,14 @@ partial class CoreTests
     public void Remote_ConnectingWithExistingGeneratedLayout_WillSendLayoutToRemotes()
     {
         InputSystem.RegisterLayoutBuilder(() =>
-            {
-                var builder = new InputControlLayout.Builder()
-                    .WithType<MyDevice>();
-                builder.AddControl("MyControl")
-                    .WithLayout("Button");
+        {
+            var builder = new InputControlLayout.Builder()
+                .WithType<MyDevice>();
+            builder.AddControl("MyControl")
+                .WithLayout("Button");
 
-                return builder.Build();
-            },
+            return builder.Build();
+        },
             "MyCustomLayout");
         InputSystem.AddDevice("MyCustomLayout");
 
@@ -187,14 +187,14 @@ partial class CoreTests
         using (var remote = new FakeRemote())
         {
             InputSystem.RegisterLayoutBuilder(() =>
-                {
-                    var builder = new InputControlLayout.Builder()
-                        .WithType<MyDevice>();
-                    builder.AddControl("MyControl")
-                        .WithLayout("Button");
+            {
+                var builder = new InputControlLayout.Builder()
+                    .WithType<MyDevice>();
+                builder.AddControl("MyControl")
+                    .WithLayout("Button");
 
-                    return builder.Build();
-                },
+                return builder.Build();
+            },
                 "MyCustomLayout");
             InputSystem.AddDevice("MyCustomLayout");
 
