@@ -168,7 +168,7 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator CheckInputFieldTextCallback()
+    public IEnumerator CheckInputFieldTextCallback([Values(true, false)] bool multiline)
     {
         yield return ResetKeyboard();
 
@@ -179,8 +179,7 @@ public class ScreenKeyboardTests : InputTestFixture
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
-        // TODO: keyboard show should trigger inputFieldTextChanged
-        yield return ShowKeyboard();
+        yield return ShowKeyboard(new ScreenKeyboardShowParams(){multiline = multiline });
 
         Assert.AreEqual(string.Empty, keyboard.inputFieldText);
 
@@ -201,7 +200,7 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator ChangeTextInsideInputFieldCallback()
+    public IEnumerator ChangeTextInsideInputFieldCallback([Values(true, false)] bool multiline)
     {
         yield return ResetKeyboard();
 
@@ -220,7 +219,7 @@ public class ScreenKeyboardTests : InputTestFixture
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
-        yield return ShowKeyboard();
+        yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline });
         
         var targetText = "Hello";
         keyboard.inputFieldText = targetText;
@@ -235,12 +234,33 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator CheckInputFieldText()
+    public IEnumerator ChangeSelectionInsideSelectionCallback()
+    {
+        yield return ResetKeyboard();
+
+        var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
+        var selectionCallback = new Action<RangeInt>((range) =>
+            {
+                selectionCallbackInfo.CallbackInvoked(range); 
+                keyboard.selection = new RangeInt(1, 0);
+            });
+
+        keyboard.selectionChanged += selectionCallback;
+        yield return ShowKeyboard();
+
+        keyboard.inputFieldText = "Hello";
+        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
+        Assert.AreEqual(new MyRangeInt(1, 0), (MyRangeInt)selectionCallbackInfo.Data);
+        yield return HideKeyboard();
+    }
+
+    [UnityTest]
+    public IEnumerator CheckInputFieldText([Values(true, false)] bool multiline)
     {
         yield return ResetKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
-        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline});
 
         Assert.AreEqual(initiaText, keyboard.inputFieldText);
         keyboard.inputFieldText = targetText;
@@ -266,7 +286,6 @@ public class ScreenKeyboardTests : InputTestFixture
         keyboard.selectionChanged += selectionCallback;
 
         yield return ShowKeyboard();
-        // TODO: keyboard show should trigger selection
 
         Assert.AreEqual(new MyRangeInt(0, 0), (MyRangeInt)keyboard.selection);
 
