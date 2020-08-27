@@ -58,6 +58,8 @@ namespace UnityEngine.InputSystem
             get => m_InputFieldText;
             set
             {
+                if (m_InputFieldText.Equals(value))
+                    return;
                 m_InputFieldText = value;
                 ReportInputFieldChange(value);
                 m_Selection = new RangeInt(m_InputFieldText.Length, 0);
