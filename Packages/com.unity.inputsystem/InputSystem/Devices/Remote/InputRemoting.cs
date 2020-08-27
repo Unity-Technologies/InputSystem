@@ -133,8 +133,7 @@ namespace UnityEngine.InputSystem
 
             sending = true;
 
-            SendAllGeneratedLayouts();
-            SendAllDevices();
+            SendInitialMessages();
         }
 
         public void StopSending()
@@ -203,6 +202,12 @@ namespace UnityEngine.InputSystem
             ArrayHelpers.Append(ref m_Subscribers, subscriber);
 
             return subscriber;
+        }
+
+        private void SendInitialMessages()
+        {
+            SendAllGeneratedLayouts();
+            SendAllDevices();
         }
 
         private void SendAllGeneratedLayouts()
@@ -414,7 +419,7 @@ namespace UnityEngine.InputSystem
             {
                 if (receiver.sending)
                 {
-                    receiver.SendAllDevices();
+                    receiver.SendInitialMessages();
                 }
                 else if ((receiver.m_Flags & Flags.StartSendingOnConnect) == Flags.StartSendingOnConnect)
                     receiver.StartSending();
