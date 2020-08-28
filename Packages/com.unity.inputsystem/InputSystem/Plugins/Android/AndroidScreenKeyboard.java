@@ -81,7 +81,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     private IScreenKeyboardCallbacks m_Callbacks;
     private ScreenKeyboardStatus m_DismissReturnValue;
 
-    private boolean m_MoveSelectionToEnd;
+    private long m_LastSelection;
 
     public AndroidScreenKeyboard ()
     {
@@ -127,6 +127,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         txtInput.setHintTextColor (0x61000000);
         txtInput.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
         txtInput.addTextChangedListener (this);
+        m_LastSelection = convertSelectionToLong(txtInput.getText().length(), 0);
         txtInput.setSelection(txtInput.getText().length());
         txtInput.setClickable (true);
         txtInput.setOnFocusChangeListener (new View.OnFocusChangeListener ()
@@ -141,6 +142,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                 }
             }
         });
+
 
         Button okButton = (Button) findViewById (id.okButton);
         okButton.setOnClickListener (this);
@@ -281,18 +283,15 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             {
                 debugLog("onSelectionChanged {0} {1}", start, end - start);
 
-                boolean moveSelectionToEnd = m_MoveSelectionToEnd;
-                m_MoveSelectionToEnd = false;
-                if (moveSelectionToEnd && start != length() && end != length())
+                long currentSelection = convertSelectionToLong(start, end);
+                if (m_LastSelection == currentSelection)
                 {
-                    debugLog("moving selection to {0} {1}", length(), 0);
-                    // This will implicitly invoke onSelectionChanged again
-                    setSelection(length());
+                    debugLog("   didn't change from last time, ignoring");
+                    return;
                 }
-                else
-                {
-                    m_Callbacks.OnSelectionChanged(start, end - start);
-                }
+                m_LastSelection = currentSelection;
+
+                m_Callbacks.OnSelectionChanged(start, end - start);
             }
         };
 
@@ -338,8 +337,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         if (txtInput != null)
         {
 			debugLog("setText {0}", text);
-            m_MoveSelectionToEnd = true;
+			// setText implicitly changes selection to 0, 0, and will invoke selection changed callback
+            // we want to ignore this, since we want for selection to be at the end of the text
+            long temp = m_LastSelection;
+            m_LastSelection = 0;
             txtInput.setText(text);
+            m_LastSelection = temp;
+            txtInput.setSelection(text.length());
         }
     }
 
@@ -351,13 +355,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             txtInput.setSelection(start, start + length);
     }
 
-    public long getSelection()
+    private long convertSelectionToLong(long start, long end)
     {
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if (txtInput == null)
-            return 0;
-        long start = txtInput.getSelectionStart();
-        long end = txtInput.getSelectionEnd();
         // Saw cases where end is actually smaller than start
         if (end < start)
         {
@@ -367,5 +366,16 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         }
         long length = end - start;
         return start | (length << 32);
+    }
+
+    public long getSelection()
+    {
+        EditText txtInput = (EditText) findViewById(id.txtInput);
+        if (txtInput == null)
+            return 0;
+        long start = txtInput.getSelectionStart();
+        long end = txtInput.getSelectionEnd();
+
+        return convertSelectionToLong(start, end);
     }
 }
