@@ -100,7 +100,7 @@ public class InputDebugInfo : MonoBehaviour
 
         Quaternion targetAngle = m_arrowUI.rotation * Quaternion.Euler(0f, 0f, 180f);
 
-        while (Mathf.Abs(currentX - targetX) > 10f)
+        while (Mathf.Abs(currentX - targetX) > 10f && currentX > targetX)
         {
             // Calculate the position in current frame
             currentX += Time.deltaTime * posDifference * 1000 / m_moveTime;

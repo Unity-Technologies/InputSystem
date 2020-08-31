@@ -1,0 +1,9 @@
+{
+    "name": "UnityEngine.InputLegacyModule",
+    "rootNamespace": "",
+    "references": [
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": true
+}

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ControllerDiagramOldInput : GamepadOldInput
 {
-#if ENABLE_LEGACY_INPUT_MANAGER
+#if true || ENABLE_LEGACY_INPUT_MANAGER
     // Update is called once per frame
     void Update()
     {

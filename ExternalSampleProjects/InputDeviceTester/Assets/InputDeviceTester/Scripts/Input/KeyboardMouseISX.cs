@@ -239,7 +239,8 @@ public class KeyboardMouseISX : MonoBehaviour
     // Show the unmapped key name in the text field
     private void ShowMessage(string msg)
     {
-        m_MessageWindow.text += "<color=red>" + msg + "</color>\n";
+        // TODO
+        //m_MessageWindow.text += "<color=red>" + msg + "</color>\n";
     }
 
     // From "KeyboardLastKey" by @Rene

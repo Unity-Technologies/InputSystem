@@ -25,7 +25,7 @@ public class GamepadOldInput : MonoBehaviour
     protected List<AnalogStick> analog_sticks = new List<AnalogStick>();
     protected List<AnalogButton> analog_buttons = new List<AnalogButton>();
 
-#if ENABLE_LEGACY_INPUT_MANAGER
+#if true || ENABLE_LEGACY_INPUT_MANAGER
     protected void UpdateAllButtons()
     {
         foreach (KeyCode kcode in Enum.GetValues(typeof(KeyCode)))

@@ -18,7 +18,7 @@ public class XboxOldInput : GamepadOldInput
     private List<XboxTrigger> xbox_triggers = new List<XboxTrigger>();
     private readonly Color m_stickButtonColor = new Color(0.4f, 0.4f, 0.55f, 1f);    // The default color for Stick when it is NOT pressed.
 
-#if ENABLE_LEGACY_INPUT_MANAGER
+#if true || ENABLE_LEGACY_INPUT_MANAGER
     // Use this for initialization
     void Start()
     {
