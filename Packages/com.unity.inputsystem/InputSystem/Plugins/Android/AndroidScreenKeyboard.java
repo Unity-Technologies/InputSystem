@@ -326,7 +326,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         if (txtInput == null)
             return null;
 
-        return txtInput.getText ().toString ().trim ();
+        return txtInput.getText().toString ();
     }
 
     public void setText (String text)
