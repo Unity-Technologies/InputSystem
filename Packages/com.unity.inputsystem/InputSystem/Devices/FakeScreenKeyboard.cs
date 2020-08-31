@@ -26,7 +26,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-
         protected override void InternalShow()
         {
             m_InputFieldText = m_ShowParams.initialText;
