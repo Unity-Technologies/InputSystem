@@ -112,12 +112,12 @@ public class ScreenKeyboardTests : InputTestFixture
 
     private IEnumerator HideKeyboard()
     {
-        if (keyboard.status != ScreenKeyboardStatus.Done)
+        if (keyboard.state != ScreenKeyboardState.Done)
         {
             keyboard.Hide();
-            for (int i = 0; i < kFrameTimeout && keyboard.status != ScreenKeyboardStatus.Done; i++)
+            for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Done; i++)
                 yield return new WaitForFixedUpdate();
-            Assert.AreEqual(ScreenKeyboardStatus.Done, keyboard.status, "Couldn't hide keyboard");
+            Assert.AreEqual(ScreenKeyboardState.Done, keyboard.state, "Couldn't hide keyboard");
         }
     }
 
@@ -128,12 +128,12 @@ public class ScreenKeyboardTests : InputTestFixture
 
     private IEnumerator ShowKeyboard(ScreenKeyboardShowParams showParams)
     {
-        Assert.IsTrue(keyboard.status != ScreenKeyboardStatus.Visible, "Expected keybard to be not visible");
+        Assert.IsTrue(keyboard.state != ScreenKeyboardState.Visible, "Expected keybard to be not visible");
 
         keyboard.Show(showParams);
-        for (int i = 0; i < kFrameTimeout && keyboard.status != ScreenKeyboardStatus.Visible; i++)
+        for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Visible; i++)
             yield return new WaitForFixedUpdate();
-        Assert.AreEqual(ScreenKeyboardStatus.Visible, keyboard.status, "Couldn't show keyboard");
+        Assert.AreEqual(ScreenKeyboardState.Visible, keyboard.state, "Couldn't show keyboard");
     }
 
     // TODO See that callbacks are not called when keyboard is not shown. ??? Do we really need this
@@ -150,8 +150,8 @@ public class ScreenKeyboardTests : InputTestFixture
     {
         yield return ResetKeyboard();
 
-        var stateCallbackInfo = new CallbackInfo<ScreenKeyboardStatus>(ScreenKeyboardStatus.Canceled);
-        var stateCallback = new Action<ScreenKeyboardStatus>(
+        var stateCallbackInfo = new CallbackInfo<ScreenKeyboardState>(ScreenKeyboardState.Canceled);
+        var stateCallback = new Action<ScreenKeyboardState>(
             (state) =>
             {
                 stateCallbackInfo.CallbackInvoked(state);
@@ -160,14 +160,14 @@ public class ScreenKeyboardTests : InputTestFixture
 
         yield return ShowKeyboard();
 
-        Assert.AreEqual(ScreenKeyboardStatus.Visible, stateCallbackInfo.Data);
+        Assert.AreEqual(ScreenKeyboardState.Visible, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
         Assert.AreEqual(1, stateCallbackInfo.CalledCount);
         // Don't check frame, since when you call Show the keyboard can appear only in next frame
 
         yield return HideKeyboard();
 
-        Assert.AreEqual(ScreenKeyboardStatus.Done, stateCallbackInfo.Data);
+        Assert.AreEqual(ScreenKeyboardState.Done, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
         Assert.AreEqual(2, stateCallbackInfo.CalledCount);
     }
