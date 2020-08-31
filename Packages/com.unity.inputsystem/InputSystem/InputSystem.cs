@@ -3174,7 +3174,6 @@ namespace UnityEngine.InputSystem
             #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
             NativeInputRuntime.instance.screenKeyboard = FakeScreenKeyboard.instance;
             #endif
-
         }
 
         private static void PerformDefaultPluginShutdown()
