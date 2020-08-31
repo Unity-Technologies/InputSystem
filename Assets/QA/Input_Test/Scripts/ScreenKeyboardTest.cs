@@ -163,16 +163,16 @@ public class ScreenKeyboardTest : MonoBehaviour
         m_InputField.text = text;
     }
 
-    private void StateChangedCallback(ScreenKeyboardStatus status)
+    private void StateChangedCallback(ScreenKeyboardState state)
     {
-        Log($"Status: {status}, Frame: {Time.frameCount}");
+        Log($"Status: {state}, Frame: {Time.frameCount}");
     }
 
     // Update is called once per frame
     void Update()
     {
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
-        m_KeyboardStatus.text = m_ScreenKeyboard.status.ToString();
+        m_KeyboardStatus.text = m_ScreenKeyboard.state.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
 
         if (m_OldScreenKeyboard != null)
@@ -183,7 +183,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         }
 
 
-        var newVisible = m_ScreenKeyboard.status == ScreenKeyboardStatus.Visible;
+        var newVisible = m_ScreenKeyboard.state == ScreenKeyboardState.Visible;
         var oldVisible = TouchScreenKeyboard.visible;
         #if UNITY_IOS
         // On iOS TouchScreenKeyboard.visible checks for keyboard availability globally
@@ -205,7 +205,7 @@ public class ScreenKeyboardTest : MonoBehaviour
         }
         else if (newVisible)
         {
-            infoMessage += $@"Name: ScreenKeyboard Status: {m_ScreenKeyboard.status}
+            infoMessage += $@"Name: ScreenKeyboard Status: {m_ScreenKeyboard.state}
 Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}, {m_ScreenKeyboard.inputFieldText}
 ";
         }
