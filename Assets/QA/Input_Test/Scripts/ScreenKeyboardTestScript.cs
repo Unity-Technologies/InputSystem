@@ -190,11 +190,13 @@ public class ScreenKeyboardTestScript : MonoBehaviour
         }
         else if (oldVisible)
         {
-            infoMessage += "Showing old TouchscreenKeyboard";
+            infoMessage += $@"[OLD] ScreenKeyboard Status: {m_OldScreenKeyboard.status}
+Selection: {m_OldScreenKeyboard.selection.start}, {m_OldScreenKeyboard.selection.length}, {m_OldScreenKeyboard.text}
+";
         }
         else if (newVisible)
         {
-            infoMessage += $@"Name: ScreenKeyboard Status: {m_ScreenKeyboard.state}
+            infoMessage += $@"[NEW] ScreenKeyboard Status: {m_ScreenKeyboard.state}
 Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.length}, {m_ScreenKeyboard.inputFieldText}
 ";
         }
