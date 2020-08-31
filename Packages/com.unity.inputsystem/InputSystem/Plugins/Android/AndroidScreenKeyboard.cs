@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Android
 #if UNITY_ANDROID
             [Preserve]
 #endif
-            void OnStatusChanged(int state)
+            void OnStateChanged(int state)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
                     throw new Exception("OnStatusChanged was executed from incorrect thread");
