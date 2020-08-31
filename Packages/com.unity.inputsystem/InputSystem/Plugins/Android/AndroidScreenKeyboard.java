@@ -37,11 +37,11 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     interface IScreenKeyboardCallbacks
     {
         void OnTextChanged(String text);
-        void OnStatusChanged(int status);
+        void OnStateChanged(int state);
         void OnSelectionChanged(int start, int length);
     }
 
-    private enum ScreenKeyboardStatus
+    private enum ScreenKeyboardState
     {
         Done(0),
         Visible(1),
@@ -49,7 +49,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         private final int value;
 
-        ScreenKeyboardStatus(int value) { this.value = value; }
+        ScreenKeyboardState(int value) { this.value = value; }
     }
 
     private enum ScreenKeyboardType
@@ -79,7 +79,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private Context m_Context = null;
     private IScreenKeyboardCallbacks m_Callbacks;
-    private ScreenKeyboardStatus m_DismissReturnValue;
+    private ScreenKeyboardState m_DismissReturnValue;
 
     private long m_LastSelection;
 
@@ -87,7 +87,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     {
         super (UnityPlayer.currentActivity);
         m_Context = UnityPlayer.currentActivity;
-        m_DismissReturnValue = ScreenKeyboardStatus.Done;
+        m_DismissReturnValue = ScreenKeyboardState.Done;
         Window window = getWindow();
         window.requestFeature(Window.FEATURE_NO_TITLE);
         // Set transparent background
@@ -116,7 +116,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             boolean inputFieldHidden)
     {
         m_Callbacks = callbacks;
-        m_DismissReturnValue = ScreenKeyboardStatus.Done;
+        m_DismissReturnValue = ScreenKeyboardState.Done;
         setHideInputField(inputFieldHidden);
 
         setContentView (createSoftInputView ());
@@ -238,13 +238,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     @Override public void onShow(DialogInterface dialog)
     {
         debugLog("onShow");
-        m_Callbacks.OnStatusChanged(ScreenKeyboardStatus.Visible.value);
+        m_Callbacks.OnStateChanged(ScreenKeyboardState.Visible.value);
     }
 
     @Override public void onDismiss(DialogInterface dialog)
     {
         debugLog("onDismiss " + m_DismissReturnValue);
-        m_Callbacks.OnStatusChanged(m_DismissReturnValue.value);
+        m_Callbacks.OnStateChanged(m_DismissReturnValue.value);
     }
 
     protected View createSoftInputView ()
@@ -260,7 +260,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             public boolean onKeyPreIme(int keyCode, KeyEvent event) {
                 // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    m_DismissReturnValue = ScreenKeyboardStatus.Canceled;
+                    m_DismissReturnValue = ScreenKeyboardState.Canceled;
                     dismiss();
                     return true;
                 }

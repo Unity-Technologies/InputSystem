@@ -53,7 +53,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
     BOOL                m_InputHidden;
     BOOL                m_Active;
-    iOSScreenKeyboardStatus      m_Status;
+    iOSScreenKeyboardState      m_State;
 
     // not pretty but seems like easiest way to keep "we are rotating" status
     BOOL                m_Rotating;
@@ -65,7 +65,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 @synthesize area;
 //@synthesize active      = m_Active;
-//@synthesize status      = m_Status;
+//@synthesize status      = m_State;
 //@synthesize text;
 //@synthesize selection;
 
@@ -78,23 +78,23 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textInputDone:(id)sender
 {
-    if (m_Status != StatusVisible)
+    if (m_State != StateVisible)
         return;
 
-    [self hide: StatusDone];
+    [self hide: StateDone];
 }
 
 - (void)textInputCancel:(id)sender
 {
-    [self hide: StatusCanceled];
+    [self hide: StateCanceled];
 }
 
 - (void)textInputLostFocus
 {
-    if (m_Status != StatusVisible)
+    if (m_State != StateVisible)
         return;
 
-    [self hide: StatusLostFocus];
+    [self hide: StateLostFocus];
 }
 
 - (void)textDidChangeImpl:(NSString*)text
@@ -250,7 +250,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_ShowParams = param;
 
     if (m_Active)
-        [self hide: StatusDone];
+        [self hide: StateDone];
 
     m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
 
@@ -296,17 +296,17 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_LastSelection.length = 0;
     m_LastSelection.location = m_InitialText.length;
 
-    m_Status     = StatusVisible;
-    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
+    m_State     = StateVisible;
+    m_ShowParams.callbacks.stateChangedCallback(m_ShowParams.callbacks.deviceId, m_State);
     m_Active     = YES;
 
     [self showUI];
 }
 
-- (void)hide:(iOSScreenKeyboardStatus)hideStatus
+- (void)hide:(iOSScreenKeyboardState)hideState
 {
-    m_Status     = hideStatus;
-    m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
+    m_State     = hideState;
+    m_ShowParams.callbacks.stateChangedCallback(m_ShowParams.callbacks.deviceId, m_State);
     [self hideUI];
 }
 

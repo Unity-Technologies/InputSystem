@@ -1,14 +1,14 @@
 #pragma once
 
 typedef void (*OnTextChangedCallback) (int deviceId, const char* text);
-typedef void (*OnStatusChangedCallback) (int deviceId, int status);
+typedef void (*OnStateChangedCallback) (int deviceId, int state);
 typedef void (*OnSelectionChangedCallback) (int deviceId, int start, int length);
 
 struct iOSScreenKeyboardCallbacks
 {
     int deviceId;
     OnTextChangedCallback textChangedCallback;
-    OnStatusChangedCallback statusChangedCallback;
+    OnStateChangedCallback stateChangedCallback;
     OnSelectionChangedCallback selectionChanagedCallback;
 };
 
@@ -23,13 +23,13 @@ struct iOSScreenKeyboardShowParamsNative
     iOSScreenKeyboardCallbacks  callbacks;
 };
 
-// Must be in sync with com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs ScreenKeyboardStatus
-enum iOSScreenKeyboardStatus
+// Must be in sync with com.unity.inputsystem/InputSystem/Devices/ScreenKeyboard.cs ScreenKeyboardState
+enum iOSScreenKeyboardState
 {
-    StatusDone        = 0,
-    StatusVisible     = 1,
-    StatusCanceled    = 2,
-    StatusLostFocus   = 3,
+    StateDone        = 0,
+    StateVisible     = 1,
+    StateCanceled    = 2,
+    StateLostFocus   = 3,
 };
 
 @interface iOSScreenKeyboardDelegate : NSObject<UITextFieldDelegate, UITextViewDelegate>
@@ -38,7 +38,7 @@ enum iOSScreenKeyboardStatus
 + (iOSScreenKeyboardDelegate*)getInstance;
 
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
-- (void)hide:(iOSScreenKeyboardStatus)hideStatus;
+- (void)hide:(iOSScreenKeyboardState)hideState;
 
 // These are all privates
 /*
@@ -70,7 +70,7 @@ enum iOSScreenKeyboardStatus
 
 @property (readonly, nonatomic, getter = queryArea)               CGRect          area;
 //@property (readonly, nonatomic)                                 BOOL            active;
-//@property (readonly, nonatomic)                                 KeyboardStatus  status;
+//@property (readonly, nonatomic)                                 KeyboardState  state;
 //@property (retain, nonatomic, getter = getText, setter = setText:)  NSString*       text;
 //@property (assign, nonatomic)   int characterLimit;
 //@property (readonly, nonatomic)                                 BOOL        canGetSelection;

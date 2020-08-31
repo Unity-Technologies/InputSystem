@@ -103,7 +103,7 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
 
 extern "C" void _iOSScreenKeyboardHide()
 {
-    [[iOSScreenKeyboardDelegate getInstanceOrCreate] hide: StatusDone];
+    [[iOSScreenKeyboardDelegate getInstanceOrCreate] hide: StateDone];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()

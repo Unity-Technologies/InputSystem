@@ -45,11 +45,11 @@ namespace UnityEngine.InputSystem.Android
 #if UNITY_ANDROID
             [Preserve]
 #endif
-            void OnStatusChanged(int status)
+            void OnStatusChanged(int state)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
                     throw new Exception("OnStatusChanged was executed from incorrect thread");
-                m_Parent.ReportStatusChange((ScreenKeyboardStatus)status);
+                m_Parent.ReportStateChange((ScreenKeyboardState)state);
             }
 
 #if UNITY_ANDROID

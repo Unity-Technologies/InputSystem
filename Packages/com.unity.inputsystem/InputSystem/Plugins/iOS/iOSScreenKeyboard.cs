@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.iOS
 
         internal delegate void OnTextChangedDelegate(int deviceId, string text);
 
-        internal delegate void OnStatusChangedDelegate(int deviceId, ScreenKeyboardStatus status);
+        internal delegate void OnStateChangedDelegate(int deviceId, ScreenKeyboardState state);
 
         internal delegate void OnSelectionChangedDelegate(int deviceId, int start, int length);
 
@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.iOS
         {
             internal int deviceId;
             internal OnTextChangedDelegate onTextChanged;
-            internal OnStatusChangedDelegate onStatusChanged;
+            internal OnStateChangedDelegate onStateChanged;
             internal OnSelectionChangedDelegate onSelectionChanaged;
         }
 
@@ -63,10 +63,10 @@ namespace UnityEngine.InputSystem.iOS
             instance.ReportInputFieldChange(text);
         }
 
-        [MonoPInvokeCallback(typeof(OnStatusChangedDelegate))]
-        private static void OnStatusChangedCallback(int deviceId, ScreenKeyboardStatus status)
+        [MonoPInvokeCallback(typeof(OnStateChangedDelegate))]
+        private static void OnStateChangedCallback(int deviceId, ScreenKeyboardState state)
         {
-            instance.ReportStatusChange(status);
+            instance.ReportStateChange(state);
         }
 
         [MonoPInvokeCallback(typeof(OnSelectionChangedDelegate))]
@@ -81,7 +81,7 @@ namespace UnityEngine.InputSystem.iOS
             {
                 deviceId = -1,
                 onTextChanged = OnTextChangedCallback,
-                onStatusChanged = OnStatusChangedCallback,
+                onStateChanged = OnStateChangedCallback,
                 onSelectionChanaged = OnSelectionChangedCallback
             };
             _iOSScreenKeyboardShow(ref m_ShowParams, Marshal.SizeOf(m_ShowParams), ref callbacks, Marshal.SizeOf(callbacks));

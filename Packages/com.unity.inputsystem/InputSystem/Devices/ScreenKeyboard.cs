@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem
         Search = 9
     }
 
-    public enum ScreenKeyboardStatus : uint
+    public enum ScreenKeyboardState : uint
     {
         Done,
         Visible,
@@ -63,14 +63,14 @@ namespace UnityEngine.InputSystem
     {
         // Note: Status cannot be a part of ScreenKeyboardState, since it defines if device is enabled or disabled
         //       If device is disabled, it cannot receive any events
-        protected ScreenKeyboardStatus m_KeyboardStatus;
+        protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
 
-        private InlinedArray<Action<ScreenKeyboardStatus>> m_StatusChangedListeners;
+        private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
         private InlinedArray<Action<RangeInt>> m_SelectionChangedListeners;
         // TODO: Status to state
-        public event Action<ScreenKeyboardStatus> stateChanged
+        public event Action<ScreenKeyboardState> stateChanged
         {
             add { m_StatusChangedListeners.Append(value); }
             remove { m_StatusChangedListeners.Remove(value); }
@@ -88,9 +88,9 @@ namespace UnityEngine.InputSystem
             remove { m_SelectionChangedListeners.Remove(value); }
         }
 
-        public ScreenKeyboardStatus status
+        public ScreenKeyboardState state
         {
-            get => m_KeyboardStatus;
+            get => m_KeyboardState;
         }
 
         public void Show()
@@ -133,19 +133,19 @@ namespace UnityEngine.InputSystem
                 listener(text);
         }
 
-        protected void ReportStatusChange(ScreenKeyboardStatus keyboardStatus)
+        protected void ReportStateChange(ScreenKeyboardState state)
         {
-            if (keyboardStatus != m_KeyboardStatus)
+            if (state != m_KeyboardState)
             {
-                m_KeyboardStatus = keyboardStatus;
+                m_KeyboardState = state;
                 foreach (var listener in m_StatusChangedListeners)
-                    listener(keyboardStatus);
+                    listener(state);
             }
         }
 
         protected void ReportSelectionChange(int start, int length)
         {
-            if (m_KeyboardStatus != ScreenKeyboardStatus.Visible)
+            if (m_KeyboardState != ScreenKeyboardState.Visible)
                 return;
 
             var selection = new RangeInt(start, length);

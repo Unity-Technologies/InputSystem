@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem
         private IEnumerator QueueStatusChangeVisible()
         {
             yield return new WaitForEndOfFrame();
-            ReportStatusChange(ScreenKeyboardStatus.Visible);
+            ReportStateChange(ScreenKeyboardState.Visible);
         }
 
         protected override void InternalHide()
@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem
         private IEnumerator QueueStatusChangeDone()
         {
             yield return new WaitForEndOfFrame();
-            ReportStatusChange(ScreenKeyboardStatus.Done);
+            ReportStateChange(ScreenKeyboardState.Done);
         }
 
         public override string inputFieldText
