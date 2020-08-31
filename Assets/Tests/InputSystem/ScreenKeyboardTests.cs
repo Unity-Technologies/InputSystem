@@ -21,8 +21,7 @@ public class ScreenKeyboardTests : InputTestFixture
 {
     static ScreenKeyboard s_TargetKeyboard;
     const int kFrameTimeout = 30;
-
-    // TODO: call count
+    
     public class CallbackInfo<T>
     {
         public T Data { private set; get; }
@@ -135,8 +134,7 @@ public class ScreenKeyboardTests : InputTestFixture
             yield return new WaitForFixedUpdate();
         Assert.AreEqual(ScreenKeyboardState.Visible, keyboard.state, "Couldn't show keyboard");
     }
-
-    // TODO See that callbacks are not called when keyboard is not shown. ??? Do we really need this
+    
     [UnityTest]
     public IEnumerator CheckShowHideOperations()
     {
@@ -173,7 +171,7 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator CheckInputFieldTextCallback([Values(true, false)] bool multiline)
+    public IEnumerator CheckInputFieldTextCallback([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
 
@@ -184,7 +182,7 @@ public class ScreenKeyboardTests : InputTestFixture
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
-        yield return ShowKeyboard(new ScreenKeyboardShowParams(){multiline = multiline });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams(){multiline = multiline, inputFieldHidden = inputFieldHidden});
 
         Assert.AreEqual(string.Empty, keyboard.inputFieldText);
 
@@ -200,7 +198,7 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator ChangeTextInsideInputFieldCallback([Values(true, false)] bool multiline)
+    public IEnumerator ChangeTextInsideInputFieldCallback([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
 
@@ -231,7 +229,7 @@ public class ScreenKeyboardTests : InputTestFixture
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
-        yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline, inputFieldHidden = inputFieldHidden});
 
         var targetText = "12345";
         keyboard.inputFieldText = targetText;
@@ -267,12 +265,12 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator CheckInputFieldText([Values(true, false)] bool multiline)
+    public IEnumerator CheckInputFieldText([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
-        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline});
+        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline, inputFieldHidden = inputFieldHidden});
 
         Assert.AreEqual(initiaText, keyboard.inputFieldText);
         keyboard.inputFieldText = targetText;
