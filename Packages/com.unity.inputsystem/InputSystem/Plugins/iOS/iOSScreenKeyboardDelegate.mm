@@ -18,8 +18,8 @@ static const unsigned kToolBarHeight = 40;
 static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value, there is no way to know the exact widths of the system bar buttons
 
 @interface iOSScreenKeyboardDelegate ()
-- (void)textDidChangeImpl: (NSString*) text;
-- (void)selectionChangeImpl: (NSRange) range;
+- (void)textDidChangeImpl:(NSString*)text;
+- (void)selectionChangeImpl:(NSRange)range;
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput;
 @end
 
@@ -59,7 +59,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     BOOL                m_Rotating;
     bool                m_ShouldHideInput;
     bool                m_ShouldHideInputChanged;
-    
+
     NSRange             m_LastSelection;
 }
 
@@ -80,7 +80,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 {
     if (m_Status != StatusVisible)
         return;
-    
+
     [self hide: StatusDone];
 }
 
@@ -97,7 +97,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     [self hide: StatusLostFocus];
 }
 
-- (void)textDidChangeImpl: (NSString*) text
+- (void)textDidChangeImpl:(NSString*)text
 {
     KEYBOARD_LOG("textDidChangeImpl %@", text);
     if (m_ShowParams.callbacks.textChangedCallback)
@@ -106,10 +106,10 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
         NSLog(@"textViewDidChange: Missing callback");
 }
 
-- (void)selectionChangeImpl: (NSRange) range
+- (void)selectionChangeImpl:(NSRange)range
 {
-    KEYBOARD_LOG("selectionChangeImpl %u, %u", (unsigned int) range.location, (unsigned int) range.length);
-    
+    KEYBOARD_LOG("selectionChangeImpl %u, %u", (unsigned int)range.location, (unsigned int)range.length);
+
     if (NSEqualRanges(m_LastSelection, range))
     {
         KEYBOARD_LOG("    selection hasn't changed, will not invoke callback");
@@ -153,7 +153,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     //       When text changes in text field, observeValueForKeyPath with selectedTextRange doesn't get triggered.
     //       When selection changes in text view, textViewDidChangeSelection is triggered
     //       When selection changes in text field, observeValueForKeyPath with selectedTextRange is triggered
-    
+
     // Workaround issue with selection not being triggered
     if (@available(iOS 13.0, tvOS 13.0, *))
     {
@@ -295,7 +295,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
     m_LastSelection.length = 0;
     m_LastSelection.location = m_InitialText.length;
-    
+
     m_Status     = StatusVisible;
     m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
     m_Active     = YES;
@@ -303,7 +303,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     [self showUI];
 }
 
--(void)hide: (iOSScreenKeyboardStatus)hideStatus
+- (void)hide:(iOSScreenKeyboardStatus)hideStatus
 {
     m_Status     = hideStatus;
     m_ShowParams.callbacks.statusChangedCallback(m_ShowParams.callbacks.deviceId, m_Status);
@@ -561,7 +561,7 @@ i = res.items;                                              \
     {
         m_TextField.text = newText;
         textInput = m_TextField;
-        
+
         if (@available(iOS 13.0, tvOS 13.0, *))
         {
             // Empty on purpose
@@ -571,7 +571,7 @@ i = res.items;                                              \
             [self selectionChangeImpl: [iOSScreenKeyboardDelegate getSelectionFromTextInput: textInput]];
         }
     }
-    
+
     // Setting text doesn't trigger callbacks, do it manually
     [self textDidChangeImpl: newText];
 }

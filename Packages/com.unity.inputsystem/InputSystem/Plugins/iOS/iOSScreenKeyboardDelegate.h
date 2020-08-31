@@ -37,8 +37,8 @@ enum iOSScreenKeyboardStatus
 + (iOSScreenKeyboardDelegate*)getInstanceOrCreate;
 + (iOSScreenKeyboardDelegate*)getInstance;
 
-- (void)show: (iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
-- (void)hide: (iOSScreenKeyboardStatus)hideStatus;
+- (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
+- (void)hide:(iOSScreenKeyboardStatus)hideStatus;
 
 // These are all privates
 /*

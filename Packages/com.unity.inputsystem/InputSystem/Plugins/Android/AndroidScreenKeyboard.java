@@ -336,8 +336,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         EditText txtInput = (EditText) findViewById (id.txtInput);
         if (txtInput != null)
         {
-			debugLog("setText {0}", text);
-			// setText implicitly changes selection to 0, 0, and will invoke selection changed callback
+            debugLog("setText {0}", text);
+            // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
             // we want to ignore this, since we want for selection to be at the end of the text
             long temp = m_LastSelection;
             m_LastSelection = 0;

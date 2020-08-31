@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem
     }
 
     // Note: ScreenKeyboardShowParams has to be a struct otherwise when passing it to objective C on iOS the data is all wrong, interestingly
-    //       the size is correct 
+    //       the size is correct
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
     {

@@ -228,12 +228,11 @@ public class ScreenKeyboardTests : InputTestFixture
                     // Change to same text, this shouldn't trigger a callback, since text didn't change
                     keyboard.inputFieldText = text;
                 }
-                
             });
         keyboard.inputFieldTextChanged += inputFieldCallback;
 
         yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline });
-        
+
         var targetText = "12345";
         keyboard.inputFieldText = targetText;
         targetText = "123456";
@@ -253,10 +252,10 @@ public class ScreenKeyboardTests : InputTestFixture
 
         var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
         var selectionCallback = new Action<RangeInt>((range) =>
-            {
-                selectionCallbackInfo.CallbackInvoked(range); 
-                keyboard.selection = new RangeInt(1, 0);
-            });
+        {
+            selectionCallbackInfo.CallbackInvoked(range);
+            keyboard.selection = new RangeInt(1, 0);
+        });
 
         keyboard.selectionChanged += selectionCallback;
         yield return ShowKeyboard();

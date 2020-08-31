@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.iOS
 
         [DllImport("__Internal")]
         private static extern void _iOSScreenKeyboardHide();
-        
+
         [DllImport("__Internal")]
         private static extern Rect _iOSScreenKeyboardOccludingArea();
 
