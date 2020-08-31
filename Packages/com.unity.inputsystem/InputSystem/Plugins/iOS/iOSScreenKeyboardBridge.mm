@@ -21,6 +21,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 - (void)textDidChangeImpl:(NSString*)text;
 - (void)selectionChangeImpl:(NSRange)range;
 + (NSRange)getSelectionFromTextInput:(UIView<UITextInput>*)textInput;
++ (BOOL)simulateTextSelection;
 @end
 
 @implementation iOSScreenKeyboardBridge
@@ -48,27 +49,14 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
     iOSScreenKeyboardShowParamsNative m_ShowParams;
 
-    CGRect              m_Area;
-    NSString*           m_InitialText;
-
-    BOOL                m_InputHidden;
-    BOOL                m_Active;
+    CGRect                      m_Area;
+    NSString*                   m_InitialText;
+    BOOL                        m_Active;
     iOSScreenKeyboardState      m_State;
-
-    // not pretty but seems like easiest way to keep "we are rotating" status
-    BOOL                m_Rotating;
-    bool                m_ShouldHideInput;
-    bool                m_ShouldHideInputChanged;
-
-    NSRange             m_LastSelection;
+    NSRange                     m_LastSelection;
 }
 
 @synthesize area;
-//@synthesize active      = m_Active;
-//@synthesize status      = m_State;
-//@synthesize text;
-//@synthesize selection;
-
 
 - (BOOL)textFieldShouldReturn:(UITextField*)textFieldObj
 {
@@ -155,11 +143,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     //       When selection changes in text field, observeValueForKeyPath with selectedTextRange is triggered
 
     // Workaround issue with selection not being triggered
-    if (@available(iOS 13.0, tvOS 13.0, *))
-    {
-        // Empty on purpose
-    }
-    else
+    if ([iOSScreenKeyboardBridge simulateTextSelection])
     {
         [self selectionChangeImpl: [iOSScreenKeyboardBridge getSelectionFromTextInput: m_TextField]];
     }
@@ -190,17 +174,20 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)keyboardDidShow:(NSNotification*)notification
 {
+    KEYBOARD_LOG("keyboardDidShow")
     m_Active = YES;
 }
 
 - (void)keyboardWillHide:(NSNotification*)notification
 {
+    KEYBOARD_LOG("keyboardWillHide")
     [self systemHideKeyboard];
 }
 
 - (void)keyboardDidChangeFrame:(NSNotification*)notification
 {
-    m_Active = true;
+    KEYBOARD_LOG("keyboardDidChangeFrame")
+    m_Active = YES;
 
     CGRect srcRect  = [[notification.userInfo objectForKey: UIKeyboardFrameEndUserInfoKey] CGRectValue];
     CGRect rect     = [UnityGetGLView() convertRect: srcRect fromView: nil];
@@ -220,9 +207,8 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 {
     if (!s_Keyboard)
     {
+        KEYBOARD_LOG("creating keyboard instance")
         s_Keyboard = [[iOSScreenKeyboardBridge alloc] init];
-        s_Keyboard->m_ShouldHideInput = false;
-        s_Keyboard->m_ShouldHideInputChanged = false;
     }
 
     return s_Keyboard;
@@ -235,6 +221,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr
 {
+    KEYBOARD_LOG("keyboard show")
     if (!m_EditView.hidden)
     {
         [NSObject cancelPreviousPerformRequestsWithTarget: self];
@@ -254,9 +241,6 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
         [self hide: StateDone];
 
     m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
-
-    // TODO
-    //_characterLimit = param.characterLimit;
 
     UITextAutocapitalizationType capitalization = UITextAutocapitalizationTypeSentences;
     if (param.keyboardType == UIKeyboardTypeURL || param.keyboardType == UIKeyboardTypeEmailAddress || param.keyboardType == UIKeyboardTypeWebSearch)
@@ -291,8 +275,11 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_InputView = m_TextField;
     m_EditView = m_TextField;
 #endif
-    // TODO
-    //[self shouldHideInput: m_ShouldHideInput];
+    
+    m_EditView.hidden     = m_ShowParams.inputFieldHidden;
+    m_InputView.hidden    = m_ShowParams.inputFieldHidden;
+    
+    m_TextField.returnKeyType = m_ShowParams.inputFieldHidden ? UIReturnKeyDone : UIReturnKeyDefault;
 
     m_LastSelection.length = 0;
     m_LastSelection.location = m_InitialText.length;
@@ -301,14 +288,26 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_ShowParams.callbacks.stateChangedCallback(m_State);
     m_Active     = YES;
 
-    [self showUI];
+    // if we unhide everything now the input will be shown smaller then needed quickly (and resized later)
+    // so unhide only when keyboard is actually shown (we will update it when reacting to ios notifications)
+
+    [NSObject cancelPreviousPerformRequestsWithTarget: self];
+    if (!m_InputView.isFirstResponder)
+    {
+        m_EditView.hidden = YES;
+
+        [UnityGetGLView() addSubview: m_EditView];
+        [m_InputView becomeFirstResponder];
+    }
 }
 
 - (void)hide:(iOSScreenKeyboardState)hideState
 {
     m_State     = hideState;
     m_ShowParams.callbacks.stateChangedCallback(m_State);
-    [self hideUI];
+    
+    [NSObject cancelPreviousPerformRequestsWithTarget: self];
+    [self performSelector: @selector(hideUIDelayed) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
 }
 
 #if PLATFORM_IOS
@@ -367,11 +366,7 @@ struct CreateToolbarResult
         [m_TextField addTarget: self action: @selector(textFieldDidChange:) forControlEvents: UIControlEventEditingChanged];
 
         // Workaround missing textFieldDidChangeSelection callback on earlier versions
-        if (@available(iOS 13.0, tvOS 13.0, *))
-        {
-            // Empty on purpose
-        }
-        else
+        if ([iOSScreenKeyboardBridge simulateTextSelection])
         {
             [m_TextField addObserver: self forKeyPath: @"selectedTextRange" options: NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld  context: nil];
         }
@@ -413,29 +408,6 @@ i = res.items;                                              \
     traits.autocapitalizationType = capitalization;
 }
 
-// we need to show/hide keyboard to react to orientation too, so extract we extract UI fiddling
-
-- (void)showUI
-{
-    // if we unhide everything now the input will be shown smaller then needed quickly (and resized later)
-    // so unhide only when keyboard is actually shown (we will update it when reacting to ios notifications)
-
-    [NSObject cancelPreviousPerformRequestsWithTarget: self];
-    if (!m_InputView.isFirstResponder)
-    {
-        m_EditView.hidden = YES;
-
-        [UnityGetGLView() addSubview: m_EditView];
-        [m_InputView becomeFirstResponder];
-    }
-}
-
-- (void)hideUI
-{
-    [NSObject cancelPreviousPerformRequestsWithTarget: self];
-    [self performSelector: @selector(hideUIDelayed) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
-}
-
 - (void)hideUIDelayed
 {
     [m_InputView resignFirstResponder];
@@ -446,29 +418,12 @@ i = res.items;                                              \
 
 - (void)systemHideKeyboard
 {
-    // when we are rotating os will bombard us with keyboardWillHide: and keyboardDidChangeFrame:
-    // ignore all of them (we do it here only to simplify code: we call systemHideKeyboard only from these notification handlers)
-    if (m_Rotating)
-        return;
+    KEYBOARD_LOG("systemHideKeyboard")
 
     m_Active = m_EditView.isFirstResponder;
     m_EditView.hidden = YES;
 
     m_Area = CGRectMake(0, 0, 0, 0);
-}
-
-- (void)updateInputHidden
-{
-    if (m_ShouldHideInputChanged)
-    {
-        [self shouldHideInput: m_ShouldHideInput];
-        m_ShouldHideInputChanged = false;
-    }
-
-    m_TextField.returnKeyType = m_InputHidden ? UIReturnKeyDone : UIReturnKeyDefault;
-
-    m_EditView.hidden     = m_InputHidden ? YES : NO;
-    m_InputView.hidden    = m_InputHidden ? YES : NO;
 }
 
 #if PLATFORM_IOS
@@ -510,7 +465,6 @@ i = res.items;                                              \
     }
 
     m_Area = CGRectMake(x, y, kbRect.size.width, kbRect.size.height);
-    [self updateInputHidden];
 }
 
 #endif
@@ -519,22 +473,6 @@ i = res.items;                                              \
 {
     return m_EditView.hidden ? m_Area : CGRectUnion(m_Area, m_EditView.frame);
 }
-
-// TODO
-/*
-+ (void)StartReorientation
-{
-    // TODO
-    if (s_Keyboard && s_Keyboard.active)
-        s_Keyboard->m_Rotating = YES;
-}
-
-+ (void)FinishReorientation
-{
-    // TODO
-    if (s_Keyboard)
-        s_Keyboard->m_Rotating = NO;
-}*/
 
 - (NSString*)getText
 {
@@ -563,11 +501,7 @@ i = res.items;                                              \
         m_TextField.text = newText;
         textInput = m_TextField;
 
-        if (@available(iOS 13.0, tvOS 13.0, *))
-        {
-            // Empty on purpose
-        }
-        else
+        if ([iOSScreenKeyboardBridge simulateTextSelection])
         {
             [self selectionChangeImpl: [iOSScreenKeyboardBridge getSelectionFromTextInput: textInput]];
         }
@@ -591,11 +525,20 @@ i = res.items;                                              \
     return NSMakeRange(location, length);
 }
 
++ (BOOL)simulateTextSelection
+{
+    if (@available(iOS 13.0, tvOS 13.0, *))
+    {
+        return NO;
+    }
+    else
+    {
+        return YES;
+    }
+}
+
 - (NSRange)getSelection
 {
-    // TODO
-    //if (_inputHidden && _hiddenSelection.length > 0)
-    //   return _hiddenSelection;
     UIView<UITextInput>* textInput;
 
 #if PLATFORM_TVOS
@@ -625,103 +568,6 @@ i = res.items;                                              \
     UITextRange* textRange = [textInput textRangeFromPosition: caret toPosition: select];
 
     [textInput setSelectedTextRange: textRange];
-
-    if (m_ShowParams.inputFieldHidden)
-        _hiddenSelection = newSelection;
-}
-
-- (void)shouldHideInput:(BOOL)hide
-{
-    if (hide)
-    {
-        switch (m_ShowParams.keyboardType)
-        {
-            case UIKeyboardTypeDefault:                 hide = YES; break;
-            case UIKeyboardTypeASCIICapable:            hide = YES; break;
-            case UIKeyboardTypeNumbersAndPunctuation:   hide = YES; break;
-            case UIKeyboardTypeURL:                     hide = YES; break;
-            case UIKeyboardTypeNumberPad:               hide = NO;  break;
-            case UIKeyboardTypePhonePad:                hide = NO;  break;
-            case UIKeyboardTypeNamePhonePad:            hide = NO;  break;
-            case UIKeyboardTypeEmailAddress:            hide = YES; break;
-            case UIKeyboardTypeTwitter:                 hide = YES; break;
-            case UIKeyboardTypeWebSearch:               hide = YES; break;
-            default:                                    hide = NO;  break;
-        }
-    }
-
-    m_InputHidden = hide;
-}
-
-#if FILTER_EMOJIS_IOS_KEYBOARD
-
-static bool StringContainsEmoji(NSString *string);
-- (BOOL)textField:(UITextField*)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string_
-{
-    if (range.length + range.location > textField.text.length)
-        return NO;
-
-    return [self currentText: textField.text shouldChangeInRange: range replacementText: string_] && !StringContainsEmoji(string_);
-}
-
-- (BOOL)textView:(UITextView*)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString*)text_
-{
-    if (range.length + range.location > textView.text.length)
-        return NO;
-
-    return [self currentText: textView.text shouldChangeInRange: range replacementText: text_] && !StringContainsEmoji(text_);
-}
-
-#else
-
-- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string_
-{
-    if (range.length + range.location > textField.text.length)
-        return NO;
-
-    return [self currentText: textField.text shouldChangeInRange: range replacementText: string_];
-}
-
-- (BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString*)text_
-{
-    if (range.length + range.location > textView.text.length)
-        return NO;
-
-    return [self currentText: textView.text shouldChangeInRange: range replacementText: text_];
-}
-
-#endif // FILTER_EMOJIS_IOS_KEYBOARD
-
-- (BOOL)currentText:(NSString*)currentText shouldChangeInRange:(NSRange)range  replacementText:(NSString*)text_
-{
-    // TODO
-    return YES;
-    /*
-    NSUInteger newLength = currentText.length + (text_.length - range.length);
-    if (newLength > _characterLimit && _characterLimit != 0 && newLength >= currentText.length)
-    {
-        NSString* newReplacementText = @"";
-        if ((currentText.length - range.length) < _characterLimit)
-            newReplacementText = [text_ substringWithRange: NSMakeRange(0, _characterLimit - (currentText.length - range.length))];
-
-        NSString* newText = [currentText stringByReplacingCharactersInRange: range withString: newReplacementText];
-
-#if PLATFORM_IOS
-        if (m_ShowParams.multiline)
-            [m_TextView setText: newText];
-        else
-            [m_TextField setText: newText];
-#else
-        [m_TextField setText: newText];
-#endif
-
-        return NO;
-    }
-    else
-    {
-        return YES;
-    }
-     */
 }
 
 @end
