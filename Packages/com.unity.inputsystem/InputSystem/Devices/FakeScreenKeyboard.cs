@@ -3,9 +3,20 @@ using System.Collections;
 
 namespace UnityEngine.InputSystem
 {
-    // TODO: Maybe have it input system package as a placeholder if no implementation is provided
     class FakeScreenKeyboard : ScreenKeyboard
     {
+        private static FakeScreenKeyboard ms_Instance;
+
+        public static FakeScreenKeyboard instance
+        {
+            get
+            {
+                if (ms_Instance == null)
+                    ms_Instance = new FakeScreenKeyboard();
+                return ms_Instance;
+            }
+        }
+
         string m_InputFieldText;
         RangeInt m_Selection;
         class FakeScreenKeyboardDispatcher : MonoBehaviour
@@ -52,6 +63,19 @@ namespace UnityEngine.InputSystem
             ReportStateChange(ScreenKeyboardState.Done);
         }
 
+        private bool IsSelectionEqual(RangeInt a, RangeInt b)
+        {
+            return a.end == b.end && a.start == b.start;
+        }
+
+        private void OnSelectionChange(RangeInt newSelection)
+        {
+            if (IsSelectionEqual(newSelection, m_Selection))
+                return;
+            m_Selection = newSelection;
+            ReportSelectionChange(m_Selection.start, m_Selection.length);
+        }
+
         public override string inputFieldText
         {
             get => m_InputFieldText;
@@ -60,9 +84,9 @@ namespace UnityEngine.InputSystem
                 if (m_InputFieldText.Equals(value))
                     return;
                 m_InputFieldText = value;
+                // Note: Order is important, the selection is reported first
+                OnSelectionChange(new RangeInt(m_InputFieldText.Length, 0));
                 ReportInputFieldChange(value);
-                m_Selection = new RangeInt(m_InputFieldText.Length, 0);
-                ReportSelectionChange(m_Selection.start, m_Selection.length);
             }
         }
 
@@ -71,12 +95,10 @@ namespace UnityEngine.InputSystem
             get => m_Selection;
             set
             {
-                if (m_Selection.Equals(value))
-                    return;
-                m_Selection = value;
-                m_Selection.start = Math.Min(m_InputFieldText.Length, m_Selection.start);
-                m_Selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
-                ReportSelectionChange(m_Selection.start, m_Selection.length);
+                var selection = value;
+                selection.start = Math.Min(m_InputFieldText.Length, m_Selection.start);
+                selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
+                OnSelectionChange(selection);
             }
         }
     }

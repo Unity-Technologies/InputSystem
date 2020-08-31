@@ -1,3 +1,7 @@
+#if !UNITY_EDITOR && (UNITY_ANDROID || UNITY_IOS)
+#define PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
+#endif
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.Haptics;
@@ -3166,6 +3170,11 @@ namespace UnityEngine.InputSystem
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Steam.SteamSupport.Initialize();
             #endif
+
+            #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
+            NativeInputRuntime.instance.screenKeyboard = FakeScreenKeyboard.instance;
+            #endif
+
         }
 
         private static void PerformDefaultPluginShutdown()
@@ -3176,6 +3185,10 @@ namespace UnityEngine.InputSystem
 
             #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
             iOS.iOSSupport.Shutdown();
+            #endif
+
+            #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
+            NativeInputRuntime.instance.screenKeyboard = null;
             #endif
         }
 
