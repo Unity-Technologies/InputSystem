@@ -110,7 +110,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     private void Log(string format, params object[] list)
     {
-        m_LogText.text += string.Format(format, list) + "\n";
+        m_LogText.text += $"Frame[{Time.frameCount}] " + string.Format(format, list) + "\n";
         var lineCount = CountOccurences(m_LogText.text, '\n');
         float lineHeight = 16.0f;
         // Has to be a better way
@@ -128,7 +128,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     private void InputFieldTextCallback(string text)
     {
-        Log($"Frame:{Time.frameCount} Text: {text}");
+        Log($"Text: {text}");
         var oldText = text;
         AutomaticOperation op = (AutomaticOperation)Enum.Parse(typeof(AutomaticOperation), m_AutomaticOperation.captionText.text);
         switch (op)
@@ -143,7 +143,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
             case AutomaticOperation.DismissOnCharacter0:
                 if (text.Contains("0"))
                 {
-                    Log($"Disable on 0, frame: {Time.frameCount}");
+                    Log($"Disable on 0");
                     m_ScreenKeyboard.Hide();
                 }
                 break;
@@ -155,10 +155,9 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     private void StateChangedCallback(ScreenKeyboardState state)
     {
-        Log($"Status: {state}, Frame: {Time.frameCount}");
+        Log($"Status: {state}");
     }
 
-    // Update is called once per frame
     void Update()
     {
         m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
@@ -241,7 +240,7 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
 
         m_ScreenKeyboard.Show(showParams);
 
-        Log($"Requesting keyboard to show, frame {Time.frameCount}");
+        Log($"Requesting keyboard to show");
     }
 
     private TouchScreenKeyboardType ToTouchScreenKeyboardType(string value)
