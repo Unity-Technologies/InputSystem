@@ -21,16 +21,15 @@ namespace UnityEngine.InputSystem.iOS
             }
         }
 
-        internal delegate void OnTextChangedDelegate(int deviceId, string text);
+        internal delegate void OnTextChangedDelegate(string text);
 
-        internal delegate void OnStateChangedDelegate(int deviceId, ScreenKeyboardState state);
+        internal delegate void OnStateChangedDelegate(ScreenKeyboardState state);
 
-        internal delegate void OnSelectionChangedDelegate(int deviceId, int start, int length);
+        internal delegate void OnSelectionChangedDelegate(int start, int length);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct iOSScreenKeyboardCallbacks
         {
-            internal int deviceId;
             internal OnTextChangedDelegate onTextChanged;
             internal OnStateChangedDelegate onStateChanged;
             internal OnSelectionChangedDelegate onSelectionChanaged;
@@ -58,19 +57,19 @@ namespace UnityEngine.InputSystem.iOS
         private static extern long _iOSScreenKeyboardGetSelection();
 
         [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
-        private static void OnTextChangedCallback(int deviceId, string text)
+        private static void OnTextChangedCallback(string text)
         {
             instance.ReportInputFieldChange(text);
         }
 
         [MonoPInvokeCallback(typeof(OnStateChangedDelegate))]
-        private static void OnStateChangedCallback(int deviceId, ScreenKeyboardState state)
+        private static void OnStateChangedCallback(ScreenKeyboardState state)
         {
             instance.ReportStateChange(state);
         }
 
         [MonoPInvokeCallback(typeof(OnSelectionChangedDelegate))]
-        private static void OnSelectionChangedCallback(int deviceId, int start, int length)
+        private static void OnSelectionChangedCallback(int start, int length)
         {
             instance.ReportSelectionChange(start, length);
         }
@@ -79,7 +78,6 @@ namespace UnityEngine.InputSystem.iOS
         {
             var callbacks = new iOSScreenKeyboardCallbacks()
             {
-                deviceId = -1,
                 onTextChanged = OnTextChangedCallback,
                 onStateChanged = OnStateChangedCallback,
                 onSelectionChanaged = OnSelectionChangedCallback

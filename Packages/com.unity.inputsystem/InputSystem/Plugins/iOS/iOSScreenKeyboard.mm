@@ -1,4 +1,4 @@
-#include "iOSScreenKeyboardDelegate.h"
+#include "iOSScreenKeyboardBridge.h"
 #include "DisplayManager.h"
 #include "UnityAppController.h"
 #include "UnityForwardDecls.h"
@@ -95,20 +95,21 @@ extern "C" void _iOSScreenKeyboardShow(iOSScreenKeyboardShowParams* showParams, 
         (BOOL)showParams->multiline,
 #endif
         (BOOL)showParams->secure,
+        (BOOL)showParams->inputFieldHidden,
         *callbacks
     };
 
-    [[iOSScreenKeyboardDelegate getInstanceOrCreate] show: param withInitialTextCStr: showParams->initialText withPlaceholderTextCStr: showParams->placeholderText];
+    [[iOSScreenKeyboardBridge getInstanceOrCreate] show: param withInitialTextCStr: showParams->initialText withPlaceholderTextCStr: showParams->placeholderText];
 }
 
 extern "C" void _iOSScreenKeyboardHide()
 {
-    [[iOSScreenKeyboardDelegate getInstanceOrCreate] hide: StateDone];
+    [[iOSScreenKeyboardBridge getInstanceOrCreate] hide: StateDone];
 }
 
 extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
+    iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
     {
         UnityRect zero = {0, 0, 0, 0};
@@ -121,7 +122,7 @@ extern "C" UnityRect _iOSScreenKeyboardOccludingArea()
 
 extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
+    iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
         return;
     NSString* convertedText = text ? [[NSString alloc] initWithUTF8String: text] : @"";
@@ -130,7 +131,7 @@ extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
 
 extern "C" const char* _iOSScreenKeyboardGetInputFieldText()
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
+    iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
         return NULL;
 
@@ -139,7 +140,7 @@ extern "C" const char* _iOSScreenKeyboardGetInputFieldText()
 
 extern "C" void _iOSScreenKeyboardSetSelection(int start, int length)
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
+    iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
         return;
     [keyboard setSelection: NSMakeRange(start, length)];
@@ -147,7 +148,7 @@ extern "C" void _iOSScreenKeyboardSetSelection(int start, int length)
 
 extern "C" long _iOSScreenKeyboardGetSelection()
 {
-    iOSScreenKeyboardDelegate* keyboard = [iOSScreenKeyboardDelegate getInstance];
+    iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
         return 0;
 
