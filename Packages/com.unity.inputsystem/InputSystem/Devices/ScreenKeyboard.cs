@@ -1,11 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem.Layouts;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-
 
 namespace UnityEngine.InputSystem
 {
@@ -56,20 +51,14 @@ namespace UnityEngine.InputSystem
     }
 
 
-    // TODO: in case ScreenKeyboard doesn't have input field, it basically behaves the same as normal Keyboard
-    //       the only difference only onTextInput is working, you won't get response from key control
-    //       Nevertheless maybe it makes sense to derive from Keyboard here. Rene?
     public abstract class ScreenKeyboard
     {
-        // Note: Status cannot be a part of ScreenKeyboardState, since it defines if device is enabled or disabled
-        //       If device is disabled, it cannot receive any events
         protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
 
         private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
         private InlinedArray<Action<string>> m_InputFieldTextListeners;
         private InlinedArray<Action<RangeInt>> m_SelectionChangedListeners;
-        // TODO: Status to state
         public event Action<ScreenKeyboardState> stateChanged
         {
             add { m_StatusChangedListeners.Append(value); }
