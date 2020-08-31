@@ -1,16 +1,8 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
-
-#if UNITY_ANDROID
-using UnityEngine.InputSystem.Android;
-#elif UNITY_WSA
-using UnityEngine.InputSystem.WSA;
-#endif
 
 public enum AutomaticOperation
 {
@@ -20,7 +12,7 @@ public enum AutomaticOperation
     DismissOnCharacter0
 }
 
-public class ScreenKeyboardTest : MonoBehaviour
+public class ScreenKeyboardTestScript : MonoBehaviour
 {
     private const int kTextLimit = 5;
 
@@ -54,7 +46,6 @@ public class ScreenKeyboardTest : MonoBehaviour
     public Text m_LogText;
 
     ScreenKeyboard m_ScreenKeyboard;
-    // Start is called before the first frame update
 
     TouchScreenKeyboard m_OldScreenKeyboard;
 
@@ -64,7 +55,6 @@ public class ScreenKeyboardTest : MonoBehaviour
 #if UNITY_WSA
         canvasScaler.enabled = false;
 #endif
-        Log("sds");
         m_ScreenKeyboard = InputRuntime.s_Instance.screenKeyboard;
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
@@ -224,6 +214,9 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
                 break;
             case AutomaticOperation.LetterReplacement:
                 m_SpecialBehaviorInfo.text = "a letter will be replaced by c";
+                break;
+            case AutomaticOperation.DismissOnCharacter0:
+                m_SpecialBehaviorInfo.text = "Keyboard will hide on character 0";
                 break;
         }
     }
