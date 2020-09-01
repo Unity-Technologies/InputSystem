@@ -292,6 +292,31 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
+    public IEnumerator CheckInputFieldTextWithReallyLongText([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
+    {
+        yield return ResetKeyboard();
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
+
+        string targetText = "";
+
+        for (int i = 0; i < 5; i++)
+        {
+            for (int x = 33; x < 127; x++)
+            {
+                targetText += (char)(x);
+            }
+            targetText += " ";
+
+            keyboard.inputFieldText = targetText;
+            Assert.AreEqual(targetText, keyboard.inputFieldText);
+        }
+
+        yield return HideKeyboard();
+
+        Assert.AreEqual(targetText, keyboard.inputFieldText);
+    }
+
+    [UnityTest]
     public IEnumerator CheckSelectionCallbacks()
     {
         yield return ResetKeyboard();
