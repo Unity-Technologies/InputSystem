@@ -82,6 +82,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     private ScreenKeyboardState m_DismissReturnValue;
 
     private long m_LastSelection;
+    private boolean m_InputFieldHidden;
 
     public AndroidScreenKeyboard ()
     {
@@ -97,6 +98,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         // Don't dim the view behind the dialog
         window.clearFlags (WindowManager.LayoutParams.FLAG_DIM_BEHIND);
         window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+
+        WindowManager.LayoutParams param = window.getAttributes();
+        param.gravity = Gravity.BOTTOM;
+        param.x = 0;
+        param.y = 0;
+        window.setAttributes(param);
     }
 
     private void debugLog(String format, Object... args)
@@ -117,9 +124,10 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     {
         m_Callbacks = callbacks;
         m_DismissReturnValue = ScreenKeyboardState.Done;
-        setHideInputField(inputFieldHidden);
+        m_InputFieldHidden = inputFieldHidden;
 
-        setContentView (createSoftInputView ());
+        View contentView = createSoftInputView();
+        setContentView (contentView);
         EditText txtInput = (EditText) findViewById (id.txtInput);
         txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_FULLSCREEN);
         txtInput.setText (initialText);
@@ -135,6 +143,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             @Override
             public void onFocusChange (View v, boolean hasFocus)
             {
+                debugLog("onFocusChange {0}", hasFocus);
                 if (hasFocus)
                 {
                     int vis = WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE;
@@ -147,37 +156,22 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         Button okButton = (Button) findViewById (id.okButton);
         okButton.setOnClickListener (this);
 
+        if (m_InputFieldHidden)
+        {
+            txtInput.setBackgroundColor(0);
+            txtInput.setTextColor(0);
+            txtInput.setCursorVisible(false);
+
+            okButton.setClickable(false);
+
+            contentView.setBackgroundColor(0);
+        }
+
         setOnDismissListener(this);
         setOnShowListener(this);
 
         show();
     }
-
-    public void setHideInputField(boolean isInputFieldHidden)
-    {
-        Window window = getWindow();
-        WindowManager.LayoutParams param = window.getAttributes();
-        if (isInputFieldHidden)
-        {
-            // There's no reliable API for hiding input field
-            // So we're drawing it outside screen and thus making an illusion that it's hidden
-            // Alternatively we could make input field fully transparent, but that raises a lot of other problems:
-            // - Need to make cursor transparent as well
-            // - Need to make selection box transparent
-            // - Ignore and forward input when you touch invisible input field
-            param.gravity = Gravity.AXIS_CLIP;
-            param.x = 20000;
-            param.y = 20000;
-        }
-        else
-        {
-            param.gravity = Gravity.BOTTOM;
-            param.x = 0;
-            param.y = 0;
-        }
-        window.setAttributes(param);
-    }
-
 
     public void afterTextChanged (Editable s)
     {
@@ -258,14 +252,20 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         EditText et = new EditText (m_Context) {
             public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+                debugLog("onKeyPreIme: {0}", keyCode);
                 // intercept BACK to make sure the dialog is close, and SEARCH to make sure it's ignored.
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                if (keyCode == KeyEvent.KEYCODE_BACK)
+                {
+                    debugLog("    Back button");
                     m_DismissReturnValue = ScreenKeyboardState.Canceled;
                     dismiss();
                     return true;
                 }
                 if (keyCode == KeyEvent.KEYCODE_SEARCH)
+                {
+                    debugLog("    Search button");
                     return true;
+                }
                 return super.onKeyPreIme(keyCode, event);
             }
 
@@ -282,6 +282,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             protected void onSelectionChanged(int start, int end)
             {
                 debugLog("onSelectionChanged {0} {1}", start, end - start);
+                if (m_InputFieldHidden && (getSelectionStart() != getText().length() || getSelectionEnd() != getText().length()))
+                {
+                    debugLog("    overriding selection, since input field is hidden");
+                    start = end = getText().length();
+                    setSelection(getText().length());
+                }
 
                 long currentSelection = convertSelectionToLong(start, end);
                 if (m_LastSelection == currentSelection)
