@@ -101,9 +101,11 @@ namespace UnityEngine.InputSystem
             get => m_Selection;
             set
             {
+                if (m_ShowParams.inputFieldHidden)
+                    return;
                 var selection = value;
-                selection.start = Math.Min(m_InputFieldText.Length, m_Selection.start);
-                selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
+                selection.start = Math.Min(m_InputFieldText.Length, selection.start);
+                selection.length = Mathf.Clamp(selection.length, 0, m_InputFieldText.Length - selection.start);
                 OnSelectionChange(selection);
             }
         }
@@ -111,7 +113,7 @@ namespace UnityEngine.InputSystem
         internal override void SimulateKeyEvent(int keyCode)
         {
             if (keyCode == (int)KeyCode.Escape)
-                QueueStatusChangeCancel();
+                Dispatcher.StartCoroutine(QueueStatusChangeCancel());
         }
     }
 }
