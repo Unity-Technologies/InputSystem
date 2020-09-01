@@ -26,6 +26,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
     public Toggle m_KeyboardSecure;
     public Toggle m_KeyboardAlert;
     public Toggle m_KeyboardInputFieldHidden;
+    public Toggle m_KeyboardLogging;
     public InputField m_InputDeviceInfo;
     public InputField m_InputField;
     public InputField m_OccludingAreaField;
@@ -70,6 +71,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
         m_Properties.RefreshShownValue();
         m_Properties.onValueChanged.AddListener(PropertiesSelectionChanged);
         PropertiesSelectionChanged(m_Properties.value);
+        SetLogging();
 
         foreach (var t in Enum.GetValues(typeof(ScreenKeyboardType)))
         {
@@ -289,5 +291,10 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
     public void HideMobileInputField()
     {
         m_InputField.shouldHideMobileInput = m_KeyboardInputFieldHidden.isOn;
+    }
+
+    public void SetLogging()
+    {
+        m_ScreenKeyboard.logging = m_KeyboardLogging.isOn;
     }
 }

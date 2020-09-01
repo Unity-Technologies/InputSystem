@@ -65,22 +65,25 @@ namespace UnityEngine.InputSystem.Android
         // Allow only one instance of java keyboard, because only one can be shown at the time
         private static AndroidJavaObject m_KeyboardObject;
 
-        protected override void InternalShow()
+        private static AndroidJavaObject GetOrCreateKeyboardObject()
         {
             if (m_KeyboardObject == null)
                 m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
+            return m_KeyboardObject;
+        }
 
-            var showParams = m_ShowParams;
-            m_KeyboardObject.Call("show",
+        protected override void InternalShow()
+        {
+            GetOrCreateKeyboardObject().Call("show",
                 new ScreenKeyboardCallbacks(this),
-                (int)showParams.type,
-                showParams.initialText,
-                showParams.placeholderText,
-                showParams.autocorrection,
-                showParams.multiline,
-                showParams.secure,
-                showParams.alert,
-                showParams.inputFieldHidden);
+                (int)m_ShowParams.type,
+                m_ShowParams.initialText,
+                m_ShowParams.placeholderText,
+                m_ShowParams.autocorrection,
+                m_ShowParams.multiline,
+                m_ShowParams.secure,
+                m_ShowParams.alert,
+                m_ShowParams.inputFieldHidden);
         }
 
         protected override void InternalHide()
@@ -135,12 +138,12 @@ namespace UnityEngine.InputSystem.Android
         {
             get
             {
-                return m_KeyboardObject.Call<bool>("getLogging");
+                return GetOrCreateKeyboardObject().Call<bool>("getLogging");
             }
 
             set
             {
-                m_KeyboardObject.Call("setLogging", value);
+                GetOrCreateKeyboardObject().Call("setLogging", value);
             }
         }
     }
