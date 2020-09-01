@@ -554,6 +554,9 @@ i = res.items;                                              \
 
 - (void)setSelection:(NSRange)newSelection
 {
+    if (m_ShowParams.inputFieldHidden)
+        return;
+    
     if (NSEqualRanges(self.getSelection, newSelection))
         return;
     UIView<UITextInput>* textInput;
@@ -563,6 +566,12 @@ i = res.items;                                              \
 #else
     textInput = m_ShowParams.multiline ? m_TextView : m_TextField;
 #endif
+    
+    NSString* text = [self getText];
+    // Check for out of bounds
+    if (newSelection.location > text.length ||
+        newSelection.location + newSelection.length > text.length)
+        return;
 
     UITextPosition* begin = [textInput beginningOfDocument];
     UITextPosition* caret = [textInput positionFromPosition: begin offset: newSelection.location];
