@@ -111,13 +111,13 @@ public class ScreenKeyboardTests : InputTestFixture
 
     private IEnumerator HideKeyboard()
     {
-        if (keyboard.state != ScreenKeyboardState.Done)
-        {
-            keyboard.Hide();
-            for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Done; i++)
-                yield return new WaitForFixedUpdate();
-            Assert.AreEqual(ScreenKeyboardState.Done, keyboard.state, "Couldn't hide keyboard");
-        }
+        if (keyboard.state != ScreenKeyboardState.Visible)
+            yield break;
+
+        keyboard.Hide();
+        for (int i = 0; i < kFrameTimeout && keyboard.state == ScreenKeyboardState.Visible; i++)
+            yield return new WaitForFixedUpdate();
+        Assert.IsFalse(keyboard.state == ScreenKeyboardState.Visible, "Couldn't hide keyboard");
     }
 
     private IEnumerator ShowKeyboard()
@@ -244,7 +244,7 @@ public class ScreenKeyboardTests : InputTestFixture
     }
 
     [UnityTest]
-    public IEnumerator ChangeSelectionInsideSelectionCallback()
+    public IEnumerator ChangeSelectionInsideSelectionCallback([Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
 
@@ -256,11 +256,21 @@ public class ScreenKeyboardTests : InputTestFixture
         });
 
         keyboard.selectionChanged += selectionCallback;
-        yield return ShowKeyboard();
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { inputFieldHidden = inputFieldHidden });
 
+        var targetText = "Hello";
         keyboard.inputFieldText = "Hello";
-        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
-        Assert.AreEqual(new MyRangeInt(1, 0), (MyRangeInt)selectionCallbackInfo.Data);
+        // For hidden input fields, yuo cannot select a text
+        if (inputFieldHidden)
+        {
+            Assert.AreEqual(1, selectionCallbackInfo.CalledCount);
+            Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
+        }
+        else
+        {
+            Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
+            Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
+        }
         yield return HideKeyboard();
     }
 
@@ -327,5 +337,32 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return HideKeyboard();
 
         Assert.AreEqual(new MyRangeInt(targetText.Length, 0), (MyRangeInt)keyboard.selection);
+    }
+
+    [UnityTest]
+    public IEnumerator CheckBackButtonFunctionality([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
+    {
+        int keyCode = -1;
+        bool supported = true;
+#if UNITY_EDITOR
+        keyCode = (int)KeyCode.Escape;
+#elif UNITY_ANDROID
+        const int kBackButton = 4;
+        keyCode = kBackButton;
+#else
+        supported = false;
+#endif
+        if (!supported)
+        {
+            Console.WriteLine("CheckBackButtonFunctionality is not supported on this platform");
+            yield break;
+        }
+        yield return ResetKeyboard();
+
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
+        keyboard.SimulateKeyEvent(keyCode);
+        for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Canceled; i++)
+            yield return new WaitForFixedUpdate();
+        Assert.AreEqual(ScreenKeyboardState.Canceled, keyboard.state, "Couldn't hide keyboard using back button");
     }
 }
