@@ -276,9 +276,6 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_EditView = m_TextField;
 #endif
 
-    m_EditView.hidden     = m_ShowParams.inputFieldHidden;
-    m_InputView.hidden    = m_ShowParams.inputFieldHidden;
-
     m_TextField.returnKeyType = m_ShowParams.inputFieldHidden ? UIReturnKeyDone : UIReturnKeyDefault;
 
     m_LastSelection.length = 0;
@@ -465,6 +462,11 @@ i = res.items;                                              \
     }
 
     m_Area = CGRectMake(x, y, kbRect.size.width, kbRect.size.height);
+    
+    m_TextField.returnKeyType = m_ShowParams.inputFieldHidden ? UIReturnKeyDone : UIReturnKeyDefault;
+
+    m_EditView.hidden     = m_ShowParams.inputFieldHidden;
+    m_InputView.hidden    = m_ShowParams.inputFieldHidden;
 }
 
 #endif
