@@ -410,7 +410,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         m_LoggingEnabled = enabled;
     }
 
-    public bool getLogging()
+    public boolean getLogging()
     {
         return m_LoggingEnabled;
     }
