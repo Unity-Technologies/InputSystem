@@ -331,11 +331,24 @@ public class ScreenKeyboardTests : InputTestFixture
         // Calling selection shouldn't trigger inputFieldText callback
         Assert.AreEqual(0, inputFieldTextCallbackInfo.CalledCount);
 
-        // TODO: check selection out of bounds behavior
+        // TODO: ANDROID, ignores the setting and keeps the old one
+        // Check what happens when selection start is out of bounds
+        keyboard.selection = new RangeInt(targetText.Length + 1, 5);
+        Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
+        Assert.AreEqual(3, selectionCallbackInfo.CalledCount);
+
+        // Check what happens when selection length is out of bounds
+        keyboard.selection = new RangeInt(targetText.Length - 1 , 2);
+        Assert.AreEqual(new MyRangeInt(targetText.Length - 1, 1), selectionCallbackInfo.Data);
+        Assert.AreEqual(4, selectionCallbackInfo.CalledCount);
+
         keyboard.selection = new RangeInt(targetText.Length, 0);
+        Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
+        Assert.AreEqual(5, selectionCallbackInfo.CalledCount);
 
         yield return HideKeyboard();
 
+        // Check that selection persists even after hiding the keyboard
         Assert.AreEqual(new MyRangeInt(targetText.Length, 0), (MyRangeInt)keyboard.selection);
     }
 
