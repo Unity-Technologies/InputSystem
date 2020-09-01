@@ -2,6 +2,8 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 
+// TODO:
+// disable debugging
 namespace UnityEngine.InputSystem
 {
     public enum ScreenKeyboardType
@@ -26,26 +28,30 @@ namespace UnityEngine.InputSystem
         LostFocus
     }
 
-    // Note: ScreenKeyboardShowParams has to be a struct otherwise when passing it to objective C on iOS the data is all wrong, interestingly
-    //       the size is correct
+    // Note: This struct is marshalled to iOS native code, don't change the layout
+    //       Also don't use auto properties, since it messes up the layout
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
     {
-        public ScreenKeyboardType type;
-        public string initialText;
-        public string placeholderText;
-        public bool autocorrection;
-        public bool multiline;
-        public bool secure;
+        private ScreenKeyboardType m_Type;
+        private string m_InitialText;
+        private string m_PlaceholderText;
+        private bool m_Autocorrection;
+        private bool m_Multiline;
+        private bool m_Secure;
+        private bool m_Alert;
+        private bool m_InputFieldHidden;
+
+        public ScreenKeyboardType type { get => m_Type; set => m_Type = value; }
+        public string initialText { get => m_InitialText; set => m_InitialText = value; }
+        public string placeholderText { get => m_PlaceholderText; set => m_PlaceholderText = value; }
+        public bool autocorrection { get => m_Autocorrection; set => m_Autocorrection = value; }
+        public bool multiline { get => m_Multiline; set => m_Multiline = value; }
+        public bool secure { get => m_Secure; set => m_Secure = value; }
 
         ////TODO: this one is iPhone specific?
-        public bool alert;
-
-        /// <summary>
-        /// Show keyboard without input field?
-        /// Only supported on iOS and Android.
-        /// </summary>
-        public bool inputFieldHidden;
+        public bool alert { get => m_Alert; set => m_Alert = value; }
+        public bool inputFieldHidden { get => m_InputFieldHidden; set => m_InputFieldHidden = value; }
     }
 
     public abstract class ScreenKeyboard
@@ -189,5 +195,10 @@ namespace UnityEngine.InputSystem
             m_InputFieldTextListeners.Clear();
             m_SelectionChangedListeners.Clear();
         }
+
+        /// <summary>
+        /// Used for testing purposes, enable platform specific logging.
+        /// </summary>
+        internal virtual bool logging { get; set; }
     }
 }

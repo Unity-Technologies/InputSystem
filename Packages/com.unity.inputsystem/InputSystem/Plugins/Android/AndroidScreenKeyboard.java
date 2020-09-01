@@ -83,10 +83,12 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private long m_LastSelection;
     private boolean m_InputFieldHidden;
+    private boolean m_LoggingEnabled;
 
     public AndroidScreenKeyboard ()
     {
         super (UnityPlayer.currentActivity);
+        m_LoggingEnabled = false;
         m_Context = UnityPlayer.currentActivity;
         m_DismissReturnValue = ScreenKeyboardState.Done;
         Window window = getWindow();
@@ -108,6 +110,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     private void debugLog(String format, Object... args)
     {
+        if (!m_LoggingEnabled)
+            return;
         Log.v("Unity", "ScreenKeyboard - " + MessageFormat.format(format, args));
     }
 
@@ -399,5 +403,15 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0));
         txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0));
+    }
+
+    public void setLogging(boolean enabled)
+    {
+        m_LoggingEnabled = enabled;
+    }
+
+    public bool getLogging()
+    {
+        return m_LoggingEnabled;
     }
 }

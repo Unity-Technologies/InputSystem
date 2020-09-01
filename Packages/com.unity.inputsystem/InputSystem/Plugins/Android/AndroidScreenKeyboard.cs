@@ -6,7 +6,6 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine.InputSystem.Android
 {
-    // TODO: check if stripping doesn't remove these methods
     internal class AndroidScreenKeyboard : ScreenKeyboard
     {
         private static AndroidScreenKeyboard ms_Instance;
@@ -130,6 +129,19 @@ namespace UnityEngine.InputSystem.Android
         internal override void SimulateKeyEvent(int keyCode)
         {
             m_KeyboardObject.Call("simulateKeyEvent", keyCode);
+        }
+
+        internal override bool logging
+        {
+            get
+            {
+                return m_KeyboardObject.Call<bool>("getLogging");
+            }
+
+            set
+            {
+                m_KeyboardObject.Call("setLogging", value);
+            }
         }
     }
 }
