@@ -21,7 +21,7 @@ public class ScreenKeyboardTests : InputTestFixture
 {
     static ScreenKeyboard s_TargetKeyboard;
     const int kFrameTimeout = 30;
-    
+
     public class CallbackInfo<T>
     {
         public T Data { private set; get; }
@@ -134,7 +134,7 @@ public class ScreenKeyboardTests : InputTestFixture
             yield return new WaitForFixedUpdate();
         Assert.AreEqual(ScreenKeyboardState.Visible, keyboard.state, "Couldn't show keyboard");
     }
-    
+
     [UnityTest]
     public IEnumerator CheckShowHideOperations()
     {

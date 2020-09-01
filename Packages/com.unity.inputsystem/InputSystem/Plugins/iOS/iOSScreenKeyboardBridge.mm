@@ -275,10 +275,10 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     m_InputView = m_TextField;
     m_EditView = m_TextField;
 #endif
-    
+
     m_EditView.hidden     = m_ShowParams.inputFieldHidden;
     m_InputView.hidden    = m_ShowParams.inputFieldHidden;
-    
+
     m_TextField.returnKeyType = m_ShowParams.inputFieldHidden ? UIReturnKeyDone : UIReturnKeyDefault;
 
     m_LastSelection.length = 0;
@@ -305,7 +305,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 {
     m_State     = hideState;
     m_ShowParams.callbacks.stateChangedCallback(m_State);
-    
+
     [NSObject cancelPreviousPerformRequestsWithTarget: self];
     [self performSelector: @selector(hideUIDelayed) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
 }
