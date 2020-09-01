@@ -190,7 +190,9 @@ public class ScreenKeyboardTestScript : MonoBehaviour
         }
         else if (oldVisible)
         {
-            infoMessage += $@"[OLD] ScreenKeyboard Status: {m_OldScreenKeyboard.status}
+            infoMessage += "[OLD] ScreenKeyboard";
+            if (m_OldScreenKeyboard != null)
+                infoMessage += $@" Status: {m_OldScreenKeyboard.status}
 Selection: {m_OldScreenKeyboard.selection.start}, {m_OldScreenKeyboard.selection.length}, {m_OldScreenKeyboard.text}
 ";
         }
