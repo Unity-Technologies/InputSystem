@@ -63,6 +63,12 @@ namespace UnityEngine.InputSystem
             ReportStateChange(ScreenKeyboardState.Done);
         }
 
+        private IEnumerator QueueStatusChangeCancel()
+        {
+            yield return new WaitForEndOfFrame();
+            ReportStateChange(ScreenKeyboardState.Canceled);
+        }
+
         private bool IsSelectionEqual(RangeInt a, RangeInt b)
         {
             return a.end == b.end && a.start == b.start;
@@ -100,6 +106,12 @@ namespace UnityEngine.InputSystem
                 selection.length = Mathf.Clamp(m_Selection.length, 0, m_InputFieldText.Length - m_Selection.start);
                 OnSelectionChange(selection);
             }
+        }
+
+        internal override void SimulateKeyEvent(int keyCode)
+        {
+            if (keyCode == (int)KeyCode.Escape)
+                QueueStatusChangeCancel();
         }
     }
 }

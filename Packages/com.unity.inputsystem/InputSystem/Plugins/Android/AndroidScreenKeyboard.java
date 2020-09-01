@@ -161,7 +161,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             txtInput.setBackgroundColor(0);
             txtInput.setTextColor(0);
             txtInput.setCursorVisible(false);
-
             okButton.setClickable(false);
 
             contentView.setBackgroundColor(0);
@@ -177,8 +176,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     {
         EditText txtInput = (EditText) findViewById (id.txtInput);
         debugLog("afterTextChanged: {0} Start {1} End {2}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd());
-
-        // TODO: For IME SelectionEnd and Start doesn't return what you would expect
         m_Callbacks.OnTextChanged(s.toString());
     }
 
@@ -287,6 +284,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
                     debugLog("    overriding selection, since input field is hidden");
                     start = end = getText().length();
                     setSelection(getText().length());
+                    return;
                 }
 
                 long currentSelection = convertSelectionToLong(start, end);
@@ -343,13 +341,21 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         if (txtInput != null)
         {
             debugLog("setText {0}", text);
-            // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
-            // we want to ignore this, since we want for selection to be at the end of the text
-            long temp = m_LastSelection;
-            m_LastSelection = 0;
-            txtInput.setText(text);
-            m_LastSelection = temp;
-            txtInput.setSelection(text.length());
+            if (m_InputFieldHidden)
+            {
+                // For hidden input fields, selection is always overriden in selection changed callback
+               txtInput.setText(text);
+            }
+            else
+             {
+                // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
+                // we want to ignore this, since we want for selection to be at the end of the text
+                long temp = m_LastSelection;
+                m_LastSelection = 0;
+                txtInput.setText(text);
+                m_LastSelection = temp;
+                txtInput.setSelection(text.length());
+            }
         }
     }
 
@@ -383,5 +389,15 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         long end = txtInput.getSelectionEnd();
 
         return convertSelectionToLong(start, end);
+    }
+
+    public void simulateKeyEvent(int keyCode)
+    {
+        EditText txtInput = (EditText) findViewById(id.txtInput);
+        if (txtInput == null)
+            return;
+
+        txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0));
+        txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0));
     }
 }

@@ -126,6 +126,11 @@ namespace UnityEngine.InputSystem.Android
                     m_KeyboardObject.Call("setSelection", value.start, value.length);
             }
         }
+
+        internal override void SimulateKeyEvent(int keyCode)
+        {
+            m_KeyboardObject.Call("simulateKeyEvent", keyCode);
+        }
     }
 }
 #endif

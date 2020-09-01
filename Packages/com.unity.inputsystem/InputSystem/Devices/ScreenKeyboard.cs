@@ -153,5 +153,14 @@ namespace UnityEngine.InputSystem
         public virtual Rect occludingArea => Rect.zero;
 
         public abstract RangeInt selection { set; get; }
+
+        /// <summary>
+        /// For testing purposes only.
+        /// Simulate a key event
+        /// </summary>
+        /// <param name="keyCode"></param>
+        internal virtual void SimulateKeyEvent(int keyCode)
+        {
+        }
     }
 }
