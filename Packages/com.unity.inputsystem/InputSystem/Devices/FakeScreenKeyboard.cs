@@ -103,10 +103,9 @@ namespace UnityEngine.InputSystem
             {
                 if (m_ShowParams.inputFieldHidden)
                     return;
-                var selection = value;
-                selection.start = Math.Min(m_InputFieldText.Length, selection.start);
-                selection.length = Mathf.Clamp(selection.length, 0, m_InputFieldText.Length - selection.start);
-                OnSelectionChange(selection);
+
+                if (m_InputFieldText.Length >= value.end && m_InputFieldText.Length >= value.start)
+                    OnSelectionChange(value);
             }
         }
 
