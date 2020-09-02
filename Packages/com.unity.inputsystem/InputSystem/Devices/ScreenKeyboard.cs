@@ -88,6 +88,9 @@ namespace UnityEngine.InputSystem
 
     // Note: This struct is marshalled to iOS native code, don't change the layout
     //       Also don't use auto properties, since it messes up the layout
+    /// <summary>
+    /// Describes the appearance of screen keyboard.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct ScreenKeyboardShowParams
     {
