@@ -3483,6 +3483,73 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1261462/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDistinguishMultiTapAndSingleTapOnSameAction()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        // This is a bit of a tricky setup for actions. We will be pressing and releasing a button with 0.1 seconds. This means
+        // that at that point, TapInteraction will recognize a tap and perform. However, since it's not driving the action
+        // (MultiTapInteraction is since it's coming first and it when into Started phase on mouse down), that has no effect on
+        // the action.
+        //
+        // When we then release the mouse button 0.21 seconds later (i.e. exceeding tapDelay and thus making it not qualify
+        // as a multi-tap), the system then needs to correctly go back to TapInteraction which triggered in the *past* and
+        // have it "delay-perform" the action.
+        //
+        // Sounds complicated but what it comes down to is that the system must not reset an interaction's state when it
+        // performed until when the whole action performs or cancels.
+        var action = new InputAction(binding: "<Mouse>/leftButton", interactions: "multitap(tapTime=0.2,tapDelay=0.2),tap(duration=0.2)");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            currentTime = 1;
+
+            Press(mouse.leftButton);
+
+            Assert.That(trace, Started<MultiTapInteraction>(action, control: mouse.leftButton));
+
+            currentTime = 1.1f;
+
+            trace.Clear();
+
+            Release(mouse.leftButton);
+
+            // At this point, MultiTapInteraction doesn't know yet whether there's another tap
+            // coming so it must be waiting until we've exceeded tapDelay.
+            Assert.That(trace, Is.Empty);
+
+            currentTime = 1.31f;
+            InputSystem.Update();
+
+            Assert.That(trace, Canceled<MultiTapInteraction>(action, control: mouse.leftButton)
+                .AndThen(Started<TapInteraction>(action, control: mouse.leftButton, time: 1f)) // Note timestamp here!
+                .AndThen(Performed<TapInteraction>(action, control: mouse.leftButton, time: 1.1f))); // Note timestamp here!
+
+            trace.Clear();
+
+            // Make sure nothing got stuck and that we can do the same thing again.
+            currentTime = 2;
+            Press(mouse.leftButton);
+
+            Assert.That(trace, Started<MultiTapInteraction>(action, control: mouse.leftButton));
+
+            currentTime = 2.1f;
+
+            trace.Clear();
+
+            Release(mouse.leftButton);
+
+            Assert.That(trace, Is.Empty);
+
+            currentTime = 2.31f;
+            InputSystem.Update();
+        }
+    }
+
     /*
     TODO: Implement WithChild and ChainedWith
     [Test]
