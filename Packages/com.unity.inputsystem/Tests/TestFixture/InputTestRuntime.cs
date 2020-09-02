@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
         public bool hasFocus => m_HasFocus;
-        
+
         ~InputTestRuntime()
         {
             Dispose();
