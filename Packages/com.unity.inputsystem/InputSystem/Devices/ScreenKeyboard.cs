@@ -4,25 +4,85 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
+    /// <summary>
+    /// Enumeration of the different types of supported screen keyboards.
+    /// </summary>
     public enum ScreenKeyboardType
     {
+        /// <summary>
+        /// The default keyboard layout of the target platform.
+        /// </summary>
         Default = 0,
+
+        /// <summary>
+        /// 
+        /// </summary>
         ASCIICapable = 1,
+
+        /// <summary>
+        /// Keyboard with numbers and punctuation mark keys.
+        /// </summary>
         NumbersAndPunctuation = 2,
+
+        /// <summary>
+        /// Keyboard with keys for URL entry.
+        /// </summary>
         URL = 3,
+
+        /// <summary>
+        /// Keyboard with standard numeric keys.
+        /// </summary>
         NumberPad = 4,
+
+        /// <summary>
+        /// Keyboard with a layout suitable for typing telephone numbers.
+        /// </summary>
         PhonePad = 5,
+
+        /// <summary>
+        /// Keyboard with alphanumeric keys.
+        /// </summary>
         NamePhonePad = 6,
+
+        /// <summary>
+        /// Keyboard with additional keys suitable for typing email addresses.
+        /// </summary>
         EmailAddress = 7,
+
+        /// <summary>
+        /// Keyboard with symbol keys often used on social media, such as Twitter.
+        /// </summary>
         Social = 8,
+
+        /// <summary>
+        /// Keyboard with the "." key beside the space key, suitable for typing search terms.
+        /// </summary>
         Search = 9
     }
 
+    /// <summary>
+    /// Screen keyboard state.
+    /// </summary>
     public enum ScreenKeyboardState : uint
     {
+        /// <summary>
+        /// Screen keyboard is closed.
+        /// </summary>
         Done,
+
+        /// <summary>
+        /// Screen keyboard is visible.
+        /// </summary>
         Visible,
+
+        /// <summary>
+        /// Screen keyboard is closed due cancellation event, for ex., Cancel button was clicked.
+        /// </summary>
         Canceled,
+
+        /// <summary>
+        /// Screen keyboard is closed due lost focus event.
+        /// </summary>
         LostFocus
     }
 
@@ -40,15 +100,45 @@ namespace UnityEngine.InputSystem
         private bool m_Alert;
         private bool m_InputFieldHidden;
 
+        /// <summary>
+        /// The type of the keyboard.
+        /// </summary>
         public ScreenKeyboardType type { get => m_Type; set => m_Type = value; }
+
+        /// <summary>
+        /// The default input field text which is present when keyboard is shown.
+        /// </summary>
         public string initialText { get => m_InitialText; set => m_InitialText = value; }
+
+        /// <summary>
+        /// Placeholder text when input field text is empty.
+        /// </summary>
         public string placeholderText { get => m_PlaceholderText; set => m_PlaceholderText = value; }
+
+        /// <summary>
+        /// Is auto correction applied?
+        /// </summary>
         public bool autocorrection { get => m_Autocorrection; set => m_Autocorrection = value; }
+
+        /// <summary>
+        /// Can more than one line of text be entered in the input field ?
+        /// </summary>
         public bool multiline { get => m_Multiline; set => m_Multiline = value; }
+
+        /// <summary>
+        /// Is the text masked (for passwords, etc)?
+        /// </summary>
         public bool secure { get => m_Secure; set => m_Secure = value; }
 
-        ////TODO: this one is iPhone specific?
+        /// <summary>
+        /// Is the keyboard opened in alert mode?
+        /// Note: Only available on iOS
+        /// </summary>
         public bool alert { get => m_Alert; set => m_Alert = value; }
+
+        /// <summary>
+        /// Is input field hidden?
+        /// </summary>
         public bool inputFieldHidden { get => m_InputFieldHidden; set => m_InputFieldHidden = value; }
     }
 

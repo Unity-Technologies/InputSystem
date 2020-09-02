@@ -3,6 +3,9 @@ using System.Collections;
 
 namespace UnityEngine.InputSystem
 {
+    /// <summary>
+    /// Mock screen keyboard class, which simulates screen keyboard behavior and is validated by the tests in ScreenKeyboardTests.cs
+    /// </summary>
     class FakeScreenKeyboard : ScreenKeyboard
     {
         private static FakeScreenKeyboard ms_Instance;
