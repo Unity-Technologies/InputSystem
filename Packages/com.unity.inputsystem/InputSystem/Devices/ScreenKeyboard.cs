@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem
         Default = 0,
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         ASCIICapable = 1,
 
