@@ -272,6 +272,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
             public void onWindowFocusChanged(boolean hasWindowFocus) {
                 super.onWindowFocusChanged(hasWindowFocus);
+                debugLog("onWindowFocusChanged {0}", hasWindowFocus);
                 // for some reason this code can NOT be in the OnFocusChangeListener; go figure..
                 if (hasWindowFocus) {
                     InputMethodManager imm = (InputMethodManager) m_Context.getSystemService(Context.INPUT_METHOD_SERVICE);
