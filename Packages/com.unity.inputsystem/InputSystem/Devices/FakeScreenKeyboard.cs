@@ -48,9 +48,21 @@ namespace UnityEngine.InputSystem
             Dispatcher.StartCoroutine(QueueStatusChangeVisible());
         }
 
+        IEnumerator Waiting()
+        {
+#if UNITY_EDITOR
+            // WaitForEndOfFrame doesn't work in batch mode
+            int startFrame = Time.frameCount;
+            return new WaitUntil(() => Time.frameCount - startFrame >= 1);
+
+#else
+            return new WaitForEndOfFrame();
+#endif
+        }
+
         private IEnumerator QueueStatusChangeVisible()
         {
-            yield return new WaitForEndOfFrame();
+            yield return Waiting();
             ReportStateChange(ScreenKeyboardState.Visible);
         }
 
@@ -62,13 +74,13 @@ namespace UnityEngine.InputSystem
 
         private IEnumerator QueueStatusChangeDone()
         {
-            yield return new WaitForEndOfFrame();
+            yield return Waiting();
             ReportStateChange(ScreenKeyboardState.Done);
         }
 
         private IEnumerator QueueStatusChangeCancel()
         {
-            yield return new WaitForEndOfFrame();
+            yield return Waiting();
             ReportStateChange(ScreenKeyboardState.Canceled);
         }
 

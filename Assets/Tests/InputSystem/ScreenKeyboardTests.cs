@@ -101,6 +101,18 @@ public class ScreenKeyboardTests : InputTestFixture
         }
     }
 
+    IEnumerator Waiting()
+    {
+#if UNITY_EDITOR
+        // WaitForEndOfFrame doesn't work in batch mode
+        int startFrame = Time.frameCount;
+        return new WaitUntil(() => Time.frameCount - startFrame >= 1);
+
+#else
+        return new WaitForEndOfFrame();
+#endif
+    }
+
     private IEnumerator ResetKeyboard()
     {
         // If there's a failure in test, the callbacks might not be properly cleaned up
@@ -116,7 +128,8 @@ public class ScreenKeyboardTests : InputTestFixture
 
         keyboard.Hide();
         for (int i = 0; i < kFrameTimeout && keyboard.state == ScreenKeyboardState.Visible; i++)
-            yield return new WaitForFixedUpdate();
+            yield return Waiting();
+
         Assert.IsFalse(keyboard.state == ScreenKeyboardState.Visible, "Couldn't hide keyboard");
     }
 
@@ -131,7 +144,7 @@ public class ScreenKeyboardTests : InputTestFixture
 
         keyboard.Show(showParams);
         for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Visible; i++)
-            yield return new WaitForFixedUpdate();
+            yield return Waiting();
         Assert.AreEqual(ScreenKeyboardState.Visible, keyboard.state, "Couldn't show keyboard");
     }
 
@@ -401,7 +414,7 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
         keyboard.SimulateKeyEvent(keyCode);
         for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Canceled; i++)
-            yield return new WaitForFixedUpdate();
+            yield return Waiting();
         Assert.AreEqual(ScreenKeyboardState.Canceled, keyboard.state, "Couldn't hide keyboard using back button");
     }
 }
