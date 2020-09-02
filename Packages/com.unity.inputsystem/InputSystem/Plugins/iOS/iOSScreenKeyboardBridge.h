@@ -36,6 +36,8 @@ enum iOSScreenKeyboardState
 
 + (iOSScreenKeyboardBridge*)getInstanceOrCreate;
 + (iOSScreenKeyboardBridge*)getInstance;
++ (bool)getLogging;
++ (void)setLogging:(bool)enabled;
 
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr;
 - (void)hide:(iOSScreenKeyboardState)hideState;

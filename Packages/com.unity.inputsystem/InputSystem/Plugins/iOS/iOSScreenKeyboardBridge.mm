@@ -155,3 +155,13 @@ extern "C" long _iOSScreenKeyboardGetSelection()
     NSRange range = keyboard.getSelection;
     return range.location | (range.length << 32);
 }
+
+extern "C" void _iOSScreenKeyboardSetLogging(int enabled)
+{
+    [iOSScreenKeyboardBridge setLogging: enabled > 0];
+}
+
+extern "C" int _iOSScreenKeyboardGetLogging()
+{
+    return [iOSScreenKeyboardBridge getLogging] ? 1 : 0;
+}

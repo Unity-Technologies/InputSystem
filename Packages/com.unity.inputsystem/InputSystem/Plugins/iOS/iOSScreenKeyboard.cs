@@ -55,6 +55,12 @@ namespace UnityEngine.InputSystem.iOS
 
         [DllImport("__Internal")]
         private static extern long _iOSScreenKeyboardGetSelection();
+        
+        [DllImport("__Internal")]
+        private static extern void _iOSScreenKeyboardSetLogging(int enabled);
+        
+        [DllImport("__Internal")]
+        private static extern int _iOSScreenKeyboardGetLogging();
 
         [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
         private static void OnTextChangedCallback(string text)
@@ -119,6 +125,19 @@ namespace UnityEngine.InputSystem.iOS
         }
 
         public override Rect occludingArea => _iOSScreenKeyboardOccludingArea();
+        
+        internal override bool logging
+        {
+            get
+            {
+                return _iOSScreenKeyboardGetLogging() != 0;
+            }
+
+            set
+            {
+                _iOSScreenKeyboardSetLogging(value ? 1 : 0);
+            }
+        }
     }
 }
 #endif

@@ -4,16 +4,10 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
-
-#define ENABLE_KEYBOARD_LOG 0
-#if ENABLE_KEYBOARD_LOG
-#define KEYBOARD_LOG(...) NSLog(@__VA_ARGS__)
-#else
-#define KEYBOARD_LOG(...) {}
-#endif
-
+#define KEYBOARD_LOG(...) if (s_KeyboardLogging) NSLog(@"%@", [@"ScreenKeyboard - " stringByAppendingString: [NSString stringWithFormat: __VA_ARGS__]])
 
 static iOSScreenKeyboardBridge* s_Keyboard = nil;
+static bool s_KeyboardLogging = false;
 static const unsigned kToolBarHeight = 40;
 static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value, there is no way to know the exact widths of the system bar buttons
 
@@ -66,6 +60,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textInputDone:(id)sender
 {
+    KEYBOARD_LOG(@"textInputDone");
     if (m_State != StateVisible)
         return;
 
@@ -74,6 +69,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textInputCancel:(id)sender
 {
+    KEYBOARD_LOG(@"textInputCancel");
     [self hide: StateCanceled];
 }
 
@@ -87,7 +83,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textDidChangeImpl:(NSString*)text
 {
-    KEYBOARD_LOG("textDidChangeImpl %@", text);
+    KEYBOARD_LOG(@"textDidChangeImpl %@", text);
     if (m_ShowParams.callbacks.textChangedCallback)
         m_ShowParams.callbacks.textChangedCallback([text UTF8String]);
     else
@@ -96,11 +92,11 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)selectionChangeImpl:(NSRange)range
 {
-    KEYBOARD_LOG("selectionChangeImpl %u, %u", (unsigned int)range.location, (unsigned int)range.length);
+    KEYBOARD_LOG(@"selectionChangeImpl %u, %u", (unsigned int)range.location, (unsigned int)range.length);
 
     if (NSEqualRanges(m_LastSelection, range))
     {
-        KEYBOARD_LOG("    selection hasn't changed, will not invoke callback");
+        KEYBOARD_LOG(@"    selection hasn't changed, will not invoke callback");
         return;
     }
     m_LastSelection = range;
@@ -174,19 +170,19 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)keyboardDidShow:(NSNotification*)notification
 {
-    KEYBOARD_LOG("keyboardDidShow")
+    KEYBOARD_LOG(@"keyboardDidShow");
     m_Active = YES;
 }
 
 - (void)keyboardWillHide:(NSNotification*)notification
 {
-    KEYBOARD_LOG("keyboardWillHide")
+    KEYBOARD_LOG(@"keyboardWillHide");
     [self systemHideKeyboard];
 }
 
 - (void)keyboardDidChangeFrame:(NSNotification*)notification
 {
-    KEYBOARD_LOG("keyboardDidChangeFrame")
+    KEYBOARD_LOG(@"keyboardDidChangeFrame");
     m_Active = YES;
 
     CGRect srcRect  = [[notification.userInfo objectForKey: UIKeyboardFrameEndUserInfoKey] CGRectValue];
@@ -207,7 +203,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 {
     if (!s_Keyboard)
     {
-        KEYBOARD_LOG("creating keyboard instance")
+        KEYBOARD_LOG(@"creating keyboard instance");
         s_Keyboard = [[iOSScreenKeyboardBridge alloc] init];
     }
 
@@ -219,9 +215,19 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     return s_Keyboard;
 }
 
++ (bool)getLogging
+{
+    return s_KeyboardLogging;
+}
+
++ (void)setLogging:(bool)enabled
+{
+    s_KeyboardLogging = enabled;
+}
+
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr
 {
-    KEYBOARD_LOG("keyboard show")
+    KEYBOARD_LOG(@"keyboard show");
     if (!m_EditView.hidden)
     {
         [NSObject cancelPreviousPerformRequestsWithTarget: self];
@@ -415,7 +421,7 @@ i = res.items;                                              \
 
 - (void)systemHideKeyboard
 {
-    KEYBOARD_LOG("systemHideKeyboard")
+    KEYBOARD_LOG(@"systemHideKeyboard");
 
     m_Active = m_EditView.isFirstResponder;
     m_EditView.hidden = YES;
@@ -487,6 +493,7 @@ i = res.items;                                              \
 
 - (void)setText:(NSString*)newText
 {
+    KEYBOARD_LOG(@"setText %@", newText);
     NSString* originalText = self.getText;
     if ([originalText isEqualToString: newText])
         return;
@@ -554,6 +561,7 @@ i = res.items;                                              \
 
 - (void)setSelection:(NSRange)newSelection
 {
+    KEYBOARD_LOG(@"setSelection %@", NSStringFromRange(newSelection));
     if (m_ShowParams.inputFieldHidden)
         return;
 
