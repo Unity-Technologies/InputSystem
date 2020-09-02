@@ -84,17 +84,20 @@ public class ScreenKeyboardTests : InputTestFixture
             {
 #if UNITY_EDITOR
                 s_TargetKeyboard = runtime.screenKeyboard;
-                Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(FakeScreenKeyboard));
 #else
+                // When running on native platform, we always want to test real screen keyboard
                 s_TargetKeyboard = NativeInputRuntime.instance.screenKeyboard;
-#if UNITY_ANDROID
+#endif
+                if (s_TargetKeyboard == null)
+                    throw new Exception("No Screen Keyboard to test?");
+
+#if UNITY_EDITOR
+                Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(FakeScreenKeyboard));
+#elif UNITY_ANDROID
                 Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(UnityEngine.InputSystem.Android.AndroidScreenKeyboard));
 #elif UNITY_IOS
                 Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(UnityEngine.InputSystem.iOS.iOSScreenKeyboard));
 #endif
-#endif
-                if (s_TargetKeyboard == null)
-                    throw new Exception("No Screen Keyboard to test?");
                 Console.WriteLine($"Testable Keyboards is: {s_TargetKeyboard.GetType().FullName}");
             }
             return s_TargetKeyboard;

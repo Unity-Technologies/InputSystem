@@ -27,9 +27,7 @@ namespace UnityEngine.InputSystem
         public unsafe delegate long DeviceCommandCallback(int deviceId, InputDeviceCommand* command);
 
         public bool hasFocus => m_HasFocus;
-
-        private FakeScreenKeyboard m_ScreenKeyboard = new FakeScreenKeyboard();
-
+        
         ~InputTestRuntime()
         {
             Dispose();
@@ -336,7 +334,7 @@ namespace UnityEngine.InputSystem
 
         public ScreenKeyboard screenKeyboard
         {
-            get => m_ScreenKeyboard;
+            get => FakeScreenKeyboard.instance;
             set => throw new NotImplementedException("You cannot set screen keyboard for test runtime");
         }
 
