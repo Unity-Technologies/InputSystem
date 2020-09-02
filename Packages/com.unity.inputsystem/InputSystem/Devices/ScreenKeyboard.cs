@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Enumeration of the different types of supported screen keyboards.
     /// </summary>
-    public enum ScreenKeyboardType
+    internal enum ScreenKeyboardType
     {
         /// <summary>
         /// The default keyboard layout of the target platform.
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Screen keyboard state.
     /// </summary>
-    public enum ScreenKeyboardState : uint
+    internal enum ScreenKeyboardState : uint
     {
         /// <summary>
         /// Screen keyboard is closed.
@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem
     /// Describes the appearance of screen keyboard.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    public struct ScreenKeyboardShowParams
+    internal struct ScreenKeyboardShowParams
     {
         private ScreenKeyboardType m_Type;
         private string m_InitialText;
@@ -156,7 +156,7 @@ namespace UnityEngine.InputSystem
     ///   - [iOS] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     ///   - [WSA] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     /// </summary>
-    public abstract class ScreenKeyboard
+    internal abstract class ScreenKeyboard
     {
         protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
