@@ -54,9 +54,8 @@ namespace UnityEngine.InputSystem
             // WaitForEndOfFrame doesn't work in batch mode
             int startFrame = Time.frameCount;
             return new WaitUntil(() => Time.frameCount - startFrame >= 1);
-
 #else
-            return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
 #endif
         }
 

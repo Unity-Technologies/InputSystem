@@ -112,7 +112,7 @@ public class ScreenKeyboardTests : InputTestFixture
         return new WaitUntil(() => Time.frameCount - startFrame >= 1);
 
 #else
-        return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
 #endif
     }
 
