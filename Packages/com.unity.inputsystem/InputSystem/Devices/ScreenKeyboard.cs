@@ -2,8 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Utilities;
 
-// TODO:
-// disable debugging
 namespace UnityEngine.InputSystem
 {
     public enum ScreenKeyboardType
@@ -54,6 +52,17 @@ namespace UnityEngine.InputSystem
         public bool inputFieldHidden { get => m_InputFieldHidden; set => m_InputFieldHidden = value; }
     }
 
+    /// <summary>
+    /// ScreenKeyboard base class for platform specific implementation.
+    ///
+    /// Known issues:
+    /// * There's a screen keyboard behavior differences in regards to input and focus loss:
+    ///   - [Android] When screen keyboard is shown, the main Unity window stops receiving input events, when clicking on Unity window, screen keyboard looses focus and closes itself
+    ///     (While it's possible to keep screen keyboard opened on focus loss, currently there's no way to make Unity window keep receiving input events like touch while screen keyboard is shown,
+    ///      this matches the behavior in old TouchScreenKeyboard implementation)
+    ///   - [iOS] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
+    ///   - [WSA] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
+    /// </summary>
     public abstract class ScreenKeyboard
     {
         protected ScreenKeyboardState m_KeyboardState;
