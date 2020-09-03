@@ -1,3 +1,7 @@
+// Case 1274997 - High Managed Stripping level makes these tests fail,  seems like test framework is not capable of 
+//                running multiple variations of UnityTest - and instead "No arguments were provided." error shows up.
+//                On other hand there's no screen keyboard on standalone, so keep these tests only in Editor + Mobile for now.
+#if UNITY_EDITOR || !UNITY_STANDALONE
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -421,3 +425,4 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(ScreenKeyboardState.Canceled, keyboard.state, "Couldn't hide keyboard using back button");
     }
 }
+#endif
