@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem
         Default = 0,
 
         /// <summary>
-        ///
+        /// Keyboard with standard ASCII keys.
         /// </summary>
         ASCIICapable = 1,
 
