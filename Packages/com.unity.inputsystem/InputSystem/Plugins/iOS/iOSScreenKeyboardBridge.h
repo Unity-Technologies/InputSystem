@@ -36,6 +36,8 @@ enum iOSScreenKeyboardState
 
 + (iOSScreenKeyboardBridge*)getInstanceOrCreate;
 + (iOSScreenKeyboardBridge*)getInstance;
++ (void)cleanup;
+
 + (bool)getLogging;
 + (void)setLogging:(bool)enabled;
 

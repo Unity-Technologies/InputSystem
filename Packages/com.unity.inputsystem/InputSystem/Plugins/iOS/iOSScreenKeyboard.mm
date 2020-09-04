@@ -215,6 +215,12 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     return s_Keyboard;
 }
 
++ (void)cleanup
+{
+    if (s_Keyboard != nil)
+        s_Keyboard = nil;
+}
+
 + (bool)getLogging
 {
     return s_KeyboardLogging;
@@ -246,7 +252,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
     if (m_Active)
         [self hide: StateDone];
 
-    m_InitialText = initialTextCStr ? [[NSString alloc] initWithUTF8String: initialTextCStr] : @"";
+    m_InitialText = initialTextCStr ? [NSString stringWithUTF8String: initialTextCStr] : @"";
 
     UITextAutocapitalizationType capitalization = UITextAutocapitalizationTypeSentences;
     if (param.keyboardType == UIKeyboardTypeURL || param.keyboardType == UIKeyboardTypeEmailAddress || param.keyboardType == UIKeyboardTypeWebSearch)
@@ -395,9 +401,21 @@ i = res.items;                                              \
 #endif
 
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(textInputDone:) name: UITextFieldTextDidEndEditingNotification object: nil];
+        
     }
 
     return self;
+}
+
+- (void)dealloc
+{
+#if PLATFORM_IOS
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidChangeFrameNotification object: nil];
+#endif
+    [[NSNotificationCenter defaultCenter] removeObserver: self name: UITextFieldTextDidEndEditingNotification object: nil];
 }
 
 - (void)setTextInputTraits:(id<UITextInputTraits>)traits

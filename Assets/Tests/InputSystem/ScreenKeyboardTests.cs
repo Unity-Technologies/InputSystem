@@ -100,7 +100,8 @@ public class ScreenKeyboardTests : InputTestFixture
 #elif UNITY_IOS
             Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.iOS.iOSScreenKeyboard));
 #endif
-
+            // Keep native logging enabled for more info
+            _keyboard.logging = true;
             return _keyboard;
         }
     }
