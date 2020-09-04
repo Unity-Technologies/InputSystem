@@ -200,9 +200,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Cleanup any platform specific resources
         /// </summary>
-        public virtual void Dispose()
-        {
-        }
+        public abstract void Dispose();
 
         /// <summary>
         /// Shows the screen keyboard with default options.
