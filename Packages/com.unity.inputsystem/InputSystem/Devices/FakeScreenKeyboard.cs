@@ -8,27 +8,18 @@ namespace UnityEngine.InputSystem
     /// </summary>
     class FakeScreenKeyboard : ScreenKeyboard
     {
-        private static FakeScreenKeyboard ms_Instance;
-
-        public static FakeScreenKeyboard instance
-        {
-            get
-            {
-                if (ms_Instance == null)
-                    ms_Instance = new FakeScreenKeyboard();
-                return ms_Instance;
-            }
-        }
-
         string m_InputFieldText;
         RangeInt m_Selection;
         class FakeScreenKeyboardDispatcher : MonoBehaviour
         {
         }
 
+        internal FakeScreenKeyboard()
+        {
+        }
+
         public override void Dispose()
         {
-            ms_Instance = null;
         }
 
         private FakeScreenKeyboardDispatcher Dispatcher

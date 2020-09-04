@@ -21,7 +21,6 @@ namespace UnityEngine.InputSystem.Android
     {
         internal const string kAndroidInterface = "Android";
 
-        private static AndroidScreenKeyboard m_AndroidScreenKeyboard;
         public static void Initialize()
         {
             InputSystem.RegisterLayout<AndroidGamepad>(
@@ -156,9 +155,7 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
 
             #if !UNITY_EDITOR
-            // AndroidSupport.Initialize can be called multiple times when running tests
-            // Don't recreate keyboard
-            NativeInputRuntime.instance.screenKeyboard = AndroidScreenKeyboard.instance;
+            NativeInputRuntime.instance.screenKeyboard = new AndroidScreenKeyboard();
             #endif
         }
 

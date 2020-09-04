@@ -83,6 +83,10 @@ namespace UnityEngine.InputSystem.iOS
             instance.ReportSelectionChange(start, length);
         }
 
+        internal iOSScreenKeyboard()
+        {
+        }
+
         public override void Dispose()
         {
             _iOSScreenKeyboardCleanup();

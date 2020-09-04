@@ -8,18 +8,6 @@ namespace UnityEngine.InputSystem.Android
 {
     internal class AndroidScreenKeyboard : ScreenKeyboard
     {
-        private static AndroidScreenKeyboard ms_Instance;
-
-        public static AndroidScreenKeyboard instance
-        {
-            get
-            {
-                if (ms_Instance == null)
-                    ms_Instance = new AndroidScreenKeyboard();
-                return ms_Instance;
-            }
-        }
-
         class AndroidScreenKeyboardCallbacks : AndroidJavaProxy
         {
             AndroidScreenKeyboard m_Parent;
@@ -65,7 +53,7 @@ namespace UnityEngine.InputSystem.Android
         private AndroidJavaObject m_KeyboardObject;
         private AndroidScreenKeyboardCallbacks m_Callbacks;
 
-        private AndroidScreenKeyboard()
+        internal AndroidScreenKeyboard()
         {
             m_Callbacks = new AndroidScreenKeyboardCallbacks(this);
             m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
@@ -78,8 +66,6 @@ namespace UnityEngine.InputSystem.Android
                 m_KeyboardObject.Dispose();
                 m_KeyboardObject = null;
             }
-
-            ms_Instance = null;
         }
 
         /// <summary>

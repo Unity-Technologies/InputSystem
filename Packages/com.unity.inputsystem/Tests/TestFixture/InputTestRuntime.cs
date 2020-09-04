@@ -332,9 +332,10 @@ namespace UnityEngine.InputSystem
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
+        ScreenKeyboard m_ScreenKeyboard = new FakeScreenKeyboard();
         public ScreenKeyboard screenKeyboard
         {
-            get => FakeScreenKeyboard.instance;
+            get => m_ScreenKeyboard;
             set => throw new NotImplementedException("You cannot set screen keyboard for test runtime");
         }
 

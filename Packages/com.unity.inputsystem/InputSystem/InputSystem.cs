@@ -3172,7 +3172,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
-            NativeInputRuntime.instance.screenKeyboard = FakeScreenKeyboard.instance;
+            NativeInputRuntime.instance.screenKeyboard = new FakeScreenKeyboard();
             #endif
         }
 
