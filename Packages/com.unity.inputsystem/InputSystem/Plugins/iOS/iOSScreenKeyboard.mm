@@ -401,7 +401,6 @@ i = res.items;                                              \
 #endif
 
         [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(textInputDone:) name: UITextFieldTextDidEndEditingNotification object: nil];
-        
     }
 
     return self;

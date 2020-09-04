@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.iOS
 
         [DllImport("__Internal")]
         private static extern int _iOSScreenKeyboardGetLogging();
-        
+
         [DllImport("__Internal")]
         private static extern int _iOSScreenKeyboardCleanup();
 
