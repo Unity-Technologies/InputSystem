@@ -50,16 +50,19 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     TouchScreenKeyboard m_OldScreenKeyboard;
 
+    private ScreenKeyboardCallbacks m_Callbacks;
+
     void Start()
     {
         m_ScreenKeyboard = InputRuntime.s_Instance.screenKeyboard;
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
 
+        m_Callbacks = new ScreenKeyboardCallbacks();
+        m_Callbacks.stateChanged = StateChangedCallback;
+        m_Callbacks.inputFieldTextChanged = InputFieldTextCallback;
+        m_Callbacks.inputFieldSelectionChanged = SelectionChanged;
 
-        m_ScreenKeyboard.stateChanged += StateChangedCallback;
-        m_ScreenKeyboard.inputFieldTextChanged += InputFieldTextCallback;
-        m_ScreenKeyboard.selectionChanged += SelectionChanged;
 
         m_Properties.ClearOptions();
         m_Properties.options.Add(new Dropdown.OptionData("Show Params"));
@@ -240,7 +243,7 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
             type = ToScreenKeyboardType(m_KeyboardTypeDropDown.captionText.text)
         };
 
-        m_ScreenKeyboard.Show(showParams);
+        m_ScreenKeyboard.Show(showParams, m_Callbacks);
 
         Log($"Requesting keyboard to show");
     }

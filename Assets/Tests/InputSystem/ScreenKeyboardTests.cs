@@ -1,4 +1,4 @@
-// Case 1274997 - High Managed Stripping level makes these tests fail,  seems like test framework is not capable of 
+// Case 1274997 - High Managed Stripping level makes these tests fail,  seems like test framework is not capable of
 //                running multiple variations of UnityTest - and instead "No arguments were provided." error shows up.
 //                On other hand there's no screen keyboard on standalone, so keep these tests only in Editor + Mobile for now.
 #if UNITY_EDITOR || !UNITY_STANDALONE
@@ -122,9 +122,6 @@ public class ScreenKeyboardTests : InputTestFixture
 
     private IEnumerator ResetKeyboard()
     {
-        // If there's a failure in test, the callbacks might not be properly cleaned up
-        // So it's easier to clean them up before starting test
-        keyboard.ClearListeners();
         return HideKeyboard();
     }
 
@@ -140,16 +137,16 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.IsFalse(keyboard.state == ScreenKeyboardState.Visible, "Couldn't hide keyboard");
     }
 
-    private IEnumerator ShowKeyboard()
+    private IEnumerator ShowKeyboard(ScreenKeyboardCallbacks callbacks = null)
     {
-        return ShowKeyboard(new ScreenKeyboardShowParams());
+        return ShowKeyboard(new ScreenKeyboardShowParams(), callbacks);
     }
 
-    private IEnumerator ShowKeyboard(ScreenKeyboardShowParams showParams)
+    private IEnumerator ShowKeyboard(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks)
     {
         Assert.IsTrue(keyboard.state != ScreenKeyboardState.Visible, "Expected keybard to be not visible");
 
-        keyboard.Show(showParams);
+        keyboard.Show(showParams, callbacks);
         for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Visible; i++)
             yield return Waiting();
         Assert.AreEqual(ScreenKeyboardState.Visible, keyboard.state, "Couldn't show keyboard");
@@ -169,14 +166,15 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
 
         var stateCallbackInfo = new CallbackInfo<ScreenKeyboardState>(ScreenKeyboardState.Canceled);
-        var stateCallback = new Action<ScreenKeyboardState>(
-            (state) =>
+        var callbacks = new ScreenKeyboardCallbacks
+        {
+            stateChanged = (state) =>
             {
                 stateCallbackInfo.CallbackInvoked(state);
-            });
-        keyboard.stateChanged += stateCallback;
+            }
+        };
 
-        yield return ShowKeyboard();
+        yield return ShowKeyboard(callbacks);
 
         Assert.AreEqual(ScreenKeyboardState.Visible, stateCallbackInfo.Data);
         Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, stateCallbackInfo.ThreadId);
@@ -196,13 +194,16 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
 
         var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
-        var inputFieldCallback = new Action<string>(
-            (text) =>
+        var callbacks = new ScreenKeyboardCallbacks
+        {
+            inputFieldTextChanged = (text) =>
             {
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
-            });
-        keyboard.inputFieldTextChanged += inputFieldCallback;
-        yield return ShowKeyboard(new ScreenKeyboardShowParams(){multiline = multiline, inputFieldHidden = inputFieldHidden});
+            }
+        };
+
+
+        yield return ShowKeyboard(new ScreenKeyboardShowParams(){multiline = multiline, inputFieldHidden = inputFieldHidden}, callbacks);
 
         Assert.AreEqual(string.Empty, keyboard.inputFieldText);
 
@@ -223,12 +224,15 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
 
         var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
-        var selectionCallback = new Action<RangeInt>((range) => { selectionCallbackInfo.CallbackInvoked(range); });
-
-        keyboard.selectionChanged += selectionCallback;
         var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
-        var inputFieldCallback = new Action<string>(
-            (text) =>
+
+        var callbacks = new ScreenKeyboardCallbacks
+        {
+            inputFieldSelectionChanged = (range) =>
+            {
+                selectionCallbackInfo.CallbackInvoked(range);
+            },
+            inputFieldTextChanged = (text) =>
             {
                 inputFieldTextCallbackInfo.CallbackInvoked(text);
                 if (text.Equals("12345"))
@@ -246,10 +250,10 @@ public class ScreenKeyboardTests : InputTestFixture
                     // Change to same text, this shouldn't trigger a callback, since text didn't change
                     keyboard.inputFieldText = text;
                 }
-            });
-        keyboard.inputFieldTextChanged += inputFieldCallback;
+            }
+        };
 
-        yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline, inputFieldHidden = inputFieldHidden});
+        yield return ShowKeyboard(new ScreenKeyboardShowParams() { multiline = multiline, inputFieldHidden = inputFieldHidden}, callbacks);
 
         var targetText = "12345";
         keyboard.inputFieldText = targetText;
@@ -269,14 +273,17 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
 
         var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
-        var selectionCallback = new Action<RangeInt>((range) =>
-        {
-            selectionCallbackInfo.CallbackInvoked(range);
-            keyboard.selection = new RangeInt(1, 0);
-        });
 
-        keyboard.selectionChanged += selectionCallback;
-        yield return ShowKeyboard(new ScreenKeyboardShowParams { inputFieldHidden = inputFieldHidden });
+        var callbacks = new ScreenKeyboardCallbacks
+        {
+            inputFieldSelectionChanged = (range) =>
+            {
+                selectionCallbackInfo.CallbackInvoked(range);
+                keyboard.selection = new RangeInt(1, 0);
+            }
+        };
+
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { inputFieldHidden = inputFieldHidden }, callbacks);
 
         var targetText = "Hello";
         keyboard.inputFieldText = "Hello";
@@ -300,7 +307,7 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
-        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline, inputFieldHidden = inputFieldHidden});
+        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline, inputFieldHidden = inputFieldHidden}, null);
 
         Assert.AreEqual(initiaText, keyboard.inputFieldText);
         keyboard.inputFieldText = targetText;
@@ -315,7 +322,7 @@ public class ScreenKeyboardTests : InputTestFixture
     public IEnumerator CheckInputFieldTextWithReallyLongText([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
-        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden }, null);
 
         string targetText = "";
 
@@ -341,14 +348,21 @@ public class ScreenKeyboardTests : InputTestFixture
     {
         yield return ResetKeyboard();
         var selectionCallbackInfo = new CallbackInfo<MyRangeInt>(new MyRangeInt(0, 0));
-        var selectionCallback = new Action<RangeInt>((range) =>
+        var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
+
+        var callbacks = new ScreenKeyboardCallbacks
         {
-            selectionCallbackInfo.CallbackInvoked(range);
-        });
+            inputFieldSelectionChanged = (range) =>
+            {
+                selectionCallbackInfo.CallbackInvoked(range);
+            },
+            inputFieldTextChanged = (text) =>
+            {
+                inputFieldTextCallbackInfo.CallbackInvoked(text);;
+            }
+        };
 
-        keyboard.selectionChanged += selectionCallback;
-
-        yield return ShowKeyboard();
+        yield return ShowKeyboard(callbacks);
 
         Assert.AreEqual(new MyRangeInt(0, 0), (MyRangeInt)keyboard.selection);
 
@@ -361,20 +375,12 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.AreEqual(1, selectionCallbackInfo.CalledCount);
 
         // Assign inputFieldTextChanged, and see that setting selection doesn't trigger it
-        var inputFieldTextCallbackInfo = new CallbackInfo<string>(string.Empty);
-        var inputFieldCallback = new Action<string>(
-            (text) =>
-            {
-                inputFieldTextCallbackInfo.CallbackInvoked(text);;
-            });
-        keyboard.inputFieldTextChanged += inputFieldCallback;
-
         keyboard.selection = new RangeInt(1, 0);
         Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
         Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
 
         // Calling selection shouldn't trigger inputFieldText callback
-        Assert.AreEqual(0, inputFieldTextCallbackInfo.CalledCount);
+        Assert.AreEqual(1, inputFieldTextCallbackInfo.CalledCount);
 
         // Check what happens when selection start is out of bounds
         // Previous selection should be kept
@@ -418,7 +424,7 @@ public class ScreenKeyboardTests : InputTestFixture
         }
         yield return ResetKeyboard();
 
-        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden }, null);
         keyboard.SimulateKeyEvent(keyCode);
         for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Canceled; i++)
             yield return Waiting();

@@ -146,6 +146,33 @@ namespace UnityEngine.InputSystem
     }
 
     /// <summary>
+    /// Provides screen keyboard callbacks
+    /// </summary>
+    /// Note: We use delegates here instead of events to disallow a potential bug from users
+    ///       If these would be events, the order in which callbacks would invoked would be undefined.
+    ///       Imagine if in one of the inputFieldTextChanged callbacks we change the input field text.
+    ///       The other inputFieldTextChanged would still receive the original changed text which is wrong and could lead to potential problems.
+    /// Note: We use this approach with class callbacks, since it's more future proof, if we add an additional callback in the future, it won't break existing user projects.
+    internal class ScreenKeyboardCallbacks
+    {
+        /// <summary>
+        /// Is fired whenever screen keyboard state changes
+        /// </summary>
+        internal Action<ScreenKeyboardState> stateChanged { set; get; }
+
+        /// <summary>
+        /// Is fired whenever input field text changes.
+        /// It doesn't matter if input field is hidden or not, this callback would still be invoked
+        /// </summary>
+        internal Action<string> inputFieldTextChanged { set; get; }
+
+        /// <summary>
+        /// Is fired whenever input field text selection changes.
+        /// </summary>
+        internal Action<RangeInt> inputFieldSelectionChanged { set; get; }
+    }
+
+    /// <summary>
     /// ScreenKeyboard base class for platform specific implementation.
     ///
     /// Known issues:
@@ -160,38 +187,7 @@ namespace UnityEngine.InputSystem
     {
         protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
-
-        private InlinedArray<Action<ScreenKeyboardState>> m_StatusChangedListeners;
-        private InlinedArray<Action<string>> m_InputFieldTextListeners;
-        private InlinedArray<Action<RangeInt>> m_SelectionChangedListeners;
-
-        /// <summary>
-        /// Subscribe to an event which is fired whenever screen keyboard state changes
-        /// </summary>
-        public event Action<ScreenKeyboardState> stateChanged
-        {
-            add { m_StatusChangedListeners.Append(value); }
-            remove { m_StatusChangedListeners.Remove(value); }
-        }
-
-        /// <summary>
-        /// Subscribe to an event which is fired whenever input field text changes
-        /// This event is also fired when input field is hidden
-        /// </summary>
-        public event Action<string> inputFieldTextChanged
-        {
-            add { m_InputFieldTextListeners.Append(value); }
-            remove { m_InputFieldTextListeners.Remove(value); }
-        }
-
-        /// <summary>
-        /// Subscribe to an event which is fired whenever input field text selection changes.
-        /// </summary>
-        public event Action<RangeInt> selectionChanged
-        {
-            add { m_SelectionChangedListeners.Append(value); }
-            remove { m_SelectionChangedListeners.Remove(value); }
-        }
+        private ScreenKeyboardCallbacks m_Callbacks;
 
         /// <summary>
         /// Returns the state of the keyboard
@@ -213,9 +209,11 @@ namespace UnityEngine.InputSystem
         /// Show the screen keyboard with customized options.
         /// </summary>
         /// <param name="showParams"></param>
-        public void Show(ScreenKeyboardShowParams showParams)
+        /// <param name="callbacks"></param>
+        public void Show(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks = null)
         {
             m_ShowParams = showParams;
+            m_Callbacks = callbacks;
             if (m_ShowParams.initialText == null)
                 m_ShowParams.initialText = String.Empty;
             if (m_ShowParams.placeholderText == null)
@@ -237,8 +235,7 @@ namespace UnityEngine.InputSystem
 
         protected void ReportInputFieldChange(string text)
         {
-            foreach (var listener in m_InputFieldTextListeners)
-                listener(text);
+            m_Callbacks?.inputFieldTextChanged?.Invoke(text);
         }
 
         protected void ReportStateChange(ScreenKeyboardState state)
@@ -246,8 +243,7 @@ namespace UnityEngine.InputSystem
             if (state != m_KeyboardState)
             {
                 m_KeyboardState = state;
-                foreach (var listener in m_StatusChangedListeners)
-                    listener(state);
+                m_Callbacks?.stateChanged?.Invoke(state);
             }
         }
 
@@ -257,8 +253,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             var selection = new RangeInt(start, length);
-            foreach (var listener in m_SelectionChangedListeners)
-                listener(selection);
+            m_Callbacks?.inputFieldSelectionChanged?.Invoke(selection);
         }
 
         /// <summary>
@@ -286,16 +281,6 @@ namespace UnityEngine.InputSystem
         /// <param name="keyCode">A platform specific key code.</param>
         internal virtual void SimulateKeyEvent(int keyCode)
         {
-        }
-
-        /// <summary>
-        /// Used by internal testing only. From user perspective you should always clean up your listeners.
-        /// </summary>
-        internal void ClearListeners()
-        {
-            m_StatusChangedListeners.Clear();
-            m_InputFieldTextListeners.Clear();
-            m_SelectionChangedListeners.Clear();
         }
 
         /// <summary>
