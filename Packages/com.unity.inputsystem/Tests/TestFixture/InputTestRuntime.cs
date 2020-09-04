@@ -350,6 +350,7 @@ namespace UnityEngine.InputSystem
 
         public void Dispose()
         {
+            screenKeyboard?.Dispose();
             m_EventBuffer.Dispose();
             GC.SuppressFinalize(this);
         }

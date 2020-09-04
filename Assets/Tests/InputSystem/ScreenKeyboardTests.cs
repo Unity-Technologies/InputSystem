@@ -23,7 +23,6 @@ using UnityEngine.TestTools.Utils;
 /// </summary>
 public class ScreenKeyboardTests : InputTestFixture
 {
-    static ScreenKeyboard s_TargetKeyboard;
     const int kFrameTimeout = 30;
 
     public class CallbackInfo<T>
@@ -84,27 +83,25 @@ public class ScreenKeyboardTests : InputTestFixture
     {
         get
         {
-            if (s_TargetKeyboard == null)
-            {
+            ScreenKeyboard _keyboard;
 #if UNITY_EDITOR
-                s_TargetKeyboard = runtime.screenKeyboard;
+            _keyboard = runtime.screenKeyboard;
 #else
-                // When running on native platform, we always want to test real screen keyboard
-                s_TargetKeyboard = NativeInputRuntime.instance.screenKeyboard;
+            // When running on native platform, we always want to test real screen keyboard
+            _keyboard = NativeInputRuntime.instance.screenKeyboard;
 #endif
-                if (s_TargetKeyboard == null)
-                    throw new Exception("No Screen Keyboard to test?");
+            if (_keyboard == null)
+                throw new Exception("No Screen Keyboard to test?");
 
 #if UNITY_EDITOR
-                Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(FakeScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType(), typeof(FakeScreenKeyboard));
 #elif UNITY_ANDROID
-                Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(UnityEngine.InputSystem.Android.AndroidScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.Android.AndroidScreenKeyboard));
 #elif UNITY_IOS
-                Assert.AreEqual(s_TargetKeyboard.GetType(), typeof(UnityEngine.InputSystem.iOS.iOSScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.iOS.iOSScreenKeyboard));
 #endif
-                Console.WriteLine($"Testable Keyboards is: {s_TargetKeyboard.GetType().FullName}");
-            }
-            return s_TargetKeyboard;
+
+            return _keyboard;
         }
     }
 
@@ -155,6 +152,7 @@ public class ScreenKeyboardTests : InputTestFixture
     [UnityTest]
     public IEnumerator CheckShowHideOperations()
     {
+        Console.WriteLine("Testable keyboard is " + keyboard.GetType().FullName);
         yield return ResetKeyboard();
         yield return ShowKeyboard();
         yield return HideKeyboard();

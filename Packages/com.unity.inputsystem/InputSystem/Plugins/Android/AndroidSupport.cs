@@ -162,13 +162,6 @@ namespace UnityEngine.InputSystem.Android
             #endif
         }
 
-        public static void Shutdown()
-        {
-            #if !UNITY_EDITOR
-            NativeInputRuntime.instance.screenKeyboard = null;
-            #endif
-        }
-
         internal static string OnFindLayoutForDevice(ref InputDeviceDescription description,
             string matchedLayout, InputDeviceExecuteCommandDelegate executeCommandDelegate)
         {

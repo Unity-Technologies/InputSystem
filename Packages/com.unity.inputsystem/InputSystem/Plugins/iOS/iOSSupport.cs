@@ -49,13 +49,6 @@ namespace UnityEngine.InputSystem.iOS
             NativeInputRuntime.instance.screenKeyboard = iOSScreenKeyboard.instance;
         #endif
         }
-
-        public static void Shutdown()
-        {
-            #if !UNITY_EDITOR
-            NativeInputRuntime.instance.screenKeyboard = null;
-            #endif
-        }
     }
 }
 #endif // UNITY_EDITOR || UNITY_IOS || UNITY_TVOS

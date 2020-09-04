@@ -20,11 +20,11 @@ namespace UnityEngine.InputSystem.Android
             }
         }
 
-        class ScreenKeyboardCallbacks : AndroidJavaProxy
+        class AndroidScreenKeyboardCallbacks : AndroidJavaProxy
         {
             AndroidScreenKeyboard m_Parent;
             private int m_MainThreadId;
-            public ScreenKeyboardCallbacks(AndroidScreenKeyboard parent)
+            public AndroidScreenKeyboardCallbacks(AndroidScreenKeyboard parent)
                 : base("com.unity.inputsystem.AndroidScreenKeyboard$IScreenKeyboardCallbacks")
             {
                 m_MainThreadId = Thread.CurrentThread.ManagedThreadId;
@@ -62,20 +62,42 @@ namespace UnityEngine.InputSystem.Android
             }
         }
 
-        // Allow only one instance of java keyboard, because only one can be shown at the time
-        private static AndroidJavaObject m_KeyboardObject;
+        private AndroidJavaObject m_KeyboardObject;
+        private AndroidScreenKeyboardCallbacks m_Callbacks;
 
-        private static AndroidJavaObject GetOrCreateKeyboardObject()
+        private AndroidScreenKeyboard()
         {
-            if (m_KeyboardObject == null)
-                m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
-            return m_KeyboardObject;
+            m_Callbacks = new AndroidScreenKeyboardCallbacks(this);
+            m_KeyboardObject = new AndroidJavaObject("com.unity.inputsystem.AndroidScreenKeyboard");
         }
+
+        public override void Dispose()
+        {
+            if (m_KeyboardObject != null)
+            {
+                m_KeyboardObject.Dispose();
+                m_KeyboardObject = null;
+            }
+
+            ms_Instance = null;
+        }
+
+        /// <summary>
+        /// Note: We're not creating AndroidJavaObject in constructor, since AndroidScreenKeyboard is called when global static variables are initialized
+        ///       But it seems you cannot create AndroidJavaObject's at this time yet
+        /// </summary>
+        /// <returns></returns>
+        //private AndroidJavaObject GetOrCreateKeyboardObject()
+        //{
+        //    if (m_KeyboardObject == null)
+
+        //    return m_KeyboardObject;
+        //}
 
         protected override void InternalShow()
         {
-            GetOrCreateKeyboardObject().Call("show",
-                new ScreenKeyboardCallbacks(this),
+            m_KeyboardObject.Call("show",
+                m_Callbacks,
                 (int)m_ShowParams.type,
                 m_ShowParams.initialText,
                 m_ShowParams.placeholderText,
@@ -138,12 +160,12 @@ namespace UnityEngine.InputSystem.Android
         {
             get
             {
-                return GetOrCreateKeyboardObject().Call<bool>("getLogging");
+                return m_KeyboardObject.Call<bool>("getLogging");
             }
 
             set
             {
-                GetOrCreateKeyboardObject().Call("setLogging", value);
+                m_KeyboardObject.Call("setLogging", value);
             }
         }
     }

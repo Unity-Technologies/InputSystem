@@ -80,6 +80,11 @@ namespace UnityEngine.InputSystem.iOS
             instance.ReportSelectionChange(start, length);
         }
 
+        public override void Dispose()
+        {
+            ms_Instance = null;
+        }
+
         protected override void InternalShow()
         {
             var callbacks = new iOSScreenKeyboardCallbacks()

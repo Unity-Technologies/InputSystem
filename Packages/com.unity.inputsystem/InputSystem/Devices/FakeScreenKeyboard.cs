@@ -26,11 +26,16 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        public override void Dispose()
+        {
+            ms_Instance = null;
+        }
+
         private FakeScreenKeyboardDispatcher Dispatcher
         {
             get
             {
-                var go = GameObject.Find(nameof(FakeScreenKeyboard));
+                var go = GameObject.Find("Unity" + nameof(FakeScreenKeyboard));
                 if (go == null)
                 {
                     go = new GameObject(nameof(FakeScreenKeyboard));

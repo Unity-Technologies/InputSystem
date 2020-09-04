@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem
     ///   - [iOS] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     ///   - [WSA] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     /// </summary>
-    internal abstract class ScreenKeyboard
+    internal abstract class ScreenKeyboard : IDisposable
     {
         protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
@@ -195,6 +195,13 @@ namespace UnityEngine.InputSystem
         public ScreenKeyboardState state
         {
             get => m_KeyboardState;
+        }
+
+        /// <summary>
+        /// Cleanup any platform specific resources
+        /// </summary>
+        public virtual void Dispose()
+        {
         }
 
         /// <summary>

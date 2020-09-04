@@ -3178,17 +3178,11 @@ namespace UnityEngine.InputSystem
 
         private static void PerformDefaultPluginShutdown()
         {
-            #if UNITY_EDITOR || UNITY_ANDROID
-            Android.AndroidSupport.Shutdown();
-            #endif
-
-            #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
-            iOS.iOSSupport.Shutdown();
-            #endif
-
-            #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
-            NativeInputRuntime.instance.screenKeyboard = null;
-            #endif
+            if (NativeInputRuntime.instance.screenKeyboard != null)
+            {
+                NativeInputRuntime.instance.screenKeyboard.Dispose();
+                NativeInputRuntime.instance.screenKeyboard = null;
+            }
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
