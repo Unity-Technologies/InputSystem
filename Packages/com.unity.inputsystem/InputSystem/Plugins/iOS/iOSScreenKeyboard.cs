@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.iOS
 {
     internal class iOSScreenKeyboard : ScreenKeyboard
     {
-        public static iOSScreenKeyboard instance
+        private static iOSScreenKeyboard instance
         {
             get
             {
@@ -86,7 +86,6 @@ namespace UnityEngine.InputSystem.iOS
         public override void Dispose()
         {
             _iOSScreenKeyboardCleanup();
-            ms_Instance = null;
         }
 
         protected override void InternalShow()
