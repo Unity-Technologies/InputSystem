@@ -14,15 +14,15 @@ public:
     {
         s_KeyboardLoggingIndentation++;
     }
-    
+
     ~LoggingIndentation()
     {
         s_KeyboardLoggingIndentation--;
     }
-    
+
     static NSString* GetIndentation()
     {
-        return [@"" stringByPaddingToLength:(s_KeyboardLoggingIndentation * 2) withString:@" " startingAtIndex:0];
+        return [@"" stringByPaddingToLength: (s_KeyboardLoggingIndentation * 2) withString: @" " startingAtIndex: 0];
     }
 };
 
@@ -447,7 +447,7 @@ i = res.items;                                              \
     {
         [m_TextField removeObserver: self forKeyPath: @"selectedTextRange"];
     }
-    
+
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UITextFieldTextDidEndEditingNotification object: nil];
 }
 
@@ -475,7 +475,7 @@ i = res.items;                                              \
 {
     KEYBOARD_LOG(@"hideUIDelayedWithCallback");
     [self hideUIDelayed];
-     m_ShowParams.callbacks.stateChangedCallback(m_State);
+    m_ShowParams.callbacks.stateChangedCallback(m_State);
 }
 
 - (void)systemHideKeyboard
