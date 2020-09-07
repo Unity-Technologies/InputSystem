@@ -166,7 +166,7 @@ extern "C" int _iOSScreenKeyboardGetLogging()
     return [iOSScreenKeyboardBridge getLogging] ? 1 : 0;
 }
 
-extern "C" int _iOSScreenKeyboardCleanup()
+extern "C" void _iOSScreenKeyboardCleanup()
 {
     [iOSScreenKeyboardBridge cleanup];
 }

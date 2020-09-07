@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem.iOS
         private static extern int _iOSScreenKeyboardGetLogging();
 
         [DllImport("__Internal")]
-        private static extern int _iOSScreenKeyboardCleanup();
+        private static extern void _iOSScreenKeyboardCleanup();
 
         [MonoPInvokeCallback(typeof(OnTextChangedDelegate))]
         private static void OnTextChangedCallback(string text)
