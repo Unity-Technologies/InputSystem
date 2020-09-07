@@ -313,10 +313,9 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 - (void)hide:(iOSScreenKeyboardState)hideState
 {
     m_State     = hideState;
-    m_ShowParams.callbacks.stateChangedCallback(m_State);
 
     [NSObject cancelPreviousPerformRequestsWithTarget: self];
-    [self performSelector: @selector(hideUIDelayed) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
+    [self performSelector: @selector(hideUIDelayedWithCallback) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
 }
 
 #if PLATFORM_IOS
@@ -408,12 +407,23 @@ i = res.items;                                              \
 
 - (void)dealloc
 {
+    KEYBOARD_LOG(@"dealloc");
+    if (m_State == StateVisible)
+    {
+        m_State = StateDone;
+        [self hideUIDelayedWithCallback];
+    }
 #if PLATFORM_IOS
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidChangeFrameNotification object: nil];
 #endif
+    if ([iOSScreenKeyboardBridge simulateTextSelection])
+    {
+        [m_TextField removeObserver: self forKeyPath: @"selectedTextRange"];
+    }
+    
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UITextFieldTextDidEndEditingNotification object: nil];
 }
 
@@ -430,10 +440,18 @@ i = res.items;                                              \
 
 - (void)hideUIDelayed
 {
+    KEYBOARD_LOG(@"hideUIDelayed");
     [m_InputView resignFirstResponder];
 
     [m_EditView removeFromSuperview];
     m_EditView.hidden = YES;
+}
+
+- (void)hideUIDelayedWithCallback
+{
+    KEYBOARD_LOG(@"hideUIDelayedWithCallback");
+    [self hideUIDelayed];
+     m_ShowParams.callbacks.stateChangedCallback(m_State);
 }
 
 - (void)systemHideKeyboard
