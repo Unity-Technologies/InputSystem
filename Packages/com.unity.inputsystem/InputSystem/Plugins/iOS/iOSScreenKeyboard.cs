@@ -9,15 +9,11 @@ namespace UnityEngine.InputSystem.iOS
 {
     internal class iOSScreenKeyboard : ScreenKeyboard
     {
-        private static iOSScreenKeyboard ms_Instance;
-
         public static iOSScreenKeyboard instance
         {
             get
             {
-                if (ms_Instance == null)
-                    ms_Instance = new iOSScreenKeyboard();
-                return ms_Instance;
+                return (iOSScreenKeyboard)NativeInputRuntime.instance.screenKeyboard;
             }
         }
 
