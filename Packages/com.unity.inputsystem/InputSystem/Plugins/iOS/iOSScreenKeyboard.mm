@@ -4,8 +4,29 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
-#define KEYBOARD_LOG(...) if (s_KeyboardLogging) NSLog(@"%@", [@"ScreenKeyboard - " stringByAppendingString: [NSString stringWithFormat: __VA_ARGS__]])
+#define KEYBOARD_LOG(...) LoggingIndentation s_IndentationScope; if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__])
 
+class LoggingIndentation
+{
+    static int s_KeyboardLoggingIndentation;
+public:
+    LoggingIndentation()
+    {
+        s_KeyboardLoggingIndentation++;
+    }
+    
+    ~LoggingIndentation()
+    {
+        s_KeyboardLoggingIndentation--;
+    }
+    
+    static NSString* GetIndentation()
+    {
+        return [@"" stringByPaddingToLength:(s_KeyboardLoggingIndentation * 2) withString:@" " startingAtIndex:0];
+    }
+};
+
+int LoggingIndentation::s_KeyboardLoggingIndentation = 0;
 static iOSScreenKeyboardBridge* s_Keyboard = nil;
 static bool s_KeyboardLogging = false;
 static const unsigned kToolBarHeight = 40;
@@ -75,6 +96,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textInputLostFocus
 {
+    KEYBOARD_LOG(@"textInputLostFocus");
     if (m_State != StateVisible)
         return;
 
@@ -96,7 +118,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
     if (NSEqualRanges(m_LastSelection, range))
     {
-        KEYBOARD_LOG(@"    selection hasn't changed, will not invoke callback");
+        KEYBOARD_LOG(@"selection hasn't changed, will not invoke callback");
         return;
     }
     m_LastSelection = range;
@@ -217,6 +239,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 + (void)cleanup
 {
+    KEYBOARD_LOG(@"cleanup");
     if (s_Keyboard != nil)
         s_Keyboard = nil;
 }
@@ -312,6 +335,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)hide:(iOSScreenKeyboardState)hideState
 {
+    KEYBOARD_LOG(@"hide");
     m_State     = hideState;
 
     [NSObject cancelPreviousPerformRequestsWithTarget: self];
