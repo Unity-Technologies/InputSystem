@@ -153,7 +153,7 @@ namespace UnityEngine.InputSystem
     ///       Imagine if in one of the inputFieldTextChanged callbacks we change the input field text.
     ///       The other inputFieldTextChanged would still receive the original changed text which is wrong and could lead to potential problems.
     /// Note: We use this approach with class callbacks, since it's more future proof, if we add an additional callback in the future, it won't break existing user projects.
-    internal class ScreenKeyboardCallbacks
+    internal struct ScreenKeyboardCallbacks
     {
         /// <summary>
         /// Is fired whenever screen keyboard state changes
@@ -217,7 +217,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="showParams"></param>
         /// <param name="callbacks"></param>
-        public void Show(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks = null)
+        public void Show(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks = default)
         {
             m_ShowParams = showParams;
             m_Callbacks = callbacks;
@@ -242,7 +242,7 @@ namespace UnityEngine.InputSystem
 
         protected void ReportInputFieldChange(string text)
         {
-            m_Callbacks?.inputFieldTextChanged?.Invoke(text);
+            m_Callbacks.inputFieldTextChanged?.Invoke(text);
         }
 
         protected void ReportStateChange(ScreenKeyboardState state)
@@ -250,7 +250,7 @@ namespace UnityEngine.InputSystem
             if (state != m_KeyboardState)
             {
                 m_KeyboardState = state;
-                m_Callbacks?.stateChanged?.Invoke(state);
+                m_Callbacks.stateChanged?.Invoke(state);
             }
         }
 
@@ -260,7 +260,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             var selection = new RangeInt(start, length);
-            m_Callbacks?.inputFieldSelectionChanged?.Invoke(selection);
+            m_Callbacks.inputFieldSelectionChanged?.Invoke(selection);
         }
 
         /// <summary>

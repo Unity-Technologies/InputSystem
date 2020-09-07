@@ -135,12 +135,12 @@ public class ScreenKeyboardTests : InputTestFixture
         Assert.IsFalse(keyboard.state == ScreenKeyboardState.Visible, "Couldn't hide keyboard");
     }
 
-    private IEnumerator ShowKeyboard(ScreenKeyboardCallbacks callbacks = null)
+    private IEnumerator ShowKeyboard(ScreenKeyboardCallbacks callbacks = default)
     {
         return ShowKeyboard(new ScreenKeyboardShowParams(), callbacks);
     }
 
-    private IEnumerator ShowKeyboard(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks)
+    private IEnumerator ShowKeyboard(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks = default)
     {
         Assert.IsTrue(keyboard.state != ScreenKeyboardState.Visible, "Expected keybard to be not visible");
 
@@ -306,7 +306,7 @@ public class ScreenKeyboardTests : InputTestFixture
         yield return ResetKeyboard();
         var initiaText = "Placeholder";
         var targetText = "Hello";
-        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline, inputFieldHidden = inputFieldHidden}, null);
+        yield return ShowKeyboard(new ScreenKeyboardShowParams {initialText = initiaText, multiline =  multiline, inputFieldHidden = inputFieldHidden});
 
         Assert.AreEqual(initiaText, keyboard.inputFieldText);
         keyboard.inputFieldText = targetText;
@@ -321,7 +321,7 @@ public class ScreenKeyboardTests : InputTestFixture
     public IEnumerator CheckInputFieldTextWithReallyLongText([Values(true, false)] bool multiline, [Values(true, false)] bool inputFieldHidden)
     {
         yield return ResetKeyboard();
-        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden }, null);
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
 
         string targetText = "";
 
@@ -423,7 +423,7 @@ public class ScreenKeyboardTests : InputTestFixture
         }
         yield return ResetKeyboard();
 
-        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden }, null);
+        yield return ShowKeyboard(new ScreenKeyboardShowParams { multiline = multiline, inputFieldHidden = inputFieldHidden });
         keyboard.SimulateKeyEvent(keyCode);
         for (int i = 0; i < kFrameTimeout && keyboard.state != ScreenKeyboardState.Canceled; i++)
             yield return Waiting();
