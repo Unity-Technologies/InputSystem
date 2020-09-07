@@ -4,8 +4,29 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
-#define KEYBOARD_LOG(...) if (s_KeyboardLogging) NSLog(@"%@", [@"ScreenKeyboard - " stringByAppendingString: [NSString stringWithFormat: __VA_ARGS__]])
+#define KEYBOARD_LOG(...) LoggingIndentation s_IndentationScope; if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__])
 
+class LoggingIndentation
+{
+    static int s_KeyboardLoggingIndentation;
+public:
+    LoggingIndentation()
+    {
+        s_KeyboardLoggingIndentation++;
+    }
+    
+    ~LoggingIndentation()
+    {
+        s_KeyboardLoggingIndentation--;
+    }
+    
+    static NSString* GetIndentation()
+    {
+        return [@"" stringByPaddingToLength:(s_KeyboardLoggingIndentation * 2) withString:@" " startingAtIndex:0];
+    }
+};
+
+int LoggingIndentation::s_KeyboardLoggingIndentation = 0;
 static iOSScreenKeyboardBridge* s_Keyboard = nil;
 static bool s_KeyboardLogging = false;
 static const unsigned kToolBarHeight = 40;
@@ -75,6 +96,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)textInputLostFocus
 {
+    KEYBOARD_LOG(@"textInputLostFocus");
     if (m_State != StateVisible)
         return;
 
@@ -96,7 +118,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
     if (NSEqualRanges(m_LastSelection, range))
     {
-        KEYBOARD_LOG(@"    selection hasn't changed, will not invoke callback");
+        KEYBOARD_LOG(@"selection hasn't changed, will not invoke callback");
         return;
     }
     m_LastSelection = range;
@@ -217,6 +239,7 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 + (void)cleanup
 {
+    KEYBOARD_LOG(@"cleanup");
     if (s_Keyboard != nil)
         s_Keyboard = nil;
 }
@@ -312,11 +335,11 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 - (void)hide:(iOSScreenKeyboardState)hideState
 {
+    KEYBOARD_LOG(@"hide");
     m_State     = hideState;
-    m_ShowParams.callbacks.stateChangedCallback(m_State);
 
     [NSObject cancelPreviousPerformRequestsWithTarget: self];
-    [self performSelector: @selector(hideUIDelayed) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
+    [self performSelector: @selector(hideUIDelayedWithCallback) withObject: nil afterDelay: 0.05]; // to avoid unnecessary hiding
 }
 
 #if PLATFORM_IOS
@@ -408,12 +431,23 @@ i = res.items;                                              \
 
 - (void)dealloc
 {
+    KEYBOARD_LOG(@"dealloc");
+    if (m_State == StateVisible)
+    {
+        m_State = StateDone;
+        [self hideUIDelayedWithCallback];
+    }
 #if PLATFORM_IOS
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillShowNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidShowNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardWillHideNotification object: nil];
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UIKeyboardDidChangeFrameNotification object: nil];
 #endif
+    if ([iOSScreenKeyboardBridge simulateTextSelection])
+    {
+        [m_TextField removeObserver: self forKeyPath: @"selectedTextRange"];
+    }
+    
     [[NSNotificationCenter defaultCenter] removeObserver: self name: UITextFieldTextDidEndEditingNotification object: nil];
 }
 
@@ -430,10 +464,18 @@ i = res.items;                                              \
 
 - (void)hideUIDelayed
 {
+    KEYBOARD_LOG(@"hideUIDelayed");
     [m_InputView resignFirstResponder];
 
     [m_EditView removeFromSuperview];
     m_EditView.hidden = YES;
+}
+
+- (void)hideUIDelayedWithCallback
+{
+    KEYBOARD_LOG(@"hideUIDelayedWithCallback");
+    [self hideUIDelayed];
+     m_ShowParams.callbacks.stateChangedCallback(m_State);
 }
 
 - (void)systemHideKeyboard
