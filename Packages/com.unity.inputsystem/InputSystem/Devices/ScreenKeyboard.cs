@@ -205,19 +205,11 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Shows the screen keyboard with default options.
-        /// </summary>
-        public void Show()
-        {
-            Show(new ScreenKeyboardShowParams());
-        }
-
-        /// <summary>
         /// Show the screen keyboard with customized options.
         /// </summary>
         /// <param name="showParams"></param>
         /// <param name="callbacks"></param>
-        public void Show(ScreenKeyboardShowParams showParams, ScreenKeyboardCallbacks callbacks = default)
+        public void Show(ScreenKeyboardShowParams showParams = default, ScreenKeyboardCallbacks callbacks = default)
         {
             m_ShowParams = showParams;
             m_Callbacks = callbacks;
