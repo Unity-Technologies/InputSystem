@@ -2,7 +2,6 @@
 
 curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr --output utr
 chmod +x utr
-EDITOR_LOCATION=
 # Keep this for informational purposes
 #EDITOR_LOCATION=/Applications/Unity/Hub/Editor/2020.1.2f1
 
