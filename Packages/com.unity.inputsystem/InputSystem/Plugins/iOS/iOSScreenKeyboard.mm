@@ -6,7 +6,7 @@
 
 #define TOKENPASTE(x, y) x ## y
 #define UNIQUE(x, y) TOKENPASTE(x, y)
-#define KEYBOARD_LOG(...) LoggingIndentation UNIQUE(loggingScope, __LINE__) ; if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__])
+#define KEYBOARD_LOG(...) LoggingIndentation UNIQUE(loggingScope, __LINE__) ; do { if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__]); } while(0)
 
 class LoggingIndentation
 {
