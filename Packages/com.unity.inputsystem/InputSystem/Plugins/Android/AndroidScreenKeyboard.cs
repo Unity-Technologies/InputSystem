@@ -19,9 +19,7 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent = parent;
             }
 
-#if UNITY_ANDROID
             [Preserve]
-#endif
             void OnTextChanged(string text)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
@@ -29,9 +27,7 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.ReportInputFieldChange(text);
             }
 
-#if UNITY_ANDROID
             [Preserve]
-#endif
             void OnStateChanged(int state)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
@@ -39,9 +35,7 @@ namespace UnityEngine.InputSystem.Android
                 m_Parent.ReportStateChange((ScreenKeyboardState)state);
             }
 
-#if UNITY_ANDROID
             [Preserve]
-#endif
             void OnSelectionChanged(int start, int length)
             {
                 if (Thread.CurrentThread.ManagedThreadId != m_MainThreadId)
@@ -51,7 +45,7 @@ namespace UnityEngine.InputSystem.Android
         }
 
         private AndroidJavaObject m_KeyboardObject;
-        private AndroidScreenKeyboardCallbacks m_Callbacks;
+        private readonly AndroidScreenKeyboardCallbacks m_Callbacks;
 
         internal AndroidScreenKeyboard()
         {
@@ -67,18 +61,6 @@ namespace UnityEngine.InputSystem.Android
                 m_KeyboardObject = null;
             }
         }
-
-        /// <summary>
-        /// Note: We're not creating AndroidJavaObject in constructor, since AndroidScreenKeyboard is called when global static variables are initialized
-        ///       But it seems you cannot create AndroidJavaObject's at this time yet
-        /// </summary>
-        /// <returns></returns>
-        //private AndroidJavaObject GetOrCreateKeyboardObject()
-        //{
-        //    if (m_KeyboardObject == null)
-
-        //    return m_KeyboardObject;
-        //}
 
         protected override void InternalShow()
         {
@@ -144,15 +126,8 @@ namespace UnityEngine.InputSystem.Android
 
         internal override bool logging
         {
-            get
-            {
-                return m_KeyboardObject.Call<bool>("getLogging");
-            }
-
-            set
-            {
-                m_KeyboardObject.Call("setLogging", value);
-            }
+            get => m_KeyboardObject.Call<bool>("getLogging");
+            set => m_KeyboardObject.Call("setLogging", value);
         }
     }
 }
