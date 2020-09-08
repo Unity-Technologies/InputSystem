@@ -4,7 +4,9 @@
 #include "UnityForwardDecls.h"
 #include <string>
 
-#define KEYBOARD_LOG(...) LoggingIndentation s_IndentationScope; if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__])
+#define TOKENPASTE(x, y) x ## y
+#define UNIQUE(x, y) TOKENPASTE(x, y)
+#define KEYBOARD_LOG(...) LoggingIndentation UNIQUE(loggingScope, __LINE__) ; if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__])
 
 class LoggingIndentation
 {
