@@ -125,7 +125,7 @@ extern "C" void _iOSScreenKeyboardSetInputFieldText(const char* text)
     iOSScreenKeyboardBridge* keyboard = [iOSScreenKeyboardBridge getInstance];
     if (keyboard == NULL)
         return;
-    NSString* convertedText = text ? [[NSString alloc] initWithUTF8String: text] : @"";
+    NSString* convertedText = text ? [NSString stringWithUTF8String: text] : @"";
     [keyboard setText: convertedText];
 }
 
