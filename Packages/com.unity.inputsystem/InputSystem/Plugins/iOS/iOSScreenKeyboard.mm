@@ -6,31 +6,36 @@
 
 #define TOKENPASTE(x, y) x ## y
 #define UNIQUE(x, y) TOKENPASTE(x, y)
-#define KEYBOARD_LOG(...) LoggingIndentation UNIQUE(loggingScope, __LINE__) ; do { if (s_KeyboardLogging) NSLog(@"ScreenKeyboard -%@%@", LoggingIndentation::GetIndentation(), [NSString stringWithFormat: __VA_ARGS__]); } while(0)
+#define KEYBOARD_LOG(...) LoggingScope UNIQUE(loggingScope, __LINE__)([NSString stringWithFormat: __VA_ARGS__])
 
-class LoggingIndentation
+class LoggingScope
 {
-    static int s_KeyboardLoggingIndentation;
-public:
-    LoggingIndentation()
-    {
-        s_KeyboardLoggingIndentation++;
-    }
-
-    ~LoggingIndentation()
-    {
-        s_KeyboardLoggingIndentation--;
-    }
-
+    static int s_Indentation;
+    
     static NSString* GetIndentation()
     {
-        return [@"" stringByPaddingToLength: (s_KeyboardLoggingIndentation * 2) withString: @" " startingAtIndex: 0];
+        return [@"" stringByPaddingToLength: (s_Indentation * 2) withString: @" " startingAtIndex: 0];
+    }
+public:
+    static bool s_Enabled;
+    
+    LoggingScope(NSString* message)
+    {
+        if (s_Enabled)
+            NSLog(@"ScreenKeyboard - %@%@", GetIndentation(), message);
+        s_Indentation++;
+    }
+
+    ~LoggingScope()
+    {
+        s_Indentation--;
     }
 };
 
-int LoggingIndentation::s_KeyboardLoggingIndentation = 0;
+int LoggingScope::s_Indentation = 0;
+bool LoggingScope::s_Enabled = false;
+
 static iOSScreenKeyboardBridge* s_Keyboard = nil;
-static bool s_KeyboardLogging = false;
 static const unsigned kToolBarHeight = 40;
 static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value, there is no way to know the exact widths of the system bar buttons
 
@@ -248,12 +253,12 @@ static const unsigned kSystemButtonsSpace = 2 * 60 + 3 * 18; // empirical value,
 
 + (bool)getLogging
 {
-    return s_KeyboardLogging;
+    return LoggingScope::s_Enabled;
 }
 
 + (void)setLogging:(bool)enabled
 {
-    s_KeyboardLogging = enabled;
+    LoggingScope::s_Enabled = enabled;
 }
 
 - (void)show:(iOSScreenKeyboardShowParamsNative)param withInitialTextCStr:(const char*)initialTextCStr withPlaceholderTextCStr:(const char*)placeholderTextCStr
