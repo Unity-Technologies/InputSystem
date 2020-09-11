@@ -24,6 +24,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
+using System.Text;
 
 #pragma warning disable CS0649
 partial class CoreTests
@@ -2591,6 +2592,96 @@ partial class CoreTests
     public void Editor_CanRestartEditorThroughReflection()
     {
         EditorHelpers.RestartEditorAndRecompileScripts(dryRun: true);
+    }
+
+    [Test]
+    public void DocsContainNoMissingOrUnreferencedImages()
+    {
+        const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
+        const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
+        var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
+
+        // Add files here if you want to ignore them being unreferenced.
+        string[] unreferencedIgnoreList = new [] { "InputArchitectureLowLevel.sdxml" };
+
+        bool missingImages = false;
+        bool unusedImages = false;
+        var messages = new StringBuilder();
+
+        // Record all the files in the images directory
+        var foundImageFiles = Directory.GetFiles(imagesPath);
+        var imageFiles = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var img in foundImageFiles)
+        {
+            // Ignore hidden files such as those OSX creates
+            if (new FileInfo(img).Attributes.HasFlag(FileAttributes.Hidden))
+                continue;
+
+            var name = img.Replace(imagesPath, string.Empty);
+
+            if (unreferencedIgnoreList.Contains(name))
+                continue;
+
+            imageFiles[name] = 0;
+        }
+
+        // Iterate through all the md doc pages and count the image
+        // references and record missing images.
+        var docsPages = new List<string>(Directory.GetFiles(docsPath, "*.md"));
+
+        // Add the changelog
+        docsPages.Add("Packages/com.unity.inputsystem/CHANGELOG.md");
+
+        var missingImagesList = new List<string>();
+        foreach (var page in docsPages)
+        {
+            missingImagesList.Clear();
+            var contents = File.ReadAllText(page);
+            var regexMatches = regex.Matches(contents);
+
+            foreach (Match match in regexMatches)
+            {
+                var name = match.Groups["filename"].Value;
+                if (imageFiles.ContainsKey(name))
+                {
+                    imageFiles[name]++;
+                }
+                else
+                {
+                    missingImagesList.Add(name);
+                }
+            }
+
+            if (missingImagesList.Count > 0)
+            {
+                if (!missingImages)
+                    messages.AppendLine("Docs contain referenced image files that do not exist:");
+
+                missingImages = true;
+                messages.AppendLine("  " + page);
+                foreach (var img in missingImagesList)
+                {
+                    messages.AppendLine($"    {img}");
+                }
+            }
+        }
+
+        foreach (var img in imageFiles)
+        {
+            if (img.Value == 0)
+            {
+                if (!unusedImages)
+                    messages.AppendLine("Images directory contains image files that are not referenced in any docs. Consider removing them:");
+
+                unusedImages = true;
+                messages.AppendLine($"  {img.Key}");
+            }
+        }
+
+        if (unusedImages || missingImages)
+        {
+            Assert.Fail(messages.ToString());
+        }
     }
 
     ////TODO: tests for InputAssetImporter; for this we need C# mocks to be able to cut us off from the actual asset DB
