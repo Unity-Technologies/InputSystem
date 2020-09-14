@@ -18,6 +18,8 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
+- Added tvOS documentation entries in 'Supported Input Devices' page.
+
 #### Actions
 
 - Added three new binding composite types:
