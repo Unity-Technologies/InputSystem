@@ -1678,7 +1678,8 @@ namespace UnityEngine.InputSystem
 
             // We need to update the magnitude before we copy the flags across as the copied flags may contain
             // the `HaveMagnitude` flag which would give us an incorrect magnitude value. (case 1239551)
-            if (!newState.haveMagnitude)
+            var control = controls[trigger.controlIndex];
+            if (!newState.haveMagnitude && control.device.added)
                 newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
 
             newState.flags = actionState->flags; // Preserve flags.
