@@ -155,7 +155,7 @@ namespace UnityEngine.InputSystem.Composites
 
             /// <summary>
             /// Part controls are treated as buttons (on/off) and the resulting vector is not normalized. This means
-            /// that if, for example, both left and up are pressed, the resulting vector is (-1,1,0) and has a length
+            /// that if both left and up are pressed, for example, the resulting vector is (-1,1,0) and has a length
             /// greater than 1.
             /// </summary>
             Digital,
@@ -166,7 +166,7 @@ namespace UnityEngine.InputSystem.Composites
     internal class Vector3CompositeEditor : InputParameterEditor<Vector2Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
-            "How to create synthesize a Vector3 from the inputs. Digital "
+            "How to synthesize a Vector3 from the inputs. Digital "
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
             + "floating-point magnitudes as read from controls.");
 

@@ -105,15 +105,15 @@ To create a Composite Binding, in the Input Action Asset editor window, select t
 
 This creates multiple Binding entries for the Action: one for the Composite as a whole, and then, one level below that, one for each Composite part. The Composite itself doesn't have a Binding path property, but its individual parts do, and you can edit these parts like any other Binding. Once you bind all the Composite's parts, the Composite can work together as if you bound a single control to the Action.
 
-You can change the type of a Composite retroactively using the "Composite Type" drop-down in the "Properties" pane when the Composite is selected.
+To change the type of a Composite retroactively, select the Composite, then select the new type from the **Composite Type** drop-down in the **Properties** pane.
 
 ![Composite Type](./Images/CompositeType.png)
 
-You can change the part of the Composite to which a particular Binding is assigned using the "Composite Part" drop-down in the Binding's properties.
+To can change the part of the Composite to which a particular Binding is assigned, use the **Composite Part** drop-down in the Binding's properties.
 
 ![Composite Part](./Images/CompositePart.png)
 
- Multiple Bindings can be assigned to the same part. Also, you can duplicate individual part Bindings using the right-click context menu and selecting "Duplicate" in order to create new part Bindings for the Composite. This can be used, for example, to create a single Composite for both "WASD" style controls and arrow keys.
+Multiple Bindings can be assigned to the same part. You can also duplicate individual part Bindings: right-click the Binding, then select **Duplicate** to create new part Bindings for the Composite. This can be used, for example, to create a single Composite for both "WASD" style controls and arrow keys.
 
 ![Duplicated Part Bindings](./Images/DuplicatedPartBindings.png)
 

@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Composites
     /// a D-Pad like configuration. Based on button presses, the composite will return a
     /// normalized direction vector (normalization can be turned off via <see cref="mode"/>).
     ///
-    /// Opposing motions cancel each other out. Meaning that if, for example, both the left
+    /// Opposing motions cancel each other out. This means that if, for example, both the left
     /// and right horizontal button are pressed, the resulting horizontal movement value will
     /// be zero.
     ///
@@ -194,7 +194,7 @@ namespace UnityEngine.InputSystem.Composites
     internal class Vector2CompositeEditor : InputParameterEditor<Vector2Composite>
     {
         private GUIContent m_ModeLabel = new GUIContent("Mode",
-            "How to create synthesize a Vector2 from the inputs. Digital "
+            "How to synthesize a Vector2 from the inputs. Digital "
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
             + "floating-point magnitudes as read from controls.");
 

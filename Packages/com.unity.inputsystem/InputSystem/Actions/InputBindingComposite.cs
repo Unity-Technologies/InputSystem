@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Read a value from the composite without having to know the value type (unlike
-        /// <see cref="InputBindingComposite{TValue}.ReadValue(InputBindingCompositeContext)"/> and
+        /// <see cref="InputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/> and
         /// without allocating GC heap memory (unlike <see cref="ReadValueAsObject"/>).
         /// </summary>
         /// <param name="context">Callback context for the binding composite. Use this
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Some composites do not have predetermine value types. Two examples of this are
-        /// <see cref="Composites.OneModifierComposite"/> and <see cref="Composites.TwoModifiersComposite"/> which
+        /// <see cref="Composites.OneModifierComposite"/> and <see cref="Composites.TwoModifiersComposite"/>, which
         /// both have a <c>"binding"</c> part that can be bound to arbitrary controls. This means that the
         /// value type of these bindings can only be determined at runtime.
         ///

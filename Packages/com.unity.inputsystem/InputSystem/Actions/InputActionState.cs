@@ -2177,7 +2177,7 @@ namespace UnityEngine.InputSystem
 
             controlIndex = kInvalidIndex;
 
-            // Find the binding in the composite that both has the given part number and
+            // Find the binding in the composite that has both the given part number and
             // the greatest value.
             //
             // NOTE: It is tempting to go by control magnitudes instead as those are readily available to us (controlMagnitudes)
@@ -2240,7 +2240,7 @@ namespace UnityEngine.InputSystem
 
             var firstChildBindingIndex = bindingIndex + 1;
 
-            // Find the binding in the composite that both has the given part number and
+            // Find the binding in the composite that has both the given part number and
             // the greatest amount of actuation.
             var currentMagnitude = float.MinValue;
             for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
