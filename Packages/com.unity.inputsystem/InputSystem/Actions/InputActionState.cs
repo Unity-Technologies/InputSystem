@@ -1507,8 +1507,9 @@ namespace UnityEngine.InputSystem
             interactionStates[interactionIndex].phase = newPhase;
             interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
             interactionStates[interactionIndex].startTime = trigger.startTime;
+            if (newPhase == InputActionPhase.Performed)
+                interactionStates[interactionIndex].performedTime = trigger.time;
 
-            ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
             if (actionIndex != -1)
@@ -1523,7 +1524,8 @@ namespace UnityEngine.InputSystem
                 else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     // We're canceling but maybe there's another interaction ready
-                    // to go into start phase.
+                    // to go into start phase. *Or* there's an interaction that has
+                    // already performed.
 
                     if (!ChangePhaseOfAction(newPhase, ref trigger))
                         return;
@@ -1533,8 +1535,10 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < numInteractions; ++i)
                     {
                         var index = interactionStartIndex + i;
-                        if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
+                        if (index != trigger.interactionIndex && (interactionStates[index].phase == InputActionPhase.Started ||
+                                                                  interactionStates[index].phase == InputActionPhase.Performed))
                         {
+                            // Trigger start.
                             var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
@@ -1547,6 +1551,22 @@ namespace UnityEngine.InputSystem
                             };
                             if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction))
                                 return;
+
+                            // If the interaction has already performed, trigger it now.
+                            if (interactionStates[index].phase == InputActionPhase.Performed)
+                            {
+                                triggerForInteraction = new TriggerState
+                                {
+                                    phase = InputActionPhase.Performed,
+                                    controlIndex = interactionStates[index].triggerControlIndex,
+                                    bindingIndex = trigger.bindingIndex,
+                                    interactionIndex = index,
+                                    time = interactionStates[index].performedTime, // Time when the interaction performed.
+                                    startTime = startTime,
+                                };
+                                if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction))
+                                    return;
+                            }
                             break;
                         }
                     }
@@ -1578,7 +1598,14 @@ namespace UnityEngine.InputSystem
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
+            if (newPhase == InputActionPhase.Performed && actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
+            {
+                // We performed but we're not the interaction driving the action. We want to stay performed to make
+                // sure that if the interaction that is currently driving the action cancels, we get to perform
+                // the action. If we go back to waiting here, then the system can't tell that there's another interaction
+                // ready to perform (in fact, that has already performed).
+            }
+            else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
                 interactionStates[interactionIndex].phase = phaseAfterPerformed;
             }
@@ -1586,7 +1613,6 @@ namespace UnityEngine.InputSystem
             {
                 ResetInteractionState(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
             }
-            ////TODO: reset entire chain
         }
 
         /// <summary>
@@ -2387,13 +2413,14 @@ namespace UnityEngine.InputSystem
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
-        [StructLayout(LayoutKind.Explicit, Size = 12)]
+        [StructLayout(LayoutKind.Explicit, Size = 20)]
         internal struct InteractionState
         {
             [FieldOffset(0)] private ushort m_TriggerControlIndex;
             [FieldOffset(2)] private byte m_Phase;
             [FieldOffset(3)] private byte m_Flags;
             [FieldOffset(4)] private double m_StartTime;
+            [FieldOffset(12)] private double m_PerformedTime;
 
             public int triggerControlIndex
             {
@@ -2411,6 +2438,12 @@ namespace UnityEngine.InputSystem
             {
                 get => m_StartTime;
                 set => m_StartTime = value;
+            }
+
+            public double performedTime
+            {
+                get => m_PerformedTime;
+                set => m_PerformedTime = value;
             }
 
             public bool isTimerRunning
