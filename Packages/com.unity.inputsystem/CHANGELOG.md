@@ -10,6 +10,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased]
 
 ### Fixed
+- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved. [case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)
 
 #### Actions
 
