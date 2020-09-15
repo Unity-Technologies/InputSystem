@@ -93,6 +93,33 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Action_WithMultipleInteractions_DoesNotThrowWhenUsingMultipleMaps()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        InputSystem.RegisterInteraction<PressInteraction>();
+        InputSystem.RegisterInteraction<HoldInteraction>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        map1.AddAction(name: "action1", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        map2.AddAction(name: "action2", type: InputActionType.Button, binding: "<Gamepad>/buttonNorth", interactions: "press,hold(duration=0.4)");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        map2.Enable();
+
+        Assert.DoesNotThrow(() =>
+        {
+            Press(gamepad.buttonNorth);
+            Release(gamepad.buttonNorth);
+        });
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenTransitionFromOneInteractionToNext_GetCallbacks()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
