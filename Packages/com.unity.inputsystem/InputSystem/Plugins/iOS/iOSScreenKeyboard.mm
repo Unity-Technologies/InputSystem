@@ -11,14 +11,15 @@
 class LoggingScope
 {
     static int s_Indentation;
-    
+
     static NSString* GetIndentation()
     {
         return [@"" stringByPaddingToLength: (s_Indentation * 2) withString: @" " startingAtIndex: 0];
     }
+
 public:
     static bool s_Enabled;
-    
+
     LoggingScope(NSString* message)
     {
         if (s_Enabled)
