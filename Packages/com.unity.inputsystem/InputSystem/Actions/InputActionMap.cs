@@ -1166,6 +1166,9 @@ namespace UnityEngine.InputSystem
                     if (m_Asset != null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
 
+                    // Fire InputBindingComposite.FinishSetup() calls.
+                    m_State.FinishBindingCompositeSetups();
+
                     // Re-enable actions.
                     if (hasEnabledActions)
                         m_State.RestoreActionStates(tempMemory);

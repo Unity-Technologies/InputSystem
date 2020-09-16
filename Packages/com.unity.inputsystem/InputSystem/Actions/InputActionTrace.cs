@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
@@ -250,6 +251,9 @@ namespace UnityEngine.InputSystem.Utilities
             eventPtr->phase = triggerState.phase;
 
             // Store value.
+            // NOTE: If the action triggered from a composite, this stores the value as
+            //       read from the composite.
+            // NOTE: Also, the value we store is a fully processed value.
             var valueBuffer = eventPtr->valueData;
             context.ReadValue(valueBuffer, valueSizeInBytes);
         }
@@ -452,8 +456,35 @@ namespace UnityEngine.InputSystem.Utilities
 
             public object ReadValueAsObject()
             {
-                var valueSizeInBytes = m_Ptr->valueSizeInBytes;
+                if (m_Ptr == null)
+                    throw new InvalidOperationException("ActionEventPtr is invalid");
+
                 var valuePtr = m_Ptr->valueData;
+
+                // Check if the value came from a composite.
+                var bindingIndex = m_Ptr->bindingIndex;
+                if (m_State.bindingStates[bindingIndex].isPartOfComposite)
+                {
+                    // Yes, so have to put the value/struct data we read into a boxed
+                    // object based on the value type of the composite.
+
+                    var compositeBindingIndex = m_State.bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
+                    var compositeIndex = m_State.bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
+                    var composite = m_State.composites[compositeIndex];
+                    Debug.Assert(composite != null, "NULL composite instance");
+
+                    var valueType = composite.valueType;
+                    if (valueType == null)
+                        throw new InvalidOperationException($"Cannot read value from Composite '{composite}' which does not have a valueType set");
+
+                    return Marshal.PtrToStructure(new IntPtr(valuePtr), valueType);
+                }
+
+                // Expecting action to only trigger from part bindings or bindings outside of composites.
+                Debug.Assert(!m_State.bindingStates[bindingIndex].isComposite, "Action should not have triggered directly from a composite binding");
+
+                // Read value through InputControl.
+                var valueSizeInBytes = m_Ptr->valueSizeInBytes;
                 return control.ReadValueFromBufferAsObject(valuePtr, valueSizeInBytes);
             }
 
