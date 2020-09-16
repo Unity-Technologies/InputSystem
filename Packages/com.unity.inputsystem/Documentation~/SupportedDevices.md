@@ -29,7 +29,7 @@ Support for the following Devices doesn't require specialized support of particu
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
 |PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
 |Switch|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
-|SteelSeries|No|No|No|No|No|Yes|Yes|No|No|No|No|
+|MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
 >__Notes__:
 >1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
