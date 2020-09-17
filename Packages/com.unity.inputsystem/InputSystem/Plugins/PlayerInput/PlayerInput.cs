@@ -1264,7 +1264,6 @@ namespace UnityEngine.InputSystem
                     actionMap.actionTriggered -= m_ActionTriggeredDelegate;
         }
 
-        ////REVIEW: should this take the action *type* into account? e.g. have different behavior when the type is "Button"?
         private void OnActionTriggered(InputAction.CallbackContext context)
         {
             if (!m_InputActive)
