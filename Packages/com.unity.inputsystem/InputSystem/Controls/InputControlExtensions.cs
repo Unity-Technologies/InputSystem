@@ -691,8 +691,9 @@ namespace UnityEngine.InputSystem
             stateOffset += device.m_StateBlock.byteOffset;
 
             // Return null if state is out of range.
-            var controlOffset = (int)control.m_StateBlock.byteOffset - stateOffset;
-            if (controlOffset < 0 || controlOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            ref var controlStateBlock = ref control.m_StateBlock;
+            var controlOffset = (int)controlStateBlock.effectiveByteOffset - stateOffset;
+            if (controlOffset < 0 || controlOffset + controlStateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return null;
 
             return (byte*)statePtr - (int)stateOffset;

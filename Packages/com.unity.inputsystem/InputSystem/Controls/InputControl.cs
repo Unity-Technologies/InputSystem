@@ -465,6 +465,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: The -1 behavior seems bad; probably better to just return 1 for controls that do not support finer levels of actuation
         /// <summary>
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated.

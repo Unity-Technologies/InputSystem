@@ -59,58 +59,84 @@ namespace UnityEngine.InputSystem.Interactions
         public PressBehavior behavior;
 
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
         private bool m_WaitingForRelease;
 
         public void Process(ref InputInteractionContext context)
         {
-            var isActuated = context.ControlIsActuated(pressPointOrDefault);
-
+            var actuation = context.ComputeMagnitude();
             switch (behavior)
             {
                 case PressBehavior.PressOnly:
                     if (m_WaitingForRelease)
                     {
-                        if (!isActuated)
+                        if (actuation <= releasePointOrDefault)
                         {
                             m_WaitingForRelease = false;
                             context.Canceled();
                         }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
+                        // Stay performed until release.
                         context.PerformedAndStayPerformed();
+                    }
+                    else if (actuation > 0 && !context.isStarted)
+                    {
+                        context.Started();
                     }
                     break;
 
                 case PressBehavior.ReleaseOnly:
-                    if (m_WaitingForRelease && !isActuated)
+                    if (m_WaitingForRelease)
                     {
-                        m_WaitingForRelease = false;
-                        context.Performed();
-                        context.Canceled();
+                        if (actuation <= releasePointOrDefault)
+                        {
+                            m_WaitingForRelease = false;
+                            context.Performed();
+                            context.Canceled();
+                        }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
-                        context.Started();
+                        if (!context.isStarted)
+                            context.Started();
+                    }
+                    else
+                    {
+                        var started = context.isStarted;
+                        if (actuation > 0 && !started)
+                            context.Started();
+                        else if (Mathf.Approximately(0, actuation) && started)
+                            context.Canceled();
                     }
                     break;
 
                 case PressBehavior.PressAndRelease:
                     if (m_WaitingForRelease)
                     {
-                        m_WaitingForRelease = isActuated;
-                        if (!isActuated)
+                        if (actuation <= releasePointOrDefault)
                         {
+                            m_WaitingForRelease = false;
                             context.Performed();
-                            context.Canceled();
+                            if (Mathf.Approximately(0, actuation))
+                                context.Canceled();
                         }
                     }
-                    else if (isActuated)
+                    else if (actuation >= pressPointOrDefault)
                     {
                         m_WaitingForRelease = true;
                         context.PerformedAndStayPerformed();
+                    }
+                    else
+                    {
+                        var started = context.isStarted;
+                        if (actuation > 0 && !started)
+                            context.Started();
+                        else if (Mathf.Approximately(0, actuation) && started)
+                            context.Canceled();
                     }
                     break;
             }
