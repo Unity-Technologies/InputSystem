@@ -1,7 +1,7 @@
 editors:
   - version: 2019.4
   - version: 2020.1
-  - version: trunk
+  - version: temp-allocator-alignment-fix
 platforms:
   - name: win
     type: Unity::VM
