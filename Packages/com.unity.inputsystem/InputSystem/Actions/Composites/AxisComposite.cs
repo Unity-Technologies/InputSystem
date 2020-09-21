@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
@@ -42,6 +43,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </remarks>
     [Preserve]
     [DisplayStringFormat("{negative}/{positive}")]
+    [DisplayName("Positive/Negative Binding")]
     public class AxisComposite : InputBindingComposite<float>
     {
         /// <summary>
