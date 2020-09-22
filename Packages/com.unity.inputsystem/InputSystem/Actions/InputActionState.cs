@@ -308,6 +308,20 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        public void FinishBindingCompositeSetups()
+        {
+            for (var i = 0; i < totalBindingCount; ++i)
+            {
+                ref var binding = ref bindingStates[i];
+                if (!binding.isComposite || binding.compositeOrCompositeBindingIndex == -1)
+                    continue;
+
+                var composite = composites[binding.compositeOrCompositeBindingIndex];
+                var context = new InputBindingCompositeContext { m_State = this, m_BindingIndex = i };
+                composite.CallFinishSetup(ref context);
+            }
+        }
+
         /// <summary>
         /// Synchronize the current action states based on what they were before.
         /// </summary>
@@ -1493,8 +1507,9 @@ namespace UnityEngine.InputSystem
             interactionStates[interactionIndex].phase = newPhase;
             interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
             interactionStates[interactionIndex].startTime = trigger.startTime;
+            if (newPhase == InputActionPhase.Performed)
+                interactionStates[interactionIndex].performedTime = trigger.time;
 
-            ////REVIEW: If we want to defer triggering of actions, this is the point where we probably need to cut things off
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
             if (actionIndex != -1)
@@ -1509,7 +1524,8 @@ namespace UnityEngine.InputSystem
                 else if (newPhase == InputActionPhase.Canceled && actionStates[actionIndex].interactionIndex == trigger.interactionIndex)
                 {
                     // We're canceling but maybe there's another interaction ready
-                    // to go into start phase.
+                    // to go into start phase. *Or* there's an interaction that has
+                    // already performed.
 
                     if (!ChangePhaseOfAction(newPhase, ref trigger))
                         return;
@@ -1519,8 +1535,10 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < numInteractions; ++i)
                     {
                         var index = interactionStartIndex + i;
-                        if (index != trigger.interactionIndex && interactionStates[index].phase == InputActionPhase.Started)
+                        if (index != trigger.interactionIndex && (interactionStates[index].phase == InputActionPhase.Started ||
+                                                                  interactionStates[index].phase == InputActionPhase.Performed))
                         {
+                            // Trigger start.
                             var startTime = interactionStates[index].startTime;
                             var triggerForInteraction = new TriggerState
                             {
@@ -1533,6 +1551,22 @@ namespace UnityEngine.InputSystem
                             };
                             if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction))
                                 return;
+
+                            // If the interaction has already performed, trigger it now.
+                            if (interactionStates[index].phase == InputActionPhase.Performed)
+                            {
+                                triggerForInteraction = new TriggerState
+                                {
+                                    phase = InputActionPhase.Performed,
+                                    controlIndex = interactionStates[index].triggerControlIndex,
+                                    bindingIndex = trigger.bindingIndex,
+                                    interactionIndex = index,
+                                    time = interactionStates[index].performedTime, // Time when the interaction performed.
+                                    startTime = startTime,
+                                };
+                                if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction))
+                                    return;
+                            }
                             break;
                         }
                     }
@@ -1564,7 +1598,14 @@ namespace UnityEngine.InputSystem
             // Exception: if it was performed and we're to remain in started state, set the interaction
             //            to started. Note that for that phase transition, there are no callbacks being
             //            triggered (i.e. we don't call 'started' every time after 'performed').
-            if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
+            if (newPhase == InputActionPhase.Performed && actionStates[actionIndex].interactionIndex != trigger.interactionIndex)
+            {
+                // We performed but we're not the interaction driving the action. We want to stay performed to make
+                // sure that if the interaction that is currently driving the action cancels, we get to perform
+                // the action. If we go back to waiting here, then the system can't tell that there's another interaction
+                // ready to perform (in fact, that has already performed).
+            }
+            else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
                 interactionStates[interactionIndex].phase = phaseAfterPerformed;
             }
@@ -1572,7 +1613,6 @@ namespace UnityEngine.InputSystem
             {
                 ResetInteractionState(trigger.mapIndex, trigger.bindingIndex, trigger.interactionIndex);
             }
-            ////TODO: reset entire chain
         }
 
         /// <summary>
@@ -1834,6 +1874,13 @@ namespace UnityEngine.InputSystem
             return bindingStartIndex + bindingIndexInMap;
         }
 
+        // Iterators may not use unsafe code so do the detour here.
+        internal BindingState GetBindingState(int bindingIndex)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
+            return bindingStates[bindingIndex];
+        }
+
         internal InputBinding GetBinding(int bindingIndex)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
@@ -1980,7 +2027,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: we can unify the reading paths once we have blittable type constraints
 
-        internal void ReadValue(int bindingIndex, int controlIndex, void* buffer, int bufferSize)
+        internal void ReadValue(int bindingIndex, int controlIndex, void* buffer, int bufferSize, bool ignoreComposites = false)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
@@ -1989,7 +2036,7 @@ namespace UnityEngine.InputSystem
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (bindingStates[bindingIndex].isPartOfComposite)
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite)
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 var compositeIndex = bindingStates[compositeBindingIndex].compositeOrCompositeBindingIndex;
@@ -2003,6 +2050,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 compositeObject.ReadValue(ref context, buffer, bufferSize);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2092,6 +2142,27 @@ namespace UnityEngine.InputSystem
             return value;
         }
 
+        public float EvaluateCompositePartMagnitude(int bindingIndex, int partNumber)
+        {
+            var firstChildBindingIndex = bindingIndex + 1;
+            var currentMagnitude = float.MinValue;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var control = controls[controlStartIndex + i];
+                    currentMagnitude = Mathf.Max(control.EvaluateMagnitude(), currentMagnitude);
+                }
+            }
+
+            return currentMagnitude;
+        }
+
         /// <summary>
         /// Read the value of the given part of a composite binding.
         /// </summary>
@@ -2132,7 +2203,7 @@ namespace UnityEngine.InputSystem
 
             controlIndex = kInvalidIndex;
 
-            // Find the binding in the composite that both has the given part number and
+            // Find the binding in the composite that has both the given part number and
             // the greatest value.
             //
             // NOTE: It is tempting to go by control magnitudes instead as those are readily available to us (controlMagnitudes)
@@ -2188,7 +2259,94 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
-        internal object ReadValueAsObject(int bindingIndex, int controlIndex)
+        internal bool ReadCompositePartValue(int bindingIndex, int partNumber, void* buffer, int bufferSize)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var firstChildBindingIndex = bindingIndex + 1;
+
+            // Find the binding in the composite that has both the given part number and
+            // the greatest amount of actuation.
+            var currentMagnitude = float.MinValue;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var thisControlIndex = controlStartIndex + i;
+
+                    // Check if the control has greater actuation than the most actuated control
+                    // we've found so far.
+                    //
+                    // NOTE: We cannot rely on controlMagnitudes here as several controls used by a composite may all have been updated
+                    //       with a single event (e.g. WASD on a keyboard will usually see just one update that refreshes the entire state
+                    //       of the keyboard). In that case, one of the controls will see its state monitor trigger first and in turn
+                    //       trigger processing of the action and composite. Thus only that one single control would have its value
+                    //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
+                    var control = controls[thisControlIndex];
+                    var magnitude = control.EvaluateMagnitude();
+                    if (magnitude < currentMagnitude)
+                        continue;
+
+                    // If so, read the value.
+                    ReadValue(index, thisControlIndex, buffer, bufferSize, ignoreComposites: true);
+                    currentMagnitude = magnitude;
+                }
+            }
+
+            return currentMagnitude > float.MinValue;
+        }
+
+        internal object ReadCompositePartValueAsObject(int bindingIndex, int partNumber)
+        {
+            Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
+            Debug.Assert(bindingStates[bindingIndex].isComposite, "Binding must be a composite");
+
+            var firstChildBindingIndex = bindingIndex + 1;
+
+            // Find the binding in the composite that both has the given part number and
+            // the greatest amount of actuation.
+            var currentMagnitude = float.MinValue;
+            object currentValue = null;
+            for (var index = firstChildBindingIndex; index < totalBindingCount && bindingStates[index].isPartOfComposite; ++index)
+            {
+                if (bindingStates[index].partIndex != partNumber)
+                    continue;
+
+                var controlCount = bindingStates[index].controlCount;
+                var controlStartIndex = bindingStates[index].controlStartIndex;
+                for (var i = 0; i < controlCount; ++i)
+                {
+                    var thisControlIndex = controlStartIndex + i;
+
+                    // Check if the control has greater actuation than the most actuated control
+                    // we've found so far.
+                    //
+                    // NOTE: We cannot rely on controlMagnitudes here as several controls used by a composite may all have been updated
+                    //       with a single event (e.g. WASD on a keyboard will usually see just one update that refreshes the entire state
+                    //       of the keyboard). In that case, one of the controls will see its state monitor trigger first and in turn
+                    //       trigger processing of the action and composite. Thus only that one single control would have its value
+                    //       refreshed in controlMagnitudes whereas the other control magnitudes would be stale.
+                    var control = controls[thisControlIndex];
+                    var magnitude = control.EvaluateMagnitude();
+                    if (magnitude < currentMagnitude)
+                        continue;
+
+                    // If so, read the value.
+                    currentValue = ReadValueAsObject(index, thisControlIndex, ignoreComposites: true);
+                    currentMagnitude = magnitude;
+                }
+            }
+
+            return currentValue;
+        }
+
+        internal object ReadValueAsObject(int bindingIndex, int controlIndex, bool ignoreComposites = false)
         {
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index is out of range");
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index is out of range");
@@ -2198,7 +2356,7 @@ namespace UnityEngine.InputSystem
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount, "Binding index is out of range");
@@ -2213,6 +2371,9 @@ namespace UnityEngine.InputSystem
                 };
 
                 value = compositeObject.ReadValueAsObject(ref context);
+
+                // Switch bindingIndex to that of composite so that we use the right processors.
+                bindingIndex = compositeBindingIndex;
             }
             else
             {
@@ -2252,13 +2413,14 @@ namespace UnityEngine.InputSystem
         /// Records the current state of a single interaction attached to a binding.
         /// Each interaction keeps track of its own trigger control and phase progression.
         /// </summary>
-        [StructLayout(LayoutKind.Explicit, Size = 12)]
+        [StructLayout(LayoutKind.Explicit, Size = 20)]
         internal struct InteractionState
         {
             [FieldOffset(0)] private ushort m_TriggerControlIndex;
             [FieldOffset(2)] private byte m_Phase;
             [FieldOffset(3)] private byte m_Flags;
             [FieldOffset(4)] private double m_StartTime;
+            [FieldOffset(12)] private double m_PerformedTime;
 
             public int triggerControlIndex
             {
@@ -2276,6 +2438,12 @@ namespace UnityEngine.InputSystem
             {
                 get => m_StartTime;
                 set => m_StartTime = value;
+            }
+
+            public double performedTime
+            {
+                get => m_PerformedTime;
+                set => m_PerformedTime = value;
             }
 
             public bool isTimerRunning
