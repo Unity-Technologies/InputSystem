@@ -119,6 +119,15 @@ namespace UnityEngine.InputSystem.Android
             }
         }
 
+        public override Rect occludingArea
+        {
+            get
+            {
+                var area = m_KeyboardObject.Call<int[]>("getArea");
+                return new Rect(area[0], area[1], area[2] - area[0], Screen.height - (area[3] - area[1]));
+            }
+        }
+
         internal override void SimulateKeyEvent(int keyCode)
         {
             m_KeyboardObject.Call("simulateKeyEvent", keyCode);

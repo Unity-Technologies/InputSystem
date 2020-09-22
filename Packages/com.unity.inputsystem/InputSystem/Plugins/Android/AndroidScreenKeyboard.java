@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface.*;
 import android.content.DialogInterface;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -166,7 +167,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             txtInput.setTextColor(0);
             txtInput.setCursorVisible(false);
             okButton.setClickable(false);
-
+            okButton.setTextColor(0);
             contentView.setBackgroundColor(0);
         }
 
@@ -394,6 +395,13 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
         long end = txtInput.getSelectionEnd();
 
         return convertSelectionToLong(start, end);
+    }
+
+    public int[] getArea()
+    {
+        Rect rect = new Rect();
+        getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);
+        return new int[] {rect.left, rect.top, rect.right, rect.bottom};
     }
 
     public void simulateKeyEvent(int keyCode)
