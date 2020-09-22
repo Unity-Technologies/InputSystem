@@ -161,13 +161,14 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     void Update()
     {
-        m_OccludingAreaField.text = m_ScreenKeyboard.occludingArea.ToString();
+        var area = m_ScreenKeyboard.occludingArea;
+        m_OccludingAreaField.text = $"{area.xMin}, {area.yMin}, {area.width}, {area.height}";
         m_KeyboardStatus.text = m_ScreenKeyboard.state.ToString();
         m_KeyboardInputField.text = m_ScreenKeyboard.inputFieldText;
 
         if (m_OldScreenKeyboard != null)
         {
-            m_OldOccludingAreaField.text = TouchScreenKeyboard.area.ToString();
+            m_OldOccludingAreaField.text = $"{Screen.width} {Screen.height}";//  TouchScreenKeyboard.area.ToString();
             m_OldKeyboardStatus.text = m_OldScreenKeyboard.status.ToString();
             m_OldKeyboardInputField.text = m_OldScreenKeyboard.text;
         }
