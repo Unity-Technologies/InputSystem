@@ -86,6 +86,8 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
     private boolean m_InputFieldHidden;
     private boolean m_LoggingEnabled;
 
+    private EditText m_EditText;
+
     public AndroidScreenKeyboard ()
     {
         super (UnityPlayer.currentActivity);
@@ -133,17 +135,17 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         View contentView = createSoftInputView();
         setContentView (contentView);
-        EditText txtInput = (EditText) findViewById (id.txtInput);
-        txtInput.setImeOptions (EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_FULLSCREEN);
-        txtInput.setText (initialText);
-        txtInput.setHint (placeholderText);
-        txtInput.setHintTextColor (0x61000000);
-        txtInput.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
-        txtInput.addTextChangedListener (this);
-        m_LastSelection = convertSelectionToLong(txtInput.getText().length(), 0);
-        txtInput.setSelection(txtInput.getText().length());
-        txtInput.setClickable (true);
-        txtInput.setOnFocusChangeListener (new View.OnFocusChangeListener ()
+        m_EditText = (EditText) findViewById (id.txtInput);
+        m_EditText.setImeOptions (EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_FULLSCREEN);
+        m_EditText.setText (initialText);
+        m_EditText.setHint (placeholderText);
+        m_EditText.setHintTextColor (0x61000000);
+        m_EditText.setInputType (convertInputType (ScreenKeyboardType.values()[keyboardType], correction, multiline, secure));
+        m_EditText.addTextChangedListener (this);
+        m_LastSelection = convertSelectionToLong(m_EditText.getText().length(), 0);
+        m_EditText.setSelection(m_EditText.getText().length());
+        m_EditText.setClickable (true);
+        m_EditText.setOnFocusChangeListener (new View.OnFocusChangeListener ()
         {
             @Override
             public void onFocusChange (View v, boolean hasFocus)
@@ -163,9 +165,9 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
         if (m_InputFieldHidden)
         {
-            txtInput.setBackgroundColor(0);
-            txtInput.setTextColor(0);
-            txtInput.setCursorVisible(false);
+            m_EditText.setBackgroundColor(0);
+            m_EditText.setTextColor(0);
+            m_EditText.setCursorVisible(false);
             okButton.setClickable(false);
             okButton.setTextColor(0);
             contentView.setBackgroundColor(0);
@@ -179,8 +181,7 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void afterTextChanged (Editable s)
     {
-        EditText txtInput = (EditText) findViewById (id.txtInput);
-        debugLog("afterTextChanged: {0} Start {1} End {2}",txtInput.getText(), txtInput.getSelectionStart(), txtInput.getSelectionEnd());
+        debugLog("afterTextChanged: {0} Start {1} End {2}", m_EditText.getText(), m_EditText.getSelectionStart(), m_EditText.getSelectionEnd());
         m_Callbacks.OnTextChanged(s.toString());
     }
 
@@ -331,46 +332,44 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public String getText ()
     {
-        EditText txtInput = (EditText) findViewById (id.txtInput);
-
-        if (txtInput == null)
+        if (m_EditText == null)
             return null;
 
-        return txtInput.getText().toString ();
+        return m_EditText.getText().toString ();
     }
 
     public void setText (String text)
     {
         if (text.equals(getText()))
             return;
-        EditText txtInput = (EditText) findViewById (id.txtInput);
-        if (txtInput != null)
+
+        if (m_EditText == null)
+            return;
+
+        debugLog("setText {0}", text);
+        if (m_InputFieldHidden)
         {
-            debugLog("setText {0}", text);
-            if (m_InputFieldHidden)
-            {
-                // For hidden input fields, selection is always overriden in selection changed callback
-               txtInput.setText(text);
-            }
-            else
-             {
-                // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
-                // we want to ignore this, since we want for selection to be at the end of the text
-                long temp = m_LastSelection;
-                m_LastSelection = 0;
-                txtInput.setText(text);
-                m_LastSelection = temp;
-                txtInput.setSelection(text.length());
-            }
+            // For hidden input fields, selection is always overriden in selection changed callback
+            m_EditText.setText(text);
         }
+        else
+        {
+            // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
+            // we want to ignore this, since we want for selection to be at the end of the text
+            long temp = m_LastSelection;
+            m_LastSelection = 0;
+            m_EditText.setText(text);
+            m_LastSelection = temp;
+            m_EditText.setSelection(text.length());
+        }
+
     }
 
     public void setSelection(int start, int length)
     {
         debugLog("set selection {0}, {1}", start, length);
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if (txtInput != null && txtInput.getText().length() >= start + length)
-            txtInput.setSelection(start, start + length);
+        if (m_EditText != null && m_EditText.getText().length() >= start + length)
+            m_EditText.setSelection(start, start + length);
     }
 
     private long convertSelectionToLong(long start, long end)
@@ -388,11 +387,10 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public long getSelection()
     {
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if (txtInput == null)
+        if (m_EditText == null)
             return 0;
-        long start = txtInput.getSelectionStart();
-        long end = txtInput.getSelectionEnd();
+        long start = m_EditText.getSelectionStart();
+        long end = m_EditText.getSelectionEnd();
 
         return convertSelectionToLong(start, end);
     }
@@ -406,12 +404,11 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
 
     public void simulateKeyEvent(int keyCode)
     {
-        EditText txtInput = (EditText) findViewById(id.txtInput);
-        if (txtInput == null)
+        if (m_EditText == null)
             return;
 
-        txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0));
-        txtInput.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0));
+        m_EditText.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, keyCode, 0));
+        m_EditText.dispatchKeyEventPreIme(new KeyEvent(0, 0, KeyEvent.ACTION_UP, keyCode, 0));
     }
 
     public void setLogging(boolean enabled)
