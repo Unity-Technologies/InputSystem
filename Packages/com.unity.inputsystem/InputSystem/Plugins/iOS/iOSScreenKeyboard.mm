@@ -629,8 +629,6 @@ i = res.items;                                              \
 - (void)setSelection:(NSRange)newSelection
 {
     KEYBOARD_LOG(@"setSelection %@", NSStringFromRange(newSelection));
-    if (m_ShowParams.inputFieldHidden)
-        return;
 
     if (NSEqualRanges(self.getSelection, newSelection))
         return;
