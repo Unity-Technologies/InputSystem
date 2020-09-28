@@ -1,7 +1,9 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -943,6 +945,12 @@ namespace UnityEngine.InputSystem.Editor
             foreach (var compositeName in InputBindingComposite.s_Composites.internedNames.Where(x =>
                 !InputBindingComposite.s_Composites.aliases.Contains(x)).OrderBy(x => x))
             {
+                // Skip composites we should hide from the UI.
+                var compositeType = InputBindingComposite.s_Composites.LookupTypeRegistration(compositeName);
+                var designTimeVisible = compositeType.GetCustomAttribute<DesignTimeVisibleAttribute>();
+                if (designTimeVisible != null && !designTimeVisible.Visible)
+                    continue;
+
                 // If the action is expected a specific control layout, check
                 // whether the value type use by the composite matches that of
                 // the layout.
@@ -954,8 +962,9 @@ namespace UnityEngine.InputSystem.Editor
                         continue;
                 }
 
-                var niceName = ObjectNames.NicifyVariableName(compositeName);
-                menu.AddItem(new GUIContent($"Add {niceName} Composite"), false,
+                var displayName = compositeType.GetCustomAttribute<DisplayNameAttribute>();
+                var niceName = displayName != null ? displayName.DisplayName.Replace('/', '\\') : ObjectNames.NicifyVariableName(compositeName) + " Composite";
+                menu.AddItem(new GUIContent($"Add {niceName}"), false,
                     () =>
                     {
                         if (actionItem != null)

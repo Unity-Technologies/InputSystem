@@ -1966,19 +1966,33 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
-        action.Enable();
+        var action1 = new InputAction(binding: "<Gamepad>/leftTrigger");
+        var action2 = new InputAction();
+        action2.AddCompositeBinding("Axis")
+            .With("Negative", "<Gamepad>/leftTrigger")
+            .With("Positive", "<Gamepad>/rightTrigger");
+
+        action1.Enable();
+        action2.Enable();
 
         using (var trace = new InputActionTrace())
         {
-            action.performed += trace.RecordAction;
+            action1.performed += trace.RecordAction;
+            action2.performed += trace.RecordAction;
 
             Set(gamepad.leftTrigger, 0.123f);
 
+            // Disable actions and alter trigger value to make sure
+            // we're not picking up values from the control.
+            action1.Disable();
+            action2.Disable();
+            Set(gamepad.leftTrigger, 0.234f);
+
             var actions = trace.ToArray();
 
-            Assert.That(actions, Has.Length.EqualTo(1));
+            Assert.That(actions, Has.Length.EqualTo(2));
             Assert.That(actions[0].ReadValueAsObject(), Is.EqualTo(0.123).Within(0.00001));
+            Assert.That(actions[1].ReadValueAsObject(), Is.EqualTo(-0.123).Within(0.00001));
         }
     }
 
@@ -6584,6 +6598,203 @@ partial class CoreTests
             Assert.That(trace,
                 Canceled(action, value: 0f, control: gamepad.rightTrigger));
         }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateBindingWithOneModifier()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/shift")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Mouse>/position");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(mouse.position, new Vector2(123, 234));
+
+            Assert.That(trace, Is.Empty);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(default(Vector2)));
+
+            Press(keyboard.leftCtrlKey);
+
+            Assert.That(trace,
+                Started(action, value: new Vector2(123, 234))
+                    .AndThen(Performed(action, value: new Vector2(123, 234))));
+
+            trace.Clear();
+
+            Set(mouse.position, new Vector2(234, 345));
+
+            Assert.That(trace,
+                Performed(action, value: new Vector2(234, 345)));
+
+            trace.Clear();
+
+            Release(keyboard.leftCtrlKey);
+
+            Assert.That(trace,
+                Canceled(action, value: Vector2.zero));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateBindingWithTwoModifiers()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("TwoModifiers")
+            .With("Modifier1", "<Keyboard>/shift")
+            .With("Modifier2", "<Keyboard>/ctrl")
+            .With("Binding", "<Mouse>/position");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            Set(mouse.position, new Vector2(123, 234));
+
+            Assert.That(trace, Is.Empty);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(default(Vector2)));
+
+            Press(keyboard.leftCtrlKey);
+
+            Assert.That(trace, Is.Empty);
+            Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(default(Vector2)));
+
+            Press(keyboard.rightShiftKey);
+
+            Assert.That(trace,
+                Started(action, value: new Vector2(123, 234))
+                    .AndThen(Performed(action, value: new Vector2(123, 234))));
+
+            trace.Clear();
+
+            Set(mouse.position, new Vector2(234, 345));
+
+            Assert.That(trace,
+                Performed(action, value: new Vector2(234, 345)));
+
+            trace.Clear();
+
+            Release(keyboard.leftCtrlKey);
+
+            Assert.That(trace,
+                Canceled(action, value: Vector2.zero));
+
+            trace.Clear();
+
+            Release(keyboard.rightShiftKey);
+
+            Assert.That(trace, Is.Empty);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanCreateVector3Composite()
+    {
+        // For simplicity's sake, give us a device with six analog buttons.
+        const string layout = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""up"", ""layout"" : ""Button"", ""format"" : ""FLT"" },
+                    { ""name"" : ""down"", ""layout"" : ""Button"", ""format"" : ""FLT"" },
+                    { ""name"" : ""left"", ""layout"" : ""Button"", ""format"" : ""FLT"" },
+                    { ""name"" : ""right"", ""layout"" : ""Button"", ""format"" : ""FLT"" },
+                    { ""name"" : ""forward"", ""layout"" : ""Button"", ""format"" : ""FLT"" },
+                    { ""name"" : ""backward"", ""layout"" : ""Button"", ""format"" : ""FLT"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(layout);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        InputSystem.settings.defaultButtonPressPoint = 0.4f;
+
+        var analog = new InputAction();
+        var digitalNormalized = new InputAction();
+        var digital = new InputAction();
+
+        analog.AddCompositeBinding("3DVector(mode=0)")
+            .With("up", "<TestDevice>/up")
+            .With("down", "<TestDevice>/down")
+            .With("left", "<TestDevice>/left")
+            .With("right", "<TestDevice>/right")
+            .With("forward", "<TestDevice>/forward")
+            .With("backward", "<TestDevice>/backward");
+        digitalNormalized.AddCompositeBinding("3DVector(mode=1)")
+            .With("up", "<TestDevice>/up")
+            .With("down", "<TestDevice>/down")
+            .With("left", "<TestDevice>/left")
+            .With("right", "<TestDevice>/right")
+            .With("forward", "<TestDevice>/forward")
+            .With("backward", "<TestDevice>/backward");
+        digital.AddCompositeBinding("3DVector(mode=2)")
+            .With("up", "<TestDevice>/up")
+            .With("down", "<TestDevice>/down")
+            .With("left", "<TestDevice>/left")
+            .With("right", "<TestDevice>/right")
+            .With("forward", "<TestDevice>/forward")
+            .With("backward", "<TestDevice>/backward");
+
+        analog.Enable();
+        digitalNormalized.Enable();
+        digital.Enable();
+
+        // Below button press threshold.
+        Set((ButtonControl)device["up"], 0.123f);
+        Set((ButtonControl)device["left"], 0.234f);
+        Set((ButtonControl)device["forward"], 0.345f);
+
+        Assert.That(analog.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(-0.234f, 0.123f, 0.345f)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digitalNormalized.ReadValue<Vector3>(),
+            Is.EqualTo(Vector3.zero).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digital.ReadValue<Vector3>(),
+            Is.EqualTo(Vector3.zero).Using(Vector3EqualityComparer.Instance));
+
+        Set((ButtonControl)device["up"], 0.456f);
+        Set((ButtonControl)device["left"], 0.567f);
+        Set((ButtonControl)device["forward"], 0.789f);
+
+        Assert.That(analog.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(-0.567f, 0.456f, 0.789f)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digitalNormalized.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(-1, 1, 1).normalized).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digital.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(-1, 1, 1)).Using(Vector3EqualityComparer.Instance));
+
+        Set((ButtonControl)device["down"], 0.890f);
+        Set((ButtonControl)device["right"], 0.901f);
+        Set((ButtonControl)device["backward"], 1f);
+
+        Assert.That(analog.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(0.901f - 0.567f, 0.456f - 0.890f, 0.789f - 1f)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digitalNormalized.ReadValue<Vector3>(),
+            Is.EqualTo(Vector3.zero).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digital.ReadValue<Vector3>(),
+            Is.EqualTo(Vector3.zero).Using(Vector3EqualityComparer.Instance));
+
+        Set((ButtonControl)device["up"], 0f);
+        Set((ButtonControl)device["left"], 0f);
+        Set((ButtonControl)device["forward"], 0f);
+
+        Assert.That(analog.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(0.901f, -0.890f, -1f)).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digitalNormalized.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(1, -1, -1).normalized).Using(Vector3EqualityComparer.Instance));
+        Assert.That(digital.ReadValue<Vector3>(),
+            Is.EqualTo(new Vector3(1, -1, -1)).Using(Vector3EqualityComparer.Instance));
     }
 
     [Test]

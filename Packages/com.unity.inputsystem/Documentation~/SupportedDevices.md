@@ -6,28 +6,30 @@ This page lists Input Device types and products that the Input System package su
 
 Support for the following Devices doesn't require specialized support of particular products.
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS|Xbox(3)|PS4(3)|Switch(3)|WebGL|
-|------|-------|---|-----|---|-------|---|----|---|------|-----|
-|[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
-|[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|Yes|Yes|No|Yes|
-|[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|
-|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|No|No|No|No|
-|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|
-|[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|Yes|
+|Device|Windows|Mac|Linux|UWP|Android|iOS|tvOS|Xbox(3)|PS4(3)|Switch(3)|WebGL|
+|------|-------|---|-----|---|-------|---|----|----|---|------|-----|
+|[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
+|[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
+|[Pen](Pen.md)|Yes|No (1)|No|Yes|Yes|Yes|No|No|No|No|No|
+|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|No|
+|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|No|
+|[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|
 
 >__Notes__:
 >1. Tablet support for macOS is coming in Unity 2020.1.
 >2. Joysticks are supported as generic HIDs (See [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) below).
 >3. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
+>4. Indirect touches are received from Siri Remote.
 
 ## Gamepads
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|Xbox(7)|PS4(7)|Switch(7)|WebGL|
-|------|-------|---|-----|---|-------|---|----|---|------|-----|
-|Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|Yes|No|No|Sometimes (2)|
-|Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes|No|No|Sometimes (2)|
-|PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
-|Switch|Yes|Yes|Yes|Yes|No|No|No|No|Yes|Sometimes (2)|
+|Device|Windows|Mac|Linux|UWP|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4(7)|Switch(7)|WebGL|
+|------|-------|---|-----|---|-------|---|----|----|---|------|-----|
+|Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
+|Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
+|PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
+|Switch|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
+|MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
 >__Notes__:
 >1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
