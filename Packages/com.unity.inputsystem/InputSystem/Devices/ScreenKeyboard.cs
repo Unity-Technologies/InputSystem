@@ -268,7 +268,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Modify selection of an input field text.
-        /// When input field is hidden, this property does nothing and always returns (text.length, 0)
+        /// You can set selection even if input field is hidden.
         /// If you specify a selection out of bounds of text length, the selection will not be set.
         /// </summary>
         public abstract RangeInt selection { set; get; }

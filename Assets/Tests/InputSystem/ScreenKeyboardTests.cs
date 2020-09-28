@@ -286,17 +286,12 @@ public class ScreenKeyboardTests : InputTestFixture
 
         var targetText = "Hello";
         keyboard.inputFieldText = "Hello";
-        // For hidden input fields, yuo cannot select a text
-        if (inputFieldHidden)
-        {
-            Assert.AreEqual(1, selectionCallbackInfo.CalledCount);
-            Assert.AreEqual(new MyRangeInt(targetText.Length, 0), selectionCallbackInfo.Data);
-        }
-        else
-        {
-            Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
-            Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
-        }
+
+        // Note: Even if input field is hidden we want selection to behave normally
+        //       Since the users of screen keyboard might be using the selection field for manually drawing cursor
+        Assert.AreEqual(2, selectionCallbackInfo.CalledCount);
+        Assert.AreEqual(new MyRangeInt(1, 0), selectionCallbackInfo.Data);
+
         yield return HideKeyboard();
     }
 

@@ -286,13 +286,6 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             protected void onSelectionChanged(int start, int end)
             {
                 debugLog("onSelectionChanged {0} {1}", start, end - start);
-                if (m_InputFieldHidden && (getSelectionStart() != getText().length() || getSelectionEnd() != getText().length()))
-                {
-                    debugLog("    overriding selection, since input field is hidden");
-                    start = end = getText().length();
-                    setSelection(getText().length());
-                    return;
-                }
 
                 long currentSelection = convertSelectionToLong(start, end);
                 if (m_LastSelection == currentSelection)
@@ -347,22 +340,14 @@ public class AndroidScreenKeyboard extends Dialog implements OnClickListener, Te
             return;
 
         debugLog("setText {0}", text);
-        if (m_InputFieldHidden)
-        {
-            // For hidden input fields, selection is always overriden in selection changed callback
-            m_EditText.setText(text);
-        }
-        else
-        {
-            // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
-            // we want to ignore this, since we want for selection to be at the end of the text
-            long temp = m_LastSelection;
-            m_LastSelection = 0;
-            m_EditText.setText(text);
-            m_LastSelection = temp;
-            m_EditText.setSelection(text.length());
-        }
 
+        // setText implicitly changes selection to 0, 0, and will invoke selection changed callback
+        // we want to ignore this, since we want for selection to be at the end of the text
+        long temp = m_LastSelection;
+        m_LastSelection = 0;
+        m_EditText.setText(text);
+        m_LastSelection = temp;
+        m_EditText.setSelection(text.length());
     }
 
     public void setSelection(int start, int length)
