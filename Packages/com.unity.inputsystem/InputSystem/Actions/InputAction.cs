@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem
     /// In what order and how those callbacks get triggered depends on both the <see cref="type"/>
     /// of the action as well as on the interactions (see <see cref="IInputInteraction"/>) present
     /// on the bindings of the action. The default behavior is that when a control is actuated
-    /// (i.e. moving away from its resting position), <see cref="started"/> is called and then
+    /// (that is, moving away from its resting position), <see cref="started"/> is called and then
     /// <see cref="performed"/>. Subsequently, whenever the a control further changes value to
     /// anything other than its default value, <see cref="performed"/> will be called again.
     /// Finally, when the control moves back to its default value (i.e. resting position),
@@ -978,10 +978,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <returns>True if the action is considered to be in "pressed" state, false otherwise.</returns>
         /// <remarks>
-        /// This method is different from simply reading the actions current <c>float</c> value and comparing
+        /// This method is different from simply reading the action's current <c>float</c> value and comparing
         /// it to the press threshold and is also different from comparing the current actuation of
-        /// <see cref="activeControl"/> to it. This is because the current level of actuation may have already
-        /// fallen below the press threshold but may not yet have reached the release threshold.
+        /// <see cref="activeControl"/> to it. This is because the current level of actuation might have already
+        /// fallen below the press threshold but might not yet have reached the release threshold.
         ///
         /// This method works with any <see cref="type"/> of action, not just buttons.
         ///
@@ -1022,13 +1022,13 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return true the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
         /// at any point in the frame.
         /// </summary>
         /// <returns>True if the action was pressed this frame.</returns>
         /// <remarks>
         /// This method is different from <see cref="WasPerformedThisFrame"/> in that it is not bound
-        /// to <see cref="phase"/>. Instead, if the action's level of actuation (i.e. the level of
+        /// to <see cref="phase"/>. Instead, if the action's level of actuation (that is, the level of
         /// magnitude -- see <see cref="InputControl.EvaluateMagnitude()"/> -- of the control(s) bound
         /// to the action) crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
         /// at any point in the frame, this method will return true. It will do so even if there is an
@@ -1075,7 +1075,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Return true the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
+        /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
         /// at any point in the frame after being in pressed state.
         /// </summary>
         /// <returns>True if the action was released this frame.</returns>
@@ -1139,13 +1139,13 @@ namespace UnityEngine.InputSystem
         /// Only after the hold time has expired will <c>WasPerformedThisFrame</c> be true and only in the frame
         /// where the hold performed.
         ///
-        /// This is different from checking <see cref="phase"/> directly as the action may have already progressed
+        /// This is different from checking <see cref="phase"/> directly as the action might have already progressed
         /// to a different phase after performing. In other words, even if an action performed in a frame, <see cref="phase"/>
-        /// may no longer be <see cref="InputActionPhase.Performed"/> whereas <c>WasPerformedThisFrame</c> will remain
+        /// might no longer be <see cref="InputActionPhase.Performed"/>, whereas <c>WasPerformedThisFrame</c> will remain
         /// true for the entirety of the frame regardless of what else the action does.
         ///
-        /// In the same vein, unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
-        /// state, this property will stay true for the duration of the current frame (i.e. until the next
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (that is, until the next
         /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
         ///
         /// <example>
@@ -1182,8 +1182,8 @@ namespace UnityEngine.InputSystem
         /// of the currently running timeout.</returns>
         /// <remarks>
         /// This method is useful, for example, when providing UI feedback for an ongoing action. If, say,
-        /// you have a <see cref="Interactions.HoldInteraction"/> on a binding, you may want to show a
-        /// progress indicator of some kind in the UI and need to now how far into the hold the action
+        /// you have a <see cref="Interactions.HoldInteraction"/> on a binding, you might want to show a
+        /// progress indicator in the UI and need to know how far into the hold the action
         /// current is. Once the hold has been started, this method will return how far into the hold
         /// the action currently is.
         ///
@@ -1194,16 +1194,16 @@ namespace UnityEngine.InputSystem
         /// updates. This means that if, for example, the timeout for a <see cref="Interactions.HoldInteraction"/>
         /// has expired according the current time but the expiration has not yet been processed by
         /// an input update (thus causing the hold to perform), the returned completion percentage
-        /// will still be 1. In other words, these is not necessarily a correlation between the current
+        /// will still be 1. In other words, there isn't always a correlation between the current
         /// completion percentage and <see cref="phase"/>.
         ///
         /// The meaning of the timeout is dependent on the interaction in play. For a <see cref="Interactions.HoldInteraction"/>,
-        /// the timeout represents "completion" (i.e. the time until a "hold" is considered to be performed) whereas
-        /// for a <see cref="Interactions.TapInteraction"/> it represents "time to failure" (i.e. the time window left
-        /// within which the interaction can be completed).
+        /// the timeout represents "completion" (that is, the time until a "hold" is considered to be performed), whereas
+        /// for a <see cref="Interactions.TapInteraction"/> it represents "time to failure" (that is, the remaining time window
+        /// that the interaction can be completed within).
         ///
-        /// Note that an interaction may run multiple timeouts in succession. One such example is <see cref="Interactions.MultiTapInteraction"/>.
-        /// In this case, progression towards a single timeout does not necessarily equate progression towards completion
+        /// Note that an interaction might run multiple timeouts in succession. One such example is <see cref="Interactions.MultiTapInteraction"/>.
+        /// In this case, progression towards a single timeout does not necessarily mean progression towards completion
         /// of the whole interaction. An interaction can call <see cref="InputInteractionContext.SetTotalTimeoutCompletionTime"/>
         /// to inform the Input System of the total length of timeouts to run. If this is done, the result of the
         /// <c>GetTimeoutCompletionPercentage</c> method will return a value reflecting the progression with respect

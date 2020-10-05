@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Composites
     public class Vector2Composite : InputBindingComposite<Vector2>
     {
         /// <summary>
-        /// Binding for the button that represents the up (i.e. <c>(0,1)</c>) direction of the vector.
+        /// Binding for the button that represents the up (that is, <c>(0,1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int up = 0;
 
         /// <summary>
-        /// Binding for the button represents the the down (i.e. <c>(0,-1)</c>) direction of the vector.
+        /// Binding for the button represents the the down (that is, <c>(0,-1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int down = 0;
 
         /// <summary>
-        /// Binding for the button represents the the left (i.e. <c>(-1,0)</c>) direction of the vector.
+        /// Binding for the button represents the the left (that is, <c>(-1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -75,7 +75,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int left = 0;
 
         /// <summary>
-        /// Binding for the button that represents the right (i.e. <c>(1,0)</c>) direction of the vector.
+        /// Binding for the button that represents the right (that is, <c>(1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Composites
             /// <summary>
             /// Part controls are treated as buttons (on/off) and the resulting vector is normalized. This means
             /// that if, for example, both left and up are pressed, instead of returning a vector (-1,1), a vector
-            /// of roughly (-0.7,0.7) (i.e. corresponding to <c>new Vector2(-1,1).normalized</c>) is returned instead.
+            /// of roughly (-0.7,0.7) (that is, corresponding to <c>new Vector2(-1,1).normalized</c>) is returned instead.
             /// The resulting 2D area is diamond-shaped.
             /// </summary>
             DigitalNormalized = 0,

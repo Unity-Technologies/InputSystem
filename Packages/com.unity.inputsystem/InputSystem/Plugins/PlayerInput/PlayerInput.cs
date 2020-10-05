@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem
     ///     private bool m_Fire;
     ///
     ///     // 'Fire' input action has been triggered. For 'Fire' we want continuous
-    ///     // action (i.e. firing) while the fire button is held such that the action
+    ///     // action (that is, firing) while the fire button is held such that the action
     ///     // gets triggered repeatedly while the button is down. We can easily set this
     ///     // up by having a "Press" interaction on the button and setting it to repeat
     ///     // at fixed intervals.

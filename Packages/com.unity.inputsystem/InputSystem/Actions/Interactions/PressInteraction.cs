@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// button press threshold defined by <see cref="pressPoint"/>. The action then will not trigger again until the control
     /// is first released.
     ///
-    /// Can be set to instead trigger on release (i.e. when the control goes back below the button press threshold) using
+    /// Can be set to instead trigger on release (that is, when the control goes back below the button press threshold) using
     /// <see cref="PressBehavior.ReleaseOnly"/> or can be set to trigger on both press and release using <see cref="PressBehavior.PressAndRelease"/>).
     ///
     /// Note that using an explicit press interaction is only necessary if the goal is to either customize the press behavior

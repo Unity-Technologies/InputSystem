@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem
         public double time => m_TriggerState.time;
 
         /// <summary>
-        /// Timestamp of the <see cref="InputEvent"/> that cause the interaction to transition
+        /// Timestamp of the <see cref="InputEvent"/> that caused the interaction to transition
         /// to <see cref="InputActionPhase.Started"/>.
         /// </summary>
         /// <seealso cref="InputEvent.time"/>
@@ -209,7 +209,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="seconds">Number of seconds before the timeout is triggered.</param>
         /// <remarks>
-        /// An interaction may want to wait a set amount of time for something to happen and then
+        /// An interaction might wait a set amount of time for something to happen and then
         /// do something depending on whether it did or did not happen. By calling this method,
         /// a timeout is installed such that in the input update that the timer expires in, the
         /// interaction's <see cref="IInputInteraction.Process"/> method is called with <see cref="timerHasExpired"/>
@@ -273,11 +273,11 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentException"></exception>
         /// <remarks>
         /// By default, timeout completion will be entirely determine by the timeout that is currently
-        /// running, if any. However, some interaction (such as <see cref="Interactions.MultiTapInteraction"/>)
+        /// running, if any. However, some interactions (such as <see cref="Interactions.MultiTapInteraction"/>)
         /// will have to run multiple timeouts in succession. Thus, completion of a single timeout is not
         /// the same as completion of the interaction.
         ///
-        /// This method can be used to account for this.
+        /// You can use this method to account for this.
         ///
         /// Whenever a timeout completes, the timeout duration will automatically be accumulated towards
         /// the total timeout completion time.
