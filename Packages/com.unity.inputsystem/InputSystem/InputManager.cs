@@ -2236,7 +2236,7 @@ namespace UnityEngine.InputSystem
             InputUpdate.s_LastUpdateType = updateType;
             if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
             {
-                // We want update step counts to be correct in OnNextUpdate() and onBeforeUpdate callbacks.
+                // We want to update step counts to be correct in OnNextUpdate() and onBeforeUpdate callbacks.
                 // We use a boolean flag to tell OnUpdate() that we've already incremented the count.
                 ++InputUpdate.s_UpdateStepCount;
                 InputUpdate.s_HaveUpdatedStepCount = true;

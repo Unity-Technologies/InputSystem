@@ -29,7 +29,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed `InputActionTrace.ActionEventPtr.ReadValueAsObject` leading to `InvalidCastException` when trying to read values that came from composite bindings.
 - Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1261462](https://issuetracker.unity3d.com/issues/multi-tap-and-tap-interactions-in-the-same-action-doesnt-work-properly)).
-- Fixed rebinds triggered by the enter key causing stuck enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
+- Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
 
 ### Added
 
@@ -40,12 +40,12 @@ however, it has to be formatted properly to pass verification tests.
   * The threshold is defined by `InputSettings.buttonReleaseThreshold`.
   * Thresholds are defined as percentages of press points. A release is thus defined as a button, after having reached a value of at least `InputSettings.defaultButtonPressPoint` (or whatever local press is used), falling back to a value equal to or less than `InputSettings.buttonReleaseThreshold` percent of the press point.
   * This is intended to solve the problem of buttons flickering around button press points.
-  * The default threshold is set at 75%, i.e. buttons release at 3/4 of the press point.
+  * The default threshold is set at 75%, that is, buttons release at 3/4 of the press point.
 - Added new methods to the `InputAction` class:
-  * `InputAction.IsPressed()`: Whether a bound control has crossed the press threshold and has not yet fallback back below the release threshold.
+  * `InputAction.IsPressed()`: Whether a bound control has crossed the press threshold and has not yet fallen back below the release threshold.
   * `InputAction.WasPressedThisFrame()`: Whether a bound control has crossed the press threshold this frame.
-  * `InputAction.WasReleasedThisFrame()`: Whether a bound control has fallback back below the release threshold this frame.
-  * `InputAction.WasPerformedThisFrame()`: Whether the action was performed at any point during the current frame. Equivalent to `InputAction.triggered` which will be deprecated in the future.
+  * `InputAction.WasReleasedThisFrame()`: Whether a bound control has fallen back below the release threshold this frame.
+  * `InputAction.WasPerformedThisFrame()`: Whether the action was performed at any point during the current frame. Equivalent to `InputAction.triggered`, which will be deprecated in the future.
   * `InputAction.Reset()`: Forcibly reset the action state. Cancels the action, if it is currently in progress.
 - Added `InputAction.GetTimeoutCompletionPercentage` to query the amount left to complete a currently ongoing interaction.
   ```CSharp
