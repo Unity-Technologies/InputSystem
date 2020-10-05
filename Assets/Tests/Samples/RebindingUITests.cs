@@ -103,8 +103,7 @@ public class RebindingUITests : InputTestFixture
         eventSystemGO.SetActive(false);
         var eventSystem = eventSystemGO.AddComponent<TestEventSystem>();
         var uiInputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
-        var inputActionsJson = File.ReadAllText("Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions");
-        var inputActions  = InputActionAsset.FromJson(inputActionsJson);
+        var inputActions = new DefaultInputActions().asset;
         uiInputModule.actionsAsset = inputActions;
         uiInputModule.submit = InputActionReference.Create(inputActions["submit"]);
 
