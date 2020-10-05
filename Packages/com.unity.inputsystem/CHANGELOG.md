@@ -24,6 +24,7 @@ however, it has to be formatted properly to pass verification tests.
   * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
 
 ### Fixed
+- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved. [case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)
 
 #### Actions
 
@@ -32,6 +33,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
 
 ### Added
+
+- Added tvOS documentation entries in 'Supported Input Devices' page.
 
 #### Actions
 
