@@ -177,7 +177,4 @@ public class RebindingUITests : InputTestFixture
             Update();
         }
     }
-
-    #if HAVE_TEXTMESH
-    #endif
 }

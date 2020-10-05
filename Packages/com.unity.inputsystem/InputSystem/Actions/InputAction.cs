@@ -964,9 +964,6 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="phase"/>
         public void Reset()
         {
-            if (!enabled)
-                return;
-
             var state = GetOrCreateActionMap().m_State;
             state?.ResetActionState(m_ActionIndexInState, hardReset: true);
         }

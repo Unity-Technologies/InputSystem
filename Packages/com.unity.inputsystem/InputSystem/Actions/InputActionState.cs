@@ -421,7 +421,7 @@ namespace UnityEngine.InputSystem
 
             // If the action in started or performed phase, cancel it first.
             var actionState = &actionStates[actionIndex];
-            if (actionState->phase != InputActionPhase.Waiting)
+            if (actionState->phase != InputActionPhase.Waiting && actionState->phase != InputActionPhase.Disabled)
             {
                 // Cancellation calls should receive current time.
                 actionState->time = InputRuntime.s_Instance.currentTime;
