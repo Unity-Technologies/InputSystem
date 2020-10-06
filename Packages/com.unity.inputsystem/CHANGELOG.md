@@ -24,7 +24,10 @@ however, it has to be formatted properly to pass verification tests.
   * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
 
 ### Fixed
-- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved. [case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)
+
+- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved ([case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)).
+- Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
+- Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
 
 #### Actions
 

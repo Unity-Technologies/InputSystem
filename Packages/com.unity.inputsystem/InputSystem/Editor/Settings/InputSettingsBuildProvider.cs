@@ -3,28 +3,31 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSettingsBuildProvider : IPreprocessBuildWithReport, IPostprocessBuildWithReport
     {
-        private Object[] m_OriginalPreloadedAssets;
+        private InputSettings m_SettingsAddedToPreloadedAssets;
 
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder => 0;
 
         public void OnPreprocessBuild(BuildReport report)
         {
             if (InputSystem.settings == null)
                 return;
 
-            m_OriginalPreloadedAssets = PlayerSettings.GetPreloadedAssets();
-            bool wasDirty = IsPlayerSettingsDirty();
+            var wasDirty = IsPlayerSettingsDirty();
+            m_SettingsAddedToPreloadedAssets = null;
 
-            if (!m_OriginalPreloadedAssets.Contains(InputSystem.settings))
+            // Add InputSettings object assets, if it's not in there already.
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+            if (!preloadedAssets.Contains(InputSystem.settings))
             {
-                var preloadedAssets = m_OriginalPreloadedAssets.ToList();
-                preloadedAssets.Add(InputSystem.settings);
-                PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
+                m_SettingsAddedToPreloadedAssets = InputSystem.settings;
+                ArrayHelpers.Append(ref preloadedAssets, m_SettingsAddedToPreloadedAssets);
+                PlayerSettings.SetPreloadedAssets(preloadedAssets);
             }
 
             if (!wasDirty)
@@ -33,19 +36,26 @@ namespace UnityEngine.InputSystem.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            if (InputSystem.settings == null)
+            if (m_SettingsAddedToPreloadedAssets == null)
                 return;
 
-            bool wasDirty = IsPlayerSettingsDirty();
+            var wasDirty = IsPlayerSettingsDirty();
 
-            // Revert back to original state
-            PlayerSettings.SetPreloadedAssets(m_OriginalPreloadedAssets);
+            // Revert back to original state.
+            var preloadedAssets = PlayerSettings.GetPreloadedAssets();
+            var index = preloadedAssets.IndexOfReference(m_SettingsAddedToPreloadedAssets);
+            if (index != -1)
+            {
+                ArrayHelpers.EraseAt(ref preloadedAssets, index);
+                PlayerSettings.SetPreloadedAssets(preloadedAssets);
+            }
+            m_SettingsAddedToPreloadedAssets = null;
 
             if (!wasDirty)
                 ClearPlayerSettingsDirtyFlag();
         }
 
-        static bool IsPlayerSettingsDirty()
+        private static bool IsPlayerSettingsDirty()
         {
             var settings = Resources.FindObjectsOfTypeAll<PlayerSettings>();
             if (settings != null && settings.Length > 0)
@@ -53,7 +63,7 @@ namespace UnityEngine.InputSystem.Editor
             return false;
         }
 
-        static void ClearPlayerSettingsDirtyFlag()
+        private static void ClearPlayerSettingsDirtyFlag()
         {
             var settings = Resources.FindObjectsOfTypeAll<PlayerSettings>();
             if (settings != null && settings.Length > 0)
