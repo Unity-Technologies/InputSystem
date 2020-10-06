@@ -6,6 +6,10 @@ using UnityEngine.InputSystem.Utilities;
 // NOTE: This is mostly auto-generated from DefaultInput.actions. To regenerate, temporarily toggle on "Generate C# Class" and
 //       merge revision from version control.
 
+// CodeAnalyzer isn't happy with our implicit conversion operator. Might be something to fix but even then, fix relates to
+// code generator, not the generated code here.
+#pragma warning disable CA2225
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
