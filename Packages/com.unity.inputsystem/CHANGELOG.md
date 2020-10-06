@@ -9,6 +9,20 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+
+- The `submit` and the `cancel` actions of the UI input module now trigger on __release__ instead of press. This makes the behavior consistent with clicks triggering UI response on release rather than press.
+
+#### Actions
+
+- Actions of type `InputActionType.Button` now respect button press (and release) points.
+  * Previously, button-type actions, when used without explicit "Press" interactions, would perform immediately when a bound control was actuated.
+  * Now, a button-type action will behave the same as if a "Press" interaction is applied with "Trigger Behavior" set to "Press Only".
+  * This means that a button-type action will now perform (and perform __once__ only) when a control crosses the button press threshold defined in the global settings or, if present, locally on a `ButtonControl`. It will then stay performed and finally cancel only when the control falls back to or below the release threshold.
+- `InputAction.ReadValue<T>()` now always returns `default<T>` when the action is canceled.
+  * This is to make it consistent with `InputAction.CallbackContext.ReadValue<T>()` which already returned `default<T>` when the action was canceled.
+  * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
+
 ### Fixed
 - Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved. [case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)
 
@@ -16,6 +30,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed `InputActionTrace.ActionEventPtr.ReadValueAsObject` leading to `InvalidCastException` when trying to read values that came from composite bindings.
 - Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1261462](https://issuetracker.unity3d.com/issues/multi-tap-and-tap-interactions-in-the-same-action-doesnt-work-properly)).
+- Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
+- Fixed `Map index on trigger` and `IndexOutOfRangeException` errors when using multiple Interactions on the same Action. ([case 1253034](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-errors-when-using-multiple-interactions-on-the-same-action)).
 
 ### Added
 
@@ -23,6 +39,25 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- Added "release thresholds" for buttons.
+  * Release points are now separated from press points by a percentage threshold.
+  * The threshold is defined by `InputSettings.buttonReleaseThreshold`.
+  * Thresholds are defined as percentages of press points. A release is thus defined as a button, after having reached a value of at least `InputSettings.defaultButtonPressPoint` (or whatever local press is used), falling back to a value equal to or less than `InputSettings.buttonReleaseThreshold` percent of the press point.
+  * This is intended to solve the problem of buttons flickering around button press points.
+  * The default threshold is set at 75%, that is, buttons release at 3/4 of the press point.
+- Added new methods to the `InputAction` class:
+  * `InputAction.IsPressed()`: Whether a bound control has crossed the press threshold and has not yet fallen back below the release threshold.
+  * `InputAction.WasPressedThisFrame()`: Whether a bound control has crossed the press threshold this frame.
+  * `InputAction.WasReleasedThisFrame()`: Whether a bound control has fallen back below the release threshold this frame.
+  * `InputAction.WasPerformedThisFrame()`: Whether the action was performed at any point during the current frame. Equivalent to `InputAction.triggered`, which will be deprecated in the future.
+  * `InputAction.Reset()`: Forcibly reset the action state. Cancels the action, if it is currently in progress.
+- Added `InputAction.GetTimeoutCompletionPercentage` to query the amount left to complete a currently ongoing interaction.
+  ```CSharp
+  // Let's say there's a hold interaction on a "warp" action. The user presses a button bound
+  // to the action and then holds it. While the user holds the button, we want to know how much
+  // longer the user will have to hold it so that we can display feedback in the UI.
+  var holdCompleted = playerInput.actions["warp"].GetTimeoutCompletionPercentage();
+  ```
 - Added three new binding composite types:
   * `OneModifierComposite`: This is a generalization of `ButtonWithOneModifier` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+delta").
   * `TwoModifiersComposite`: This is a generalization of `ButtonWithTwoModifiers` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+CTRL+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+CTRL+delta").

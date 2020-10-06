@@ -2216,7 +2216,7 @@ namespace UnityEngine.InputSystem
         /// The event will be copied in full to the internal event buffer meaning that
         /// you can release memory for the event after it has been queued. The internal event
         /// buffer is flushed on the next input system update (see <see cref="Update"/>).
-        /// Note that if timeslicing is in effect (see <see cref="InputSettings.timesliceEvents"/>),
+        /// Note that if input is process in <c>FixedUpdate()</c> (see <see cref="InputSettings.updateMode"/>),
         /// then the event may not get processed until its <see cref="InputEvent.time"/> timestamp
         /// is within the update window of the input system.
         ///
@@ -2238,6 +2238,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         /// <seealso cref="Update"/>
+        /// <seealso cref="onEvent"/>
+        /// <seealso cref="onBeforeUpdate"/>
         public static void QueueEvent(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
@@ -2490,7 +2492,6 @@ namespace UnityEngine.InputSystem
             s_Manager.QueueEvent(ref inputEvent);
         }
 
-        ////TODO: rename or move this to a less obvious place
         /// <summary>
         /// Run a single update of input state.
         /// </summary>
@@ -2637,7 +2638,7 @@ namespace UnityEngine.InputSystem
         ///
         /// For <see cref="InputActionChange.BoundControlsAboutToChange"/> and <see cref="InputActionChange.BoundControlsChanged"/>,
         /// the given object is an <see cref="InputAction"/> if the action is not part of an action map,
-        /// an <see cref="InputActionMap"/> if the the actions are part of a map but not part of an asset, and an
+        /// an <see cref="InputActionMap"/> if the actions are part of a map but not part of an asset, and an
         /// <see cref="InputActionAsset"/> if the actions are part of an asset. In other words, the notification is
         /// sent for the topmost object in the hierarchy.
         /// </remarks>

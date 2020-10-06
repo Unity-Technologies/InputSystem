@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.Composites
     public class Vector3Composite : InputBindingComposite<Vector3>
     {
         /// <summary>
-        /// Binding for the button that represents the up (i.e. <c>(0,1,0)</c>) direction of the vector.
+        /// Binding for the button that represents the up (that is, <c>(0,1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int up;
 
         /// <summary>
-        /// Binding for the button that represents the down (i.e. <c>(0,-1,0)</c>) direction of the vector.
+        /// Binding for the button that represents the down (that is, <c>(0,-1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -57,7 +57,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int down;
 
         /// <summary>
-        /// Binding for the button that represents the left (i.e. <c>(-1,0,0)</c>) direction of the vector.
+        /// Binding for the button that represents the left (that is, <c>(-1,0,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int left;
 
         /// <summary>
-        /// Binding for the button that represents the right (i.e. <c>(1,0,0)</c>) direction of the vector.
+        /// Binding for the button that represents the right (that is, <c>(1,0,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -77,7 +77,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int right;
 
         /// <summary>
-        /// Binding for the button that represents the right (i.e. <c>(0,0,1)</c>) direction of the vector.
+        /// Binding for the button that represents the right (that is, <c>(0,0,1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -87,7 +87,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int forward;
 
         /// <summary>
-        /// Binding for the button that represents the right (i.e. <c>(0,0,-1)</c>) direction of the vector.
+        /// Binding for the button that represents the right (that is, <c>(0,0,-1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -149,7 +149,7 @@ namespace UnityEngine.InputSystem.Composites
             /// <summary>
             /// Part controls are treated as buttons (on/off) and the resulting vector is normalized. This means
             /// that if, for example, both left and up are pressed, instead of returning a vector (-1,1,0), a vector
-            /// of roughly (-0.7,0.7,0) (i.e. corresponding to <c>new Vector3(-1,1,0).normalized</c>) is returned instead.
+            /// of roughly (-0.7,0.7,0) (that is, corresponding to <c>new Vector3(-1,1,0).normalized</c>) is returned instead.
             /// </summary>
             DigitalNormalized,
 

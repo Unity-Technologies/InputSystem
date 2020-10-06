@@ -304,6 +304,8 @@ namespace UnityEngine.InputSystem
             if (m_State == null)
                 return default;
 
+            ////REVIEW: wouldn't this have to take release points into account now?
+
             var buttonValue = false;
             m_State.ReadCompositePartValue<float, DefaultComparer<float>>(m_BindingIndex, partNumber, &buttonValue,
                 out _);

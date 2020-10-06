@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem.Composites
 
         /// <summary>
         /// Binding for the control that is gated by the modifier. The composite will assume the value
-        /// of this control while the modifier is considered pressed (i.e. has a magnitude equal to or
+        /// of this control while the modifier is considered pressed (that is, has a magnitude equal to or
         /// greater than the button press point).
         /// </summary>
         /// <value>Part index to use with <see cref="InputBindingCompositeContext.ReadValue{T}(int)"/>.</value>
