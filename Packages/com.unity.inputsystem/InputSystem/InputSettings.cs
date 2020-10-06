@@ -315,7 +315,7 @@ namespace UnityEngine.InputSystem
         ///
         /// This is a percentage rather than a fixed value so it allows computing release
         /// points even when the press point has been customized. If, for example, a <see cref="Interactions.PressInteraction"/>
-        /// sets a custom <see cref="Interactions.PressInteraction.pressPoint"/>, the the respective release point
+        /// sets a custom <see cref="Interactions.PressInteraction.pressPoint"/>, the respective release point
         /// can still be computed from the percentage set here.
         /// </remarks>
         public float buttonReleaseThreshold

@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int up = 0;
 
         /// <summary>
-        /// Binding for the button represents the the down (that is, <c>(0,-1)</c>) direction of the vector.
+        /// Binding for the button represents the down (that is, <c>(0,-1)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
@@ -65,7 +65,7 @@ namespace UnityEngine.InputSystem.Composites
         [InputControl(layout = "Button")] public int down = 0;
 
         /// <summary>
-        /// Binding for the button represents the the left (that is, <c>(-1,0)</c>) direction of the vector.
+        /// Binding for the button represents the left (that is, <c>(-1,0)</c>) direction of the vector.
         /// </summary>
         /// <remarks>
         /// This property is automatically assigned by the input system.
