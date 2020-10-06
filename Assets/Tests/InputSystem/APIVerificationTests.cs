@@ -15,6 +15,7 @@ using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Utilities;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -707,6 +708,8 @@ class APIVerificationTests
         public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Canceled(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
         public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Performed(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
         public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
+        public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
+        public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
@@ -808,22 +811,22 @@ class APIVerificationTests
         Assert.That(unresolvedLinks, Is.Empty);
     }
 
-
     [Test]
-    public void DocsContainNoMissingOrUnreferencedImages()
+    [Category("API")]
+    public void API_DocumentationManualDoesNotHaveUnusedImages()
     {
         const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
         const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
         var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
 
         // Add files here if you want to ignore them being unreferenced.
-        string[] unreferencedIgnoreList = new [] { "InputArchitectureLowLevel.sdxml" };
+        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml" };
 
-        bool missingImages = false;
-        bool unusedImages = false;
+        var missingImages = false;
+        var unusedImages = false;
         var messages = new StringBuilder();
 
-        // Record all the files in the images directory
+        // Record all the files in the images directory.
         var foundImageFiles = Directory.GetFiles(imagesPath);
         var imageFiles = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var img in foundImageFiles)
@@ -844,7 +847,7 @@ class APIVerificationTests
         // references and record missing images.
         var docsPages = new List<string>(Directory.GetFiles(docsPath, "*.md"));
 
-        // Add the changelog
+        // Add the changelog.
         docsPages.Add("Packages/com.unity.inputsystem/CHANGELOG.md");
 
         var missingImagesList = new List<string>();
@@ -875,28 +878,37 @@ class APIVerificationTests
                 missingImages = true;
                 messages.AppendLine("  " + page);
                 foreach (var img in missingImagesList)
-                {
                     messages.AppendLine($"    {img}");
-                }
             }
         }
 
-        foreach (var img in imageFiles)
+        foreach (var img in imageFiles.Where(img => img.Value == 0))
         {
-            if (img.Value == 0)
-            {
-                if (!unusedImages)
-                    messages.AppendLine("Images directory contains image files that are not referenced in any docs. Consider removing them:");
+            if (!unusedImages)
+                messages.AppendLine("Images directory contains image files that are not referenced in any docs. Consider removing them:");
 
-                unusedImages = true;
-                messages.AppendLine($"  {img.Key}");
-            }
+            unusedImages = true;
+            messages.AppendLine($"  {img.Key}");
         }
 
         if (unusedImages || missingImages)
         {
             Assert.Fail(messages.ToString());
         }
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DefaultInputActionsClassIsUpToDate()
+    {
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        Assert.That(File.Exists(assetFile), Is.True);
+
+        var actions = new DefaultInputActions();
+        var jsonFromActions = actions.asset.ToJson();
+        var jsonFromFile = File.ReadAllText(assetFile);
+
+        Assert.That(jsonFromActions.WithAllWhitespaceStripped(), Is.EqualTo(jsonFromFile.WithAllWhitespaceStripped()));
     }
 }
 #endif

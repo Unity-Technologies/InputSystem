@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// touches supported by the screen. Unlike a <see cref="Touch"/>, a <see cref="Finger"/> will stay the same and valid for the
     /// lifetime of its <see cref="Touchscreen"/>.
     ///
-    /// Note that a Finger does not represent an actual physical finger in the world. I.e. the same Finger instance might be used,
+    /// Note that a Finger does not represent an actual physical finger in the world. That is, the same Finger instance might be used,
     /// for example, for a touch from the index finger at one point and then for a touch from the ring finger. Each Finger simply
     /// corresponds to the Nth touch on the given screen.
     /// </remarks>

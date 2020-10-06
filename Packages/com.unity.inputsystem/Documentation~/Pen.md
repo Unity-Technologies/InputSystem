@@ -9,7 +9,7 @@ Pens are represented by the [`Pen`](../api/UnityEngine.InputSystem.Pen.html) Dev
 You can query the last used or last added pen with [`Pen.current`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_current).
 
 >__Note__:
->* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. Support on macOS is coming in Unity 2020.1.
+>* Pen/tablet support is currently implemented on Windows, UWP, iOS, and Android. macOS is supported in Unity 2020.1+.
 >* Some devices support tracking multiple pens independently. Unity's Input System doesn't support this currently.
 >* iOS: The double-tap interaction on the side of the Apple Pencil is not surfaced as input at the moment. Also, no in-range detection is supported and [`inRange`](../api/UnityEngine.InputSystem.Pen.html#UnityEngine_InputSystem_Pen_inRange) will remain at its default value.
 

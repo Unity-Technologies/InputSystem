@@ -243,7 +243,7 @@ namespace UnityEngine.InputSystem
     /// A binding composite arranges several bindings such that they form a "virtual control".
     /// </summary>
     /// <typeparam name="TValue">Type of value returned by the composite. This must be a "blittable"
-    /// type, i.e. a type whose values can simply be copied around.</typeparam>
+    /// type, that is, a type whose values can simply be copied around.</typeparam>
     /// <remarks>
     /// Composite bindings are a special type of <see cref="InputBinding"/>. Whereas normally
     /// an input binding simply references a set of controls and returns whatever input values are

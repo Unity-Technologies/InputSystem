@@ -7,6 +7,17 @@ namespace UnityEngine.InputSystem
     /// </summary>
     public static class InputExtensions
     {
+        /// <summary>
+        /// Return true if the given phase is <see cref="InputActionPhase.Started"/> or <see cref="InputActionPhase.Performed"/>.
+        /// </summary>
+        /// <param name="phase">An action phase.</param>
+        /// <returns>True if the phase is started or performed.</returns>
+        /// <seealso cref="InputAction.phase"/>
+        public static bool IsInProgress(this InputActionPhase phase)
+        {
+            return phase == InputActionPhase.Started || phase == InputActionPhase.Performed;
+        }
+
         public static bool IsEndedOrCanceled(this TouchPhase phase)
         {
             return phase == TouchPhase.Canceled || phase == TouchPhase.Ended;
