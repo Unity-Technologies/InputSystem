@@ -13,6 +13,7 @@ using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Utilities;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -806,6 +807,20 @@ class APIVerificationTests
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
             CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
         Assert.That(unresolvedLinks, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DefaultInputActionsClassIsUpToDate()
+    {
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        Assert.That(File.Exists(assetFile), Is.True);
+
+        var actions = new DefaultInputActions();
+        var jsonFromActions = actions.asset.ToJson();
+        var jsonFromFile = File.ReadAllText(assetFile);
+
+        Assert.That(jsonFromActions.WithAllWhitespaceStripped(), Is.EqualTo(jsonFromFile.WithAllWhitespaceStripped()));
     }
 }
 #endif
