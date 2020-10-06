@@ -25,7 +25,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// <see cref="Touchscreen"/> may overwrite it with a new touch coming in in the same update whereas this class
     /// will retain all changes that happened on the touchscreen in any particular update.
     ///
-    /// The API makes a distinction between "fingers" and "touches". A touch refers to one contact state change event, i.e. a
+    /// The API makes a distinction between "fingers" and "touches". A touch refers to one contact state change event, that is, a
     /// finger beginning to touch the screen (<see cref="TouchPhase.Began"/>), moving on the screen (<see cref="TouchPhase.Moved"/>),
     /// or being lifted off the screen (<see cref="TouchPhase.Ended"/> or <see cref="TouchPhase.Canceled"/>).
     /// A finger, on the other hand, always refers to the Nth contact on the screen.
