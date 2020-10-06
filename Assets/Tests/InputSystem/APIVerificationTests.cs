@@ -813,7 +813,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    public void API_DocumentationManualDoesNotHaveUnusedImages()
+    public void API_DocumentationManualDoesNotHaveMissingOrUnusedImages()
     {
         const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
         const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
