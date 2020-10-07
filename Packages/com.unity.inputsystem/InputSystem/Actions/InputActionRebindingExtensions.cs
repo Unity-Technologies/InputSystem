@@ -1978,6 +1978,8 @@ namespace UnityEngine.InputSystem
                         !InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
                         continue;
 
+                    ////REVIEW: shouldn't we generally require any already actuated control to go back to 0 actuation before considering it for a rebind?
+
                     // Skip controls that are in their default state.
                     // NOTE: This is the cheapest check with respect to looking at actual state. So
                     //       do this first before looking further at the state.

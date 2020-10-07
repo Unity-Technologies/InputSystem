@@ -23,6 +23,9 @@ using UnityEngine.Profiling;
 
 ////REVIEW: Given that Touchscreen is no use for polling, should we remove Touchscreen.current?
 
+////REVIEW: Should Touchscreen reset individual TouchControls to default(TouchState) after a touch has ended? This would allow
+////        binding to a TouchControl as a whole and the action would correctly cancel if the touch ends
+
 namespace UnityEngine.InputSystem.LowLevel
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "byte to correspond to TouchState layout.")]

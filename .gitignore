@@ -23,6 +23,7 @@ docerrors.log
 Assets/**/*.api
 Assets/**/*.api.meta
 
+Packages/packages-lock.json
 Packages/com.unity.inputsystem/artifacts/**
 Packages/com.unity.inputsystem/build/**
 Packages/com.unity.inputsystem/Documentation~/ApiDocs/**

@@ -3,8 +3,9 @@
 * [Composite Bindings](#composite-bindings)
   * [1D Axis](#1d-axis)
   * [2D Vector](#2d-vector)
-  * [Button with one modifier](#button-with-one-modifier)
-  * [Button with two modifiers](#button-with-two-modifiers)
+  * [3D Vector](#3d-vector)
+  * [One Modifier](#one-modifier)
+  * [Two Modifiers](#two-modifiers)
   * [Writing custom Composites](#writing-custom-composites)
 * [Working with Bindings](#working-with-bindings)
   * [Looking up Bindings](#looking-up-bindings)
@@ -62,15 +63,30 @@ myAction.AddCompositeBinding("Axis")
 
 Each Composite consists of one Binding that has [`InputBinding.isComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isComposite) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposiste`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isPartOfComposite) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings) or [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings) together form a Composite.
 
+Note that each composite part can be bound arbitrary many times.
+
+```CSharp
+// Make both shoulders and triggers pull on the axis.
+myAction.AddCompositeBinding("Axis")
+    .With("Positive", "<Gamepad>/rightTrigger")
+    .With("Positive", "<Gamepad>/rightShoulder")
+    .With("Negative", "<Gamepad>/leftTrigger");
+    .With("Negative", "<Gamepad>/leftShoulder");
+```
+
 Composites can have parameters, just like [Interactions](Interactions.md) and [Processors](Processors.md).
 
 ```CSharp
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently four Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [Button With One Modifier](#button-with-one-modifier) and [Button With Two Modifiers](#button-with-two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
+There are currently five Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [3D-Vector](#3d-vector), [One Modifier](#one-modifier) and [Two Modifiers](#two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
 
 ### 1D axis
+
+![Add 1D Axis Composite](./Images/Add1DAxisComposite.png)
+
+![1D Axis Composite](./Images/1DAxisComposite.png)
 
 A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html) class. The result is a `float`.
 
@@ -103,7 +119,13 @@ If Controls from both the `positive` and the `negative` side are actuated, then 
 |(1) `Positive`|The positive side has precedence and the Composite returns `maxValue`.|
 |(2) `Negative`|The negative side has precedence and the Composite returns `minValue`.|
 
+>__Note__: There is no support yet for interpolating between the positive and negative over time.
+
 ### 2D vector
+
+![Add 2D Vector Composite](./Images/Add2DVectorComposite.png)
+
+![2D Vector Composite](./Images/2DVectorComposite.png)
 
 A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html) class. The result is a `Vector2`.
 
@@ -139,37 +161,92 @@ In addition, you can set the following parameters on a 2D vector Composite:
 |---------|-----------|
 |[`mode`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_mode)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Digital), the behavior is essentially the same as [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Analog), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_down) and [`left`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_left) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized).|
 
-### Button with one modifier
+>__Note__: There is no support yet for interpolating between the up/down/left/right over time.
 
-A Composite that requires the user to press the button that triggers the Action while holding down another "modifier" button (for example, to represent keyboard shortcuts such as Shift+1). Implemented in the [`ButtonWithOneModifier`](../api/UnityEngine.InputSystem.Composites.ButtonWithOneModifier.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+### 3D vector
 
-The result is a `float`.
+![Add 3D Vector Composite](./Images/Add3DVectorComposite.png)
+
+![3D Vector Composite](./Images/3DVectorComposite.png)
+
+A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html) class. The result is a `Vector3`.
 
 ```CSharp
-myAction.AddCompositeBinding("ButtonWithOneModifier")
-    .With("Button", "<Keyboard>/1")
-    .With("Modifier", "<Keyboard>/leftCtrl")
-    .With("Modifier", "<Keyboard>/rightCtrl");
+myAction.AddCompositeBinding("3DVector")
+    .With("Up", "<Keyboard>/w")
+    .With("Down", "<Keyboard>/s")
+    .With("Left", "<Keyboard>/a")
+    .With("Right", "<Keyboard>/d");
+
+// To set mode (2=analog, 1=digital, 0=digitalNormalized):
+myAction.AddCompositeBinding("3DVector(mode=2)")
+    .With("Up", "<Gamepad>/leftStick/up")
+    .With("Down", "<Gamepad>/leftStick/down")
+    .With("Left", "<Gamepad>/leftStick/left")
+    .With("Right", "<Gamepad>/leftStick/right");
+```
+
+The 3D vector Composite has four part Bindings.
+
+|Part|Type|Description|
+|----|----|-----------|
+|[`up`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_up)|`Button`|Controls representing `(0,1,0)` (+Y).|
+|[`down`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_down)|`Button`|Controls representing `(0,-1,0)` (-Y).|
+|[`left`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_left)|`Button`|Controls representing `(-1,0,0)` (-X).|
+|[`right`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_right)|`Button`|Controls representing `(1,0,0)` (+X).|
+|[`forward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_forward)|`Button`|Controls representing `(0,0,1)` (+Z).|
+|[`backward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_backward)|`Button`|Controls representing `(0,0,-1)` (-Z).|
+
+In addition, you can set the following parameters on a 3D vector Composite:
+
+|Parameter|Description|
+|---------|-----------|
+|[`mode`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_mode)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_DigitalNormalized), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right/forward/backward parts is normalized.<br><br>If this is set to [`Mode.Digital`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Digital), the behavior is essentially the same as [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_DigitalNormalized) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Analog), inputs are treated as analog (that is, full floating-point values) and, other than [`down`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_down), [`left`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_left), and [`backward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_backward) being inverted, values will be passed through as they are.<br><br>The default is [`Analog`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Analog).|
+
+### One Modifier
+
+![Add Binding With One Modifier](./Images/AddBindingWithOneModifier.png)
+
+![One Modifier Composite](./Images/OneModifierComposite.png)
+
+A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+
+The result is a value of the same type as the controls bound to the [`binding`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_binding) part.
+
+```CSharp
+// Add binding for "CTRL+1".
+myAction.AddCompositeBinding("OneModifier")
+    .With("Binding", "<Keyboard>/1")
+    .With("Modifier", "<Keyboard>/ctrl")
+
+// Add binding to mouse delta such that it only takes effect
+// while the ALT key is down.
+myAction.AddCompositeBinding("OneModifier")
+    .With("Binding", "<Mouse>/delta")
+    .With("Modifier", "<Keyboard>/alt");
 ```
 
 The button with one modifier Composite has two part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`modifier`](../api/UnityEngine.InputSystem.Composites.ButtonWithOneModifier.html#UnityEngine_InputSystem_Composites_ButtonWithOneModifier_modifier)|`Button`|Modifier that has to be held for `button` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `button` Binding. If the user does not press any button bound to the `modifier`, the Composite has a value of 0.|
-|[`button`](../api/UnityEngine.InputSystem.Composites.ButtonWithOneModifier.html#UnityEngine_InputSystem_Composites_ButtonWithOneModifier_button)|`Button`|The button whose value the Composite assumes while the user holds both the button that triggers the action, and the `modifier`.|
+|[`modifier`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_modifier)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
+|[`binding`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_binding)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
 
 This Composite has no parameters.
 
-### Button with two modifiers
+### Two Modifiers
 
-A Composite that requires the user to press the button that triggers the Action while holding down two other "modifier" button (for example, to represent keyboard shortcuts such as Ctrl+Shift+1). Implemented in the [`ButtonWithTwoModifiers`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+![Add Bindings With Two Modifiers](./Images/AddBindingWithTwoModifiers.png)
 
+![Two Modifiers Composite](./Images/TwoModifiersComposite.png)
 
-The result is a `float`.
+A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+
+The result is a value of the same type as the controls bound to the [`binding`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_binding) part.
 
 ```CSharp
-myAction.AddCompositeBinding("ButtonWithTwoModifiers")
+myAction.AddCompositeBinding("TwoModifiers")
     .With("Button", "<Keyboard>/1")
     .With("Modifier1", "<Keyboard>/leftCtrl")
     .With("Modifier1", "<Keyboard>/rightCtrl")
@@ -181,9 +258,9 @@ The button with two modifiers Composite has three part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`modifier1`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html#UnityEngine_InputSystem_Composites_ButtonWithTwoModifiers_modifier1)|`Button`|The first modifier the user must hold alongside the button that triggers the action, for `button` to come through. If the user does not press any button bound to the `modifier1`, the composite has a value of 0.|
-|[`modifier2`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html#UnityEngine_InputSystem_Composites_ButtonWithTwoModifiers_modifier2)|`Button`|The second modifier the user must hold alongside the button that triggers the action, for `button` to come through. If the user does not press any button bound to the `modifier2`, the composite has a value of 0.|
-|[`button`](../api/UnityEngine.InputSystem.Composites.ButtonWithTwoModifiers.html#UnityEngine_InputSystem_Composites_ButtonWithTwoModifiers_button)|`Button`|The button whose value the Composite assumes while the user presses the button that triggers the action, `modifier1` and `modifier2` at the same time.|
+|[`modifier1`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_modifier1)|`Button`|The first modifier the user must hold alongside `modifier2`, for `binding` to come through. If the user does not press any button bound to the `modifier1`, the Composite remains at default value.|
+|[`modifier2`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_modifier2)|`Button`|The second modifier the user must hold alongside `modifier1`, for `binding` to come through. If the user does not press any button bound to the `modifier2`, the Composite remains at default value.|
+|[`binding`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_binding)|Any|The control(s) whose value the Composite assumes while the user presses both `modifier1` and `modifier2` at the same time.|
 
 This Composite has no parameters.
 
@@ -606,7 +683,7 @@ If multiple Controls are bound to an Action, the Input System monitors input fro
 
 This Control is the "driving" Control; the Control which is driving the Action. Unity decides which Control is currently driving the Action in a process called disambiguation.
 
-During the disambiguation process, the Input System looks at the value of each Control bound to an Action. If the [magnitude](Controls.md#control-actuation) of the input from any Control is higher then the magnitude of the Control currently driving the Action, then the Control with the higher magnitude becomes the new Control driving the Action. In the above example of `<Gamepad>/leftStick` binding to multiple gamepads, the Control driving the Action is the left stick which is actuated the furthest of all the gamepads. You can query which Control is currently driving the Action by checking the [`InputAction.CallbackContext.control`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_control) property in an [Action callback](Actions.md#started-performed-and-canceled-callbacks).
+During the disambiguation process, the Input System looks at the value of each Control bound to an Action. If the [magnitude](Controls.md#control-actuation) of the input from any Control is higher then the magnitude of the Control currently driving the Action, then the Control with the higher magnitude becomes the new Control driving the Action. In the above example of `<Gamepad>/leftStick` binding to multiple gamepads, the Control driving the Action is the left stick which is actuated the furthest of all the gamepads. You can query which Control is currently driving the Action by checking the [`InputAction.CallbackContext.control`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_control) property in an [Action callback](Actions.md#action-callbacks).
 
 If you don't want your Action to perform disambiguation, you can set your Action type to [Pass-Through](Actions.md#pass-through). Pass-Through Actions skip disambiguation, and changes to any bound Control trigger them. The value of a Pass-Through Action is the value of whichever bound Control changed most recently.
 

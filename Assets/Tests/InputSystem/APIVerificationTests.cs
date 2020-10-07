@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
@@ -13,6 +15,7 @@ using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Utilities;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 using PropertyAttribute = NUnit.Framework.PropertyAttribute;
@@ -700,6 +703,14 @@ class APIVerificationTests
     [Property("Exclusions", @"1.0.0
         public static void RemoveAllBindingOverrides(UnityEngine.InputSystem.InputActionMap actionMap);
     ")]
+    // These methods have gained an extra (optional) parameter.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Canceled(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Performed(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
+        public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
+        public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
@@ -798,6 +809,106 @@ class APIVerificationTests
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
             CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
         Assert.That(unresolvedLinks, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DocumentationManualDoesNotHaveMissingOrUnusedImages()
+    {
+        const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
+        const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
+        var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
+
+        // Add files here if you want to ignore them being unreferenced.
+        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InteractionsDiagram.sdxml" };
+
+        var missingImages = false;
+        var unusedImages = false;
+        var messages = new StringBuilder();
+
+        // Record all the files in the images directory.
+        var foundImageFiles = Directory.GetFiles(imagesPath);
+        var imageFiles = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var img in foundImageFiles)
+        {
+            // Ignore hidden files such as those OSX creates
+            if (new FileInfo(img).Attributes.HasFlag(FileAttributes.Hidden))
+                continue;
+
+            var name = img.Replace(imagesPath, string.Empty);
+
+            if (unreferencedIgnoreList.Contains(name))
+                continue;
+
+            imageFiles[name] = 0;
+        }
+
+        // Iterate through all the md doc pages and count the image
+        // references and record missing images.
+        var docsPages = new List<string>(Directory.GetFiles(docsPath, "*.md"));
+
+        // Add the changelog.
+        docsPages.Add("Packages/com.unity.inputsystem/CHANGELOG.md");
+
+        var missingImagesList = new List<string>();
+        foreach (var page in docsPages)
+        {
+            missingImagesList.Clear();
+            var contents = File.ReadAllText(page);
+            var regexMatches = regex.Matches(contents);
+
+            foreach (Match match in regexMatches)
+            {
+                var name = match.Groups["filename"].Value;
+                if (imageFiles.ContainsKey(name))
+                {
+                    imageFiles[name]++;
+                }
+                else
+                {
+                    missingImagesList.Add(name);
+                }
+            }
+
+            if (missingImagesList.Count > 0)
+            {
+                if (!missingImages)
+                    messages.AppendLine("Docs contain referenced image files that do not exist:");
+
+                missingImages = true;
+                messages.AppendLine("  " + page);
+                foreach (var img in missingImagesList)
+                    messages.AppendLine($"    {img}");
+            }
+        }
+
+        foreach (var img in imageFiles.Where(img => img.Value == 0))
+        {
+            if (!unusedImages)
+                messages.AppendLine("Images directory contains image files that are not referenced in any docs. Consider removing them:");
+
+            unusedImages = true;
+            messages.AppendLine($"  {img.Key}");
+        }
+
+        if (unusedImages || missingImages)
+        {
+            Assert.Fail(messages.ToString());
+        }
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DefaultInputActionsClassIsUpToDate()
+    {
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        Assert.That(File.Exists(assetFile), Is.True);
+
+        var actions = new DefaultInputActions();
+        var jsonFromActions = actions.asset.ToJson();
+        var jsonFromFile = File.ReadAllText(assetFile);
+
+        Assert.That(jsonFromActions.WithAllWhitespaceStripped(), Is.EqualTo(jsonFromFile.WithAllWhitespaceStripped()));
     }
 }
 #endif
