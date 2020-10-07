@@ -26,6 +26,8 @@ You can find the corresponding setting in the Player settings (menu: __Edit > Pr
 
 >**Note:** You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
 
+![Active Input Handling](Images/ActiveInputHandling.png)
+
 When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define` is added to builds. Similarly, when the old input backends are enabled, the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define` is added. Because both can be enabled at the same time, it is possible for __both__ defines to be 1 at the same time.
 
 ## Installing samples

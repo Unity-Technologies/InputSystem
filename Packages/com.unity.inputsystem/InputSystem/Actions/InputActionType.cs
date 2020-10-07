@@ -56,7 +56,7 @@ namespace UnityEngine.InputSystem
     /// Also, unlike both <see cref="Button"/> and <see cref="PassThrough"/> actions, <see cref="Value"/>
     /// actions perform what's called "initial state check" on the first input update after the action
     /// was enabled. What this does is check controls bound to the action and if they are already actuated
-    /// (i.e. at non-default value), the action will immediately be started and performed. What
+    /// (that is, at non-default value), the action will immediately be started and performed. What
     /// this means in practice is that when a value action is bound to, say, the left stick on a
     /// gamepad and the stick is already moved out of its resting position, then the action will
     /// immediately trigger instead of first requiring the stick to be moved slightly.

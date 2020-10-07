@@ -360,8 +360,9 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputBinding.path"/>.</param>
         /// <param name="interactions">Names and parameters for interactions to apply to the
         /// binding. See <see cref="InputBinding.interactions"/>.</param>
-        /// <param name="groups">Binding groups to apply to the binding. See <see cref="InputBinding.groups"/>.</param>
+        /// <param name="groups">Optional list of groups to apply to the binding. See <see cref="InputBinding.groups"/>.</param>
         /// <param name="action">Action to trigger from the binding. See <see cref="InputBinding.action"/>.</param>
+        /// <param name="processors">Optional list of processors to apply to the binding. See <see cref="InputBinding.processors"/>.</param>
         /// <returns>A write-accessor to the newly added binding.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c>.</exception>
         /// <remarks>
@@ -377,7 +378,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBinding"/>
         /// <seealso cref="InputActionMap.bindings"/>
         public static BindingSyntax AddBinding(this InputActionMap actionMap, string path,
-            string interactions = null, string groups = null, string action = null)
+            string interactions = null, string groups = null, string action = null, string processors = null)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path), "Binding path cannot be null");
@@ -388,7 +389,8 @@ namespace UnityEngine.InputSystem
                     path = path,
                     interactions = interactions,
                     groups = groups,
-                    action = action
+                    action = action,
+                    processors = processors,
                 });
         }
 
@@ -1467,17 +1469,18 @@ namespace UnityEngine.InputSystem
             /// <c>"Left"</c>, and <c>"Right"</c>.</param>
             /// <param name="binding">Control path to binding to. See <see cref="InputBinding.path"/>.</param>
             /// <param name="groups">Binding groups to assign to the part binding. See <see cref="InputBinding.groups"/>.</param>
+            /// <param name="processors">Optional list of processors to apply to the binding. See <see cref="InputBinding.processors"/>.</param>
             /// <returns>The same composite syntax for further configuration.</returns>
-            public CompositeSyntax With(string name, string binding, string groups = null)
+            public CompositeSyntax With(string name, string binding, string groups = null, string processors = null)
             {
                 ////TODO: check whether non-composite bindings have been added in-between
 
                 int bindingIndex;
                 if (m_Action != null)
-                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups)
+                    bindingIndex = m_Action.AddBinding(path: binding, groups: groups, processors: processors)
                         .m_BindingIndexInMap;
                 else
-                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups)
+                    bindingIndex = m_ActionMap.AddBinding(path: binding, groups: groups, processors: processors)
                         .m_BindingIndexInMap;
 
                 m_ActionMap.m_Bindings[bindingIndex].name = name;

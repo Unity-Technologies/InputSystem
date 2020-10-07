@@ -282,6 +282,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="buttonReleaseThreshold"/>
         /// <seealso cref="Controls.ButtonControl.pressPoint"/>
         /// <seealso cref="Controls.ButtonControl.isPressed"/>
         /// <seealso cref="Interactions.PressInteraction.pressPoint"/>
@@ -297,6 +298,35 @@ namespace UnityEngine.InputSystem
                 if (m_DefaultButtonPressPoint == value)
                     return;
                 m_DefaultButtonPressPoint = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// The percentage of <see cref="defaultButtonPressPoint"/> at which a button that was pressed
+        /// is considered released again.
+        /// </summary>
+        /// <remarks>
+        /// This setting helps avoid flickering around the button press point by introducing something akin to a
+        /// "dead zone" below <see cref="defaultButtonPressPoint"/>. Once a button has been pressed to a magnitude
+        /// of at least <see cref="defaultButtonPressPoint"/>, it is considered pressed and keeps being considered pressed
+        /// until its magnitude falls back to a value of or below <see cref="buttonReleaseThreshold"/> percent of
+        /// <see cref="defaultButtonPressPoint"/>.
+        ///
+        /// This is a percentage rather than a fixed value so it allows computing release
+        /// points even when the press point has been customized. If, for example, a <see cref="Interactions.PressInteraction"/>
+        /// sets a custom <see cref="Interactions.PressInteraction.pressPoint"/>, the respective release point
+        /// can still be computed from the percentage set here.
+        /// </remarks>
+        public float buttonReleaseThreshold
+        {
+            get => m_ButtonReleaseThreshold;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_ButtonReleaseThreshold == value)
+                    return;
+                m_ButtonReleaseThreshold = value;
                 OnChange();
             }
         }
@@ -443,6 +473,7 @@ namespace UnityEngine.InputSystem
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
+        [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;

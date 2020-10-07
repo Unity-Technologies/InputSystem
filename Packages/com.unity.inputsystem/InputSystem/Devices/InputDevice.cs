@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem
         public InputDeviceDescription description => m_Description;
 
         /// <summary>
-        /// Whether the device is currently enabled (i.e. sends and receives events).
+        /// Whether the device is currently enabled (that is, sends and receives events).
         /// </summary>
         /// <remarks>
         /// A device that is disabled will not receive events. I.e. events that are being sent to the device

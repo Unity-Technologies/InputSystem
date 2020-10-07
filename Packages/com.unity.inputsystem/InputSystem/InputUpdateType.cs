@@ -71,6 +71,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal static class InputUpdate
     {
+        public static bool s_HaveUpdatedStepCount;
         public static InputUpdateType s_LastUpdateType;
         public static uint s_UpdateStepCount;
         public static uint s_LastUpdateRetainedEventBytes;
