@@ -1813,9 +1813,11 @@ namespace UnityEngine.InputSystem
 
             // Update action state.
             var newState = trigger;
+
+            // We need to make sure here that any HaveMagnitude flag we may be carrying over from actionState
+            // is handled correctly (case 1239551).
             newState.flags = actionState->flags; // Preserve flags.
-            if (!newState.haveMagnitude)
-                newState.magnitude = ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
+            newState.magnitude = trigger.haveMagnitude ? trigger.magnitude : ComputeMagnitude(trigger.bindingIndex, trigger.controlIndex);
             newState.phase = newPhase;
             if (newPhase == InputActionPhase.Performed)
             {

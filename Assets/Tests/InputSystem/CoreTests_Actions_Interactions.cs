@@ -442,6 +442,47 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(binding: "<Keyboard>/space", interactions: "hold(duration=0.4)");
+        action.AddBinding("<Keyboard>/s");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Press and hold.
+            Press(keyboard.spaceKey, time: 10);
+
+            Assert.That(trace, Started<HoldInteraction>(action, keyboard.spaceKey, time: 10, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+
+            trace.Clear();
+
+            // Exceed hold time. Make sure action performs and *stays* performed.
+            currentTime = 10.5;
+            InputSystem.Update();
+
+            Assert.That(trace,
+                Performed<HoldInteraction>(action, keyboard.spaceKey, time: 10.5, duration: 0.5, value: 1.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+
+            trace.Clear();
+
+            // Release.
+            Release(keyboard.spaceKey, time: 10.6);
+
+            Assert.That(trace, Canceled<HoldInteraction>(action, keyboard.spaceKey, duration: 0.6, time: 10.6, value: 0.0));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(action.ReadValue<float>(), Is.Zero);
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanPerformTapInteraction()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
