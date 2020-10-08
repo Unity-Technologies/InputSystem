@@ -309,7 +309,7 @@ namespace UnityEngine.InputSystem
         // Add a layout constructed from a type.
         // If a layout with the same name already exists, the new layout
         // takes its place.
-        public void RegisterControlLayout(string name, Type type, string @namespace = null)
+        public void RegisterControlLayout(string name, Type type)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
@@ -325,7 +325,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentException($"Types used as layouts have to be InputControls or InputDevices; '{type.Name}' is a '{type.BaseType.Name}'",
                     nameof(type));
 
-            var internedName = InputControlLayout.GetQualifiedLayoutName(name, @namespace);
+            var internedName = new InternedString(name);
             var isReplacement = DoesLayoutExist(internedName);
 
             // All we do is enter the type into a map. We don't construct an InputControlLayout
@@ -357,7 +357,7 @@ namespace UnityEngine.InputSystem
                 isReplacement, isKnownToBeDeviceLayout: isDeviceLayout);
         }
 
-        public void RegisterControlLayout(string json, string name = null, string @namespace = null, bool isOverride = false)
+        public void RegisterControlLayout(string json, string name = null, bool isOverride = false)
         {
             if (string.IsNullOrEmpty(json))
                 throw new ArgumentNullException(nameof(json));
@@ -379,9 +379,6 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException("Layout name has not been given and is not set in JSON layout",
                         nameof(name));
             }
-
-            // Prepend the namespace to the layout name.
-            internedLayoutName = InputControlLayout.GetQualifiedLayoutName(internedLayoutName, @namespace);
 
             // If it's an override, it must have a layout the overrides apply to.
             if (isOverride && baseLayouts.length == 0)
@@ -754,12 +751,12 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void RemoveControlLayout(string name, string @namespace = null)
+        public void RemoveControlLayout(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            var internedName = InputControlLayout.GetQualifiedLayoutName(name, @namespace);
+            var internedName = new InternedString(name);
 
             // Remove all devices using the layout.
             for (var i = 0; i < m_DevicesCount;)

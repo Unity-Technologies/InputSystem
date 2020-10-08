@@ -1488,49 +1488,6 @@ namespace UnityEngine.InputSystem.Layouts
             return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, VariantSeparator[0]);
         }
 
-        /// <summary>
-        /// Gets the fully qualified name of the layout.
-        /// </summary>
-        /// <param name="layout">The name of the layout.</param>
-        /// <param name="namespace">The optional namespace of the layout.</param>
-        /// <returns>Returns the fully qualified name of the layout.</returns>
-        /// <seealso cref="TrimNamespace"/>
-        internal static InternedString GetQualifiedLayoutName(string layout, string @namespace = null)
-        {
-            if (string.IsNullOrEmpty(layout))
-                throw new ArgumentNullException(nameof(layout));
-
-            return !string.IsNullOrEmpty(@namespace) ? new InternedString($"{@namespace}::{layout}") : new InternedString(layout);
-        }
-
-        /// <summary>
-        /// Gets the fully qualified name of the layout.
-        /// </summary>
-        /// <param name="layout">The name of the layout.</param>
-        /// <param name="namespace">The optional namespace of the layout.</param>
-        /// <returns>Returns the fully qualified name of the layout.</returns>
-        /// <seealso cref="TrimNamespace"/>
-        internal static InternedString GetQualifiedLayoutName(InternedString layout, string @namespace = null)
-        {
-            if (layout.IsEmpty())
-                throw new ArgumentNullException(nameof(layout));
-
-            return !string.IsNullOrEmpty(@namespace) ? new InternedString($"{@namespace}::{layout}") : layout;
-        }
-
-        /// <summary>
-        /// Gets a new string in which the leading namespace is removed.
-        /// </summary>
-        /// <param name="layout">The fully qualified name of the layout.</param>
-        /// <returns>Returns the name of the layout without a namespace.</returns>
-        /// <seealso cref="GetQualifiedLayoutName(InternedString, string)"/>
-        /// <seealso cref="GetQualifiedLayoutName(string, string)"/>
-        internal static InternedString TrimNamespace(InternedString layout)
-        {
-            var indexOfLastColon = layout.ToString().LastIndexOf(':');
-            return indexOfLastColon != -1 ? new InternedString(layout.ToString().Substring(indexOfLastColon + 1)) : layout;
-        }
-
         private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
             IEnumerable<ControlItem> controlLayouts, string layoutName)
         {
