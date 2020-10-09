@@ -136,9 +136,6 @@ namespace UnityEngine.InputSystem
             get => m_Selection;
             set
             {
-                if (m_ShowParams.inputFieldHidden)
-                    return;
-
                 if (m_InputFieldText.Length >= value.end && m_InputFieldText.Length >= value.start)
                     OnSelectionChange(value);
             }
