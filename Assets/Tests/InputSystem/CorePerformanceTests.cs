@@ -1,5 +1,3 @@
-////FIXME: ATM the tests don't run properly in players; the performance tests framework triggers a NRE
-#if UNITY_EDITOR // || DEVELOPMENT_BUILD
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using NUnit.Framework;
@@ -11,8 +9,6 @@ using UnityEngine.InputSystem.Users;
 
 ////TODO: add test for domain reload logic
 
-////TODO: switch to using WarmupCount once we can upgrade
-
 // IMPORTANT: When running in editor, make sure to turn off debugging (disable "Editor Attaching" in
 //            editor preferences and restart editor) when running tests here. If debugging is enabled,
 //            the code will run A LOT slower.
@@ -20,8 +16,6 @@ using UnityEngine.InputSystem.Users;
 internal class CorePerformanceTests : InputTestFixture
 {
     ////TODO: same test but with several actions listening on each gamepad
-    // Performing a full state update on 10 devices should take less than 0.01 ms.
-    // STATUS: On 2014 MBP with 2.8GHz i7, passes in less than half that time.
     [Test, Performance]
     [Category("Performance")]
     public void Performance_Update10Gamepads()
@@ -31,11 +25,6 @@ internal class CorePerformanceTests : InputTestFixture
         var gamepads = new Gamepad[kNumGamepads];
         for (var i = 0; i < kNumGamepads; ++i)
             gamepads[i] = InputSystem.AddDevice<Gamepad>();
-
-        // Warm up.
-        for (var i = 0; i < kNumGamepads; ++i)
-            InputSystem.QueueStateEvent(gamepads[i], default(GamepadState));
-        InputSystem.Update();
 
         Measure.Method(() =>
         {
@@ -52,10 +41,6 @@ internal class CorePerformanceTests : InputTestFixture
     public void Performance_UpdateMouse100TimesInFrame()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
-
-        // Warm up.
-        InputSystem.QueueStateEvent(mouse, default(MouseState));
-        InputSystem.Update();
 
         Measure.Method(() =>
         {
@@ -77,10 +62,6 @@ internal class CorePerformanceTests : InputTestFixture
 
         if (enableEnhancedTouch)
             EnhancedTouchSupport.Enable();
-
-        // Warm up.
-        BeginTouch(1, new Vector2(123, 234));
-        EndTouch(1, new Vector2(234, 345));
 
         Measure.Method(() =>
         {
@@ -107,10 +88,6 @@ internal class CorePerformanceTests : InputTestFixture
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        // Warm up.
-        foreach (var key in keyboard.allKeys)
-            key.ReadValue();
-
         Measure.Method(() =>
         {
             foreach (var key in keyboard.allKeys)
@@ -131,9 +108,6 @@ internal class CorePerformanceTests : InputTestFixture
         // Nuke builtin precompiled layouts.
         InputControlLayout.s_Layouts.precompiledLayouts.Clear();
 
-        // Warm up.
-        InputDevice.Build<InputDevice>(layoutName);
-
         Measure.Method(() => InputDevice.Build<InputDevice>(layoutName))
             .MeasurementCount(100)
             .Run();
@@ -146,9 +120,6 @@ internal class CorePerformanceTests : InputTestFixture
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
         action.Enable();
-
-        // Warm up.
-        PressAndRelease(gamepad.buttonSouth);
 
         Measure.Method(() => PressAndRelease(gamepad.buttonSouth))
             .MeasurementCount(100)
@@ -164,10 +135,6 @@ internal class CorePerformanceTests : InputTestFixture
         InputSystem.AddDevice<Touchscreen>();
         ++InputUser.listenForUnpairedDeviceActivity;
         InputUser.onUnpairedDeviceUsed += (control, eventPtr) => {};
-
-        // Warm up.
-        BeginTouch(1, new Vector2(123, 234));
-        EndTouch(1, new Vector2(234, 345));
 
         Measure.Method(() =>
         {
@@ -186,9 +153,6 @@ internal class CorePerformanceTests : InputTestFixture
     [TestCase("Keyboard")]
     public void Performance_CreatePrecompiledDevice(string layoutName)
     {
-        // Warm up.
-        InputDevice.Build<InputDevice>(layoutName);
-
         Measure.Method(() => InputDevice.Build<InputDevice>(layoutName))
             .MeasurementCount(100)
             .Run();
@@ -205,4 +169,3 @@ internal class CorePerformanceTests : InputTestFixture
 
     #endif
 }
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
