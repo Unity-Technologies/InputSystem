@@ -11,23 +11,125 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- The `submit` and the `cancel` actions of the UI input module now trigger on __release__ instead of press. This makes the behavior consistent with clicks triggering UI response on release rather than press.
+
+#### Actions
+
+- Actions of type `InputActionType.Button` now respect button press (and release) points.
+  * Previously, button-type actions, when used without explicit "Press" interactions, would perform immediately when a bound control was actuated.
+  * Now, a button-type action will behave the same as if a "Press" interaction is applied with "Trigger Behavior" set to "Press Only".
+  * This means that a button-type action will now perform (and perform __once__ only) when a control crosses the button press threshold defined in the global settings or, if present, locally on a `ButtonControl`. It will then stay performed and finally cancel only when the control falls back to or below the release threshold.
+- `InputAction.ReadValue<T>()` now always returns `default<T>` when the action is canceled.
+  * This is to make it consistent with `InputAction.CallbackContext.ReadValue<T>()` which already returned `default<T>` when the action was canceled.
+  * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
+
+### Fixed
+
+- Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
+- Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
+- Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
+
+#### Actions
+
+- Fixed Action with multiple bindings becoming unresponsive after a Hold interaction was performed ([case 1239551](https://issuetracker.unity3d.com/issues/input-system-hold-interaction-makes-an-input-action-unresponsive-when-2-or-more-binding-are-attached-to-the-same-input-action)).
+- Fixed `NullReferenceException` when `Player Input` component `Create Action` is pressed and saved ([case 1245921](https://issuetracker.unity3d.com/issues/input-system-nullreferenceexception-is-thrown-when-player-input-component-create-action-is-pressed-and-saved)).
+- Fixed `InputActionTrace.ActionEventPtr.ReadValueAsObject` leading to `InvalidCastException` when trying to read values that came from composite bindings.
+- Fixed not being able to stack a `MultiTap` on top of a `Tap` ([case 1261462](https://issuetracker.unity3d.com/issues/multi-tap-and-tap-interactions-in-the-same-action-doesnt-work-properly)).
+- Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
+- Fixed `Map index on trigger` and `IndexOutOfRangeException` errors when using multiple Interactions on the same Action. ([case 1253034](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-errors-when-using-multiple-interactions-on-the-same-action)).
+- Fixed context menu in action editor not filtering out composites the same way that the `+` icon menu does. This led to, for example, a "2D Vector" composite being shown as an option for a button type action.
+
+### Added
+
+- Added tvOS documentation entries in 'Supported Input Devices' page.
+
+#### Actions
+
+- Added "release thresholds" for buttons.
+  * Release points are now separated from press points by a percentage threshold.
+  * The threshold is defined by `InputSettings.buttonReleaseThreshold`.
+  * Thresholds are defined as percentages of press points. A release is thus defined as a button, after having reached a value of at least `InputSettings.defaultButtonPressPoint` (or whatever local press is used), falling back to a value equal to or less than `InputSettings.buttonReleaseThreshold` percent of the press point.
+  * This is intended to solve the problem of buttons flickering around button press points.
+  * The default threshold is set at 75%, that is, buttons release at 3/4 of the press point.
+- Added new methods to the `InputAction` class:
+  * `InputAction.IsPressed()`: Whether a bound control has crossed the press threshold and has not yet fallen back below the release threshold.
+  * `InputAction.WasPressedThisFrame()`: Whether a bound control has crossed the press threshold this frame.
+  * `InputAction.WasReleasedThisFrame()`: Whether a bound control has fallen back below the release threshold this frame.
+  * `InputAction.WasPerformedThisFrame()`: Whether the action was performed at any point during the current frame. Equivalent to `InputAction.triggered`, which will be deprecated in the future.
+  * `InputAction.Reset()`: Forcibly reset the action state. Cancels the action, if it is currently in progress.
+- Added `InputAction.GetTimeoutCompletionPercentage` to query the amount left to complete a currently ongoing interaction.
+  ```CSharp
+  // Let's say there's a hold interaction on a "warp" action. The user presses a button bound
+  // to the action and then holds it. While the user holds the button, we want to know how much
+  // longer the user will have to hold it so that we can display feedback in the UI.
+  var holdCompleted = playerInput.actions["warp"].GetTimeoutCompletionPercentage();
+  ```
+- Added three new binding composite types:
+  * `OneModifierComposite`: This is a generalization of `ButtonWithOneModifier` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+delta").
+  * `TwoModifiersComposite`: This is a generalization of `ButtonWithTwoModifiers` (which is still available but now hidden from the UI) which also represents bindings such as "SHIFT+CTRL+1" but now can be used to target bindings other than buttons (e.g. "SHIFT+CTRL+delta").
+  * `Vector3Composite`: Works the same way `Vector2Composite` does. Adds a `forward` and `backward` binding in addition to `up`, `down`, `left`, and `right`.
+
+## [1.1.0-preview.1] - 2020-08-20
+>>>>>>> develop
+
+>__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
+
+### Changed
+
 #### Actions
 
 - Auto-generated C# files now have `<auto-generated>` headers so they get ignored by Rider code analysis.
 - Auto-generated C# classes are now `partial` so that they can be manually extended.
+- Deleting a composite binding with `action.ChangeBinding(0).Erase()` now also erases all the bindings that are part of the composite.
+- Trigger binding resolution from within action callbacks (e.g. `InputAction.performed`) will now defer resolution until after the callback has completed.
+  * This fixes crashes such as [case 1242406](https://issuetracker.unity3d.com/issues/mecanim-crash-when-entering-or-exiting-play-mode-destroying-gameobjects) where disabling `PlayerInput` from within an action callback led to an action's state being released while the action was still in a callback.
 
 ### Fixed
 
+- Fixed input history on Android mono build by alligning memory of history records
 - Fixed no input being processed when running a `[UnityTest]` over several frames. Before, this required calling `InputSystem.Update` manually.
 - Fixed clicking on help page button in Unity inspector for Input System components not going to relevant manual pages.
+- Fixed a bug that prevented DualShock controllers from working on tvOS. (case 1221223).
+- `GravitySensor`, `LinearAccelerationSensor`, and `AttitudeSensor` not being initialized on iOS ([case 1251382](https://issuetracker.unity3d.com/product/unity/issues/guid/1251382/)).
+- Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations.
+- Fixed possible `NullReferenceException`s on ARMs with controls that receive automatic memory offsets.
+- Fixed `TouchControl.tapCount` resetting to 0 when "Script Debugging" is enabled (case 1194636).
+- Fixed `Touch.activeTouches` not having a `TouchPhase.Began` entry for touches that moved in the same frame that they began in ([case 1230656](https://issuetracker.unity3d.com/issues/input-system-mobile-enhancedtouch-screen-taps-start-with-moved-or-stationary-phase-instead-of-began)).
+- Fixed sequential taps causing touches to get stuck in `Touch.activeTouches`.
+- Improved performance of `Touch.activeTouches` (most notably, a lot of time was spent in endlessly repetitive safety checks).
+- Fixed `EnhancedTouch` APIs not indicating that they need to be enabled with `EnhancedTouchSupport.Enable()`.
+  - The APIs now throw `InvalidOperationException` when used without being enabled.
+- Fixed memory corruption in `InputEventTrace.AllocateEvent` ([case 1262496](https://issuetracker.unity3d.com/issues/input-system-crash-with-various-stack-traces-when-using-inputactiontrace-dot-subscribetoall))
+  * Manifested itself, for example, as crashes when using `InputActionTrace.SubscribeToAll`.
+- AxisControls and Vector2Controls' X and Y subcontrols on XR devices now have a minimum range of -1 and a maximum range of 1. This means they can now properly respond to modifiers and interactions in the binding system.
 
 #### Actions
 
 - Fixed drag&drop reordering actions while having one control scheme selected causing bindings from other control schemes to be lost ([case 122800](https://issuetracker.unity3d.com/issues/input-system-bindings-get-cleared-for-other-control-scheme-actions-when-reordering-an-action-in-a-specific-control-scheme)).
+- Fixed stack overflow in `PlayerInput.SwitchCurrentActionMap` when called from action callback ([case 1232893](https://issuetracker.unity3d.com/issues/inputsystem-switchcurrentactionmap-causes-a-stackoverflow-when-called-by-each-pahse-of-an-action)).
+- Fixed control picker ending up empty when listing devices in "Supported Devices" ([case 1254150](https://issuetracker.unity3d.com/product/unity/issues/guid/1254150/)).
 
 ### Added
 
 - Device layouts can now be "precompiled" for speed. `Keyboard`, `Mouse`, and `Touchscreen` are now included as precompiled layouts greatly reducing instantiation time and GC heap cost for these devices. For `Touchscreen`, this results in a >20x speed-up for `InputSystem.AddDevice<Touchscreen>()`.
+- Added Pose Control layout. The Pose Control is used on XR Devices and wraps tracking state, position, rotation, and velocity information.
+
+#### Actions
+
+- Can now save binding overrides as JSON strings and restore them from such using the newly added `SaveBindingOverridesAsJson` and `LoadBindingOverridesFromJson` extension methods.
+  ```CSharp
+  void SaveUserRebinds(PlayerInput player)
+  {
+      var rebinds = player.actions.SaveBindingOverridesAsJson();
+      PlayerPrefs.SetString("rebinds", rebinds);
+  }
+
+  void LoadUserRebinds(PlayerInput player)
+  {
+      var rebinds = PlayerPrefs.GetString("rebinds");
+      player.actions.LoadBindingOverridesFromJson(rebinds);
+  }
+  ```
 
 ## [1.0.0] - 2020-04-23
 

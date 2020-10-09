@@ -6,7 +6,7 @@
 
 This guide describes how to install and activate the Input System package for your Unity Project.
 
->__Note__: The new Input System requires Unity 2019.1+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
+>__Note__: The new Input System requires Unity 2019.4+ and the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
 
 ## Installing the package
 
@@ -25,6 +25,8 @@ When you install the Input System package, Unity will ask whether you want to en
 You can find the corresponding setting in the Player settings (menu: __Edit > Project Settings > Player__), under **Active Input Handling**. You can change this setting at any time. Doing so will restart the Editor.
 
 >**Note:** You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
+
+![Active Input Handling](Images/ActiveInputHandling.png)
 
 When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define` is added to builds. Similarly, when the old input backends are enabled, the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define` is added. Because both can be enabled at the same time, it is possible for __both__ defines to be 1 at the same time.
 

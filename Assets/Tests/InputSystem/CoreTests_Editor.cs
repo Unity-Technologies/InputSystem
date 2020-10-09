@@ -29,7 +29,7 @@ using UnityEngine.TestTools;
 partial class CoreTests
 {
     [Serializable]
-    private struct PackageJson
+    internal struct PackageJson
     {
         public string version;
 
@@ -2035,6 +2035,7 @@ partial class CoreTests
         Assert.That(set1Instance, Is.Not.Null);
         var set1map = set1MapGetter.Invoke(set1Instance, null) as InputActionMap;
         Assert.That(set1map, Is.Not.Null);
+        Assert.That(typeof(IInputActionCollection2).IsAssignableFrom(type));
 
         Assert.That(set1map.ToJson(), Is.EqualTo(map1.ToJson()));
     }
@@ -2395,6 +2396,7 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
 
+#if UNITY_STANDALONE // CodeDom API not available in most players.
     [Test]
     [Category("Editor")]
     [TestCase("Mouse", typeof(Mouse))]
@@ -2581,6 +2583,8 @@ partial class CoreTests
         Assert.That(type, Is.Not.Null);
         return type;
     }
+
+#endif
 
     [Test]
     [Category("Editor")]

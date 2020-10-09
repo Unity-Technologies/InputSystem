@@ -151,25 +151,25 @@ namespace UnityEngine.InputSystem.LowLevel
             var alignedSizeInBytes = sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment);
 
             // See if we need to enlarge our buffer.
+            var necessaryCapacity = m_SizeInBytes + alignedSizeInBytes;
             var currentCapacity = capacityInBytes;
-            if (currentCapacity < alignedSizeInBytes)
+            if (currentCapacity < necessaryCapacity)
             {
                 // Yes, so reallocate.
-                var newCapacity = Math.Max(currentCapacity + capacityIncrementInBytes,
-                    currentCapacity + alignedSizeInBytes);
-                var newSize = this.sizeInBytes + newCapacity;
-                if (newSize > int.MaxValue)
+
+                var newCapacity = necessaryCapacity.AlignToMultipleOf(capacityIncrementInBytes);
+                if (newCapacity > int.MaxValue)
                     throw new NotImplementedException("NativeArray long support");
                 var newBuffer =
-                    new NativeArray<byte>((int)newSize, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+                    new NativeArray<byte>((int)newCapacity, Allocator.Persistent, NativeArrayOptions.ClearMemory);
 
                 if (m_Buffer.IsCreated)
+                {
                     UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(), m_Buffer.GetUnsafeReadOnlyPtr(), this.sizeInBytes);
-                else
-                    m_SizeInBytes = 0;
+                    if (m_WeOwnTheBuffer)
+                        m_Buffer.Dispose();
+                }
 
-                if (m_WeOwnTheBuffer)
-                    m_Buffer.Dispose();
                 m_Buffer = newBuffer;
                 m_WeOwnTheBuffer = true;
             }
@@ -244,7 +244,14 @@ namespace UnityEngine.InputSystem.LowLevel
             // end up overwriting the data we need to find the next event in memory.
             var newReadPos = currentReadPos;
             if (numRemainingEvents > 1)
+            {
+                // Don't perform safety check in non-debug builds.
+                #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 newReadPos = InputEvent.GetNextInMemoryChecked(currentReadPos, ref this);
+                #else
+                newReadPos = InputEvent.GetNextInMemory(currentReadPos);
+                #endif
+            }
 
             // If the current event should be left in the buffer, advance write position.
             if (leaveEventInBuffer)

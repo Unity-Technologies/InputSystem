@@ -451,7 +451,7 @@ namespace UnityEngine.InputSystem.Editor
                                     var code = InputLayoutCodeGenerator.GenerateCodeFileForDeviceLayout(layoutItem.layoutName, fileName, prefix: "Fast");
                                     File.WriteAllText(fileName, code);
                                     if (isInAssets)
-                                        AssetDatabase.ImportAsset(fileName);
+                                        AssetDatabase.Refresh();
                                 }
                             });
                         }
@@ -737,6 +737,8 @@ namespace UnityEngine.InputSystem.Editor
                 AddChild(item, "Type: " + layout.type.Name, ref id);
                 if (!string.IsNullOrEmpty(layout.m_DisplayName))
                     AddChild(item, "Display Name: " + layout.m_DisplayName, ref id);
+                if (!string.IsNullOrEmpty(layout.name))
+                    AddChild(item, "Name: " + layout.name, ref id);
                 var baseLayouts = StringHelpers.Join(layout.baseLayouts, ", ");
                 if (!string.IsNullOrEmpty(baseLayouts))
                     AddChild(item, "Extends: " + baseLayouts, ref id);

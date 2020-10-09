@@ -37,6 +37,24 @@ namespace UnityEngine.InputSystem.OnScreen
     /// </remarks>
     public abstract class OnScreenControl : MonoBehaviour
     {
+        /// <summary>
+        /// The control path (see <see cref="InputControlPath"/>) for the control that the on-screen
+        /// control will feed input into.
+        /// </summary>
+        /// <remarks>
+        /// A device will be created from the device layout referenced by the control path (see
+        /// <see cref="InputControlPath.TryGetDeviceLayout"/>). The path is then used to look up
+        /// <see cref="control"/> on the device. The resulting control will be fed values from
+        /// the on-screen control.
+        ///
+        /// Multiple on-screen controls sharing the same device layout will together create a single
+        /// virtual device. If, for example, one component uses <c>"&lt;Gamepad&gt;/buttonSouth"</c>
+        /// and another uses <c>"&lt;Gamepad&gt;/leftStick"</c> as the control path, a single
+        /// <see cref="Gamepad"/> will be created and the first component will feed data to
+        /// <see cref="Gamepad.buttonSouth"/> and the second component will feed data to
+        /// <see cref="Gamepad.leftStick"/>.
+        /// </remarks>
+        /// <seealso cref="InputControlPath"/>
         public string controlPath
         {
             get => controlPathInternal;
@@ -52,8 +70,8 @@ namespace UnityEngine.InputSystem.OnScreen
         /// The actual control that is fed input from the on-screen control.
         /// </summary>
         /// <remarks>
-        /// This is only valid while the on-screen control is enabled. Otherwise, it is null. Also,
-        /// if no <see cref="controlPath"/> has been set, this will remain null even if the component is enabled.
+        /// This is only valid while the on-screen control is enabled. Otherwise, it is <c>null</c>. Also,
+        /// if no <see cref="controlPath"/> has been set, this will remain <c>null</c> even if the component is enabled.
         /// </remarks>
         public InputControl control => m_Control;
 
@@ -62,7 +80,7 @@ namespace UnityEngine.InputSystem.OnScreen
         private InputEventPtr m_InputEventPtr;
 
         /// <summary>
-        ///
+        /// Accessor for the <see cref="controlPath"/> of the component. Must be implemented by subclasses.
         /// </summary>
         /// <remarks>
         /// Moving the definition of how the control path is stored into subclasses allows them to
@@ -168,7 +186,6 @@ namespace UnityEngine.InputSystem.OnScreen
             if (m_Control == null)
                 return;
 
-            ////TODO: only cast once
             if (!(m_Control is InputControl<TValue> control))
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));

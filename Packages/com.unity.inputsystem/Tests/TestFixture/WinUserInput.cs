@@ -1,4 +1,4 @@
-#if UNITY_2019_3_OR_NEWER && (UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN)
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
 
 using System;
 using System.Runtime.InteropServices;
@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 /// <summary>
 /// Used to send fake input events to Windows via user32.dll.
 /// </summary>
-public static class WinUserInput
+internal static class WinUserInput
 {
     [DllImport("user32.dll")]
     public static extern uint SendInput(

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+////REVIEW: why is this public?
+
 ////TODO: add array support
 
 ////TODO: switch parsing to use to Substring
@@ -53,6 +55,14 @@ namespace UnityEngine.InputSystem.Utilities
             return true;
         }
 
+        internal static string ParseName(string text)
+        {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+            var index = 0;
+            return ParseNameAndParameters(text, ref index, true).name;
+        }
+
         public static NameAndParameters Parse(string text)
         {
             if (text == null)
@@ -61,7 +71,7 @@ namespace UnityEngine.InputSystem.Utilities
             return ParseNameAndParameters(text, ref index);
         }
 
-        private static NameAndParameters ParseNameAndParameters(string text, ref int index)
+        private static NameAndParameters ParseNameAndParameters(string text, ref int index, bool nameOnly = false)
         {
             var textLength = text.Length;
 
@@ -81,6 +91,8 @@ namespace UnityEngine.InputSystem.Utilities
             if (index - nameStart == 0)
                 throw new ArgumentException($"Expecting name at position {nameStart} in '{text}'", nameof(text));
             var name = text.Substring(nameStart, index - nameStart);
+            if (nameOnly)
+                return new NameAndParameters {name = name};
 
             // Skip whitespace.
             while (index < textLength && char.IsWhiteSpace(text[index]))

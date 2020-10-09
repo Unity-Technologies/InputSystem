@@ -402,6 +402,8 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
+        ////TODO: After 1.0, make this a simple bool API that *underneath* uses a counter rather than exposing the counter
+        ////      directly to the user.
         /// <summary>
         /// Whether to listen for user activity on currently unpaired devices and invoke <see cref="onUnpairedDeviceUsed"/>
         /// if such activity is detected.

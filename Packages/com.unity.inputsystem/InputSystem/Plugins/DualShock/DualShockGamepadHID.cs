@@ -269,6 +269,8 @@ namespace UnityEngine.InputSystem.DualShock
             ExecuteCommand(ref command);
         }
 
+        ////FIXME: SetLightBarColor and SetMotorSpeeds to not mutually respect their settings
+
         public override void SetLightBarColor(Color color)
         {
             var command = DualShockHIDOutputReport.Create();

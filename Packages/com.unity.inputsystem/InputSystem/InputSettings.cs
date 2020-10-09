@@ -21,6 +21,8 @@ using UnityEngine.InputSystem.Utilities;
 
 ////REVIEW: put default gamepad polling frequency here?
 
+////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
+
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -185,6 +187,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMin;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMin == value)
                     return;
                 m_DefaultDeadzoneMin = value;
@@ -229,6 +232,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultDeadzoneMax;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultDeadzoneMax == value)
                     return;
                 m_DefaultDeadzoneMax = value;
@@ -278,6 +282,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="buttonReleaseThreshold"/>
         /// <seealso cref="Controls.ButtonControl.pressPoint"/>
         /// <seealso cref="Controls.ButtonControl.isPressed"/>
         /// <seealso cref="Interactions.PressInteraction.pressPoint"/>
@@ -289,9 +294,39 @@ namespace UnityEngine.InputSystem
             get => m_DefaultButtonPressPoint;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultButtonPressPoint == value)
                     return;
                 m_DefaultButtonPressPoint = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// The percentage of <see cref="defaultButtonPressPoint"/> at which a button that was pressed
+        /// is considered released again.
+        /// </summary>
+        /// <remarks>
+        /// This setting helps avoid flickering around the button press point by introducing something akin to a
+        /// "dead zone" below <see cref="defaultButtonPressPoint"/>. Once a button has been pressed to a magnitude
+        /// of at least <see cref="defaultButtonPressPoint"/>, it is considered pressed and keeps being considered pressed
+        /// until its magnitude falls back to a value of or below <see cref="buttonReleaseThreshold"/> percent of
+        /// <see cref="defaultButtonPressPoint"/>.
+        ///
+        /// This is a percentage rather than a fixed value so it allows computing release
+        /// points even when the press point has been customized. If, for example, a <see cref="Interactions.PressInteraction"/>
+        /// sets a custom <see cref="Interactions.PressInteraction.pressPoint"/>, the respective release point
+        /// can still be computed from the percentage set here.
+        /// </remarks>
+        public float buttonReleaseThreshold
+        {
+            get => m_ButtonReleaseThreshold;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_ButtonReleaseThreshold == value)
+                    return;
+                m_ButtonReleaseThreshold = value;
                 OnChange();
             }
         }
@@ -310,12 +345,13 @@ namespace UnityEngine.InputSystem
         ///
         /// The default tap time is 0.2 seconds.
         /// </remarks>
-        /// <seealso cref="TapInteraction"/>
+        /// <seealso cref="Interactions.TapInteraction"/>
         public float defaultTapTime
         {
             get => m_DefaultTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultTapTime == value)
                     return;
                 m_DefaultTapTime = value;
@@ -328,6 +364,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultSlowTapTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultSlowTapTime == value)
                     return;
                 m_DefaultSlowTapTime = value;
@@ -340,6 +377,7 @@ namespace UnityEngine.InputSystem
             get => m_DefaultHoldTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_DefaultHoldTime == value)
                     return;
                 m_DefaultHoldTime = value;
@@ -352,6 +390,7 @@ namespace UnityEngine.InputSystem
             get => m_TapRadius;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_TapRadius == value)
                     return;
                 m_TapRadius = value;
@@ -364,6 +403,7 @@ namespace UnityEngine.InputSystem
             get => m_MultiTapDelayTime;
             set
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_MultiTapDelayTime == value)
                     return;
                 m_MultiTapDelayTime = value;
@@ -433,6 +473,7 @@ namespace UnityEngine.InputSystem
         // Having a higher value here also obsoletes the need for custom press points on stick buttons
         // (the up/down/left/right ones).
         [SerializeField] private float m_DefaultButtonPressPoint = 0.5f;
+        [SerializeField] private float m_ButtonReleaseThreshold = 0.75f;
         [SerializeField] private float m_DefaultTapTime = 0.2f;
         [SerializeField] private float m_DefaultSlowTapTime = 0.5f;
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
@@ -473,34 +514,31 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
             /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
             /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
-            /// </summary>
-            /// <remarks>
+            ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
             /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
-            /// </remarks>
+            /// </summary>
             ProcessEventsInFixedUpdate,
 
             /// <summary>
             /// Do not run updates automatically. In this mode, <see cref="InputSystem.Update"/> must be called
             /// manually to update input.
-            /// </summary>
-            /// <remarks>
+            ///
             /// This mode is most useful for placing input updates in the frame explicitly at an exact location.
             ///
             /// Note that failing to call <see cref="InputSystem.Update"/> may result in a lot of events
             /// accumulating or some input getting lost.
-            /// </remarks>
+            /// </summary>
             ProcessEventsManually,
         }
     }

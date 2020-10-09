@@ -751,13 +751,10 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void RemoveControlLayout(string name, string @namespace = null)
+        public void RemoveControlLayout(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
-
-            if (@namespace != null)
-                name = $"{@namespace}::{name}";
 
             var internedName = new InternedString(name);
 
@@ -1659,10 +1656,13 @@ namespace UnityEngine.InputSystem
             // Register composites.
             composites.AddTypeRegistration("1DAxis", typeof(AxisComposite));
             composites.AddTypeRegistration("2DVector", typeof(Vector2Composite));
+            composites.AddTypeRegistration("3DVector", typeof(Vector3Composite));
             composites.AddTypeRegistration("Axis", typeof(AxisComposite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("Dpad", typeof(Vector2Composite));// Alias for pre-0.2 name.
             composites.AddTypeRegistration("ButtonWithOneModifier", typeof(ButtonWithOneModifier));
             composites.AddTypeRegistration("ButtonWithTwoModifiers", typeof(ButtonWithTwoModifiers));
+            composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
+            composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2230,13 +2230,19 @@ namespace UnityEngine.InputSystem
 
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
+            InputUpdate.s_LastUpdateType = updateType;
+            if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
+            {
+                // We want to update step counts to be correct in OnNextUpdate() and onBeforeUpdate callbacks.
+                // We use a boolean flag to tell OnUpdate() that we've already incremented the count.
+                ++InputUpdate.s_UpdateStepCount;
+                InputUpdate.s_HaveUpdatedStepCount = true;
+            }
+
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
             if (m_HaveDevicesWithStateCallbackReceivers && updateType != InputUpdateType.BeforeRender) ////REVIEW: before-render handling is probably wrong
             {
-                ////TODO: have to handle updatecount here, too
-                InputUpdate.s_LastUpdateType = updateType;
-
                 for (var i = 0; i < m_DevicesCount; ++i)
                 {
                     var device = m_Devices[i];
@@ -2341,6 +2347,7 @@ namespace UnityEngine.InputSystem
             Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
             Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
             ButtonControl.s_GlobalDefaultButtonPressPoint = settings.defaultButtonPressPoint;
+            ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
 
             // Let listeners know.
             for (var i = 0; i < m_SettingsChangedListeners.length; ++i)
@@ -2558,7 +2565,9 @@ namespace UnityEngine.InputSystem
             var isBeforeRenderUpdate = false;
             if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
             {
-                ++InputUpdate.s_UpdateStepCount;
+                if (!InputUpdate.s_HaveUpdatedStepCount)
+                    ++InputUpdate.s_UpdateStepCount;
+                InputUpdate.s_HaveUpdatedStepCount = false;
             }
             else if (updateType == InputUpdateType.BeforeRender)
             {

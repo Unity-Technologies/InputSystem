@@ -968,30 +968,113 @@ internal class PlayerInputTests : InputTestFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
-        Set(gamepad.leftTrigger, 0.234f);
+        Set(gamepad.leftTrigger, 0.6f);
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.True);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.False);
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
             new Message("OnControlsChanged", playerInput),
-            new Message("OnFire", 0.234f)
+            new Message("OnFire", 0.6f)
         }));
 
         listener.messages.Clear();
 
         go.SendMessage("SwitchCurrentActionMap", "other");
 
-        Set(gamepad.leftTrigger, 0.345f);
+        Set(gamepad.leftTrigger, 0.7f);
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(
             new[]
             {
-                new Message("OnOtherAction", 0.234f), // otherAction is a value action which implies an initial state check
-                new Message("OnOtherAction", 0.345f)
+                new Message("OnOtherAction", 0.6f), // otherAction is a value action which implies an initial state check
+                new Message("OnOtherAction", 0.7f)
             }));
+    }
+
+    // https://issuetracker.unity3d.com/issues/inputsystem-switchcurrentactionmap-causes-a-stackoverflow-when-called-by-each-pahse-of-an-action
+    // https://fogbugz.unity3d.com/f/cases/1232893/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanSwitchActionMap_FromActionCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInput.onActionTriggered += context => playerInput.SwitchCurrentActionMap("other");
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        Assert.That(playerInput.currentActionMap.name, Is.EqualTo("gameplay"));
+
+        // Start an action. Should immediately lead to a switch.
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.3f));
+
+        Assert.That(playerInput.currentActionMap.name, Is.EqualTo("other"));
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1242406/
+    // This test triggers a number of challenging scenarios within the action system.
+    // From within an action callback, we essentially destroy the entire action setup
+    // and then recreate it.
+    // The first thing the code has to get right to pass the test is to not pull the rug
+    // from under InputActionState while it is in an action callback (such as by re-resolving
+    // bindings while in the callback).
+    // The other thing the code has to get right is to not end up recursively triggering
+    // callbacks that are already running. For example, when we flip PlayerInput off and on
+    // from a Performed callback, we should not see repeated recursive Started or Canceled
+    // callbacks.
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_CanDisableAndReEnablePlayerInput_FromActionCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var started = false;
+
+        var go = new GameObject();
+        go.SetActive(false);
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
+        playerInput.onActionTriggered += context =>
+        {
+            switch (context.phase)
+            {
+                case InputActionPhase.Started:
+                    Assert.That(started, Is.False);
+                    started = true;
+                    break;
+
+                case InputActionPhase.Canceled:
+                    Assert.That(started, Is.True);
+                    started = false;
+                    break;
+
+                case InputActionPhase.Performed:
+                    playerInput.enabled = false;
+                    playerInput.enabled = true;
+                    break;
+            }
+        };
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        // Trigger it repeatedly to increases chances of surfacing memory issues
+        // in case the code does end up releasing memory when it shouldn't.
+        Set(gamepad.leftStick, new Vector2(0.2f, 0.3f));
+        Set(gamepad.leftStick, new Vector2(0.3f, 0.4f));
+        Set(gamepad.leftStick, new Vector2(0.4f, 0.5f));
+        Set(gamepad.leftStick, new Vector2(0.5f, 0.6f));
+        Set(gamepad.leftStick, new Vector2(0.6f, 0.7f));
+        Set(gamepad.leftStick, new Vector2(0.7f, 0.8f));
+        Set(gamepad.leftStick, new Vector2(0.8f, 0.9f));
     }
 
     [Test]
@@ -1080,7 +1163,7 @@ internal class PlayerInputTests : InputTestFixture
 
         if (receivesAllPhases)
         {
-            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("Fire Canceled", 0f)}));
+            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("Fire Canceled")}));
         }
         else
         {
@@ -1463,6 +1546,9 @@ internal class PlayerInputTests : InputTestFixture
     // is refused.
     [Test]
     [Category("PlayerInput")]
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+    [Ignore("Case 1254573")]
+#endif
     public void PlayerInput_JoiningPlayerThroughButtonPress_WillFailIfDeviceIsNotUsableWithPlayerActions()
     {
         var playerPrefab = new GameObject();

@@ -13,10 +13,13 @@ using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
 ////TODO: add test to make sure we're not grabbing HIDs that have more specific layouts
 
+// No HID devices on Android
+#if (!UNITY_ANDROID && !UNITY_IOS) || UNITY_EDITOR
 internal class HIDTests : InputTestFixture
 {
     [Test]
@@ -1301,3 +1304,4 @@ internal class HIDTests : InputTestFixture
         Assert.That(HID.UsageToString((HID.UsagePage) 0xff01, 0x33), Is.Null);
     }
 }
+#endif

@@ -692,6 +692,13 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder WithRange(float minValue, float maxValue)
+                {
+                    builder.m_Controls[index].minValue = minValue;
+                    builder.m_Controls[index].maxValue = maxValue;
+                    return this;
+                }
+
                 public ControlBuilder WithUsages(params InternedString[] usages)
                 {
                     if (usages == null || usages.Length == 0)
@@ -1572,7 +1579,8 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Description = description,
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
-                    m_Variants = new InternedString(variant)
+                    m_Variants = new InternedString(variant),
+                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1595,10 +1603,6 @@ namespace UnityEngine.InputSystem.Layouts
                     else
                         throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
                 }
-
-                // Add common usages.
-                if (commonUsages != null)
-                    layout.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
 
                 // Add controls.
                 if (controls != null)
@@ -1623,7 +1627,7 @@ namespace UnityEngine.InputSystem.Layouts
                 return new LayoutJson
                 {
                     name = layout.m_Name,
-                    type = layout.type.AssemblyQualifiedName,
+                    type = layout.type?.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
                     description = layout.m_Description,
@@ -1632,7 +1636,9 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
+                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
+                    beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };
             }
         }

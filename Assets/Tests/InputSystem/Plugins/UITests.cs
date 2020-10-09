@@ -134,6 +134,9 @@ internal class UITests : InputTestFixture
     [TestCase("Touchscreen", UIPointerType.Touch, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     [TestCase("TrackedDeviceWithButton", UIPointerType.Tracked, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     [TestCase("GenericDeviceWithPointingAbility", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254576")]
+#endif
     public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, UIPointerType pointerType, PointerEventData.InputButton clickButton)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1014,6 +1017,9 @@ internal class UITests : InputTestFixture
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254576")]
+#endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1410,6 +1416,9 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("UI")]
+#if UNITY_ANDROID && !UNITY_EDITOR
+    [Ignore("Case 1254576")]
+#endif
     public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1846,8 +1855,7 @@ internal class UITests : InputTestFixture
         }
 
         // Check Player 0 Submit
-        InputSystem.QueueStateEvent(gamepads[0], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.Update();
+        PressAndRelease(gamepads[0].buttonSouth);
 
         foreach (var player in players)
         {
@@ -1861,8 +1869,7 @@ internal class UITests : InputTestFixture
         players[0].rightChildReceiver.events.Clear();
 
         // Check Player 1 Submit
-        InputSystem.QueueStateEvent(gamepads[1], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.Update();
+        PressAndRelease(gamepads[1].buttonSouth);
 
         foreach (var player in players)
         {

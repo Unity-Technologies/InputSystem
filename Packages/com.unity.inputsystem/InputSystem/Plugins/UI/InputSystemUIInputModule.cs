@@ -52,7 +52,16 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// How to deal with the presence of pointer-type input from multiple devices.
         /// </summary>
-        /// <value>Wh </value>
+        /// <remarks>
+        /// By default, this is set to <see cref="UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack"/> which will
+        /// treat input from <see cref="Mouse"/> and <see cref="Pen"/> devices as coming from a single on-screen pointer
+        /// but will treat input from devices such as <see cref="XR.XRController"/> and <see cref="Touchscreen"/> as
+        /// their own discrete pointers.
+        ///
+        /// The primary effect of this setting is to determine whether the user can concurrently point at more than
+        /// a single UI element or not. Whenever multiple pointers are allowed, more than one element may have a pointer
+        /// over it at any one point and thus several elements can be interacted with concurrently.
+        /// </remarks>
         public UIPointerBehavior pointerBehavior
         {
             get => m_PointerBehavior;
@@ -525,14 +534,21 @@ namespace UnityEngine.InputSystem.UI
             // Process submit and cancel events.
             if (!usedSelectionChange && eventSystem.currentSelectedGameObject != null)
             {
+                // NOTE: Whereas we use callbacks for the other actions, we rely on WasReleasedThisFrame() for
+                //       submit and cancel. This makes their behavior consistent with pointer click behavior where
+                //       a click will register on button *up*. This nuance in behavior becomes important in
+                //       combination with action enable/disable changes in response to submit or cancel. If we
+                //       react to button *down* instead of *up*, the button *up* will come in *after* we have
+                //       applied the state change.
+                var submitAction = m_SubmitAction?.action;
+                var cancelAction = m_CancelAction?.action;
+
                 var data = GetBaseEventData();
-                if (m_NavigationState.cancelButton.wasPressedThisFrame)
+                if (cancelAction != null && cancelAction.WasReleasedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                if (!data.used && m_NavigationState.submitButton.wasPressedThisFrame)
+                if (!data.used && submitAction != null && submitAction.WasReleasedThisFrame())
                     ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
             }
-
-            m_NavigationState.OnFrameFinished();
         }
 
         [FormerlySerializedAs("m_RepeatDelay")]
@@ -612,7 +628,7 @@ namespace UnityEngine.InputSystem.UI
             if (property == newValue || (property != null && newValue != null && property.action == newValue.action))
                 return;
 
-            if (property != null && actionsHooked)
+            if (property != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed -= actionCallback;
                 property.action.canceled -= actionCallback;
@@ -621,14 +637,14 @@ namespace UnityEngine.InputSystem.UI
             property = newValue;
 
             #if DEBUG
-            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough)
+            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough && newValue.action.m_Type != InputActionType.Button)
             {
-                Debug.LogWarning("Actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
+                Debug.LogWarning("Non-button actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
                     + $"input from multiple devices (action {newValue.action} is set to {newValue.action.type})", this);
             }
             #endif
 
-            if (newValue != null && actionsHooked)
+            if (newValue != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
                 property.action.canceled += actionCallback;
@@ -927,7 +943,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference submit
         {
             get => m_SubmitAction;
-            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, m_OnSubmitDelegate);
+            set => SwapAction(ref m_SubmitAction, value, m_ActionsHooked, null);
         }
 
         /// <summary>
@@ -967,7 +983,7 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference cancel
         {
             get => m_CancelAction;
-            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, m_OnCancelDelegate);
+            set => SwapAction(ref m_CancelAction, value, m_ActionsHooked, null);
         }
 
         /// <summary>
@@ -1507,16 +1523,6 @@ namespace UnityEngine.InputSystem.UI
             m_NavigationState.move = context.ReadValue<Vector2>();
         }
 
-        private void OnSubmit(InputAction.CallbackContext context)
-        {
-            m_NavigationState.submitButton.isPressed = context.ReadValueAsButton();
-        }
-
-        private void OnCancel(InputAction.CallbackContext context)
-        {
-            m_NavigationState.cancelButton.isPressed = context.ReadValueAsButton();
-        }
-
         private void OnTrackedDeviceOrientation(InputAction.CallbackContext context)
         {
             ref var state = ref GetPointerStateFor(ref context);
@@ -1539,7 +1545,6 @@ namespace UnityEngine.InputSystem.UI
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
             if (!eventSystem.isFocused)
             {
-                m_NavigationState.OnFrameFinished();
                 for (var i = 0; i < m_PointerStates.length; ++i)
                     m_PointerStates[i].OnFrameFinished();
             }
@@ -1580,10 +1585,6 @@ namespace UnityEngine.InputSystem.UI
                 m_OnScrollWheelDelegate = OnScroll;
             if (m_OnMoveDelegate == null)
                 m_OnMoveDelegate = OnMove;
-            if (m_OnSubmitDelegate == null)
-                m_OnSubmitDelegate = OnSubmit;
-            if (m_OnCancelDelegate == null)
-                m_OnCancelDelegate = OnCancel;
             if (m_OnTrackedDeviceOrientationDelegate == null)
                 m_OnTrackedDeviceOrientationDelegate = OnTrackedDeviceOrientation;
             if (m_OnTrackedDevicePositionDelegate == null)
@@ -1608,8 +1609,6 @@ namespace UnityEngine.InputSystem.UI
             SetActionCallback(m_LeftClickAction, m_OnLeftClickDelegate, install);
             SetActionCallback(m_RightClickAction, m_OnRightClickDelegate, install);
             SetActionCallback(m_MiddleClickAction, m_OnMiddleClickDelegate, install);
-            SetActionCallback(m_SubmitAction, m_OnSubmitDelegate, install);
-            SetActionCallback(m_CancelAction, m_OnCancelDelegate, install);
             SetActionCallback(m_ScrollWheelAction, m_OnScrollWheelDelegate, install);
             SetActionCallback(m_TrackedDeviceOrientationAction, m_OnTrackedDeviceOrientationDelegate, install);
             SetActionCallback(m_TrackedDevicePositionAction, m_OnTrackedDevicePositionDelegate, install);
@@ -1704,8 +1703,6 @@ namespace UnityEngine.InputSystem.UI
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
-        private Action<InputAction.CallbackContext> m_OnSubmitDelegate;
-        private Action<InputAction.CallbackContext> m_OnCancelDelegate;
         private Action<InputAction.CallbackContext> m_OnLeftClickDelegate;
         private Action<InputAction.CallbackContext> m_OnRightClickDelegate;
         private Action<InputAction.CallbackContext> m_OnMiddleClickDelegate;

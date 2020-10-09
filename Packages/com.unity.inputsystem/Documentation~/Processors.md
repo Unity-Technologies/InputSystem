@@ -27,6 +27,24 @@ An Input Processor takes a value and returns a processed result for it. The rece
 
 You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md).
 
+Each Processor is [registered](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) using a unique name. To replace an existing Processor, register your own Processor under an existing name.
+
+Processors can have parameters which can be booleans, integers, or floating-point numbers. When created in data such as [bindings](./ActionBindings.md), processors are described as strings that look like function calls:
+
+```CSharp
+    // This references the processor registered as "scale" and sets its "factor"
+    // parameter (a floating-point value) to a value of 2.5.
+
+    "scale(factor=2.5)"
+
+    // Multiple processors can be chained together. They are processed
+    // from left to right.
+    //
+    // Example: First invert the value, then normalize [0..10] values to [0..1].
+
+    "invert,normalize(min=0,max=10)"
+```
+
 ### Processors on Bindings
 
 When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](#invert-vector-2) Processor to your Binding.
@@ -209,6 +227,8 @@ A stick deadzone Processor scales the values of a Vector2 Control, such as a sti
 
 You can also write custom Processors to use in your Project. Custom Processors are available in the UI and code in the same way as the built-in Processors. Add a class derived from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
 
+>__IMPORTANT__: Processors must be __stateless__. This means you cannot store local state in a processor that will change depending on the input being processed. The reason for this is because processors are not part of the [input state](./Controls.md#control-state) that the Input System keeps.
+
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
 {
@@ -237,7 +257,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
     }
     #endif
 
-    [RuntimeInitializeOnLoadMethod]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void Initialize()
     {
         InputSystem.RegisterProcessor<MyValueShiftProcessor>();

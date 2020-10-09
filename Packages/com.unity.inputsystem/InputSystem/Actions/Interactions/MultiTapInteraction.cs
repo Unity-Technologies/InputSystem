@@ -4,6 +4,10 @@ using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
+////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
+
+////TODO: add ability to perform on final press rather than on release
+
 ////TODO: change this so that the interaction stays performed when the tap count is reached until the button is released
 
 namespace UnityEngine.InputSystem.Interactions
@@ -63,6 +67,7 @@ namespace UnityEngine.InputSystem.Interactions
         private float tapTimeOrDefault => tapTime > 0.0 ? tapTime : InputSystem.settings.defaultTapTime;
         internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
@@ -83,12 +88,21 @@ namespace UnityEngine.InputSystem.Interactions
                         m_CurrentTapPhase = TapPhase.WaitingForNextRelease;
                         m_CurrentTapStartTime = context.time;
                         context.Started();
-                        context.SetTimeout(tapTimeOrDefault);
+
+                        var maxTapTime = tapTimeOrDefault;
+                        var maxDelayInBetween = tapDelayOrDefault;
+                        context.SetTimeout(maxTapTime);
+
+                        // We'll be using multiple timeouts so set a total completion time that
+                        // effects the result of InputAction.GetTimeoutCompletionPercentage()
+                        // such that it accounts for the total time we allocate for the interaction
+                        // rather than only the time of one single timeout.
+                        context.SetTotalTimeoutCompletionTime(maxTapTime * tapCount + (tapCount - 1) * maxDelayInBetween);
                     }
                     break;
 
                 case TapPhase.WaitingForNextRelease:
-                    if (!context.ControlIsActuated(pressPointOrDefault))
+                    if (!context.ControlIsActuated(releasePointOrDefault))
                     {
                         if (context.time - m_CurrentTapStartTime <= tapTimeOrDefault)
                         {

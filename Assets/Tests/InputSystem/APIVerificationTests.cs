@@ -4,6 +4,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Mono.Cecil;
 using UnityEditor.PackageManager.DocumentationTools.UI;
@@ -13,8 +15,10 @@ using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Utilities;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
+using PropertyAttribute = NUnit.Framework.PropertyAttribute;
 
 class APIVerificationTests
 {
@@ -575,6 +579,221 @@ class APIVerificationTests
         Assert.That(brokenHelpUrls, Is.Empty);
     }
 
+    private const string kAPIDirectory = "Tools/API";
+
+    ////FIXME: The .api-based checks are temporary and don't account for platform-specific APIs. Nuke these tests as soon
+    ////       as we can switch back to API validation performed by the Package Validation Suite (as soon as Adriano's fix
+    ////       for the access modifier false positive has landed).
+
+    // The .api files are platform-specific so we can only compare on the platform
+    // they were built on.
+    #if UNITY_EDITOR_WIN
+
+    // We disable "API Verification" tests running as part of the validation suite as they give us
+    // false positives (specifically, for setters having changes accessibility from private to protected).
+    // Instead, we run our own check here which, instead of comparing to the previous artifact on the
+    // package repo (like the validation suite does), we keep a checked-in XML file with the public API
+    // that we compare against. This also makes it much easier to run this test locally (rather than
+    // having to install and run the package validation suite manually).
+    [Test]
+    [Category("API")]
+    // This is our whitelist for changes to existing APIs that we are fine with. Each exclusion
+    // starts with the version number of the API that was changed and then each line lists the API
+    // that is whitelisted for a change.
+    //
+    // NOTE: ATM we do not actually check for the right context of these definitions.
+    //
+    // The following properties have setters that changed from being private to being protected.
+    // This is not a breaking change as no existing code will fail to compile.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonEast { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonNorth { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonSouth { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl buttonWest { get; }
+        public UnityEngine.InputSystem.Controls.DpadControl dpad { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftShoulder { get; }
+        public UnityEngine.InputSystem.Controls.StickControl leftStick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftStickButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftTrigger { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightShoulder { get; }
+        public UnityEngine.InputSystem.Controls.StickControl rightStick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightStickButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightTrigger { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl selectButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl startButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control hatswitch { get; }
+        public UnityEngine.InputSystem.Controls.StickControl stick { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl trigger { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl altKey { get; }
+        public UnityEngine.InputSystem.Controls.AnyKeyControl anyKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl ctrlKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl imeSelected { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl shiftKey { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl backButton { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl clickCount { get; }
+        public static UnityEngine.InputSystem.Mouse current { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl forwardButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl middleButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control scroll { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl eraser { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl firstBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl fourthBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl inRange { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl secondBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl thirdBarrelButton { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control tilt { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl tip { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl twist { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl press { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control delta { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl indirectTouch { get; }
+        public UnityEngine.InputSystem.Controls.TouchPhaseControl phase { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control position { get; }
+        public UnityEngine.InputSystem.Controls.TouchPressControl press { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl pressure { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control radius { get; }
+        public UnityEngine.InputSystem.Controls.Vector2Control startPosition { get; }
+        public UnityEngine.InputSystem.Controls.DoubleControl startTime { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl tap { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl tapCount { get; }
+        public UnityEngine.InputSystem.Controls.IntegerControl touchId { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl leftTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl playStationButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl rightTriggerButton { get; }
+        public UnityEngine.InputSystem.Controls.TouchControl primaryTouch { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl down { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl left { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl right { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl up { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl x { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl y { get; }
+        public UnityEngine.InputSystem.Controls.AxisControl z { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L1 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L2 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl L3 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl optionsButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R1 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R2 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl R3 { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl shareButton { get; }
+        public UnityEngine.InputSystem.Controls.ButtonControl touchpadButton { get; }
+        public UnityEngine.InputSystem.Utilities.ReadOnlyArray<UnityEngine.InputSystem.Controls.TouchControl> touches { get; }
+        public virtual System.Collections.Generic.IEnumerator<TValue> GetEnumerator();
+    ")]
+    // InputActionAsset and InputActionMap changed from IInputActionCollection to IInputActionCollection2 with
+    // the latter just being based on the former.
+    [Property("Exclusions", @"1.0.0
+        public class InputActionAsset : UnityEngine.ScriptableObject, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, UnityEngine.InputSystem.IInputActionCollection
+        public sealed class InputActionMap : System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.InputAction>, System.Collections.IEnumerable, System.ICloneable, System.IDisposable, UnityEngine.InputSystem.IInputActionCollection, UnityEngine.ISerializationCallbackReceiver
+    ")]
+    // FindAction is now defined at the IInputActionCollection2 level and thus no longer introduced separately
+    // by InputActionMap and InputActionAsset.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.InputAction FindAction(string actionNameOrId, bool throwIfNotFound = False);
+        public UnityEngine.InputSystem.InputAction FindAction(string nameOrId, bool throwIfNotFound = False);
+    ")]
+    // RemoveAllBindingOverrides(InputActionMap) is now RemoveAllBindingOverrides (IInputActionCollection2).
+    [Property("Exclusions", @"1.0.0
+        public static void RemoveAllBindingOverrides(UnityEngine.InputSystem.InputActionMap actionMap);
+    ")]
+    // These methods have gained an extra (optional) parameter.
+    [Property("Exclusions", @"1.0.0
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Canceled(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Performed(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
+        public UnityEngine.InputSystem.InputTestFixture.ActionConstraint Started(UnityEngine.InputSystem.InputAction action, UnityEngine.InputSystem.InputControl control = default(UnityEngine.InputSystem.InputControl), System.Nullable<double> time = default(System.Nullable<double>));
+        public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
+        public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
+    ")]
+    public void API_MinorVersionsHaveNoBreakingChanges()
+    {
+        var currentVersion = CoreTests.PackageJson.ReadVersion();
+        var apiVersions = Directory.GetDirectories(kAPIDirectory)
+            .Select(p => new Version(Path.GetFileName(p)))
+            .ToList();
+        apiVersions.Sort();
+
+        Assert.That(apiVersions, Has.Count.GreaterThanOrEqualTo(1), "Did not find a checked in .api version in " + kAPIDirectory);
+
+        var lastReleasedVersion = apiVersions[apiVersions.Count - 1];
+        Assert.That(currentVersion, Is.Not.EqualTo(lastReleasedVersion), "Must bump package version when making changes.");
+
+        var exclusions =
+            TestContext.CurrentContext.Test.Properties["Exclusions"].OfType<string>()
+                .Where(t => t.StartsWith(lastReleasedVersion.ToString())).SelectMany(t => t.Split(new[] { "\n", "\r\n", "\r" },
+                    StringSplitOptions.None)).ToArray();
+
+        if (currentVersion.Major == lastReleasedVersion.Major)
+        {
+            Unity.Coding.Editor.ApiScraping.ApiScraping.Scrape();
+
+            var currentApiFiles = Directory.GetFiles("Packages/com.unity.inputsystem", "*.api", SearchOption.AllDirectories);
+            var lastPublicApiFiles = Directory.GetFiles(Path.Combine(kAPIDirectory, lastReleasedVersion.ToString()), "*.api");
+
+            Assert.That(lastPublicApiFiles.Where(p => !currentApiFiles.Any(x => Path.GetFileName(x) == Path.GetFileName(p))),
+                Is.Empty,
+                "Any API file existing for the last published release must also exist for the current one.");
+
+            var missingLines = lastPublicApiFiles.SelectMany(p => MissingLines(Path.GetFileName(p), currentApiFiles, lastPublicApiFiles, exclusions))
+                .ToList();
+            Assert.That(missingLines, Is.Empty);
+        }
+    }
+
+    private static IEnumerable<string> MissingLines(string apiFile, string[] currentApiFiles, string[] lastPublicApiFiles, string[] exclusions)
+    {
+        var oldApiFile = lastPublicApiFiles.First(p => Path.GetFileName(p) == apiFile);
+        var newApiFile = currentApiFiles.First(p => Path.GetFileName(p) == apiFile);
+
+        var oldApiContents = File.ReadAllLines(oldApiFile).Select(FilterIgnoredChanges).ToArray();
+        var newApiContents = File.ReadAllLines(newApiFile).Select(FilterIgnoredChanges).ToArray();
+
+        foreach (var line in oldApiContents)
+        {
+            if (!newApiContents.Contains(line) && !exclusions.Any(x => x.Trim() == line.Trim()))
+                yield return line;
+        }
+    }
+
+    private static string FilterIgnoredChanges(string line)
+    {
+        if (line.Length == 0)
+            return line;
+
+        var pos = 0;
+        while (true)
+        {
+            // Skip whitespace.
+            while (pos < line.Length && char.IsWhiteSpace(line[pos]))
+                ++pos;
+
+            if (pos < line.Length && line[pos] != '[')
+                return line;
+
+            var startPos = pos;
+            ++pos;
+            while (pos < line.Length + 1 && !(line[pos] == ']' && line[pos + 1] == ' '))
+                ++pos;
+            ++pos;
+
+            var length = pos - startPos - 2;
+            var attribute = line.Substring(startPos + 1, length);
+            if (!attribute.StartsWith("System.Obsolete"))
+            {
+                line = line.Substring(0, startPos) + line.Substring(pos + 1); // Snip space after ']'.
+                pos -= length + 2;
+            }
+        }
+    }
+
+    #endif // UNITY_EDITOR_WIN
+
     ////TODO: add verification of *online* links to this; probably prone to instability and maybe they shouldn't fail tests but would
     ////      be great to have some way of diagnosing links that have gone stale
     [Test]
@@ -590,6 +809,106 @@ class APIVerificationTests
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
             CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
         Assert.That(unresolvedLinks, Is.Empty);
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DocumentationManualDoesNotHaveMissingOrUnusedImages()
+    {
+        const string docsPath = "Packages/com.unity.inputsystem/Documentation~/";
+        const string imagesPath = "Packages/com.unity.inputsystem/Documentation~/images/";
+        var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
+
+        // Add files here if you want to ignore them being unreferenced.
+        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InteractionsDiagram.sdxml" };
+
+        var missingImages = false;
+        var unusedImages = false;
+        var messages = new StringBuilder();
+
+        // Record all the files in the images directory.
+        var foundImageFiles = Directory.GetFiles(imagesPath);
+        var imageFiles = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var img in foundImageFiles)
+        {
+            // Ignore hidden files such as those OSX creates
+            if (new FileInfo(img).Attributes.HasFlag(FileAttributes.Hidden))
+                continue;
+
+            var name = img.Replace(imagesPath, string.Empty);
+
+            if (unreferencedIgnoreList.Contains(name))
+                continue;
+
+            imageFiles[name] = 0;
+        }
+
+        // Iterate through all the md doc pages and count the image
+        // references and record missing images.
+        var docsPages = new List<string>(Directory.GetFiles(docsPath, "*.md"));
+
+        // Add the changelog.
+        docsPages.Add("Packages/com.unity.inputsystem/CHANGELOG.md");
+
+        var missingImagesList = new List<string>();
+        foreach (var page in docsPages)
+        {
+            missingImagesList.Clear();
+            var contents = File.ReadAllText(page);
+            var regexMatches = regex.Matches(contents);
+
+            foreach (Match match in regexMatches)
+            {
+                var name = match.Groups["filename"].Value;
+                if (imageFiles.ContainsKey(name))
+                {
+                    imageFiles[name]++;
+                }
+                else
+                {
+                    missingImagesList.Add(name);
+                }
+            }
+
+            if (missingImagesList.Count > 0)
+            {
+                if (!missingImages)
+                    messages.AppendLine("Docs contain referenced image files that do not exist:");
+
+                missingImages = true;
+                messages.AppendLine("  " + page);
+                foreach (var img in missingImagesList)
+                    messages.AppendLine($"    {img}");
+            }
+        }
+
+        foreach (var img in imageFiles.Where(img => img.Value == 0))
+        {
+            if (!unusedImages)
+                messages.AppendLine("Images directory contains image files that are not referenced in any docs. Consider removing them:");
+
+            unusedImages = true;
+            messages.AppendLine($"  {img.Key}");
+        }
+
+        if (unusedImages || missingImages)
+        {
+            Assert.Fail(messages.ToString());
+        }
+    }
+
+    [Test]
+    [Category("API")]
+    public void API_DefaultInputActionsClassIsUpToDate()
+    {
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        Assert.That(File.Exists(assetFile), Is.True);
+
+        var actions = new DefaultInputActions();
+        var jsonFromActions = actions.asset.ToJson();
+        var jsonFromFile = File.ReadAllText(assetFile);
+
+        Assert.That(jsonFromActions.WithAllWhitespaceStripped(), Is.EqualTo(jsonFromFile.WithAllWhitespaceStripped()));
     }
 }
 #endif

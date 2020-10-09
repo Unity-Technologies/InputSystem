@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem
     /// when <see cref="InputAction.started"/>, <see cref="InputAction.performed"/>, and <see cref="InputAction.canceled"/>
     /// are called.
     ///
-    /// The default interaction (i.e. when no interaction has been added to a binding or the
+    /// The default interaction (that is, when no interaction has been added to a binding or the
     /// action that the binding targets) will generally start and perform an action as soon as a control
     /// is actuated, then perform the action whenever the value of the control changes except if the value
     /// changes back to the default in which case the action is cancelled.
@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem
     /// // Create a fire action with two interactions:
     /// // 1. Hold. Triggers charged firing. Has to come first as otherwise "Press" will immediately perform the action.
     /// // 2. Press. Triggers instant firing.
-    /// // NOTE: An alternative is to use "Tap;Hold", i.e. a "Tap" first and then a "Hold". The difference
+    /// // NOTE: An alternative is to use "Tap;Hold", that is, a "Tap" first and then a "Hold". The difference
     /// //       is relatively minor. In this setup, the "Tap" turns into a "Hold" if the button is held for
     /// //       longer than the tap time whereas in the setup below, the "Hold" turns into a "Press" if the
     /// //       button is released before the hold time has been reached.
@@ -105,7 +105,7 @@ namespace UnityEngine.InputSystem
     ///         InputSystem.RegisterInteraction&lt;MyInteraction&gt;();
     ///     }
     ///
-    ///     [RuntimeInitializeOnLoad]
+    ///     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     ///     private static void Initialize()
     ///     {
     ///         // Will execute the static constructor as a side effect.
