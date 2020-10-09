@@ -8,8 +8,13 @@ namespace UnityEngine.InputSystem
     /// </summary>
     class FakeScreenKeyboard : ScreenKeyboard
     {
+#if UNITY_EDITOR
+        private FakeScreenKeyboardVisualization m_Visualization;
+#endif
+
         string m_InputFieldText;
         RangeInt m_Selection;
+
         class FakeScreenKeyboardDispatcher : MonoBehaviour
         {
         }
@@ -55,10 +60,30 @@ namespace UnityEngine.InputSystem
 #endif
         }
 
+#if UNITY_EDITOR
+        private FakeScreenKeyboardVisualization Visualization
+        {
+            get
+            {
+                if (!Application.isPlaying)
+                    return null;
+                if (m_Visualization != null)
+                    return m_Visualization;
+                var go = new GameObject("Unity" + nameof(FakeScreenKeyboardVisualization));
+                m_Visualization = go.AddComponent<FakeScreenKeyboardVisualization>();
+                m_Visualization.SetCallbacks(this, OnSelectionChange);
+                return m_Visualization;
+            }
+        }
+#endif
+
         private IEnumerator QueueStatusChangeVisible()
         {
             yield return Waiting();
             ReportStateChange(ScreenKeyboardState.Visible);
+#if UNITY_EDITOR
+            Visualization.Show(m_ShowParams);
+#endif
         }
 
         protected override void InternalHide()
