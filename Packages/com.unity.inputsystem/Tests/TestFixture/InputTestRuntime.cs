@@ -332,7 +332,7 @@ namespace UnityEngine.InputSystem
 
         public ScreenOrientation screenOrientation { set; get; } = ScreenOrientation.Portrait;
 
-        ScreenKeyboard m_ScreenKeyboard = new FakeScreenKeyboard();
+        ScreenKeyboard m_ScreenKeyboard = new EmulatedScreenKeyboard();
         public ScreenKeyboard screenKeyboard
         {
             get => m_ScreenKeyboard;

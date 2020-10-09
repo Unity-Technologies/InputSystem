@@ -94,7 +94,7 @@ public class ScreenKeyboardTests : InputTestFixture
                 throw new Exception("No Screen Keyboard to test?");
 
 #if UNITY_EDITOR
-            Assert.AreEqual(_keyboard.GetType(), typeof(FakeScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType(), typeof(EmulatedScreenKeyboard));
 #elif UNITY_ANDROID
             Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.Android.AndroidScreenKeyboard));
 #elif UNITY_IOS
@@ -284,7 +284,6 @@ public class ScreenKeyboardTests : InputTestFixture
 
         yield return ShowKeyboard(new ScreenKeyboardShowParams { inputFieldHidden = inputFieldHidden }, callbacks);
 
-        var targetText = "Hello";
         keyboard.inputFieldText = "Hello";
 
         // Note: Even if input field is hidden we want selection to behave normally

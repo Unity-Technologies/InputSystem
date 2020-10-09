@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    class FakeScreenKeyboardVisualization : MonoBehaviour
+    class EmulatedScreenKeyboardVisualization : MonoBehaviour
     {
         enum ShiftState
         {
@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem
 
         private class KeyboardKey
         {
-            protected FakeScreenKeyboardVisualization m_Parent;
+            protected EmulatedScreenKeyboardVisualization m_Parent;
 
             private string m_DisplayName;
 
@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem
 
             public GUILayoutOption[] GUIOptions { set; get; }
 
-            internal KeyboardKey(FakeScreenKeyboardVisualization parent)
+            internal KeyboardKey(EmulatedScreenKeyboardVisualization parent)
             {
                 m_Parent = parent;
                 GUIOptions = new GUILayoutOption[] { GUILayout.Height(70), GUILayout.MinWidth(Styles.ButtonHeight) };
@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem
         {
             public ShiftState State { set; get; }
 
-            internal ShiftKey(FakeScreenKeyboardVisualization parent) : base(parent) {}
+            internal ShiftKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
             internal override void DoGUI()
             {
@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem
         {
             public LayoutState State { set; get; }
 
-            internal LayoutKey(FakeScreenKeyboardVisualization parent) : base(parent) {}
+            internal LayoutKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
             internal override void DoGUI()
             {
@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem
 
         private class BackspaceKey : KeyboardKey
         {
-            internal BackspaceKey(FakeScreenKeyboardVisualization parent) : base(parent) {}
+            internal BackspaceKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
             internal override void DoGUI()
             {
@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem
 
         private class OkKey : KeyboardKey
         {
-            internal OkKey(FakeScreenKeyboardVisualization parent) : base(parent) {}
+            internal OkKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
             internal override void DoGUI()
             {
@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem
         /// Called when selection is changed via UI means, for ex., clicking on input field via mouse
         /// </summary>
         private Action<RangeInt> m_ReportSelectionChange;
-        private FakeScreenKeyboard m_ScreenKeyboard;
+        private EmulatedScreenKeyboard m_ScreenKeyboard;
 
 
         private LettersLine[] m_LetterLines;
@@ -171,7 +171,7 @@ namespace UnityEngine.InputSystem
         private bool m_ResetSelection;
         private List<KeyboardKey> m_KeyQueue = new List<KeyboardKey>();
 
-        internal void SetCallbacks(FakeScreenKeyboard screenKeyboard, Action<RangeInt> reportSelectionChange)
+        internal void SetCallbacks(EmulatedScreenKeyboard screenKeyboard, Action<RangeInt> reportSelectionChange)
         {
             m_ScreenKeyboard = screenKeyboard;
             m_ReportSelectionChange = reportSelectionChange;

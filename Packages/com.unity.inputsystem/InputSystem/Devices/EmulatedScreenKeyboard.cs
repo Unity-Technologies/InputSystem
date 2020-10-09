@@ -6,10 +6,10 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Mock screen keyboard class, which simulates screen keyboard behavior and is validated by the tests in ScreenKeyboardTests.cs
     /// </summary>
-    class FakeScreenKeyboard : ScreenKeyboard
+    class EmulatedScreenKeyboard : ScreenKeyboard
     {
 #if UNITY_EDITOR
-        private FakeScreenKeyboardVisualization m_Visualization;
+        private EmulatedScreenKeyboardVisualization m_Visualization;
 #endif
 
         string m_InputFieldText;
@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem
         {
         }
 
-        internal FakeScreenKeyboard()
+        internal EmulatedScreenKeyboard()
         {
         }
 
@@ -31,10 +31,10 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                var go = GameObject.Find("Unity" + nameof(FakeScreenKeyboard));
+                var go = GameObject.Find("Unity" + nameof(EmulatedScreenKeyboard));
                 if (go == null)
                 {
-                    go = new GameObject(nameof(FakeScreenKeyboard));
+                    go = new GameObject(nameof(EmulatedScreenKeyboard));
                     go.AddComponent<FakeScreenKeyboardDispatcher>();
                 }
                 return go.GetComponent<FakeScreenKeyboardDispatcher>();
@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        private FakeScreenKeyboardVisualization Visualization
+        private EmulatedScreenKeyboardVisualization Visualization
         {
             get
             {
@@ -69,8 +69,8 @@ namespace UnityEngine.InputSystem
                     return null;
                 if (m_Visualization != null)
                     return m_Visualization;
-                var go = new GameObject("Unity" + nameof(FakeScreenKeyboardVisualization));
-                m_Visualization = go.AddComponent<FakeScreenKeyboardVisualization>();
+                var go = new GameObject("Unity" + nameof(EmulatedScreenKeyboardVisualization));
+                m_Visualization = go.AddComponent<EmulatedScreenKeyboardVisualization>();
                 m_Visualization.SetCallbacks(this, OnSelectionChange);
                 return m_Visualization;
             }
