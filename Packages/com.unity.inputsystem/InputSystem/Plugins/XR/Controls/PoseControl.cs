@@ -1,3 +1,4 @@
+#if (UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR) || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
@@ -221,3 +222,4 @@ namespace UnityEngine.InputSystem.XR
         }
     }
 }
+#endif

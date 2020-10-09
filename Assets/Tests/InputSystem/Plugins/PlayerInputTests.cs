@@ -968,29 +968,29 @@ internal class PlayerInputTests : InputTestFixture
         playerInput.defaultActionMap = "gameplay";
         playerInput.actions = InputActionAsset.FromJson(kActions);
 
-        Set(gamepad.leftTrigger, 0.234f);
+        Set(gamepad.leftTrigger, 0.6f);
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.True);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.False);
         Assert.That(listener.messages, Is.EquivalentTo(new[]
         {
             new Message("OnControlsChanged", playerInput),
-            new Message("OnFire", 0.234f)
+            new Message("OnFire", 0.6f)
         }));
 
         listener.messages.Clear();
 
         go.SendMessage("SwitchCurrentActionMap", "other");
 
-        Set(gamepad.leftTrigger, 0.345f);
+        Set(gamepad.leftTrigger, 0.7f);
 
         Assert.That(playerInput.actions.FindActionMap("gameplay").enabled, Is.False);
         Assert.That(playerInput.actions.FindActionMap("other").enabled, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(
             new[]
             {
-                new Message("OnOtherAction", 0.234f), // otherAction is a value action which implies an initial state check
-                new Message("OnOtherAction", 0.345f)
+                new Message("OnOtherAction", 0.6f), // otherAction is a value action which implies an initial state check
+                new Message("OnOtherAction", 0.7f)
             }));
     }
 
@@ -1163,7 +1163,7 @@ internal class PlayerInputTests : InputTestFixture
 
         if (receivesAllPhases)
         {
-            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("Fire Canceled", 0f)}));
+            Assert.That(listener.messages, Is.EquivalentTo(new[] {new Message("Fire Canceled")}));
         }
         else
         {
