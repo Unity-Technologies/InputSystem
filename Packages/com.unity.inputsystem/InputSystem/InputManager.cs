@@ -751,13 +751,10 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void RemoveControlLayout(string name, string @namespace = null)
+        public void RemoveControlLayout(string name)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
-
-            if (@namespace != null)
-                name = $"{@namespace}::{name}";
 
             var internedName = new InternedString(name);
 

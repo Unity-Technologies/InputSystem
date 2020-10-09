@@ -1295,14 +1295,13 @@ namespace UnityEngine.InputSystem
 
                     if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
                     {
-                        return ((interactionState.totalTimeoutCompletionDone + (timerCompletion * interactionState.timerDuration))  /
-                            (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining));
+                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration)  /
+                            (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining);
                     }
                     else
                     {
                         return timerCompletion;
                     }
-                    break;
 
                 case InputActionPhase.Performed:
                     return 1;
