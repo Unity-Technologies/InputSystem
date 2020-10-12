@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
 - Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
 - Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
+- Fixed use of UI `Slider` causing drag thresholds to no longer work ([case 1275834](https://issuetracker.unity3d.com/issues/inputsystem-drag-threshold-value-is-ignored-for-scroll-view-after-interacting-with-a-slider-slash-scroll-bar)).
 
 #### Actions
 
@@ -70,7 +71,6 @@ however, it has to be formatted properly to pass verification tests.
   * `Vector3Composite`: Works the same way `Vector2Composite` does. Adds a `forward` and `backward` binding in addition to `up`, `down`, `left`, and `right`.
 
 ## [1.1.0-preview.1] - 2020-08-20
->>>>>>> develop
 
 >__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
 
