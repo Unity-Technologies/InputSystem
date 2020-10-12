@@ -130,7 +130,7 @@ namespace UnityEngine.InputSystem
         {
             if (m_UseReference)
                 return m_Reference != null ? m_Reference.GetHashCode() : 0;
-            return m_Action.GetHashCode();
+            return m_Action != null ? m_Action.GetHashCode() : 0;
         }
 
         /// <summary>
