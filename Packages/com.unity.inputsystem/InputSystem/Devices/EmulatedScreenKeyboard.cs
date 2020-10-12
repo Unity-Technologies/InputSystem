@@ -21,6 +21,8 @@ namespace UnityEngine.InputSystem
 
         internal EmulatedScreenKeyboard()
         {
+            m_InputFieldText = string.Empty;
+            m_Selection = new RangeInt(0, 0);
         }
 
         public override void Dispose()
@@ -138,6 +140,16 @@ namespace UnityEngine.InputSystem
             {
                 if (m_InputFieldText.Length >= value.end && m_InputFieldText.Length >= value.start)
                     OnSelectionChange(value);
+            }
+        }
+
+        public override Rect occludingArea
+        {
+            get
+            {
+                if (Visualization == null)
+                    return Rect.zero;
+                return Visualization.area;
             }
         }
 

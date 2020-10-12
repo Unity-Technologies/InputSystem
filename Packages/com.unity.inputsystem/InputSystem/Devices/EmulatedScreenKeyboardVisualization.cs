@@ -391,7 +391,10 @@ namespace UnityEngine.InputSystem
 
         public void OnGUI()
         {
-            var rc = new Rect(0, Screen.height - m_KeyboardHeightOffset, Screen.height, Screen.width);
+            if (m_KeyboaradLines == null)
+                return;
+
+            var rc = area;
             GUI.Box(rc, GUIContent.none);
             GUILayout.BeginArea(rc);
             GUILayout.BeginVertical(GUILayout.Height(Screen.height), GUILayout.Width(Screen.width));
@@ -404,6 +407,14 @@ namespace UnityEngine.InputSystem
                 DoLineGUI(line);
             GUILayout.EndVertical();
             GUILayout.EndArea();
+        }
+
+        public Rect area
+        {
+            get
+            {
+                return new Rect(0, Screen.height - m_KeyboardHeightOffset, Screen.width, m_KeyboardHeight);
+            }
         }
     }
 }
