@@ -56,12 +56,15 @@ namespace UnityEngine.InputSystem
                 GUIOptions = new GUILayoutOption[] { GUILayout.Height(70), GUILayout.MinWidth(Styles.ButtonHeight) };
             }
 
-            internal virtual void DoGUI()
+            internal virtual bool DoGUI()
             {
                 if (GUILayout.Button(DisplayName, Styles.ButtonStyle, GUIOptions))
                 {
                     m_Parent.OnKey(this);
+                    return true;
                 }
+
+                return false;
             }
         }
 
@@ -71,7 +74,7 @@ namespace UnityEngine.InputSystem
 
             internal ShiftKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
-            internal override void DoGUI()
+            internal override bool DoGUI()
             {
                 var name = "Shift";
                 switch (State)
@@ -89,7 +92,10 @@ namespace UnityEngine.InputSystem
                     if (State == ShiftState.Disabled) State = ShiftState.EnableForOneLetter;
                     else if (State == ShiftState.EnableForOneLetter) State = ShiftState.Enable;
                     else if (State == ShiftState.Enable) State = ShiftState.Disabled;
+                    return true;
                 }
+
+                return false;
             }
         }
 
@@ -99,7 +105,7 @@ namespace UnityEngine.InputSystem
 
             internal LayoutKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
-            internal override void DoGUI()
+            internal override bool DoGUI()
             {
                 var name = State == LayoutState.Symbols ? "/123" : "ABC";
                 if (GUILayout.Button(name, Styles.ButtonStyle, GUIOptions))
@@ -114,7 +120,9 @@ namespace UnityEngine.InputSystem
                     else if (State == LayoutState.Symbols)
                         lines.AddRange(m_Parent.m_SymbolLines);
                     lines.Add(m_Parent.m_BottomLine);
+                    return true;
                 }
+                return false;
             }
         }
 
@@ -122,12 +130,14 @@ namespace UnityEngine.InputSystem
         {
             internal BackspaceKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
-            internal override void DoGUI()
+            internal override bool DoGUI()
             {
                 if (GUILayout.Button("Backspace", Styles.ButtonStyle, GUIOptions))
                 {
                     m_Parent.OnKey(this);
+                    return true;
                 }
+                return false;
             }
         }
 
@@ -135,12 +145,14 @@ namespace UnityEngine.InputSystem
         {
             internal OkKey(EmulatedScreenKeyboardVisualization parent) : base(parent) {}
 
-            internal override void DoGUI()
+            internal override bool DoGUI()
             {
                 if (GUILayout.Button("Ok", Styles.ButtonStyle, GUIOptions))
                 {
                     m_Parent.m_ScreenKeyboard.Hide();
+                    return true;
                 }
+                return false;
             }
         }
 
@@ -300,14 +312,18 @@ namespace UnityEngine.InputSystem
                 m_ShiftKey.State = ShiftState.Disabled;
         }
 
-        private void DoLineGUI(LettersLine line)
+        private bool DoLineGUI(LettersLine line)
         {
+            bool result = false;
             GUILayout.BeginHorizontal();
             foreach (var letter in line.Letters)
             {
-                letter.DoGUI();
+                result = letter.DoGUI();
+                if (result)
+                    break;
             }
             GUILayout.EndHorizontal();
+            return result;
         }
 
         private void DoInputFieldGUI()
@@ -404,7 +420,10 @@ namespace UnityEngine.InputSystem
                 DoInputFieldGUI();
 
             foreach (var line in m_KeyboaradLines)
-                DoLineGUI(line);
+            {
+                if (DoLineGUI(line))
+                    break;
+            }
             GUILayout.EndVertical();
             GUILayout.EndArea();
         }
