@@ -184,7 +184,7 @@ namespace UnityEngine.InputSystem
         /// Binding masks can be applied at three different levels: for an entire asset through
         /// <see cref="InputActionAsset.bindingMask"/>, for a specific map through this property,
         /// and for single actions through <see cref="InputAction.bindingMask"/>. By default,
-        /// none of the masks will be set (i.e. they will be <c>null</c>).
+        /// none of the masks will be set (that is, they will be <c>null</c>).
         ///
         /// When an action is enabled, all the binding masks that apply to it are taken into
         /// account. Specifically, this means that any given binding on the action will be
@@ -225,7 +225,7 @@ namespace UnityEngine.InputSystem
         /// <value>Optional set of devices to use by bindings in the map.</value>
         /// <remarks>
         /// By default (with this property being <c>null</c>), bindings will bind to any of the
-        /// controls available through <see cref="InputSystem.devices"/>, i.e. controls from all
+        /// controls available through <see cref="InputSystem.devices"/>, that is, controls from all
         /// devices in the system will be used.
         ///
         /// By setting this property, binding resolution can instead be restricted to just specific
@@ -1165,6 +1165,9 @@ namespace UnityEngine.InputSystem
                     }
                     if (m_Asset != null)
                         InputActionState.NotifyListenersOfActionChange(InputActionChange.BoundControlsChanged, m_Asset);
+
+                    // Fire InputBindingComposite.FinishSetup() calls.
+                    m_State.FinishBindingCompositeSetups();
 
                     // Re-enable actions.
                     if (hasEnabledActions)

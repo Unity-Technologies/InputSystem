@@ -21,6 +21,60 @@ namespace UnityEngine.InputSystem
     public struct InputBindingCompositeContext
     {
         /// <summary>
+        /// Information about a control bound to a part of a composite.
+        /// </summary>
+        public struct PartBinding
+        {
+            /// <summary>
+            /// Identifier of the part. This is the numeric identifier stored in the public
+            /// fields of the composite by the input system.
+            /// </summary>
+            public int part { get; set; }
+
+            /// <summary>
+            /// The control bound to the part.
+            /// </summary>
+            public InputControl control { get; set; }
+        }
+
+        /// <summary>
+        /// Enumerate all the controls that are part of the composite.
+        /// </summary>
+        /// <seealso cref="InputBindingComposite.FinishSetup"/>
+        public IEnumerable<PartBinding> controls
+        {
+            get
+            {
+                if (m_State == null)
+                    yield break;
+
+                var totalBindingCount = m_State.totalBindingCount;
+                for (var bindingIndex = m_BindingIndex + 1; bindingIndex < totalBindingCount; ++bindingIndex)
+                {
+                    var bindingState = m_State.GetBindingState(bindingIndex);
+                    if (!bindingState.isPartOfComposite)
+                        break;
+
+                    var controlStartIndex = bindingState.controlStartIndex;
+                    for (var i = 0; i < bindingState.controlCount; ++i)
+                    {
+                        var control = m_State.controls[controlStartIndex + i];
+                        yield return new PartBinding
+                        {
+                            part = bindingState.partIndex,
+                            control = control
+                        };
+                    }
+                }
+            }
+        }
+
+        public float EvaluateMagnitude(int partNumber)
+        {
+            return m_State.EvaluateCompositePartMagnitude(m_BindingIndex, partNumber);
+        }
+
+        /// <summary>
         /// Read the value of the giving part binding.
         /// </summary>
         /// <param name="partNumber">Number of the part to read. This is assigned
@@ -132,6 +186,8 @@ namespace UnityEngine.InputSystem
 
             return value;
         }
+
+        ////TODO: once we can break the API, remove the versions that rely on comparers and do everything through magnitude
 
         /// <summary>
         /// Read the value of the given part bindings and use the given <paramref name="comparer"/>
@@ -248,10 +304,22 @@ namespace UnityEngine.InputSystem
             if (m_State == null)
                 return default;
 
+            ////REVIEW: wouldn't this have to take release points into account now?
+
             var buttonValue = false;
             m_State.ReadCompositePartValue<float, DefaultComparer<float>>(m_BindingIndex, partNumber, &buttonValue,
                 out _);
             return buttonValue;
+        }
+
+        public unsafe void ReadValue(int partNumber, void* buffer, int bufferSize)
+        {
+            m_State?.ReadCompositePartValue(m_BindingIndex, partNumber, buffer, bufferSize);
+        }
+
+        public object ReadValueAsObject(int partNumber)
+        {
+            return m_State.ReadCompositePartValueAsObject(m_BindingIndex, partNumber);
         }
 
         internal InputActionState m_State;

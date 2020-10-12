@@ -363,7 +363,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// True if any of the override properties, i.e. <see cref="overridePath"/>, <see cref="overrideProcessors"/>,
+        /// True if any of the override properties, that is, <see cref="overridePath"/>, <see cref="overrideProcessors"/>,
         /// and/or <see cref="overrideInteractions"/>, are set (not <c>null</c>).
         /// </summary>
         public bool hasOverrides => overridePath != null || overrideProcessors != null || overrideInteractions != null;

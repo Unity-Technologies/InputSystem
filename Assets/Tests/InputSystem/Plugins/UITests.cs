@@ -1855,8 +1855,7 @@ internal class UITests : InputTestFixture
         }
 
         // Check Player 0 Submit
-        InputSystem.QueueStateEvent(gamepads[0], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.Update();
+        PressAndRelease(gamepads[0].buttonSouth);
 
         foreach (var player in players)
         {
@@ -1870,8 +1869,7 @@ internal class UITests : InputTestFixture
         players[0].rightChildReceiver.events.Clear();
 
         // Check Player 1 Submit
-        InputSystem.QueueStateEvent(gamepads[1], new GamepadState { buttons = 1 << (int)GamepadButton.South });
-        InputSystem.Update();
+        PressAndRelease(gamepads[1].buttonSouth);
 
         foreach (var player in players)
         {
