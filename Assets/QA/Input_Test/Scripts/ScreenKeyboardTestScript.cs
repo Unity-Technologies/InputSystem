@@ -297,4 +297,13 @@ Selection: {m_ScreenKeyboard.selection.start}, {m_ScreenKeyboard.selection.lengt
     {
         m_ScreenKeyboard.logging = m_KeyboardLogging.isOn;
     }
+
+    public Rect GetOccludingArea()
+    {
+        if (m_ScreenKeyboard.state == ScreenKeyboardState.Visible)
+            return m_ScreenKeyboard.occludingArea;
+        else if (TouchScreenKeyboard.visible)
+            return TouchScreenKeyboard.area;
+        return Rect.zero;
+    }
 }
