@@ -148,11 +148,11 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Provides screen keyboard callbacks
     /// </summary>
-    /// Note: We use delegates here instead of events to disallow a potential bug from users
-    ///       If these would be events, the order in which callbacks would invoked would be undefined.
-    ///       Imagine if in one of the inputFieldTextChanged callbacks we change the input field text.
-    ///       The other inputFieldTextChanged would still receive the original changed text which is wrong and could lead to potential problems.
-    /// Note: We use this approach with class callbacks, since it's more future proof, if we add an additional callback in the future, it won't break existing user projects.
+    // Note: We use delegates here instead of events to disallow a potential bug from users
+    //       If these would be events, the order in which callbacks would invoked would be undefined.
+    //       Imagine if in one of the inputFieldTextChanged callbacks we change the input field text.
+    //       The other inputFieldTextChanged would still receive the original changed text which is wrong and could lead to potential problems.
+    // Note: We use this approach with class callbacks, since it's more future proof, if we add an additional callback in the future, it won't break existing user projects.
     internal struct ScreenKeyboardCallbacks
     {
         /// <summary>
@@ -190,7 +190,7 @@ namespace UnityEngine.InputSystem
         private ScreenKeyboardCallbacks m_Callbacks;
 
         /// <summary>
-        /// Returns the state of the keyboard
+        /// Returns the state of the keyboard.
         /// </summary>
         public ScreenKeyboardState state
         {
@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Cleanup any platform specific resources
+        /// Cleanup any platform specific resources.
         /// </summary>
         public virtual void Dispose()
         {
@@ -221,7 +221,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Hide screen keyboard
+        /// Hides the screen keyboard.
         /// </summary>
         public void Hide()
         {
