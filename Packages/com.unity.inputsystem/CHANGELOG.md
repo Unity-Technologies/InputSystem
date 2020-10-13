@@ -38,6 +38,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
 - Fixed `Map index on trigger` and `IndexOutOfRangeException` errors when using multiple Interactions on the same Action. ([case 1253034](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-errors-when-using-multiple-interactions-on-the-same-action)).
 - Fixed context menu in action editor not filtering out composites the same way that the `+` icon menu does. This led to, for example, a "2D Vector" composite being shown as an option for a button type action.
+- Fixed initial state checks for composite bindings failing if performed repeatedly. For example, doing a `ReadValue<Vector2>` for a WASD binding would return an incorrect value after disabling the the map twice while no input from the keyboard was received ([case 1274977](https://issuetracker.unity3d.com/issues/input-system-cannot-read-vector2-values-after-inputactionset-has-been-disabled-and-enabled-twice)).
 
 ### Added
 
