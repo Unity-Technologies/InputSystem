@@ -846,7 +846,7 @@ namespace UnityEngine.InputSystem
                     continue;
 
                 Debug.Assert(!bindingStatePtr->isPartOfComposite, "Initial state check flag must be set on composite, not on its parts");
-                bindingStates[bindingIndex].initialStateCheckPending = false;
+                bindingStatePtr->initialStateCheckPending = false;
 
                 var mapIndex = bindingStatePtr->mapIndex;
                 var controlStartIndex = bindingStatePtr->controlStartIndex;
