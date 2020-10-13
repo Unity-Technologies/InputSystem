@@ -862,11 +862,12 @@ namespace UnityEngine.InputSystem
                     {
                         // For composites, the binding index we have at this point is for the composite binding, not for the part
                         // binding that contributes the control we're looking at. Adjust for that.
+                        var bindingIndexForControl = bindingIndex;
                         if (isComposite)
-                            bindingIndex = controlIndexToBindingIndex[controlIndex];
-                        
-                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, default);
-                        
+                            bindingIndexForControl = controlIndexToBindingIndex[controlIndex];
+
+                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndexForControl, time, default);
+
                         // For composites, any one actuated control will lead to the composite being
                         // processed as a whole so we can stop here. This also ensure that we are
                         // not triggering the composite repeatedly if there are multiple actuated
