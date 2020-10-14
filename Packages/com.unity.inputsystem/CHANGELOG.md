@@ -22,7 +22,7 @@ however, it has to be formatted properly to pass verification tests.
 - `InputAction.ReadValue<T>()` now always returns `default<T>` when the action is canceled.
   * This is to make it consistent with `InputAction.CallbackContext.ReadValue<T>()` which already returned `default<T>` when the action was canceled.
   * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
-- If multiple actions in different action maps but in the same .inputactions asset have the same name, calling `InputActionAsset.FindAction()` with just an action name will now return the first __enabled__ action. If none of the actions are enabled, it will return the first action with a matching as before ([case 1207550](https://issuetracker.unity3d.com/issues/input-system-action-can-only-be-triggered-by-one-of-the-action-maps-when-action-name-is-identical)).
+- If multiple actions in different action maps but in the same .inputactions asset have the same name, calling `InputActionAsset.FindAction()` with just an action name will now return the first __enabled__ action. If none of the actions are enabled, it will return the first action with a matching name as before ([case 1207550](https://issuetracker.unity3d.com/issues/input-system-action-can-only-be-triggered-by-one-of-the-action-maps-when-action-name-is-identical)).
   ```CSharp
   var map1 = new InputActionMap("map1");
   var map2 = new InputActionMap("map2");
