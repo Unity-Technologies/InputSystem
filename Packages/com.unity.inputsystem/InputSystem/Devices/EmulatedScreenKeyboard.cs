@@ -147,9 +147,13 @@ namespace UnityEngine.InputSystem
         {
             get
             {
+#if !UNITY_EDITOR
+                return Rect.zero;
+#else
                 if (Visualization == null)
                     return Rect.zero;
                 return Visualization.area;
+#endif
             }
         }
 
