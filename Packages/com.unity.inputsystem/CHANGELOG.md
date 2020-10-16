@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
 - Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
 - Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
+- Fixed "On-Screen Controls" sample still using `StandaloneInputModule` and thus throwing `InvalidOperationException` when used with "Active Input Handling" set to "Input System Package (New)" ([case 1201866](https://issuetracker.unity3d.com/issues/input-system-old-input-module-is-available-in-onscreencontrolssample-sample-scene-from-package)).
 
 #### Actions
 
