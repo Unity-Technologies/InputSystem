@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     Debug.LogException(exception);
                     return;
                 }
+                InputSystem.AddDeviceUsage(device, "OnScreen");
 
                 // Create event buffer.
                 var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);

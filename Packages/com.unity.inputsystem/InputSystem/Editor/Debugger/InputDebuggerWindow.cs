@@ -657,18 +657,22 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            private void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.kLocalParticipantId)
+            private static void AddDevices(TreeViewItem parent, IEnumerable<InputDevice> devices, ref int id, int participantId = InputDevice.kLocalParticipantId)
             {
                 foreach (var device in devices)
                 {
                     if (device.m_ParticipantId != participantId)
                         continue;
 
+                    var displayName = device.name;
+                    if (device.usages.Count > 0)
+                        displayName += " (" + string.Join(",", device.usages) + ")";
+
                     var item = new DeviceItem
                     {
                         id = id++,
                         depth = parent.depth + 1,
-                        displayName = device.name,
+                        displayName = displayName,
                         device = device,
                         icon = EditorInputControlLayoutCache.GetIconForLayout(device.layout),
                     };
