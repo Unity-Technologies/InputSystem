@@ -784,6 +784,8 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+
+            ++m_LayoutRegistrationVersion;
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
