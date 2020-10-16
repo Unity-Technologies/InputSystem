@@ -12,6 +12,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - The `submit` and the `cancel` actions of the UI input module now trigger on __release__ instead of press. This makes the behavior consistent with clicks triggering UI response on release rather than press.
+- We removed the old "Tanks" demo (previously available from the samples shipped with the package).
+  * We now have a much better demo in the form of the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors).
 
 #### Actions
 
