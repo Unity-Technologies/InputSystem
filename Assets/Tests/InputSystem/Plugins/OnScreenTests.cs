@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.OnScreen;
 using UnityEngine.TestTools.Utils;
 
@@ -64,6 +65,38 @@ internal class OnScreenTests : InputTestFixture
         button.OnPointerUp(null);
         InputSystem.Update();
         Assert.That(keyboard.aKey.isPressed, Is.False);
+    }
+
+    // When we receive the OnPointerDown event in OnScreenButton, someone may disable the button as a response.
+    // In that case, we don't get an OnPointerUp. Ensure that the OnScreenButton correctly resets the state of
+    // its InputControl when the button is enabled.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanDisableOnScreenButtonFromPressEvent()
+    {
+        var gameObject = new GameObject();
+        var button = gameObject.AddComponent<OnScreenButton>();
+        button.controlPath = "<Keyboard>/a";
+
+        // When we disable the OnScreenComponent, the keyboard goes away, so use a state monitor
+        // to observe the change.
+        bool? isPressed = null;
+        InputState.AddChangeMonitor(Keyboard.current.aKey,
+            (control, time, eventPtr, index) =>
+            {
+                isPressed = ((ButtonControl)control).isPressed;
+            });
+
+        button.OnPointerDown(null);
+        InputSystem.Update();
+
+        Assert.That(isPressed, Is.True);
+
+        isPressed = null;
+        gameObject.SetActive(false);
+        InputSystem.Update();
+
+        Assert.That(isPressed, Is.False);
     }
 
     ////TODO: we should allow this as an optional feature
