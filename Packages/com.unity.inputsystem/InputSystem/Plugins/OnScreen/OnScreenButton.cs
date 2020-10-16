@@ -18,6 +18,7 @@ namespace UnityEngine.InputSystem.OnScreen
         public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
+            m_Pressed = false;
         }
 
         public void OnPointerDown(PointerEventData eventData)
