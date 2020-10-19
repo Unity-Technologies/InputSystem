@@ -239,8 +239,21 @@ namespace UnityEngine.InputSystem.Editor
         public override GUIStyle colorTagStyle => Styles.greenRect;
         public bool isSingletonAction => actionMapProperty == null;
 
-        public override string expectedControlLayout =>
-            property.FindPropertyRelative("m_ExpectedControlType").stringValue;
+        public override string expectedControlLayout
+        {
+            get
+            {
+                var expectedControlType = property.FindPropertyRelative("m_ExpectedControlType").stringValue;
+                if (!string.IsNullOrEmpty(expectedControlType))
+                    return expectedControlType;
+
+                var type = property.FindPropertyRelative("m_Type").intValue;
+                if (type == (int)InputActionType.Button)
+                    return "Button";
+
+                return null;
+            }
+        }
 
         public SerializedProperty bindingsArrayProperty => isSingletonAction
         ? property.FindPropertyRelative("m_SingletonActionBindings")
