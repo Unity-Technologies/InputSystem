@@ -60,17 +60,20 @@ namespace UnityEngine.InputSystem.Editor
 
             --s_Disabled;
             if (s_Disabled == 0 && s_Instance != null)
+            {
                 s_Instance.InstallHooks();
-
-            ////REVIEW: technically, we'd have to do a refresh here but that'd mean that in the current setup
-            ////        we'd do a refresh after every single test; find a better solution
+                s_Instance.Refresh();
+            }
         }
 
         public static void Disable()
         {
             ++s_Disabled;
             if (s_Disabled == 1 && s_Instance != null)
+            {
                 s_Instance.UninstallHooks();
+                s_Instance.Refresh();
+            }
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)

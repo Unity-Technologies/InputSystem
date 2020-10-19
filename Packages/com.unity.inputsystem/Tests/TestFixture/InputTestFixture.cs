@@ -10,6 +10,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 
@@ -114,6 +115,11 @@ namespace UnityEngine.InputSystem
                 };
                 NativeInputRuntime.instance.onShouldRunUpdate =
                     updateType => true;
+
+                #if UNITY_EDITOR
+                m_OnPlayModeStateChange = OnPlayModeStateChange;
+                EditorApplication.playModeStateChanged += m_OnPlayModeStateChange;
+                #endif
             }
             catch (Exception exception)
             {
@@ -121,6 +127,8 @@ namespace UnityEngine.InputSystem
                 Debug.LogException(exception);
                 throw;
             }
+
+            m_Initialized = true;
 
             if (InputSystem.devices.Count > 0)
                 Assert.Fail("Input system should not have devices after reset");
@@ -133,6 +141,9 @@ namespace UnityEngine.InputSystem
         [TearDown]
         public virtual void TearDown()
         {
+            if (!m_Initialized)
+                return;
+
             try
             {
                 // Destroy any GameObject in the current scene that isn't hidden and isn't the
@@ -149,6 +160,12 @@ namespace UnityEngine.InputSystem
                 InputSystem.Restore();
                 runtime.Dispose();
 
+                // Unhook from play mode state changes.
+                #if UNITY_EDITOR
+                if (m_OnPlayModeStateChange != null)
+                    EditorApplication.playModeStateChanged -= m_OnPlayModeStateChange;
+                #endif
+
                 // Re-enable input debugger.
                 #if UNITY_EDITOR
                 InputDebuggerWindow.Enable();
@@ -160,7 +177,19 @@ namespace UnityEngine.InputSystem
                 Debug.LogException(exception);
                 throw;
             }
+
+            m_Initialized = false;
         }
+
+        #if UNITY_EDITOR
+        private Action<PlayModeStateChange> m_OnPlayModeStateChange;
+        private void OnPlayModeStateChange(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.ExitingPlayMode && m_Initialized)
+                TearDown();
+        }
+
+        #endif
 
         // ReSharper disable once MemberCanBeProtected.Global
         public static void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
@@ -187,6 +216,7 @@ namespace UnityEngine.InputSystem
         }
 
         private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
+        private bool m_Initialized;
 
         /// <summary>
         /// Set <see cref="Keyboard.keyboardLayout"/> of the given keyboard.
