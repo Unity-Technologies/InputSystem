@@ -4773,6 +4773,52 @@ partial class CoreTests
         }, Is.Not.AllocatingGCMemory());
     }
 
+    // Since we allow looking up by action name without any map qualification, ambiguities result when several
+    // actions are named the same. We choose to not do anything special other than generally preferring an
+    // enabled action over a disabled one. Other than that, we just return the first hit.
+    // https://fogbugz.unity3d.com/f/cases/1207550/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionInAssetByName_WithMultipleActionsHavingTheSameName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        var map3 = new InputActionMap("map3");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+        asset.AddActionMap(map3);
+
+        var action1 = map1.AddAction("action");
+        var action2 = map2.AddAction("action");
+        var action3 = map3.AddAction("action");
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+
+        action2.Enable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action2));
+
+        action3.Enable();
+
+        // No difference. Returns first enabled action.
+        Assert.That(asset.FindAction("action"), Is.SameAs(action2));
+
+        action2.Disable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action3));
+
+        action1.Enable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+
+        asset.Disable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanRemoveActionFromMap()
@@ -5922,6 +5968,31 @@ partial class CoreTests
             Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
             Release(gamepad.buttonEast);
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1244988/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveCompositesWithoutControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.AddBinding("<Gamepad>/rightTrigger");
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "<DoesNotExist>/leftButton")
+            .With("Negative", "<DoesNotExist>/rightButton");
+
+        action.Enable();
+
+        // Actuate both triggers and make sure the disambiguation code isn't stumbling over
+        // the composite that in fact has no controls bound to its parts.
+        Set(gamepad.leftTrigger, 0.6f);
+        Set(gamepad.rightTrigger, 0.7f);
+        Set(gamepad.rightTrigger, 0.4f); // Disambiguation now needs to find leftTrigger; should not be thrown off track by the empty composite.
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.6f));
     }
 
     [Test]

@@ -372,8 +372,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
                 else if (sizeInBits <= 31)
                 {
-                    var maxValue = (float)(1 << (int)sizeInBits);
-                    var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    var maxValue = (float)((1 << (int)sizeInBits) - 1);
+                    var rawValue = (float)MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
                     if (format == FormatSBit)
                     {
                         var unclampedValue = (rawValue / maxValue) * 2.0f - 1.0f;
@@ -596,8 +596,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 }
                 else if (sizeInBits != 31)
                 {
-                    var maxValue = (float)(1 << (int)sizeInBits);
-                    var rawValue = (float)(MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits));
+                    var maxValue = (float)((1 << (int)sizeInBits) - 1);
+                    var rawValue = (float)MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
                     if (format == FormatSBit)
                     {
                         var unclampedValue = (((rawValue / maxValue) * 2.0f) - 1.0f);
