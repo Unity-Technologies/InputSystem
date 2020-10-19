@@ -220,6 +220,27 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
+        /// <summary>
+        /// Read the value of <paramref name="control"/> from the given <paramref name="inputEvent"/> without having to
+        /// know the specific value type of the control.
+        /// </summary>
+        /// <param name="control">Control to read the value for.</param>
+        /// <param name="inputEvent">An <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> to read the value from.</param>
+        /// <returns>The current value for the control or <c>null</c> if the control's value is not included
+        /// in the event.</returns>
+        /// <seealso cref="InputControl.ReadValueFromStateAsObject"/>
+        public static unsafe object ReadValueFromEventAsObject(this InputControl control, InputEventPtr inputEvent)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            var statePtr = control.GetStatePtrFromStateEvent(inputEvent);
+            if (statePtr == null)
+                return control.ReadDefaultValueAsObject();
+
+            return control.ReadValueFromStateAsObject(statePtr);
+        }
+
         public static TValue ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr eventPtr)
             where TValue : struct
         {

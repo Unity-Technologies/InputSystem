@@ -1234,8 +1234,6 @@ namespace UnityEngine.InputSystem
                         var firstControlIndex = binding->controlStartIndex;
                         var compositeIndex = binding->compositeOrCompositeBindingIndex;
 
-                        Debug.Assert(firstControlIndex >= 0 && firstControlIndex < totalControlCount,
-                            "Control start index out of range on composite");
                         Debug.Assert(compositeIndex >= 0 && compositeIndex < totalCompositeCount,
                             "Composite index out of range on composite");
 
@@ -1244,6 +1242,9 @@ namespace UnityEngine.InputSystem
                             ++numActuations;
                         if (magnitude > highestActuationLevel)
                         {
+                            Debug.Assert(firstControlIndex >= 0 && firstControlIndex < totalControlCount,
+                                "Control start index out of range on composite");
+
                             controlWithHighestActuation = firstControlIndex;
                             bindingWithHighestActuation = controlIndexToBindingIndex[firstControlIndex];
                             highestActuationLevel = magnitude;
