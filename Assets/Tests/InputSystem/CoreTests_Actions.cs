@@ -5924,6 +5924,31 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1244988/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanHaveCompositesWithoutControls()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Value);
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.AddBinding("<Gamepad>/rightTrigger");
+        action.AddCompositeBinding("Axis")
+            .With("Positive", "<DoesNotExist>/leftButton")
+            .With("Negative", "<DoesNotExist>/rightButton");
+
+        action.Enable();
+
+        // Actuate both triggers and make sure the disambiguation code isn't stumbling over
+        // the composite that in fact has no controls bound to its parts.
+        Set(gamepad.leftTrigger, 0.6f);
+        Set(gamepad.rightTrigger, 0.7f);
+        Set(gamepad.rightTrigger, 0.4f); // Disambiguation now needs to find leftTrigger; should not be thrown off track by the empty composite.
+
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.6f));
+    }
+
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
