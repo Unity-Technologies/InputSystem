@@ -28,6 +28,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed player build causing `ProjectSettings.asset` to be checked out in Perforce ([case 1254502](https://issuetracker.unity3d.com/issues/projectsettings-dot-asset-is-checked-out-in-perforce-when-building-a-project-with-the-input-system-package-installed)).
 - Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
 - Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
+- Fixed max values for `Axis` and `Double` controls stored as multi-bit fields being off by one ([case 1223436](https://issuetracker.unity3d.com/issues/value-equal-to-1-is-not-returned-by-the-input-system-when-reading-a-multi-bit-control)).
+  * Fix contributed by [jamre](https://github.com/jamre) in [962](https://github.com/Unity-Technologies/InputSystem/pull/962). Thank you!
 - Fixed debug assert in `InputDeviceTester` sample when simultaneously pressing two buttons on gamepad ([case 1244988](https://issuetracker.unity3d.com/issues/input-system-runtime-errors-when-pressing-more-than-one-button-at-the-same-time)).
 - Fixed use of UI `Slider` causing drag thresholds to no longer work ([case 1275834](https://issuetracker.unity3d.com/issues/inputsystem-drag-threshold-value-is-ignored-for-scroll-view-after-interacting-with-a-slider-slash-scroll-bar)).
 

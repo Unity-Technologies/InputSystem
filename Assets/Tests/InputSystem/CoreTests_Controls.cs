@@ -470,8 +470,9 @@ partial class CoreTests
         {
             ++receivedCalls;
             float value;
-            Assert.IsTrue(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value));
+            Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
             Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
+            Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
@@ -700,10 +701,7 @@ partial class CoreTests
             this.dpad = dpad;
         }
 
-        public FourCC format
-        {
-            get { return new FourCC('C', 'U', 'S', 'T'); }
-        }
+        public FourCC format => new FourCC('C', 'U', 'S', 'T');
     }
 
     [Test]
