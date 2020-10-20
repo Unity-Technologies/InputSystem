@@ -78,6 +78,10 @@ internal class OnScreenTests : InputTestFixture
         var button = gameObject.AddComponent<OnScreenButton>();
         button.controlPath = "<Keyboard>/a";
 
+        // Add a second button so that the device doesn't go away when we disable
+        // the first one.
+        new GameObject().AddComponent<OnScreenButton>().controlPath = "<Keyboard>/b";
+
         // When we disable the OnScreenComponent, the keyboard goes away, so use a state monitor
         // to observe the change.
         bool? isPressed = null;

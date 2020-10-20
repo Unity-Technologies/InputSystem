@@ -31,9 +31,9 @@ however, it has to be formatted properly to pass verification tests.
   var asset = ScriptableObject.CreateInstance<InputActionAsset>();
   asset.AddActionMap(map1);
   asset.AddActionMap(map2);
-  
+
   map2["actionWithSameName"].Enable();
-  
+
   var action = asset["actionWithSameName"];
   // Before: "map1/actionWithSameName"
   // Now: "map2/actionWithSameName"

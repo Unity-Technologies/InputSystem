@@ -18,22 +18,11 @@ namespace UnityEngine.InputSystem.OnScreen
         public void OnPointerUp(PointerEventData eventData)
         {
             SendValueToControl(0.0f);
-            m_Pressed = false;
         }
 
         public void OnPointerDown(PointerEventData eventData)
         {
             SendValueToControl(1.0f);
-            m_Pressed = true;
-        }
-
-        protected void OnDisable()
-        {
-            if (m_Pressed)
-            {
-                SendValueToControl(0f);
-                m_Pressed = false;
-            }
         }
 
         ////TODO: pressure support
@@ -50,8 +39,6 @@ namespace UnityEngine.InputSystem.OnScreen
         [InputControl(layout = "Button")]
         [SerializeField]
         private string m_ControlPath;
-
-        [NonSerialized] bool m_Pressed;
 
         protected override string controlPathInternal
         {

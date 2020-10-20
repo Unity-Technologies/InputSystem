@@ -115,6 +115,59 @@ namespace UnityEngine.InputSystem.Utilities
             return (bits & (1 << (int)bitOffset)) != 0;
         }
 
+        public static void MemCpyBitRegion(void* destination, void* source, uint bitOffset, uint bitCount)
+        {
+            var destPtr = (byte*)destination;
+            var sourcePtr = (byte*)source;
+
+            // If we're offset by more than a byte, adjust our pointers.
+            if (bitOffset >= 8)
+            {
+                var skipBytes = bitOffset / 8;
+                destPtr += skipBytes;
+                sourcePtr += skipBytes;
+                bitOffset %= 8;
+            }
+
+            // Copy unaligned prefix, if any.
+            if (bitOffset > 0)
+            {
+                var byteMask = 0xFF << (int)bitOffset;
+                if (bitCount + bitOffset < 8)
+                    byteMask &= 0xFF >> (int)(8 - (bitCount + bitOffset));
+
+                *destPtr = (byte)(((*destPtr & ~byteMask) | (*sourcePtr & byteMask)) & 0xFF);
+
+                // If the total length of the memory region is equal or less than a byte,
+                // we're done.
+                if (bitCount + bitOffset <= 8)
+                    return;
+
+                ++destPtr;
+                ++sourcePtr;
+
+                bitCount -= 8 - bitOffset;
+            }
+
+            // Copy contiguous bytes in-between, if any.
+            var byteCount = bitCount / 8;
+            if (byteCount >= 1)
+                UnsafeUtility.MemCpy(destPtr, sourcePtr, byteCount);
+
+            // Copy unaligned suffix, if any.
+            var remainingBitCount = bitCount % 8;
+            if (remainingBitCount > 0)
+            {
+                destPtr += byteCount;
+                sourcePtr += byteCount;
+
+                // We want the lowest remaining bits.
+                var byteMask = 0xFF >> (int)(8 - remainingBitCount);
+
+                *destPtr = (byte)(((*destPtr & ~byteMask) | (*sourcePtr & byteMask)) & 0xFF);
+            }
+        }
+
         /// <summary>
         /// Compare two memory regions that may be offset by a bit count and have a length expressed
         /// in bits.
@@ -164,13 +217,13 @@ namespace UnityEngine.InputSystem.Utilities
                 if (byte1 != byte2)
                     return false;
 
-                ++bytePtr1;
-                ++bytePtr2;
-
                 // If the total length of the memory region is equal or less than a byte,
                 // we're done.
                 if (bitCount + bitOffset <= 8)
                     return true;
+
+                ++bytePtr1;
+                ++bytePtr2;
 
                 bitCount -= 8 - bitOffset;
             }
