@@ -2303,6 +2303,25 @@ partial class CoreTests
             Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(kIconPath + skinPrefix + "Pen" + scalePostFix + ".png")));
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_AddingAndRemovingLayoutRefreshesLayoutCache()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestLayout""
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
+        Assert.That(EditorInputControlLayoutCache.allLayouts, Has.Exactly(1).With.Property("name").EqualTo(new InternedString("TestLayout")));
+
+        InputSystem.RemoveLayout("TestLayout");
+
+        Assert.That(EditorInputControlLayoutCache.allLayouts, Has.None.With.Property("name").EqualTo(new InternedString("TestLayout")));
+    }
+
     private class TestEditorWindow : EditorWindow
     {
         public Vector2 mousePosition;

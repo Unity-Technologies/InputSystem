@@ -777,6 +777,7 @@ namespace UnityEngine.InputSystem
             m_Layouts.layoutStrings.Remove(internedName);
             m_Layouts.layoutBuilders.Remove(internedName);
             m_Layouts.baseLayoutTable.Remove(internedName);
+            ++m_LayoutRegistrationVersion;
 
             ////TODO: check all layout inheritance chain for whether they are based on the layout and if so
             ////      remove those layouts, too
@@ -784,8 +785,6 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
                 m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
-
-            ++m_LayoutRegistrationVersion;
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
