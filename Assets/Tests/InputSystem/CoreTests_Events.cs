@@ -447,6 +447,47 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    public void Events_CanResetControlToDefaultState()
+    {
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""Button"", ""layout"" : ""Button"" },
+                    { ""name"" : ""ButtonWithDefaultState"", ""layout"" : ""Button"", ""defaultState"" : ""1"" },
+                    { ""name"" : ""Axis"", ""layout"" : ""Axis"" },
+                    { ""name"" : ""AxisWithDefaultState"", ""layout"" : ""Axis"", ""defaultState"" : ""0.5"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        Press((ButtonControl)device["Button"]);
+        Release((ButtonControl)device["ButtonWithDefaultState"]);
+        Set((AxisControl)device["Axis"], 0.123f);
+        Set((AxisControl)device["AxisWithDefaultState"], 0.234f);
+
+        using (StateEvent.From(device, out var eventPtr))
+        {
+            device["Button"].ResetToDefaultStateInEvent(eventPtr);
+            device["ButtonWithDefaultState"].ResetToDefaultStateInEvent(eventPtr);
+            device["Axis"].ResetToDefaultStateInEvent(eventPtr);
+            device["AxisWithDefaultState"].ResetToDefaultStateInEvent(eventPtr);
+
+            InputSystem.QueueEvent(eventPtr);
+            InputSystem.Update();
+
+            Assert.That(device["Button"].CheckStateIsAtDefault());
+            Assert.That(device["ButtonWithDefaultState"].CheckStateIsAtDefault());
+            Assert.That(device["Axis"].CheckStateIsAtDefault());
+            Assert.That(device["AxisWithDefaultState"].CheckStateIsAtDefault());
+        }
+    }
+
+    [Test]
+    [Category("Events")]
     public void Events_SendingStateToDeviceWithoutBeforeRenderEnabled_DoesNothingInBeforeRenderUpdate()
     {
         // We need one device that has before-render updates enabled for the update to enable

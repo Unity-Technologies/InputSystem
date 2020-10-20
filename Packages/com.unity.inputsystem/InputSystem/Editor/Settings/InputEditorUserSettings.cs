@@ -105,12 +105,16 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static void Load()
         {
+            s_Settings = new SerializedState();
+            if (!File.Exists(kSavePath))
+                return;
+
             try
             {
                 var json = File.ReadAllText(kSavePath);
                 s_Settings = JsonUtility.FromJson<SerializedState>(json);
             }
-            catch (Exception)
+            catch
             {
                 s_Settings = new SerializedState();
             }
