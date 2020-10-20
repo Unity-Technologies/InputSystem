@@ -519,7 +519,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var map = new InputActionMap();
-        
+
         var action = map.AddAction("action", type: InputActionType.Value);
         action.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/w")
@@ -528,30 +528,30 @@ partial class CoreTests
             .With("Right", "<Keyboard>/d");
 
         Press(keyboard.dKey);
-        
+
         map.Enable();
         InputSystem.Update();
 
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
-        
+
         map.Disable();
         InputSystem.Update();
-        
+
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
-        
+
         map.Enable();
         InputSystem.Update();
-        
+
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
-        
+
         map.Disable();
         InputSystem.Update();
-        
+
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
-        
+
         map.Enable();
         InputSystem.Update();
-        
+
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
     }
 
