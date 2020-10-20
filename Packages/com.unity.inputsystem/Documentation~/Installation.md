@@ -36,4 +36,4 @@ The Input System package comes with a number of samples. You can install these d
 
 ![Install Samples](Images/InstallSamples.png)
 
-A more comprehensive demo project for the Input System can be found on GitHub under [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors).
+For a more comprehensive demo project for the Input System, see the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.
