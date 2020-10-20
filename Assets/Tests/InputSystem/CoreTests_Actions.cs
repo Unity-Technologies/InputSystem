@@ -3455,6 +3455,29 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceConfigurationChangesAndLayoutDoesntContainAllTheKeys()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Bind to key generating a 'ö' character from Swedish layout.
+        // It doesn't exist in English layout so initial controls list should be empty.
+        var action = new InputAction(binding: "<Keyboard>/#(ö)");
+
+        Assert.AreEqual(action.controls.Count, 0, "Initially shouldn't map to anything");
+
+        // Rebind the key.
+        SetKeyInfo(Key.Semicolon, "ö");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.semicolonKey}));
+
+        // Rebind the key back.
+        SetKeyInfo(Key.Semicolon, ";");
+
+        Assert.AreEqual(action.controls.Count, 0, "Shouldn't map to anything after changing layout back");
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_WhenControlsUpdate_NotificationIsTriggered_ButOnlyAfterBindingsHaveFirstBeenResolved()
     {
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");

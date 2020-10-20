@@ -3697,7 +3697,7 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
-                if (change == InputDeviceChange.ConfigurationChanged && !state.IsUsingDevice(device))
+                if (change == InputDeviceChange.ConfigurationChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
 
                 // Trigger a lazy-resolve on all action maps in the state.
