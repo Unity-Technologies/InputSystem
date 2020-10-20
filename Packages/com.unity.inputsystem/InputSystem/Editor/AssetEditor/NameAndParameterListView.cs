@@ -53,8 +53,8 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 else if (m_ExpectedValueType != null)
                 {
                     var valueType = getValueType(rowType);
-                    if (!m_ExpectedValueType.IsAssignableFrom(valueType))
-                        name += " (Ignored)";
+                    if (valueType != null && !m_ExpectedValueType.IsAssignableFrom(valueType))
+                        name += " (Incompatible Value Type)";
                 }
                 m_EditableParametersForEachListItem[i].name = name;
             }
