@@ -777,6 +777,7 @@ namespace UnityEngine.InputSystem
             m_Layouts.layoutStrings.Remove(internedName);
             m_Layouts.layoutBuilders.Remove(internedName);
             m_Layouts.baseLayoutTable.Remove(internedName);
+            ++m_LayoutRegistrationVersion;
 
             ////TODO: check all layout inheritance chain for whether they are based on the layout and if so
             ////      remove those layouts, too
