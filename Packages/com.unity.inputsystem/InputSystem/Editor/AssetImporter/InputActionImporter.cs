@@ -158,48 +158,61 @@ namespace UnityEngine.InputSystem.Editor
             // Generate wrapper code, if enabled.
             if (m_GenerateWrapperCode)
             {
-                var wrapperFilePath = m_WrapperCodePath;
-                if (string.IsNullOrEmpty(wrapperFilePath))
+                // When using code generation, it is an error for any action map to be named the same as the asset itself.
+                // https://fogbugz.unity3d.com/f/cases/1212052/
+                var className = !string.IsNullOrEmpty(m_WrapperClassName) ? m_WrapperClassName : CSharpCodeHelpers.MakeTypeName(asset.name);
+                if (maps.Any(x =>
+                    CSharpCodeHelpers.MakeTypeName(x.name) == className || CSharpCodeHelpers.MakeIdentifier(x.name) == className))
                 {
-                    // Placed next to .inputactions file.
-                    var assetPath = ctx.assetPath;
-                    var directory = Path.GetDirectoryName(assetPath);
-                    var fileName = Path.GetFileNameWithoutExtension(assetPath);
-                    wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+                    ctx.LogImportError(
+                        $"{asset.name}: An action map in an .inputactions asset cannot be named the same as the asset itself if 'Generate C# Class' is used. "
+                        + "You can rename the action map in the asset, rename the asset itself or assign a different C# class name in the import settings.");
                 }
-                else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
-                         wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+                else
                 {
-                    // User-specified file relative to location of .inputactions file.
-                    var assetPath = ctx.assetPath;
-                    var directory = Path.GetDirectoryName(assetPath);
-                    wrapperFilePath = Path.Combine(directory, wrapperFilePath);
-                }
-                else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
-                         !wrapperFilePath.ToLower().StartsWith("assets\\"))
-                {
-                    // User-specified file in Assets/ folder.
-                    wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
-                }
+                    var wrapperFilePath = m_WrapperCodePath;
+                    if (string.IsNullOrEmpty(wrapperFilePath))
+                    {
+                        // Placed next to .inputactions file.
+                        var assetPath = ctx.assetPath;
+                        var directory = Path.GetDirectoryName(assetPath);
+                        var fileName = Path.GetFileNameWithoutExtension(assetPath);
+                        wrapperFilePath = Path.Combine(directory, fileName) + ".cs";
+                    }
+                    else if (wrapperFilePath.StartsWith("./") || wrapperFilePath.StartsWith(".\\") ||
+                             wrapperFilePath.StartsWith("../") || wrapperFilePath.StartsWith("..\\"))
+                    {
+                        // User-specified file relative to location of .inputactions file.
+                        var assetPath = ctx.assetPath;
+                        var directory = Path.GetDirectoryName(assetPath);
+                        wrapperFilePath = Path.Combine(directory, wrapperFilePath);
+                    }
+                    else if (!wrapperFilePath.ToLower().StartsWith("assets/") &&
+                             !wrapperFilePath.ToLower().StartsWith("assets\\"))
+                    {
+                        // User-specified file in Assets/ folder.
+                        wrapperFilePath = Path.Combine("Assets", wrapperFilePath);
+                    }
 
-                var dir = Path.GetDirectoryName(wrapperFilePath);
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                    var dir = Path.GetDirectoryName(wrapperFilePath);
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
 
-                var options = new InputActionCodeGenerator.Options
-                {
-                    sourceAssetPath = ctx.assetPath,
-                    namespaceName = m_WrapperCodeNamespace,
-                    className = m_WrapperClassName,
-                };
+                    var options = new InputActionCodeGenerator.Options
+                    {
+                        sourceAssetPath = ctx.assetPath,
+                        namespaceName = m_WrapperCodeNamespace,
+                        className = m_WrapperClassName,
+                    };
 
-                if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
-                {
-                    // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
-                    // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
-                    // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
-                    // changed/added script, and trigger a new import.
-                    EditorApplication.delayCall += AssetDatabase.Refresh;
+                    if (InputActionCodeGenerator.GenerateWrapperCode(wrapperFilePath, asset, options))
+                    {
+                        // When we generate the wrapper code cs file during asset import, we cannot call ImportAsset on that directly because
+                        // script assets have to be imported before all other assets, and are not allowed to be added to the import queue during
+                        // asset import. So instead we register a callback to trigger a delayed asset refresh which should then pick up the
+                        // changed/added script, and trigger a new import.
+                        EditorApplication.delayCall += AssetDatabase.Refresh;
+                    }
                 }
             }
 

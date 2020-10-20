@@ -12,6 +12,8 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - The `submit` and the `cancel` actions of the UI input module now trigger on __release__ instead of press. This makes the behavior consistent with clicks triggering UI response on release rather than press.
+- Removed the old "Tanks" demo (previously available from the samples shipped with the package).
+  * Added a new and improved demo project, which you can download from the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.
 
 #### Actions
 
@@ -22,6 +24,22 @@ however, it has to be formatted properly to pass verification tests.
 - `InputAction.ReadValue<T>()` now always returns `default<T>` when the action is canceled.
   * This is to make it consistent with `InputAction.CallbackContext.ReadValue<T>()` which already returned `default<T>` when the action was canceled.
   * In general, all APIs that read values will return default values when an action is in a phase other than `Started` or `Performed`.
+- If multiple actions in different action maps but in the same .inputactions asset have the same name, calling `InputActionAsset.FindAction()` with just an action name will now return the first __enabled__ action. If none of the actions are enabled, it will return the first action with a matching name as before ([case 1207550](https://issuetracker.unity3d.com/issues/input-system-action-can-only-be-triggered-by-one-of-the-action-maps-when-action-name-is-identical)).
+  ```CSharp
+  var map1 = new InputActionMap("map1");
+  var map2 = new InputActionMap("map2");
+  map1.AddAction("actionWithSameName");
+  map2.AddAction("actionWithSameName");
+  var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+  asset.AddActionMap(map1);
+  asset.AddActionMap(map2);
+
+  map2["actionWithSameName"].Enable();
+
+  var action = asset["actionWithSameName"];
+  // Before: "map1/actionWithSameName"
+  // Now: "map2/actionWithSameName"
+  ```
 
 ### Fixed
 
@@ -29,6 +47,13 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed player build corrupting preloaded asset list in `PlayerSettings` if it was modified by another build processor.
 - Fixed remoting in Input Debugger not working for devices in the player that are created from generated layouts (such as XR devices).
 - Fixed potential `NullReferenceException` in `InputActionProperty` when the `InputActionReference` is `null`.
+- Fixed "On-Screen Controls" sample still using `StandaloneInputModule` and thus throwing `InvalidOperationException` when used with "Active Input Handling" set to "Input System Package (New)" ([case 1201866](https://issuetracker.unity3d.com/issues/input-system-old-input-module-is-available-in-onscreencontrolssample-sample-scene-from-package)).
+- Fixed `OnScreenButton` leaving button controls in pressed state when disabled in-between receiving `OnPointerDown` and `OnPointerUp`. Usually manifested itself by having to click the button twice next time it was enabled.
+- Fixed exiting out of play mode in the Unity Editor while a test run is in progress leading to the Input System permanently losing all its state until the editor is restarted ([case 1251724](https://issuetracker.unity3d.com/issues/the-input-system-does-not-get-re-enabled-when-a-playmode-input-test-is-interrupted)).
+- Fixed max values for `Axis` and `Double` controls stored as multi-bit fields being off by one ([case 1223436](https://issuetracker.unity3d.com/issues/value-equal-to-1-is-not-returned-by-the-input-system-when-reading-a-multi-bit-control)).
+  * Fix contributed by [jamre](https://github.com/jamre) in [962](https://github.com/Unity-Technologies/InputSystem/pull/962). Thank you!
+- Fixed debug assert in `InputDeviceTester` sample when simultaneously pressing two buttons on gamepad ([case 1244988](https://issuetracker.unity3d.com/issues/input-system-runtime-errors-when-pressing-more-than-one-button-at-the-same-time)).
+- Fixed use of UI `Slider` causing drag thresholds to no longer work ([case 1275834](https://issuetracker.unity3d.com/issues/inputsystem-drag-threshold-value-is-ignored-for-scroll-view-after-interacting-with-a-slider-slash-scroll-bar)).
 
 #### Actions
 
@@ -39,6 +64,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed rebinds triggered by the Enter key causing stuck Enter key states ([case 1271591](https://issuetracker.unity3d.com/issues/input-system-rebind-action-requires-two-inputs-slash-presses-when-using-the-enter-key)).
 - Fixed `Map index on trigger` and `IndexOutOfRangeException` errors when using multiple Interactions on the same Action. ([case 1253034](https://issuetracker.unity3d.com/issues/map-index-on-trigger-and-indexoutofrangeexception-errors-when-using-multiple-interactions-on-the-same-action)).
 - Fixed context menu in action editor not filtering out composites the same way that the `+` icon menu does. This led to, for example, a "2D Vector" composite being shown as an option for a button type action.
+- Fixed initial state checks for composite bindings failing if performed repeatedly. For example, doing a `ReadValue<Vector2>` for a WASD binding would return an incorrect value after disabling the map twice while no input from the keyboard was received ([case 1274977](https://issuetracker.unity3d.com/issues/input-system-cannot-read-vector2-values-after-inputactionset-has-been-disabled-and-enabled-twice)).
+- Fixed "Add Interaction" menu in action editor not filtering out interactions with incompatible value types ([case 1272772](https://issuetracker.unity3d.com/issues/new-input-system-action-gets-called-only-once-when-using-mouse-press-interaction)).
+- Fixed `PlayerInput` no longer auto-switching control schemes if `neverAutoSwitchControlSchemes` was toggled off and back on after the component was first enabled ([case 1232039](https://issuetracker.unity3d.com/issues/input-system-auto-switch-locks-on-one-device-when-its-disabled-and-re-enabled-via-script)).
+- Fixed action map name being the same as .inputactions asset name leading to compile errors when `Generate C# Class` is used; now leads to import error ([case 1212052](https://issuetracker.unity3d.com/issues/input-system-user-can-name-inputaction-asset-and-action-map-the-same-creating-compilation-errors-on-generation)).
 
 ### Added
 
@@ -71,7 +100,6 @@ however, it has to be formatted properly to pass verification tests.
   * `Vector3Composite`: Works the same way `Vector2Composite` does. Adds a `forward` and `backward` binding in addition to `up`, `down`, `left`, and `right`.
 
 ## [1.1.0-preview.1] - 2020-08-20
->>>>>>> develop
 
 >__The minimum version requirement for the Input System package has been moved up to 2019.4 LTS.__
 
@@ -879,7 +907,7 @@ This release includes a number of Quality-of-Life improvements for a range of co
   * Controls now have icons displayed for them.
 - There is new support for binding to keys on the keyboard by their generated character rather than by their location. \
   ![Keyboard Binding](Documentation~/Images/KeyboardBindByLocationVsCharacter.png)
-  * At the toplevel of the the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
+  * At the toplevel of the Keyboard device, you now have the choice of either binding by keyboard location or binding by generated/mapped character.
   * Binding by location shows differences between the local keyboard layout and the US reference layout.
   * The control path language has been extended to allow referencing controls by display name. `<Keyboard>/#(a)` binds to the control on a `Keyboard` with the display name `a`.
 - `continuous` flag is now ignored for `Press and Release` interactions, as it did not  make sense.

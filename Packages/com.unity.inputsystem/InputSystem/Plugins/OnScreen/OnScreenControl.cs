@@ -139,6 +139,7 @@ namespace UnityEngine.InputSystem.OnScreen
                     Debug.LogException(exception);
                     return;
                 }
+                InputSystem.AddDeviceUsage(device, "OnScreen");
 
                 // Create event buffer.
                 var buffer = StateEvent.From(device, out var eventPtr, Allocator.Persistent);
@@ -190,18 +191,29 @@ namespace UnityEngine.InputSystem.OnScreen
                 throw new ArgumentException(
                     $"The control path {controlPath} yields a control of type {m_Control.GetType().Name} which is not an InputControl with value type {typeof(TValue).Name}", nameof(value));
 
-            ////FIXME: this gives us a one-frame lag
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
             m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
             control.WriteValueIntoEvent(value, m_InputEventPtr);
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
-        private void OnEnable()
+        protected void SentDefaultValueToControl()
+        {
+            if (m_Control == null)
+                return;
+
+            ////FIXME: this gives us a one-frame lag (use InputState.Change instead?)
+            m_InputEventPtr.internalTime = InputRuntime.s_Instance.currentTime;
+            m_Control.ResetToDefaultStateInEvent(m_InputEventPtr);
+            InputSystem.QueueEvent(m_InputEventPtr);
+        }
+
+        protected virtual void OnEnable()
         {
             SetupInputControl();
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             if (m_Control == null)
                 return;
@@ -222,6 +234,14 @@ namespace UnityEngine.InputSystem.OnScreen
                 else
                 {
                     s_OnScreenDevices[i] = deviceInfo;
+
+                    // We're keeping the device but we're disabling the on-screen representation
+                    // for one of its controls. If the control isn't in default state, reset it
+                    // to that now. This is what ensures that if, for example, OnScreenButton is
+                    // disabled after OnPointerDown, we reset its button control to zero even
+                    // though we will not see an OnPointerUp.
+                    if (!m_Control.CheckStateIsAtDefault())
+                        SentDefaultValueToControl();
                 }
 
                 m_Control = null;
