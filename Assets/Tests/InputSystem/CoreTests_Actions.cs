@@ -508,6 +508,53 @@ partial class CoreTests
         }
     }
 
+    // Composites have logic to ignore control state changes coming from the same event. We had a bug where
+    // this threw off initial value checks for actions as we made up a fake event. Specifically test
+    // for this here.
+    // https://fogbugz.unity3d.com/f/cases/1274977/
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueActionsReactToCurrentStateOfControlWhenEnabled_WithCompositeBinding()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+
+        var action = map.AddAction("action", type: InputActionType.Value);
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        Press(keyboard.dKey);
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+
+        map.Disable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+
+        map.Disable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+    }
+
     // Value actions perform an initial state check when enabled. These state checks are performed
     // from InputSystem.onBeforeUpdate. However, if we enable an action as part of event processing,
     // we will react to the state of a control right away and should then not ALSO perform an

@@ -728,7 +728,7 @@ namespace UnityEngine.InputSystem
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
-                    bindingStatePtr->initialStateCheckPending = true;
+                    SetInitialStateCheckPending(bindingStatePtr, true);
                 manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
 
                 SetControlEnabled(controlIndex, true);
@@ -753,10 +753,26 @@ namespace UnityEngine.InputSystem
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
-                    bindingStatePtr->initialStateCheckPending = false;
+                    SetInitialStateCheckPending(bindingStatePtr, false);
                 manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
 
                 SetControlEnabled(controlIndex, false);
+            }
+        }
+
+        private void SetInitialStateCheckPending(BindingState* bindingStatePtr, bool value)
+        {
+            if (bindingStatePtr->isPartOfComposite)
+            {
+                // For composites, we always flag the composite itself as wanting an initial state check. This
+                // way, we don't have to worry about triggering the composite multiple times when several of its
+                // controls are actuated.
+                var compositeIndex = bindingStatePtr->compositeOrCompositeBindingIndex;
+                bindingStates[compositeIndex].initialStateCheckPending = value;
+            }
+            else
+            {
+                bindingStatePtr->initialStateCheckPending = value;
             }
         }
 
@@ -815,11 +831,6 @@ namespace UnityEngine.InputSystem
 
             Profiler.BeginSample("InitialActionStateCheck");
 
-            // The composite logic relies on the event ID to determine whether a composite binding should trigger again
-            // when already triggered. Make up a fake event with just an ID.
-            var inputEvent = new InputEvent {eventId = 1234};
-            var eventPtr = new InputEventPtr(&inputEvent);
-
             // Use current time as time of control state change.
             var time = InputRuntime.s_Instance.currentTime;
 
@@ -830,22 +841,40 @@ namespace UnityEngine.InputSystem
             // that the control just got actuated.
             for (var bindingIndex = 0; bindingIndex < totalBindingCount; ++bindingIndex)
             {
-                if (!bindingStates[bindingIndex].initialStateCheckPending)
+                var bindingStatePtr = &bindingStates[bindingIndex];
+                if (!bindingStatePtr->initialStateCheckPending)
                     continue;
 
-                bindingStates[bindingIndex].initialStateCheckPending = false;
+                Debug.Assert(!bindingStatePtr->isPartOfComposite, "Initial state check flag must be set on composite, not on its parts");
+                bindingStatePtr->initialStateCheckPending = false;
 
-                var mapIndex = bindingStates[bindingIndex].mapIndex;
-                var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
-                var controlCount = bindingStates[bindingIndex].controlCount;
+                var mapIndex = bindingStatePtr->mapIndex;
+                var controlStartIndex = bindingStatePtr->controlStartIndex;
+                var controlCount = bindingStatePtr->controlCount;
 
+                var isComposite = bindingStatePtr->isComposite;
                 for (var n = 0; n < controlCount; ++n)
                 {
                     var controlIndex = controlStartIndex + n;
                     var control = controls[controlIndex];
 
                     if (!control.CheckStateIsAtDefault())
-                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
+                    {
+                        // For composites, the binding index we have at this point is for the composite binding, not for the part
+                        // binding that contributes the control we're looking at. Adjust for that.
+                        var bindingIndexForControl = bindingIndex;
+                        if (isComposite)
+                            bindingIndexForControl = controlIndexToBindingIndex[controlIndex];
+
+                        ProcessControlStateChange(mapIndex, controlIndex, bindingIndexForControl, time, default);
+
+                        // For composites, any one actuated control will lead to the composite being
+                        // processed as a whole so we can stop here. This also ensure that we are
+                        // not triggering the composite repeatedly if there are multiple actuated
+                        // controls bound to its parts.
+                        if (isComposite)
+                            break;
+                    }
                 }
             }
 
