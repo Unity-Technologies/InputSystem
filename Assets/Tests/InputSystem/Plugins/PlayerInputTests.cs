@@ -781,6 +781,50 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1232039/
+    [Test]
+    [Category("PlayerInput")]
+    public void PlayerInput_AutoSwitchingControlSchemesInSinglePlayer_CanBeDisabled_OnTheFly()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var go = new GameObject();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = false;
+        playerInput.defaultControlScheme = "Keyboard&Mouse";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+
+        PressAndRelease(keyboard.wKey);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        playerInput.neverAutoSwitchControlSchemes = true;
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Keyboard&Mouse"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { keyboard, mouse }));
+
+        playerInput.neverAutoSwitchControlSchemes = false;
+
+        PressAndRelease(gamepad.buttonSouth);
+
+        Assert.That(playerInput.currentControlScheme, Is.EqualTo("Gamepad"));
+        Assert.That(playerInput.devices, Is.EquivalentTo(new InputDevice[] { gamepad }));
+    }
+
     [Test]
     [Category("PlayerInput")]
     public void PlayerInput_CanSwitchControlSchemesManually()
@@ -1546,9 +1590,6 @@ internal class PlayerInputTests : InputTestFixture
     // is refused.
     [Test]
     [Category("PlayerInput")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1254573")]
-#endif
     public void PlayerInput_JoiningPlayerThroughButtonPress_WillFailIfDeviceIsNotUsableWithPlayerActions()
     {
         var playerPrefab = new GameObject();
@@ -1562,11 +1603,10 @@ internal class PlayerInputTests : InputTestFixture
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         managerComponent.playerPrefab = playerPrefab;
 
-        // Create a device based on the HID layout with a single button control.
+        // Create a device with a single button control.
         const string kLayout = @"
             {
                 ""name"" : ""TestDevice"",
-                ""extend"" : ""HID"",
                 ""controls"" : [
                     { ""name"" : ""button"", ""layout"" : ""Button"" }
                 ]
