@@ -68,6 +68,12 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed "Add Interaction" menu in action editor not filtering out interactions with incompatible value types ([case 1272772](https://issuetracker.unity3d.com/issues/new-input-system-action-gets-called-only-once-when-using-mouse-press-interaction)).
 - Fixed `PlayerInput` no longer auto-switching control schemes if `neverAutoSwitchControlSchemes` was toggled off and back on after the component was first enabled ([case 1232039](https://issuetracker.unity3d.com/issues/input-system-auto-switch-locks-on-one-device-when-its-disabled-and-re-enabled-via-script)).
 - Fixed action map name being the same as .inputactions asset name leading to compile errors when `Generate C# Class` is used; now leads to import error ([case 1212052](https://issuetracker.unity3d.com/issues/input-system-user-can-name-inputaction-asset-and-action-map-the-same-creating-compilation-errors-on-generation)).
+- Fixed bindings not getting updated when binding by display name and there is no control with the given display name initially.
+  ```
+  // If at the time this action is enabled, there's no ä key on the keyboard,
+  // this did not update properly later when switched to a layout that does have the key.
+  var action = new InputAction(binding: "<Keyboard>/#(ä)");
+  ```
 
 ### Added
 

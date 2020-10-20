@@ -3727,6 +3727,8 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
+                // NOTE: ConfigurationChanges can affect display names of controls which may make a device usable that
+                //       we didn't find anything usable on before.
                 if (change == InputDeviceChange.ConfigurationChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
                     continue;
 

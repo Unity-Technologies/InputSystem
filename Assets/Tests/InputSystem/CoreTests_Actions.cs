@@ -3502,7 +3502,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_ControlsUpdateWhenDeviceConfigurationChangesAndLayoutDoesntContainAllTheKeys()
+    public void Actions_ControlsUpdateWhenDeviceConfigurationChanges_AndControlIsNotFound()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -3510,7 +3510,7 @@ partial class CoreTests
         // It doesn't exist in English layout so initial controls list should be empty.
         var action = new InputAction(binding: "<Keyboard>/#(ö)");
 
-        Assert.AreEqual(action.controls.Count, 0, "Initially shouldn't map to anything");
+        Assert.That(action.controls, Is.Empty);
 
         // Rebind the key.
         SetKeyInfo(Key.Semicolon, "ö");
@@ -3520,7 +3520,7 @@ partial class CoreTests
         // Rebind the key back.
         SetKeyInfo(Key.Semicolon, ";");
 
-        Assert.AreEqual(action.controls.Count, 0, "Shouldn't map to anything after changing layout back");
+        Assert.That(action.controls, Is.Empty);
     }
 
     [Test]
