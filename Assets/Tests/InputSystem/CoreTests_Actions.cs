@@ -4820,6 +4820,52 @@ partial class CoreTests
         }, Is.Not.AllocatingGCMemory());
     }
 
+    // Since we allow looking up by action name without any map qualification, ambiguities result when several
+    // actions are named the same. We choose to not do anything special other than generally preferring an
+    // enabled action over a disabled one. Other than that, we just return the first hit.
+    // https://fogbugz.unity3d.com/f/cases/1207550/
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanLookUpActionInAssetByName_WithMultipleActionsHavingTheSameName()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        var map1 = new InputActionMap("map1");
+        var map2 = new InputActionMap("map2");
+        var map3 = new InputActionMap("map3");
+
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+        asset.AddActionMap(map3);
+
+        var action1 = map1.AddAction("action");
+        var action2 = map2.AddAction("action");
+        var action3 = map3.AddAction("action");
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+
+        action2.Enable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action2));
+
+        action3.Enable();
+
+        // No difference. Returns first enabled action.
+        Assert.That(asset.FindAction("action"), Is.SameAs(action2));
+
+        action2.Disable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action3));
+
+        action1.Enable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+
+        asset.Disable();
+
+        Assert.That(asset.FindAction("action"), Is.SameAs(action1));
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanRemoveActionFromMap()
