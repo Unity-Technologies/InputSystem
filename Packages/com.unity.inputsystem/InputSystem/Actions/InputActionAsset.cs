@@ -288,13 +288,13 @@ namespace UnityEngine.InputSystem
         /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
         /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
         /// <remarks>
-        /// This method is equivalent to <see cref="FindAction(string)"/> except that it throws
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except that it throws
         /// <see cref="KeyNotFoundException"/> if no action with the given name or ID
         /// could be found.
         /// </remarks>
         /// <exception cref="KeyNotFoundException">No action was found matching <paramref name="actionNameOrId"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c> or empty.</exception>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction this[string actionNameOrId]
         {
             get
@@ -513,6 +513,16 @@ namespace UnityEngine.InputSystem
         /// cannot be found, throw <c>ArgumentException</c>.</param>
         /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
         /// <remarks>
+        /// Note that no lookup structures are used internally to speed the operation up. Instead, the search is done
+        /// linearly. For repeated access of an action, it is thus generally best to look up actions once ahead of
+        /// time and cache the result.
+        ///
+        /// If multiple actions have the same name and <paramref name="actionNameOrId"/> is not an ID and not an
+        /// action name qualified by a map name (that is, in the form of <c>"mapName/actionName"</c>), the action that
+        /// is returned will be from the first map in <see cref="actionMaps"/> that has an action with the given name.
+        /// An exception is if, of the multiple actions with the same name, some are enabled and some are disabled. In
+        /// this case, the first action that is enabled is returned.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
@@ -559,13 +569,22 @@ namespace UnityEngine.InputSystem
                 var indexOfSlash = actionNameOrId.IndexOf('/');
                 if (indexOfSlash == -1)
                 {
-                    // No slash so it's just a simple action name.
+                    // No slash so it's just a simple action name. Return either first enabled action or, if
+                    // none are enabled, first action with the given name.
+                    InputAction firstActionFound = null;
                     for (var i = 0; i < m_ActionMaps.Length; ++i)
                     {
                         var action = m_ActionMaps[i].FindAction(actionNameOrId);
                         if (action != null)
-                            return action;
+                        {
+                            if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
+                                return action;
+                            if (firstActionFound == null)
+                                firstActionFound = action;
+                        }
                     }
+                    if (firstActionFound != null)
+                        return firstActionFound;
                 }
                 else
                 {
