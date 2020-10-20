@@ -8299,6 +8299,65 @@ partial class CoreTests
         }
     }
 
+    private class MonoBehaviourWithActionProperty : MonoBehaviour
+    {
+        public InputActionProperty actionProperty;
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithNullReferenceType()
+    {
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty((InputActionReference)null);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithNullActionType()
+    {
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty((InputAction)null);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithDestroyedReferenceType()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("action1");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "map", "action1");
+
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty(reference);
+
+        Assert.That(component.actionProperty.action, Is.Not.Null);
+
+        UnityEngine.Object.DestroyImmediate(reference);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
     [Test]
     [Category("Actions")]
     [Ignore("TODO")]
