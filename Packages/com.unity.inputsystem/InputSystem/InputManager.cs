@@ -2160,20 +2160,18 @@ namespace UnityEngine.InputSystem
                 // We don't parse the full description but rather go property by property in order to not
                 // allocate GC memory if we can avoid it.
 
-                if (!string.IsNullOrEmpty(description.interfaceName) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.product) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.manufacturer) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.deviceClass) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
                     continue;
-
-                // We ignore capabilities here.
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", description.capabilities, deviceDescriptor))
+                    continue;
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("serial", description.serial, deviceDescriptor))
+                    continue;
 
                 ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
                 return device;
