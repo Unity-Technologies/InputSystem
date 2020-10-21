@@ -126,6 +126,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed memory corruption in `InputEventTrace.AllocateEvent` ([case 1262496](https://issuetracker.unity3d.com/issues/input-system-crash-with-various-stack-traces-when-using-inputactiontrace-dot-subscribetoall))
   * Manifested itself, for example, as crashes when using `InputActionTrace.SubscribeToAll`.
 - AxisControls and Vector2Controls' X and Y subcontrols on XR devices now have a minimum range of -1 and a maximum range of 1. This means they can now properly respond to modifiers and interactions in the binding system.
+- Improved build performance of script debugging builds on Nintendo Switch
 
 #### Actions
 
