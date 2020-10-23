@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem
     ///     private bool m_Fire;
     ///
     ///     // 'Fire' input action has been triggered. For 'Fire' we want continuous
-    ///     // action (i.e. firing) while the fire button is held such that the action
+    ///     // action (that is, firing) while the fire button is held such that the action
     ///     // gets triggered repeatedly while the button is down. We can easily set this
     ///     // up by having a "Press" interaction on the button and setting it to repeat
     ///     // at fixed intervals.
@@ -415,8 +415,13 @@ namespace UnityEngine.InputSystem
                 if (m_NeverAutoSwitchControlSchemes == value)
                     return;
                 m_NeverAutoSwitchControlSchemes = value;
-                if (enabled && m_OnUnpairedDeviceUsedHooked)
-                    StopListeningForUnpairedDeviceActivity();
+                if (enabled)
+                {
+                    if (!value && !m_OnUnpairedDeviceUsedHooked)
+                        StartListeningForUnpairedDeviceActivity();
+                    else if (value && m_OnUnpairedDeviceUsedHooked)
+                        StopListeningForUnpairedDeviceActivity();
+                }
             }
         }
 
@@ -1264,7 +1269,6 @@ namespace UnityEngine.InputSystem
                     actionMap.actionTriggered -= m_ActionTriggeredDelegate;
         }
 
-        ////REVIEW: should this take the action *type* into account? e.g. have different behavior when the type is "Button"?
         private void OnActionTriggered(InputAction.CallbackContext context)
         {
             if (!m_InputActive)

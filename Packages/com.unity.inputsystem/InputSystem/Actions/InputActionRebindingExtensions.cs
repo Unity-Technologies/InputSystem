@@ -384,12 +384,12 @@ namespace UnityEngine.InputSystem
         /// action.AddBinding("&lt;Mouse&gt;/leftButton", groups: "KeyboardMouse");
         ///
         /// // Prints "A", then "Gamepad", then "dpad/up".
-        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad", out var deviceLayoutNameA, out var controlPathA));
+        /// Debug.Log(action.GetBindingDisplayString(0, out var deviceLayoutNameA, out var controlPathA));
         /// Debug.Log(deviceLayoutNameA);
         /// Debug.Log(controlPathA);
         ///
         /// // Prints "LMB", then "Mouse", then "leftButton".
-        /// Debug.Log(action.GetBindingDisplayString(InputBinding.MaskByGroup("KeyboardMouse", out var deviceLayoutNameB, out var controlPathB));
+        /// Debug.Log(action.GetBindingDisplayString(1, out var deviceLayoutNameB, out var controlPathB));
         /// Debug.Log(deviceLayoutNameB);
         /// Debug.Log(controlPathB);
         /// </code>
@@ -397,6 +397,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputBinding.ToDisplayString(InputBinding.DisplayStringOptions,InputControl)"/>
         /// <seealso cref="InputControlPath.ToHumanReadableString(string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingIndex(InputAction,InputBinding)"/>
         public static unsafe string GetBindingDisplayString(this InputAction action, int bindingIndex,
             out string deviceLayoutName, out string controlPath,
             InputBinding.DisplayStringOptions options = default)
@@ -1977,6 +1978,8 @@ namespace UnityEngine.InputSystem
                         m_ExpectedLayout != control.m_Layout &&
                         !InputControlLayout.s_Layouts.IsBasedOn(m_ExpectedLayout, control.m_Layout))
                         continue;
+
+                    ////REVIEW: shouldn't we generally require any already actuated control to go back to 0 actuation before considering it for a rebind?
 
                     // Skip controls that are in their default state.
                     // NOTE: This is the cheapest check with respect to looking at actual state. So

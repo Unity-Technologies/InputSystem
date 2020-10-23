@@ -1381,6 +1381,82 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [TestCase("Gamepad", "TestDevice")]
+    [TestCase("Gamepad", "TestDevice", "caps")]
+    [TestCase("Gamepad", "TestDevice", null, "1234")]
+    [TestCase("Gamepad", "TestDevice", "caps", "1234")]
+    public void Devices_WhenRetainedOnDisconnectedList_CanBeReconnected(string deviceClass, string product, string capabilities = null, string serial = null)
+    {
+        var deviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                deviceClass = deviceClass,
+                product = product,
+                capabilities = capabilities,
+                serial = serial
+            });
+
+        InputSystem.Update();
+
+        var device = InputSystem.GetDeviceById(deviceId);
+
+        runtime.ReportInputDeviceRemoved(device);
+        InputSystem.Update();
+
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+
+        if (!string.IsNullOrEmpty(capabilities))
+        {
+            // Report device with different caps and make sure we don't reuse the instance from before.
+            runtime.ReportNewInputDevice(
+                new InputDeviceDescription
+                {
+                    deviceClass = deviceClass,
+                    product = product,
+                    capabilities = capabilities + "foo"
+                });
+            InputSystem.Update();
+
+            Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+            Assert.That(device.added, Is.False);
+        }
+
+        if (!string.IsNullOrEmpty(serial))
+        {
+            // Report device with different serial and make sure we don't reuse the instance from before.
+            runtime.ReportNewInputDevice(
+                new InputDeviceDescription
+                {
+                    deviceClass = deviceClass,
+                    product = product,
+                    capabilities = capabilities,
+                    serial = serial + "foo"
+                });
+            InputSystem.Update();
+
+            Assert.That(InputSystem.disconnectedDevices, Is.EquivalentTo(new[] { device }));
+            Assert.That(device.added, Is.False);
+        }
+
+        // Bring the device back.
+        var newDeviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                deviceClass = deviceClass,
+                product = product,
+                capabilities = capabilities,
+                serial = serial
+            });
+        InputSystem.Update();
+
+        Assert.That(newDeviceId, Is.Not.EqualTo(deviceId));
+        Assert.That(device.added, Is.True);
+        Assert.That(InputSystem.disconnectedDevices, Is.Empty);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_WhenRemoved_DoNotEmergeOnUnsupportedList()
     {
         // Devices added directly via AddDevice() don't end up on the list of
