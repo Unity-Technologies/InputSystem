@@ -1042,6 +1042,9 @@ namespace UnityEngine.InputSystem.Users
             {
                 ArrayHelpers.EraseSliceWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount,
                     s_AllUserData[userIndex].lostDeviceStartIndex, lostDeviceCount);
+                
+                s_AllUserData[userIndex].lostDeviceCount = 0;
+                s_AllUserData[userIndex].lostDeviceStartIndex = 0;
             }
 
             // Remove account selections that are in progress.
@@ -1322,9 +1325,14 @@ namespace UnityEngine.InputSystem.Users
                             // If we had lost some devices, flush the list. We haven't regained the device
                             // but we're no longer missing devices to play.
                             if (s_AllUserData[userIndex].lostDeviceCount > 0)
+                            {
                                 ArrayHelpers.EraseSliceWithCapacity(ref s_AllLostDevices, ref s_AllLostDeviceCount,
                                     s_AllUserData[userIndex].lostDeviceStartIndex,
                                     s_AllUserData[userIndex].lostDeviceCount);
+                                
+                                s_AllUserData[userIndex].lostDeviceCount = 0;
+                                s_AllUserData[userIndex].lostDeviceStartIndex = 0;
+                            }
 
                             // Control scheme is satisfied with the devices we have available.
                             // If we may have grabbed as of yet unpaired devices, go and pair them to the user.
