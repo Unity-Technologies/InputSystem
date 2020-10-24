@@ -1,3 +1,34 @@
+{% metadata_file .yamato/config.metadata %}
+---
+
+{% for editor in editors %}
+{% for platform in platforms %}
+promotion_test_{{ platform.name }}_{{ editor.version }}:
+  name: Promotion Test {{ editor.version }} on {{ platform.name }}
+  agent:
+    type: {{ platform.type }}
+    image: {{ platform.image }}
+    flavor: {{ platform.flavor}}
+  variables:
+    UPMCI_PROMOTION: 1
+  commands:
+    - mv ./Assets/Samples ./Packages/com.unity.inputsystem
+    - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
+    - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    {% if platform.installscript %}
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - {{ platform.installscript }} {{ editor.version }}
+    {% endif %}
+    - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
+  artifacts:
+    logs:
+      paths:
+        - "upm-ci~/test-results/**/*"
+{% endfor %}
+{% endfor %}
+
 promote:
   name: Promote to Production
   agent:
@@ -17,4 +48,8 @@ promote:
       paths:
         - "upm-ci~/**/*"
   dependencies:
-    - .yamato/upm-ci.yml#all_tests
+{% for editor in editors %}
+{% for platform in platforms %}
+    - .yamato/promotion.yml#promotion_test_{{ platform.name }}_{{ editor.version }}
+{% endfor %}
+{% endfor %}
