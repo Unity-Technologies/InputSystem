@@ -16,3 +16,5 @@ promote:
     artifacts:
       paths:
         - "upm-ci~/**/*"
+  dependencies:
+    - .yamato/upm-ci.yml#all_tests
