@@ -233,6 +233,8 @@ namespace UnityEngine.InputSystem.Editor
             return $"Initialize_{controlVariableName}";
         }
 
+        // We emit this as a separate method instead of directly inline to avoid generating a single massive constructor method
+        // as these can lead to large build times with il2cpp and C++ compilers (https://fogbugz.unity3d.com/f/cases/1282090/).
         private static void EmitControlMethod(InputActionCodeGenerator.Writer writer, string controlVariableName, Type controlType,
             string controlFieldInits, int i, InputControl control)
         {
