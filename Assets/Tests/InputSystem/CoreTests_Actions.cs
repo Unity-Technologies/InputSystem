@@ -508,6 +508,53 @@ partial class CoreTests
         }
     }
 
+    // Composites have logic to ignore control state changes coming from the same event. We had a bug where
+    // this threw off initial value checks for actions as we made up a fake event. Specifically test
+    // for this here.
+    // https://fogbugz.unity3d.com/f/cases/1274977/
+    [Test]
+    [Category("Actions")]
+    public void Actions_ValueActionsReactToCurrentStateOfControlWhenEnabled_WithCompositeBinding()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap();
+
+        var action = map.AddAction("action", type: InputActionType.Value);
+        action.AddCompositeBinding("2DVector")
+            .With("Up", "<Keyboard>/w")
+            .With("Down", "<Keyboard>/s")
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
+
+        Press(keyboard.dKey);
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+
+        map.Disable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+
+        map.Disable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+
+        map.Enable();
+        InputSystem.Update();
+
+        Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(Vector2.right).Using(Vector2EqualityComparer.Instance));
+    }
+
     // Value actions perform an initial state check when enabled. These state checks are performed
     // from InputSystem.onBeforeUpdate. However, if we enable an action as part of event processing,
     // we will react to the state of a control right away and should then not ALSO perform an
@@ -3451,6 +3498,29 @@ partial class CoreTests
         SetKeyInfo(Key.Q, "A");
 
         Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.aKey}));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_ControlsUpdateWhenDeviceConfigurationChanges_AndControlIsNotFound()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Bind to key generating a 'ö' character from Swedish layout.
+        // It doesn't exist in English layout so initial controls list should be empty.
+        var action = new InputAction(binding: "<Keyboard>/#(ö)");
+
+        Assert.That(action.controls, Is.Empty);
+
+        // Rebind the key.
+        SetKeyInfo(Key.Semicolon, "ö");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] {keyboard.semicolonKey}));
+
+        // Rebind the key back.
+        SetKeyInfo(Key.Semicolon, ";");
+
+        Assert.That(action.controls, Is.Empty);
     }
 
     [Test]
@@ -8250,6 +8320,65 @@ partial class CoreTests
                     .AndThen(Started(action, value: new Vector2(0.3f, 0.4f)))
                     .AndThen(Performed(action, value: new Vector2(0.3f, 0.4f))));
         }
+    }
+
+    private class MonoBehaviourWithActionProperty : MonoBehaviour
+    {
+        public InputActionProperty actionProperty;
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithNullReferenceType()
+    {
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty((InputActionReference)null);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithNullActionType()
+    {
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty((InputAction)null);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Property_CanGetAction_WithDestroyedReferenceType()
+    {
+        var map = new InputActionMap("map");
+        map.AddAction("action1");
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map);
+
+        var reference = ScriptableObject.CreateInstance<InputActionReference>();
+        reference.Set(asset, "map", "action1");
+
+        var go = new GameObject();
+        var component = go.AddComponent<MonoBehaviourWithActionProperty>();
+        component.actionProperty = new InputActionProperty(reference);
+
+        Assert.That(component.actionProperty.action, Is.Not.Null);
+
+        UnityEngine.Object.DestroyImmediate(reference);
+
+        Assert.DoesNotThrow(() => _ = component.actionProperty.action);
+        Assert.That(component.actionProperty.action, Is.Null);
+
+        Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
     }
 
     [Test]

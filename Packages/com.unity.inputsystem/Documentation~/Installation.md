@@ -35,3 +35,5 @@ When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define
 The Input System package comes with a number of samples. You can install these directly from the Package Manager window in Unity (menu: __Window > Package Manager__). To see the list, select the Input System package in the Package Manager window. Click **Import into Project** next to a sample to copy it into the current Project.
 
 ![Install Samples](Images/InstallSamples.png)
+
+For a more comprehensive demo project for the Input System, see the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.
