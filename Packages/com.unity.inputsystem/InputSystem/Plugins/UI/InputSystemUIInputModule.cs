@@ -348,6 +348,7 @@ namespace UnityEngine.InputSystem.UI
                 eventData.pressPosition = eventData.position;
                 eventData.pointerPressRaycast = eventData.pointerCurrentRaycast;
                 eventData.eligibleForClick = true;
+                eventData.useDragThreshold = true;
 
                 var selectHandler = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
 
