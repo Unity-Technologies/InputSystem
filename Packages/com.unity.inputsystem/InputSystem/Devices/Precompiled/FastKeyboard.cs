@@ -13,6 +13,10 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+// Suppress warnings from local variables for control references
+// that we don't end up using.
+#pragma warning disable CS0219
+
 namespace UnityEngine.InputSystem
 {
     internal partial class FastKeyboard : UnityEngine.InputSystem.Keyboard

@@ -104,6 +104,10 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using UnityEngine.InputSystem.LowLevel;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
+            writer.WriteLine("// Suppress warnings from local variables for control references");
+            writer.WriteLine("// that we don't end up using.");
+            writer.WriteLine("#pragma warning disable CS0219");
+            writer.WriteLine("");
             if (@namespace != "")
                 writer.WriteLine("namespace " + @namespace);
             writer.BeginBlock();
