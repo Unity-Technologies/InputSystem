@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.XR
     /// </remarks>
     [Serializable]
     [AddComponentMenu("XR/Tracked Pose Driver (Input System)")]
-    public class TrackedPoseDriver : MonoBehaviour, ISerializationCallbackReceiver
+    public partial class TrackedPoseDriver : MonoBehaviour
     {
         /// <summary>
         /// Options for which <see cref="Transform"/> properties to update.
@@ -93,29 +93,6 @@ namespace UnityEngine.InputSystem.XR
             set => m_UpdateType = value;
         }
 
-        // Disable warnings that these fields are never assigned to. They are set during Unity deserialization and migrated.
-        // ReSharper disable UnassignedField.Local
-#pragma warning disable 0649
-        [SerializeField, HideInInspector]
-        InputAction m_PositionAction;
-        [Obsolete("positionAction has been deprecated. Use positionInput instead.")]
-        public InputAction positionAction
-        {
-            get => m_PositionInput.action;
-            set => positionInput = new InputActionProperty(value);
-        }
-
-        [SerializeField, HideInInspector]
-        InputAction m_RotationAction;
-        [Obsolete("rotationAction has been deprecated. Use rotationInput instead.")]
-        public InputAction rotationAction
-        {
-            get => m_RotationInput.action;
-            set => rotationInput = new InputActionProperty(value);
-        }
-#pragma warning restore 0649
-        // ReSharper restore UnassignedField.Local
-
         [SerializeField]
         InputActionProperty m_PositionInput;
         /// <summary>
@@ -157,12 +134,6 @@ namespace UnityEngine.InputSystem.XR
                     BindRotation();
             }
         }
-
-        /// <summary>
-        /// Stores whether the fields of type <see cref="InputAction"/> have been migrated to fields of type <see cref="InputActionProperty"/>.
-        /// </summary>
-        [SerializeField, HideInInspector]
-        bool m_HasMigratedActions;
 
         Vector3 m_CurrentPosition = Vector3.zero;
         Quaternion m_CurrentRotation = Quaternion.identity;
@@ -280,15 +251,6 @@ namespace UnityEngine.InputSystem.XR
         }
 
         /// <summary>
-        /// This function is called when the user hits the Reset button in the Inspector's context menu
-        /// or when adding the component the first time. This function is only called in editor mode.
-        /// </summary>
-        protected void Reset()
-        {
-            m_HasMigratedActions = true;
-        }
-
-        /// <summary>
         /// This function is called when the script instance is being loaded.
         /// </summary>
         protected virtual void Awake()
@@ -382,22 +344,6 @@ namespace UnityEngine.InputSystem.XR
         protected virtual void PerformUpdate()
         {
             SetLocalTransform(m_CurrentPosition, m_CurrentRotation);
-        }
-
-        /// <inheritdoc />
-        void ISerializationCallbackReceiver.OnBeforeSerialize()
-        {
-        }
-
-        /// <inheritdoc />
-        void ISerializationCallbackReceiver.OnAfterDeserialize()
-        {
-            if (m_HasMigratedActions)
-                return;
-
-            m_PositionInput = new InputActionProperty(m_PositionAction);
-            m_RotationInput = new InputActionProperty(m_RotationAction);
-            m_HasMigratedActions = true;
         }
     }
 }
