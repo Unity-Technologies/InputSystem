@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
@@ -3219,6 +3220,7 @@ namespace UnityEngine.InputSystem
             Mouse.s_PlatformMouseDevice = null;
 
             InputUser.ResetGlobals();
+            EnhancedTouchSupport.Reset();
             Profiling.Profiler.EndSample();
         }
 
@@ -3292,6 +3294,7 @@ namespace UnityEngine.InputSystem
 
             ////FIXME: does not preserve global state in InputActionState
             ////TODO: preserve InputUser state
+            ////TODO: preserve EnhancedTouchSupport state
 
             s_SavedStateStack.Push(new State
             {

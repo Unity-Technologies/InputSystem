@@ -19,7 +19,7 @@
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - {{ platform.installscript }} {{ editor.version }}
     {% endif %}
-    - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} 
+    - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
@@ -39,7 +39,7 @@ build_ios_{{ editor.version }}:
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
     - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr --output utr
     - chmod +x ./utr
-    - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only
+    - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
     players:
         paths:
@@ -63,7 +63,7 @@ run_ios_{{ editor.version }}:
     # Give UTR execution permissions
     - chmod +x ./utr
     # Run the test build on the device
-    - ./utr --suite=playmode --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results
+    - ./utr --suite=playmode --platform=iOS --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
   artifacts:
     logs:
         paths:
@@ -80,7 +80,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
     - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
-    - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only
+    - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
         paths:
@@ -110,7 +110,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
        # List the connected devices
        start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-       {% if editor.version != "2020.1" or backend.name == "mono" %} ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results {% else %}echo "2020.1 Android Debug il2cpp has a bug Case 1252614" {%endif%}
+       ./utr --suite=playmode --platform=android --player-load-path=build/players --artifacts_path=build/test-results --report-performance-data --performance-project-id=InputSystem
   after:
     - start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
     - if not exist build\test-results mkdir build\test-results
