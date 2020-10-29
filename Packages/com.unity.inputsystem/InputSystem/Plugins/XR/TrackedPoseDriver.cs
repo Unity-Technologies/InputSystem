@@ -184,13 +184,15 @@ namespace UnityEngine.InputSystem.XR
             if (action == null)
                 return;
 
-            action.Rename($"{gameObject.name} - TPD - Position");
             action.performed += OnPositionPerformed;
             action.canceled += OnPositionCanceled;
             m_PositionBound = true;
 
             if (m_PositionInput.reference == null)
+            {
+                action.Rename($"{gameObject.name} - TPD - Position");
                 action.Enable();
+            }
         }
 
         void BindRotation()
@@ -202,13 +204,15 @@ namespace UnityEngine.InputSystem.XR
             if (action == null)
                 return;
 
-            action.Rename($"{gameObject.name} - TPD - Rotation");
             action.performed += OnRotationPerformed;
             action.canceled += OnRotationCanceled;
             m_RotationBound = true;
 
             if (m_RotationInput.reference == null)
+            {
+                action.Rename($"{gameObject.name} - TPD - Rotation");
                 action.Enable();
+            }
         }
 
         void UnbindActions()
