@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Layouts;
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
-    /// Enum of different player loop positions where the input system can invoke it's update mechanism.
+    /// Enum of different player loop positions where the input system can invoke its update mechanism.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "Not consistently used as flags, many using APIs expect only one type to be passed.")]
     [Flags]
