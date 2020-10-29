@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.XR
@@ -187,6 +186,7 @@ namespace UnityEngine.InputSystem.XR
 
             action.Rename($"{gameObject.name} - TPD - Position");
             action.performed += OnPositionPerformed;
+            action.canceled += OnPositionCanceled;
             m_PositionBound = true;
 
             if (m_PositionInput.reference == null)
@@ -204,6 +204,7 @@ namespace UnityEngine.InputSystem.XR
 
             action.Rename($"{gameObject.name} - TPD - Rotation");
             action.performed += OnRotationPerformed;
+            action.canceled += OnRotationCanceled;
             m_RotationBound = true;
 
             if (m_RotationInput.reference == null)
@@ -229,6 +230,7 @@ namespace UnityEngine.InputSystem.XR
                 action.Disable();
 
             action.performed -= OnPositionPerformed;
+            action.canceled -= OnPositionCanceled;
             m_PositionBound = false;
         }
 
@@ -245,6 +247,7 @@ namespace UnityEngine.InputSystem.XR
                 action.Disable();
 
             action.performed -= OnRotationPerformed;
+            action.canceled -= OnRotationCanceled;
             m_RotationBound = false;
         }
 
@@ -254,10 +257,31 @@ namespace UnityEngine.InputSystem.XR
             m_CurrentPosition = context.ReadValue<Vector3>();
         }
 
+        void OnPositionCanceled(InputAction.CallbackContext context)
+        {
+            Debug.Assert(m_PositionBound, this);
+            m_CurrentPosition = Vector3.zero;
+        }
+
         void OnRotationPerformed(InputAction.CallbackContext context)
         {
             Debug.Assert(m_RotationBound, this);
             m_CurrentRotation = context.ReadValue<Quaternion>();
+        }
+
+        void OnRotationCanceled(InputAction.CallbackContext context)
+        {
+            Debug.Assert(m_RotationBound, this);
+            m_CurrentRotation = Quaternion.identity;
+        }
+
+        /// <summary>
+        /// This function is called when the user hits the Reset button in the Inspector's context menu
+        /// or when adding the component the first time. This function is only called in editor mode.
+        /// </summary>
+        protected void Reset()
+        {
+            m_HasMigratedActions = true;
         }
 
         /// <summary>
