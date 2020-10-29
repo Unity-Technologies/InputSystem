@@ -1,7 +1,11 @@
+---
+uid: home
+---
+
 # Package Manager Documentation Tools
 The package documentation tools is a package manager ui extension that generates documentation for a package. This allows package developers to preview what their documentation will look like in its final published form.
 
-*This is an internal Unity tool and will not be supported.*
+*This is an internal Unity tool and is be supported for external use.*
 
 <a name="Install"></a>
 ## Installation
@@ -35,8 +39,33 @@ You can press the `Generate Documentation` button on an _installed_ packages to 
 
 ![Update button](Images/Generate.png)
 
+* **Validate** -- Enable the Validate option to also run the Package Validation Suite to find any missing documentation in your API scripts. The report is included in the Error Report.
+* **Serve after Build** -- Enable the Serve after Build option to view the generated docs in a browser. Note that this feature relies on an internal, local web server. Since the web server is running in the Editor, any domain reload shuts down the server. The structure of the generated HTML does not support viewing from the local file server.
+* **View Error Report** -- Shows errors and warnings emitted by DocFX or the Package Validation tool.
+* **Debug Doc Build** -- Enable this option to save the intermediate build files used during doc generation. Only use enable this if you need to debug at the DocFX build level. The terminal command needed to rerun DocFX is printed to the Unity Console so that you can easily rerun the DocFX portion of the doc build.
+
+Note that the Validate button shown in the screenshot is inserted by the Validation package. You can use this button to run the Validation Suite checks as normal, but the results aren't included in the doc error report. The Validation Suite checks identify C# ctypes and members that do not have any documentation. The Doc Tools Error report includes missing files, bad links, and malformed document contents, but does not list "missing" documentation.
+
+## Landing pages
+There are two "landing pages" in package docs, one for the Manual, and one for the Script Reference.
+
+For the Manual, the landing page is created from the `index.md` file found in the `Documentation~` folder. If no such file exists, the tools uses the first markdown file it founds. Thus, if you have more than one markdown file, you should always `index.md` as your first, or landing, page. (In fact if you include a `TableOfContents.md` file, you MUST include `index.md`.)
+
+For the Script Reference, you can optionally include a markdown file, `api_index.md`. If this file exists, the tool puts the contents onto the first page of the Script Reference. This is a good place to outline the structure of your API and list the major classes. When making links, note that the file ends up in the `api` folder, not the `manual` folder, so ensure that relative links reflect the final folder structure. You can also use DocFX's `xref` link syntax and uids:
+
+    [API class](xref:Unity.Entities.SystemBase)
+    [Manual topic](xref:uid-you-assigned-to-topic)
+
+DocFX assigns uids to all classes and members automatically (see the `xrefmap.xml` file in the generated output to look these up -- they can sometimes be complicated to figure out). You must assign a uid to a manual topic, which you can do by placing the following text at the top of the markdown file for the topic:
+
+    ---
+    uid: uid-you-assigned-to-topic
+    ---
+
+If you do not include `api_index.md`, the tools generates a generic, one-sentence, landing page.
+
 ## Table of Content
-The generated documentation will have no table of content by default, unless there is an `TableOfContents.md` file in the `Documentation` folder of the package. If there is a `TableOfContents.md` file, then there _must_ be an `index.md` file
+The generated documentation will have no table of content by default, unless there is an `TableOfContents.md` file in the `Documentation~` folder of the package. If there is a `TableOfContents.md` file, then there _must_ be an `index.md` file
 which will be the landing page when going into the manual.
 
 The table of content supports the DocWorks table of content format, which looks a liitle bit like this:
@@ -115,15 +144,57 @@ Note that by default the `_appTitle` field is set to  `DEFAULT_APP_TITLE`, and t
 | `_disableToc` | Turns off the table of contents displayed on the left side of all pages. Turning this off makes it rather dificult to navigate through a multi-page documentation set. |
 | `_packageVersion` | The package version string, which is appended to the _appTitle to become part of each html page title and the breadcrumb trail. Set to an empty string to suppress the version display. |
 
+## Snippets
+
+You can include a markdown file as content in another with:
+
+`[!include[](snippets/snippet-content.md)]`
+
+[!include[](snippets/snippet-content.md)]
+
+## Batch Generation
+You can batch generate docs for a set of packages from either inside Unity or by passing commandline parameters to the Unity executable.
+
+**Note:** This should be considered an experimental feature. Batch generating docs seems to work fine; however, batch adding packages has limitations. Some packages require user interactions the first time they are added and sometimes adding more than one package at a time generates errors -- this is probably related to packages that share dependencies (or are dependencies).
+
+### Using a PackageSet Asset
+
+To use a PackageSet Asset, first create one with the Unity **Create Asset** menu (menu: **Assets > Create > Doc Tools > Create Package Set Asset**).
+
+Next, select the new Asset to display its Inspector:
+
+![Package Set Inspector](Images/PackageSetInspector.png)
+
+Paste a list of packages names (including @version) into the text field.
+
+You can optionally set a destination path to override the normal output path for the docs (which is *c:/temp* on Windows and deep inside a hidden *Library* folder on Mac). This can be helpful when generating multiple sets of docs so you can view them in a local web server.
+
+Note that after batch generating a set of docs, you can find the error report in the *Logs/DocToolReports* directory of the Unity project folder (or from the Package Manager window for an individual package).
+
+### Using commandline arguments to Unity
+You can use the Batch class to generate docs by passing command line arguments to Unity. To use batch generation, you must have a project that already contains this Doc Tools package (since that is where the batch code exists).
+
+There are three batch commands supported, each can be given one or more package IDs as input:
+
+* **AddPackages** -- Installs the packages through the Package Manager. This must be run unless the packages are already installed in the project.
+* **GenerateDocs** -- Generates the docs for the packages. The files are saved to the usual place, hidden in the bowels of your file system.
+* **RemovePackages** -- Removes one or more packages using the Package Manager. This step is optional.
+
+These commands must be run as separate steps -- in other words, to add, generate the docs for, and then remove a set of packages, you must invoke Unity three times. An example invocation to do that in a bash shell is:
+
+``` bash
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.AddPackages -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1"
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.GenerateDocs -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1"
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.RemovePackages -packages="com.unity.entities com.unity.ugui com.unity.remote-config"
+
+```
+
+(At the time this was written, the RemovePackages function only takes a package name, not the full ID, which is contrary to the documentation.)
+
 # Technical details
 
 ## Requirements
 
-This version of Unity Package Manager is compatible with the following versions of the Unity Editor:
+This version of Unity Package Manager Doc Tools is compatible with the following versions of the Unity Editor:
 
-* 2018.1 and later (recommended)
-
-## Documentation revision history
-|Date|Reason|
-|---|---|
-|April 12, 2018|Document created. Matches package version 1.0.0-preview.|
+* 2019.4 and later

@@ -24,6 +24,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 return;
 
             this.packageInfo = packageInfo;
+            GlobalSettings.PackageInformation = packageInfo;
 
             if (ui != null)
                 ui.OnPackageChanged(this.packageInfo);

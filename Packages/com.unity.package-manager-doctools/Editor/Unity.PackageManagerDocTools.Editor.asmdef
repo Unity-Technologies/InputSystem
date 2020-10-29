@@ -1,9 +1,18 @@
 {
     "name": "Unity.PackageManagerDocTools.Editor",
-    "references": ["Unity.PackageManagerUI.Editor"],
-    "optionalUnityReferences": [],
+    "references": [
+        "Unity.PackageManagerUI.Editor",
+        "Unity.PackageValidationSuite.Editor"
+    ],
     "includePlatforms": [
         "Editor"
     ],
-    "excludePlatforms": []
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

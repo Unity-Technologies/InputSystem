@@ -8,6 +8,7 @@
     <tr>
       <th>{{__global.name}}</th>
       <th>{{__global.description}}</th>
+      <th>Value</th>
     </tr>
   <thead>
   <tbody>
@@ -15,6 +16,7 @@
     <tr>
       <td id="{{id}}">{{name.0.value}}</td>
       <td>{{{summary}}}</td>
+      <td>{{_enum_value}}</td>
     </tr>
   {{/children}}
   </tbody>

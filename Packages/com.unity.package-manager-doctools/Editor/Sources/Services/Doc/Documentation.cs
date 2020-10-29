@@ -52,13 +52,13 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         ///
         /// This method will also generate the site locally if needed.
         /// </summary>
-        /// <param name="packageName">eg: com.unity.package-manager-ui</param>
+        /// <param name="packageInfo">The package properties.</param>
         /// <param name="shortVersionId">eg: com.unity.package-manager-ui@1.2 (note: not @1.2.0)</param>
         /// <param name="isEmbedded">If the package is embedded</param>
         /// <param name="isInstalled">If the package is currently installed</param>
-        internal void View(string packageName, string shortVersionId, bool isEmbedded, bool isInstalled)
+        internal void View(PackageInfo packageInfo, string shortVersionId, bool isEmbedded, bool isInstalled)
         {
-            Builder.OpenPackageUrl(packageName, shortVersionId, isEmbedded, isInstalled);
+            Builder.OpenPackageUrl(packageInfo, shortVersionId, isEmbedded, isInstalled);
         }
 
         /// <summary>
@@ -66,13 +66,13 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         ///
         /// This method will also generate the site locally if needed.
         /// </summary>
-        /// <param name="packageName">eg: com.unity.package-manager-ui</param>
+        /// <param name="packageInfo">Package properties.</param>
         /// <param name="shortVersionId">eg: com.unity.package-manager-ui@1.2 (note: not @1.2.0)</param>
         /// <param name="isEmbedded">If the package is embedded</param>
         /// <param name="isInstalled">If the package is currently installed</param>
-        internal void ViewChangelog(string packageName, string shortVersionId, bool isEmbedded, bool isInstalled)
+        internal void ViewChangelog(PackageInfo packageInfo, string shortVersionId, bool isEmbedded, bool isInstalled)
         {
-            Builder.OpenPackageUrl(packageName, shortVersionId, isEmbedded, isInstalled, "changelog/CHANGELOG.html");
+            Builder.OpenPackageUrl(packageInfo, shortVersionId, isEmbedded, isInstalled, "changelog/CHANGELOG.html");
         }
 
         /// <summary>
@@ -85,27 +85,31 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         /// This will generate two folder, one which contains the documentation website, and another wich will contain a page to re-direct to the
         /// latest documentation website address.
         /// </summary>
-        /// <param name="packageName">eg: com.unity.package-manager-ui</param>
+        /// <param name="packageInfo">The package info object.</param>
         /// <param name="shortVersionId">eg: com.unity.package-manager-ui@1.2 (note: not @1.2.0)</param>
         /// <param name="isEmbedded">If the package is embedded</param>
         /// <param name="latestShortVersionId">Short version id of the latest available package. This is used when creating the redirect page to latest version.</param>
         /// <param name="absoluteLatestShortVersionId">Short version id of the latest available package, including preview. Used to link to latest preview version of a package. eg: 1.4.0-preview</param>
-        internal void GenerateFullSite(string packageName, string shortVersionId, bool isEmbedded, string latestShortVersionId = "", string absoluteLatestShortVersionId = "",
-            bool revealInFinder = true, bool openWebsite = true)
+        internal string GenerateFullSite(PackageInfo packageInfo, string shortVersionId, bool isEmbedded, string latestShortVersionId = "", string absoluteLatestShortVersionId = "",
+            bool openWebsite = true, bool revealInFinder = true)
         {
-            if (!Builder.TryBuildRedirectToManual(packageName, shortVersionId))
-                Builder.BuildWithProgress(packageName, shortVersionId);                    // Always re-build
+            var buildLog = "";
+            if (!Builder.TryBuildRedirectToManual(packageInfo.name, shortVersionId))
+                buildLog = Builder.BuildWithProgress(packageInfo, shortVersionId);                    // Always re-build
 
             if (string.IsNullOrEmpty(latestShortVersionId))
                 latestShortVersionId = shortVersionId;
 
-            Builder.BuildRedirectToLatestPage(packageName, latestShortVersionId, absoluteLatestShortVersionId);
+            Builder.BuildRedirectToLatestPage(packageInfo.name, latestShortVersionId, absoluteLatestShortVersionId);
 
             if (revealInFinder)
                 EditorUtility.RevealInFinder(Builder.GetPackageSiteFolder(shortVersionId));
 
             if (openWebsite)
-                Builder.OpenLocalPackageUrl(packageName, shortVersionId, isEmbedded, "index.html", true);
+                Builder.OpenLocalPackageUrl(packageInfo, shortVersionId, isEmbedded, "index.html", true);
+
+            Builder.BuildPackageMetaData(packageInfo.name);
+            return buildLog;
         }
 
         /// <summary>
@@ -116,15 +120,16 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         ///     C:\Users\USER_NAME\AppData\Local\Unity\Editor\documentation\packages on Windows
         ///
         /// </summary>
-        /// <param name="packageName">eg: com.unity.package-manager-ui</param>
+        /// <param name="packageInfo">The package info object</param>
         /// <param name="version">Version in Semantic version format -- eg: 1.2.0</param>
         ///<param name="outputFolder">(Optional) Output folder where the doc site should be created.</param>
-        public void Generate(string packageName, string version, string outputFolder = null)
+        public void Generate(PackageInfo packageInfo, string version, string outputFolder = null)
         {
+            var packageName = packageInfo.name;
             var shortVersionId = GetShortVersionId(packageName, version);
 
-            if (!Builder.TryBuildRedirectToManual(packageName, shortVersionId))
-                Builder.BuildWithProgress(packageName, shortVersionId, outputFolder);                    // Always re-build
+            if (!Builder.TryBuildRedirectToManual(packageName, shortVersionId, outputFolder))
+                Builder.BuildWithProgress(packageInfo, shortVersionId, outputFolder);                    // Always re-build
         }
 
         /// <summary>
@@ -141,7 +146,26 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         /// <param name="absoluteLatestShortVersionId">Short version id of the latest available package, including preview. Used to link to latest preview version of a package. eg: 1.4.0-preview</param>
         public void GenerateRedirect(string packageName, string latestVersionId, string outputFolder = null, string absoluteLatestShortVersionId = "")
         {
+            if (string.IsNullOrEmpty(absoluteLatestShortVersionId))
+                absoluteLatestShortVersionId = GetShortVersionId(packageName, latestVersionId);
+
             Builder.BuildRedirectToLatestPage(packageName, GetShortVersionId(packageName, latestVersionId), absoluteLatestShortVersionId, outputFolder);
+        }
+
+        /// <summary>
+        /// Generate metadata for a package.
+        /// </summary>
+        /// <param name="packageName">eg: com.unity.package-manager-ui</param>
+        /// <param name="outputFolder">(Optional) Output folder where the metadata should be created.</param>
+        public void GenerateMetadata(string packageName, string outputFolder = null)
+        {
+            Builder.BuildPackageMetaData(packageName, outputFolder);
+        }
+
+        // TODO: this doesn't seem to be the right place for a "serve the docs" function, but serving is tightly bound to the building right now.
+        public void ServeDocs(PackageInfo packageInfo, string shortVersionId, bool isEmbedded, string path = "index.html", bool doNotRebuild = false)
+        {
+            Builder.OpenLocalPackageUrl(packageInfo, shortVersionId, isEmbedded, path, doNotRebuild);
         }
 
         internal static void GeneratePackageDocTest()

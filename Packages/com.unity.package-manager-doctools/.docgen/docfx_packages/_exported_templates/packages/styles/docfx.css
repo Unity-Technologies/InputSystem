@@ -1,5 +1,5 @@
 /* Copyright (c) Microsoft Corporation. All Rights Reserved. Licensed under the MIT License. See License.txt in the project root for license information. */
-@import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,400i,700,700i&display=swap');
 
 html,
 body {
@@ -41,7 +41,7 @@ h4:before {
 
 h1, h2, h3, h4, h5, h6, span.xref {
     word-wrap: break-word;
-    word-break: break-all;
+    /* word-break: break-all; */
 }
 
 .manual h1, .manual h2, .manual h3, .manual h4, .manual h5, .manual h6 {
@@ -90,6 +90,42 @@ h6 mark {
 .inheritance .level5 {
     margin-left: 5em;
 }
+
+/* Collapsible section customizatiom */
+.collapsible {
+    cursor: pointer;
+}
+
+.collapsible div {
+  padding: 0 18px;
+  display: block;
+  overflow: hidden;
+}
+
+.collapsible.closed div {
+    display: none;
+}
+.initial {
+    display: block !important;
+}
+.collapsible.closed h5::before {
+    content: "+ ";
+    font-size: 1.2em;
+}
+.collapsible h5::before {
+    content: "- ";
+    font-size: 1.2em;
+}
+.collapsible.closed::after {
+    content: " ... ";
+    font-size: 1.5em;
+}
+
+.show-bottom .level0.initial:after {
+    content: "\A        ↳ ..." !important;
+    white-space: pre;
+}
+/* End collapsible section customizatiom */
 
 span.parametername,
 span.paramref,
@@ -224,7 +260,7 @@ article section {
 }*/
 .breadcrumb {
   margin: 0;
-  padding: 10px 0;
+  padding: 0;
   background-color: inherit;
   white-space: nowrap;
 }
@@ -295,6 +331,7 @@ article section {
 .navbar .navbar-nav {
   display: inline-block;
 }
+
 .docs-search {
   background: white;
   vertical-align: middle;
@@ -358,8 +395,6 @@ article section {
 }
 
 .back-to-unity {
-  #color: #00cccc;
-
   color: white;
   background: url(../styles/sprites.png) right -112px no-repeat;
   padding: 0 31px 0 0;
@@ -371,7 +406,7 @@ article section {
 }
 
 .back-to-unity:hover {
-  color: rgb(255, 255, 255);
+  color: #2196f3;
 }
 
 /* Search results display*/
@@ -554,6 +589,12 @@ body .toc{
   font-weight: normal;
   margin: 5px 0 0 15px;
   font-size: 14px;
+}
+.toc .level2 a {
+  margin-bottom: 0.3em;
+}
+.toc .level2 {
+  text-indent: -0.5em;
 }
 .toc-toggle {
   display: none;

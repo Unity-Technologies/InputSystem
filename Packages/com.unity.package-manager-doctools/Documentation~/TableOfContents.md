@@ -1,2 +1,6 @@
-* [Documentation Tool](index)
-    * [Table Of Content](index#table-of-content)
+* [Documentation Tool](index.md)
+* [External Links](ExternalLinks.md)
+* [Parent Topics](subfolder/ParentTopicA.md)
+    * [Child Topic B](subfolder/subfolder/ChildTopicB.md)
+    * [Child Topic C](ChildTopicC.md)
+    * [Nested TOC](subfolder/subfolderWithTOC/toc.yml)

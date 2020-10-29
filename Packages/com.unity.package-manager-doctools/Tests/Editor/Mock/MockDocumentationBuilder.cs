@@ -15,7 +15,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         // Don't do anything
         public override void OpenUrl(string url) {}
 
-        public override void OpenLocalPackageUrl(string packageName, string shortVersionId, bool isEmbedded, string path, bool doNotRebuild)
+        public override void OpenLocalPackageUrl(PackageInfo packageInfo, string shortVersionId, bool isEmbedded, string path, bool doNotRebuild)
         {
             OpenLocalWasCalled = true;
         }

@@ -4,7 +4,7 @@
 <div class="markdown level0 summary">{{{summary}}}</div>
 <div class="markdown level0 conceptual">{{{conceptual}}}</div>
 {{#inClass}}
-<div class="inheritance">
+<div class="inheritance collapsible show-bottom">
   <h5>{{__global.inheritance}}</h5>
   {{#inheritance}}
   <div class="level{{index}}">{{{specName.0.value}}}</div>
@@ -16,7 +16,7 @@
     <div class="level{{index}}">{{{specName.0.value}}}</div>
 {{/derivedClasses}}
 {{#inheritedMembers.0}}
-<div class="inheritedMembers">
+<div class="inheritedMembers collapsible">
   <h5>{{__global.inheritedMembers}}</h5>
 {{/inheritedMembers.0}}
 {{#inheritedMembers}}

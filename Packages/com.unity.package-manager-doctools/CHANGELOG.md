@@ -4,6 +4,61 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.6.1-preview.2] - 2020-09-28
+- Include the Linux Mono archive that was accidentally omitted from the previous release.
+
+## [1.6.1-preview] - 2020-09-25
+- Added support for package documentation generation on Linux
+
+## [1.6.0-preview] - 2020-09-23
+- Add support for separating API members on their own pages. This featrue is opt-in. Add a file named `projectMetadata.json` to the Documentation~ folder containing the JSON statement: `{"useMemberPages": true}`.
+- Fixed bug that prevented classes in the global namespace from appearing in the script reference. Hint: use filter.yml to hide test classes (or put them in a namespace).
+- Fixed bug in which enum values were alphabetically sorted. Now enum values are sorted by value. The value is also displayed.
+
+## [1.5.1-preview] - 2020-09-08
+- Added support for the `DOCTOOLS_DESTINATION` environment variable which overrides the `DestinationPath` variable (see [GlobalSettings](./Editor/Sources/Services/Doc/GlobalSettings.cs))
+
+## [1.5.0-preview.2] - 2020-09-01
+- Fixed version selector for localised docs (links were formatted incorrectly resulting in broken links)
+
+## [1.5.0-preview.1] - 2020-08-25
+- Added support for linking to C# keywords (like `null` and `async`) with `<see langword="keyword">` elements. Previously these were just rendered as normal text in the html output.
+
+## [1.4.0-preview.1] - 2020-08-18
+- Added support for placing markdown fragments in `Documentation~/snippets`. These fragments can be included by another markdown file, but do not become html files themselves.
+
+## [1.3.0-preview.1] - 2020-07-07
+- Add ScriptableAsset object to allow in-Editor batch doc generation.
+- Fixed sorting of versions in the HTML version selector control
+- Added minimum Unity version to HTML version selector text
+
+## [1.2.1-preview.1] - 2020-06-18
+- Fix bug introduced in 1.2.0 in which markdown files in subfolders under `Documentation~` were ignored.
+- Added support for linking to `toc.yml` files in subfolders from `TableOFContents.md`.
+- Added documentation about nesting content in the TOC.
+- Added xrefmaps for Unity 2019.4
+- Added methods, fields, and properties to the Unity xrefmaps.
+
+### Known Issues
+- Not all Unity APIs can be crossreferenced via the xrefmaps. (The mapping of Comment ID to URL in the published docs is not always predictable. Adding support for the remaining types is ongoing.)
+- Cross-references to Unity docs does not always work. A workaround is to use the **Assets > Open C# Project** menu command in the Unity Editor before generating the docs. This seems to create a working project file with the correct library references.
+
+## [1.2.0-preview.1] - 2020-05-27
+- Refactored doc generation code to better resolve types in external assemblies
+- Some type links to other packages now work; all should list namespace if no link is available
+- Files in Documentation~ are no longer moved to a different relative location before doc generation. This is a potentially breaking change if file links assumed the old file structure. Including code samples defined in a region in a C# file inside a Manual markdown file is one place such breakage could occur. To correct this, remove the lowercase `package` folder in the path. Including a code sample in the XML comment of another C# file is unaffected by this change.
+-  Warnings and errors are now always logged to a text file under Logs/DocToolReports in the project folder. View the report using the **View Error Report** button.
+- Added a **Validate** option, which runs the Package Validation Suite and includes its report in the Doc Tool Report. This shows missing API docs. It also creates a dependency on the Package Validation Suite package.
+- Added a **Debug Doc Build** option, which replaces the **Verbose** option.
+- Added batch generation to perform doc builds using Unity command line arguments.
+  - Added support for optional `api_index.md`, which allows you to write content for the landing page of the Script Reference section.
+- Added version switcher feature
+- Changed header background colour to true black (#000)
+- Added metadata download feature on generating documentation
+- Moved breadcrumbs to main content area
+- Fixed some broken CSS (a rogue hashtag)
+- Added bold fonts to Roboto import for Mac users
+
 ## [1.1.1-preview.5] - 2019-09-23
 - Updated the Google Tag Manager code
 - Changed default `_apptitle` setting to `PACKAGE DISPLAY NAME | VERSION`

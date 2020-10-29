@@ -3,3 +3,6 @@
 <script type="text/javascript" src="{{_rel}}styles/docfx.vendor.js"></script>
 <script type="text/javascript" src="{{_rel}}styles/docfx.js"></script>
 <script type="text/javascript" src="{{_rel}}styles/main.js"></script>
+<script type="text/javascript" src="{{_rel}}styles/metadata-collector.js"></script>
+<script type="text/javascript" src="{{_rel}}styles/version-switcher.js"></script>
+<script type="text/javascript" src="{{_rel}}styles/language-switcher.js"></script>
