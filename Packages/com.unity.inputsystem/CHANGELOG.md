@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
+- Fixed `InputDevice.canRunInBackground` not being correctly set for VR devices (thus not allowing them to receive input while the application is not focused).
 
 ## [1.1.0-preview.2] - 2020-10-23
 
