@@ -81,6 +81,11 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
+        public int IndexOf(TValue value)
+        {
+            return Array.IndexOf(m_Array, value);
+        }
+
         /// <summary>
         /// Returns an enumerator that iterates through the read-only array.
         /// <returns>

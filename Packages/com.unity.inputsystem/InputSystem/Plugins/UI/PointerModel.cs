@@ -74,14 +74,9 @@ namespace UnityEngine.InputSystem.UI
         public ButtonState middleButton;
         public ExtendedPointerEventData eventData;
 
-        public PointerModel(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, ExtendedPointerEventData eventData)
+        public PointerModel(ExtendedPointerEventData eventData)
         {
             this.eventData = eventData;
-
-            eventData.pointerId = pointerId;
-            eventData.touchId = touchId;
-            eventData.pointerType = pointerType;
-            eventData.device = device;
 
             changedThisFrame = false;
 

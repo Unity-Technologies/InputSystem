@@ -52,6 +52,8 @@ namespace UnityEngine.InputSystem.UI
         /// </summary>
         public UIPointerType pointerType { get; set; }
 
+        public int uiToolkitPointerId { get; set; }
+
         /// <summary>
         /// For <see cref="UIPointerType.Tracked"/> type pointer input, this is the world-space position of
         /// the <see cref="TrackedDevice"/>.
