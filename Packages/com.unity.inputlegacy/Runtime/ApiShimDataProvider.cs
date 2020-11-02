@@ -24,13 +24,15 @@ namespace UnityEngine.InputLegacy
 
         public static void OnDeviceChange()
         {
-            s_KeyboardMapping = null;
-        }
+            // TODO remove macro, make a unified wrapper instead
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
+            WindowsKeyboardMapping.ResolveMappingForCurrentLayout();
+#endif
 
-        // Maps Keycode+Shift+Numlock to array of button controls.
-        // Mapping is layout sensitive, so should be reset every time keyboard layout changes.
-        private static IDictionary<(KeyCode keyCode, bool shiftStatus, bool numlockStatus), ButtonControl[]>
-            s_KeyboardMapping;
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            MacOSKeyboardMapping.ResolveMappingForCurrentLayout();
+#endif
+        }
 
         private static string s_InputStringData = "";
         private static uint s_InputStringStep = 0;
@@ -111,15 +113,14 @@ namespace UnityEngine.InputLegacy
                 case var keyboardKeyCode when (keyCode >= KeyCode.None && keyCode <= KeyCode.Menu):
                 {
 #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
-                    if (s_KeyboardMapping == null)
-                        s_KeyboardMapping = WindowsKeyboardMapping.GetMappingForCurrentLayout();
-
-                    var shiftStatus = Keyboard.current.shiftKey.isPressed;
-                    var numlockStatus = WindowsKeyboardMapping.GetNumlockState();
+                    var buttonControls = WindowsKeyboardMapping.GetControlsForKeyCode(keyboardKeyCode);
 #endif
 
-                    if (!s_KeyboardMapping.TryGetValue((keyboardKeyCode, shiftStatus, numlockStatus),
-                        out var buttonControls))
+                    #if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+                    var buttonControls = MacOSKeyboardMapping.GetControlsForKeyCode(keyboardKeyCode);
+#endif
+
+                    if (buttonControls == null)
                         return false;
 
                     foreach (var buttonControl in buttonControls)
