@@ -465,7 +465,7 @@ namespace UnityEngine.InputSystem
         /// <param name="id">ID (as in <see cref="InputAction.id"/>) of the action.</param>
         /// <returns>The action with the given ID or null if no action in the map has
         /// the given ID.</returns>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction FindAction(Guid id)
         {
             var index = FindActionIndex(id);

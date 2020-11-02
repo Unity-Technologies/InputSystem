@@ -299,7 +299,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Add a binding that references the given <paramref name="control"/> and triggers
-        /// the given <seealso cref="action"/>.
+        /// the given <paramref cref="action"/>.
         /// </summary>
         /// <param name="action">Action to trigger.</param>
         /// <param name="control">Control to bind to. The full <see cref="InputControl.path"/> of the control will

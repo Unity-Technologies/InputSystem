@@ -15,7 +15,7 @@ namespace UnityEngine.InputSystem.LowLevel
         None = 0,
 
         /// <summary>
-        /// Update corresponding to <see cref="MonoBehaviour.OnUpdate"/>.
+        /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
         /// </summary>
         /// <remarks>
         /// Every frame has exactly one dynamic update. If not reconfigured using <see cref="PlayerLoop"/>,
@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Dynamic = 1 << 0,
 
         /// <summary>
-        /// Update corresponding to <see cref="MonoBehaviour.OnFixedUpdate"/>.
+        /// Update corresponding to <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
         /// </summary>
         /// <remarks>
         /// Every frame has zero or more fixed updates. These are run before the dynamic update for the

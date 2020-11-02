@@ -123,13 +123,14 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         /// <param name="packageInfo">The package info object</param>
         /// <param name="version">Version in Semantic version format -- eg: 1.2.0</param>
         ///<param name="outputFolder">(Optional) Output folder where the doc site should be created.</param>
-        public void Generate(PackageInfo packageInfo, string version, string outputFolder = null)
+        public string Generate(PackageInfo packageInfo, string version, string outputFolder = null)
         {
             var packageName = packageInfo.name;
             var shortVersionId = GetShortVersionId(packageName, version);
 
             if (!Builder.TryBuildRedirectToManual(packageName, shortVersionId, outputFolder))
-                Builder.BuildWithProgress(packageInfo, shortVersionId, outputFolder);                    // Always re-build
+                return Builder.BuildWithProgress(packageInfo, shortVersionId, outputFolder);                    // Always re-build
+            return default;
         }
 
         /// <summary>

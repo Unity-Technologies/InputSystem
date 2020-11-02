@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem
         /// Within player code, the coordinates are in the coordinate space of Unity's <c>Display</c>.
         ///
         /// Within editor code, the coordinates are in the coordinate space of the current <c>EditorWindow</c>
-        /// This means that if you query <see cref="Mouse.position"/> in <c>EditorWindow.OnGUI</c>, for example,
+        /// This means that if you query the <see cref="Mouse"/> <see cref="position"/> in <c>EditorWindow.OnGUI</c>, for example,
         /// the returned 2D vector will be in the coordinate space of your local GUI (same as
         /// <c>Event.mousePosition</c>).
         /// </remarks>

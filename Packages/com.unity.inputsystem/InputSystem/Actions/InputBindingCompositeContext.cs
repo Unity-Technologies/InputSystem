@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem
     /// </summary>
     /// <remarks>
     /// An instance of this struct is passed to <see
-    /// cref="InputBindingComposite{TValue}.ReadValue(InputBindingComposite)"/>.
+    /// cref="InputBindingComposite{TValue}.ReadValue(ref InputBindingCompositeContext)"/>.
     /// Use it to access contextual data such as the value for individual part bindings.
     ///
     /// Note that an instance of this struct should never be held on to past the duration

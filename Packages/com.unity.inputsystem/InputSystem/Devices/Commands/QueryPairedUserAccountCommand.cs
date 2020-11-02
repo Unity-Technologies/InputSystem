@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct QueryPairedUserAccountCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('P', 'A', 'C', 'C'); } }
+        public static FourCC Type => new FourCC('P', 'A', 'C', 'C');
 
         internal const int kMaxNameLength = 256;
         internal const int kMaxIdLength = 256;
@@ -33,36 +33,22 @@ namespace UnityEngine.InputSystem.LowLevel
             /// <summary>
             /// The device is currently paired to a user account.
             /// </summary>
-            /// <remarks>
-            /// If <see cref="NotSupported"/> is not set and this flag is also not set, it means that the device
-            /// does support pairing to user accounts but that the device is not currently paired to an account.
-            /// It depends on the platform whether this is a valid setup. At the moment, only Xbox and Switch
-            /// support this behavior. On PS4, devices will always be paired.
-            /// </remarks>
             DevicePairedToUserAccount = 1 << 1,
 
             /// <summary>
             /// The system is currently displaying a prompt for the user to select an account to
             /// use the device with.
             /// </summary>
-            /// <remarks>
-            /// Note that there may still be a
-            /// </remarks>
-            /// <seealso cref="InitiateUserAccountPairingCommand"/>
             UserAccountSelectionInProgress = 1 << 2,
 
             /// <summary>
-            /// User account selection complated.
+            /// User account selection completed.
             /// </summary>
-            /// <remarks>
-            /// Note that this should be returned only once
-            /// </remarks>
             UserAccountSelectionComplete = 1 << 3,
 
             /// <summary>
             /// The system had been displaying a prompt
             /// </summary>
-            /// <seealso cref="InitiateUserAccountPairingCommand"/>
             UserAccountSelectionCanceled = 1 << 4,
         }
 
@@ -144,10 +130,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public FourCC typeStatic
-        {
-            get { return Type; }
-        }
+        public FourCC typeStatic => Type;
 
         public static QueryPairedUserAccountCommand Create()
         {

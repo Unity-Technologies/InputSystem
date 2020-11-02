@@ -567,7 +567,7 @@ namespace UnityEngine.InputSystem
         /// constant.
         /// </summary>
         /// <param name="button">Button to retrieve.</param>
-        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid gamepad
+        /// <exception cref="ArgumentException"><paramref name="button"/> is not a valid gamepad
         /// button value.</exception>
         public ButtonControl this[GamepadButton button]
         {

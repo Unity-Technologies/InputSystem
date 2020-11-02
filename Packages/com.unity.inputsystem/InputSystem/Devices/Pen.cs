@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using UnityEngine.InputSystem.Controls;
@@ -322,7 +323,7 @@ namespace UnityEngine.InputSystem
         /// Return the given pen button.
         /// </summary>
         /// <param name="button">Pen button to return.</param>
-        /// <exception cref="InvalidEnumArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
+        /// <exception cref="ArgumentException"><paramref name="button"/> is not a valid pen button.</exception>
         public ButtonControl this[PenButton button]
         {
             get
