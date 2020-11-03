@@ -1,0 +1,35 @@
+#language-switcher {
+    float: right;
+}
+
+#language-select {
+    background-color: transparent;
+    border: none;
+    margin-top: 4px;
+    font-size: 15px;
+    line-height: 24px;
+    font-weight: bold;
+    height: 30px;
+    outline: none;
+}
+
+#language-switcher select.offline {
+    -webkit-appearance:     none;
+    -moz-appearance:        none;
+    -ms-appearance:         none;
+    -o-appearance:          none;
+    appearance:             none;
+}
+
+#language-select option {
+    color: #000;
+    cursor: pointer;
+}
+
+#language-select option:disabled {
+    color: lightgrey;
+}
+
+#language-select {
+    cursor: pointer;
+}

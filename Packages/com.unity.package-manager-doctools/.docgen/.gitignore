@@ -1,0 +1,9 @@
+###############
+#    folder   #
+###############
+/**/DROP/
+/**/TEMP/
+/**/obj/
+_site/
+cachetmp/
+_build/

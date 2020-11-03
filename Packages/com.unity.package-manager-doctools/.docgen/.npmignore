@@ -1,0 +1,7 @@
+.npmrc
+.npmignore
+.gitignore
+QAReport.md
+QAReport.md.meta
+.vscode
+.idea

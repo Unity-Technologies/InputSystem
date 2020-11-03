@@ -1,0 +1,15 @@
+{
+  "_UI_search": "Search",
+  "_UI_docs_url": "http://docs.unity3d.com/",
+  "_UI_back_to_top": "Back to top",
+  "_UI_show_hide_toc": "Show / Hide Table of Contents",
+  "_UI_Manual": "Manual",
+  "_UI_License": "License",
+  "_UI_Changelog": "Changelog",
+  "_UI_Scripting_API": "Scripting API",
+  "_UI_NoResultsFound": "No results found",
+  "_UI_InThisArticle": "In This Article",
+  "_UI_SearchResultsFor": "Search Results for \"{0}\"",
+  "_UI_enter_here_to_filter": "Enter here to filter...",
+  "_UI_lang": "en"
+}

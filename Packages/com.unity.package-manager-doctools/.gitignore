@@ -1,0 +1,12 @@
+Documentation/ApiDocs/doxygen.log
+Documentation/ApiDocs/doxygen.log.meta
+Documentation/ApiDocs/.xml/**
+Documentation/ApiDocs/.html/**
+.npmrc
+.vscode
+.idea
+*.preformat.bak
+*.preformat.bak.meta
+**/.DS_Store
+*.api
+*.api.meta
