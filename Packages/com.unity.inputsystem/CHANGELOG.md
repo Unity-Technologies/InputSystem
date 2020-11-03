@@ -13,6 +13,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
 
+#### Actions
+
+- Fixed JSON serialization of action maps not preserving empty binding paths ([case 1231968](https://issuetracker.unity3d.com/issues/cloning-actionmap-through-json-converts-empty-paths-to-null-which-is-not-allowed)).
+
 ## [1.1.0-preview.2] - 2020-10-23
 
 ### Changed
