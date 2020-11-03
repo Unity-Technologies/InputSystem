@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -19,35 +20,155 @@ namespace UnityEngine.InputLegacy
 
             foreach (var pair in s_KeypadScanCodeToSDLK)
             {
-                Debug.Assert(!s_SDLKToKeypadScanCode.ContainsKey(pair.Value), "keypad shouldn't contain multiple mappings");
+                Debug.Assert(!s_SDLKToKeypadScanCode.ContainsKey(pair.Value),
+                    "keypad shouldn't contain multiple mappings");
                 s_SDLKToKeypadScanCode[pair.Value] = pair.Key;
             }
 
             ResolveMappingForCurrentLayout();
         }
 
-        private static IDictionary<(KeyCode keyCode, bool commandKeyStatus), ButtonControl[]>
+        private static IDictionary<(KeyCode keyCode, bool commandKeyStatus), ButtonControl>
             s_KeyboardMapping;
 
         public static void ResolveMappingForCurrentLayout()
         {
-            //var layout = GetKeyboardLayout(0);
+            s_KeyboardMapping = new Dictionary<(KeyCode keyCode, bool commandKeyStatus), ButtonControl>();
 
-            s_KeyboardMapping = new Dictionary<(KeyCode keyCode, bool commandKeyStatus), ButtonControl[]>();
+            if (Keyboard.current == null)
+                return;
 
+            var carbon = dlopen("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon", RTLD_NOW);
+            var kTISPropertyUnicodeKeyLayoutData = dlsym(carbon, "kTISPropertyUnicodeKeyLayoutData");
+            
+            Debug.Assert(kTISPropertyUnicodeKeyLayoutData != null, "kTISPropertyUnicodeKeyLayoutData should be valid");
+
+            var kbdType = LMGetKbdType();
+            var currentKeyboard = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+            var keyLayoutData = TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+            var layout = CFDataGetBytePtr(keyLayoutData);
+            var maxStringLength = (ulong)255;
+            var actualStringLength = (ulong)0;
+            var unicodeString = new ushort[maxStringLength];
+
+            ushort kUCKeyActionDown = 0;
+            ushort kVK_Space = 0x31;
+
+            Debug.Assert(currentKeyboard != null, "currentKeyboard should be valid");
+            Debug.Assert(keyLayoutData != null, "keyLayoutData should be valid");
+            Debug.Assert(layout != null, "layout should be valid");
+
+            if (false)
             foreach (var keyCode in (KeyCode[]) Enum.GetValues(typeof(KeyCode)))
             {
-                /*
-                if (!s_SdlKeyToVirtualKey.TryGetValue((SDLK) keyCode, out var virtualKeyCodes))
-                    continue;
+                if (s_SDLKToKeypadScanCode.TryGetValue((SDLK) keyCode, out var keyPadScanCode))
+                {
+                    if (s_ScanCodeToKey.TryGetValue(keyPadScanCode, out var key))
+                    {
+                        var control = Keyboard.current[key];
+                        s_KeyboardMapping[(keyCode, false)] = control;
+                        s_KeyboardMapping[(keyCode, true)] = control;
+                    }
+                }
+                else if (s_SDLKToMainScanCode.TryGetValue((SDLK) keyCode, out var mainScanCode))
+                {
+                    foreach (var commandKeyStatus in new[] {false, true})
+                    {
+                        var modifierKeyState = commandKeyStatus ? (uint)1 : (uint)0; // 1 == ((cmdKey >> 8) & 0xFF)
+                        
+                        uint state = 0;
+                        actualStringLength = 0;
 
-                foreach (var shiftStatus in new[] {false, true})
-                foreach (var numlockStatus in new[] {false, true})
-                    mapping[(keyCode, shiftStatus, numlockStatus)] =
-                        MapVirtualKeyCodesToKeys(virtualKeyCodes, shiftStatus, numlockStatus, layout).ToArray();
-                        */
+                        var status = UCKeyTranslate(
+                            layout,
+                            (ushort)mainScanCode,
+                            kUCKeyActionDown,
+                            modifierKeyState,
+                            kbdType,
+                            0, 
+                            ref state,
+                            maxStringLength, 
+                            ref actualStringLength,
+                            unicodeString);
+
+                        if (status == 0 && state != 0)
+                            status = UCKeyTranslate(
+                                layout, 
+                                kVK_Space,
+                                kUCKeyActionDown,
+                                modifierKeyState,
+                                kbdType,
+                                0,
+                                ref state,
+                                maxStringLength,
+                                ref actualStringLength,
+                                unicodeString);
+                        
+                        if (status != 0 || actualStringLength == 0)
+                            continue;
+
+                        var value = unicodeString[0];
+                        var scanCode = value >= 32 ? (QZ)value : mainScanCode;
+
+                        if (value >= 128)
+                            continue;
+
+                        if (s_ScanCodeToKey.TryGetValue(scanCode, out var key))
+                            s_KeyboardMapping[(keyCode, commandKeyStatus)] = Keyboard.current[key];
+                    }
+                }
             }
+
+            dlclose(carbon);
         }
+
+        // typedef struct __TISInputSource*        TISInputSourceRef;
+        // typedef const struct CF_BRIDGED_TYPE(NSData) __CFData * CFDataRef;
+        // typedef SInt32                          OSStatus;
+        // typedef const struct CF_BRIDGED_TYPE(NSString) __CFString * CFStringRef;
+        // extern const CFStringRef kTISPropertyUnicodeKeyLayoutData
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon")]
+        private static extern IntPtr /*TISInputSourceRef*/ TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon")]
+        private static extern IntPtr /*void* */ TISGetInputSourceProperty(IntPtr /*TISInputSourceRef*/ inputSource,
+            IntPtr /*CFStringRef*/ propertyKey);
+
+        [DllImport("/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation")]
+        private static extern IntPtr /*const UInt8* */ CFDataGetBytePtr(IntPtr /*CFDataRef*/ theData);
+
+        [DllImport("/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices")]
+        private static extern int UCKeyTranslate(
+            IntPtr /*const UCKeyboardLayout* */ keyLayoutPtr,
+            ushort virtualKeyCode,
+            ushort keyAction,
+            uint modifierKeyState,
+            uint keyboardType,
+            uint /*OptionBits*/ keyTranslateOptions,
+            ref uint /*UInt32* */ deadKeyState,
+            ulong /*UniCharCount*/ maxStringLength, // UniCharCount is unsigned long, which is 4 or 8 bytes
+            ref ulong /*UniCharCount* */ actualStringLength,
+            ushort[] /*UniChar[]*/ unicodeString);
+
+        [DllImport("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon")]
+        private static extern byte LMGetKbdType();
+
+        [DllImport("libdl.dylib", CharSet = CharSet.Ansi)]
+        private static extern IntPtr dlopen(string path, int mode);
+
+        [DllImport("libdl.dylib")]
+        private static extern int dlclose(IntPtr handle);
+
+        [DllImport("libdl.dylib", CharSet = CharSet.Ansi)]
+        private static extern IntPtr dlsym(IntPtr handle, string symbol);
+
+        private const int RTLD_NOW = 0x2;
+
+
+        // extern TISInputSourceRef
+        // TISCopyCurrentASCIICapableKeyboardLayoutInputSource(void)     AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER;
+
 
         /*
         static void AdjustKeyMapForCurrentKeyboardLayout(int* keymapArray, bool commandKeyModifierDown)
@@ -107,10 +228,10 @@ namespace UnityEngine.InputLegacy
                 Keyboard.current.leftCommandKey.isPressed || Keyboard.current.rightCommandKey.isPressed;
 
             return s_KeyboardMapping.TryGetValue((keyCode, commandKeyStatus),
-                out var buttonControls)
-                ? buttonControls
-                : null;
-        }
+                out var buttonControl)
+                ? (buttonControl != null ? new[] {buttonControl} : null)
+        : null;
+    }
 
         // These are the Macintosh key scancode constants -- from Inside Macintosh
         private enum QZ
