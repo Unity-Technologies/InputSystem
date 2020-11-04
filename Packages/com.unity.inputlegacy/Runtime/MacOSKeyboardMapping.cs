@@ -39,62 +39,64 @@ namespace UnityEngine.InputLegacy
                 return;
 
             var carbon = dlopen("/System/Library/Frameworks/Carbon.framework/Versions/A/Carbon", RTLD_NOW);
-            var kTISPropertyUnicodeKeyLayoutData = dlsym(carbon, "kTISPropertyUnicodeKeyLayoutData");
-            
-            Debug.Assert(kTISPropertyUnicodeKeyLayoutData != null, "kTISPropertyUnicodeKeyLayoutData should be valid");
+            if (carbon == IntPtr.Zero)
+                throw new ArgumentNullException($"Failed to open Carbon framework");
 
-            var kbdType = LMGetKbdType();
-            var currentKeyboard = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
-            var keyLayoutData = TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
-            var layout = CFDataGetBytePtr(keyLayoutData);
-            var maxStringLength = (ulong)255;
-            var actualStringLength = (ulong)0;
-            var unicodeString = new ushort[maxStringLength];
-
-            ushort kUCKeyActionDown = 0;
-            ushort kVK_Space = 0x31;
-
-            Debug.Assert(currentKeyboard != null, "currentKeyboard should be valid");
-            Debug.Assert(keyLayoutData != null, "keyLayoutData should be valid");
-            Debug.Assert(layout != null, "layout should be valid");
-
-            if (false)
-            foreach (var keyCode in (KeyCode[]) Enum.GetValues(typeof(KeyCode)))
+            //try
             {
-                if (s_SDLKToKeypadScanCode.TryGetValue((SDLK) keyCode, out var keyPadScanCode))
+                var kTisPropertyUnicodeKeyLayoutData = dlsym(carbon, "kTISPropertyUnicodeKeyLayoutData");
+                if (kTisPropertyUnicodeKeyLayoutData == IntPtr.Zero)
+                    throw new ArgumentNullException($"Failed to get kTISPropertyUnicodeKeyLayoutData");
+
+                kTisPropertyUnicodeKeyLayoutData = Marshal.ReadIntPtr(kTisPropertyUnicodeKeyLayoutData);
+                if (kTisPropertyUnicodeKeyLayoutData == IntPtr.Zero)
+                    throw new ArgumentNullException($"Failed to get *kTISPropertyUnicodeKeyLayoutData");
+
+                var kbdType = LMGetKbdType();
+
+                var currentKeyboard = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
+                if (currentKeyboard == IntPtr.Zero)
+                    throw new ArgumentNullException($"TISCopyCurrentASCIICapableKeyboardLayoutInputSource failed");
+
+                var keyLayoutData = TISGetInputSourceProperty(currentKeyboard, kTisPropertyUnicodeKeyLayoutData);
+                if (keyLayoutData == IntPtr.Zero)
+                    throw new ArgumentNullException($"TISGetInputSourceProperty failed");
+
+                var layout = CFDataGetBytePtr(keyLayoutData);
+                if (layout == IntPtr.Zero)
+                    throw new ArgumentNullException($"CFDataGetBytePtr failed");
+
+                var maxStringLength = (ulong) 255;
+                var actualStringLength = (ulong) 0;
+                var unicodeString = new ushort[maxStringLength];
+
+                ushort kUCKeyActionDown = 0;
+                ushort kVK_Space = 0x31;
+
+                foreach (var keyCode in (KeyCode[]) Enum.GetValues(typeof(KeyCode)))
                 {
-                    if (s_ScanCodeToKey.TryGetValue(keyPadScanCode, out var key))
+                    if (s_SDLKToKeypadScanCode.TryGetValue((SDLK) keyCode, out var keyPadScanCode))
                     {
-                        var control = Keyboard.current[key];
-                        s_KeyboardMapping[(keyCode, false)] = control;
-                        s_KeyboardMapping[(keyCode, true)] = control;
+                        if (s_ScanCodeToKey.TryGetValue(keyPadScanCode, out var key))
+                        {
+                            var control = Keyboard.current[key];
+                            s_KeyboardMapping[(keyCode, false)] = control;
+                            s_KeyboardMapping[(keyCode, true)] = control;
+                        }
                     }
-                }
-                else if (s_SDLKToMainScanCode.TryGetValue((SDLK) keyCode, out var mainScanCode))
-                {
-                    foreach (var commandKeyStatus in new[] {false, true})
+                    else if (s_SDLKToMainScanCode.TryGetValue((SDLK) keyCode, out var mainScanCode))
                     {
-                        var modifierKeyState = commandKeyStatus ? (uint)1 : (uint)0; // 1 == ((cmdKey >> 8) & 0xFF)
-                        
-                        uint state = 0;
-                        actualStringLength = 0;
+                        foreach (var commandKeyStatus in new[] {false, true})
+                        {
+                            var modifierKeyState =
+                                commandKeyStatus ? (uint) 1 : (uint) 0; // 1 == ((cmdKey >> 8) & 0xFF)
 
-                        var status = UCKeyTranslate(
-                            layout,
-                            (ushort)mainScanCode,
-                            kUCKeyActionDown,
-                            modifierKeyState,
-                            kbdType,
-                            0, 
-                            ref state,
-                            maxStringLength, 
-                            ref actualStringLength,
-                            unicodeString);
+                            uint state = 0;
+                            actualStringLength = 0;
 
-                        if (status == 0 && state != 0)
-                            status = UCKeyTranslate(
-                                layout, 
-                                kVK_Space,
+                            var status = UCKeyTranslate(
+                                layout,
+                                (ushort) mainScanCode,
                                 kUCKeyActionDown,
                                 modifierKeyState,
                                 kbdType,
@@ -103,23 +105,55 @@ namespace UnityEngine.InputLegacy
                                 maxStringLength,
                                 ref actualStringLength,
                                 unicodeString);
-                        
-                        if (status != 0 || actualStringLength == 0)
-                            continue;
 
-                        var value = unicodeString[0];
-                        var scanCode = value >= 32 ? (QZ)value : mainScanCode;
+                            if (status == 0 && state != 0)
+                                status = UCKeyTranslate(
+                                    layout,
+                                    kVK_Space,
+                                    kUCKeyActionDown,
+                                    modifierKeyState,
+                                    kbdType,
+                                    0,
+                                    ref state,
+                                    maxStringLength,
+                                    ref actualStringLength,
+                                    unicodeString);
 
-                        if (value >= 128)
-                            continue;
+                            if (status != 0 || actualStringLength == 0)
+                                continue;
 
-                        if (s_ScanCodeToKey.TryGetValue(scanCode, out var key))
-                            s_KeyboardMapping[(keyCode, commandKeyStatus)] = Keyboard.current[key];
+                            var value = unicodeString[0];
+
+                            if (value < 32 || value >= 128)
+                            {
+                                if (s_ScanCodeToKey.TryGetValue(mainScanCode, out var key1))
+                                    s_KeyboardMapping[(keyCode, commandKeyStatus)] = Keyboard.current[key1];
+                                Debug.Log($"{keyCode} -> {mainScanCode} --direct--> {key1}");
+                                continue;
+                            }
+
+                            var sdlk = (SDLK) value;
+                            var scanCode = (QZ) 0;
+                            if (s_SDLKToMainScanCode.TryGetValue(sdlk, out var mainScanCode2))
+                                scanCode = mainScanCode2;
+                            else if (s_SDLKToKeypadScanCode.TryGetValue(sdlk, out var keypadScanCode2))
+                                scanCode = keypadScanCode2;
+                            else
+                                continue;
+                            
+                            if (s_ScanCodeToKey.TryGetValue(scanCode, out var key2))
+                                s_KeyboardMapping[(keyCode, commandKeyStatus)] = Keyboard.current[key2];
+                            Debug.Log($"{keyCode} -> {mainScanCode} -> {sdlk} -> {scanCode} -> {key2}");
+                            
+                        }
                     }
                 }
             }
-
-            dlclose(carbon);
+            //finally
+            {
+                if (carbon != null)
+                    dlclose(carbon);
+            }
         }
 
         // typedef struct __TISInputSource*        TISInputSourceRef;
@@ -230,8 +264,8 @@ namespace UnityEngine.InputLegacy
             return s_KeyboardMapping.TryGetValue((keyCode, commandKeyStatus),
                 out var buttonControl)
                 ? (buttonControl != null ? new[] {buttonControl} : null)
-        : null;
-    }
+                : null;
+        }
 
         // These are the Macintosh key scancode constants -- from Inside Macintosh
         private enum QZ
