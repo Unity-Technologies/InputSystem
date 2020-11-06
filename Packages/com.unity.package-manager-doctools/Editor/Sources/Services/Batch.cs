@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -74,7 +74,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             }
             EditorApplication.UnlockReloadAssemblies();
         }
-
 #pragma warning disable RECS0165 // Asynchronous methods should return a Task instead of void
         public async static void GenerateDocs()
 #pragma warning restore RECS0165 // Asynchronous methods should return a Task instead of void
@@ -83,7 +82,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             parseArgs();
 
             PackageCollection allPackageInfos = await GetInfo();
-
+            
             foreach (var packageInfo in allPackageInfos)
             {
                 var packageId = packageInfo.packageId.Contains("@file:") ? packageInfo.packageId.Split('@')[0] : packageInfo.packageId;
@@ -116,7 +115,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             {
                 await Task.Yield();
             }
-            if (request.Status == StatusCode.Failure)
+            if(request.Status == StatusCode.Failure)
                 Debug.LogError("Removing " + packageID + " failed with error code " + request.Error.errorCode + ": " + request.Error.message);
             return request;
         }
@@ -162,6 +161,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
         private static void GeneratePackageDoc(PackageInfo packageInfo)
         {
+
             // Get latest version
             string latestShortVersionId = null;
             string latestAbsoluteVersionId = null;    // Can be a preview
@@ -178,5 +178,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 false);
             Validator.Validate(buildLog);
         }
+
     }
 }

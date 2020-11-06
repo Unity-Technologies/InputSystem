@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,6 +6,8 @@ using System.IO;
 
 namespace UnityEditor.PackageManager.DocumentationTools.UI
 {
+
+
     /// <summary>
     /// A TOC for DocFX. Currently only simple, one level TOCs are implemented.
     /// </summary>
@@ -99,6 +101,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         {
             throw new NotImplementedException("Only simple, one-level TOCs are currently supported.");
         }
+
     }
 
     public class TOCItem : IComparable
@@ -127,3 +130,4 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         }
     }
 }
+

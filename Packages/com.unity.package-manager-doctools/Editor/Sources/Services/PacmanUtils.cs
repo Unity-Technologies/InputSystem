@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using System.Collections;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                         versions.Add(version.Key);
                     }
                 }
-                catch (Exception e)
+                catch(Exception e)
                 {
                     Debug.LogError(e.Message);
                 }

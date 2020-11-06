@@ -39,7 +39,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         [Test]
         public void TestAddBefore()
         {
-            toc.AddBefore(toc[1].sectionHref, new TOCItem("Inserted second", "Dir/1.2"));
+            toc.AddBefore(toc[1].sectionHref, new TOCItem( "Inserted second", "Dir/1.2"));
             Assert.AreEqual(1, toc.FindIndexForEntry("Dir/1.2"), "Index does not match inserted order.");
             Assert.AreEqual(2, toc.FindIndexForEntry("dir/second"), "Index does not match order after insert.");
             Assert.AreEqual(3, toc.FindIndexForEntry("dir/third"), "Index does not match order after insert.");
@@ -56,8 +56,8 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             Assert.AreEqual(1, toc.FindIndexForEntry("Dir/1.2"), "Index does not match inserted order.");
             Assert.AreEqual(2, toc.FindIndexForEntry("dir/second"), "Index does not match order after insert.");
             Assert.AreEqual(3, toc.FindIndexForEntry("dir/third"), "Index does not match order after insert.");
-            toc.AddAfter(toc[toc.Count - 1].sectionHref, new TOCItem("Inserted at end", "Dir/o.0"));
-            Assert.AreEqual(toc.Count - 1, toc.FindIndexForEntry("Dir/o.0"), "Index for item inserted last is not count-1.");
+            toc.AddAfter(toc[toc.Count-1].sectionHref, new TOCItem("Inserted at end", "Dir/o.0"));
+            Assert.AreEqual(toc.Count-1, toc.FindIndexForEntry("Dir/o.0"), "Index for item inserted last is not count-1.");
             toc.AddAfter("Doesn't exist", new TOCItem("Inserted at end", "doh"));
             Assert.AreEqual(toc.Count - 1, toc.FindIndexForEntry("doh"), "Index for item inserted before non existant item is not last.");
         }
@@ -85,7 +85,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 //  topicHref: dir/third/third.md
 //";
 
-//            Assert.AreEqual(expected, toc.ToString());
+//            Assert.AreEqual(expected, toc.ToString()); 
 //        }
     }
 }

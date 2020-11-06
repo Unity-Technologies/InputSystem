@@ -4,6 +4,9 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.7.0-preview] - 2020-10-29
+- Return the build log string from Documentation.Generate function.
+
 ## [1.6.1-preview.2] - 2020-09-28
 - Include the Linux Mono archive that was accidentally omitted from the previous release.
 
@@ -26,7 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [1.4.0-preview.1] - 2020-08-18
 - Added support for placing markdown fragments in `Documentation~/snippets`. These fragments can be included by another markdown file, but do not become html files themselves.
-
+ 
 ## [1.3.0-preview.1] - 2020-07-07
 - Add ScriptableAsset object to allow in-Editor batch doc generation.
 - Fixed sorting of versions in the HTML version selector control
@@ -40,16 +43,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added methods, fields, and properties to the Unity xrefmaps.
 
 ### Known Issues
-- Not all Unity APIs can be crossreferenced via the xrefmaps. (The mapping of Comment ID to URL in the published docs is not always predictable. Adding support for the remaining types is ongoing.)
+- Not all Unity APIs can be crossreferenced via the xrefmaps. (The mapping of Comment ID to URL in the published docs is not always predictable. Adding support for the remaining types is ongoing.)  
 - Cross-references to Unity docs does not always work. A workaround is to use the **Assets > Open C# Project** menu command in the Unity Editor before generating the docs. This seems to create a working project file with the correct library references.
-
+  
 ## [1.2.0-preview.1] - 2020-05-27
 - Refactored doc generation code to better resolve types in external assemblies
 - Some type links to other packages now work; all should list namespace if no link is available
 - Files in Documentation~ are no longer moved to a different relative location before doc generation. This is a potentially breaking change if file links assumed the old file structure. Including code samples defined in a region in a C# file inside a Manual markdown file is one place such breakage could occur. To correct this, remove the lowercase `package` folder in the path. Including a code sample in the XML comment of another C# file is unaffected by this change.
--  Warnings and errors are now always logged to a text file under Logs/DocToolReports in the project folder. View the report using the **View Error Report** button.
+-  Warnings and errors are now always logged to a text file under Logs/DocToolReports in the project folder. View the report using the **View Error Report** button. 
 - Added a **Validate** option, which runs the Package Validation Suite and includes its report in the Doc Tool Report. This shows missing API docs. It also creates a dependency on the Package Validation Suite package.
-- Added a **Debug Doc Build** option, which replaces the **Verbose** option.
+- Added a **Debug Doc Build** option, which replaces the **Verbose** option. 
 - Added batch generation to perform doc builds using Unity command line arguments.
   - Added support for optional `api_index.md`, which allows you to write content for the landing page of the Script Reference section.
 - Added version switcher feature
@@ -68,7 +71,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Enable hyperlinks to the .NET System class documentation in script reference using the Microsoft [Cross reference service](https://dotnet.github.io/docfx/tutorial/links_and_cross_references.html#cross-reference-services).
  - Add per-project metadata support
  - Changed default `_apptitle` setting to "Unity Documentation"
-
+ 
 ## [1.1.1-preview.3] - 2019-08-22
 - Updated default `filter.yml` to not exclude `ObsoleteAttribute`
 

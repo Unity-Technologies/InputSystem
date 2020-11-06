@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -52,7 +52,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         internal static string DocFxZip { get { return Path.Combine(PackageUIDocumentationRoot, "docfx-2.51.7z"); } }
         internal static string DocFxRoot { get { return Path.Combine(DocumentationBuildRoot, "docfx-2.51"); } }
         internal static string DocFxExecutable {get { return Path.Combine(DocFxRoot, "docfx.exe"); }}
-        internal static string DocFxTemplateRoot {get { return Path.Combine(PackageUIDocumentationRoot, "docfx_packages"); }}
+        internal static string DocFxTemplateRoot {get { return Path.Combine(PackageUIDocumentationRoot, "docfx_packages~"); }}
         internal static string EditorMonoPath {get { return Path.Combine(EditorApplication.applicationContentsPath, "MonoBleedingEdge/bin/mono"); }}
         internal static string MonoZip { get { return Path.Combine(PackageUIDocumentationRoot, "mono-5.16.0.7z"); } }
         internal static string MonoLinuxZip {get { return Path.Combine(PackageUIDocumentationRoot, "mono-linux-5.16.0.7z"); }}
@@ -89,7 +89,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                     return Path.Combine(DocumentationRoot, "packages");
             }
         }
-        //=> GlobalSettings.DestinationPath != String.Empty ? GlobalSettings.DestinationPath : Path.Combine(DocumentationRoot, "packages");
+            //=> GlobalSettings.DestinationPath != String.Empty ? GlobalSettings.DestinationPath : Path.Combine(DocumentationRoot, "packages");
 
         // Some packages have deep paths which end up exceeding windows' path name limit
         internal static string DocumentationBuildRoot
@@ -126,6 +126,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
         private bool RunDocFx(string docFxArguments, bool serveMode = false)
         {
+
             // Build using docfx
             Process docfxProcess = new Process();
             var startInfo = docfxProcess.StartInfo;
@@ -336,6 +337,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             return log;
         }
 
+
         /// <summary>
         /// Sets up a doc build by copying files to a build folder, creating a docFx config and top-level TOC.
         /// </summary>
@@ -355,7 +357,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             DocFXTOC topTOC = new DocFXTOC();
 
             // Where the finished output is copied after generation
-
+            
             siteFolder = GetPackageSiteFolder(shortVersionId, siteFolder);
 
             //Various paths
@@ -377,7 +379,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
             #endregion
 
-            if (UpdateProgressOrCancel($"{packageInfo.displayName}... copying package files..."))
+            if(UpdateProgressOrCancel($"{packageInfo.displayName}... copying package files..."))
             {
                 AbortBuild = true;
             }
@@ -387,9 +389,9 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             FileUtil.CopyFileOrDirectory(DocFxTemplateRoot, buildFolder); //The html template files
             FileUtil.CopyFileOrDirectory(packageFolder, packageCloneFolder); // The Packages in the current folder
             FileUtils.DirectoryCopyAll(Path.Combine(unityProjectFolder, "Library", "PackageCache"),
-                Path.Combine(buildFolder, "Library", "PackageCache"), true);                        // The cached dependencies
+                                       Path.Combine(buildFolder, "Library", "PackageCache"), true); // The cached dependencies
             FileUtils.DirectoryCopyAll(Path.Combine(unityProjectFolder, "Library", "ScriptAssemblies"),
-                Path.Combine(buildFolder, "Library", "ScriptAssemblies"), true);                        // The compiled dlls
+                                       Path.Combine(buildFolder, "Library", "ScriptAssemblies"), true); // The compiled dlls
 
             // if package isn't actually in the project (i.e. it is a built-in or in the global package cache),
             // then copy it into the build folder
@@ -489,7 +491,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
             #region handle-api-section
             if (GlobalSettings.DoScriptRef)
-            {
+            { 
                 //Make  project (csproj) file
                 var config = Path.Combine(manualSource, "config.json");
                 CreateSolution(packageInfo, packageCloneFolder, config);
@@ -498,7 +500,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 topTOC.AddItem(new TOCItem("Scripting API", "api/", Path.Combine("api", "index.md")), 1);
 
                 bool hasGNSSetting = docFXConfig.GetGlobalMetadata().TryGetValue("hideGlobalNamespace", out var hideGlobalNamespaceSetting);
-                if (!(hasGNSSetting && (bool)hideGlobalNamespaceSetting))
+                if(!(hasGNSSetting && (bool)hideGlobalNamespaceSetting))
                     docFXConfig.SetGlobalNamespace("Global Namespace");
             }
             #endregion
@@ -558,7 +560,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             #endregion
 
             #region set-ui-texts
-
+            
             SetGlobalMetadataFromFile(docFXConfig, Path.Combine(buildFolder, "ui.json"));
             var globalMetadata = docFXConfig.GetGlobalMetadata();
             var uiKeys = docFXConfig.GetGlobalMetadata().Keys.Where(key => key.StartsWith("_UI_", StringComparison.Ordinal));
@@ -576,13 +578,13 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             using (var sw = File.AppendText(docFxJsPath))
             {
                 foreach (var uiKey in uiKeys)
-                {
+                { 
                     sw.WriteLine(string.Format("appendUITexts('{0}', '{1}')", uiKey, globalMetadata[uiKey]));
                 }
-            }
-
+            }	
+            
             #endregion
-
+            
             if (UpdateProgressOrCancel($"{packageInfo.displayName}... running DocFX..."))
             {
                 AbortBuild = true;
@@ -590,7 +592,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
             #region add-memberpage-plugin
             bool hasSetting = docFXConfig.GetGlobalMetadata().TryGetValue("useMemberPages", out var memberPluginSetting);
-            if (hasSetting && (bool)memberPluginSetting)
+            if (hasSetting && (bool) memberPluginSetting)
             {
                 docFXConfig.AddDocFXTemplate(Path.Combine("Plugins", "memberpage.2.56.2", "content"));
             }
@@ -619,7 +621,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             #endregion
 
             #region handle-build-completion
-            // Copy generated html and svg logo
+                        // Copy generated html and svg logo
             if (success && !AbortBuild)
             {
                 FileUtil.MoveFileOrDirectory(Path.Combine(buildFolder, "_site"), siteFolder);
@@ -697,6 +699,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             var solutionReferenceGroup = string.Format("<ItemGroup>{0}</ItemGroup>", referenceItems);
             var solution = string.Format("{0}\n{1}\n{2}\n{3}\n{4}\n", solutionPrefix, solutionPropertyGroup, solutionCompileItemGroup, solutionReferenceGroup, solutionSuffix);
             File.WriteAllText(Path.Combine(packageCloneFolder, "solution.csproj"), solution);
+
         }
 
         // Uses the Assembly-CSharp.csproj file to get references to Unity dlls on current machine
@@ -786,7 +789,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 ConvertDocWorksToC(docWorksToC, Path.Combine(manualSource, "toc.md"));
                 tocOkay = true;
             }
-            else if (File.Exists(docfxMdToc) || File.Exists(docfxYmlToc))
+            else if(File.Exists(docfxMdToc) || File.Exists(docfxYmlToc))
             {
                 //Allow alternate formats
                 enableTOC = true;
@@ -812,6 +815,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             }
 
             return tocOkay;
+
         }
 
         private void ConvertDocWorksToC(string docWorksToC, string output)
@@ -976,12 +980,12 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         public virtual bool TryBuildRedirectToManual(string packageName, string shortVersionId, string siteFolder = null)
         {
             var redirectUrl = GetPackageUrlRedirect(packageName, shortVersionId);
-
+            
             if (!string.IsNullOrEmpty(redirectUrl))
             {
                 Debug.Log("Building site with Direct Documentation Url: " + redirectUrl);
 
-
+                    
                 siteFolder = GetPackageSiteFolder(shortVersionId, siteFolder);
                 BuildRedirectPage(siteFolder, redirectUrl, "index.html", "index.html", "");
                 BuildRedirectPage(Path.Combine(siteFolder, "changelog"), redirectUrl, "CHANGELOG.html", "CHANGELOG.html", "");
@@ -995,11 +999,11 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
         public virtual void BuildRedirectToLatestPage(string packageName , string latestShortVersionId, string absoluteLatestShortVersionId = "", string siteFolder = null)
         {
-            if (string.IsNullOrEmpty(siteFolder))
+            if (string.IsNullOrEmpty(siteFolder)) 
                 siteFolder = DocumentationSiteRoot;
-
+                
             siteFolder = Path.Combine(siteFolder, string.Format("{0}@latest", packageName));
-
+            
             if (string.IsNullOrEmpty(absoluteLatestShortVersionId))
                 absoluteLatestShortVersionId = latestShortVersionId;
 
@@ -1044,11 +1048,12 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             }
         }
 
-        public void BuildPackageMetaData(string packageName, string siteFolder = null)
+        public void BuildPackageMetaData(string packageName,string siteFolder = null)
         {
+
             if (string.IsNullOrEmpty(siteFolder))
                 siteFolder = DocumentationSiteRoot;
-
+            
             string metaFolder = Path.Combine(siteFolder, "metadata");
             string packageMetaFolder = Path.Combine(metaFolder, packageName);
             string metaFilePath = Path.Combine(packageMetaFolder, "metadata.json");
@@ -1099,7 +1104,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             // without linux binaries
             if (Application.platform == RuntimePlatform.LinuxEditor && !File.Exists(Path.Combine(MonoRootPath, monoBinary)))
                 ZipUtils.Unzip(MonoLinuxZip, MonoRootPath);
-
+            
             var monoPath = Path.Combine(DocumentationRoot, "mono");
             MonoPath = Path.Combine(monoPath, monoBinary);
 
@@ -1110,7 +1115,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 FileUtils.SetFolderPermission(monoPath, "777");
             }
         }
-
         bool SetupLicenseSection(string packageFolder, string buildFolder)
         {
             bool validLicenseInPackage = false;
@@ -1182,7 +1186,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         bool UpdateProgressOrCancel(string message)
         {
             float progress = GlobalSettings.Progress++;
-            return EditorUtility.DisplayCancelableProgressBar("Documentation", message, progress / (progress + 4));
+            return EditorUtility.DisplayCancelableProgressBar("Documentation", message, progress/(progress + 4));
         }
     }
 }

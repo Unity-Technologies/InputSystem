@@ -1,3 +1,4 @@
+﻿
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -138,10 +139,11 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             }
             catch (Exception exc)
             {
-                if (GlobalSettings.Debug)
+                if(GlobalSettings.Debug)
                     UnityEngine.Debug.LogWarning("CheckAccess exception for " + url + ": " + exc.Message);
                 return false;
             }
+
         }
 
         internal static bool IsDirectoryWritable(string dirPath)
@@ -150,5 +152,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             permissionSet.AddPermission(new FileIOPermission(FileIOPermissionAccess.Write, dirPath));
             return permissionSet.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet);
         }
+
     }
+
 }

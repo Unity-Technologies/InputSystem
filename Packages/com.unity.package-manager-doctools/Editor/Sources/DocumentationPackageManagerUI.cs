@@ -62,12 +62,10 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         {
             GlobalSettings.Validate = Verbose.value;
         }
-
         private void DebugToggle()
         {
             GlobalSettings.Debug = DebugState.value;
         }
-
         private void ServeToggle()
         {
             GlobalSettings.ServeAfterGeneration = ServeState.value;
@@ -136,14 +134,16 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             string shortVersionId = Documentation.GetShortVersionId(packageInfo.name, packageInfo.version);
 
             var buildLog = Documentation.Instance.GenerateFullSite(packageInfo,
-                shortVersionId,
-                packageInfo.source == PackageSource.Embedded,
-                latestShortVersionId,
-                latestAbsoluteVersionId,
-                GlobalSettings.ServeAfterGeneration);
+                                                    shortVersionId,
+                                                    packageInfo.source == PackageSource.Embedded,
+                                                    latestShortVersionId,
+                                                    latestAbsoluteVersionId,
+                                                    GlobalSettings.ServeAfterGeneration);
             Validator.Validate(buildLog);
             UpdateErrorReportButton();
         }
+
+       
 
         private Button GenerateButton { get { return root.Q<Button>("generateButton");} }
         private Toggle Verbose { get { return root.Q<Toggle>("validate");} }

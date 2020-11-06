@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
@@ -39,7 +39,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
             var project = new SourceProject();
             project.src.Add(new FileMap(
-                new string[] {},
+                new string[] {  },
                 new string[] { "**/obj/**", "**/bin/**", "_site/**" }));
             project.dest = "api";
             project.filter = "filter.yml";
@@ -47,51 +47,49 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             defaultConfig.metadata.Add(project);
 
             defaultConfig.build.content.Add(
-                new FileMap(new string[] { "api/**.yml", "api/index.md" }));
+                new FileMap( new string[] { "api/**.yml", "api/index.md" }));
             defaultConfig.build.content.Add(
-                new FileMap(new string[]
-                {
+                new FileMap(new string[] {
                     "manual/**.md",
                     "manual/**/toc.yml"
                 }));
             defaultConfig.build.content.Add(
-                new FileMap(new string[]
-                {
+                new FileMap(new string[] {
                     "changelog/**.md",
                     "changelog/**/toc.yml"
                 }));
             defaultConfig.build.content.Add(
-                new FileMap(new string[]
-                {
+                new FileMap(new string[] {
                     "license/**.md",
                     "license/**/toc.yml"
                 }));
-            defaultConfig.build.content.Add(new FileMap(
-                new string[]
-                {
+            defaultConfig.build.content.Add( new FileMap(
+                new string[] {
                     "toc.yml",
                     "*.md"
                 },
-                new string[]   //exclude
-                {"obj/**",
-                 "_site/**"}
+                new string[] { //exclude
+                    "obj/**",
+                    "_site/**"
+                }
             ));
 
             defaultConfig.build.resource.Add(new FileMap(
-                new string[]
-                {
+                new string[] {
                     "images/**",
                     "logo.svg"
                 },
-                new string[]   //exclude
-                {"obj/**",
-                 "_site/**"}
+                new string[] { //exclude
+                    "obj/**",
+                    "_site/**"
+                }
             ));
             defaultConfig.build.overwrite.Add(new FileMap(
-                new string[] {"apidoc/**.md"},
-                new string[]    //exclude
-                {"obj/**",
-                 "_site/**"}
+                 new string[] {"apidoc/**.md"},
+                 new string[] { //exclude
+                    "obj/**",
+                    "_site/**"
+                            }
             ));
             defaultConfig.build.template.Add("./_exported_templates/packages/");
             defaultConfig.build.noLangKeyword = false;
@@ -138,7 +136,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 config.build.globalMetadata.Add(key, value);
             }
         }
-
+        
         public Dictionary<string, object> GetGlobalMetadata()
         {
             return config.build.globalMetadata;
@@ -177,7 +175,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             if (rootFolder != String.Empty)
                 config.metadata[0].src[0].src = rootFolder;
         }
-
         public void AddCSProjectProperties(string key, string value)
         {
             config.metadata[0].properties.Add(key, value);
@@ -185,33 +182,28 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
 
         public void AddContentToSection(string path, string section, string[] filePatterns)
         {
-            var fileSet = new FileMap(path, section, filePatterns, new string[] {});
+            var fileSet = new FileMap(path, section, filePatterns, new string[] { });
             config.build.content.Add(fileSet);
         }
-
         public void AddContentToSection(string path, string section, string[] filePatterns, string[] excludePatterns)
         {
             var fileSet = new FileMap(path, section, filePatterns, excludePatterns);
             config.build.content.Add(fileSet);
         }
-
         public void AddImageFolder(string path, string destinationFolder, string[] filePatterns)
         {
-            var fileSet = new FileMap(path, destinationFolder, filePatterns, new string[] {});
+            var fileSet = new FileMap(path, destinationFolder, filePatterns, new string[] { });
             config.build.resource.Add(fileSet);
         }
-
         public void AddXrefmapURL(string url)
         {
             config.build.xref.Add(url);
         }
-
         public void AddDllReferences(string dllFilePath, string rootFolder)
         {
-            var reference = new FileMap(rootFolder, new string[] {dllFilePath}, new string[] {});
+            var reference = new FileMap(rootFolder, new string[]{dllFilePath}, new string[] { });
             config.metadata[0].references.Add(reference);
         }
-
         public void AddDocFXTemplate(string templateContentFolder)
         {
             config.build.template.Add(templateContentFolder);
@@ -339,7 +331,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             files = new List<string>(4);
             exclude = new List<string>(4);
         }
-
         public FileMap(string src, string dest, string[] files, string[] exclude)
         {
             this.src = src;
@@ -349,7 +340,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             this.exclude = new List<string>(exclude.Length);
             this.exclude.AddRange(exclude);
         }
-
         public FileMap(string src, string[] files, string[] exclude)
         {
             this.src = src;
@@ -358,7 +348,6 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             this.exclude = new List<string>(exclude.Length);
             this.exclude.AddRange(exclude);
         }
-
         public FileMap(string[] files, string[] exclude)
         {
             this.files = new List<string>(files.Length);
@@ -366,14 +355,12 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             this.exclude = new List<string>(exclude.Length);
             this.exclude.AddRange(exclude);
         }
-
         public FileMap(string[] files)
         {
             this.files = new List<string>(files.Length);
             this.files.AddRange(files);
             this.exclude = new List<string>(4);
         }
-
         public FileMap(string file)
         {
             this.files = new List<string>(1);

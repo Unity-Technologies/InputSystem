@@ -1,7 +1,7 @@
 {
 	"name": "com.unity.package-manager-doctools",
 	"displayName": "Package Manager DocTools",
-	"version": "1.6.1-preview.2",
+	"version": "1.7.0-preview",
 	"unity": "2019.1",
 	"description": "This is an internal Unity tool and is not supported for external use.\n\nThe package documentation tools is a package manager ui extension that generates documentation for a package. This allows package developers to preview what their documentation will look like in its final published form.",
 	"dependencies": {

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -22,11 +22,11 @@ public class PackageSetAssetEditor : Editor
         EditorGUILayout.PropertyField(targetPath, true);
         serializedObject.ApplyModifiedProperties();
 
-        if (GUILayout.Button("Add these packages to project"))
+        if(GUILayout.Button("Add these packages to project"))
         {
             Batch.AddPackagesFromString(packageSet.stringValue);
         }
-        if (GUILayout.Button("Generate these docs"))
+        if(GUILayout.Button("Generate these docs"))
         {
             GlobalSettings.DestinationPath = targetPath.stringValue;
             GlobalSettings.Progress = 0;
@@ -37,5 +37,7 @@ public class PackageSetAssetEditor : Editor
         //    Debug.LogWarning("Remove function not implemented yet.");
         //    //Batch.RemovePackagesFromString(packageSet.stringValue);
         //}
+
     }
+
 }

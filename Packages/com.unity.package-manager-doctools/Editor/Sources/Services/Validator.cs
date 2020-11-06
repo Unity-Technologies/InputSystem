@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace UnityEditor.PackageManager.DocumentationTools.UI
@@ -8,7 +8,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         public static void Validate(string buildLog)
         {
             #region run-validation
-
+            
             if (GlobalSettings.Validate)
             {
                 ValidationSuite.ValidationSuite.ValidatePackage(GlobalSettings.PackageInformation.name, GlobalSettings.PackageInformation.version, ValidationSuite.ValidationType.LocalDevelopmentInternal);
@@ -32,7 +32,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 new[] { Environment.NewLine },
                 StringSplitOptions.None
             );
-            foreach (var line in lines)
+            foreach(var line in lines)
             {
                 report += line + Environment.NewLine;
             }

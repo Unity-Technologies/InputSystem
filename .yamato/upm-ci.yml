@@ -3,6 +3,7 @@
 
 {% for editor in editors %}
 {% for platform in platforms %}
+{% if platform.name != "mac_standalone_il2cpp" or editor.version != "trunk" %}
 {{ platform.name }}_{{ editor.version }}:
   name : Build and Test version {{ editor.version }} on {{ platform.name }}
   agent:
@@ -14,16 +15,19 @@
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ --extra-utr-arg=--timeout=1800 -u {{ editor.version }}
     {% if platform.installscript %}
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - {{ platform.installscript }} {{ editor.version }}
     {% endif %}
-    - upm-ci~/tools/utr/utr --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
+    - upm-ci~/tools/utr/utr --timeout=1800 --testproject . --editor-location=.Editor --artifacts_path=upm-ci~/test-results/isolation-com.unity.inputsystem.tests --suite=playmode --api-profile=NET_4_6 --stdout-filter=minimal {% if platform.runtime %} --platform {{ platform.runtime }} {% endif %} {% if platform.scripting-backend %} --scripting-backend {{ platform.scripting-backend }} {% endif %} --report-performance-data --performance-project-id=InputSystem
   artifacts:
     UTR_Output.zip:
       paths:
         - "upm-ci~/test-results/**/*"
+{% else %}
+# TODO skipping {{ platform.name }} on {{ editor.version }} for now.
+{% endif %}
 {% endfor %}
 {% endfor %}
 
@@ -130,7 +134,9 @@ all_tests:
   dependencies:
     {% for editor in editors %}
     {% for platform in platforms %}
+    {% if platform.name != "mac_standalone_il2cpp" or editor.version != "trunk" %}
     - .yamato/upm-ci.yml#{{ platform.name }}_{{ editor.version }}
+    {% endif %}
     {% endfor %}
     {% for backend in scripting_backends %}
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}  

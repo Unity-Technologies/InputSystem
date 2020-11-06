@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Examples
 {
@@ -7,9 +7,9 @@ namespace Examples
     /// </summary>
     /// <remarks>The `math` functions implemented by <c>Calculator</c> favor *speed* over _accuracy_.
     /// Use <see cref="SlowCalculator"/> when you need accurate results.
-    ///
+    ///   
     /// Currently this calculator only implements Sum&lt;T&gt;(T) which can be linked to
-    /// as <see cref="Sum{T}(T)"/>.
+    /// as <see cref="Sum{T}(T)"/>. 
     ///
     /// Supported langwords:
     /// * <see langword="null"/>
@@ -48,51 +48,52 @@ namespace Examples
     ///     </code>
     /// </example>
     public class Calculator
-    {
+{
         /// <summary>
         /// The storage register of this calculator.
         /// </summary>
         /// <value>Stores the intermediate results of the current calculation.</value>
         public int Register;
 
-        /// <summary>
-        /// Adds the operand to the Register.
-        /// </summary>
-        /// <param name="operand">The number to add to the current sum.</param>
-        /// <typeparam name="T">A numeric type.</typeparam>
-        /// <returns>The result so far.</returns>
-        /// <exception cref="NullReferenceException">Thrown if operand is null.</exception>
-        /// <exception cref="UnityEditor.Build.BuildFailedException">Build Failed.</exception>
-        public T Sum<T>(T operand)
-        {
+    /// <summary>
+    /// Adds the operand to the Register.
+    /// </summary>
+    /// <param name="operand">The number to add to the current sum.</param>
+     /// <typeparam name="T">A numeric type.</typeparam>
+    /// <returns>The result so far.</returns>
+    /// <exception cref="NullReferenceException">Thrown if operand is null.</exception>
+    /// <exception cref="UnityEditor.Build.BuildFailedException">Build Failed.</exception>
+    public T Sum<T>(T operand)
+    {
             if (operand == null)
                 throw (new NullReferenceException("operands cannot be null."));
 
-            Register += (int)(object)operand;
-            return (T)(object)Register;
-        }
+        Register += (int)(object)operand;
+        return (T)(object)Register;
+    }
 
-        /// <summary>
-        /// Gets the result of the current operation.
-        /// </summary>
-        /// <returns>The current Register value.</returns>
-        public int Result()
-        {
-            return Register;
-        }
+    /// <summary>
+    /// Gets the result of the current operation.
+    /// </summary>
+    /// <returns>The current Register value.</returns>
+    public int Result()
+    {
+        return Register;
+    }
 
-        /// <summary>
-        /// Clears the current calculation, setting Register to zero.
-        /// </summary>
-        public void Clear()
-        {
-            Register = 0;
-        }
+    /// <summary>
+    /// Clears the current calculation, setting Register to zero.
+    /// </summary>
+    public void Clear()
+    {
+        Register = 0;
+    }
+
     }
 
     ///<summary>The slower, more accurate calculator.</summary>
     /// <remarks>
-    ///
+    /// 
     /// <![CDATA[
     /// Within this Character Data block you can
     /// use double dashes as much as you want (along with <, &, ', and ");
@@ -100,18 +101,17 @@ namespace Examples
     /// brackets or the greater-than sign using concatenated CDATA sections.
     /// ]]>
     /// </remarks>
-    public class SlowCalculator
+    public class SlowCalculator{
+    
+    /// <summary>Generic function</summary>
+    public T Sum<T,R,S>(T t, R r, S s) where T: new()
     {
-        /// <summary>Generic function</summary>
-        public T Sum<T, R, S>(T t, R r, S s) where T : new()
-        {
-            return new T();
-        }
-
-        /// <summary>Generic function</summary>
-        public T Sum<T, R, S>(T t, R r) where T : new()
-        {
-            return new T();
-        }
+        return new T();
     }
+    /// <summary>Generic function</summary>
+    public T Sum<T,R,S>(T t, R r) where T: new()
+    {
+        return new T();
+    }
+}
 }

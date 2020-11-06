@@ -53,7 +53,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
                 _destinationPath = value;
             }
         }
-        public static bool DoScriptRef
+        public static bool DoScriptRef 
         {
             get
             {

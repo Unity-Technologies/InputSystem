@@ -47,7 +47,7 @@ You can press the `Generate Documentation` button on an _installed_ packages to 
 Note that the Validate button shown in the screenshot is inserted by the Validation package. You can use this button to run the Validation Suite checks as normal, but the results aren't included in the doc error report. The Validation Suite checks identify C# ctypes and members that do not have any documentation. The Doc Tools Error report includes missing files, bad links, and malformed document contents, but does not list "missing" documentation.
 
 ## Landing pages
-There are two "landing pages" in package docs, one for the Manual, and one for the Script Reference.
+There are two "landing pages" in package docs, one for the Manual, and one for the Script Reference. 
 
 For the Manual, the landing page is created from the `index.md` file found in the `Documentation~` folder. If no such file exists, the tools uses the first markdown file it founds. Thus, if you have more than one markdown file, you should always `index.md` as your first, or landing, page. (In fact if you include a `TableOfContents.md` file, you MUST include `index.md`.)
 
@@ -126,7 +126,7 @@ You can set specific metadat values for a project by adding a `projectMetadata.j
     "_appTitle": "Unity Documentation",
     "enableTocForManual": true
 }
-```
+``` 
 
 | Name | Purpose |
 | :------- | :---------- |
@@ -151,7 +151,7 @@ You can include a markdown file as content in another with:
 `[!include[](snippets/snippet-content.md)]`
 
 [!include[](snippets/snippet-content.md)]
-
+ 
 ## Batch Generation
 You can batch generate docs for a set of packages from either inside Unity or by passing commandline parameters to the Unity executable.
 
@@ -165,7 +165,7 @@ Next, select the new Asset to display its Inspector:
 
 ![Package Set Inspector](Images/PackageSetInspector.png)
 
-Paste a list of packages names (including @version) into the text field.
+Paste a list of packages names (including @version) into the text field. 
 
 You can optionally set a destination path to override the normal output path for the docs (which is *c:/temp* on Windows and deep inside a hidden *Library* folder on Mac). This can be helpful when generating multiple sets of docs so you can view them in a local web server.
 
@@ -183,9 +183,9 @@ There are three batch commands supported, each can be given one or more package 
 These commands must be run as separate steps -- in other words, to add, generate the docs for, and then remove a set of packages, you must invoke Unity three times. An example invocation to do that in a bash shell is:
 
 ``` bash
-/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.AddPackages -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1"
-/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.GenerateDocs -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1"
-/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.RemovePackages -packages="com.unity.entities com.unity.ugui com.unity.remote-config"
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.AddPackages -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1" 
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.GenerateDocs -packages="com.unity.entities@0.10.0-preview.6 com.unity.ugui@1.0.0 com.unity.remote-config@1.3.2-preview.1" 
+/Applications/Unity/Hub/Editor/2020.1.0b9/Unity.app/Contents/MacOS/Unity   -quit -batchmode -projectPath . -executeMethod UnityEditor.PackageManager.DocumentationTools.UI.Batch.RemovePackages -packages="com.unity.entities com.unity.ugui com.unity.remote-config" 
 
 ```
 
@@ -198,3 +198,4 @@ These commands must be run as separate steps -- in other words, to add, generate
 This version of Unity Package Manager Doc Tools is compatible with the following versions of the Unity Editor:
 
 * 2019.4 and later
+
