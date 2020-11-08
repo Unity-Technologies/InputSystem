@@ -67,6 +67,17 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(9)] public byte rightTrigger;
 
+        //INFO: The sensordata format is as follows:
+        //Gyro[0] = (short)((data[14] << 8) | data[13]);
+        //Gyro[1] = (short)((data[16] << 8) | data[15]);
+        //Gyro[2] = (short)((data[18] << 8) | data[17]);
+
+        //Accel[0] = (short)((data[20] << 8) | data[19]);
+        //Accel[1] = (short)((data[22] << 8) | data[21]);
+        //Accel[2] = (short)((data[24] << 8) | data[23]);
+        // From DS4Tool Source                 //
+        // https://code.google.com/p/ds4-tool/ //
+
         [FieldOffset(30)] public byte batteryLevel;
 
         ////TODO: touchpad
