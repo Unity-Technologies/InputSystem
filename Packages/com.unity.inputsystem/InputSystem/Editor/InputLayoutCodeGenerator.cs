@@ -211,7 +211,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 writer.WriteLine();
                 writer.WriteLine("// State offset to control index map.");
-                writer.WriteLine("builder.WithStateOffsetToControlIndexMap(new uint[] {");
+                writer.WriteLine("builder.WithStateOffsetToControlIndexMap(new uint[]");
+                writer.WriteLine("{");
                 ++writer.indentLevel;
                 var map = device.m_StateOffsetToControlMap;
                 var entryCount = map.Length;
@@ -224,8 +225,8 @@ namespace UnityEngine.InputSystem.Editor
                     for (var i = 0; i < 10 && index < entryCount; ++index, ++i)
                         writer.Write((index != 0 ? ", " : "") + map[index] + "u");
                 }
-                --writer.indentLevel;
                 writer.WriteLine();
+                --writer.indentLevel;
                 writer.WriteLine("});");
             }
 
