@@ -1048,12 +1048,12 @@ namespace UnityEngine.InputSystem.Layouts
                         continue;
                 }
 
-                AddControlItemsFromMember(member, attributes, controlItems, layoutName);
+                AddControlItemsFromMember(member, attributes, controlItems);
             }
         }
 
         private static void AddControlItemsFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
+            InputControlAttribute[] attributes, List<ControlItem> controlItems)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each occurrence. However, it can also
