@@ -444,6 +444,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    [Parallelizable(ParallelScope.None)]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
@@ -456,6 +457,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    [Parallelizable(ParallelScope.None)]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
@@ -470,6 +472,7 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Ignore("Still needs a lot of documentation work to happen")]
+    [Parallelizable(ParallelScope.None)]
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
         var docsFolder = GenerateDocsDirectory(out _);
@@ -556,6 +559,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    [Parallelizable(ParallelScope.None)]
     public void API_MonoBehavioursHaveHelpUrls()
     {
         // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
@@ -815,6 +819,7 @@ class APIVerificationTests
     ////      be great to have some way of diagnosing links that have gone stale
     [Test]
     [Category("API")]
+    [Parallelizable(ParallelScope.None)]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
