@@ -6,6 +6,6 @@
 	"description": "This is an internal Unity tool and is not supported for external use.\n\nThe package documentation tools is a package manager ui extension that generates documentation for a package. This allows package developers to preview what their documentation will look like in its final published form.",
 	"dependencies": {
         "com.unity.package-validation-suite": "0.10.0-preview",
-        "com.unity.nuget.newtonsoft-json": "2.0.0-preview"
+        "com.unity.nuget.newtonsoft-json": "1.1.2"
 	}
 }
