@@ -1034,7 +1034,7 @@ namespace UnityEngine.InputSystem
         ///   {
         ///       // Ignore anything that is not a state event.
         ///       var eventType = eventPtr.type;
-        ///       if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+        ///       if (eventType != StateEvent.Type &amp;&amp; eventType != DeltaStateEvent.Type)
         ///           return;
         ///
         ///       // Find all changed controls actuated above the button press threshold.

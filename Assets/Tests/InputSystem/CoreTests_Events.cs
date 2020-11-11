@@ -550,9 +550,8 @@ partial class CoreTests
     }
 
     // A control may employ useStateFrom to point itself at the state of another control. The
-    // control enumerator ignores useStateFrom controls and returns only the ones that have
-    // their "own" state. This is mainly to not negatively impact the search of *all* controls
-    // for the sake of these controls.
+    // control enumerator by default ignores useStateFrom controls and returns only the ones that have
+    // their "own" state.
     [Test]
     [Category("Events")]
     public void Events_CanIterateOverChangedControlsInEvent_IgnoresControlsUsingStateFromOtherControls()

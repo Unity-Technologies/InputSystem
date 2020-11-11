@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - An upper limit of 1024 controls per device and 1kb of memory state per device has been introduced.
   * This allows for certain optimizations.
-  * Should the limits prove to tight, they can be raised in the future.
+  * Should the limits prove too tight, they can be raised in the future.
   * The most complex device we have at the moment (`Touchscreen`) has 242 controls and 616 bytes of state.
 
 ### Fixed
