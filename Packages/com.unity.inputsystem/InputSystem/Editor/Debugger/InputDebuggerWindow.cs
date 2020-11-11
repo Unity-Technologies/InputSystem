@@ -605,7 +605,7 @@ namespace UnityEngine.InputSystem.Editor
                         AddChild(supportedDevices, item, ref id, icon);
                     }
                 }
-                settingsItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName));
+                settingsItem.children.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.InvariantCultureIgnoreCase));
 
                 // Metrics.
                 var metrics = InputSystem.metrics;

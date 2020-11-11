@@ -220,6 +220,16 @@ namespace UnityEngine.InputSystem.DualShock
             ctrlDualShock4GamepadHIDdpad.right = ctrlDualShock4GamepadHIDdpadright;
             ctrlDualShock4GamepadHIDdpad.x = ctrlDualShock4GamepadHIDdpadx;
             ctrlDualShock4GamepadHIDdpad.y = ctrlDualShock4GamepadHIDdpady;
+
+            // State offset to control index map.
+            builder.WithStateOffsetToControlIndexMap(new uint[]
+            {
+                4202516u, 4202519u, 4202520u, 8396819u, 8396821u, 8396822u, 12591130u, 12591133u, 12591134u, 16785433u
+                , 16785435u, 16785436u, 20975647u, 20975648u, 20975649u, 20975650u, 20975651u, 20975652u, 23069699u, 23593988u
+                , 24118277u, 24642566u, 25166855u, 25691144u, 26215433u, 26739722u, 27264011u, 27788300u, 28312589u, 28836878u
+                , 29361167u, 29885456u, 33562641u, 37756946u
+            });
+
             builder.Finish();
         }
 

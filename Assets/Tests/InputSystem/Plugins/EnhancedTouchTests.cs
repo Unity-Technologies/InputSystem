@@ -550,14 +550,14 @@ internal class EnhancedTouchTests : InputTestFixture
     {
         var touchscreen1 = Touchscreen.current;
 
-        // To mix it up, have a touchscreen with 60 possible contacts instead of
+        // To mix it up, have a touchscreen with 15 possible contacts instead of
         // the default ten.
         const string json = @"
             {
                 ""name"" : ""CustomTouchscreen"",
                 ""extend"" : ""Touchscreen"",
                 ""controls"" : [
-                    { ""name"" : ""touch"", ""arraySize"" : 60 }
+                    { ""name"" : ""touch"", ""arraySize"" : 15 }
                 ]
             }
         ";
