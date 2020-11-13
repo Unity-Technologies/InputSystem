@@ -445,6 +445,7 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Parallelizable(ParallelScope.None)]
+    [Ignore("Troubleshooting: Ignore docs tests")]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
@@ -458,6 +459,7 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Parallelizable(ParallelScope.None)]
+    [Ignore("Troubleshooting: Ignore docs tests")]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
@@ -559,6 +561,7 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    [Ignore("Troubleshooting: Ignore docs tests")]
     [Parallelizable(ParallelScope.None)]
     public void API_MonoBehavioursHaveHelpUrls()
     {
@@ -820,6 +823,7 @@ class APIVerificationTests
     [Test]
     [Category("API")]
     [Parallelizable(ParallelScope.None)]
+    [Ignore("Troubleshooting: Ignore docs tests")]
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
