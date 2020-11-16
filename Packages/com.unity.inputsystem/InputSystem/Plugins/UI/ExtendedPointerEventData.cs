@@ -24,6 +24,13 @@ namespace UnityEngine.InputSystem.UI
         }
 
         /// <summary>
+        /// The <see cref="InputControl"/> that generated the pointer input.
+        /// The device associated with this control should be the same as this event's device.
+        /// </summary>
+        /// <seealso cref="device"/>
+        public InputControl control { get; set; }
+
+        /// <summary>
         /// The <see cref="InputDevice"/> that generated the pointer input.
         /// </summary>
         /// <seealso cref="Pointer"/>
@@ -104,10 +111,11 @@ namespace UnityEngine.InputSystem.UI
         public Vector2 tilt { get; set; }
         */
 
-        internal void ReadDeviceState(InputControl control)
+        internal void ReadDeviceState()
         {
             if (control.parent is Pen pen)
             {
+                uiToolkitPointerId = GetPenPointerId(pen);
                 pressure = pen.pressure.EvaluateMagnitude();
                 azimuthAngle = (pen.tilt.ReadValue().x + 1) * Mathf.PI / 2;
                 altitudeAngle = (pen.tilt.ReadValue().y + 1) * Mathf.PI / 2;
@@ -115,9 +123,37 @@ namespace UnityEngine.InputSystem.UI
             }
             else if (control.parent is TouchControl touchControl)
             {
+                uiToolkitPointerId = GetTouchPointerId(touchControl);
                 pressure = touchControl.pressure.EvaluateMagnitude();
                 radius = touchControl.radius.ReadValue();
             }
+            else
+            {
+                uiToolkitPointerId = UIElements.PointerId.mousePointerId;
+            }
+        }
+
+        private static int GetPenPointerId(Pen pen)
+        {
+            var n = 0;
+            foreach (var otherDevice in InputSystem.devices)
+                if (otherDevice is Pen otherPen)
+                {
+                    if (pen == otherPen)
+                    {
+                        return UIElements.PointerId.penPointerIdBase +
+                               Mathf.Clamp(n, 0, UIElements.PointerId.penPointerCount - 1);
+                    }
+                    n++;
+                }
+            return UIElements.PointerId.penPointerIdBase;
+        }
+
+        private static int GetTouchPointerId(TouchControl touchControl)
+        {
+            var i = ((Touchscreen) touchControl.device).touches.IndexOf(touchControl);
+            return UIElements.PointerId.touchPointerIdBase +
+                   Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
         }
     }
 
