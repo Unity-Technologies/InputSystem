@@ -1526,6 +1526,7 @@ namespace UnityEngine.InputSystem.UI
         {
             ref var state = ref GetPointerStateFor(ref context);
             state.screenPosition = context.ReadValue<Vector2>();
+            state.eventData.ReadDeviceState(context.control);
         }
 
         ////REVIEW: How should we handle clickCount here? There's only one for the entire device yet right and middle clicks

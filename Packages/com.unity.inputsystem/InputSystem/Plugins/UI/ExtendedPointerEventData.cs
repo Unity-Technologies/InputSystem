@@ -103,6 +103,22 @@ namespace UnityEngine.InputSystem.UI
         /// </summary>
         public Vector2 tilt { get; set; }
         */
+
+        internal void ReadDeviceState(InputControl control)
+        {
+            if (control.parent is Pen pen)
+            {
+                pressure = pen.pressure.EvaluateMagnitude();
+                azimuthAngle = (pen.tilt.ReadValue().x + 1) * Mathf.PI / 2;
+                altitudeAngle = (pen.tilt.ReadValue().y + 1) * Mathf.PI / 2;
+                twist = pen.twist.ReadValue() * Mathf.PI * 2;
+            }
+            else if (control.parent is TouchControl touchControl)
+            {
+                pressure = touchControl.pressure.EvaluateMagnitude();
+                radius = touchControl.radius.ReadValue();
+            }
+        }
     }
 
     /// <summary>
