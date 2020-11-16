@@ -1224,13 +1224,13 @@ namespace UnityEngine.InputSystem.UI
             // ID of the InputDevice.
             var pointerId = device.deviceId;
             var touchId = 0;
-            var uiePointerId = UIElements.PointerId.mousePointerId;
+            var uiToolkitPointerId = UIElements.PointerId.mousePointerId;
             var controlParent = control.parent;
             if (controlParent is TouchControl touchControl)
             {
                 touchId = touchControl.touchId.ReadValue();
                 var i = ((Touchscreen) touchControl.device).touches.IndexOf(touchControl);
-                uiePointerId = UIElements.PointerId.touchPointerIdBase +
+                uiToolkitPointerId = UIElements.PointerId.touchPointerIdBase +
                                Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
             }
             // Could be it's a toplevel control on Touchscreen (like "<Touchscreen>/position"). In that case,
@@ -1238,18 +1238,18 @@ namespace UnityEngine.InputSystem.UI
             else if (controlParent is Touchscreen touchscreen)
             {
                 touchId = touchscreen.primaryTouch.touchId.ReadValue();
-                uiePointerId = UIElements.PointerId.touchPointerIdBase;
+                uiToolkitPointerId = UIElements.PointerId.touchPointerIdBase;
             }
             else if (controlParent is Pen pen)
             {
-                uiePointerId = UIElements.PointerId.penPointerIdBase;
+                uiToolkitPointerId = UIElements.PointerId.penPointerIdBase;
                 var n = 0;
                 foreach (var otherDevice in InputSystem.devices)
                     if (otherDevice is Pen otherPen)
                     {
                         if (pen == otherPen)
                         {
-                            uiePointerId = UIElements.PointerId.penPointerIdBase +
+                            uiToolkitPointerId = UIElements.PointerId.penPointerIdBase +
                                            Mathf.Clamp(n, 0, UIElements.PointerId.penPointerCount - 1);
                             break;
                         }
@@ -1326,7 +1326,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_CurrentPointerIndex == -1)
                 {
-                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, device, uiePointerId);
+                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, device, uiToolkitPointerId);
                 }
                 else
                 {
@@ -1341,7 +1341,7 @@ namespace UnityEngine.InputSystem.UI
                     eventData.pointerType = pointerType;
                     eventData.pointerId = pointerId;
                     eventData.touchId = touchId;
-                    eventData.uiToolkitPointerId = uiePointerId;
+                    eventData.uiToolkitPointerId = uiToolkitPointerId;
 
                     // Make sure these don't linger around when we switch to a different kind of pointer.
                     eventData.trackedDeviceOrientation = default;
@@ -1360,7 +1360,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
-                index = AllocatePointer(pointerId, touchId, pointerType, device, uiePointerId);
+                index = AllocatePointer(pointerId, touchId, pointerType, device, uiToolkitPointerId);
             }
             else
             {
@@ -1382,7 +1382,7 @@ namespace UnityEngine.InputSystem.UI
                 if (pointerDevice != null && !(pointerDevice is Touchscreen)) // Touchscreen only temporarily allocate pointer states.
                 {
                     // Create MouseOrPen style pointer.
-                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointerDevice, uiePointerId);
+                    index = AllocatePointer(pointerDevice.deviceId, 0, UIPointerType.MouseOrPen, pointerDevice, uiToolkitPointerId);
                 }
                 else
                 {
@@ -1394,13 +1394,13 @@ namespace UnityEngine.InputSystem.UI
                     if (trackedDevice != null)
                     {
                         // Create a Tracked style pointer.
-                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, trackedDevice, uiePointerId);
+                        index = AllocatePointer(trackedDevice.deviceId, 0, UIPointerType.Tracked, trackedDevice, uiToolkitPointerId);
                     }
                     else
                     {
                         // We got input from a non-pointer device and apparently there's no pointer we can route the
                         // input into. Just create a pointer state for the device and leave it at that.
-                        index = AllocatePointer(pointerId, 0, UIPointerType.None, device, uiePointerId);
+                        index = AllocatePointer(pointerId, 0, UIPointerType.None, device, uiToolkitPointerId);
                     }
                 }
             }
@@ -1412,7 +1412,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, int uiePointerId)
+        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, int uiToolkitPointerId)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1432,7 +1432,7 @@ namespace UnityEngine.InputSystem.UI
             eventData.touchId = touchId;
             eventData.pointerType = pointerType;
             eventData.device = device;
-            eventData.uiToolkitPointerId = uiePointerId;
+            eventData.uiToolkitPointerId = uiToolkitPointerId;
 
             // Allocate state.
             m_PointerIds.AppendWithCapacity(pointerId);
@@ -1599,7 +1599,6 @@ namespace UnityEngine.InputSystem.UI
                 for (var i = 0; i < m_PointerStates.length; i++)
                 {
                     ref var state = ref GetPointerStateForIndex(i);
-
                     ProcessPointer(ref state);
 
                     // If it's a touch and the touch has ended, release the pointer state.
