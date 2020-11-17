@@ -294,7 +294,9 @@ namespace UnityEngine.InputSystem.UI
             {
                 for (var i = 0; i < eventData.hovered.Count; ++i)
                 {
+#if UNITY_2021_1_OR_NEWER
                     ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
+#endif
                     ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
                 }
 
@@ -309,6 +311,7 @@ namespace UnityEngine.InputSystem.UI
 
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
             {
+#if UNITY_2021_1_OR_NEWER
                 // Maybe this should change in the future. The documentation for pressure, radius, etc. suggests we
                 // send pointerMove if anything at all has changed. Perhaps IsPointerMoving should reflect changes in
                 // any of the variables, not just "delta"?
@@ -317,6 +320,7 @@ namespace UnityEngine.InputSystem.UI
                     for (var i = 0; i < eventData.hovered.Count; ++i)
                         ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
                 }
+#endif
                 return;
             }
 
@@ -328,7 +332,9 @@ namespace UnityEngine.InputSystem.UI
             {
                 for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
                 {
+#if UNITY_2021_1_OR_NEWER
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+#endif
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
                 }
@@ -342,7 +348,9 @@ namespace UnityEngine.InputSystem.UI
                      current = current.parent)
                 {
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+#if UNITY_2021_1_OR_NEWER
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+#endif
                     eventData.hovered.Add(current.gameObject);
                 }
             }
@@ -1599,12 +1607,14 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+#if UNITY_2021_1_OR_NEWER
         public override int ConvertUIToolkitPointerId(PointerEventData sourcePointerData)
         {
             return sourcePointerData is ExtendedPointerEventData ep
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
         }
+#endif
 
         private void HookActions()
         {

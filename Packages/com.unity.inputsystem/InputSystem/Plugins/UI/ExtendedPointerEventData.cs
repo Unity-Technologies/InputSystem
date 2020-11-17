@@ -116,16 +116,20 @@ namespace UnityEngine.InputSystem.UI
             if (control.parent is Pen pen)
             {
                 uiToolkitPointerId = GetPenPointerId(pen);
+#if UNITY_2021_1_OR_NEWER
                 pressure = pen.pressure.EvaluateMagnitude();
                 azimuthAngle = (pen.tilt.ReadValue().x + 1) * Mathf.PI / 2;
                 altitudeAngle = (pen.tilt.ReadValue().y + 1) * Mathf.PI / 2;
                 twist = pen.twist.ReadValue() * Mathf.PI * 2;
+#endif
             }
             else if (control.parent is TouchControl touchControl)
             {
                 uiToolkitPointerId = GetTouchPointerId(touchControl);
+#if UNITY_2021_1_OR_NEWER
                 pressure = touchControl.pressure.EvaluateMagnitude();
                 radius = touchControl.radius.ReadValue();
+#endif
             }
             else
             {

@@ -32,6 +32,15 @@ internal class UITests : InputTestFixture
         public UICallbackReceiver rightChildReceiver;
     }
 
+    [SetUp]
+    public override void Setup()
+    {
+        base.Setup();
+#if UNITY_2021_1_OR_NEWER
+        EventSystem.SetUITookitEventSystemOverride(null, false, false);
+#endif
+    }
+
     // Set up a InputSystemUIInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
@@ -2381,6 +2390,9 @@ internal class UITests : InputTestFixture
         PointerUp,
         PointerEnter,
         PointerExit,
+#if UNITY_2021_1_OR_NEWER
+        PointerMove,
+#endif
         Select,
         Deselect,
         InitializePotentialDrag,
@@ -2395,6 +2407,9 @@ internal class UITests : InputTestFixture
     }
 
     private class UICallbackReceiver : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler,
+#if UNITY_2021_1_OR_NEWER
+        IPointerMoveHandler,
+#endif
         IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler,
         IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
@@ -2447,6 +2462,14 @@ internal class UITests : InputTestFixture
         {
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
+
+#if UNITY_2021_1_OR_NEWER
+        public void OnPointerMove(PointerEventData eventData)
+        {
+            //TODO: Uncomment the following line and adjust all tests to account for new PointerMove event.
+            //events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
+        }
+#endif
 
         public void OnMove(AxisEventData eventData)
         {
@@ -2547,7 +2570,16 @@ internal class UITests : InputTestFixture
                 touchId = extendedEventData.touchId,
                 pointerType = extendedEventData.pointerType,
                 trackedDeviceOrientation = extendedEventData.trackedDeviceOrientation,
-                trackedDevicePosition = extendedEventData.trackedDevicePosition
+                trackedDevicePosition = extendedEventData.trackedDevicePosition,
+#if UNITY_2021_1_OR_NEWER
+                pressure = eventData.pressure,
+                tangentialPressure = eventData.tangentialPressure,
+                altitudeAngle = eventData.altitudeAngle,
+                azimuthAngle = eventData.azimuthAngle,
+                twist = eventData.twist,
+                radius = eventData.radius,
+                radiusVariance = eventData.radiusVariance,
+#endif
             };
 
             // Can't set lastPress directly.

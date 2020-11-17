@@ -181,22 +181,15 @@ namespace UnityEngine.InputSystem.UI
         private float m_Twist;
         private Vector2 m_Radius;
 
-        public void CopyTouchOrPenStateTo(PointerEventData eventData)
-        {
-            eventData.pressure = pressure;
-            eventData.azimuthAngle = azimuthAngle;
-            eventData.altitudeAngle = altitudeAngle;
-            eventData.twist = twist;
-            eventData.radius = radius;
-        }
-
         public void CopyTouchOrPenStateFrom(PointerEventData eventData)
         {
+#if UNITY_2021_1_OR_NEWER
             pressure = eventData.pressure;
             azimuthAngle = eventData.azimuthAngle;
             altitudeAngle = eventData.altitudeAngle;
             twist = eventData.twist;
             radius = eventData.radius;
+#endif
         }
 
         // State related to pressing and releasing individual bodies. Retains those parts of
