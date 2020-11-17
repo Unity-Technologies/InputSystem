@@ -112,24 +112,32 @@ namespace UnityEngine.InputSystem.Editor
 
         private static (bool newSystemEnabled, bool oldSystemEnabled) ActiveInputHandlerToTuple(int value)
         {
-            return (InputHandler) value switch
+            switch ((InputHandler) value)
             {
-                InputHandler.OldInputManager => (false, true),
-                InputHandler.NewInputSystem => (true, false),
-                InputHandler.InputBoth => (true, true),
-                _ => throw new ArgumentException($"Invalid value of 'activeInputHandler' setting: {value}")
-            };
+                case InputHandler.OldInputManager:
+                    return (false, true);
+                case InputHandler.NewInputSystem:
+                    return (true, false);
+                case InputHandler.InputBoth:
+                    return (true, true);
+                default:
+                    throw new ArgumentException($"Invalid value of 'activeInputHandler' setting: {value}");
+            }
         }
 
         private static int TupleToActiveInputHandler((bool newSystemEnabled, bool oldSystemEnabled) tuple)
         {
-            return tuple switch
+            switch (tuple)
             {
-                (false, true) => (int)InputHandler.OldInputManager,
-                (true, false) => (int)InputHandler.NewInputSystem,
-                (true, true) => (int)InputHandler.InputBoth,
-                _ => throw new ArgumentException($"Invalid value of player settings: {tuple}")
-            };
+                case (false, true):
+                    return (int) InputHandler.OldInputManager;
+                case (true, false):
+                    return (int) InputHandler.NewInputSystem;
+                case (true, true):
+                    return (int) InputHandler.InputBoth;
+                default:
+                    throw new ArgumentException($"Invalid value of player settings: {tuple}");
+            }
         }
 #else
         private const string kEnableNewSystemProperty = "enableNativePlatformBackendsForNewInputSystem";
