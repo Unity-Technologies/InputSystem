@@ -1,4 +1,5 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+using System;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Layouts;
 

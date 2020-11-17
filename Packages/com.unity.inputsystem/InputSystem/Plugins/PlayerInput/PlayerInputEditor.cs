@@ -269,25 +269,20 @@ namespace UnityEngine.InputSystem.Editor
 
                     // Write it out and tell the asset DB to pick it up.
                     File.WriteAllText(fileName, newActionsText);
-                    AssetDatabase.Refresh();
 
-                    // Need to wait for import to happen. On next editor update, wire the asset
-                    // into our PlayerInput component and bring up the action editor.
-                    EditorApplication.delayCall +=
-                        () =>
-                    {
-                        var relativePath = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+                    // Import the new asset
+                    var relativePath = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+                    AssetDatabase.ImportAsset(relativePath, ImportAssetOptions.ForceSynchronousImport);
 
-                        // Load imported object.
-                        var importedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
+                    // Load imported object.
+                    var importedObject = AssetDatabase.LoadAssetAtPath<InputActionAsset>(relativePath);
 
-                        // Set it on the PlayerInput component.
-                        m_ActionsProperty.objectReferenceValue = importedObject;
-                        serializedObject.ApplyModifiedProperties();
+                    // Set it on the PlayerInput component.
+                    m_ActionsProperty.objectReferenceValue = importedObject;
+                    serializedObject.ApplyModifiedProperties();
 
-                        // Open the asset.
-                        AssetDatabase.OpenAsset(importedObject);
-                    };
+                    // Open the asset.
+                    AssetDatabase.OpenAsset(importedObject);
                 }
             }
             EditorGUILayout.EndHorizontal();

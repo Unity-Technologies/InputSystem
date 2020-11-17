@@ -220,6 +220,27 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
+        /// <summary>
+        /// Read the value of <paramref name="control"/> from the given <paramref name="inputEvent"/> without having to
+        /// know the specific value type of the control.
+        /// </summary>
+        /// <param name="control">Control to read the value for.</param>
+        /// <param name="inputEvent">An <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/> to read the value from.</param>
+        /// <returns>The current value for the control or <c>null</c> if the control's value is not included
+        /// in the event.</returns>
+        /// <seealso cref="InputControl.ReadValueFromStateAsObject"/>
+        public static unsafe object ReadValueFromEventAsObject(this InputControl control, InputEventPtr inputEvent)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+
+            var statePtr = control.GetStatePtrFromStateEvent(inputEvent);
+            if (statePtr == null)
+                return control.ReadDefaultValueAsObject();
+
+            return control.ReadValueFromStateAsObject(statePtr);
+        }
+
         public static TValue ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr eventPtr)
             where TValue : struct
         {
@@ -516,7 +537,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <param name="statePtr">State memory containing the control's <see cref="stateBlock"/>.</param>
         /// <returns>True if </returns>
-        /// <seealso cref="currentStatePtr"/>
+        /// <seealso cref="InputControl.currentStatePtr"/>
         /// <remarks>
         /// This method ignores noise
         ///
@@ -691,11 +712,62 @@ namespace UnityEngine.InputSystem
             stateOffset += device.m_StateBlock.byteOffset;
 
             // Return null if state is out of range.
-            var controlOffset = (int)control.m_StateBlock.byteOffset - stateOffset;
-            if (controlOffset < 0 || controlOffset + control.m_StateBlock.alignedSizeInBytes > stateSizeInBytes)
+            ref var controlStateBlock = ref control.m_StateBlock;
+            var controlOffset = (int)controlStateBlock.effectiveByteOffset - stateOffset;
+            if (controlOffset < 0 || controlOffset + controlStateBlock.alignedSizeInBytes > stateSizeInBytes)
                 return null;
 
             return (byte*)statePtr - (int)stateOffset;
+        }
+
+        /// <summary>
+        /// Writes the default state of <paramref name="control"/> into <paramref name="eventPtr"/>.
+        /// </summary>
+        /// <param name="control">A control whose default state to write.</param>
+        /// <param name="eventPtr">A valid pointer to either a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c> -or- <paramref name="eventPtr"/> contains
+        /// a null pointer.</exception>
+        /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is not a <see cref="StateEvent"/> or <see cref="DeltaStateEvent"/>.</exception>
+        /// <returns>True if the default state for <paramref name="control"/> was written to <paramref name="eventPtr"/>, false if the
+        /// given state or delta state event did not include memory for the given control.</returns>
+        /// <remarks>
+        /// Note that the default state of a control does not necessarily need to correspond to zero-initialized memory. For example, if
+        /// an axis control yields a range of [-1..1] and is stored as a signed 8-bit value, the default state will be 127, not 0.
+        ///
+        /// <example>
+        /// <code>
+        /// // Reset the left gamepad stick to its default state (which results in a
+        /// // value of (0,0).
+        /// using (StateEvent.From(Gamepad.all[0], out var eventPtr))
+        /// {
+        ///     Gamepad.all[0].leftStick.ResetToDefaultStateInEvent(eventPtr);
+        ///     InputSystem.QueueEvent(eventPtr);
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputControl.defaultStatePtr"/>
+        public static unsafe bool ResetToDefaultStateInEvent(this InputControl control, InputEventPtr eventPtr)
+        {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (!eventPtr.valid)
+                throw new ArgumentNullException(nameof(eventPtr));
+
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+                throw new ArgumentException("Given event is not a StateEvent or a DeltaStateEvent", nameof(eventPtr));
+
+            var statePtr = (byte*)control.GetStatePtrFromStateEvent(eventPtr);
+            if (statePtr == null)
+                return false;
+
+            var defaultStatePtr = (byte*)control.defaultStatePtr;
+            ref var stateBlock = ref control.m_StateBlock;
+            var offset = stateBlock.byteOffset;
+
+            MemoryHelpers.MemCpyBitRegion(statePtr + offset, defaultStatePtr + offset, stateBlock.bitOffset, stateBlock.sizeInBits);
+            return true;
         }
 
         /// <summary>

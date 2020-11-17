@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem
         /// the delta is automatically set to <c>(0,0)</c>. More precisely, deltas will reset as part
         /// of <see cref="InputSystem.onBeforeUpdate"/>. This happens every time regardless of whether
         /// there are pending motion events for the pointer or not. But because it happens in
-        /// <see cref="InputSystem.onBeforeUpdate"/> (i.e. <em>before</em> events are processed),
+        /// <see cref="InputSystem.onBeforeUpdate"/> (that is, <em>before</em> events are processed),
         /// subsequent motion deltas are incorporated normally.
         ///
         /// Note that the resetting is visible to <see cref="InputAction"/>s. This means that when
