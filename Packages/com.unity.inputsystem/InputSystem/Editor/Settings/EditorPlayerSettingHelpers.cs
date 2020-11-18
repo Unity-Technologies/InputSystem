@@ -135,8 +135,15 @@ namespace UnityEngine.InputSystem.Editor
                     return (int) InputHandler.NewInputSystem;
                 case (true, true):
                     return (int) InputHandler.InputBoth;
-                default:
-                    throw new ArgumentException($"Invalid value of player settings: {tuple}");
+                // Special case, when using two separate bool's of the public API here,
+                // it's possible to end up with both settings in false, for example:
+                // - EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+                // - EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
+                // - EditorPlayerSettingHelpers.newSystemBackendsEnabled = false;
+                // - EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
+                // On line 3 both settings will be false, even if we set old system to true on line 4.
+                case (false, false):
+                    return (int) InputHandler.OldInputManager;
             }
         }
 #else
