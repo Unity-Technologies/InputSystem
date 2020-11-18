@@ -2469,6 +2469,7 @@ internal class UITests : InputTestFixture
             //TODO: Uncomment the following line and adjust all tests to account for new PointerMove event.
             //events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
         }
+
 #endif
 
         public void OnMove(AxisEventData eventData)

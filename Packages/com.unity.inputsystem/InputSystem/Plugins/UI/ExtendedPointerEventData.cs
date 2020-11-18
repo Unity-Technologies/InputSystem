@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.UI
                     if (pen == otherPen)
                     {
                         return UIElements.PointerId.penPointerIdBase +
-                               Mathf.Clamp(n, 0, UIElements.PointerId.penPointerCount - 1);
+                            Mathf.Clamp(n, 0, UIElements.PointerId.penPointerCount - 1);
                     }
                     n++;
                 }
@@ -155,9 +155,9 @@ namespace UnityEngine.InputSystem.UI
 
         private static int GetTouchPointerId(TouchControl touchControl)
         {
-            var i = ((Touchscreen) touchControl.device).touches.IndexOf(touchControl);
+            var i = ((Touchscreen)touchControl.device).touches.IndexOf(touchControl);
             return UIElements.PointerId.touchPointerIdBase +
-                   Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
+                Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
         }
     }
 

@@ -1614,6 +1614,7 @@ namespace UnityEngine.InputSystem.UI
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
         }
+
 #endif
 
         private void HookActions()
