@@ -1,9 +1,0 @@
-- name: Manual
-  href: manual/
-- name: Scripting API
-  href: api/
-  homepage: api/index.md
-- name: Changelog
-  href: changelog/
-- name: License
-  href: license/

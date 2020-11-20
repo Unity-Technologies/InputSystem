@@ -1,9 +1,0 @@
-{
-    "name": "Unity.PackageManagerDocTools.Editor",
-    "references": ["Unity.PackageManagerUI.Editor"],
-    "optionalUnityReferences": [],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": []
-}
