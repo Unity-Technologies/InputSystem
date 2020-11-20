@@ -15,6 +15,19 @@ namespace UnityEngine.InputSystem.Editor
         {
             // The APIs here are not public. Use reflection to get to them.
 
+            #if UNITY_2020_2_OR_NEWER
+
+            var editorApplicationType = typeof(EditorApplication);
+            var restartEditorAndRecompileScripts =
+                editorApplicationType.GetMethod("RestartEditorAndRecompileScripts",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+            if (!dryRun)
+                restartEditorAndRecompileScripts.Invoke(null, null);
+            else if (restartEditorAndRecompileScripts == null)
+                throw new MissingMethodException(editorApplicationType.FullName, "RestartEditorAndRecompileScripts");
+
+            #else
+
             // Delete compilation output.
             var editorAssembly = typeof(EditorApplication).Assembly;
             var editorCompilationInterfaceType =
@@ -35,6 +48,8 @@ namespace UnityEngine.InputSystem.Editor
                 requestCloseAndRelaunchWithCurrentArgumentsMethod.Invoke(null, null);
             else if (requestCloseAndRelaunchWithCurrentArgumentsMethod == null)
                 throw new MissingMethodException(editorApplicationType.FullName, "RequestCloseAndRelaunchWithCurrentArguments");
+
+            #endif
         }
 
         public static void CheckOut(string path)
