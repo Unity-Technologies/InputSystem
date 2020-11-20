@@ -1,5 +1,8 @@
 editors:
-  - version: 2019.1
+  - version: 2019.4
+  - version: 2020.1
+  - version: 2020.2
+  - version: trunk
 platforms:
   - name: win
     type: Unity::VM
@@ -19,16 +22,16 @@ platforms:
     installscript: c:\python27\Scripts\unity-downloader-cli.exe -c editor -c StandaloneSupport-IL2CPP -w -u 
   - name: mac
     type: Unity::VM::osx
-    image: buildfarm/mac:stable
+    image: package-ci/mac:stable
     flavor: m1.mac
   - name: mac_standalone
     type: Unity::VM::osx
-    image: buildfarm/mac:stable
+    image: package-ci/mac:stable
     flavor: m1.mac
     runtime: StandaloneOSX
   - name: mac_standalone_il2cpp
     type: Unity::VM::osx
-    image: buildfarm/mac:stable
+    image: package-ci/mac:stable
     flavor: m1.mac
     runtime: StandaloneOSX   
     scripting-backend: Il2Cpp 
@@ -75,7 +78,7 @@ publish:
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
-    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/
+    - upm-ci package publish --package-path ./Packages/com.unity.inputsystem/ --dry-run
   triggers:
     tags:
       only:
