@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.1] - 2020-11-20
+
+### Fixed
+
+- Fixed update/switch and restart prompt on Unity 2020.2+ ([case 1292513](https://issuetracker.unity3d.com/issues/input-system-after-package-install-the-update-slash-switch-and-restart-prompt-does-not-appear)).
+
 ## [1.0.0] - 2020-4-23
 
 ### Fixed
