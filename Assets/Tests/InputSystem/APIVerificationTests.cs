@@ -425,11 +425,12 @@ class APIVerificationTests
         return false;
     }
 
-    string GenerateDocsDirectory()
+    string GenerateDocsDirectory(out string log)
     {
         const string docsFolder = "Temp/docstest";
         Directory.CreateDirectory(docsFolder);
-        Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
+        var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
+        log = Documentation.Instance.Generate(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
         return docsFolder;
     }
 
@@ -440,7 +441,7 @@ class APIVerificationTests
 #endif
     public void API_DoesNotHaveUndocumentedPublicTypes()
     {
-        var docsFolder = GenerateDocsDirectory();
+        var docsFolder = GenerateDocsDirectory(out _);
         var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
         Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types.");
     }
@@ -450,9 +451,22 @@ class APIVerificationTests
     [Ignore("Still needs a lot of documentation work to happen")]
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
-        var docsFolder = GenerateDocsDirectory();
+        var docsFolder = GenerateDocsDirectory(out _);
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
+    }
+
+    [Test]
+    [Category("API")]
+#if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+#endif
+    public void API_DocsDoNotHaveXMLDocErrors()
+    {
+        GenerateDocsDirectory(out var log);
+        var lines = log.Split('\n');
+        Assert.That(lines.Where(l => l.Contains("Badly formed XML")), Is.Empty);
+        Assert.That(lines.Where(l => l.Contains("Invalid cref")), Is.Empty);
     }
 
     HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
@@ -521,7 +535,7 @@ class APIVerificationTests
 #endif
     public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
     {
-        var docsFolder = GenerateDocsDirectory();
+        var docsFolder = GenerateDocsDirectory(out _);
         var unresolvedLinks = new List<string>();
         var htmlFileCache = new Dictionary<string, HtmlDocument>();
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
