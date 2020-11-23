@@ -2,7 +2,7 @@
 	"name": "com.unity.inputsystem",
 	"displayName": "Input System",
 	"version": "1.0.1",
-	"unity": "2019.4",
+	"unity": "2019.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Unity-Technologies/InputSystem.git",
