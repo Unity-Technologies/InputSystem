@@ -6,7 +6,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Unity-Technologies/InputSystem.git",
-		"revision": "be0328ed1eb396e994217245c68ad74276c90e2e"
+		"revision": "a907390ff55d25623c2253f996a650a39b1297c2"
 	},
 	"description": "A new input system which can be used as a more extensible and customizable alternative to Unity's classic input system in UnityEngine.Input.",
 	"keywords": [
