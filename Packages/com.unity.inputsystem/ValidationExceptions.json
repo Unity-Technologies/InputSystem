@@ -1,0 +1,25 @@
+{
+    "Exceptions":
+    [
+        {
+            "ValidationTest": "API Validation",
+            "ExceptionError": "Breaking changes require a new major version.",
+            "PackageVersion": "1.0.1"
+        },
+        {
+            "ValidationTest": "API Validation",
+            "ExceptionError": "Additions require a new minor or major version.",
+            "PackageVersion": "1.0.1"
+        },
+        {
+            "ValidationTest": "API Validation",
+            "ExceptionError": "New assembly \"Unity.InputSystem.IntegrationTests\" may only be added in a new minor or major version.",
+            "PackageVersion": "1.0.1"
+        },
+        {
+            "ValidationTest": "API Validation",
+            "ExceptionError": "New assembly \"Unity.InputSystem.TestFramework\" may only be added in a new minor or major version.",
+            "PackageVersion": "1.0.1"
+        }
+    ]
+}
