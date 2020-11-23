@@ -32,7 +32,8 @@ promote:
     - mv ./Assets/Samples.meta ./Packages/com.unity.inputsystem
     - npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/ --dry-run
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u 2019.1
+    - upm-ci package promote --package-path ./Packages/com.unity.inputsystem/
   artifacts:
     artifacts:
       paths:
