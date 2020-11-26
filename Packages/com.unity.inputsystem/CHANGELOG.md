@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
 - Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
   * In our own measurements, `InputUser.OnEvent` is >9 times faster than before and `RebindingOperation.OnEvent` is ~2.5 times faster.
+- Fixed PS4 controller not recognized on Mac when connected over Bluetooth ([case 1286449](https://issuetracker.unity3d.com/issues/input-system-dualshock-4-zct1e-dualshock-2-v1-devices-are-not-fully-recognised-over-bluetooth)).
 
 ### Added
 
