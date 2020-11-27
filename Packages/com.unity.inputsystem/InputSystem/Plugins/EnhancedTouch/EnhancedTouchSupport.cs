@@ -124,8 +124,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         private static void SetUpState()
         {
             Touch.s_PlayerState.updateMask = InputUpdateType.Dynamic | InputUpdateType.Manual;
+            Touch.s_PlayerState.updateStepCount = InputUpdate.s_UpdateStepCount;
             #if UNITY_EDITOR
             Touch.s_EditorState.updateMask = InputUpdateType.Editor;
+            Touch.s_EditorState.updateStepCount = InputUpdate.s_UpdateStepCount;
             #endif
 
             s_UpdateMode = InputSystem.settings.updateMode;
