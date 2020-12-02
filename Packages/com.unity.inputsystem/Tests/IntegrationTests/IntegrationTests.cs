@@ -91,7 +91,7 @@ public class IntegrationTests
 
     [Test]
     [Category("Integration")]
-    public void Integration__InEditor_AbleToChangePlayerSettings()
+    public void Integration_CanChangeInputBackendPlayerSettingInEditor()
     {
         // Save current player settings so we can restore them.
         var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
