@@ -8,14 +8,12 @@ namespace UnityEngine.InputSystem
     /// </summary>
     class EmulatedScreenKeyboard : ScreenKeyboard
     {
-#if UNITY_EDITOR
         private EmulatedScreenKeyboardVisualization m_Visualization;
-#endif
 
         string m_InputFieldText;
         RangeInt m_Selection;
 
-        class FakeScreenKeyboardDispatcher : MonoBehaviour
+        class EmulatedScreenKeyboardDispatcher : MonoBehaviour
         {
         }
 
@@ -29,17 +27,19 @@ namespace UnityEngine.InputSystem
         {
         }
 
-        private FakeScreenKeyboardDispatcher Dispatcher
+        private EmulatedScreenKeyboardDispatcher Dispatcher
         {
             get
             {
-                var go = GameObject.Find("Unity" + nameof(EmulatedScreenKeyboard));
+                var name = "Unity" + nameof(EmulatedScreenKeyboard);
+                var go = GameObject.Find(name);
                 if (go == null)
                 {
                     go = new GameObject(nameof(EmulatedScreenKeyboard));
-                    go.AddComponent<FakeScreenKeyboardDispatcher>();
+                    go.name = name;
+                    go.AddComponent<EmulatedScreenKeyboardDispatcher>();
                 }
-                return go.GetComponent<FakeScreenKeyboardDispatcher>();
+                return go.GetComponent<EmulatedScreenKeyboardDispatcher>();
             }
         }
 
@@ -62,13 +62,14 @@ namespace UnityEngine.InputSystem
 #endif
         }
 
-#if UNITY_EDITOR
         private EmulatedScreenKeyboardVisualization Visualization
         {
             get
             {
+#if UNITY_EDITOR
                 if (!Application.isPlaying)
                     return null;
+#endif
                 if (m_Visualization != null)
                     return m_Visualization;
                 var go = new GameObject("Unity" + nameof(EmulatedScreenKeyboardVisualization));
@@ -77,15 +78,12 @@ namespace UnityEngine.InputSystem
                 return m_Visualization;
             }
         }
-#endif
 
         private IEnumerator QueueStatusChangeVisible()
         {
             yield return Waiting();
             ReportStateChange(ScreenKeyboardState.Visible);
-#if UNITY_EDITOR
             Visualization.Show(m_ShowParams);
-#endif
         }
 
         protected override void InternalHide()
@@ -147,13 +145,9 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-#if !UNITY_EDITOR
-                return Rect.zero;
-#else
                 if (Visualization == null)
                     return Rect.zero;
                 return Visualization.area;
-#endif
             }
         }
 
