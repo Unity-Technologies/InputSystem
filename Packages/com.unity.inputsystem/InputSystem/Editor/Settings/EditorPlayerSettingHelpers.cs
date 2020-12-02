@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static (bool newSystemEnabled, bool oldSystemEnabled) ActiveInputHandlerToTuple(int value)
         {
-            switch ((InputHandler) value)
+            switch ((InputHandler)value)
             {
                 case InputHandler.OldInputManager:
                     return (false, true);
@@ -130,11 +130,11 @@ namespace UnityEngine.InputSystem.Editor
             switch (tuple)
             {
                 case (false, true):
-                    return (int) InputHandler.OldInputManager;
+                    return (int)InputHandler.OldInputManager;
                 case (true, false):
-                    return (int) InputHandler.NewInputSystem;
+                    return (int)InputHandler.NewInputSystem;
                 case (true, true):
-                    return (int) InputHandler.InputBoth;
+                    return (int)InputHandler.InputBoth;
                 // Special case, when using two separate bool's of the public API here,
                 // it's possible to end up with both settings in false, for example:
                 // - EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
@@ -143,9 +143,10 @@ namespace UnityEngine.InputSystem.Editor
                 // - EditorPlayerSettingHelpers.oldSystemBackendsEnabled = true;
                 // On line 3 both settings will be false, even if we set old system to true on line 4.
                 case (false, false):
-                    return (int) InputHandler.OldInputManager;
+                    return (int)InputHandler.OldInputManager;
             }
         }
+
 #else
         private const string kEnableNewSystemProperty = "enableNativePlatformBackendsForNewInputSystem";
         private const string kDisableOldSystemProperty = "disableOldInputManagerSupport";
