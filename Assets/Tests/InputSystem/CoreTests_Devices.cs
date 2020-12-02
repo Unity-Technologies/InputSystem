@@ -1770,6 +1770,61 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_CanMarkDeviceAsBeingAbleToRunInBackground()
+    {
+        var device1Id = runtime.ReportNewInputDevice<Gamepad>();
+        var device2Id = runtime.ReportNewInputDevice<Mouse>();
+
+        var receivedCanRunInBackgroundForDevice1 = false;
+        var receivedCanRunInBackgroundForDevice2 = false;
+
+        runtime.SetDeviceCommandCallback(device1Id,
+            (id, command) =>
+            {
+                if (command->type != QueryCanRunInBackground.Type)
+                    return InputDeviceCommand.GenericFailure;
+
+                Assert.That(id, Is.EqualTo(device1Id));
+                Assert.That(command->payloadSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<bool>()));
+
+                receivedCanRunInBackgroundForDevice1 = true;
+                ((QueryCanRunInBackground*)command)->canRunInBackground = true;
+                return InputDeviceCommand.GenericSuccess;
+            });
+        runtime.SetDeviceCommandCallback(device2Id,
+            (id, command) =>
+            {
+                if (command->type != QueryCanRunInBackground.Type)
+                    return InputDeviceCommand.GenericFailure;
+
+                Assert.That(id, Is.EqualTo(device2Id));
+                Assert.That(command->payloadSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<bool>()));
+
+                receivedCanRunInBackgroundForDevice2 = true;
+                ((QueryCanRunInBackground*)command)->canRunInBackground = false;
+                return InputDeviceCommand.GenericSuccess;
+            });
+
+        InputSystem.Update();
+
+        // Just adding the device should not have triggered a query for canRunInBackground.
+        Assert.That(receivedCanRunInBackgroundForDevice1, Is.False);
+        Assert.That(receivedCanRunInBackgroundForDevice2, Is.False);
+
+        var device1 = InputSystem.GetDeviceById(device1Id);
+        var device2 = InputSystem.GetDeviceById(device2Id);
+
+        var device1CanRunInBackground = device1.canRunInBackground;
+        var device2CanRunInBackground = device2.canRunInBackground;
+
+        Assert.That(receivedCanRunInBackgroundForDevice1, Is.True);
+        Assert.That(receivedCanRunInBackgroundForDevice2, Is.True);
+        Assert.That(device1CanRunInBackground, Is.True);
+        Assert.That(device2CanRunInBackground, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription { deviceClass = "Gamepad" };
@@ -2825,13 +2880,19 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateTouchscreenWithCustomTouchCount()
     {
-        // Create a touchscreen that has 60 concurrent touches instead of 10.
+        // NOTE: ATM we have pretty tight restrictions on the upper limit of the number
+        //       of controls and the state offsets and sizes of controls. This comes down
+        //       to state offset tables in device (InputDevice.m_StateOffsetToControlMap)
+        //       packing everything into 32-bit entries. If the current limits turn out
+        //       to be too low, we can bump this to 64 bits.
+
+        // Create a touchscreen that has 16 concurrent touches instead of 10.
         const string json = @"
             {
                 ""name"" : ""CustomTouchscreen"",
                 ""extend"" : ""Touchscreen"",
                 ""controls"" : [
-                    { ""name"" : ""touch"", ""arraySize"" : 60 }
+                    { ""name"" : ""touch"", ""arraySize"" : 16 }
                 ]
             }
         ";
@@ -2839,7 +2900,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Touchscreen)InputSystem.AddDevice("CustomTouchscreen");
 
-        Assert.That(device.touches, Has.Count.EqualTo(60));
+        Assert.That(device.touches, Has.Count.EqualTo(16));
     }
 
     [Test]

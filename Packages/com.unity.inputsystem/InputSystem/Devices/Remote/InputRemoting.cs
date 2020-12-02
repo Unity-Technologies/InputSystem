@@ -624,8 +624,9 @@ namespace UnityEngine.InputSystem
                     var eventCount = 0;
                     var eventPtr = new InputEventPtr((InputEvent*)dataPtr);
                     var senderIndex = receiver.FindOrCreateSenderRecord(msg.participantId);
-
-                    while ((Int64)eventPtr.data < dataEndPtr.ToInt64())
+                    // Don't use IntPtr.ToInt64() function, on 32 bit systems, the pointer is first converted to Int32 and then casted to Int64
+                    // Thus for big pointer value, you might get a negative value even though the pointer value will be less than Int64.MaxValue
+                    while ((void*)eventPtr.data < dataEndPtr.ToPointer())
                     {
                         // Patch up device ID to refer to local device and send event.
                         var remoteDeviceId = eventPtr.deviceId;
