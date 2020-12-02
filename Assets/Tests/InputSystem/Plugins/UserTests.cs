@@ -805,14 +805,12 @@ internal class UserTests : InputTestFixture
         var gamepad = (Gamepad)InputSystem.AddDevice("GamepadWithNoisyGyro");
 
         // First send some noise on the gyro.
-        InputSystem.QueueDeltaStateEvent((QuaternionControl)gamepad["gyro"], new Quaternion(1, 2, 3, 4));
-        InputSystem.Update();
+        Set((QuaternionControl)gamepad["gyro"], new Quaternion(1, 2, 3, 4));
 
         Assert.That(receivedControls, Is.Empty);
 
         // Now send some real interaction.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
-        InputSystem.Update();
+        PressAndRelease(gamepad.buttonSouth);
 
         Assert.That(receivedControls, Is.EquivalentTo(new[] { gamepad.aButton }));
 
@@ -821,8 +819,7 @@ internal class UserTests : InputTestFixture
         // Now pair the device to a user and try the same thing again.
         var user = InputUser.PerformPairingWithDevice(gamepad);
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.B));
-        InputSystem.Update();
+        PressAndRelease(gamepad.buttonEast);
 
         Assert.That(receivedControls, Is.Empty);
 
@@ -832,8 +829,7 @@ internal class UserTests : InputTestFixture
         user.UnpairDevice(gamepad);
         --InputUser.listenForUnpairedDeviceActivity;
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.A));
-        InputSystem.Update();
+        PressAndRelease(gamepad.buttonSouth);
 
         Assert.That(receivedControls, Is.Empty);
 

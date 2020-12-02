@@ -9,9 +9,47 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+
+- An upper limit of 1024 controls per device and 1kb of memory state per device has been introduced.
+  * This allows for certain optimizations.
+  * Should the limits prove too tight, they can be raised in the future.
+  * The most complex device we have at the moment (`Touchscreen`) has 242 controls and 616 bytes of state.
+
 ### Fixed
 
 - Fixed precompiled layouts such as `FastKeyboard` leading to build time regressions with il2cpp (case 1283676).
+- Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
+  * In our own measurements, `InputUser.OnEvent` is >9 times faster than before and `RebindingOperation.OnEvent` is ~2.5 times faster.
+- Fixed PS4 controller not recognized on Mac when connected over Bluetooth ([case 1286449](https://issuetracker.unity3d.com/issues/input-system-dualshock-4-zct1e-dualshock-2-v1-devices-are-not-fully-recognised-over-bluetooth)).
+
+### Added
+
+- Added a new high-performance way to iterate over changed controls in an event.
+  ```CSharp
+  // Can optionally specify a magnitude threshold that controls must cross.
+  // NOTE: This will note allocate GC memory.
+  foreach (var control in eventPtr.EnumerateChangedControls(magnitudeThreshold: 0.1f))
+      Debug.Log($"Control {control} changed state");
+  ```
+  * This can be used, for example, to implement much more performant "any button pressed?" queries.
+  ```CSharp
+  InputSystem.onEvent +=
+      (eventPtr, device) =>
+      {
+          // Ignore anything that is not a state event.
+          var eventType = eventPtr.type;
+          if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+              return;
+
+          // Find all changed controls actuated above the button press threshold.
+          foreach (var control in eventPtr.EnumerateChangedControls
+              (device: device, magnitudeThreshold: InputSystem.settings.defaultButtonPressThreshold))
+              // Check if it's a button.
+              if (control is ButtonControl button)
+                  Debug.Log($"Button {button} was pressed");
+      }
+  ```
 
 ## [1.1.0-preview.2] - 2020-10-23
 
