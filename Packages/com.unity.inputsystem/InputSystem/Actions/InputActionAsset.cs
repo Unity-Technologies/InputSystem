@@ -776,6 +776,52 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Return true if the asset contains bindings (in any of its action maps) that are usable
+        /// with the given <paramref name="device"/>.
+        /// </summary>
+        /// <param name="device">An arbitrary input device.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Find out if the actions of the given PlayerInput can be used with
+        /// // a gamepad.
+        /// if (playerInput.actions.IsUsableWithDevice(Gamepad.all[0]))
+        ///     /* ... */;
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.IsUsableWithDevice"/>
+        /// <seealso cref="InputControlScheme.SupportsDevice"/>
+        public bool IsUsableWithDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // If we have control schemes, we let those dictate our search.
+            var numControlSchemes = m_ControlSchemes.LengthSafe();
+            if (numControlSchemes > 0)
+            {
+                for (var i = 0; i < numControlSchemes; ++i)
+                {
+                    if (m_ControlSchemes[i].SupportsDevice(device))
+                        return true;
+                }
+            }
+            else
+            {
+                // Otherwise, we'll go search bindings. Slow.
+                var actionMapCount = m_ActionMaps.LengthSafe();
+                for (var i = 0; i < actionMapCount; ++i)
+                    if (m_ActionMaps[i].IsUsableWithDevice(device))
+                        return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Enable all action maps in the asset.
         /// </summary>
         /// <remarks>

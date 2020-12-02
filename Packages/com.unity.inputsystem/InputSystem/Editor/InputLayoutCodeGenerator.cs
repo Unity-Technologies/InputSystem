@@ -206,6 +206,31 @@ namespace UnityEngine.InputSystem.Editor
                 writer.EmitControlGetterInitializers(control, controlVariableName, controlGetterProperties);
             }
 
+            // State offset to control index map.
+            if (device.m_StateOffsetToControlMap != null)
+            {
+                writer.WriteLine();
+                writer.WriteLine("// State offset to control index map.");
+                writer.WriteLine("builder.WithStateOffsetToControlIndexMap(new uint[]");
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                var map = device.m_StateOffsetToControlMap;
+                var entryCount = map.Length;
+                for (var index = 0; index < entryCount;)
+                {
+                    if (index != 0)
+                        writer.WriteLine();
+                    // 10 entries a line.
+                    writer.WriteIndent();
+                    for (var i = 0; i < 10 && index < entryCount; ++index, ++i)
+                        writer.Write((index != 0 ? ", " : "") + map[index] + "u");
+                }
+                writer.WriteLine();
+                --writer.indentLevel;
+                writer.WriteLine("});");
+            }
+
+            writer.WriteLine();
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();
 

@@ -848,6 +848,26 @@ namespace UnityEngine.InputSystem
         /// <returns>Syntax to allow providing additional configuration for the newly added control scheme.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="name"/>
         /// is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Create an .inputactions asset.
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        ///
+        /// // Add an action map to it.
+        /// var actionMap = asset.AddActionMap("actions");
+        ///
+        /// // Add an action to it and bind it to the A button on the gamepad.
+        /// // Also, associate that binding with the "Gamepad" control scheme.
+        /// var action = actionMap.AddAction("action");
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        ///
+        /// // Add a control scheme called "Gamepad" that requires a Gamepad device.
+        /// asset.AddControlScheme("Gamepad")
+        ///     .WithRequiredDevice&lt;Gamepad&gt;();
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
             if (asset == null)

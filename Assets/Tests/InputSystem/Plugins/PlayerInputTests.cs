@@ -1735,8 +1735,8 @@ internal class PlayerInputTests : InputTestFixture
             Is.EquivalentTo(new[] { gamepad1, gamepad2, gamepad3, gamepad4 }));
 
         // Join two players and make sure we get two screen side-by-side.
-        Press(gamepad1.buttonSouth);
-        Press(gamepad2.buttonSouth);
+        PressAndRelease(gamepad1.buttonSouth);
+        PressAndRelease(gamepad2.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(2));
 
@@ -1761,7 +1761,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(1));
 
         // Add one more player and make sure we got a 2x2 setup.
-        Press(gamepad3.buttonSouth);
+        PressAndRelease(gamepad3.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(3));
 
@@ -1794,7 +1794,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
 
         // Join one more player and make sure we got a fully filled 2x2 setup.
-        Press(gamepad4.buttonSouth);
+        PressAndRelease(gamepad4.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
 
@@ -1867,7 +1867,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
 
         // Join a new player and make sure the upper right slot gets filled.
-        Press(gamepad2.buttonSouth);
+        PressAndRelease(gamepad2.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
 
@@ -1909,7 +1909,7 @@ internal class PlayerInputTests : InputTestFixture
 
         // Join yet another player and make sure the split-screen setup goes to 3x2.
         var gamepad5 = InputSystem.AddDevice<Gamepad>();
-        Press(gamepad5.buttonSouth);
+        PressAndRelease(gamepad5.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(5));
 
