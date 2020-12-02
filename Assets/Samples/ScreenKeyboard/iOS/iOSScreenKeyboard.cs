@@ -9,11 +9,12 @@ namespace UnityEngine.InputSystem.iOS
 {
     internal class iOSScreenKeyboard : ScreenKeyboard
     {
+        private static iOSScreenKeyboard s_Instance;
         private static iOSScreenKeyboard instance
         {
             get
             {
-                return (iOSScreenKeyboard)NativeInputRuntime.instance.screenKeyboard;
+                return s_Instance;
             }
         }
 
@@ -81,11 +82,17 @@ namespace UnityEngine.InputSystem.iOS
 
         internal iOSScreenKeyboard()
         {
+            if (s_Instance != null)
+                throw new Exception("Creating more than on iOSScreenKeyboard");
+            s_Instance = this;
         }
 
         public override void Dispose()
         {
+            if (s_Instance == null)
+                throw new Exception("iOSScreenKeyboard was already disposed?");
             _iOSScreenKeyboardCleanup();
+            s_Instance = null;
         }
 
         protected override void InternalShow()
@@ -134,7 +141,7 @@ namespace UnityEngine.InputSystem.iOS
 
         public override Rect occludingArea => _iOSScreenKeyboardOccludingArea();
 
-        internal override bool logging
+        public override bool logging
         {
             get
             {

@@ -157,7 +157,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal override void SimulateKeyEvent(int keyCode)
+        public override void SimulateKeyEvent(int keyCode)
         {
             if (keyCode == (int)KeyCode.Escape)
                 Dispatcher.StartCoroutine(QueueStatusChangeCancel());

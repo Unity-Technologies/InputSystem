@@ -42,11 +42,6 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
-
-
-        #if !UNITY_EDITOR
-            NativeInputRuntime.instance.screenKeyboard = new iOSScreenKeyboard();
-        #endif
         }
     }
 }
