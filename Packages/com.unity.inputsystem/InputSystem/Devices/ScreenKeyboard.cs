@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Enumeration of the different types of supported screen keyboards.
     /// </summary>
-    internal enum ScreenKeyboardType
+    public enum ScreenKeyboardType
     {
         /// <summary>
         /// The default keyboard layout of the target platform.
@@ -63,7 +63,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Screen keyboard state.
     /// </summary>
-    internal enum ScreenKeyboardState : uint
+    public enum ScreenKeyboardState : uint
     {
         /// <summary>
         /// Screen keyboard is closed.
@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem
     /// Describes the appearance of screen keyboard.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    internal struct ScreenKeyboardShowParams
+    public struct ScreenKeyboardShowParams
     {
         private ScreenKeyboardType m_Type;
         private string m_InitialText;
@@ -153,23 +153,23 @@ namespace UnityEngine.InputSystem
     //       Imagine if in one of the inputFieldTextChanged callbacks we change the input field text.
     //       The other inputFieldTextChanged would still receive the original changed text which is wrong and could lead to potential problems.
     // Note: We use this approach with class callbacks, since it's more future proof, if we add an additional callback in the future, it won't break existing user projects.
-    internal struct ScreenKeyboardCallbacks
+    public struct ScreenKeyboardCallbacks
     {
         /// <summary>
         /// Is fired whenever screen keyboard state changes
         /// </summary>
-        internal Action<ScreenKeyboardState> stateChanged { set; get; }
+        public Action<ScreenKeyboardState> stateChanged { set; get; }
 
         /// <summary>
         /// Is fired whenever input field text changes.
         /// It doesn't matter if input field is hidden or not, this callback would still be invoked
         /// </summary>
-        internal Action<string> inputFieldTextChanged { set; get; }
+        public Action<string> inputFieldTextChanged { set; get; }
 
         /// <summary>
         /// Is fired whenever input field text selection changes.
         /// </summary>
-        internal Action<RangeInt> inputFieldSelectionChanged { set; get; }
+        public Action<RangeInt> inputFieldSelectionChanged { set; get; }
     }
 
     /// <summary>
@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem
     ///   - [iOS] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     ///   - [WSA] When screen keyboard is shown, the main Unity window will continue receiving input events, when clicking on Unity window, screen keyboard will continue to be shown
     /// </summary>
-    internal abstract class ScreenKeyboard : IDisposable
+    public abstract class ScreenKeyboard : IDisposable
     {
         protected ScreenKeyboardState m_KeyboardState;
         protected ScreenKeyboardShowParams m_ShowParams;
@@ -278,13 +278,13 @@ namespace UnityEngine.InputSystem
         /// Simulate a key event
         /// </summary>
         /// <param name="keyCode">A platform specific key code.</param>
-        internal virtual void SimulateKeyEvent(int keyCode)
+        public virtual void SimulateKeyEvent(int keyCode)
         {
         }
 
         /// <summary>
         /// Used for testing purposes, enable platform specific logging.
         /// </summary>
-        internal virtual bool logging { get; set; }
+        public virtual bool logging { get; set; }
     }
 }
