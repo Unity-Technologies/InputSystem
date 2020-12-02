@@ -2825,13 +2825,19 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanCreateTouchscreenWithCustomTouchCount()
     {
-        // Create a touchscreen that has 60 concurrent touches instead of 10.
+        // NOTE: ATM we have pretty tight restrictions on the upper limit of the number
+        //       of controls and the state offsets and sizes of controls. This comes down
+        //       to state offset tables in device (InputDevice.m_StateOffsetToControlMap)
+        //       packing everything into 32-bit entries. If the current limits turn out
+        //       to be too low, we can bump this to 64 bits.
+
+        // Create a touchscreen that has 16 concurrent touches instead of 10.
         const string json = @"
             {
                 ""name"" : ""CustomTouchscreen"",
                 ""extend"" : ""Touchscreen"",
                 ""controls"" : [
-                    { ""name"" : ""touch"", ""arraySize"" : 60 }
+                    { ""name"" : ""touch"", ""arraySize"" : 16 }
                 ]
             }
         ";
@@ -2839,7 +2845,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Touchscreen)InputSystem.AddDevice("CustomTouchscreen");
 
-        Assert.That(device.touches, Has.Count.EqualTo(60));
+        Assert.That(device.touches, Has.Count.EqualTo(16));
     }
 
     [Test]

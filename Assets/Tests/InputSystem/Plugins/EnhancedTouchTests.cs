@@ -137,9 +137,6 @@ internal class EnhancedTouchTests : InputTestFixture
     [TestCase(InputSettings.UpdateMode.ProcessEventsManually)]
     [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate)]
     [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate)]
-    #if UNITY_2021_1_OR_NEWER
-    [Ignore("TODO fix me")]
-    #endif
     public void EnhancedTouch_SupportsEditorUpdates(InputSettings.UpdateMode updateMode)
     {
         // To better observe that play mode and edit mode state is indeed independent and handled
@@ -553,14 +550,14 @@ internal class EnhancedTouchTests : InputTestFixture
     {
         var touchscreen1 = Touchscreen.current;
 
-        // To mix it up, have a touchscreen with 60 possible contacts instead of
+        // To mix it up, have a touchscreen with 15 possible contacts instead of
         // the default ten.
         const string json = @"
             {
                 ""name"" : ""CustomTouchscreen"",
                 ""extend"" : ""Touchscreen"",
                 ""controls"" : [
-                    { ""name"" : ""touch"", ""arraySize"" : 60 }
+                    { ""name"" : ""touch"", ""arraySize"" : 15 }
                 ]
             }
         ";
