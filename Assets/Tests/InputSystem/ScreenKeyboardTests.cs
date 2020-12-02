@@ -96,9 +96,9 @@ public class ScreenKeyboardTests : InputTestFixture
 #if UNITY_EDITOR
             Assert.AreEqual(_keyboard.GetType(), typeof(EmulatedScreenKeyboard));
 #elif UNITY_ANDROID
-            Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.Android.AndroidScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType().FullName, "UnityEngine.InputSystem.Android.AndroidScreenKeyboard");
 #elif UNITY_IOS
-            Assert.AreEqual(_keyboard.GetType(), typeof(UnityEngine.InputSystem.iOS.iOSScreenKeyboard));
+            Assert.AreEqual(_keyboard.GetType().FullName, "UnityEngine.InputSystem.iOS.iOSScreenKeyboard");
 #endif
             // Keep native logging enabled for more info
             _keyboard.logging = true;
