@@ -434,12 +434,12 @@ class APIVerificationTests
     ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
     private static string GenerateDocsDirectory(out string log)
     {
-        const string docsFolder = "Temp/docstest";
+        var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
         Directory.CreateDirectory(docsFolder);
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
-        var result = Documentation.Instance.Generate(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
-        log = result.buildLog;
-        return Path.Combine(docsFolder, result.shortVersionId);
+        var(buildLog, shortVersionId) = Documentation.Instance.Generate(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
+        log = buildLog;
+        return Path.Combine(docsFolder, shortVersionId);
     }
 
     [Test]
