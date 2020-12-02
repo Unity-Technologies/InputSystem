@@ -54,7 +54,7 @@ public class ScreenKeyboardTestScript : MonoBehaviour
 
     void Start()
     {
-        m_ScreenKeyboard = InputRuntime.s_Instance.screenKeyboard;
+        m_ScreenKeyboard = InputSystem.screenKeyboard;
         m_KeyboardTypeDropDown.ClearOptions();
         m_AutomaticOperation.ClearOptions();
 

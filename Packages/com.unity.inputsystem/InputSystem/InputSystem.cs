@@ -2854,6 +2854,12 @@ namespace UnityEngine.InputSystem
         /// <value>Current version of the input system.</value>
         public static Version version => new Version(kAssemblyVersion);
 
+        /// <summary>
+        /// Returns the instance of the screen keyboard.
+        /// If a platform specific keyboard is not found, an emulated screenkeyboard is returned instead.
+        /// </summary>
+        public static ScreenKeyboard screenKeyboard => InputRuntime.s_Instance.screenKeyboard;
+
         ////REVIEW: restrict metrics to editor and development builds?
         /// <summary>
         /// Get various up-to-date metrics about the input system.
