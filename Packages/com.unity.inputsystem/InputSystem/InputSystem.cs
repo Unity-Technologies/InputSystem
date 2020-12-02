@@ -3177,7 +3177,6 @@ namespace UnityEngine.InputSystem
             #if (UNITY_EDITOR || UNITY_STANDALONE) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
             Steam.SteamSupport.Initialize();
             #endif
-
         }
 
         private static void PerformDefaultPluginShutdown()

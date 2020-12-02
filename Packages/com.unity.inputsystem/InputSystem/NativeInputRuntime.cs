@@ -235,15 +235,14 @@ namespace UnityEngine.InputSystem.LowLevel
                 var keyboardFactories = new List<Type>();
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-
                     foreach (var typeInfo in assembly.DefinedTypes)
                     {
                         if (assembly.FullName.Contains("Assembly"))
-                            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null," " + typeInfo.FullName);
+                            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null, " " + typeInfo.FullName);
 
                         if (!typeInfo.IsClass)
                             continue;
-       
+
                         if (!typeof(IScreenKeyboardFactory).IsAssignableFrom(typeInfo) || typeInfo == typeof(EmulatedScreenKeyboardFactory))
                             continue;
                         keyboardFactories.Add(typeInfo);
@@ -258,7 +257,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     if (keyboardFactories.Count > 1)
                         Debug.LogWarning($"More than one screen keyboard factories available, {string.Join(", ", keyboardFactories.Select(t => t.FullName))}");
-                    factory = (IScreenKeyboardFactory) Activator.CreateInstance(keyboardFactories[0]);
+                    factory = (IScreenKeyboardFactory)Activator.CreateInstance(keyboardFactories[0]);
                 }
 
                 m_ScreenKeyboard = factory.Create();
