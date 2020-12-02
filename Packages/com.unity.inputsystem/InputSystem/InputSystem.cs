@@ -3178,18 +3178,11 @@ namespace UnityEngine.InputSystem
             Steam.SteamSupport.Initialize();
             #endif
 
-            #if !PLATFORM_HAS_SCREENKEYBOARD_IMPLEMENTATION
-            NativeInputRuntime.instance.screenKeyboard = new EmulatedScreenKeyboard();
-            #endif
         }
 
         private static void PerformDefaultPluginShutdown()
         {
-            if (NativeInputRuntime.instance.screenKeyboard != null)
-            {
-                NativeInputRuntime.instance.screenKeyboard.Dispose();
-                NativeInputRuntime.instance.screenKeyboard = null;
-            }
+            NativeInputRuntime.instance.DisposeScreenKeyboard();
         }
 
 #endif // UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
