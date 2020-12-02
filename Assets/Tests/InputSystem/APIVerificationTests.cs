@@ -434,6 +434,12 @@ class APIVerificationTests
     ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
     private static string GenerateDocsDirectory(out string log)
     {
+        // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
+        // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
+        // Create it manually here.
+        #if UNITY_EDITOR_WIN
+        Directory.CreateDirectory("C:/temp");
+        #endif
         var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
         Directory.CreateDirectory(docsFolder);
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
