@@ -237,9 +237,6 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     foreach (var typeInfo in assembly.DefinedTypes)
                     {
-                        if (assembly.FullName.Contains("Assembly"))
-                            Debug.LogFormat(LogType.Warning, LogOption.NoStacktrace, null, " " + typeInfo.FullName);
-
                         if (!typeInfo.IsClass)
                             continue;
 
