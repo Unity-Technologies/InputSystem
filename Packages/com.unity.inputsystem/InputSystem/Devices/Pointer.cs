@@ -230,12 +230,8 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr">The input event.</param>
         protected unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            var statePtr = currentStatePtr;
-
             ////FIXME: This stuff makes pointer events too expensive; find a better way.
-            delta.x.AccumulateValueInEvent(statePtr, eventPtr);
-            delta.y.AccumulateValueInEvent(statePtr, eventPtr);
-
+            delta.AccumulateValueInEvent(currentStatePtr, eventPtr);
             InputState.Change(this, eventPtr);
         }
 
