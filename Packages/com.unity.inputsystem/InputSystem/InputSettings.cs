@@ -411,6 +411,22 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // TODO: Maybe simply return ScreenKeyboard here instead of factory?
+        public  IScreenKeyboardFactory ScreenKeyboardFactory
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(m_ScreenKeyboardFactoryType))
+                    m_ScreenKeyboardFactoryType = typeof(DefaultScreenKeyboardFactory).AssemblyQualifiedName;
+
+                var type = System.Type.GetType(m_ScreenKeyboardFactoryType);
+                if (type == null)
+                    throw new System.Exception($"Couldn't resolve Screen Keyboard Factory ('{m_ScreenKeyboardFactoryType}')");
+
+                return (IScreenKeyboardFactory)System.Activator.CreateInstance(type);
+            }
+        }
+
         /// <summary>
         /// List of device layouts used by the project.
         /// </summary>
@@ -479,6 +495,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private string m_ScreenKeyboardFactoryType = typeof(DefaultScreenKeyboardFactory).AssemblyQualifiedName;
 
         internal void OnChange()
         {

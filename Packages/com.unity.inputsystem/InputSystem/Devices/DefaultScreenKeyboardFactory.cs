@@ -1,6 +1,9 @@
+using UnityEngine.Scripting;
+
 namespace UnityEngine.InputSystem
 {
-    class EmulatedScreenKeyboardFactory : IScreenKeyboardFactory
+    [Preserve]
+    public class DefaultScreenKeyboardFactory : IScreenKeyboardFactory
     {
         public ScreenKeyboard Create()
         {

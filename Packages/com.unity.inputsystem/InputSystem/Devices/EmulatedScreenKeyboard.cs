@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Mock screen keyboard class, which simulates screen keyboard behavior and is validated by the tests in ScreenKeyboardTests.cs
     /// </summary>
-    class EmulatedScreenKeyboard : ScreenKeyboard
+    public class EmulatedScreenKeyboard : ScreenKeyboard
     {
         private EmulatedScreenKeyboardVisualization m_Visualization;
 
@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem
         {
         }
 
-        internal EmulatedScreenKeyboard()
+        public EmulatedScreenKeyboard()
         {
             m_InputFieldText = string.Empty;
             m_Selection = new RangeInt(0, 0);

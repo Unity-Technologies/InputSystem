@@ -230,6 +230,12 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 if (m_ScreenKeyboard != null)
                     return m_ScreenKeyboard;
+
+                var factory = InputSystem.settings.ScreenKeyboardFactory;
+                if (factory == null)
+                    return null;
+
+                /*
                 // TODO: Maybe do this somehow via Input Settings, where user could explicitly choose a screen keyboard for the platform
                 IScreenKeyboardFactory factory = null;
                 var keyboardFactories = new List<Type>();
@@ -256,6 +262,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         Debug.LogWarning($"More than one screen keyboard factories available, {string.Join(", ", keyboardFactories.Select(t => t.FullName))}");
                     factory = (IScreenKeyboardFactory)Activator.CreateInstance(keyboardFactories[0]);
                 }
+                */
 
                 m_ScreenKeyboard = factory.Create();
 
