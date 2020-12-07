@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (m_ScreenKeyboard != null)
                     return m_ScreenKeyboard;
 
-                var factory = InputSystem.settings.ScreenKeyboardFactory;
+                var factory = InputSystem.settings.screenKeyboardFactory;
                 if (factory == null)
                     return null;
 

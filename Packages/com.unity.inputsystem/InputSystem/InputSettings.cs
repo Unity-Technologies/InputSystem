@@ -411,8 +411,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        // TODO: Maybe simply return ScreenKeyboard here instead of factory?
-        public  IScreenKeyboardFactory ScreenKeyboardFactory
+        public IScreenKeyboardFactory screenKeyboardFactory
         {
             get
             {
@@ -424,6 +423,11 @@ namespace UnityEngine.InputSystem
                     throw new System.Exception($"Couldn't resolve Screen Keyboard Factory ('{m_ScreenKeyboardFactoryType}')");
 
                 return (IScreenKeyboardFactory)System.Activator.CreateInstance(type);
+            }
+
+            set
+            {
+                m_ScreenKeyboardFactoryType = value.GetType().AssemblyQualifiedName;
             }
         }
 

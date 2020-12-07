@@ -7,7 +7,8 @@
         "Unity.PackageManagerDocTools.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Unity.Coding.Editor"
+        "Unity.Coding.Editor",
+        "Unity.ScreenKeyboard"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
