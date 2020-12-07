@@ -52,10 +52,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)] public FourCC type;
         [FieldOffset(4)] public int sizeInBytes;
 
-        public int payloadSizeInBytes
-        {
-            get { return sizeInBytes - kBaseCommandSize; }
-        }
+        public int payloadSizeInBytes => sizeInBytes - kBaseCommandSize;
 
         public unsafe void* payloadPtr
         {
