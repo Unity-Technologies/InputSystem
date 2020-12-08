@@ -93,10 +93,9 @@ public class ScreenKeyboardTests : InputTestFixture
                 _keyboard = runtime.screenKeyboard;
             }
             else
-            { 
-
+            {
                 // When running on native platform, we always want to test real screen keyboard
-                InputSystem.settings.screenKeyboardFactory = new DefaultScreenKeyboardFactory();
+                InputSystem.settings.screenKeyboardFactory = typeof(DefaultScreenKeyboardFactory);
                 _keyboard = NativeInputRuntime.instance.screenKeyboard;
             }
             if (_keyboard == null)
