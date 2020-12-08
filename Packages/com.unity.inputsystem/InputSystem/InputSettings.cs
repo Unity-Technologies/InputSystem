@@ -411,7 +411,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public IScreenKeyboardFactory screenKeyboardFactory
+        public System.Type screenKeyboardFactory
         {
             get
             {
@@ -422,12 +422,12 @@ namespace UnityEngine.InputSystem
                 if (type == null)
                     throw new System.Exception($"Couldn't resolve Screen Keyboard Factory ('{m_ScreenKeyboardFactoryType}')");
 
-                return (IScreenKeyboardFactory)System.Activator.CreateInstance(type);
+                return type;
             }
 
             set
             {
-                m_ScreenKeyboardFactoryType = value.GetType().AssemblyQualifiedName;
+                m_ScreenKeyboardFactoryType = value.AssemblyQualifiedName;
             }
         }
 

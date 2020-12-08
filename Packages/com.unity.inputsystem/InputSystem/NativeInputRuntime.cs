@@ -231,39 +231,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (m_ScreenKeyboard != null)
                     return m_ScreenKeyboard;
 
-                var factory = InputSystem.settings.screenKeyboardFactory;
-                if (factory == null)
+                var factoryType = InputSystem.settings.screenKeyboardFactory;
+                if (factoryType == null)
                     return null;
 
-                /*
-                // TODO: Maybe do this somehow via Input Settings, where user could explicitly choose a screen keyboard for the platform
-                IScreenKeyboardFactory factory = null;
-                var keyboardFactories = new List<Type>();
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    foreach (var typeInfo in assembly.DefinedTypes)
-                    {
-                        if (!typeInfo.IsClass)
-                            continue;
-
-                        if (!typeof(IScreenKeyboardFactory).IsAssignableFrom(typeInfo) || typeInfo == typeof(EmulatedScreenKeyboardFactory))
-                            continue;
-                        keyboardFactories.Add(typeInfo);
-                    }
-                }
-
-                if (keyboardFactories.Count == 0)
-                {
-                    factory = new EmulatedScreenKeyboardFactory();
-                }
-                else
-                {
-                    if (keyboardFactories.Count > 1)
-                        Debug.LogWarning($"More than one screen keyboard factories available, {string.Join(", ", keyboardFactories.Select(t => t.FullName))}");
-                    factory = (IScreenKeyboardFactory)Activator.CreateInstance(keyboardFactories[0]);
-                }
-                */
-
+                var factory = (IScreenKeyboardFactory)Activator.CreateInstance(factoryType);
                 m_ScreenKeyboard = factory.Create();
 
                 return m_ScreenKeyboard;
