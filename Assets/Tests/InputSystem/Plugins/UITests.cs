@@ -374,7 +374,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.leftChildReceiver.events[2].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.leftChildReceiver.events[2].pointerData.lastPress, Is.Null);
             Assert.That(scene.leftChildReceiver.events[2].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.leftChildReceiver.events[2].pointerData.eligibleForClick, Is.True);
             Assert.That(scene.leftChildReceiver.events[2].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
             Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -441,7 +441,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
             Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
             Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
             Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -469,7 +469,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.leftChildReceiver.events[2].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.leftChildReceiver.events[2].pointerData.lastPress, Is.Null);
             Assert.That(scene.leftChildReceiver.events[2].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[2].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.leftChildReceiver.events[2].pointerData.eligibleForClick, Is.True);
             Assert.That(scene.leftChildReceiver.events[2].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
             Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -497,7 +497,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.leftChildReceiver.events[3].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.leftChildReceiver.events[3].pointerData.lastPress, Is.Null);
             Assert.That(scene.leftChildReceiver.events[3].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[3].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[3].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.leftChildReceiver.events[3].pointerData.eligibleForClick, Is.True);
             Assert.That(scene.leftChildReceiver.events[3].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
             Assert.That(scene.leftChildReceiver.events[3].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -563,7 +563,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
             Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.False);
-            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
             Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
             Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -619,7 +619,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.False);
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[0].pointerData.eligibleForClick, Is.True);
         Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -646,7 +646,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[1].pointerData.eligibleForClick, Is.True);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.leftGameObject));
@@ -691,7 +691,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.delta, Is.EqualTo(thirdScreenPosition - secondScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.leftGameObject));
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.leftGameObject, scene.parentGameObject })); // Updated from pointer enter.
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -741,7 +741,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
@@ -757,7 +757,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.rightChildReceiver.events[0].pointerData.position, Is.EqualTo(thirdScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.delta, Is.EqualTo(thirdScreenPosition - secondScreenPosition).Using(Vector2EqualityComparer.Instance));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerEnter, Is.SameAs(scene.rightGameObject));
-        Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.parentGameObject })); // Right GO gets added after.
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -816,7 +816,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.lastPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[0].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(isTouch ? Enumerable.Empty<GameObject>() : new[] { scene.rightGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -839,7 +839,7 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events[1].pointerData.rawPointerPress, Is.Null);
         Assert.That(scene.leftChildReceiver.events[1].pointerData.lastPress, Is.SameAs(scene.leftGameObject)); // Remembers last pointerPress.
         Assert.That(scene.leftChildReceiver.events[1].pointerData.dragging, Is.True);
-        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+        Assert.That(scene.leftChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
         Assert.That(scene.leftChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(isTouch ? Enumerable.Empty<GameObject>() : new[] { scene.rightGameObject, scene.parentGameObject }));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
         Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
@@ -868,7 +868,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null);
             Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -893,7 +893,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.parentReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.parentReceiver.events[0].pointerData.lastPress, Is.Null);
             Assert.That(scene.parentReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.parentReceiver.events[0].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.parentReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             ////REVIEW: This behavior is inconsistent between "normal" pointer-enter/exit sequences but is consistent with what StandaloneInputModule does.
             ////        However, it seems wrong that on one path, GOs are removed one-by-one from `hovered` as the callbacks step through the hierarchy, whereas
             ////        on the other path, the list stays unmodified until the end and is then cleared en-bloc.
@@ -920,7 +920,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.rightChildReceiver.events[1].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.rightChildReceiver.events[1].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
             Assert.That(scene.rightChildReceiver.events[1].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[1].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.rightChildReceiver.events[1].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.rightChildReceiver.events[1].pointerData.hovered, Is.EquivalentTo(Enumerable.Empty<GameObject>()));
             Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[1].pointerData.pointerCurrentRaycast.screenPosition,
@@ -951,7 +951,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.Null); // See PointerModel.ButtonState.CopyPressStateTo.
             Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.True);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -986,7 +986,7 @@ internal class UITests : InputTestFixture
             Assert.That(scene.rightChildReceiver.events[0].pointerData.rawPointerPress, Is.Null);
             Assert.That(scene.rightChildReceiver.events[0].pointerData.lastPress, Is.SameAs(scene.leftGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.dragging, Is.False);
-            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.True);
+            Assert.That(scene.rightChildReceiver.events[0].pointerData.useDragThreshold, Is.False); // We set it in OnInitializePotentialDrag.
             Assert.That(scene.rightChildReceiver.events[0].pointerData.hovered, Is.EquivalentTo(new[] { scene.rightGameObject, scene.parentGameObject }));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.gameObject, Is.SameAs(scene.rightGameObject));
             Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerCurrentRaycast.screenPosition,
@@ -2477,6 +2477,12 @@ internal class UITests : InputTestFixture
 
         public void OnInitializePotentialDrag(PointerEventData eventData)
         {
+            // Slider sets useDragThreshold to false. Simulate this happening in response to InitializePotentialDrag
+            // to ensure InputSystemUIInputModule handles that correctly.
+            // https://fogbugz.unity3d.com/f/cases/1275834/
+            Assert.That(eventData.useDragThreshold, Is.True); // Module should have initialized to true.
+            eventData.useDragThreshold = false;
+
             events.Add(new Event(EventType.InitializePotentialDrag, ClonePointerEventData(eventData)));
         }
 

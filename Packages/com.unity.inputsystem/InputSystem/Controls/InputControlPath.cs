@@ -318,10 +318,8 @@ namespace UnityEngine.InputSystem
             if (!parser.MoveToNextComponent())
                 return null;
 
-            if (parser.current.usages != null && parser.current.usages.Length > 0)
-            {
-                return Array.ConvertAll(parser.current.usages, i => { return i.ToString(); });
-            }
+            if (parser.current.usages.length > 0)
+                return parser.current.usages.ToArray(x => x.ToString());
 
             return null;
         }
@@ -480,10 +478,10 @@ namespace UnityEngine.InputSystem
             }
 
             // Match usage.
-            if (parser.current.usages != null)
+            if (parser.current.usages.length > 0)
             {
                 // All of usages should match to the one of usage in the control
-                for (int usageIndex = 0; usageIndex < parser.current.usages.Length; ++usageIndex)
+                for (int usageIndex = 0; usageIndex < parser.current.usages.length; ++usageIndex)
                 {
                     var usage = parser.current.usages[usageIndex];
 
@@ -736,28 +734,24 @@ namespace UnityEngine.InputSystem
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
-            ////REVIEW: this can probably be done more efficiently
-            for (var current = control; current != null; current = current.parent)
-            {
-                var parser = new PathParser(expected);
-                if (MatchesRecursive(ref parser, current) && parser.isAtEnd)
-                    return true;
-            }
+            var parser = new PathParser(expected);
+            if (MatchesRecursive(ref parser, control, prefixOnly: true) && parser.isAtEnd)
+                return true;
 
             return false;
         }
 
-        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl)
+        private static bool MatchesRecursive(ref PathParser parser, InputControl currentControl, bool prefixOnly = false)
         {
             // Recurse into parent before looking at the current control. This
             // will advance the parser to where our control is in the path.
             var parent = currentControl.parent;
-            if (parent != null && !MatchesRecursive(ref parser, parent))
+            if (parent != null && !MatchesRecursive(ref parser, parent, prefixOnly))
                 return false;
 
-            // Fail if there's no more path left.
+            // Stop if there's no more path left.
             if (!parser.MoveToNextComponent())
-                return false;
+                return prefixOnly; // Failure if we match full path, success if we match prefix only.
 
             // Match current path component against current control.
             return parser.current.Matches(currentControl);
@@ -1099,7 +1093,8 @@ namespace UnityEngine.InputSystem
                     return false;
                 }
 
-                if (char.ToLower(component[indexInComponent]) == char.ToLower(nextCharInPath))
+                var charInComponent = component[indexInComponent];
+                if (charInComponent == nextCharInPath || char.ToLower(charInComponent) == char.ToLower(nextCharInPath))
                 {
                     ++indexInComponent;
                     ++indexInPath;
@@ -1133,7 +1128,7 @@ namespace UnityEngine.InputSystem
         internal struct ParsedPathComponent
         {
             public Substring layout;
-            public Substring[] usages;
+            public InlinedArray<Substring> usages;
             public Substring name;
             public Substring displayName;
 
@@ -1150,11 +1145,11 @@ namespace UnityEngine.InputSystem
                 if (isWildcard)
                     result += "Any";
 
-                if (usages != null)
+                if (usages.length > 0)
                 {
                     var combinedUsages = string.Empty;
 
-                    for (var i = 0; i < usages.Length; ++i)
+                    for (var i = 0; i < usages.length; ++i)
                     {
                         if (usages[i].isEmpty)
                             continue;
@@ -1307,9 +1302,9 @@ namespace UnityEngine.InputSystem
                 }
 
                 // Match usage.
-                if (usages != null)
+                if (usages.length > 0)
                 {
-                    for (int i = 0; i < usages.Length; ++i)
+                    for (var i = 0; i < usages.length; ++i)
                     {
                         if (!usages[i].isEmpty)
                         {
@@ -1396,10 +1391,12 @@ namespace UnityEngine.InputSystem
                 if (rightIndexInPath < length && path[rightIndexInPath] == '<')
                     layout = ParseComponentPart('>');
 
+                ////FIXME: with multiple usages, this will allocate
+                ////FIXME: Why the heck is this allocating? Should not allocate here! Worse yet, we do ToArray() down there.
                 // Parse {...} usage part, if present.
-                var usages = new List<Substring>();
+                var usages = new InlinedArray<Substring>();
                 while (rightIndexInPath < length && path[rightIndexInPath] == '{')
-                    usages.Add(ParseComponentPart('}'));
+                    usages.AppendWithCapacity(ParseComponentPart('}'));
 
                 // Parse display name part, if present.
                 var displayName = new Substring();
@@ -1417,7 +1414,7 @@ namespace UnityEngine.InputSystem
                 current = new ParsedPathComponent
                 {
                     layout = layout,
-                    usages = usages.ToArray(),
+                    usages = usages,
                     name = name,
                     displayName = displayName
                 };

@@ -777,6 +777,7 @@ namespace UnityEngine.InputSystem
             m_Layouts.layoutStrings.Remove(internedName);
             m_Layouts.layoutBuilders.Remove(internedName);
             m_Layouts.baseLayoutTable.Remove(internedName);
+            ++m_LayoutRegistrationVersion;
 
             ////TODO: check all layout inheritance chain for whether they are based on the layout and if so
             ////      remove those layouts, too
@@ -1126,8 +1127,7 @@ namespace UnityEngine.InputSystem
 
             // Update state buffers.
             ReallocateStateBuffers();
-            InitializeDefaultState(device);
-            InitializeNoiseMask(device);
+            InitializeDeviceState(device);
 
             // Update metrics.
             m_Metrics.maxNumDevices = Mathf.Max(m_DevicesCount, m_Metrics.maxNumDevices);
@@ -2028,7 +2028,7 @@ namespace UnityEngine.InputSystem
             #endif
         }
 
-        private unsafe void InitializeNoiseMask(InputDevice device)
+        private unsafe void InitializeDeviceState(InputDevice device)
         {
             Debug.Assert(device != null, "Device must not be null");
             Debug.Assert(device.added, "Device must have been added");
@@ -2040,36 +2040,65 @@ namespace UnityEngine.InputSystem
             var controls = device.allControls;
             var controlCount = controls.Count;
 
+            var haveControlsWithDefaultState = device.hasControlsWithDefaultState;
+            var haveNoisyControls = device.noisy;
+
             // Assume that everything in the device is noise. This way we also catch memory regions
             // that are not actually covered by a control and implicitly mark them as noise (e.g. the
             // report ID in HID input reports).
             //
             // NOTE: Noise is indicated by *unset* bits so we don't have to do anything here to start
             //       with all-noise as we expect noise mask memory to be cleared on allocation.
-
             var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
 
             ////FIXME: this needs to properly take leaf vs non-leaf controls into account
 
-            // Go through controls and for each one that isn't noisy, set the control's
-            // bits in the mask.
+            // Go through controls.
+            var defaultStateBuffer = m_StateBuffers.defaultStateBuffer;
             for (var n = 0; n < controlCount; ++n)
             {
                 var control = controls[n];
-                if (control.noisy)
-                    continue;
 
-                ref var stateBlock = ref control.m_StateBlock;
+                if (!control.noisy)
+                {
+                    ref var stateBlock = ref control.m_StateBlock;
 
-                Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
-                Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
-                Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
-                Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
-                Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
-                    device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
+                    Debug.Assert(stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Byte offset is invalid on control's state block");
+                    Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
+                    Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
+                    Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
+                    if (stateBlock.byteOffset + stateBlock.alignedSizeInBytes >
+                        device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes)
+                        Debug.Log("Foo");
+                    Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
+                        device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
-                MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
-                    (int)stateBlock.sizeInBits, true);
+                    MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
+                        (int)stateBlock.sizeInBits, true);
+                }
+
+                if (haveControlsWithDefaultState && control.hasDefaultState)
+                    control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultState);
+            }
+
+            // Copy default state to all front and back buffers.
+            if (haveControlsWithDefaultState)
+            {
+                ref var deviceStateBlock = ref device.m_StateBlock;
+                var deviceIndex = device.m_DeviceIndex;
+                if (m_StateBuffers.m_PlayerStateBuffers.valid)
+                {
+                    deviceStateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                    deviceStateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+                }
+
+                #if UNITY_EDITOR
+                if (m_StateBuffers.m_EditorStateBuffers.valid)
+                {
+                    deviceStateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
+                    deviceStateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
+                }
+                #endif
             }
         }
 
@@ -2160,20 +2189,18 @@ namespace UnityEngine.InputSystem
                 // We don't parse the full description but rather go property by property in order to not
                 // allocate GC memory if we can avoid it.
 
-                if (!string.IsNullOrEmpty(description.interfaceName) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("interface", description.interfaceName, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.product) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("product", description.product, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.manufacturer) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("manufacturer", description.manufacturer, deviceDescriptor))
                     continue;
-                if (!string.IsNullOrEmpty(description.deviceClass) &&
-                    !InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("type", description.deviceClass, deviceDescriptor))
                     continue;
-
-                // We ignore capabilities here.
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("capabilities", description.capabilities, deviceDescriptor))
+                    continue;
+                if (!InputDeviceDescription.ComparePropertyToDeviceDescriptor("serial", description.serial, deviceDescriptor))
+                    continue;
 
                 ArrayHelpers.EraseAtWithCapacity(m_DisconnectedDevices, ref m_DisconnectedDevicesCount, i);
                 return device;

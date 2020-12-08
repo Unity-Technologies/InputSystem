@@ -858,6 +858,7 @@ namespace UnityEngine.InputSystem
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
+            UsesStateFromOtherControl = 1 << 6,
         }
 
         internal bool isSetupFinished
@@ -881,6 +882,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.ConfigUpToDate;
                 else
                     m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool usesStateFromOtherControl
+        {
+            get => (m_ControlFlags & ControlFlags.UsesStateFromOtherControl) == ControlFlags.UsesStateFromOtherControl;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.UsesStateFromOtherControl;
+                else
+                    m_ControlFlags &= ~ControlFlags.UsesStateFromOtherControl;
             }
         }
 

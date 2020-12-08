@@ -1,4 +1,5 @@
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -12,6 +13,7 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Interactions
 {
+    ////REVIEW: Why is this deriving from IInputInteraction<float>? It goes by actuation just like Hold etc.
     /// <summary>
     /// Interaction that requires multiple taps (press and release within <see cref="tapTime"/>) spaced no more
     /// than <see cref="tapDelay"/> seconds apart. This equates to a chain of <see cref="TapInteraction"/> with
@@ -23,7 +25,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// <see cref="InputActionPhase.Performed"/>) or the multi-tap is aborted by a timeout being hit (in which
     /// case the interaction will trigger <see cref="InputActionPhase.Canceled"/>).
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
     public class MultiTapInteraction : IInputInteraction<float>
     {
         /// <summary>

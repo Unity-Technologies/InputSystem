@@ -9,6 +9,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
@@ -2909,8 +2910,11 @@ namespace UnityEngine.InputSystem
         #if !UNITY_EDITOR
         private static bool ShouldEnableRemoting()
         {
-            ////FIXME: is there a better way to detect whether we are running tests?
-            var isRunningTests = Application.productName == "UnityTestFramework";
+#if UNITY_INCLUDE_TESTS
+            var isRunningTests = true;
+#else
+            var isRunningTests = false;
+#endif
             if (isRunningTests)
                 return false; // Don't remote while running tests.
             return true;
@@ -3234,6 +3238,7 @@ namespace UnityEngine.InputSystem
             Mouse.s_PlatformMouseDevice = null;
 
             InputUser.ResetGlobals();
+            EnhancedTouchSupport.Reset();
             Profiling.Profiler.EndSample();
         }
 
@@ -3310,6 +3315,7 @@ namespace UnityEngine.InputSystem
 
             ////FIXME: does not preserve global state in InputActionState
             ////TODO: preserve InputUser state
+            ////TODO: preserve EnhancedTouchSupport state
 
             s_SavedStateStack.Push(new State
             {

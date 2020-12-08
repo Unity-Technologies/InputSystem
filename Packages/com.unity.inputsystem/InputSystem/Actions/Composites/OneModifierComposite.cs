@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
+////TODO: allow making modifier optional; maybe alter the value (e.g. 0=unpressed, 0.5=pressed without modifier, 1=pressed with modifier)
+
 namespace UnityEngine.InputSystem.Composites
 {
     /// <summary>
