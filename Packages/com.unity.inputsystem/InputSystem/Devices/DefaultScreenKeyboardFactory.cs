@@ -7,7 +7,16 @@ namespace UnityEngine.InputSystem
     {
         public ScreenKeyboard Create()
         {
-            return new EmulatedScreenKeyboard();
+            // Note: Not using defines, since it hides compile errors
+            switch (Application.platform)
+            {
+                case RuntimePlatform.Android:
+                    return new Android.AndroidScreenKeyboard();
+                case RuntimePlatform.IPhonePlayer:
+                    return new iOS.iOSScreenKeyboard();
+                default:
+                    return new EmulatedScreenKeyboard();
+            }
         }
     }
 }

@@ -10,7 +10,9 @@ using System.Threading;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Android;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.iOS;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
@@ -84,23 +86,32 @@ public class ScreenKeyboardTests : InputTestFixture
         get
         {
             ScreenKeyboard _keyboard;
-#if UNITY_EDITOR
-            _keyboard = runtime.screenKeyboard;
-#else
-            // When running on native platform, we always want to test real screen keyboard
-            InputSystem.settings.screenKeyboardFactory = new MyCustomScreenKeyboardFactory();
-            _keyboard = NativeInputRuntime.instance.screenKeyboard;
-#endif
+            if (Application.platform == RuntimePlatform.OSXEditor ||
+                Application.platform == RuntimePlatform.WindowsEditor ||
+                Application.platform == RuntimePlatform.LinuxEditor)
+            {
+                _keyboard = runtime.screenKeyboard;
+            }
+            else
+            { 
+
+                // When running on native platform, we always want to test real screen keyboard
+                InputSystem.settings.screenKeyboardFactory = new DefaultScreenKeyboardFactory();
+                _keyboard = NativeInputRuntime.instance.screenKeyboard;
+            }
             if (_keyboard == null)
                 throw new Exception("No Screen Keyboard to test?");
 
-#if UNITY_EDITOR
-            Assert.AreEqual(_keyboard.GetType(), typeof(EmulatedScreenKeyboard));
-#elif UNITY_ANDROID
-            Assert.AreEqual(_keyboard.GetType().FullName, "UnityEngine.InputSystem.Android.AndroidScreenKeyboard");
-#elif UNITY_IOS
-            Assert.AreEqual(_keyboard.GetType().FullName, "UnityEngine.InputSystem.iOS.iOSScreenKeyboard");
-#endif
+            switch (Application.platform)
+            {
+                case RuntimePlatform.IPhonePlayer:
+                    Assert.AreEqual(_keyboard.GetType(), typeof(iOSScreenKeyboard)); break;
+                case RuntimePlatform.Android:
+                    Assert.AreEqual(_keyboard.GetType(), typeof(AndroidScreenKeyboard)); break;
+                default:
+                    Assert.AreEqual(_keyboard.GetType(), typeof(EmulatedScreenKeyboard)); break;
+            }
+
             // Keep native logging enabled for more info
             _keyboard.logging = true;
             return _keyboard;

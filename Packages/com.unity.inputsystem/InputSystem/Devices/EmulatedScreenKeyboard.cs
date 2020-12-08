@@ -6,7 +6,7 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Mock screen keyboard class, which simulates screen keyboard behavior and is validated by the tests in ScreenKeyboardTests.cs
     /// </summary>
-    public class EmulatedScreenKeyboard : ScreenKeyboard
+    internal class EmulatedScreenKeyboard : ScreenKeyboard
     {
         private EmulatedScreenKeyboardVisualization m_Visualization;
 
