@@ -103,10 +103,12 @@ public class ScreenKeyboardTests : InputTestFixture
 
             switch (Application.platform)
             {
+#if !DISABLE_SCREEN_KEYBOARD
                 case RuntimePlatform.IPhonePlayer:
                     Assert.AreEqual(_keyboard.GetType(), typeof(iOSScreenKeyboard)); break;
                 case RuntimePlatform.Android:
                     Assert.AreEqual(_keyboard.GetType(), typeof(AndroidScreenKeyboard)); break;
+#endif
                 default:
                     Assert.AreEqual(_keyboard.GetType(), typeof(EmulatedScreenKeyboard)); break;
             }

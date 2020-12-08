@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using UnityEngine.Scripting;
 
-#if UNITY_EDITOR || UNITY_ANDROID
+#if (UNITY_EDITOR || UNITY_ANDROID) && !DISABLE_SCREEN_KEYBOARD
 
 namespace UnityEngine.InputSystem.Android
 {

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if (UNITY_EDITOR || UNITY_IOS || UNITY_TVOS) && !DISABLE_SCREEN_KEYBOARD
 using System;
 using System.Runtime.InteropServices;
 using AOT;

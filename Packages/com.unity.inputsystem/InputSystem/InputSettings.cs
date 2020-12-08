@@ -427,6 +427,8 @@ namespace UnityEngine.InputSystem
 
             set
             {
+                if (!typeof(IScreenKeyboardFactory).IsAssignableFrom(value))
+                    throw new System.Exception($"Type '{value.FullName}' has to be derived from '{nameof(IScreenKeyboardFactory)}'");
                 m_ScreenKeyboardFactoryType = value.AssemblyQualifiedName;
             }
         }

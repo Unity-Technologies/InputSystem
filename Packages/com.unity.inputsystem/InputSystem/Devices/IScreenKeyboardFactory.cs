@@ -10,7 +10,6 @@ namespace UnityEngine.InputSystem
         ScreenKeyboard Create();
     }
 
-
     internal static class ScreenKeyboardUtilities
     {
         static List<IScreenKeyboardFactory> m_Factories;
@@ -22,8 +21,6 @@ namespace UnityEngine.InputSystem
                 if (m_Factories != null)
                     return m_Factories;
                 m_Factories = new List<IScreenKeyboardFactory>();
-
-                IScreenKeyboardFactory factory = null;
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     foreach (var typeInfo in assembly.DefinedTypes)
