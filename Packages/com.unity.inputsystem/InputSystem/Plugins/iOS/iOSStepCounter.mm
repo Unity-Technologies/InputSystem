@@ -1,7 +1,3 @@
-#include "iOSStepCounter.h"
-#include "UnityAppController.h"
-#include "UnityForwardDecls.h"
-#include <string>
 #include <CoreMotion/CoreMotion.h>
 
 #define ENABLE_STEP_COUNTER_LOGGING 1
