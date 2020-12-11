@@ -57,26 +57,43 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
             InputSystem.QueueStateEvent(stepCounter, new iOSStepCounterState {stepCounter = numberOfSteps});
         }
 
+#if UNITY_EDITOR
+        private bool m_Enabled;
+#endif
         public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
         {
             var ptr = UnsafeUtility.AddressOf(ref command);
             var t = command.typeStatic;
             if (t == QueryEnabledStateCommand.Type)
             {
+#if UNITY_EDITOR
+                ((QueryEnabledStateCommand*)ptr)->isEnabled = m_Enabled;
+#else
                 ((QueryEnabledStateCommand*)ptr)->isEnabled = _iOSStepCounterIsEnabled(deviceId) != 0;
+#endif
                 return kCommandSuccess;
             }
 
             if (t == EnableDeviceCommand.Type)
             {
+#if UNITY_EDITOR
+                m_Enabled = true;
+                return kCommandSuccess;
+#else
                 var callbacks = new iOSStepCounterCallbacks();
                 callbacks.onData = OnDataReceived;
                 return _iOSStepCounterEnable(deviceId, ref callbacks, Marshal.SizeOf(callbacks));
+#endif
             }
 
             if (t == DisableDeviceCommand.Type)
             {
+#if UNITY_EDITOR
+                m_Enabled = true;
+                return kCommandSuccess;
+#else
                 return _iOSStepCounterDisable(deviceId);
+#endif
             }
 
             if (t == QueryCanRunInBackground.Type)
@@ -87,8 +104,12 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
             if (t == RequestResetCommand.Type)
             {
+#if UNITY_EDITOR
+                m_Enabled = true;
+#else
                 _iOSStepCounterDisable(deviceId);
-                return kCommandFailure;
+#endif
+                return kCommandSuccess;
             }
 
             Debug.LogWarning($"Unhandled command {command.GetType().Name}");
