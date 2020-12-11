@@ -107,7 +107,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 #if UNITY_EDITOR
             return false;
 #else
-            return _iOSStepCounterIsAvailable();
+            return _iOSStepCounterIsAvailable() != 0;
 #endif
         }
 
@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 #if UNITY_EDITOR
             return false;
 #else
-            return _iOSStepCounterIsAuthorized();
+            return _iOSStepCounterIsAuthorized() != 0;
 #endif
         }
     }
