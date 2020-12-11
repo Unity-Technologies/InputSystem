@@ -4,67 +4,122 @@
 #include <string>
 #include <CoreMotion/CoreMotion.h>
 
+#define ENABLE_STEP_COUNTER_LOGGING 1
+#if ENABLE_STEP_COUNTER_LOGGING
+#define STEP_COUNTER_LOG(...) NSLog(@"StepCounter - %@", [NSString stringWithFormat: __VA_ARGS__])
+#else
+#define STEP_COUNTER_LOG(...) {}
+#endif
 
-typedef void (*OnDataReceived) (int deviceId, int numberOfSteps);
-
-struct iOSStepCounterCallbacks
+class iOSStepCounterWrapper
 {
-    OnDataReceived dataReceived;
+public:
+    typedef void (*OnDataReceived) (int deviceId, int numberOfSteps);
+
+    struct iOSStepCounterCallbacks
+    {
+        OnDataReceived dataReceived;
+    };
+
+
+    iOSStepCounterWrapper()
+    {
+        m_Pedometer = nullptr;
+        m_Device = -1;
+    }
+
+    void Enable(int deviceId, iOSStepCounterCallbacks* callbacks)
+    {
+        if (IsEnabled())
+        {
+            STEP_COUNTER_LOG(@"Was already enabled?");
+            if (m_Device != deviceId)
+                STEP_COUNTER_LOG(@"Enabling with different device id? Expected %d, was %d. Are you creating more than one iOSStepCounter", m_Device, deviceId);
+        }
+        m_Pedometer = [[CMPedometer alloc]init];
+        m_Callbacks = *callbacks;
+        m_Device = deviceId;
+        [m_Pedometer startPedometerUpdatesFromDate: [NSDate date] withHandler:^(CMPedometerData * _Nullable pedometerData, NSError * _Nullable error)
+        {
+            // Note: We need to call our callback on the same thread the Unity scripting is operating
+            dispatch_async(dispatch_get_main_queue(), ^{
+                m_Callbacks.dataReceived(m_Device, [pedometerData.numberOfSteps intValue]);
+            });
+        }];
+    }
+
+    void Disable(int deviceId)
+    {
+        if (m_Pedometer == nullptr)
+            return;
+        if (m_Device != deviceId)
+            STEP_COUNTER_LOG(@"Disabling with wrong device id, expected %d, was %d", m_Device, deviceId);
+        [m_Pedometer stopPedometerUpdates];
+        m_Pedometer = nullptr;
+        m_Device = -1;
+    }
+
+    bool IsEnabled() const
+    {
+        return m_Pedometer != nullptr;
+    }
+
+private:
+    CMPedometer* m_Pedometer;
+    iOSStepCounterCallbacks m_Callbacks;
+    int m_Device;
 };
 
+static iOSStepCounterWrapper s_Wrapper;
 static const int kResultSuccess = 1;
 static const int kResultFailure = -1;
-CMPedometer* m_Pedometer = nullptr;
-iOSStepCounterCallbacks m_Callbacks;
-int m_Device = -1;
-extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterCallbacks* callbacks, int sizeOfCallbacks)
-{
-    if (sizeof(iOSStepCounterCallbacks) != sizeOfCallbacks)
-    {
-        NSLog(@"iOSStepCounterCallbacks size mismatch, expected %lu was %d", sizeof(iOSStepCounterCallbacks), sizeOfCallbacks);
-        return kResultFailure;
-    }
-    
-    if (![CMPedometer isStepCountingAvailable])
-    {
-        NSLog(@"Step counting is not available");
-        return kResultFailure;
-    }
-    
-    // TODO: on ios 11
-    /*
-    if ([CMPedometer authorizationStatus] != CMAuthorizationStatusAuthorized)
-    {
-        NSLog(@"Step counting was not authorized");
-        return kResultFailure;
-    }
-     */
 
-    m_Pedometer = [[CMPedometer alloc]init];
-    m_Callbacks = *callbacks;
-    m_Device = deviceId;
-    [m_Pedometer startPedometerUpdatesFromDate:[NSDate date] withHandler:^(CMPedometerData * _Nullable pedometerData, NSError * _Nullable error)
+extern "C" int _iOSStepCounterIsAvailable()
+{
+    return [CMPedometer isStepCountingAvailable] ? 1 : 0;
+}
+
+extern "C" int _iOSStepCounterIsAuthorized()
+{
+    if (@available(iOS 11.0, *))
     {
-        // Note: We need to call our call on the same thread the Unity scripting is operating
-        dispatch_async(dispatch_get_main_queue(), ^{
-            m_Callbacks.dataReceived(m_Device, [pedometerData.numberOfSteps intValue]);
-        });
-    }];
+        return [CMPedometer authorizationStatus] == CMAuthorizationStatusAuthorized ? 1 : 0;
+    }
+    return 1;
+}
+
+extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterWrapper::iOSStepCounterCallbacks* callbacks, int sizeOfCallbacks)
+{
+    if (sizeof(iOSStepCounterWrapper::iOSStepCounterCallbacks) != sizeOfCallbacks)
+    {
+        STEP_COUNTER_LOG(@"iOSStepCounterCallbacks size mismatch, expected %lu was %d", sizeof(iOSStepCounterWrapper::iOSStepCounterCallbacks), sizeOfCallbacks);
+        return kResultFailure;
+    }
+
+    if (_iOSStepCounterIsAvailable() == 0)
+    {
+        STEP_COUNTER_LOG(@"Step counting is not available");
+        return kResultFailure;
+    }
+
+    if (_iOSStepCounterIsAuthorized() == 0)
+    {
+        STEP_COUNTER_LOG(@"Step counting was not authorized");
+        return kResultFailure;
+    }
+
+    s_Wrapper.Enable(deviceId, callbacks);
 
     return kResultSuccess;
 }
 
 extern "C" int _iOSStepCounterDisable(int deviceId)
 {
-    if (m_Pedometer == nullptr)
-        return kResultSuccess;
-    [m_Pedometer stopPedometerUpdates];
-    m_Pedometer = nullptr;
-    m_Device = -1;
+    s_Wrapper.Disable(deviceId);
     return kResultSuccess;
 }
 
 extern "C" int _iOSStepCounterIsEnabled(int deviceId)
 {
-    return m_Pedometer != nullptr;
+    return s_Wrapper.IsEnabled();
 }

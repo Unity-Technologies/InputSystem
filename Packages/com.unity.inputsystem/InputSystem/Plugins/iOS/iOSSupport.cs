@@ -42,9 +42,9 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
-            
+
 #if UNITY_EDITOR && NOT_WORKING
-            // TODO: How to ensure we add device only one time per Editor session? 
+            // TODO: How to ensure we add device only one time per Editor session?
             //       Since if we call just InputSystem.AddDevice<iOSStepCounter>();
             //       it creates a new device on each enter to play mode
             if (!UnityEditor.SessionState.GetBool(nameof(iOSStepCounter), false))
