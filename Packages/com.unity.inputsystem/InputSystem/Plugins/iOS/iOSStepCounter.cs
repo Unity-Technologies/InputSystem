@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
     /// <summary>
     /// Step Counter (also known as pedometer) sensor for iOS.
-    /// Note: You need to add 'Privacy - Motion Usage Description to Info.plist to use this sensor.
+    /// Note: You need to add 'Privacy - Motion Usage Description' to Info.plist to use this sensor.
     /// </summary>
     [InputControlLayout(stateType = typeof(iOSStepCounterState), variants = "StepCounter", hideInUI = true)]
     public class iOSStepCounter : StepCounter

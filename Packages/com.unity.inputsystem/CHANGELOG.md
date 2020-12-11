@@ -52,6 +52,7 @@ however, it has to be formatted properly to pass verification tests.
                   Debug.Log($"Button {button} was pressed");
       }
   ```
+  - Added Step Counter sensor for iOS, you'll need to add 'Privacy - Motion Usage Description' to Info.plist before using the sensor.
 
 ## [1.1.0-preview.2] - 2020-10-23
 
