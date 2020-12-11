@@ -43,26 +43,9 @@ namespace UnityEngine.InputSystem.iOS
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
 
-#if UNITY_EDITOR && NOT_WORKING
-            // TODO: How to ensure we add device only one time per Editor session?
-            //       Since if we call just InputSystem.AddDevice<iOSStepCounter>();
-            //       it creates a new device on each enter to play mode
-            if (!UnityEditor.SessionState.GetBool(nameof(iOSStepCounter), false))
-            {
-                Debug.Log("test");
-                UnityEditor.SessionState.SetBool(nameof(iOSStepCounter), true);
+            InputSystem.RegisterLayout<iOSStepCounter>();
+            if (iOSStepCounter.IsAvailable())
                 InputSystem.AddDevice<iOSStepCounter>();
-            }
-#else
-            // A hack to keep always one step counter, also doesn't work
-            /*
-            while (InputSystem.GetDevice<iOSStepCounter>() != null)
-            {
-                InputSystem.RemoveDevice(InputSystem.GetDevice<iOSStepCounter>());
-            }
-            */
-            InputSystem.AddDevice<iOSStepCounter>();
-#endif
         }
     }
 }

@@ -53,11 +53,8 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         [MonoPInvokeCallback(typeof(OnDataReceivedDelegate))]
         private static void OnDataReceived(int deviceId, int numberOfSteps)
         {
-            // Note: this is called on non main thread.
-            Debug.Log($"Received data {deviceId} {numberOfSteps}");
-            var stepCounter = InputSystem.GetDevice<iOSStepCounter>();
-
-            InputSystem.QueueStateEvent(stepCounter, new iOSStepCounterState(){stepCounter = numberOfSteps});
+            var stepCounter = (iOSStepCounter)InputSystem.GetDeviceById(deviceId);
+            InputSystem.QueueStateEvent(stepCounter, new iOSStepCounterState {stepCounter = numberOfSteps});
         }
 
         public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)

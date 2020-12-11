@@ -39,6 +39,9 @@ public:
         {
             // Note: We need to call our callback on the same thread the Unity scripting is operating
             dispatch_async(dispatch_get_main_queue(), ^{
+                // Guard against situation where device was disabled, any event which are received after that, should be ignored.
+                if (m_Device == -1)
+                    return;
                 m_Callbacks.dataReceived(m_Device, [pedometerData.numberOfSteps intValue]);
             });
         }];
