@@ -7,6 +7,15 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel
 {
+    //See CoreMotion.framework/Headers/CMAuthorization.h
+    public enum MotionAuthorizationStatus : int
+    {
+        NotDetermined = 0,
+        Restricted,
+        Denied,
+        Authorized
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct iOSStepCounterState : IInputStateTypeInfo
     {
@@ -130,18 +139,19 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         }
 
         /// <summary>
-        /// Did user authorize the usage of the pedometer?
+        /// Query motion authorization status
         /// </summary>
         /// <returns></returns>
-        public static bool IsAuthorized()
+        public static MotionAuthorizationStatus AuthorizationStatus
         {
+            get
+            {
 #if UNITY_EDITOR
-            return true;
+                return MotionAuthorizationStatus.NotDetermined;
 #else
-            // See CoreMotion.framework/Headers/CMAuthorization.h
-            const int CMAuthorizationStatusAuthorized = 3;
-            return _iOSStepCounterGetAuthorizationStatus() == CMAuthorizationStatusAuthorized;
+                return (MotionAuthorizationStatus)_iOSStepCounterGetAuthorizationStatus();
 #endif
+            }
         }
     }
 }
