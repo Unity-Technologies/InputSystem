@@ -39,6 +39,13 @@ public:
         {
             // Note: We need to call our callback on the same thread the Unity scripting is operating
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (error != nil)
+                {
+                    STEP_COUNTER_LOG(@"startPedometerUpdatesFromDate threw an error '%@', was it authorized?", [error localizedDescription]);
+                    if (m_Device != -1)
+                        Disable(m_Device);
+                    return;
+                }
                 // Guard against situation where device was disabled, any event which are received after that, should be ignored.
                 if (m_Device == -1)
                     return;
@@ -47,15 +54,16 @@ public:
         }];
     }
 
-    void Disable(int deviceId)
+    bool Disable(int deviceId)
     {
         if (m_Pedometer == nullptr)
-            return;
+            return false;
         if (m_Device != deviceId)
             STEP_COUNTER_LOG(@"Disabling with wrong device id, expected %d, was %d", m_Device, deviceId);
         [m_Pedometer stopPedometerUpdates];
         m_Pedometer = nullptr;
         m_Device = -1;
+        return true;
     }
 
     bool IsEnabled() const
@@ -78,13 +86,13 @@ extern "C" int _iOSStepCounterIsAvailable()
     return [CMPedometer isStepCountingAvailable] ? 1 : 0;
 }
 
-extern "C" int _iOSStepCounterIsAuthorized()
+extern "C" int _iOSStepCounterGetAuthorizationStatus()
 {
     if (@available(iOS 11.0, *))
     {
-        return [CMPedometer authorizationStatus] == CMAuthorizationStatusAuthorized ? 1 : 0;
+        return (int)[CMPedometer authorizationStatus];
     }
-    return 1;
+    return 0;
 }
 
 extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterWrapper::iOSStepCounterCallbacks* callbacks, int sizeOfCallbacks)
@@ -101,12 +109,25 @@ extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterWrapper::iOSSte
         return kResultFailure;
     }
 
-    if (_iOSStepCounterIsAuthorized() == 0)
+    if (@available(iOS 11.0, *))
     {
-        STEP_COUNTER_LOG(@"Step counting was not authorized");
-        return kResultFailure;
+        if ([CMPedometer authorizationStatus] == CMAuthorizationStatusRestricted)
+        {
+            STEP_COUNTER_LOG(@"Step Counter was restricted.");
+            return kResultFailure;
+        }
+
+        if ([CMPedometer authorizationStatus] == CMAuthorizationStatusDenied)
+        {
+            STEP_COUNTER_LOG(@"Step Counter was denied. Enable Motion & Fitness under app settings.");
+            return kResultFailure;
+        }
+        // Do nothing for Authorized and NotDetermined
     }
 
+    // Note: After installation this function will prompt a dialog asking about Motion & Fitness authorization
+    //       If user denies the prompt, there will be an error in startPedometerUpdatesFromDate callback
+    //       The dialog only appears once, not sure how to trigger it again, besides reinstalling app
     s_Wrapper.Enable(deviceId, callbacks);
 
     return kResultSuccess;
@@ -114,11 +135,10 @@ extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterWrapper::iOSSte
 
 extern "C" int _iOSStepCounterDisable(int deviceId)
 {
-    s_Wrapper.Disable(deviceId);
-    return kResultSuccess;
+    return s_Wrapper.Disable(deviceId) ? kResultSuccess : kResultFailure;
 }
 
 extern "C" int _iOSStepCounterIsEnabled(int deviceId)
 {
-    return s_Wrapper.IsEnabled();
+    return s_Wrapper.IsEnabled() ? 1 : 0;
 }

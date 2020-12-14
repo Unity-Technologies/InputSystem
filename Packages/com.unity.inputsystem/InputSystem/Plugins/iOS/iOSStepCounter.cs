@@ -48,7 +48,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         private static extern int _iOSStepCounterIsAvailable();
 
         [DllImport("__Internal")]
-        private static extern int _iOSStepCounterIsAuthorized();
+        private static extern int _iOSStepCounterGetAuthorizationStatus();
 
         [MonoPInvokeCallback(typeof(OnDataReceivedDelegate))]
         private static void OnDataReceived(int deviceId, int numberOfSteps)
@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         }
 
 #if UNITY_EDITOR
-        private bool m_Enabled;
+        private bool m_Enabled = false;
 #endif
         public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
         {
@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
             if (t == DisableDeviceCommand.Type)
             {
 #if UNITY_EDITOR
-                m_Enabled = true;
+                m_Enabled = false;
                 return kCommandSuccess;
 #else
                 return _iOSStepCounterDisable(deviceId);
@@ -98,14 +98,14 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
             if (t == QueryCanRunInBackground.Type)
             {
-                ((QueryCanRunInBackground*)ptr)->canRunInBackground = false;
+                ((QueryCanRunInBackground*)ptr)->canRunInBackground = true;
                 return kCommandSuccess;
             }
 
             if (t == RequestResetCommand.Type)
             {
 #if UNITY_EDITOR
-                m_Enabled = true;
+                m_Enabled = false;
 #else
                 _iOSStepCounterDisable(deviceId);
 #endif
@@ -136,9 +136,11 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         public static bool IsAuthorized()
         {
 #if UNITY_EDITOR
-            return false;
+            return true;
 #else
-            return _iOSStepCounterIsAuthorized() != 0;
+            // See CoreMotion.framework/Headers/CMAuthorization.h
+            const int CMAuthorizationStatusAuthorized = 3;
+            return _iOSStepCounterGetAuthorizationStatus() == CMAuthorizationStatusAuthorized;
 #endif
         }
     }
