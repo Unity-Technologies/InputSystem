@@ -71,19 +71,84 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal static class InputUpdate
     {
-        public static bool s_HaveUpdatedStepCount;
         public static InputUpdateType s_LastUpdateType;
-        public static uint s_UpdateStepCount;
+        public static UpdateStepCount s_PlayerUpdateStepCount;
+        #if UNITY_EDITOR
+        public static UpdateStepCount s_EditorUpdateStepCount;
+        public static uint s_UpdateStepCount => s_LastUpdateType == InputUpdateType.Editor ? s_EditorUpdateStepCount.value : s_PlayerUpdateStepCount.value;
+        #else
+        public static uint s_UpdateStepCount => s_PlayerUpdateStepCount.value;
+        #endif
         public static uint s_LastUpdateRetainedEventBytes;
         public static uint s_LastUpdateRetainedEventCount;
+
+        [Serializable]
+        public struct UpdateStepCount
+        {
+            public bool wasUpdated;
+            public uint value;
+
+            public void OnBeforeUpdate()
+            {
+                wasUpdated = true;
+                value++;
+            }
+
+            public void OnUpdate()
+            {
+                // only increment if OnBeforeUpdate was not called
+                if (!wasUpdated)
+                    value++;
+                wasUpdated = false;
+            }
+        };
 
         [Serializable]
         public struct SerializedState
         {
             public InputUpdateType lastUpdateType;
-            public uint updateStepCount;
+            public UpdateStepCount playerUpdateStepCount;
+            #if UNITY_EDITOR
+            public UpdateStepCount editorUpdateStepCount;
+            #endif
             public uint lastUpdateRetainedEventBytes;
             public uint lastUpdateRetainedEventCount;
+        }
+
+        internal static void OnBeforeUpdate(InputUpdateType type)
+        {
+            s_LastUpdateType = type;
+            switch (type)
+            {
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Manual:
+                case InputUpdateType.Fixed:
+                    s_PlayerUpdateStepCount.OnBeforeUpdate();
+                    break;
+                #if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    s_EditorUpdateStepCount.OnBeforeUpdate();
+                    break;
+                #endif
+            }
+        }
+
+        internal static void OnUpdate(InputUpdateType type)
+        {
+            s_LastUpdateType = type;
+            switch (type)
+            {
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Manual:
+                case InputUpdateType.Fixed:
+                    s_PlayerUpdateStepCount.OnUpdate();
+                    break;
+                #if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    s_EditorUpdateStepCount.OnUpdate();
+                    break;
+                #endif
+            }
         }
 
         public static SerializedState Save()
@@ -91,7 +156,10 @@ namespace UnityEngine.InputSystem.LowLevel
             return new SerializedState
             {
                 lastUpdateType = s_LastUpdateType,
-                updateStepCount = s_UpdateStepCount,
+                playerUpdateStepCount = s_PlayerUpdateStepCount,
+                #if UNITY_EDITOR
+                editorUpdateStepCount = s_EditorUpdateStepCount,
+                #endif
                 lastUpdateRetainedEventBytes = s_LastUpdateRetainedEventBytes,
                 lastUpdateRetainedEventCount = s_LastUpdateRetainedEventCount,
             };
@@ -100,9 +168,12 @@ namespace UnityEngine.InputSystem.LowLevel
         public static void Restore(SerializedState state)
         {
             s_LastUpdateType = state.lastUpdateType;
-            s_UpdateStepCount = state.updateStepCount;
+            s_PlayerUpdateStepCount = state.playerUpdateStepCount;
             s_LastUpdateRetainedEventBytes = state.lastUpdateRetainedEventBytes;
             s_LastUpdateRetainedEventCount = state.lastUpdateRetainedEventCount;
+            #if UNITY_EDITOR
+            s_EditorUpdateStepCount = state.editorUpdateStepCount;
+            #endif
         }
     }
 }
