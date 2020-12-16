@@ -797,6 +797,41 @@ internal class EnhancedTouchTests : InputTestFixture
             new Tuple<string, Finger>("Up", Touch.fingers[1])
         }));
     }
+    
+    [Test]
+    [Category("EnhancedTouch")]
+    public void EnhancedTouch_TouchWorksAfterDisableEnable()
+    {
+        BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
+
+        MoveTouch(1, new Vector2(0.234f, 0.345f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Moved));
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
+        
+        EnhancedTouchSupport.Disable();
+        EnhancedTouchSupport.Enable();
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
+
+        MoveTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Moved));
+
+        InputSystem.Update();
+        Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
+        Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
+    }
 
     [Test]
     [Category("EnhancedTouch")]
