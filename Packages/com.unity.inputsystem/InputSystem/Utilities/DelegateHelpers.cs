@@ -13,10 +13,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var copy = callbacks.Clone();
+            for (var i = copy.length - 1; i >= 0; --i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
                     callbacks[i]();
@@ -29,10 +28,6 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
@@ -42,10 +37,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var copy = callbacks.Clone();
+            for (var i = copy.length - 1; i >= 0; --i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
                     callbacks[i](argument);
@@ -58,10 +52,6 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
@@ -71,10 +61,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var copy = callbacks.Clone();
+            for (var i = copy.length - 1; i >= 0; --i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
                     callbacks[i](argument1, argument2);
@@ -87,10 +76,6 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
         }
@@ -101,10 +86,9 @@ namespace UnityEngine.InputSystem.Utilities
             if (callbacks.length == 0)
                 return true;
             Profiler.BeginSample(callbackName);
-            for (var i = 0; i < callbacks.length; ++i)
+            var copy = callbacks.Clone();
+            for (var i = copy.length - 1; i >= 0; --i)
             {
-                var lengthBefore = callbacks.length;
-
                 try
                 {
                     if (callbacks[i](argument1, argument2))
@@ -118,10 +102,6 @@ namespace UnityEngine.InputSystem.Utilities
                         Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
                     Debug.LogException(exception);
                 }
-
-                ////REVIEW: is this enough?
-                if (callbacks.length == lengthBefore - 1)
-                    --i;
             }
             Profiler.EndSample();
             return false;
