@@ -109,6 +109,14 @@ extern "C" int _iOSStepCounterEnable(int deviceId, iOSStepCounterWrapper::iOSSte
         return kResultFailure;
     }
 
+    NSString* motionUsage = @"NSMotionUsageDescription";
+
+    if ([[NSBundle mainBundle] objectForInfoDictionaryKey: motionUsage] == nil)
+    {
+        STEP_COUNTER_LOG(@"%@ is missing in Info.plist, please enable Motion Usage in Input Settings", motionUsage);
+        return kResultFailure;
+    }
+
     if (@available(iOS 11.0, *))
     {
         if ([CMPedometer authorizationStatus] == CMAuthorizationStatusRestricted)
