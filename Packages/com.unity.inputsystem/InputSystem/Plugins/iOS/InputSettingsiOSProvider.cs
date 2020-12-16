@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem
             m_MotionUsage = parent.FindProperty(prefix + nameof(m_MotionUsage));
             m_MotionUsageDescription = parent.FindProperty(prefix + nameof(m_MotionUsageDescription));
 
-            m_MotionUsageContent = new GUIContent("Motion Usage", "Enables Motion Usage for the app. This also adds 'Privacy - Motion Usage Description' entry to Info.plist");
+            m_MotionUsageContent = new GUIContent("Motion Usage", "Enables Motion Usage for the app, required for sensors like Step Counter. This also adds 'Privacy - Motion Usage Description' entry to Info.plist");
             m_MotionUsageDescriptionContent = new GUIContent("  Description", "Describe why the app wants to access the device's accelerometer.");
         }
 

@@ -2,6 +2,8 @@
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class iOSPostProcessBuild
 {
@@ -10,19 +12,23 @@ public class iOSPostProcessBuild
     {
         if (buildTarget != BuildTarget.iOS)
             return;
-        string plistPath = pathToBuiltProject + "/Info.plist";
-        PlistDocument plist = new PlistDocument();
-        plist.ReadFromString(File.ReadAllText(plistPath));
 
-        // Get root
-        PlistElementDict rootDict = plist.root;
+        var settings = InputSystem.settings.iOS;
+        if (!settings.MotionUsage)
+            return;
+        var plistPath = pathToBuiltProject + "/Info.plist";
+        var contents = File.ReadAllText(plistPath);
+#if UNITY_IOS || UNITY_TVOS
+        var plist = new UnityEditor.iOS.Xcode.PlistDocument();
+        plist.ReadFromString(contents);
+        var root = plist.root;
+        var buildKey = "NSMotionUsageDescription";
+        if (root[buildKey] != null)
+            Debug.LogWarning($"{buildKey} is already present in Info.plist, the value will be overwritten.");
 
-        // Change value of CFBundleVersion in Xcode plist
-        var buildKey = "CFBundleVersion";
-        rootDict.SetString(buildKey, "2.3.4");
-
-        // Write to file
+        root.SetString(buildKey, InputSystem.settings.iOS.MotionUsageDescription);
         File.WriteAllText(plistPath, plist.WriteToString());
+#endif
     }
 }
 
