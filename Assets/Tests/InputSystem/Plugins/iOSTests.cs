@@ -10,6 +10,7 @@ using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.XInput;
+using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
 internal class iOSTests : InputTestFixture
@@ -87,10 +88,15 @@ internal class iOSTests : InputTestFixture
     public void Devices_SupportsiOSStepCounter()
     {
         var device = InputSystem.AddDevice<iOSStepCounter>();
+        LogAssert.Expect(LogType.Error, "Please enable Motion Usage in Input Settings.");
+        InputSystem.EnableDevice(device);
+
+        InputSystem.settings.iOS.MotionUsage = true;
         InputSystem.EnableDevice(device);
         InputSystem.QueueStateEvent(device, new iOSStepCounterState(){stepCounter = 5});
         InputSystem.Update();
         Assert.That(device.stepCounter.ReadValue(), Is.EqualTo(5));
+        InputSystem.settings.iOS.MotionUsage = false;
     }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID

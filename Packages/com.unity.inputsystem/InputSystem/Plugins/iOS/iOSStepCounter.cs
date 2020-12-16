@@ -86,6 +86,13 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
             if (t == EnableDeviceCommand.Type)
             {
 #if UNITY_EDITOR
+                if (InputSystem.settings.iOS.MotionUsage == false)
+                {
+                    Debug.LogError("Please enable Motion Usage in Input Settings.");
+                    m_Enabled = false;
+                    return kCommandFailure;
+                }
+
                 m_Enabled = true;
                 return kCommandSuccess;
 #else
