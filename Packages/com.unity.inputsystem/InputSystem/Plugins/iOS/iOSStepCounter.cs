@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
 using System.Runtime.InteropServices;
 using AOT;
 using Unity.Collections.LowLevel.Unsafe;
@@ -162,3 +163,4 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         }
     }
 }
+#endif
