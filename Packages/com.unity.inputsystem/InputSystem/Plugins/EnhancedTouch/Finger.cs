@@ -124,6 +124,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 updateMask = updateMask,
             };
             m_StateHistory.StartRecording();
+
+            // if touch is already in progress, record the current state
+            if (screen.touches[index].isInProgress)
+                m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].ReadValue());
         }
 
         private static unsafe bool ShouldRecordTouch(InputControl control, double time, InputEventPtr eventPtr)
