@@ -85,21 +85,22 @@ namespace UnityEngine.InputSystem.LowLevel
         [Serializable]
         public struct UpdateStepCount
         {
-            public bool wasUpdated;
-            public uint value;
+            private bool m_WasUpdated;
+
+            public uint value { get; private set; }
 
             public void OnBeforeUpdate()
             {
-                wasUpdated = true;
+                m_WasUpdated = true;
                 value++;
             }
 
             public void OnUpdate()
             {
                 // only increment if OnBeforeUpdate was not called
-                if (!wasUpdated)
+                if (!m_WasUpdated)
                     value++;
-                wasUpdated = false;
+                m_WasUpdated = false;
             }
         };
 
