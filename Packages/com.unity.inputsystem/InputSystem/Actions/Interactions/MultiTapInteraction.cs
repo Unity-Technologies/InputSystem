@@ -1,4 +1,5 @@
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -12,6 +13,7 @@ using UnityEngine.InputSystem.Editor;
 
 namespace UnityEngine.InputSystem.Interactions
 {
+    ////REVIEW: Why is this deriving from IInputInteraction<float>? It goes by actuation just like Hold etc.
     /// <summary>
     /// Interaction that requires multiple taps (press and release within <see cref="tapTime"/>) spaced no more
     /// than <see cref="tapDelay"/> seconds apart. This equates to a chain of <see cref="TapInteraction"/> with
@@ -23,7 +25,7 @@ namespace UnityEngine.InputSystem.Interactions
     /// <see cref="InputActionPhase.Performed"/>) or the multi-tap is aborted by a timeout being hit (in which
     /// case the interaction will trigger <see cref="InputActionPhase.Canceled"/>).
     /// </remarks>
-    [Scripting.Preserve]
+    [Preserve]
     public class MultiTapInteraction : IInputInteraction<float>
     {
         /// <summary>
@@ -67,6 +69,7 @@ namespace UnityEngine.InputSystem.Interactions
         private float tapTimeOrDefault => tapTime > 0.0 ? tapTime : InputSystem.settings.defaultTapTime;
         internal float tapDelayOrDefault => tapDelay > 0.0 ? tapDelay : tapTimeOrDefault * 2;
         private float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         /// <inheritdoc />
         public void Process(ref InputInteractionContext context)
@@ -87,12 +90,21 @@ namespace UnityEngine.InputSystem.Interactions
                         m_CurrentTapPhase = TapPhase.WaitingForNextRelease;
                         m_CurrentTapStartTime = context.time;
                         context.Started();
-                        context.SetTimeout(tapTimeOrDefault);
+
+                        var maxTapTime = tapTimeOrDefault;
+                        var maxDelayInBetween = tapDelayOrDefault;
+                        context.SetTimeout(maxTapTime);
+
+                        // We'll be using multiple timeouts so set a total completion time that
+                        // effects the result of InputAction.GetTimeoutCompletionPercentage()
+                        // such that it accounts for the total time we allocate for the interaction
+                        // rather than only the time of one single timeout.
+                        context.SetTotalTimeoutCompletionTime(maxTapTime * tapCount + (tapCount - 1) * maxDelayInBetween);
                     }
                     break;
 
                 case TapPhase.WaitingForNextRelease:
-                    if (!context.ControlIsActuated(pressPointOrDefault))
+                    if (!context.ControlIsActuated(releasePointOrDefault))
                     {
                         if (context.time - m_CurrentTapStartTime <= tapTimeOrDefault)
                         {

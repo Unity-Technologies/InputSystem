@@ -313,6 +313,60 @@ partial class CoreTests
 
     [Test]
     [Category("State")]
+    [TestCase("Axis")]
+    [TestCase("Double")]
+    public void State_CanStoreControlAsMultiBitfield(string controlType)
+    {
+        var json = @"
+        {
+            ""name"" : ""TestDevice"",
+            ""controls"" : [
+                {
+                    ""name"" : ""max"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 127
+                },
+                {
+                    ""name"" : ""min"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 1,
+                    ""bit"" : 0,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 0
+                },
+                {
+                    ""name"" : ""mid"",
+                    ""layout"" : ""__CONTROLTYPE__"",
+                    ""format"" : ""BIT"",
+                    ""offset"" : 2,
+                    ""sizeInBits"" : 7,
+                    ""defaultState"" : 63
+                }
+            ]
+        }".Replace("__CONTROLTYPE__", controlType);
+
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+
+        var min = device["min"];
+        var max = device["max"];
+        var mid = device["mid"];
+
+        var minValue = min.ReadValueAsObject();
+        var maxValue = max.ReadValueAsObject();
+        var midValue = mid.ReadValueAsObject();
+
+        Assert.That(minValue, Is.EqualTo(0).Within(0.00001));
+        Assert.That(maxValue, Is.EqualTo(1).Within(0.00001));
+        Assert.That(midValue, Is.EqualTo(0.5).Within(1 / 128f)); // Precision dictated by number of bits we have available.
+    }
+
+    [Test]
+    [Category("State")]
     public void State_AppendsControlsWithoutForcedOffsetToEndOfState()
     {
         var json = @"

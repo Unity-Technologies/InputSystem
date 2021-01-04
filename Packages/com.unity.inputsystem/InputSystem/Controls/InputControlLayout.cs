@@ -8,6 +8,10 @@ using System.Runtime.Serialization;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+////TODO: *kill* variants!
+
+////TODO: allow setting canRunInBackground at the layout level
+
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
@@ -395,9 +399,6 @@ namespace UnityEngine.InputSystem.Layouts
         /// List of child controls defined for the layout.
         /// </summary>
         /// <value>Child controls defined for the layout.</value>
-        /// <remarks>
-        /// Note that this list TODO
-        /// </remarks>
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
@@ -1047,12 +1048,12 @@ namespace UnityEngine.InputSystem.Layouts
                         continue;
                 }
 
-                AddControlItemsFromMember(member, attributes, controlItems, layoutName);
+                AddControlItemsFromMember(member, attributes, controlItems);
             }
         }
 
         private static void AddControlItemsFromMember(MemberInfo member,
-            InputControlAttribute[] attributes, List<ControlItem> controlItems, string layoutName)
+            InputControlAttribute[] attributes, List<ControlItem> controlItems)
         {
             // InputControlAttribute can be applied multiple times to the same member,
             // generating a separate control for each occurrence. However, it can also
@@ -1063,17 +1064,15 @@ namespace UnityEngine.InputSystem.Layouts
 
             if (attributes.Length == 0)
             {
-                var controlLayout = CreateControlItemFromMember(member, null);
-                ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
-                controlItems.Add(controlLayout);
+                var controlItem = CreateControlItemFromMember(member, null);
+                controlItems.Add(controlItem);
             }
             else
             {
                 foreach (var attribute in attributes)
                 {
-                    var controlLayout = CreateControlItemFromMember(member, attribute);
-                    ThrowIfControlItemIsDuplicate(ref controlLayout, controlItems, layoutName);
-                    controlItems.Add(controlLayout);
+                    var controlItem = CreateControlItemFromMember(member, attribute);
+                    controlItems.Add(controlItem);
                 }
             }
         }
@@ -1488,16 +1487,6 @@ namespace UnityEngine.InputSystem.Layouts
             return StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(expected, actual, VariantSeparator[0]);
         }
 
-        private static void ThrowIfControlItemIsDuplicate(ref ControlItem controlItem,
-            IEnumerable<ControlItem> controlLayouts, string layoutName)
-        {
-            var name = controlItem.name;
-            foreach (var existing in controlLayouts)
-                if (string.Compare(name, existing.name, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    existing.variants == controlItem.variants)
-                    throw new InvalidOperationException($"Duplicate control '{name}' in layout '{layoutName}'");
-        }
-
         internal static void ParseHeaderFieldsFromJson(string json, out InternedString name,
             out InlinedArray<InternedString> baseLayouts, out InputDeviceMatcher deviceMatcher)
         {
@@ -1579,7 +1568,8 @@ namespace UnityEngine.InputSystem.Layouts
                     m_Description = description,
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
-                    m_Variants = new InternedString(variant)
+                    m_Variants = new InternedString(variant),
+                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1603,10 +1593,6 @@ namespace UnityEngine.InputSystem.Layouts
                         throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
                 }
 
-                // Add common usages.
-                if (commonUsages != null)
-                    layout.m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x));
-
                 // Add controls.
                 if (controls != null)
                 {
@@ -1616,7 +1602,6 @@ namespace UnityEngine.InputSystem.Layouts
                         if (string.IsNullOrEmpty(control.name))
                             throw new InvalidOperationException($"Control with no name in layout '{name}");
                         var controlLayout = control.ToLayout();
-                        ThrowIfControlItemIsDuplicate(ref controlLayout, controlLayouts, layout.name);
                         controlLayouts.Add(controlLayout);
                     }
                     layout.m_Controls = controlLayouts.ToArray();
@@ -1630,7 +1615,7 @@ namespace UnityEngine.InputSystem.Layouts
                 return new LayoutJson
                 {
                     name = layout.m_Name,
-                    type = layout.type.AssemblyQualifiedName,
+                    type = layout.type?.AssemblyQualifiedName,
                     variant = layout.m_Variants,
                     displayName = layout.m_DisplayName,
                     description = layout.m_Description,
@@ -1639,7 +1624,9 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
+                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
+                    beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };
             }
         }

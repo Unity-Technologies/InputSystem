@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem
         /// the delta is automatically set to <c>(0,0)</c>. More precisely, deltas will reset as part
         /// of <see cref="InputSystem.onBeforeUpdate"/>. This happens every time regardless of whether
         /// there are pending motion events for the pointer or not. But because it happens in
-        /// <see cref="InputSystem.onBeforeUpdate"/> (i.e. <em>before</em> events are processed),
+        /// <see cref="InputSystem.onBeforeUpdate"/> (that is, <em>before</em> events are processed),
         /// subsequent motion deltas are incorporated normally.
         ///
         /// Note that the resetting is visible to <see cref="InputAction"/>s. This means that when
@@ -230,12 +230,8 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr">The input event.</param>
         protected unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            var statePtr = currentStatePtr;
-
             ////FIXME: This stuff makes pointer events too expensive; find a better way.
-            delta.x.AccumulateValueInEvent(statePtr, eventPtr);
-            delta.y.AccumulateValueInEvent(statePtr, eventPtr);
-
+            delta.AccumulateValueInEvent(currentStatePtr, eventPtr);
             InputState.Change(this, eventPtr);
         }
 

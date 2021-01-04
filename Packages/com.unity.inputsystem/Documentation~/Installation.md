@@ -26,6 +26,8 @@ You can find the corresponding setting in the Player settings (menu: __Edit > Pr
 
 >**Note:** You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
 
+![Active Input Handling](Images/ActiveInputHandling.png)
+
 When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define` is added to builds. Similarly, when the old input backends are enabled, the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define` is added. Because both can be enabled at the same time, it is possible for __both__ defines to be 1 at the same time.
 
 ## Installing samples
@@ -33,3 +35,5 @@ When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define
 The Input System package comes with a number of samples. You can install these directly from the Package Manager window in Unity (menu: __Window > Package Manager__). To see the list, select the Input System package in the Package Manager window. Click **Import into Project** next to a sample to copy it into the current Project.
 
 ![Install Samples](Images/InstallSamples.png)
+
+For a more comprehensive demo project for the Input System, see the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.

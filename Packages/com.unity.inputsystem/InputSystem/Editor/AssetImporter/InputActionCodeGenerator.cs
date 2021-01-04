@@ -6,6 +6,8 @@ using System.Text;
 using UnityEngine.InputSystem.Utilities;
 using UnityEditor;
 
+////TODO: option to allow referencing the original asset rather than embedding it
+
 ////TODO: emit indexer directly at toplevel so you can more easily look up actions dynamically
 
 ////TODO: put the generated code behind #if that depends on input system

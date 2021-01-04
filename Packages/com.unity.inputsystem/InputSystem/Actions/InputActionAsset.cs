@@ -288,13 +288,13 @@ namespace UnityEngine.InputSystem
         /// Alternatively, the given string can be a GUID as given by <see cref="InputAction.id"/>.</param>
         /// <returns>The action with the corresponding name or null if no matching action could be found.</returns>
         /// <remarks>
-        /// This method is equivalent to <see cref="FindAction(string)"/> except that it throws
+        /// This method is equivalent to <see cref="FindAction(string,bool)"/> except that it throws
         /// <see cref="KeyNotFoundException"/> if no action with the given name or ID
         /// could be found.
         /// </remarks>
         /// <exception cref="KeyNotFoundException">No action was found matching <paramref name="actionNameOrId"/>.</exception>
         /// <exception cref="ArgumentNullException"><paramref name="actionNameOrId"/> is <c>null</c> or empty.</exception>
-        /// <seealso cref="FindAction(string)"/>
+        /// <seealso cref="FindAction(string,bool)"/>
         public InputAction this[string actionNameOrId]
         {
             get
@@ -513,6 +513,16 @@ namespace UnityEngine.InputSystem
         /// cannot be found, throw <c>ArgumentException</c>.</param>
         /// <returns>The action with the corresponding name or <c>null</c> if no matching action could be found.</returns>
         /// <remarks>
+        /// Note that no lookup structures are used internally to speed the operation up. Instead, the search is done
+        /// linearly. For repeated access of an action, it is thus generally best to look up actions once ahead of
+        /// time and cache the result.
+        ///
+        /// If multiple actions have the same name and <paramref name="actionNameOrId"/> is not an ID and not an
+        /// action name qualified by a map name (that is, in the form of <c>"mapName/actionName"</c>), the action that
+        /// is returned will be from the first map in <see cref="actionMaps"/> that has an action with the given name.
+        /// An exception is if, of the multiple actions with the same name, some are enabled and some are disabled. In
+        /// this case, the first action that is enabled is returned.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
@@ -559,13 +569,22 @@ namespace UnityEngine.InputSystem
                 var indexOfSlash = actionNameOrId.IndexOf('/');
                 if (indexOfSlash == -1)
                 {
-                    // No slash so it's just a simple action name.
+                    // No slash so it's just a simple action name. Return either first enabled action or, if
+                    // none are enabled, first action with the given name.
+                    InputAction firstActionFound = null;
                     for (var i = 0; i < m_ActionMaps.Length; ++i)
                     {
                         var action = m_ActionMaps[i].FindAction(actionNameOrId);
                         if (action != null)
-                            return action;
+                        {
+                            if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
+                                return action;
+                            if (firstActionFound == null)
+                                firstActionFound = action;
+                        }
                     }
+                    if (firstActionFound != null)
+                        return firstActionFound;
                 }
                 else
                 {
@@ -754,6 +773,52 @@ namespace UnityEngine.InputSystem
                 return null;
 
             return m_ControlSchemes[index];
+        }
+
+        /// <summary>
+        /// Return true if the asset contains bindings (in any of its action maps) that are usable
+        /// with the given <paramref name="device"/>.
+        /// </summary>
+        /// <param name="device">An arbitrary input device.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Find out if the actions of the given PlayerInput can be used with
+        /// // a gamepad.
+        /// if (playerInput.actions.IsUsableWithDevice(Gamepad.all[0]))
+        ///     /* ... */;
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="InputActionMap.IsUsableWithDevice"/>
+        /// <seealso cref="InputControlScheme.SupportsDevice"/>
+        public bool IsUsableWithDevice(InputDevice device)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+
+            // If we have control schemes, we let those dictate our search.
+            var numControlSchemes = m_ControlSchemes.LengthSafe();
+            if (numControlSchemes > 0)
+            {
+                for (var i = 0; i < numControlSchemes; ++i)
+                {
+                    if (m_ControlSchemes[i].SupportsDevice(device))
+                        return true;
+                }
+            }
+            else
+            {
+                // Otherwise, we'll go search bindings. Slow.
+                var actionMapCount = m_ActionMaps.LengthSafe();
+                for (var i = 0; i < actionMapCount; ++i)
+                    if (m_ActionMaps[i].IsUsableWithDevice(device))
+                        return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem
         /// been assigned to the control.
         ///
         /// For nested controls, the short display name will include the short display names of all parent controls,
-        /// i.e. the display name will fully identify the control on the device. For example, the display
+        /// that is, the display name will fully identify the control on the device. For example, the display
         /// name for the left D-Pad button on a gamepad is "D-Pad \u2190" and not just "\u2190". Note that if a parent
         /// control has no short name, its long name will be used instead.
         /// </remarks>
@@ -402,7 +402,7 @@ namespace UnityEngine.InputSystem
         /// <code>
         /// gamepad["leftStick"] // Returns Gamepad.leftStick
         /// gamepad["leftStick/x"] // Returns Gamepad.leftStick.x
-        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, i.e. Gamepad.aButton
+        /// gamepad["{PrimaryAction}"] // Returns the control with PrimaryAction usage, that is, Gamepad.aButton
         /// </code>
         /// </example>
         /// <exception cref="KeyNotFoundException"><paramref name="path"/> cannot be found.</exception>
@@ -465,6 +465,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        ////REVIEW: The -1 behavior seems bad; probably better to just return 1 for controls that do not support finer levels of actuation
         /// <summary>
         /// Compute an absolute, normalized magnitude value that indicates the extent to which the control
         /// is actuated.
@@ -857,6 +858,7 @@ namespace UnityEngine.InputSystem
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
+            UsesStateFromOtherControl = 1 << 6,
         }
 
         internal bool isSetupFinished
@@ -880,6 +882,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.ConfigUpToDate;
                 else
                     m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool usesStateFromOtherControl
+        {
+            get => (m_ControlFlags & ControlFlags.UsesStateFromOtherControl) == ControlFlags.UsesStateFromOtherControl;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.UsesStateFromOtherControl;
+                else
+                    m_ControlFlags &= ~ControlFlags.UsesStateFromOtherControl;
             }
         }
 

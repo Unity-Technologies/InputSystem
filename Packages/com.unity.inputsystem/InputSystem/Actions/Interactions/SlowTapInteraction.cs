@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 using UnityEngine.InputSystem.Editor;
 #endif
 
-////REVIEW: this is confusing when considered next to HoldInteraction
+////REVIEW: this is confusing when considered next to HoldInteraction; also it's confusingly named
 
 namespace UnityEngine.InputSystem.Interactions
 {

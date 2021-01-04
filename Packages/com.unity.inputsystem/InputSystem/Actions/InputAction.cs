@@ -1,4 +1,6 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
@@ -35,11 +37,12 @@ using UnityEngine.Serialization;
 
 ////REVIEW: Do we need to have separate display names for actions?
 
-////TODO: allow changing bindings without having to disable
-
 ////REVIEW: what about having the concept of "consumed" on the callback context?
 
 ////REVIEW: have "Always Enabled" toggle on actions?
+
+////TODO: allow temporarily disabling individual bindings (flag on binding) such that no re-resolve is needed
+////      (SilenceBinding? DisableBinding)
 
 namespace UnityEngine.InputSystem
 {
@@ -96,7 +99,7 @@ namespace UnityEngine.InputSystem
     /// In what order and how those callbacks get triggered depends on both the <see cref="type"/>
     /// of the action as well as on the interactions (see <see cref="IInputInteraction"/>) present
     /// on the bindings of the action. The default behavior is that when a control is actuated
-    /// (i.e. moving away from its resting position), <see cref="started"/> is called and then
+    /// (that is, moving away from its resting position), <see cref="started"/> is called and then
     /// <see cref="performed"/>. Subsequently, whenever the a control further changes value to
     /// anything other than its default value, <see cref="performed"/> will be called again.
     /// Finally, when the control moves back to its default value (i.e. resting position),
@@ -463,6 +466,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public InputActionPhase phase => currentState.phase;
 
+        public bool inProgress => phase.IsInProgress();
+
         /// <summary>
         /// Whether the action is currently enabled, i.e. responds to input, or not.
         /// </summary>
@@ -524,35 +529,12 @@ namespace UnityEngine.InputSystem
             remove => m_OnPerformed.Remove(value);
         }
 
+        ////TODO: Obsolete and drop this when we can break API
         /// <summary>
-        /// Whether the action was triggered (i.e. had <see cref="performed"/> called) this frame.
+        /// Equivalent to <see cref="WasPerformedThisFrame"/>.
         /// </summary>
-        /// <remarks>
-        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
-        /// state, this property will stay true for the duration of the current frame (i.e. until the next
-        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
-        ///
-        /// <example>
-        /// <code>
-        /// if (myControls.gameplay.fire.triggered)
-        ///     Fire();
-        /// </code>
-        /// </example>
-        /// </remarks>
-        /// <seealso cref="InputActionType.Button"/>
-        /// <seealso cref="ReadValue{TValue}"/>
-        public unsafe bool triggered
-        {
-            get
-            {
-                var map = GetOrCreateActionMap();
-                if (map.m_State == null)
-                    return false;
-
-                var lastTriggeredInUpdate = map.m_State.actionStates[m_ActionIndexInState].lastTriggeredInUpdate;
-                return lastTriggeredInUpdate != 0 && lastTriggeredInUpdate == InputUpdate.s_UpdateStepCount;
-            }
-        }
+        /// <seealso cref="WasPerformedThisFrame"/>
+        public bool triggered => WasPerformedThisFrame();
 
         /// <summary>
         /// The currently active control that is driving the action. Null while the action
@@ -931,9 +913,12 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-                var controlIndex = actionStatePtr->controlIndex;
-                if (controlIndex != InputActionState.kInvalidIndex)
-                    result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
+                if (actionStatePtr->phase.IsInProgress())
+                {
+                    var controlIndex = actionStatePtr->controlIndex;
+                    if (controlIndex != InputActionState.kInvalidIndex)
+                        result = state.ReadValue<TValue>(actionStatePtr->bindingIndex, controlIndex);
+                }
             }
 
             return result;
@@ -943,13 +928,14 @@ namespace UnityEngine.InputSystem
         /// Same as <see cref="ReadValue{TValue}"/> but read the value without having to know the value type
         /// of the action.
         /// </summary>
-        /// <returns>The current value of the action or null if the action is not currently in <see cref="InputActionPhase.Started"/>
+        /// <returns>The current value of the action or <c>null</c> if the action is not currently in <see cref="InputActionPhase.Started"/>
         /// or <see cref="InputActionPhase.Performed"/> phase.</returns>
         /// <remarks>
         /// This method allocates GC memory and is thus not a good choice for getting called as part of gameplay
         /// logic.
         /// </remarks>
         /// <seealso cref="ReadValue{TValue}"/>
+        /// <seealso cref="InputAction.CallbackContext.ReadValueAsObject"/>
         public unsafe object ReadValueAsObject()
         {
             var state = GetOrCreateActionMap().m_State;
@@ -957,11 +943,371 @@ namespace UnityEngine.InputSystem
                 return null;
 
             var actionStatePtr = &state.actionStates[m_ActionIndexInState];
-            var controlIndex = actionStatePtr->controlIndex;
-            if (controlIndex != InputActionState.kInvalidIndex)
-                return state.ReadValueAsObject(actionStatePtr->bindingIndex, controlIndex);
+            if (actionStatePtr->phase.IsInProgress())
+            {
+                var controlIndex = actionStatePtr->controlIndex;
+                if (controlIndex != InputActionState.kInvalidIndex)
+                    return state.ReadValueAsObject(actionStatePtr->bindingIndex, controlIndex);
+            }
 
             return null;
+        }
+
+        /// <summary>
+        /// Reset the action state to default.
+        /// </summary>
+        /// <remarks>
+        /// This method can be used to forcibly cancel an action even while it is in progress. Note that unlike
+        /// disabling an action, for example, this also effects APIs such as <see cref="WasPressedThisFrame"/>.
+        /// </remarks>
+        /// <seealso cref="inProgress"/>
+        /// <seealso cref="phase"/>
+        public void Reset()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            state?.ResetActionState(m_ActionIndexInState, hardReset: true);
+        }
+
+        /// <summary>
+        /// Check whether the current actuation of the action has crossed the button press threshold (see
+        /// <see cref="InputSettings.defaultButtonPressPoint"/>) and has not yet fallen back below the
+        /// release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>).
+        /// </summary>
+        /// <returns>True if the action is considered to be in "pressed" state, false otherwise.</returns>
+        /// <remarks>
+        /// This method is different from simply reading the action's current <c>float</c> value and comparing
+        /// it to the press threshold and is also different from comparing the current actuation of
+        /// <see cref="activeControl"/> to it. This is because the current level of actuation might have already
+        /// fallen below the press threshold but might not yet have reached the release threshold.
+        ///
+        /// This method works with any <see cref="type"/> of action, not just buttons.
+        ///
+        /// Also note that because this operates on the results of <see cref="InputControl.EvaluateMagnitude()"/>,
+        /// it works with many kind of controls, not just buttons. For example, if an action is bound
+        /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
+        /// of the Vector2 of the control has crossed the press threshold.
+        ///
+        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
+        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var up = playerInput.actions["up"];
+        /// if (up.IsPressed())
+        ///    transform.Translate(0, 10 * Time.deltaTime, 0);
+        /// </code>
+        /// </example>
+        ///
+        /// Disabled actions will always return false from this method, even if a control bound to the action
+        /// is currently pressed. Also, re-enabling an action will not restore the state to when the action
+        /// was disabled even if the control is still actuated.
+        /// </remarks>
+        /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+        /// <seealso cref="ButtonControl.pressPoint"/>
+        /// <seealso cref="CallbackContext.ReadValueAsButton"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        public unsafe bool IsPressed()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                return actionStatePtr->isPressed;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// at any point in the frame.
+        /// </summary>
+        /// <returns>True if the action was pressed this frame.</returns>
+        /// <remarks>
+        /// This method is different from <see cref="WasPerformedThisFrame"/> in that it is not bound
+        /// to <see cref="phase"/>. Instead, if the action's level of actuation (that is, the level of
+        /// magnitude -- see <see cref="InputControl.EvaluateMagnitude()"/> -- of the control(s) bound
+        /// to the action) crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// at any point in the frame, this method will return true. It will do so even if there is an
+        /// interaction on the action that has not yet performed the action in response to the press.
+        ///
+        /// This method works with any <see cref="type"/> of action, not just buttons.
+        ///
+        /// Also note that because this operates on the results of <see cref="InputControl.EvaluateMagnitude()"/>,
+        /// it works with many kind of controls, not just buttons. For example, if an action is bound
+        /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
+        /// of the Vector2 of the control has crossed the press threshold.
+        ///
+        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
+        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleasedThisFrame())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        ///
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        /// </remarks>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasReleasedThisFrame"/>
+        /// <seealso cref="CallbackContext.ReadValueAsButton"/>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        public unsafe bool WasPressedThisFrame()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
+        /// at any point in the frame after being in pressed state.
+        /// </summary>
+        /// <returns>True if the action was released this frame.</returns>
+        /// <remarks>
+        /// This method works with any <see cref="type"/> of action, not just buttons.
+        ///
+        /// Also note that because this operates on the results of <see cref="InputControl.EvaluateMagnitude()"/>,
+        /// it works with many kind of controls, not just buttons. For example, if an action is bound
+        /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
+        /// of the Vector2 of the control has crossed the press threshold.
+        ///
+        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
+        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// var fire = playerInput.actions["fire"];
+        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        ///     StartFiring();
+        /// else if (fire.WasReleasedThisFrame())
+        ///     StopFiring();
+        /// </code>
+        /// </example>
+        ///
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        /// </remarks>
+        /// <seealso cref="IsPressed"/>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="CallbackContext.ReadValueAsButton"/>
+        /// <seealso cref="WasPerformedThisFrame"/>
+        public unsafe bool WasReleasedThisFrame()
+        {
+            var state = GetOrCreateActionMap().m_State;
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        ////REVIEW: Should we also have WasStartedThisFrame()? (and WasCanceledThisFrame()?)
+
+        /// <summary>
+        /// Check whether <see cref="phase"/> was <see cref="InputActionPhase.Performed"/> at any point
+        /// in the current frame.
+        /// </summary>
+        /// <returns>True if the action performed this frame.</returns>
+        /// <remarks>
+        /// This method is different from <see cref="WasPressedThisFrame"/> in that it depends directly on the
+        /// interaction(s) driving the action (including the default interaction if no specific interaction
+        /// has been added to the action or binding).
+        ///
+        /// For example, let's say the action is bound to the space bar and that the binding has a
+        /// <see cref="Interactions.HoldInteraction"/> assigned to it. In the frame where the space bar
+        /// is pressed, <see cref="WasPressedThisFrame"/> will be true (because the button/key is now pressed)
+        /// but <c>WasPerformedThisFrame</c> will still be false (because the hold has not been performed yet).
+        /// Only after the hold time has expired will <c>WasPerformedThisFrame</c> be true and only in the frame
+        /// where the hold performed.
+        ///
+        /// This is different from checking <see cref="phase"/> directly as the action might have already progressed
+        /// to a different phase after performing. In other words, even if an action performed in a frame, <see cref="phase"/>
+        /// might no longer be <see cref="InputActionPhase.Performed"/>, whereas <c>WasPerformedThisFrame</c> will remain
+        /// true for the entirety of the frame regardless of what else the action does.
+        ///
+        /// Unlike <see cref="ReadValue{TValue}"/>, which will reset when the action goes back to waiting
+        /// state, this property will stay true for the duration of the current frame (that is, until the next
+        /// <see cref="InputSystem.Update"/> runs) as long as the action was triggered at least once.
+        ///
+        /// <example>
+        /// <code>
+        /// var warp = playerInput.actions["Warp"];
+        /// if (warp.WasPerformedThisFrame())
+        ///     InitiateWarp();
+        /// </code>
+        /// </example>
+        ///
+        /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
+        /// true for the duration of the frame even if the action was subsequently disabled in the frame.
+        /// </remarks>
+        /// <seealso cref="WasPressedThisFrame"/>
+        /// <seealso cref="phase"/>
+        public unsafe bool WasPerformedThisFrame()
+        {
+            var state = GetOrCreateActionMap().m_State;
+
+            if (state != null)
+            {
+                var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                var currentUpdateStep = InputUpdate.s_UpdateStepCount;
+                return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Return the completion percentage of the timeout (if any) running on the current interaction.
+        /// </summary>
+        /// <returns>A value &ge; 0 (no progress) and &le; 1 (finished) indicating the level of completion
+        /// of the currently running timeout.</returns>
+        /// <remarks>
+        /// This method is useful, for example, when providing UI feedback for an ongoing action. If, say,
+        /// you have a <see cref="Interactions.HoldInteraction"/> on a binding, you might want to show a
+        /// progress indicator in the UI and need to know how far into the hold the action
+        /// current is. Once the hold has been started, this method will return how far into the hold
+        /// the action currently is.
+        ///
+        /// Note that if an interaction performs and stays performed (see <see cref="InputInteractionContext.PerformedAndStayPerformed"/>),
+        /// the completion percentage will remain at 1 until the interaction is canceled.
+        ///
+        /// Also note that completion is based on the progression of time and not dependent on input
+        /// updates. This means that if, for example, the timeout for a <see cref="Interactions.HoldInteraction"/>
+        /// has expired according the current time but the expiration has not yet been processed by
+        /// an input update (thus causing the hold to perform), the returned completion percentage
+        /// will still be 1. In other words, there isn't always a correlation between the current
+        /// completion percentage and <see cref="phase"/>.
+        ///
+        /// The meaning of the timeout is dependent on the interaction in play. For a <see cref="Interactions.HoldInteraction"/>,
+        /// the timeout represents "completion" (that is, the time until a "hold" is considered to be performed), whereas
+        /// for a <see cref="Interactions.TapInteraction"/> it represents "time to failure" (that is, the remaining time window
+        /// that the interaction can be completed within).
+        ///
+        /// Note that an interaction might run multiple timeouts in succession. One such example is <see cref="Interactions.MultiTapInteraction"/>.
+        /// In this case, progression towards a single timeout does not necessarily mean progression towards completion
+        /// of the whole interaction. An interaction can call <see cref="InputInteractionContext.SetTotalTimeoutCompletionTime"/>
+        /// to inform the Input System of the total length of timeouts to run. If this is done, the result of the
+        /// <c>GetTimeoutCompletionPercentage</c> method will return a value reflecting the progression with respect
+        /// to total time.
+        ///
+        /// <example>
+        /// <code>
+        /// // Scale a UI element in response to the completion of a hold on the gamepad's A button.
+        ///
+        /// Transform uiObjectToScale;
+        ///
+        /// InputAction holdAction;
+        ///
+        /// void OnEnable()
+        /// {
+        ///     if (holdAction == null)
+        ///     {
+        ///         // Create hold action with a 2 second timeout.
+        ///         // NOTE: Here we create the action in code. You can, of course, grab the action from an .inputactions
+        ///         //       asset created in the editor instead.
+        ///         holdAction = new InputAction(type: InputActionType.Button, interactions: "hold(duration=2)");
+        ///
+        ///         // Show the UI object when the hold starts and hide it when it ends.
+        ///         holdAction.started += _ => uiObjectToScale.SetActive(true);
+        ///         holdAction.canceled += _ => uiObjectToScale.SetActive(false);
+        ///
+        ///         // If you want to play a visual effect when the action performs, you can initiate from
+        ///         // the performed callback.
+        ///         holdAction.performed += _ => /* InitiateVisualEffectWhenHoldIsComplete() */;
+        ///     }
+        ///
+        ///     holdAction.Enable();
+        ///
+        ///     // Hide the UI object until the action is started.
+        ///     uiObjectToScale.gameObject.SetActive(false);
+        /// }
+        ///
+        /// void OnDisable()
+        /// {
+        ///     holdAction.Disable();
+        /// }
+        ///
+        /// void Update()
+        /// {
+        ///     var completion = holdAction.GetTimeoutCompletionPercentage();
+        ///     uiObjectToScale.localScale = new Vector3(1, completion, 1);
+        /// }
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="IInputInteraction"/>
+        /// <seealso cref="InputInteractionContext.SetTimeout"/>
+        /// <seealso cref="InputInteractionContext.SetTotalTimeoutCompletionTime"/>
+        public unsafe float GetTimeoutCompletionPercentage()
+        {
+            var actionMap = GetOrCreateActionMap();
+            var state = actionMap.m_State;
+
+            // If there's no state, there can't be activity on the action so our completion
+            // percentage must be zero.
+            if (state == null)
+                return 0;
+
+            ref var actionState = ref state.actionStates[m_ActionIndexInState];
+            var interactionIndex = actionState.interactionIndex;
+            if (interactionIndex == -1)
+            {
+                ////REVIEW: should this use WasPerformedThisFrame()?
+                // There's no interactions on the action or on the currently active binding, so go
+                // entirely by the current phase. Performed is 100%, everything else is 0%.
+                return actionState.phase == InputActionPhase.Performed ? 1 : 0;
+            }
+
+            ref var interactionState = ref state.interactionStates[interactionIndex];
+            switch (interactionState.phase)
+            {
+                case InputActionPhase.Started:
+                    // If the interaction was started and there is a timer running, the completion level
+                    // is determined by far we are between the interaction start time and timer expiration.
+                    var timerCompletion = 0f;
+                    if (interactionState.isTimerRunning)
+                    {
+                        var duration = interactionState.timerDuration;
+                        var startTime = interactionState.timerStartTime;
+                        var endTime = startTime + duration;
+                        var remainingTime = endTime - InputRuntime.s_Instance.currentTime;
+                        if (remainingTime <= 0)
+                            timerCompletion = 1;
+                        else
+                            timerCompletion = (float)((duration - remainingTime) / duration);
+                    }
+
+                    if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
+                    {
+                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration)  /
+                            (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining);
+                    }
+                    else
+                    {
+                        return timerCompletion;
+                    }
+
+                case InputActionPhase.Performed:
+                    return 1;
+            }
+
+            return 0;
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
@@ -1410,7 +1756,18 @@ namespace UnityEngine.InputSystem
                 if (buffer == null)
                     throw new ArgumentNullException(nameof(buffer));
 
-                m_State?.ReadValue(bindingIndex, controlIndex, buffer, bufferSize);
+                if (m_State != null && phase.IsInProgress())
+                {
+                    m_State.ReadValue(bindingIndex, controlIndex, buffer, bufferSize);
+                }
+                else
+                {
+                    var valueSize = valueSizeInBytes;
+                    if (bufferSize < valueSize)
+                        throw new ArgumentException(
+                            $"Expected buffer of at least {valueSize} bytes but got buffer of only {bufferSize} bytes", nameof(bufferSize));
+                    UnsafeUtility.MemClear(buffer, valueSizeInBytes);
+                }
             }
 
             /// <summary>
@@ -1429,7 +1786,7 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
             {
                 var value = default(TValue);
-                if (m_State != null && phase != InputActionPhase.Canceled)
+                if (m_State != null && phase.IsInProgress())
                     value = m_State.ReadValue<TValue>(bindingIndex, controlIndex);
                 return value;
             }
@@ -1449,7 +1806,7 @@ namespace UnityEngine.InputSystem
             public bool ReadValueAsButton()
             {
                 var value = false;
-                if (m_State != null && phase != InputActionPhase.Canceled)
+                if (m_State != null && phase.IsInProgress())
                     value = m_State.ReadValueAsButton(bindingIndex, controlIndex);
                 return value;
             }
@@ -1458,15 +1815,19 @@ namespace UnityEngine.InputSystem
             /// Same as <see cref="ReadValue{TValue}"/> except that it is not necessary to
             /// know the type of value at compile time.
             /// </summary>
-            /// <returns>The current value from the binding that triggered the action.</returns>
+            /// <returns>The current value from the binding that triggered the action or <c>null</c> if the action
+            /// is not currently in progress.</returns>
             /// <remarks>
             /// This method allocates GC heap memory. Using it during normal gameplay will lead
             /// to frame-rate instabilities.
             /// </remarks>
             /// <seealso cref="ReadValue{TValue}"/>
+            /// <seealso cref="InputAction.ReadValueAsObject"/>
             public object ReadValueAsObject()
             {
-                return m_State?.ReadValueAsObject(bindingIndex, controlIndex);
+                if (m_State != null && phase.IsInProgress())
+                    return m_State.ReadValueAsObject(bindingIndex, controlIndex);
+                return null;
             }
 
             /// <summary>
