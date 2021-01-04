@@ -2355,7 +2355,7 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var device = InputSystem.AddDevice("TestLayout", variants: "A,B");
+        var device = InputSystem.AddDevice("TestLayout", variants: "A;B");
 
         Assert.That(device.variants, Is.EqualTo("A;B"));
         Assert.That(device.allControls, Has.Count.EqualTo(4));

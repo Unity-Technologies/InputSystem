@@ -231,8 +231,8 @@ internal class AndroidTests : InputTestFixture
                 productId = 0x02dd,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
@@ -241,13 +241,13 @@ internal class AndroidTests : InputTestFixture
             }.ToJson()
         });
 
-        Assert.That(gamepad.name, Is.EqualTo("AndroidGamepadXboxController"));
+        Assert.That(gamepad.name, Is.EqualTo("XboxOneGamepadAndroid"));
 
         // Check if normalization works correctly
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Z, -1)
-                .WithAxis(AndroidAxis.Rz, -1));
+                .WithAxis(AndroidAxis.Ltrigger, -1)
+                .WithAxis(AndroidAxis.Rtrigger, -1));
 
         InputSystem.Update();
 
@@ -256,10 +256,10 @@ internal class AndroidTests : InputTestFixture
 
         InputSystem.QueueStateEvent(gamepad,
             new AndroidGameControllerState()
-                .WithAxis(AndroidAxis.Z, 1)
-                .WithAxis(AndroidAxis.Rz, 1)
-                .WithAxis(AndroidAxis.Rx, 0.123f)
-                .WithAxis(AndroidAxis.Ry, -0.456f));
+                .WithAxis(AndroidAxis.Brake, 1)
+                .WithAxis(AndroidAxis.Gas, 1)
+                .WithAxis(AndroidAxis.Z, 0.123f)
+                .WithAxis(AndroidAxis.Rz, -0.456f));
 
 
         InputSystem.Update();
@@ -287,8 +287,8 @@ internal class AndroidTests : InputTestFixture
                 productId = 0x02dd,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
@@ -353,8 +353,8 @@ internal class AndroidTests : InputTestFixture
                 productId = 0x09cc,
                 motionAxes = new[]
                 {
-                    AndroidAxis.Rx,
-                    AndroidAxis.Ry,
+                    AndroidAxis.Brake,
+                    AndroidAxis.Gas,
                     AndroidAxis.Z,
                     AndroidAxis.Rz,
                     AndroidAxis.HatX,
