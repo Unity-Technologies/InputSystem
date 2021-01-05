@@ -33,38 +33,8 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.RegisterLayout<XboxOneGamepadAndroid>();
 
             ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
-
-            const string kDpadHatSettings = @"
-        { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
-";
-            InputSystem.RegisterLayout(@"
-{
-    ""name"" : ""AndroidGamepadWithDpadAxes"",
-    ""extend"" : ""AndroidGamepad"",
-    ""hideInUI"" : true,
-    ""controls"" : [
-    " + kDpadHatSettings + @"
-    ]
-}
-            ");
-            InputSystem.RegisterLayout(@"
-{
-    ""name"" : ""AndroidGamepadWithDpadButtons"",
-    ""extend"" : ""AndroidGamepad"",
-    ""hideInUI"" : true,
-    ""controls"" : [
-        { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 19, ""sizeInBits"" : 4 },
-        { ""name"" : ""dpad/left"", ""bit"" : 21 },
-        { ""name"" : ""dpad/right"", ""bit"" : 22 },
-        { ""name"" : ""dpad/up"", ""bit"" : 19 },
-        { ""name"" : ""dpad/down"", ""bit"" : 20 }
-    ]
-}
-            ");
+            InputSystem.RegisterLayout<AndroidGamepadWithDpadAxes>();
+            InputSystem.RegisterLayout<AndroidGamepadWithDpadButtons>();
 
             InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
             InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();

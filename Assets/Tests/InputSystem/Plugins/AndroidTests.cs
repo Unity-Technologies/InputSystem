@@ -36,7 +36,8 @@ internal class AndroidTests : InputTestFixture
             }.ToJson()
         });
 
-        Assert.That(gamepad, Is.TypeOf<AndroidGamepad>());
+        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
+        Assert.That(gamepad, Is.TypeOf<AndroidGamepadWithDpadButtons>());
         Assert.That(joystick, Is.TypeOf<AndroidJoystick>());
     }
 
@@ -54,7 +55,8 @@ internal class AndroidTests : InputTestFixture
             }.ToJson()
         });
 
-        Assert.That(device, Is.TypeOf<AndroidGamepad>());
+        // Gamepad class is always adding dpad in FinishSetup so AndroidGamepadWithDpadButtons instead of AndroidGamepad is used
+        Assert.That(device, Is.TypeOf<AndroidGamepadWithDpadButtons>());
         var controller = (AndroidGamepad)device;
 
         var leftStick = new Vector2(0.789f, 0.987f);
