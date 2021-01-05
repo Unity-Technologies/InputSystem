@@ -47,8 +47,8 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "dpad/left", offset = 0, bit = 0, sizeInBits = 32, format = "FLT", parameters = "clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantDPadAxes)]
         [InputControl(name = "dpad/down", offset = ((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit = 0, sizeInBits = 32, format = "FLT", parameters = "clamp=3,clampConstant=0,clampMin=0,clampMax=1", variants = kVariantDPadAxes)]
         [InputControl(name = "dpad/up", offset = ((uint)AndroidAxis.HatY - (uint)AndroidAxis.HatX) * sizeof(float), bit = 0, sizeInBits = 32, format = "FLT", parameters = "clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert", variants = kVariantDPadAxes)]
-        [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Brake * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
-        [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, variants = kVariantGamepad)]
+        [InputControl(name = "leftTrigger", offset = (uint)AndroidAxis.Brake * sizeof(float) + kAxisOffset, parameters = "clamp=1,clampMin=0,clampMax=1.0", variants = kVariantGamepad)]
+        [InputControl(name = "rightTrigger", offset = (uint)AndroidAxis.Gas * sizeof(float) + kAxisOffset, parameters = "clamp=1,clampMin=0,clampMax=1.0", variants = kVariantGamepad)]
         [InputControl(name = "leftStick", variants = kVariantGamepad)]
         [InputControl(name = "leftStick/y", variants = kVariantGamepad, parameters = "invert")]
         [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
@@ -78,7 +78,6 @@ namespace UnityEngine.InputSystem.Android.LowLevel
                 else
                     buttonsPtr[(int)code / 32] &= ~((uint)1 << ((int)code % 32));
             }
-
             return this;
         }
 
@@ -88,7 +87,6 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             {
                 axisPtr[(int)axis] = value;
             }
-
             return this;
         }
     }
