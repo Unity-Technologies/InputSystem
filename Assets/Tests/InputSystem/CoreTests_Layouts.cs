@@ -2103,13 +2103,20 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
-#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-    [Ignore("Case 1254565")]
-#endif
     public void Layouts_CanDetermineIfLayoutIsBasedOnGivenLayout()
     {
+        var json = @"
+            {
+                ""name"" : ""DualShockGamepadTest"",
+                ""extend"" : ""DualShockGamepad"",
+                ""controls"" : [ { ""name"" : ""MyControl"" } ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(json);
+
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepad", "Gamepad"), Is.True);
-        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShock4GamepadHID", "Gamepad"), Is.True);
+        Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("DualShockGamepadTest", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Gamepad"), Is.True);
         Assert.That(InputSystem.IsFirstLayoutBasedOnSecond("Gamepad", "Pointer"), Is.False);
     }
