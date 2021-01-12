@@ -54,14 +54,11 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         [InputControl(name = "leftStick/up", variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
         [InputControl(name = "leftStick/down", variants = kVariantGamepad, parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
         ////FIXME: state for this control is not contiguous
-        [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8,
-            variants = kVariantGamepad)]
+        [InputControl(name = "rightStick", offset = (uint)AndroidAxis.Z * sizeof(float) + kAxisOffset, sizeInBits = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float) * 8, variants = kVariantGamepad)]
         [InputControl(name = "rightStick/x", variants = kVariantGamepad)]
         [InputControl(name = "rightStick/y", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert")]
-        [InputControl(name = "rightStick/up", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad,
-            parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
-        [InputControl(name = "rightStick/down", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad,
-            parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
+        [InputControl(name = "rightStick/up", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert,clamp=1,clampMin=-1.0,clampMax=0.0")]
+        [InputControl(name = "rightStick/down", offset = ((uint)AndroidAxis.Rz - (uint)AndroidAxis.Z) * sizeof(float), variants = kVariantGamepad, parameters = "invert=false,clamp=1,clampMin=0,clampMax=1.0")]
         public fixed float axis[MaxAxes];
 
         public FourCC format
@@ -143,10 +140,12 @@ namespace UnityEngine.InputSystem.Android
     /// </summary>
     /// <remarks>
     /// Most of the gamepads:
-    /// - NVIDIA Controller v01.03/v01.04
     /// - ELAN PLAYSTATION(R)3 Controller
     /// - My-Power CO.,LTD. PS(R) Controller Adaptor
+    /// (Following tested with: Nvidia Shield TV - Android 9; Galaxy Note 20 Ultra - Android 11; Galaxy S9+ - Android 10)
     /// - Sony Interactive Entertainment Wireless
+    /// - Xbox Wireless Controller (Xbox One)
+    /// - NVIDIA Controller v01.03/v01.04
     /// - (Add more)
     /// map buttons in the following way:
     ///  Left Stick -> AXIS_X(0) / AXIS_Y(1)
@@ -165,21 +164,7 @@ namespace UnityEngine.InputSystem.Android
     /// Note: On Nvidia Shield Console, L2/R2 additionally invoke key events for AXIS_LTRIGGER, AXIS_RTRIGGER (in addition to AXIS_BRAKE, AXIS_GAS)
     ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
     ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
-    /// Other exotic gamepads have different mappings
-    ///  Xbox Gamepad (for ex., Microsoft X-Box One pad (Firmware 2015)) mapping (Note mapping: L2/R2/Right Stick)
-    ///  Left Stick -> AXIS_X(0) / AXIS_Y(1)
-    ///  Right Stick -> AXIS_Z (11) / AXIS_RZ(14)
-    ///  Right Thumb -> KEYCODE_BUTTON_THUMBR(107)
-    ///  Left Thumb -> KEYCODE_BUTTON_THUMBL(106)
-    ///  L1 (Left shoulder) -> KEYCODE_BUTTON_L1(102)
-    ///  R1 (Right shoulder) -> KEYCODE_BUTTON_R1(103)
-    ///  L2 (Left trigger) -> AXIS_BRAKE(23)
-    ///  R2 (Right trigger) -> AXIS_GAS(22)
-    ///  X -> KEYCODE_BUTTON_X(99)
-    ///  Y -> KEYCODE_BUTTON_Y(100)
-    ///  B -> KEYCODE_BUTTON_B(97)
-    ///  A -> KEYCODE_BUTTON_A(96)
-    ///  DPAD -> AXIS_HAT_X(15),AXIS_HAT_Y(16)
+    ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work 
     /// Some gamepads on Android devices (with same Android number version) might have different mappings
     ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
     ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonL1, rightShoulder -> AndroidKeyCode.ButtonR1, etc
