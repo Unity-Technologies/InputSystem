@@ -164,7 +164,7 @@ namespace UnityEngine.InputSystem.Android
     /// Note: On Nvidia Shield Console, L2/R2 additionally invoke key events for AXIS_LTRIGGER, AXIS_RTRIGGER (in addition to AXIS_BRAKE, AXIS_GAS)
     ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
     ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
-    ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work 
+    ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work
     /// Some gamepads on Android devices (with same Android number version) might have different mappings
     ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
     ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonL1, rightShoulder -> AndroidKeyCode.ButtonR1, etc
