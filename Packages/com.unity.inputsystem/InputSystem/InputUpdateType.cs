@@ -190,6 +190,10 @@ namespace UnityEngine.InputSystem.LowLevel
                     s_UpdateStepCount = s_EditorUpdateStepCount.value;
                     break;
                 #endif
+                default:
+                    // if there was no previous update type, reset the counter
+                    s_UpdateStepCount = 0;
+                    break;
             }
         }
     }
