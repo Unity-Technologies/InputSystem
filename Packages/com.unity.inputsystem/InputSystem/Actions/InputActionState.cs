@@ -1023,7 +1023,7 @@ namespace UnityEngine.InputSystem
                     // Check actuation level.
                     var actuation = ComputeMagnitude(ref trigger);
                     var actionState = &actionStates[actionIndex];
-                    var pressPoint = controls[controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                    var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                     if (!actionState->isPressed && actuation >= pressPoint)
                     {
                         actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;

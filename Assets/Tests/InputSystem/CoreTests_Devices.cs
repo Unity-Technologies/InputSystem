@@ -1551,28 +1551,25 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Mouse>();
 
         bool? disabled = null;
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(device.deviceId,
-                (id, commandPtr) =>
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == DisableDeviceCommand.Type)
                 {
-                    if (commandPtr->type == DisableDeviceCommand.Type)
-                    {
-                        Assert.That(disabled, Is.Null);
-                        disabled = true;
-                        return InputDeviceCommand.GenericSuccess;
-                    }
+                    Assert.That(disabled, Is.Null);
+                    disabled = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
 
-                    if (commandPtr->type == EnableDeviceCommand.Type)
-                    {
-                        Assert.That(disabled, Is.Null);
-                        disabled = false;
-                        return InputDeviceCommand.GenericSuccess;
-                    }
+                if (commandPtr->type == EnableDeviceCommand.Type)
+                {
+                    Assert.That(disabled, Is.Null);
+                    disabled = false;
+                    return InputDeviceCommand.GenericSuccess;
+                }
 
-                    return InputDeviceCommand.GenericFailure;
-                });
-        }
+                return InputDeviceCommand.GenericFailure;
+            });
 
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled, Is.Null);
@@ -1597,6 +1594,40 @@ partial class CoreTests
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled.HasValue, Is.True);
         Assert.That(disabled.Value, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanBeDisabled_WhileLettingItKeepSendingEvents()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == DisableDeviceCommand.Type)
+                    Assert.Fail("Device should not receive a DisableDeviceCommand");
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        InputSystem.DisableDevice(device, keepSendingEvents: true);
+
+        Assert.That(device.enabled, Is.False);
+
+        var receivedEvent = false;
+        InputSystem.onEvent +=
+            (eventPtr, d) =>
+        {
+            Assert.That(d, Is.SameAs(device));
+            Assert.That(receivedEvent, Is.False);
+            receivedEvent = true;
+        };
+
+        InputSystem.QueueStateEvent(device, new MouseState());
+        InputSystem.Update();
+
+        Assert.That(receivedEvent, Is.True);
     }
 
     [Test]
