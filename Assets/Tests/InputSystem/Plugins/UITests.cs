@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Profiling;
@@ -111,6 +112,23 @@ internal class UITests : InputTestFixture
         objects.eventSystem.InvokeUpdate(); // Initial update only sets current module.
 
         return objects;
+    }
+
+    private static void AssignDefaultActions(ref TestObjects setup)
+    {
+        var defaultActions = new DefaultInputActions();
+
+        setup.uiModule.actionsAsset = defaultActions.asset;
+        setup.uiModule.cancel = InputActionReference.Create(defaultActions.UI.Cancel);
+        setup.uiModule.submit = InputActionReference.Create(defaultActions.UI.Submit);
+        setup.uiModule.move = InputActionReference.Create(defaultActions.UI.Navigate);
+        setup.uiModule.leftClick = InputActionReference.Create(defaultActions.UI.Click);
+        setup.uiModule.rightClick = InputActionReference.Create(defaultActions.UI.RightClick);
+        setup.uiModule.middleClick = InputActionReference.Create(defaultActions.UI.MiddleClick);
+        setup.uiModule.point = InputActionReference.Create(defaultActions.UI.Point);
+        setup.uiModule.scrollWheel = InputActionReference.Create(defaultActions.UI.ScrollWheel);
+
+        defaultActions.Enable();
     }
 
     // Comprehensive test for general pointer input behaviors.
@@ -1414,6 +1432,57 @@ internal class UITests : InputTestFixture
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1190150/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanUseTouchSimulationWithUI()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var scene = CreateScene();
+        AssignDefaultActions(ref scene);
+        TouchSimulation.Enable();
+
+        try
+        {
+            yield return null;
+            scene.leftChildReceiver.events.Clear();
+
+            InputSystem.QueueStateEvent(mouse, new MouseState
+            {
+                position = new Vector2(123, 123),
+            }.WithButton(MouseButton.Left));
+            InputSystem.Update();
+
+            yield return null;
+
+            Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
+            Assert.That(scene.uiModule.m_PointerTouchControls.length, Is.EqualTo(1));
+            Assert.That(scene.uiModule.m_PointerTouchControls[0], Is.SameAs(Touchscreen.current.touches[0]));
+            Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(3));
+            Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerEnter));
+            Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.leftChildReceiver.events[0].pointerData.touchId, Is.EqualTo(1));
+            Assert.That(scene.leftChildReceiver.events[1].type, Is.EqualTo(EventType.PointerDown));
+            Assert.That(scene.leftChildReceiver.events[1].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.leftChildReceiver.events[1].pointerData.touchId, Is.EqualTo(1));
+            Assert.That(scene.leftChildReceiver.events[2].type, Is.EqualTo(EventType.InitializePotentialDrag));
+            Assert.That(scene.leftChildReceiver.events[2].pointerData.pointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.leftChildReceiver.events[2].pointerData.touchId, Is.EqualTo(1));
+
+            // Release the mouse button so the touch ends. TouchSimulation.Disable() will remove
+            // the touchscreen and thus cancel ongoing actions (like Point). This should not result
+            // in exceptions from the input module trying to read data from the already removed touchscreen.
+            Release(mouse.leftButton);
+            yield return null;
+        }
+        finally
+        {
+            TouchSimulation.Disable();
+        }
+    }
+
     [UnityTest]
     [Category("UI")]
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -2118,6 +2187,7 @@ internal class UITests : InputTestFixture
 
         // Remove mouse. Should result in pointer-exit event.
         InputSystem.RemoveDevice(mouse);
+        yield return null;
 
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And

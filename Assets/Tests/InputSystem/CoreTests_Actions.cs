@@ -3384,7 +3384,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_ControlsUpdateWhenDeviceIsRemoved()
+    public void Actions_WhenDeviceIsRemoved_BoundControlsAreUpdated()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -3401,13 +3401,31 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_ActionListenerWillNotThrowWhenDeviceIsRemoved()
+    public void Actions_WhenDeviceIsRemoved_OngoingActionsAreCancelled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        float triggerValue = 0.0f;
-        bool canceled = false;
-        bool performed = false;
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+        action.Enable();
+
+        Set(gamepad.leftTrigger, 0.75f);
+
+        Assert.That(action.inProgress, Is.True);
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(action.inProgress, Is.False);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenDeviceIsRemoved_ReadingValueInActionListenersWillNotThrow()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var triggerValue = 0.0f;
+        var canceled = false;
+        var performed = false;
         var action = new InputAction();
         action.AddBinding("<Gamepad>/leftTrigger");
 
