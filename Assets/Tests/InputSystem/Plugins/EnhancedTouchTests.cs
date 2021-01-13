@@ -797,7 +797,7 @@ internal class EnhancedTouchTests : InputTestFixture
             new Tuple<string, Finger>("Up", Touch.fingers[1])
         }));
     }
-    
+
     [Test]
     [Category("EnhancedTouch")]
     public void EnhancedTouch_TouchWorksAfterDisableEnable()
@@ -815,7 +815,7 @@ internal class EnhancedTouchTests : InputTestFixture
         InputSystem.Update();
         Assert.That(Touch.activeTouches.Count, Is.EqualTo(1));
         Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Stationary));
-        
+
         EnhancedTouchSupport.Disable();
         EnhancedTouchSupport.Enable();
 
