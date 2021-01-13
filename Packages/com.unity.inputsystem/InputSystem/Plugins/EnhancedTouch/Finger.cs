@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 if (touch.isInProgress)
                     return touch;
                 // Ended touches stay current in the frame they ended in.
-                if (touch.updateStepCount == Touch.s_PlayerState.updateStepCount)
+                if (touch.updateStepCount == InputUpdate.s_UpdateStepCount)
                     return touch;
                 return default;
             }
