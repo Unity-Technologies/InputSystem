@@ -71,13 +71,11 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal static class InputUpdate
     {
+        public static uint s_UpdateStepCount; // read only, but kept as a variable for performance reasons
         public static InputUpdateType s_LastUpdateType;
         public static UpdateStepCount s_PlayerUpdateStepCount;
         #if UNITY_EDITOR
         public static UpdateStepCount s_EditorUpdateStepCount;
-        public static uint s_UpdateStepCount => s_LastUpdateType == InputUpdateType.Editor ? s_EditorUpdateStepCount.value : s_PlayerUpdateStepCount.value;
-        #else
-        public static uint s_UpdateStepCount => s_PlayerUpdateStepCount.value;
         #endif
         public static uint s_LastUpdateRetainedEventBytes;
         public static uint s_LastUpdateRetainedEventCount;
@@ -125,10 +123,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Manual:
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnBeforeUpdate();
+                    s_UpdateStepCount = s_PlayerUpdateStepCount.value;
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
                     s_EditorUpdateStepCount.OnBeforeUpdate();
+                    s_UpdateStepCount = s_EditorUpdateStepCount.value;
                     break;
                 #endif
             }
@@ -143,10 +143,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 case InputUpdateType.Manual:
                 case InputUpdateType.Fixed:
                     s_PlayerUpdateStepCount.OnUpdate();
+                    s_UpdateStepCount = s_PlayerUpdateStepCount.value;
                     break;
                 #if UNITY_EDITOR
                 case InputUpdateType.Editor:
                     s_EditorUpdateStepCount.OnUpdate();
+                    s_UpdateStepCount = s_EditorUpdateStepCount.value;
                     break;
                 #endif
             }
@@ -175,6 +177,20 @@ namespace UnityEngine.InputSystem.LowLevel
             #if UNITY_EDITOR
             s_EditorUpdateStepCount = state.editorUpdateStepCount;
             #endif
+
+            switch (s_LastUpdateType)
+            {
+                case InputUpdateType.Dynamic:
+                case InputUpdateType.Manual:
+                case InputUpdateType.Fixed:
+                    s_UpdateStepCount = s_PlayerUpdateStepCount.value;
+                    break;
+                #if UNITY_EDITOR
+                case InputUpdateType.Editor:
+                    s_UpdateStepCount = s_EditorUpdateStepCount.value;
+                    break;
+                #endif
+            }
         }
     }
 }
