@@ -15,6 +15,9 @@ however, it has to be formatted properly to pass verification tests.
   * This allows for certain optimizations.
   * Should the limits prove too tight, they can be raised in the future.
   * The most complex device we have at the moment (`Touchscreen`) has 242 controls and 616 bytes of state.
+- `TouchSimulation` now __disables__ the `Pointer` devices it reads input from.
+  * This is to address the problem of mouse input leading to __both__ mouse and touch input happening concurrently. Instead, enabling touch simulation will now effectively __replace__ mouse and pen input with touch input.
+  * Devices such `Mouse` and `Pen` will remain in place but will not get updated. Events received for them will be consumed by `TouchSimulation`.
 
 ### Fixed
 
@@ -22,6 +25,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed `InputUser.OnEvent` and `RebindingOperation.OnEvent` exhibiting bad performance profiles and leading to multi-millisecond input update times (case 1253371).
   * In our own measurements, `InputUser.OnEvent` is >9 times faster than before and `RebindingOperation.OnEvent` is ~2.5 times faster.
 - Fixed PS4 controller not recognized on Mac when connected over Bluetooth ([case 1286449](https://issuetracker.unity3d.com/issues/input-system-dualshock-4-zct1e-dualshock-2-v1-devices-are-not-fully-recognised-over-bluetooth)).
+- Fixed `TouchSimulation` leading to `"Pointer should have exited all objects before being removed"` errors ([case 1190150](https://issuetracker.unity3d.com/issues/new-input-system-simulated-touch-in-editor-doesnt-work)).
 
 ### Added
 
