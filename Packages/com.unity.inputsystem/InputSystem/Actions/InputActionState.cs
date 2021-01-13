@@ -1451,6 +1451,13 @@ namespace UnityEngine.InputSystem
                         var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                         if (actuation <= threshold)
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        else
+                        {
+                            // Always remember the latest trigger control index
+                            actionState->controlIndex = trigger.controlIndex;
+                            actionState->bindingIndex = trigger.bindingIndex;
+                            actionState->magnitude = actuation;
+                        }
                     }
                     else if (actionState->isPassThrough)
                     {

@@ -8388,4 +8388,31 @@ partial class CoreTests
     {
         Assert.Fail();
     }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_Buttons_CanTransitionToDifferentActuationControl_WhilePerformed()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var wasCanceled = false;
+        var action = new InputAction("action", InputActionType.Button);
+        action.canceled += _ => wasCanceled = true;
+        action.AddBinding("<Keyboard>/s");
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+        wasCanceled = false;
+
+        Press(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Press(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(wasCanceled, Is.True);
+    }
 }
