@@ -7393,6 +7393,32 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_CanTransitionFromOneActuatedControlToAnother ()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var wasCanceled = false;
+        var action = new InputAction("test", InputActionType.Button);
+        action.canceled += _ => wasCanceled = true;
+        action.AddBinding("<Keyboard>/s");
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        Press(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Press(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(wasCanceled, Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanRestoreDefaultsAfterOverridingBinding()
     {
         var action = new InputAction(binding: "/gamepad/leftTrigger");
@@ -8387,32 +8413,5 @@ partial class CoreTests
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {
         Assert.Fail();
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_Buttons_CanTransitionToDifferentActuationControl_WhilePerformed()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        var wasCanceled = false;
-        var action = new InputAction("action", InputActionType.Button);
-        action.canceled += _ => wasCanceled = true;
-        action.AddBinding("<Keyboard>/s");
-        action.AddBinding("<Keyboard>/a");
-        action.Enable();
-        wasCanceled = false;
-
-        Press(keyboard.sKey);
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
-
-        Press(keyboard.aKey);
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
-
-        Release(keyboard.sKey);
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
-
-        Release(keyboard.aKey);
-        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
-        Assert.That(wasCanceled, Is.True);
     }
 }

@@ -1453,7 +1453,9 @@ namespace UnityEngine.InputSystem
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
                         else
                         {
-                            // Always remember the latest trigger control index
+                            // ShouldIgnoreControlStateChange may have switched one from control to another,
+                            // so make sure we update the trigger state here regardless of whether we changed
+                            // phase or not.
                             actionState->controlIndex = trigger.controlIndex;
                             actionState->bindingIndex = trigger.bindingIndex;
                             actionState->magnitude = actuation;
