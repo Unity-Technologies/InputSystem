@@ -7393,7 +7393,7 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_OnActionWithMultipleBindings_CanTransitionFromOneActuatedControlToAnother ()
+    public void Actions_OnActionWithMultipleBindings_CanTransitionFromOneActuatedControlToAnother()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var wasCanceled = false;
