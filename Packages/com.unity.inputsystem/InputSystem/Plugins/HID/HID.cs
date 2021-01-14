@@ -542,7 +542,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
+                    var maxValue = (1UL << reportSizeInBits) - 1;
                     if (isSigned)
                         return logicalMin / (float)((maxValue + 1) / 2);
                     return logicalMin / (float)maxValue;
@@ -553,7 +553,7 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
+                    var maxValue = (1UL << reportSizeInBits) - 1;
                     if (isSigned)
                         return logicalMax / (float)((maxValue + 1) / 2);
                     return logicalMax / (float)maxValue;
@@ -673,17 +673,11 @@ namespace UnityEngine.InputSystem.HID
                 switch (reportSizeInBits)
                 {
                     case 8:
-                        if (isSigned)
-                            return InputStateBlock.FormatSByte;
-                        return InputStateBlock.FormatByte;
+                        return isSigned ? InputStateBlock.FormatSByte : InputStateBlock.FormatByte;
                     case 16:
-                        if (isSigned)
-                            return InputStateBlock.FormatShort;
-                        return InputStateBlock.FormatUShort;
+                        return isSigned ? InputStateBlock.FormatShort : InputStateBlock.FormatUShort;
                     case 32:
-                        if (isSigned)
-                            return InputStateBlock.FormatInt;
-                        return InputStateBlock.FormatUInt;
+                        return isSigned ? InputStateBlock.FormatInt : InputStateBlock.FormatUInt;
                     default:
                         // Generic bitfield value.
                         return InputStateBlock.FormatBit;
@@ -796,15 +790,14 @@ namespace UnityEngine.InputSystem.HID
                                     // logical min and max but in range with respect to what we can store
                                     // in the bits we have.
 
-                                    // Test lower bound.
-                                    var minMinusOne = logicalMin - 1;
-                                    if (minMinusOne >= 0)
-                                        return new PrimitiveValue(minMinusOne);
+                                    // Test lower bound, we can store >= 0.
+                                    if (logicalMin >= 1)
+                                        return new PrimitiveValue(logicalMin - 1);
 
-                                    // Test upper bound.
-                                    var maxPlusOne = logicalMax + 1;
-                                    if (maxPlusOne <= (1 << reportSizeInBits) - 1)
-                                        return new PrimitiveValue(maxPlusOne);
+                                    // Test upper bound, we can store <= maxValue.
+                                    var maxValue = (1UL << reportSizeInBits) - 1;
+                                    if ((ulong)logicalMax < maxValue)
+                                        return new PrimitiveValue(logicalMax + 1);
                                 }
                                 break;
 
