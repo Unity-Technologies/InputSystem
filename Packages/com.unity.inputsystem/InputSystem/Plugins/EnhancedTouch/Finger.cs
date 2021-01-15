@@ -91,7 +91,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 if (touch.isInProgress)
                     return touch;
                 // Ended touches stay current in the frame they ended in.
-                if (touch.updateStepCount == Touch.s_PlayerState.updateStepCount)
+                if (touch.updateStepCount == InputUpdate.s_UpdateStepCount)
                     return touch;
                 return default;
             }
@@ -124,6 +124,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 updateMask = updateMask,
             };
             m_StateHistory.StartRecording();
+
+            // record the current state if touch is already in progress
+            if (screen.touches[index].isInProgress)
+                m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].ReadValue());
         }
 
         private static unsafe bool ShouldRecordTouch(InputControl control, double time, InputEventPtr eventPtr)
