@@ -13,28 +13,15 @@ namespace UnityEngine.InputSystem.Editor
 
         public static void RestartEditorAndRecompileScripts(bool dryRun = false)
         {
-            // The APIs here are not public. Use reflection to get to them.
-
-            // Delete compilation output.
-            var editorAssembly = typeof(EditorApplication).Assembly;
-            var editorCompilationInterfaceType =
-                editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
-            var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
-            var cleanScriptAssembliesMethod = editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies");
-            if (!dryRun)
-                cleanScriptAssembliesMethod.Invoke(editorCompilationInstance, null);
-            else if (cleanScriptAssembliesMethod == null)
-                throw new MissingMethodException(editorCompilationInterfaceType.FullName, "CleanScriptAssemblies");
-
-            // Restart editor.
+            // The API here are not public. Use reflection to get to them.
             var editorApplicationType = typeof(EditorApplication);
-            var requestCloseAndRelaunchWithCurrentArgumentsMethod =
-                editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments",
+            var restartEditorAndRecompileScripts =
+                editorApplicationType.GetMethod("RestartEditorAndRecompileScripts",
                     BindingFlags.NonPublic | BindingFlags.Static);
             if (!dryRun)
-                requestCloseAndRelaunchWithCurrentArgumentsMethod.Invoke(null, null);
-            else if (requestCloseAndRelaunchWithCurrentArgumentsMethod == null)
-                throw new MissingMethodException(editorApplicationType.FullName, "RequestCloseAndRelaunchWithCurrentArguments");
+                restartEditorAndRecompileScripts.Invoke(null, null);
+            else if (restartEditorAndRecompileScripts == null)
+                throw new MissingMethodException(editorApplicationType.FullName, "RestartEditorAndRecompileScripts");
         }
 
         public static void CheckOut(string path)

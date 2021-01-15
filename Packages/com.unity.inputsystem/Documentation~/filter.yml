@@ -37,4 +37,3 @@ apiRules:
   - exclude:
       uidRegex: ^UnityEngine\.InputSystem\.Samples\..*$
       type: Namespace
-      
