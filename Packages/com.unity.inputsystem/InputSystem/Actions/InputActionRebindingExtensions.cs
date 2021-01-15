@@ -1672,6 +1672,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            ////REVIEW: This API has been confusing for users who usually will do something like WithControlsExcluding("Mouse"); find a more intuitive way to do this
             /// <summary>
             /// Prevent specific controls from being considered as candidate controls.
             /// </summary>

@@ -218,7 +218,7 @@ namespace UnityEngine.InputSystem.Utilities
                 case TypeCode.Int64: return ToInt64();
                 case TypeCode.UInt16: return ToInt16();
                 case TypeCode.UInt32: return ToInt32();
-                case TypeCode.UInt64: return ToInt64();
+                case TypeCode.UInt64: return ToUInt64();
                 case TypeCode.Single: return ToSingle();
                 case TypeCode.Double: return ToDouble();
                 case TypeCode.Empty: return new PrimitiveValue();

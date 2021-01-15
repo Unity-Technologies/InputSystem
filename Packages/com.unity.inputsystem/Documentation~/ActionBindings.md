@@ -660,6 +660,23 @@ Note that a single [Binding path](Controls.md#control-paths) can match multiple 
 
 * A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any Control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any Control tagged with the "Submit" [usage](Controls.md#control-usages) on any Device.
 
+If there are multiple Bindings on the same Action that all reference the same Control(s), only the first such Binding will successfully bind to the control.
+
+```CSharp
+var action1 = new InputAction();
+
+action1.AddBinding("<Gamepad>/buttonSouth");
+action1.AddBinding("<Gamepad>/buttonSouth"); // This binding will be ignored.
+
+var action2 = new InputAction();
+
+action2.AddBinding("<Gamepad>/buttonSouth");
+// Add a binding that implicitly matches the first binding, too. When binding resolution
+// happens, this binding will only receive buttonNorth, buttonWest, and buttonEast, but not
+// buttonSouth as the first binding already received that control.
+action2.AddBinding("<Gamepad>/button*");
+```
+
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
 
 #### Choosing which Devices to use
