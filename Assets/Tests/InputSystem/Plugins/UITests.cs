@@ -134,9 +134,6 @@ internal class UITests : InputTestFixture
     [TestCase("Touchscreen", UIPointerType.Touch, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     [TestCase("TrackedDeviceWithButton", UIPointerType.Tracked, PointerEventData.InputButton.Left, ExpectedResult = 1)]
     [TestCase("GenericDeviceWithPointingAbility", UIPointerType.MouseOrPen, PointerEventData.InputButton.Left, ExpectedResult = 1)]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254576")]
-#endif
     public IEnumerator UI_CanDriveUIFromPointer(string deviceLayout, UIPointerType pointerType, PointerEventData.InputButton clickButton)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1017,9 +1014,6 @@ internal class UITests : InputTestFixture
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254576")]
-#endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1416,9 +1410,6 @@ internal class UITests : InputTestFixture
 
     [UnityTest]
     [Category("UI")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254576")]
-#endif
     public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
