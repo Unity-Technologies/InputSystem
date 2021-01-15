@@ -1012,7 +1012,7 @@ internal partial class CoreTests
                 (operation, path) =>
                 {
                     receivedOnApplyBindingCall = true;
-                    Assert.That(path, Is.EqualTo("<Gamepad>/leftStick"));
+                    Assert.That(path, Is.EqualTo("<Gamepad>/leftStick/x"));
                 })
                 .Start();
 
