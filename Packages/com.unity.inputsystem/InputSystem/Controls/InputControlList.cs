@@ -359,14 +359,14 @@ namespace UnityEngine.InputSystem
             if (m_Count == 0)
                 return -1;
 
-            var index = ToIndex(item);
-            var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
-
             if (count < 0)
                 count = Mathf.Max(m_Count - startIndex, 0);
 
             if (startIndex + count > m_Count)
                 throw new ArgumentOutOfRangeException(nameof(count));
+
+            var index = ToIndex(item);
+            var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
 
             for (var i = 0; i < count; ++i)
                 if (indices[startIndex + i] == index)
