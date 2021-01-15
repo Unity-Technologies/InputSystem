@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             };
             m_StateHistory.StartRecording();
 
-            // if touch is already in progress, record the current state
+            // record the current state if touch is already in progress
             if (screen.touches[index].isInProgress)
                 m_StateHistory.RecordStateChange(screen.touches[index], screen.touches[index].ReadValue());
         }

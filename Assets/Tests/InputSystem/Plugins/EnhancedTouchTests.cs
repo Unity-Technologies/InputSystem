@@ -798,9 +798,10 @@ internal class EnhancedTouchTests : InputTestFixture
         }));
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1286865/
     [Test]
     [Category("EnhancedTouch")]
-    public void EnhancedTouch_TouchWorksAfterDisableEnable()
+    public void EnhancedTouch_CanBeDisabledAndReenabled()
     {
         BeginTouch(1, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         InputSystem.Update();
