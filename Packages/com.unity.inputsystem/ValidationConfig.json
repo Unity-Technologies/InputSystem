@@ -8,5 +8,9 @@
                 "Targets": "+PS4,+XboxOne"
             }
         ]
+    },
+    "FileContentKeywordValidation":
+    {
+        "TimeoutMins": 10.0
     }
 }
