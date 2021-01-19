@@ -1,4 +1,5 @@
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#if ENABLE_VR || ENABLE_AR
 using System;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -693,4 +694,5 @@ internal class XRTests : InputTestFixture
         }
     }
 }
+#endif
 #endif // UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA

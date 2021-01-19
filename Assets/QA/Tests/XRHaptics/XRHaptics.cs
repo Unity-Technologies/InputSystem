@@ -4,6 +4,7 @@ using UnityEngine.InputSystem.XR;
 
 using UnityEngine.UI;
 
+#if ENABLE_VR || ENABLE_AR
 public class XRHaptics : MonoBehaviour
 {
     public Image leftHapticDetected;
@@ -90,3 +91,5 @@ public class XRHaptics : MonoBehaviour
         }
     }
 }
+
+#endif

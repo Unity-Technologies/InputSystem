@@ -12,11 +12,6 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.unity.modules.xr",
-            "expression": "1.0.0",
-            "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
-        },
-        {
             "name": "com.unity.xr.oculus",
             "expression": "1.0.3",
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_OCULUS"
@@ -37,14 +32,14 @@
             "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
         },
         {
-            "name": "Select...",
-            "expression": "2.0.3",
-            "define": "DISABLE_BUILTIN_INPUT_SYSTEM_WINDOWSMR"
-        },
-        {
             "name": "com.unity.modules.vr",
             "expression": "1.0.0",
             "define": "UNITY_INPUT_SYSTEM_ENABLE_VR"
+        },
+        {
+            "name": "com.unity.modules.xr",
+            "expression": "1.0.0",
+            "define": "UNITY_INPUT_SYSTEM_ENABLE_XR"
         },
         {
             "name": "com.unity.modules.physics",

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Due to package verification, the latest version below is the unpublished version and the date is meaningless.
 however, it has to be formatted properly to pass verification tests.
 
+## [1.0.2] - 2021-1-13
+
+- Fixed compilation issues with XR and VR references when building to platforms that do not have complete XR and VR implementations. Backported from 1.1.0-preview.1
+
 ## [1.0.1] - 2020-11-20
 
 ### Fixed
