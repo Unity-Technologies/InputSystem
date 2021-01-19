@@ -165,12 +165,86 @@ partial class CoreTests
         }
     }
 
+    // We may be looking at a situation of having more than one binding path on the same action
+    // matches the same control in a system.
+    // https://fogbugz.unity3d.com/f/cases/1293808/
     [Test]
     [Category("Actions")]
-    [Ignore("TODO")]
-    public void TODO_Actions_WhenSeveralBindingsResolveToSameControl_ThenWhatDoWeDoXXX()
+    public void Actions_WhenSeveralBindingsResolveToSameControl_ControlIsAssociatedWithFirstActiveBinding()
     {
-        Assert.Fail();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action1 = new InputAction();
+        var action2 = new InputAction();
+
+        var actionMap = new InputActionMap();
+        var action3 = actionMap.AddAction("action3");
+        var action4 = actionMap.AddAction("action4");
+
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+
+        action2.AddBinding("<Gamepad>/buttonSouth");
+        action2.AddBinding("<Gamepad>/button*");
+
+        action3.AddBinding("<Gamepad>/buttonNorth");
+        action3.AddBinding("<Gamepad>/buttonSouth");
+        action3.AddBinding("<Gamepad>/buttonSouth");
+        action4.AddBinding("<Gamepad>/buttonSouth"); // Should not be removed; different action.
+
+        Assert.That(action1.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(action2.controls, Has.Exactly(1).SameAs(gamepad.buttonSouth));
+        Assert.That(action2.controls, Has.Count.EqualTo(4)); // North, south, east, west
+        Assert.That(action3.controls, Is.EquivalentTo(new[] { gamepad.buttonNorth, gamepad.buttonSouth }));
+        Assert.That(action4.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        Assert.That(action1.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
+        Assert.That(action2.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
+        Assert.That(action3.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(1));
+        Assert.That(action4.GetBindingIndexForControl(gamepad.buttonSouth), Is.EqualTo(0));
+
+        // Go through a bit of pressing and releasing to make sure that the action state
+        // processing wasn't thrown off its track.
+
+        action1.Enable();
+        action2.Enable();
+        action3.Enable();
+        action4.Enable();
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action1.triggered, Is.True);
+        Assert.That(action2.triggered, Is.True);
+        Assert.That(action3.triggered, Is.True);
+        Assert.That(action4.triggered, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(action1.triggered, Is.False);
+        Assert.That(action2.triggered, Is.False);
+        Assert.That(action3.triggered, Is.False);
+        Assert.That(action4.triggered, Is.False);
+
+        Release(gamepad.buttonSouth);
+
+        Assert.That(action1.triggered, Is.False);
+        Assert.That(action2.triggered, Is.False);
+        Assert.That(action3.triggered, Is.False);
+        Assert.That(action4.triggered, Is.False);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(action1.triggered, Is.True);
+        Assert.That(action2.triggered, Is.True);
+        Assert.That(action3.triggered, Is.True);
+        Assert.That(action4.triggered, Is.True);
+
+        InputSystem.Update();
+
+        Assert.That(action1.triggered, Is.False);
+        Assert.That(action2.triggered, Is.False);
+        Assert.That(action3.triggered, Is.False);
+        Assert.That(action4.triggered, Is.False);
     }
 
     [Test]
@@ -7389,6 +7463,32 @@ partial class CoreTests
 
         Assert.That(action.bindings[0].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
         Assert.That(action.bindings[1].overridePath, Is.EqualTo("/gamepad/buttonSouth"));
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_CanTransitionFromOneActuatedControlToAnother()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var wasCanceled = false;
+        var action = new InputAction("test", InputActionType.Button);
+        action.canceled += _ => wasCanceled = true;
+        action.AddBinding("<Keyboard>/s");
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        Press(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Press(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.sKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+
+        Release(keyboard.aKey);
+        Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+        Assert.That(wasCanceled, Is.True);
     }
 
     [Test]
