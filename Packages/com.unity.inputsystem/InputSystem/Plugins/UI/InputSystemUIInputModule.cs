@@ -638,6 +638,9 @@ namespace UnityEngine.InputSystem.UI
                 property.action.canceled -= actionCallback;
             }
 
+            var oldActionNull = property?.action == null;
+            var oldActionEnabled = property?.action != null && property.action.enabled;
+
             property = newValue;
 
             #if DEBUG
@@ -655,11 +658,14 @@ namespace UnityEngine.InputSystem.UI
             }
             #endif
 
-            if (newValue != null && actionCallback != null && actionsHooked)
+            if (newValue?.action != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
                 property.action.canceled += actionCallback;
             }
+
+            if (isActiveAndEnabled && newValue?.action != null && (oldActionEnabled || oldActionNull))
+                newValue.action.Enable();
         }
 
         #if DEBUG
@@ -1597,7 +1603,7 @@ namespace UnityEngine.InputSystem.UI
 
         private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
         {
-            // When a device is removed, we want to simply cancels ongoing pointer
+            // When a device is removed, we want to simply cancel ongoing pointer
             // operations. Most importantly, we want to prevent GetPointerStateFor()
             // doing ReadValue() on touch ID controls when a touchscreen has already
             // been removed.
