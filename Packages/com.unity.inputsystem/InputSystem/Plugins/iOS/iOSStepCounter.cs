@@ -8,12 +8,30 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel
 {
-    //See CoreMotion.framework/Headers/CMAuthorization.h
+    /// <summary>
+    /// Describes the access for motion related features.
+    /// </summary>
+    /// <remarks>Enum values map values from CoreMotion.framework/Headers/CMAuthorization.h</remarks>
     public enum MotionAuthorizationStatus : int
     {
+        /// <summary>
+        /// The access status was not yet determined.
+        /// </summary>
         NotDetermined = 0,
+
+        /// <summary>
+        /// Access was denied due system settings.
+        /// </summary>
         Restricted,
+
+        /// <summary>
+        /// Access was denied by the user.
+        /// </summary>
         Denied,
+
+        /// <summary>
+        /// Access was allowed by the user.
+        /// </summary>
         Authorized
     }
 
@@ -29,8 +47,24 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
     /// <summary>
     /// Step Counter (also known as pedometer) sensor for iOS.
-    /// Note: You need to add 'Privacy - Motion Usage Description' to Info.plist to use this sensor.
     /// </summary>
+    /// <remarks>
+    /// You need to enable Motion Usage in Input System settings, before using this sensor.
+    /// Alternatively you can manually add 'Privacy - Motion Usage Description' to Info.plist.
+    /// <example>
+    /// <code>
+    /// void Start()
+    /// {
+    ///     InputSystem.EnableDevice(StepCounter.current);
+    /// }
+    ///
+    /// void OnGUI()
+    /// {
+    ///     GUILayout.Label(StepCounter.current.stepCounter.ReadValue().ToString());
+    /// }
+    /// </code>
+    /// </example>
+    /// </remarks>
     [InputControlLayout(stateType = typeof(iOSStepCounterState), variants = "StepCounter", hideInUI = true)]
     public class iOSStepCounter : StepCounter
     {
