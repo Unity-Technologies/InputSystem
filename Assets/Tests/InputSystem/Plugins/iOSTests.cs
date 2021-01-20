@@ -91,12 +91,12 @@ internal class iOSTests : InputTestFixture
         LogAssert.Expect(LogType.Error, "Please enable Motion Usage in Input Settings.");
         InputSystem.EnableDevice(device);
 
-        InputSystem.settings.iOS.MotionUsage = true;
+        InputSystem.settings.iOS.MotionUsage.Enabled = true;
         InputSystem.EnableDevice(device);
         InputSystem.QueueStateEvent(device, new iOSStepCounterState(){stepCounter = 5});
         InputSystem.Update();
         Assert.That(device.stepCounter.ReadValue(), Is.EqualTo(5));
-        InputSystem.settings.iOS.MotionUsage = false;
+        InputSystem.settings.iOS.MotionUsage.Enabled = false;
     }
 }
 #endif // UNITY_EDITOR || UNITY_ANDROID
