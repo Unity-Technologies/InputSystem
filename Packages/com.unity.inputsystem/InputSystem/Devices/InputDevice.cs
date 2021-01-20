@@ -519,20 +519,26 @@ namespace UnityEngine.InputSystem
         /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
         /// target="_blank">ioctl</a> on UNIX-like systems.
         /// </remarks>
-        public virtual unsafe long ExecuteCommand<TCommand>(ref TCommand command)
+        public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
             var callbacks = manager.m_DeviceCommandCallbacks;
             for (var i = 0; i < callbacks.length; ++i)
             {
-                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+                var result = callbacks[i](this, commandPtr);
                 if (result.HasValue)
                     return result.Value;
             }
 
-            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
+            return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+        }
+
+        protected virtual unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
+        {
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
         [Flags]

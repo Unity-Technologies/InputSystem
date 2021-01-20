@@ -104,16 +104,15 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 #if UNITY_EDITOR
         private bool m_Enabled = false;
 #endif
-        public override unsafe long ExecuteCommand<TCommand>(ref TCommand command)
+        protected override unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
         {
-            var ptr = UnsafeUtility.AddressOf(ref command);
-            var t = command.typeStatic;
+            var t = commandPtr->typeStatic;
             if (t == QueryEnabledStateCommand.Type)
             {
 #if UNITY_EDITOR
-                ((QueryEnabledStateCommand*)ptr)->isEnabled = m_Enabled;
+                ((QueryEnabledStateCommand*)commandPtr)->isEnabled = m_Enabled;
 #else
-                ((QueryEnabledStateCommand*)ptr)->isEnabled = _iOSStepCounterIsEnabled(deviceId) != 0;
+                ((QueryEnabledStateCommand*)commandPtr)->isEnabled = _iOSStepCounterIsEnabled(deviceId) != 0;
 #endif
                 return kCommandSuccess;
             }
@@ -149,7 +148,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
             if (t == QueryCanRunInBackground.Type)
             {
-                ((QueryCanRunInBackground*)ptr)->canRunInBackground = true;
+                ((QueryCanRunInBackground*)commandPtr)->canRunInBackground = true;
                 return kCommandSuccess;
             }
 
@@ -163,7 +162,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
                 return kCommandSuccess;
             }
 
-            Debug.LogWarning($"Unhandled command {command.GetType().Name}");
+            Debug.LogWarning($"Unhandled command {commandPtr->GetType().Name}");
             return kCommandFailure;
         }
 
