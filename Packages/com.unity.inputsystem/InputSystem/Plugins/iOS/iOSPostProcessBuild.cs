@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem
                 return;
             var plistPath = pathToBuiltProject + "/Info.plist";
             var contents = File.ReadAllText(plistPath);
+            var description = InputSystem.settings.iOS.MotionUsage.UsageDescription;
 #if UNITY_IOS || UNITY_TVOS
             var plist = new UnityEditor.iOS.Xcode.PlistDocument();
             plist.ReadFromString(contents);
@@ -28,7 +29,7 @@ namespace UnityEngine.InputSystem
             if (root[buildKey] != null)
                 Debug.LogWarning($"{buildKey} is already present in Info.plist, the value will be overwritten.");
 
-            root.SetString(buildKey, InputSystem.settings.iOS.MotionUsageDescription);
+            root.SetString(buildKey, description);
             File.WriteAllText(plistPath, plist.WriteToString());
 #endif
         }
