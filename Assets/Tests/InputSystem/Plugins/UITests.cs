@@ -23,6 +23,7 @@ internal class UITests : InputTestFixture
 {
     private struct TestObjects
     {
+        public Camera camera;
         public InputSystemUIInputModule uiModule;
         public TestEventSystem eventSystem;
         public GameObject parentGameObject;
@@ -31,60 +32,63 @@ internal class UITests : InputTestFixture
         public UICallbackReceiver parentReceiver;
         public UICallbackReceiver leftChildReceiver;
         public UICallbackReceiver rightChildReceiver;
+
+        // Assume a 640x480 resolution and translate the given coordinates from a resolution
+        // in that space to coordinates in the current camera sceen space.
+        public Vector2 From640x480ToScreen(float x, float y)
+        {
+            var cameraRect = camera.rect;
+            var cameraPixelRect = camera.pixelRect;
+
+            return new Vector2(cameraPixelRect.x + x / 640f * cameraRect.width * cameraPixelRect.width,
+                cameraPixelRect.y + y / 480f * cameraRect.height * cameraPixelRect.height);
+        }
     }
 
     // Set up a InputSystemUIInputModule with a full roster of actions and inputs
     // and then see if we can generate all the various events expected by the UI
     // from activity on input devices.
-    private static TestObjects CreateScene(int minY = 0 , int maxY = 480, bool noFirstSelected = false)
+    private static TestObjects CreateUIAndPlayer(Rect viewport = default, bool noFirstSelected = false, string namePrefix = "")
     {
         var objects = new TestObjects();
 
         // Set up GameObject with EventSystem.
-        var systemObject = new GameObject("System");
+        var systemObject = new GameObject(namePrefix + "System");
         objects.eventSystem = systemObject.AddComponent<TestEventSystem>();
         var uiModule = systemObject.AddComponent<InputSystemUIInputModule>();
         objects.uiModule = uiModule;
         objects.eventSystem.UpdateModules();
 
-        var cameraObject = GameObject.Find("Camera");
-        Camera camera;
-        if (cameraObject == null)
-        {
-            // Set up camera and canvas on which we can perform raycasts.
-            cameraObject = new GameObject("Camera");
-            camera = cameraObject.AddComponent<Camera>();
-            camera.stereoTargetEye = StereoTargetEyeMask.None;
-            camera.pixelRect = new Rect(0, 0, 640, 480);
-        }
-        else
-            camera = cameraObject.GetComponent<Camera>();
+        var cameraObject = new GameObject(namePrefix + "Camera");
+        objects.camera = cameraObject.AddComponent<Camera>();
+        objects.camera.stereoTargetEye = StereoTargetEyeMask.None;
+        objects.camera.rect = viewport == default ? new Rect(0, 0, 1, 1) : viewport;
 
-        var canvasObject = GameObject.Find("Canvas");
-        if (canvasObject == null)
-        {
-            canvasObject = new GameObject("Canvas");
-            var canvas = canvasObject.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvasObject.AddComponent<GraphicRaycaster>();
-            canvasObject.AddComponent<TrackedDeviceRaycaster>();
-            canvas.worldCamera = camera;
-        }
+        var canvasObject = new GameObject(namePrefix + "Canvas");
+        canvasObject.SetActive(false);
+        var canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceCamera;
+        canvasObject.AddComponent<GraphicRaycaster>();
+        canvasObject.AddComponent<TrackedDeviceRaycaster>();
+        canvas.worldCamera = objects.camera;
 
         // Set up a GameObject hierarchy that we send events to. In a real setup,
         // this would be a hierarchy involving UI components.
-        var parentGameObject = new GameObject("Parent");
+        var parentGameObject = new GameObject(namePrefix + "Parent");
+        parentGameObject.SetActive(false);
         var parentTransform = parentGameObject.AddComponent<RectTransform>();
         objects.parentGameObject = parentGameObject;
         objects.parentReceiver = parentGameObject.AddComponent<UICallbackReceiver>();
 
-        var leftChildGameObject = new GameObject("Left Child");
+        var leftChildGameObject = new GameObject(namePrefix + "Left Child");
+        leftChildGameObject.SetActive(false);
         var leftChildTransform = leftChildGameObject.AddComponent<RectTransform>();
         leftChildGameObject.AddComponent<Image>();
         objects.leftChildReceiver = leftChildGameObject.AddComponent<UICallbackReceiver>();
         objects.leftGameObject = leftChildGameObject;
 
-        var rightChildGameObject = new GameObject("Right Child");
+        var rightChildGameObject = new GameObject(namePrefix + "Right Child");
+        rightChildGameObject.SetActive(false);
         var rightChildTransform = rightChildGameObject.AddComponent<RectTransform>();
         rightChildGameObject.AddComponent<Image>();
         objects.rightChildReceiver = rightChildGameObject.AddComponent<UICallbackReceiver>();
@@ -95,16 +99,27 @@ internal class UITests : InputTestFixture
         rightChildTransform.SetParent(parentTransform, worldPositionStays: false);
 
         // Parent occupies full space of canvas.
-        parentTransform.sizeDelta = new Vector2(640, maxY - minY);
-        parentTransform.anchoredPosition = new Vector2(0, (maxY + minY) / 2 - 240);
+        parentTransform.anchoredPosition = default;
+        parentTransform.anchorMin = Vector2.zero;
+        parentTransform.anchorMax = Vector2.one;
+        parentTransform.sizeDelta = default;
 
         // Left child occupies left half of parent.
-        leftChildTransform.anchoredPosition = new Vector2(-(640 / 4), 0); //(maxY + minY)/2 - 240);
-        leftChildTransform.sizeDelta = new Vector2(320, maxY - minY);
+        leftChildTransform.anchoredPosition = default;
+        leftChildTransform.anchorMin = default;
+        leftChildTransform.anchorMax = new Vector2(0.5f, 1);
+        leftChildTransform.sizeDelta = default;
 
         // Right child occupies right half of parent.
-        rightChildTransform.anchoredPosition = new Vector2(640 / 4, 0); //(maxY + minY) / 2 - 240);
-        rightChildTransform.sizeDelta = new Vector2(320, maxY - minY);
+        rightChildTransform.anchoredPosition = default;
+        rightChildTransform.anchorMin = new Vector2(0.5f, 0);
+        rightChildTransform.anchorMax = new Vector2(1, 1);
+        rightChildTransform.sizeDelta = default;
+
+        canvasObject.SetActive(true);
+        parentGameObject.SetActive(true);
+        leftChildGameObject.SetActive(true);
+        rightChildGameObject.SetActive(true);
 
         objects.eventSystem.playerRoot = parentGameObject;
         if (!noFirstSelected)
@@ -169,7 +184,7 @@ internal class UITests : InputTestFixture
         var trackedOrientation = isTracked ? Quaternion.Euler(0, -90, 0) : default;
         var trackedPosition = isTracked ? new Vector3(0.001f, 0.001f, 0.001f) : default;
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         const string kActions = @"
             {
@@ -249,15 +264,15 @@ internal class UITests : InputTestFixture
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.False);
 
-        var firstScreenPosition = new Vector2(100, 100);
-        var secondScreenPosition = new Vector2(100, 200);
-        var thirdScreenPosition = new Vector2(350, 200);
+        var firstScreenPosition = scene.From640x480ToScreen(100, 100);
+        var secondScreenPosition = scene.From640x480ToScreen(100, 200);
+        var thirdScreenPosition = scene.From640x480ToScreen(350, 200);
 
         if (isTracked)
         {
-            firstScreenPosition = new Vector2(28.936f, 240);
-            secondScreenPosition = new Vector2(80.006f, 240);
-            thirdScreenPosition = new Vector2(560, 240);
+            firstScreenPosition = scene.From640x480ToScreen(28.936f, 240);
+            secondScreenPosition = scene.From640x480ToScreen(80.006f, 240);
+            thirdScreenPosition = scene.From640x480ToScreen(560, 240);
         }
 
         // Move pointer over left child.
@@ -1051,7 +1066,7 @@ internal class UITests : InputTestFixture
         var trackedDevice1 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
         var trackedDevice2 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
         scene.uiModule.pointerBehavior = pointerBehavior;
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1087,20 +1102,22 @@ internal class UITests : InputTestFixture
         scene.leftChildReceiver.events.Clear();
 
         // Put mouse1 over left object.
-        Set(mouse1.position, new Vector2(100, 100));
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+        Set(mouse1.position, firstPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse1).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Put mouse2 over right object.
-        Set(mouse2.position, new Vector2(350, 200));
+        var secondPosition = scene.From640x480ToScreen(350, 200);
+        Set(mouse2.position, secondPosition);
         scene.eventSystem.InvokeUpdate();
 
         switch (pointerBehavior)
@@ -1111,11 +1128,11 @@ internal class UITests : InputTestFixture
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse2).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse2).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 break;
 
             case UIPointerBehavior.AllPointersAsIs:
@@ -1124,7 +1141,7 @@ internal class UITests : InputTestFixture
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse2).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 break;
         }
 
@@ -1139,6 +1156,9 @@ internal class UITests : InputTestFixture
         Set(trackedDevice2, "deviceRotation", Quaternion.Euler(0, 30, 0));
         scene.eventSystem.InvokeUpdate();
 
+        var leftPosition = scene.From640x480ToScreen(80, 240);
+        var rightPosition = scene.From640x480ToScreen(560, 240);
+
         switch (pointerBehavior)
         {
             case UIPointerBehavior.SingleUnifiedPointer:
@@ -1147,22 +1167,22 @@ internal class UITests : InputTestFixture
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And // System transparently switched from mouse2 to trackedDevice1.
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 80f) && Mathf.Approximately(e.pointerData.position.y, 240))); // Exits at position of trackedDevice1.
+                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y))); // Exits at position of trackedDevice1.
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 80f) && Mathf.Approximately(e.pointerData.position.y, 240)));
+                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y)));
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 560f) && Mathf.Approximately(e.pointerData.position.y, 240)));
+                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 560) && Mathf.Approximately(e.pointerData.position.y, 240)));
+                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
                 break;
 
             case UIPointerBehavior.AllPointersAsIs:
@@ -1173,7 +1193,7 @@ internal class UITests : InputTestFixture
                     Assert.That(scene.rightChildReceiver.events,
                         Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                             .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse2).And
-                            .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                            .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 }
 
                 // Pointer-enter on left, pointer-enter on right.
@@ -1181,12 +1201,12 @@ internal class UITests : InputTestFixture
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 80f) && Mathf.Approximately(e.pointerData.position.y, 240)));
+                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y)));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, 560) && Mathf.Approximately(e.pointerData.position.y, 240)));
+                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
                 break;
         }
 
@@ -1194,9 +1214,9 @@ internal class UITests : InputTestFixture
         scene.rightChildReceiver.events.Clear();
 
         // Touch right object on first touchscreen and left object on second touchscreen.
-        BeginTouch(1, new Vector2(350, 200), screen: touch1);
+        BeginTouch(1, secondPosition, screen: touch1);
         scene.eventSystem.InvokeUpdate();
-        BeginTouch(1, new Vector2(100, 100), screen: touch2);
+        BeginTouch(1, firstPosition, screen: touch2);
         scene.eventSystem.InvokeUpdate();
 
         switch (pointerBehavior)
@@ -1208,22 +1228,22 @@ internal class UITests : InputTestFixture
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch1).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch2).And // Transparently switched.
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And // Transparently switched.
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.BeginDrag).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch2).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch2).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
                 break;
 
             case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
@@ -1232,11 +1252,11 @@ internal class UITests : InputTestFixture
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touch2).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
                 Assert.That(scene.leftChildReceiver.events, Has.None.With.Property("type").EqualTo(EventType.Dragging));
                 Assert.That(scene.rightChildReceiver.events, Has.None.With.Property("type").EqualTo(EventType.Dragging));
                 break;
@@ -1251,7 +1271,7 @@ internal class UITests : InputTestFixture
 
         // Prevent default selection of left object. This means that we will not have to contend with selections at all
         // in this test as they are driven from UI objects and not by the input module itself.
-        var scene = CreateScene(noFirstSelected: true);
+        var scene = CreateUIAndPlayer(noFirstSelected: true);
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -1274,7 +1294,8 @@ internal class UITests : InputTestFixture
         Assert.That(scene.eventSystem.IsPointerOverGameObject(3), Is.False);
 
         // Touch left object.
-        BeginTouch(1, new Vector2(100, 100));
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+        BeginTouch(1, firstPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1288,20 +1309,21 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(100, 100)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Touch right object.
-        BeginTouch(2, new Vector2(350, 200));
+        var secondPosition = scene.From640x480ToScreen(350, 200);
+        BeginTouch(2, secondPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1315,20 +1337,21 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(350, 200)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Drag left object over right object.
-        MoveTouch(1, new Vector2(355, 210));
+        var thirdPosition = scene.From640x480ToScreen(355, 210);
+        MoveTouch(1, thirdPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1342,25 +1365,26 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == thirdPosition));
         Assert.That(scene.leftChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == thirdPosition));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 1).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 210)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == thirdPosition));
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Touch left object again.
-        BeginTouch(3, new Vector2(123, 123));
+        var fourthPosition = scene.From640x480ToScreen(123, 123);
+        BeginTouch(3, fourthPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1374,14 +1398,15 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 3).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(123, 123)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fourthPosition));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // End second touch.
-        EndTouch(2, new Vector2(355, 205));
+        var fifthPosition = scene.From640x480ToScreen(355, 205);
+        EndTouch(2, fifthPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1395,20 +1420,21 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 205)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerUp).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(355, 205)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == fifthPosition));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
         // Begin second touch again.
-        BeginTouch(2, new Vector2(345, 195));
+        var sixthPosition = scene.From640x480ToScreen(345, 195);
+        BeginTouch(2, sixthPosition);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
@@ -1422,13 +1448,13 @@ internal class UITests : InputTestFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(345, 195)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == sixthPosition));
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerDown).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.touchId == 2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
-                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == new Vector2(345, 195)));
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == sixthPosition));
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
     }
 
@@ -1439,7 +1465,7 @@ internal class UITests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
         AssignDefaultActions(ref scene);
         TouchSimulation.Enable();
 
@@ -1450,7 +1476,7 @@ internal class UITests : InputTestFixture
 
             InputSystem.QueueStateEvent(mouse, new MouseState
             {
-                position = new Vector2(123, 123),
+                position = scene.From640x480ToScreen(123, 123)
             }.WithButton(MouseButton.Left));
             InputSystem.Update();
 
@@ -1495,7 +1521,7 @@ internal class UITests : InputTestFixture
         var trackedDevice1 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
         var trackedDevice2 = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = new InputActionMap("map");
@@ -1655,7 +1681,7 @@ internal class UITests : InputTestFixture
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
         var uiActions = actions.AddActionMap("UI");
@@ -1671,7 +1697,7 @@ internal class UITests : InputTestFixture
         yield return null;
 
         // Move mouse over right object.
-        Set(mouse.position, new Vector2(350, 200));
+        Set(mouse.position, scene.From640x480ToScreen(350, 200));
         scene.eventSystem.InvokeUpdate();
 
         scene.rightChildReceiver.events.Clear();
@@ -1701,7 +1727,7 @@ internal class UITests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         var actions = ScriptableObject.CreateInstance<InputActionAsset>();
         var uiActions = actions.AddActionMap("UI");
@@ -1725,11 +1751,11 @@ internal class UITests : InputTestFixture
         //
         // NOTE: We also need to do this because we can't use Retry(2) -- as we normally do to warm up the JIT -- in combination
         //       with UnityTest. Doing so will flat out lead to InvalidCastExceptions in the test runner :(
-        Set(mouse.position, new Vector2(100, 100));
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
         scene.eventSystem.InvokeUpdate();
         Press(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
-        Set(mouse.position, new Vector2(200, 200));
+        Set(mouse.position, scene.From640x480ToScreen(200, 200));
         scene.eventSystem.InvokeUpdate();
         Release(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
@@ -1740,21 +1766,21 @@ internal class UITests : InputTestFixture
         Assert.That(() =>
         {
             Profiler.BeginSample(kProfilerRegion);
-            Set(mouse.position, new Vector2(100, 100));
+            Set(mouse.position, scene.From640x480ToScreen(100, 100));
             scene.eventSystem.InvokeUpdate();
             Press(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
-            Set(mouse.position, new Vector2(200, 200));
+            Set(mouse.position, scene.From640x480ToScreen(200, 200));
             scene.eventSystem.InvokeUpdate();
             Release(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
 
             // And just for kicks, do it the opposite way, too.
-            Set(mouse.position, new Vector2(200, 200));
+            Set(mouse.position, scene.From640x480ToScreen(200, 200));
             scene.eventSystem.InvokeUpdate();
             Press(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
-            Set(mouse.position, new Vector2(100, 100));
+            Set(mouse.position, scene.From640x480ToScreen(100, 100));
             scene.eventSystem.InvokeUpdate();
             Release(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
@@ -1770,7 +1796,13 @@ internal class UITests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var players = new[] { CreateScene(0, 240), CreateScene(240, 480) };
+        // Create two players each with their own UI scene and split
+        // it vertically across the screen.
+        var players = new[]
+        {
+            CreateUIAndPlayer(new Rect(0, 0, 1, 0.5f), namePrefix: "Player1 "),
+            CreateUIAndPlayer(new Rect(0, 0.5f, 1, 0.5f), namePrefix: "Player2 ")
+        };
 
         // Create asset
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -1809,9 +1841,9 @@ internal class UITests : InputTestFixture
         // We need to wait a frame to let the underlying canvas update and properly order the graphics images for raycasting.
         yield return null;
 
-        // Click left gameObject of player 0
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 1 << (int)MouseButton.Left });
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(100, 100), buttons = 0 });
+        // Click left gameObject of player 0.
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(100, 100), buttons = 1 << (int)MouseButton.Left });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(100, 100), buttons = 0 });
         InputSystem.Update();
 
         foreach (var player in players)
@@ -1820,9 +1852,9 @@ internal class UITests : InputTestFixture
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.Null);
 
-        // Click right gameObject of player 1
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 300), buttons = 1 << (int)MouseButton.Left });
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 300), buttons = 0 });
+        // Click right gameObject of player 1.
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[1].From640x480ToScreen(400, 100), buttons = 1 << (int)MouseButton.Left });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[1].From640x480ToScreen(400, 100), buttons = 0 });
 
         InputSystem.Update();
 
@@ -1832,9 +1864,9 @@ internal class UITests : InputTestFixture
         Assert.That(players[0].eventSystem.currentSelectedGameObject, Is.SameAs(players[0].leftGameObject));
         Assert.That(players[1].eventSystem.currentSelectedGameObject, Is.SameAs(players[1].rightGameObject));
 
-        // Click right gameObject of player 0
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 100), buttons = 1 << (int)MouseButton.Left });
-        InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(400, 100), buttons = 0 });
+        // Click right gameObject of player 0.
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(400, 100), buttons = 1 << (int)MouseButton.Left });
+        InputSystem.QueueStateEvent(mouse, new MouseState { position = players[0].From640x480ToScreen(400, 100), buttons = 0 });
         InputSystem.Update();
 
         foreach (var player in players)
@@ -1852,7 +1884,7 @@ internal class UITests : InputTestFixture
     {
         // Create devices.
         var gamepads = new[] { InputSystem.AddDevice<Gamepad>(), InputSystem.AddDevice<Gamepad>() };
-        var players = new[] { CreateScene(0, 240), CreateScene(240, 480) };
+        var players = new[] { CreateUIAndPlayer(new Rect(0, 0, 0.5f, 1)), CreateUIAndPlayer(new Rect(0.5f, 0, 0.5f, 1)) };
 
         for (var i = 0; i < 2; i++)
         {
@@ -1967,7 +1999,7 @@ internal class UITests : InputTestFixture
         InputSystem.settings.defaultDeadzoneMax = 1;
         InputSystem.settings.defaultDeadzoneMin = 0;
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -2157,7 +2189,7 @@ internal class UITests : InputTestFixture
     {
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var scene = CreateScene();
+        var scene = CreateUIAndPlayer();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -2172,7 +2204,7 @@ internal class UITests : InputTestFixture
         yield return null;
 
         // Put mouse over left object.
-        Set(mouse.position, new Vector2(100, 100));
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter));
@@ -2200,11 +2232,10 @@ internal class UITests : InputTestFixture
     public IEnumerator TODO_UI_WhenEnabled_InitialPointerPositionIsPickedUp()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateUIAndPlayer();
 
         // Put mouse over left object.
-        Set(mouse.position, new Vector2(100, 100));
-
-        var scene = CreateScene();
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = asset.AddActionMap("map");
@@ -2314,7 +2345,10 @@ internal class UITests : InputTestFixture
 
         actions.Enable();
 
-        var scene = CreateScene(0, 200);
+        var scene = CreateUIAndPlayer();
+
+        // Resize parent to span only half the screen.
+        ((RectTransform)scene.parentGameObject.transform).anchorMax = new Vector2(0.5f, 1);
 
         scene.uiModule.actionsAsset = actions;
         scene.uiModule.point = InputActionReference.Create(pointAction);
@@ -2328,14 +2362,14 @@ internal class UITests : InputTestFixture
         yield return null;
 
         // Click on left GO and make sure it gets selected.
-        Set(mouse.position, new Vector2(10, 10));
+        Set(mouse.position, scene.From640x480ToScreen(10, 10));
         PressAndRelease(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
 
-        // Click outside of GOs and make sure the selection gets cleared.
-        Set(mouse.position, new Vector2(50, 250));
+        // Click on empty right side and make sure the selection gets cleared.
+        Set(mouse.position, scene.From640x480ToScreen(400, 10));
         PressAndRelease(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
 
@@ -2344,14 +2378,14 @@ internal class UITests : InputTestFixture
         scene.uiModule.deselectOnBackgroundClick = false;
 
         // Click on left GO and make sure it gets selected.
-        Set(mouse.position, new Vector2(10, 10));
+        Set(mouse.position, scene.From640x480ToScreen(10, 10));
         PressAndRelease(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
 
-        // Click outside of GOs and make sure our selection does NOT get cleared.
-        Set(mouse.position, new Vector2(50, 250));
+        // Click on empty right side and make sure our selection does NOT get cleared.
+        Set(mouse.position, scene.From640x480ToScreen(400, 10));
         PressAndRelease(mouse.leftButton);
         scene.eventSystem.InvokeUpdate();
 
@@ -2379,38 +2413,38 @@ internal class UITests : InputTestFixture
 
         actions.Enable();
 
-        var testObjects = CreateScene(0, 200);
+        var scene = CreateUIAndPlayer();
 
-        testObjects.uiModule.actionsAsset = actions;
-        testObjects.uiModule.point = InputActionReference.Create(pointAction);
-        testObjects.uiModule.leftClick = InputActionReference.Create(clickAction);
-        testObjects.uiModule.move = InputActionReference.Create(navigateAction);
+        scene.uiModule.actionsAsset = actions;
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+        scene.uiModule.move = InputActionReference.Create(navigateAction);
 
         // Give canvas a chance to set itself up.
         yield return null;
 
         // Select left GO.
-        Set(mouse.position, new Vector2(10, 10));
+        Set(mouse.position, scene.From640x480ToScreen(10, 10));
         Press(mouse.leftButton);
         yield return null;
         Release(mouse.leftButton);
 
-        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
 
         // Click on background and make sure we deselect.
-        Set(mouse.position, new Vector2(50, 250));
+        Set(mouse.position, scene.From640x480ToScreen(50, 250));
         Press(mouse.leftButton);
         yield return null;
         Release(mouse.leftButton);
 
-        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.Null);
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.Null);
 
         // Now perform a navigate-right action. Given we have no current selection, this should
         // cause the right GO to be selected based on the fact that the left GO was selected last.
         Press(gamepad.dpad.right);
         yield return null;
 
-        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.rightGameObject));
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject));
 
         // Just to make extra sure, navigate left and make sure that results in the expected selection
         // change over to the left GO.
@@ -2418,7 +2452,7 @@ internal class UITests : InputTestFixture
         Press(gamepad.dpad.left);
         yield return null;
 
-        Assert.That(testObjects.eventSystem.currentSelectedGameObject, Is.SameAs(testObjects.leftGameObject));
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject));
     }
 
     private const string kTrackedDeviceWithButton = @"
