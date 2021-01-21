@@ -1,9 +1,8 @@
+#if ENABLE_VR || ENABLE_AR
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.XR;
-
-#if ENABLE_VR || ENABLE_AR
 
 public class Handedness : MonoBehaviour
 {
