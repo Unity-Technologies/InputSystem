@@ -169,7 +169,6 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         /// <summary>
         /// Does the phone support the pedometer?
         /// </summary>
-        /// <returns></returns>
         public static bool IsAvailable()
         {
 #if UNITY_EDITOR
@@ -182,7 +181,6 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         /// <summary>
         /// Indicates whether the app is authorized to gather data for step counter sensor.
         /// </summary>
-        /// <returns></returns>
         public static MotionAuthorizationStatus AuthorizationStatus
         {
             get
