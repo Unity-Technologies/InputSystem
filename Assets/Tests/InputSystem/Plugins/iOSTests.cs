@@ -88,7 +88,7 @@ internal class iOSTests : InputTestFixture
     public void Devices_SupportsiOSStepCounter()
     {
         var device = InputSystem.AddDevice<iOSStepCounter>();
-        LogAssert.Expect(LogType.Error, "Please enable Motion Usage in Input Settings.");
+        LogAssert.Expect(LogType.Error, "Please enable Motion Usage in Input Settings before using Step Counter.");
         InputSystem.EnableDevice(device);
 
         InputSystem.settings.iOS.MotionUsage.Enabled = true;

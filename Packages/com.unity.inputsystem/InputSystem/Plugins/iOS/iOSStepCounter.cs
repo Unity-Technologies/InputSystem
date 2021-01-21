@@ -50,7 +50,6 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     /// </summary>
     /// <remarks>
     /// You need to enable Motion Usage in Input System settings, before using this sensor.
-    /// Alternatively you can manually add 'Privacy - Motion Usage Description' to Info.plist.
     /// <example>
     /// <code>
     /// void Start()
@@ -119,14 +118,12 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
             if (t == EnableDeviceCommand.Type)
             {
-#if UNITY_EDITOR
                 if (InputSystem.settings.iOS.MotionUsage.Enabled == false)
                 {
-                    Debug.LogError("Please enable Motion Usage in Input Settings.");
-                    m_Enabled = false;
+                    Debug.LogError("Please enable Motion Usage in Input Settings before using Step Counter.");
                     return kCommandFailure;
                 }
-
+#if UNITY_EDITOR
                 m_Enabled = true;
                 return kCommandSuccess;
 #else
