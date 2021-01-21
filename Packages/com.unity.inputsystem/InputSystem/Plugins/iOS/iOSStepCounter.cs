@@ -106,7 +106,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 #endif
         protected override unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
         {
-            var t = commandPtr->typeStatic;
+            var t = commandPtr->type;
             if (t == QueryEnabledStateCommand.Type)
             {
 #if UNITY_EDITOR
@@ -162,7 +162,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
                 return kCommandSuccess;
             }
 
-            Debug.LogWarning($"Unhandled command {commandPtr->GetType().Name}");
+            Debug.LogWarning($"Unhandled command of type {t.ToString()}");
             return kCommandFailure;
         }
 

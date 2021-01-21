@@ -15,6 +15,7 @@ using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Object = System.Object;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
@@ -424,7 +425,12 @@ class APIVerificationTests
         if (type == typeof(FastKeyboard)
             || type == typeof(FastMouse)
             || type == typeof(FastTouchscreen)
-            || type == typeof(FastDualShock4GamepadHID))
+            || type == typeof(FastDualShock4GamepadHID)
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+            // iOS Step Counter is created from C# code
+            || type == typeof(iOSStepCounter)
+#endif
+        )
             return true;
 
         return false;
