@@ -453,7 +453,7 @@ class APIVerificationTests
     {
         var docsFolder = GenerateDocsDirectory();
         var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
-        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types.");
+        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types, the docs are generated in {docsFolder}");
     }
 
     [Test]
