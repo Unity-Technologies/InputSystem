@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+#if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
 using AOT;
 using Unity.Collections.LowLevel.Unsafe;
