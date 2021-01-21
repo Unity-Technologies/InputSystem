@@ -27,6 +27,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed action with multiple bindings getting stuck in `Performed` state when two or more controls are pressed at the same time ([case 1295535](https://issuetracker.unity3d.com/issues/input-system-not-registering-multiple-inputs)).
   * Regression introduced in 1.1-preview.2.
 - Fixed `Touch.activeTouches` having incorrect touch phases after calling `EnhancedTouch.Disable()` and then `EnhancedTouch.Enable()` ([case 1286865](https://issuetracker.unity3d.com/issues/new-input-system-began-moved-and-ended-touch-phases-are-not-reported-when-a-second-scene-is-loaded)).
+- Fixed compile errors related to XR/AR on console platforms.
 
 #### Actions
 
