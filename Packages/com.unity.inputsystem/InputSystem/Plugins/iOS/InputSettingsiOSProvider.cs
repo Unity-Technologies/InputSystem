@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.InputSystem
 {
-    public class InputSettingsiOSProvider
+    internal class InputSettingsiOSProvider
     {
         [NonSerialized] private SerializedProperty m_MotionUsageEnabled;
         [NonSerialized] private SerializedProperty m_MotionUsageDescription;
