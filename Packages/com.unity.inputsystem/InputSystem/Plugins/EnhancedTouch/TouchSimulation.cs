@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     #if UNITY_EDITOR
     [InitializeOnLoad]
     #endif
-    public class TouchSimulation : MonoBehaviour
+    public class TouchSimulation : MonoBehaviour, IInputStateChangeMonitor
     {
         public Touchscreen simulatedTouchscreen { get; private set; }
 
@@ -370,5 +370,30 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         }
 
         #endif
+
+        ////TODO: Remove IInputStateChangeMonitor from this class when we can break the API
+        void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
+        {
+        }
+
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+        {
+        }
+
+        ////TODO: [Obsolete]
+        protected void InstallStateChangeMonitors(int startIndex = 0)
+        {
+        }
+
+        ////TODO: [Obsolete]
+        protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr,
+            long sourceDeviceAndButtonIndex)
+        {
+        }
+
+        ////TODO: [Obsolete]
+        protected void UninstallStateChangeMonitors(int startIndex = 0)
+        {
+        }
     }
 }
