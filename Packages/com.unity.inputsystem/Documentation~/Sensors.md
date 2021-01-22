@@ -8,7 +8,7 @@ Unlike other devices, sensors are disabled by default. To enable a sensor, call 
 InputSystem.EnableDevice(Gyroscope.current);
 ```
 
-To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_).
+To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_).
 
 ```
 InputSystem.DisableDevice(Gyroscope.current);
