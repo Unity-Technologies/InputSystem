@@ -348,15 +348,29 @@ namespace UnityEngine.InputSystem
 
         public int IndexOf(TControl item)
         {
+            return IndexOf(item, 0);
+        }
+
+        public int IndexOf(TControl item, int startIndex, int count = -1)
+        {
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "startIndex cannot be negative");
+
             if (m_Count == 0)
                 return -1;
+
+            if (count < 0)
+                count = Mathf.Max(m_Count - startIndex, 0);
+
+            if (startIndex + count > m_Count)
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             var index = ToIndex(item);
             var indices = (ulong*)m_Indices.GetUnsafeReadOnlyPtr();
 
-            for (var i = 0; i < m_Count; ++i)
-                if (indices[i] == index)
-                    return i;
+            for (var i = 0; i < count; ++i)
+                if (indices[startIndex + i] == index)
+                    return startIndex + i;
 
             return -1;
         }
@@ -374,6 +388,11 @@ namespace UnityEngine.InputSystem
         public bool Contains(TControl item)
         {
             return IndexOf(item) != -1;
+        }
+
+        public bool Contains(TControl item, int startIndex, int count = -1)
+        {
+            return IndexOf(item, startIndex, count) != -1;
         }
 
         public void SwapElements(int index1, int index2)

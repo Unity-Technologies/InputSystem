@@ -1801,6 +1801,61 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public unsafe void Devices_CanMarkDeviceAsBeingAbleToRunInBackground()
+    {
+        var device1Id = runtime.ReportNewInputDevice<Gamepad>();
+        var device2Id = runtime.ReportNewInputDevice<Mouse>();
+
+        var receivedCanRunInBackgroundForDevice1 = false;
+        var receivedCanRunInBackgroundForDevice2 = false;
+
+        runtime.SetDeviceCommandCallback(device1Id,
+            (id, command) =>
+            {
+                if (command->type != QueryCanRunInBackground.Type)
+                    return InputDeviceCommand.GenericFailure;
+
+                Assert.That(id, Is.EqualTo(device1Id));
+                Assert.That(command->payloadSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<bool>()));
+
+                receivedCanRunInBackgroundForDevice1 = true;
+                ((QueryCanRunInBackground*)command)->canRunInBackground = true;
+                return InputDeviceCommand.GenericSuccess;
+            });
+        runtime.SetDeviceCommandCallback(device2Id,
+            (id, command) =>
+            {
+                if (command->type != QueryCanRunInBackground.Type)
+                    return InputDeviceCommand.GenericFailure;
+
+                Assert.That(id, Is.EqualTo(device2Id));
+                Assert.That(command->payloadSizeInBytes, Is.EqualTo(UnsafeUtility.SizeOf<bool>()));
+
+                receivedCanRunInBackgroundForDevice2 = true;
+                ((QueryCanRunInBackground*)command)->canRunInBackground = false;
+                return InputDeviceCommand.GenericSuccess;
+            });
+
+        InputSystem.Update();
+
+        // Just adding the device should not have triggered a query for canRunInBackground.
+        Assert.That(receivedCanRunInBackgroundForDevice1, Is.False);
+        Assert.That(receivedCanRunInBackgroundForDevice2, Is.False);
+
+        var device1 = InputSystem.GetDeviceById(device1Id);
+        var device2 = InputSystem.GetDeviceById(device2Id);
+
+        var device1CanRunInBackground = device1.canRunInBackground;
+        var device2CanRunInBackground = device2.canRunInBackground;
+
+        Assert.That(receivedCanRunInBackgroundForDevice1, Is.True);
+        Assert.That(receivedCanRunInBackgroundForDevice2, Is.True);
+        Assert.That(device1CanRunInBackground, Is.True);
+        Assert.That(device2CanRunInBackground, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_NativeDevicesAreFlaggedAsSuch()
     {
         var description = new InputDeviceDescription { deviceClass = "Gamepad" };

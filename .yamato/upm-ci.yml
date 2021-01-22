@@ -43,7 +43,7 @@ build_ios_{{ editor.version }}:
   commands:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - unity-downloader-cli -c Editor -c iOS -u {{ editor.version }} --fast -w
-    - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr --output utr
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
     - chmod +x ./utr
     - ./utr --suite=playmode --platform=iOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
   artifacts:
@@ -65,7 +65,7 @@ run_ios_{{ editor.version }}:
     - .yamato/upm-ci.yml#build_ios_{{ editor.version }}  
   commands:
     # Download standalone UnityTestRunner
-    - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr --output utr
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
     # Give UTR execution permissions
     - chmod +x ./utr
     # Run the test build on the device
@@ -85,7 +85,7 @@ build_android_{{ editor.version }}_{{ backend.name }}:
   commands:
     - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
     - unity-downloader-cli -c Editor -c Android -u {{ editor.version }} --fast -w
-    - curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
     - ./utr.bat --suite=playmode --platform=Android --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --scripting-backend={{ backend.name }} --build-only --repository --performance-project-id=InputSystem
   artifacts:
     players:
@@ -109,7 +109,7 @@ run_android_{{ editor.version }}_{{ backend.name }}:
   commands:
     - |
        # Download standalone UnityTestRunner
-       curl -s https://artifactory.internal.unity3d.com/core-automation/tools/utr-standalone/utr.bat --output utr.bat
+       curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
        # Set the IP of the device. In case device gets lost, UTR will try to recconect to ANDROID_DEVICE_CONNECTION
        set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
        # Establish an ADB connection with the device

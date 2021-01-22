@@ -2910,8 +2910,11 @@ namespace UnityEngine.InputSystem
         #if !UNITY_EDITOR
         private static bool ShouldEnableRemoting()
         {
-            ////FIXME: is there a better way to detect whether we are running tests?
-            var isRunningTests = Application.productName == "UnityTestFramework";
+#if UNITY_INCLUDE_TESTS
+            var isRunningTests = true;
+#else
+            var isRunningTests = false;
+#endif
             if (isRunningTests)
                 return false; // Don't remote while running tests.
             return true;
@@ -3163,7 +3166,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
             XR.XRSupport.Initialize();
             #endif
 
