@@ -232,7 +232,7 @@ internal class OnScreenTests : InputTestFixture
         yield return null;
         eventSystem.Update();
 
-        Assert.That(player.devices, Is.EqualTo(new[] { Gamepad.all[0] }));
+        Assert.That(player.devices, Is.EquivalentTo(new[] { Gamepad.all[0] }));
 
         // Touch the stick and drag it upwards.
         BeginTouch(1, new Vector2(150, 150));
