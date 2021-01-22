@@ -427,7 +427,48 @@ namespace UnityEngine.InputSystem
         /// will first resolve controls on the action (and for all actions in the map and/or
         /// the asset). See <a href="../manual/ActionBindings.html#binding-resolution">Binding Resolution</a>
         /// in the manual for details.
+        ///
+        /// To map a control in this array to an index into <see cref="bindings"/>, use
+        /// <see cref="InputActionRebindingExtensions.GetBindingIndexForControl"/>.
+        ///
+        /// <example>
+        /// <code>
+        /// // Map control list to binding indices.
+        /// var bindingIndices = myAction.controls.Select(c => myAction.GetBindingIndexForControl(c));
+        /// </code>
+        /// </example>
+        ///
+        /// Note that this array will not contain the same control multiple times even if more than
+        /// one binding on an action references the same control. Instead, the first binding on
+        /// an action that resolves to a particular control will essentially "own" the control
+        /// and subsequent bindings for the action will be blocked from resolving to the same control.
+        ///
+        /// <example>
+        /// <code>
+        /// var action1 = new InputAction();
+        /// action1.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// action1.AddBinding("&lt;Gamepad&gt;/buttonSouth"); // This binding will be ignored.
+        ///
+        /// // Contains only one instance of buttonSouth which is associated
+        /// // with the first binding (at index #0).
+        /// var action1Controls = action1.controls;
+        ///
+        /// var action2 = new InputAction();
+        /// action2.AddBinding("&lt;Gamepad&gt;/buttonSouth");
+        /// // Add a binding that implicitly matches the first binding, too. When binding resolution
+        /// // happens, this binding will only receive buttonNorth, buttonWest, and buttonEast, but not
+        /// // buttonSouth as the first binding already received that control.
+        /// action2.AddBinding("&lt;Gamepad&gt;/button*");
+        ///
+        /// // Contains only all four face buttons (buttonSouth, buttonNorth, buttonEast, buttonWest)
+        /// // but buttonSouth is associated with the first button and only buttonNorth, buttonEast,
+        /// // and buttonWest are associated with the second binding.
+        /// var action2Controls = action2.controls;
+        /// </code>
+        /// </example>
         /// </remarks>
+        /// <seealso cref="InputActionRebindingExtensions.GetBindingIndexForControl"/>
+        /// <seealso cref="bindings"/>
         public ReadOnlyArray<InputControl> controls
         {
             get

@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
+////REVIEW: remove users automatically when exiting play mode?
+
 ////REVIEW: do we need to handle the case where devices are added to a user that are each associated with a different user account
 
 ////REVIEW: how should we handle pairings of devices *not* called for by a control scheme? should that result in a failed match?
