@@ -15,6 +15,7 @@ however, it has to be formatted properly to pass verification tests.
   * This allows for certain optimizations.
   * Should the limits prove too tight, they can be raised in the future.
   * The most complex device we have at the moment (`Touchscreen`) has 242 controls and 616 bytes of state.
+- Enabled XR device support on Switch.
 
 ### Fixed
 
