@@ -27,18 +27,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed action with multiple bindings getting stuck in `Performed` state when two or more controls are pressed at the same time ([case 1295535](https://issuetracker.unity3d.com/issues/input-system-not-registering-multiple-inputs)).
   * Regression introduced in 1.1-preview.2.
 
-#### Actions
-
-- Fixed actions not triggering correctly when multiple bindings on the same action were referencing the same control ([case 1293808](https://issuetracker.unity3d.com/product/unity/issues/guid/1293808/)).
-  * Bindings will now "claim" controls during resolution. If several bindings __on the same action__ resolve to the same control, only the first such binding will successfully resolve to the control. Subsequent bindings will only resolve to controls not already referenced by other bindings on the action.
-  ```CSharp
-  var action = new InputAction();
-  action.AddBinding("<Gamepad>/buttonSouth");
-  action.AddBinding("<Gamepad>/buttonSouth"); // Will be ignored.
-  action.AddBinding("<Gamepad>/button*"); // Will only receive buttonWest, buttonEast, and buttonNorth.
-  ```
-  * This also means that `InputAction.controls` will now only contain any control at most once.
-
 ### Added
 
 - Added a new high-performance way to iterate over changed controls in an event.
