@@ -1503,45 +1503,37 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_WhenCreationFails_SystemRecoversGracefully()
     {
-        // Create an isolated runtime + input manager.
-        using (var runtime = new InputTestRuntime())
+        // Create a device layout that will fail to instantiate.
+        const string layout = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
+                ]
+            }
+        ";
+        InputSystem.RegisterLayout(layout);
+
+        // Report two devices, one that will fail creation and one that shouldn't.
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
-            var manager = new InputManager();
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.Initialize(runtime, settings);
+            deviceClass = "TestDevice"
+        }.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad"
+        }.ToJson());
 
-            // Create a device layout that will fail to instantiate.
-            const string layout = @"
-                {
-                    ""name"" : ""TestDevice"",
-                    ""controls"" : [
-                        { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
-                    ]
-                }
-            ";
-            manager.RegisterControlLayout(layout);
+        LogAssert.Expect(LogType.Error,
+            new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
 
-            // Report two devices, one that will fail creation and one that shouldn't.
-            runtime.ReportNewInputDevice(new InputDeviceDescription
-            {
-                deviceClass = "TestDevice"
-            }.ToJson());
-            runtime.ReportNewInputDevice(new InputDeviceDescription
-            {
-                deviceClass = "Gamepad"
-            }.ToJson());
+        Assert.That(() => InputSystem.Update(), Throws.Nothing);
 
-            LogAssert.Expect(LogType.Error,
-                new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
+        // Make sure InputManager kept the gamepad.
+        Assert.That(InputSystem.devices.Count, Is.EqualTo(1));
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
 
-            Assert.That(() => manager.Update(), Throws.Nothing);
-
-            // Make sure InputManager kept the gamepad.
-            Assert.That(manager.devices.Count, Is.EqualTo(1));
-            Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
-
-            LogAssert.NoUnexpectedReceived();
-        }
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]
