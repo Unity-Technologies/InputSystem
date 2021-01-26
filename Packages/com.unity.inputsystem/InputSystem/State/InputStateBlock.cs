@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatBit = new FourCC('B', 'I', 'T');
-        private const int kFormatBit = 'B' << 24 | 'I' << 16 | 'T' << 8 | ' ';
+        internal const int kFormatBit = 'B' << 24 | 'I' << 16 | 'T' << 8 | ' ';
 
         /// <summary>
         /// Format code for a variable-width bitfield representing a signed value, i.e. the
@@ -60,77 +60,77 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatSBit = new FourCC('S', 'B', 'I', 'T');
-        private const int kFormatSBit = 'S' << 24 | 'B' << 16 | 'I' << 8 | 'T';
+        internal const int kFormatSBit = 'S' << 24 | 'B' << 16 | 'I' << 8 | 'T';
 
         /// <summary>
         /// Format code for a 32-bit signed integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatInt = new FourCC('I', 'N', 'T');
-        private const int kFormatInt = 'I' << 24 | 'N' << 16 | 'T' << 8 | ' ';
+        internal const int kFormatInt = 'I' << 24 | 'N' << 16 | 'T' << 8 | ' ';
 
         /// <summary>
         /// Format code for a 32-bit unsigned integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatUInt = new FourCC('U', 'I', 'N', 'T');
-        private const int kFormatUInt = 'U' << 24 | 'I' << 16 | 'N' << 8 | 'T';
+        internal const int kFormatUInt = 'U' << 24 | 'I' << 16 | 'N' << 8 | 'T';
 
         /// <summary>
         /// Format code for a 16-bit signed integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatShort = new FourCC('S', 'H', 'R', 'T');
-        private const int kFormatShort = 'S' << 24 | 'H' << 16 | 'R' << 8 | 'T';
+        internal const int kFormatShort = 'S' << 24 | 'H' << 16 | 'R' << 8 | 'T';
 
         /// <summary>
         /// Format code for a 16-bit unsigned integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatUShort = new FourCC('U', 'S', 'H', 'T');
-        private const int kFormatUShort = 'U' << 24 | 'S' << 16 | 'H' << 8 | 'T';
+        internal const int kFormatUShort = 'U' << 24 | 'S' << 16 | 'H' << 8 | 'T';
 
         /// <summary>
         /// Format code for an 8-bit unsigned integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatByte = new FourCC('B', 'Y', 'T', 'E');
-        private const int kFormatByte = 'B' << 24 | 'Y' << 16 | 'T' << 8 | 'E';
+        internal const int kFormatByte = 'B' << 24 | 'Y' << 16 | 'T' << 8 | 'E';
 
         /// <summary>
         /// Format code for an 8-bit signed integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatSByte = new FourCC('S', 'B', 'Y', 'T');
-        private const int kFormatSByte = 'S' << 24 | 'B' << 16 | 'Y' << 8 | 'T';
+        internal const int kFormatSByte = 'S' << 24 | 'B' << 16 | 'Y' << 8 | 'T';
 
         /// <summary>
         /// Format code for a 64-bit signed integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatLong = new FourCC('L', 'N', 'G');
-        private const int kFormatLong = 'L' << 24 | 'N' << 16 | 'G' << 8 | ' ';
+        internal const int kFormatLong = 'L' << 24 | 'N' << 16 | 'G' << 8 | ' ';
 
         /// <summary>
         /// Format code for a 64-bit unsigned integer value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatULong = new FourCC('U', 'L', 'N', 'G');
-        private const int kFormatULong = 'U' << 24 | 'L' << 16 | 'N' << 8 | 'G';
+        internal const int kFormatULong = 'U' << 24 | 'L' << 16 | 'N' << 8 | 'G';
 
         /// <summary>
         /// Format code for a 32-bit floating-point value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatFloat = new FourCC('F', 'L', 'T');
-        private const int kFormatFloat = 'F' << 24 | 'L' << 16 | 'T' << 8 | ' ';
+        internal const int kFormatFloat = 'F' << 24 | 'L' << 16 | 'T' << 8 | ' ';
 
         /// <summary>
         /// Format code for a 64-bit floating-point value.
         /// </summary>
         /// <seealso cref="format"/>
         public static readonly FourCC FormatDouble = new FourCC('D', 'B', 'L');
-        private const int kFormatDouble = 'D' << 24 | 'B' << 16 | 'L' << 8 | ' ';
+        internal const int kFormatDouble = 'D' << 24 | 'B' << 16 | 'L' << 8 | ' ';
 
         ////REVIEW: are these really useful?
         public static readonly FourCC FormatVector2 = new FourCC('V', 'E', 'C', '2');
@@ -250,13 +250,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 case kFormatBit:
                     if (sizeInBits == 1)
                         return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : 0;
-                    return MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    return MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
                 case kFormatSBit:
                 {
                     if (sizeInBits == 1)
                         return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : -1;
-                    var halfMax = (1 << (int)sizeInBits) / 2; // TODO fix me!
-                    var unsignedValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    var halfMax = (int)(1UL << (int)sizeInBits) / 2; // TODO fix me!
+                    var unsignedValue = MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
                     return unsignedValue - halfMax;
                 }
                 case kFormatInt:
@@ -305,7 +305,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value != 0);
                     else
-                        MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value);
+                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
                 case kFormatSBit:
                     if (sizeInBits == 1)
@@ -313,7 +313,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     else
                     {
                         var halfMax = (1 << (int) sizeInBits) / 2; // TODO fix me!
-                        MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value + halfMax);
+                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value + halfMax);
                     }
                     break;
                 case kFormatInt:
@@ -372,7 +372,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits > 32)
                         throw new NotImplementedException("Cannot yet convert unaligned multi-bit fields greater than 32 bits to floats");
                     
-                    var uintValue = (uint)MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    var uintValue = (uint)MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
                     var maxValue = (uint)((1UL << (int)sizeInBits) - 1); // TODO fix me!
                     var value = NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
                     if (fmt == kFormatSBit)
@@ -433,7 +433,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     {
                         var maxValue = (1 << (int) sizeInBits) - 1; // TODO fix me!
                         var intValue = (int) (value * maxValue);
-                        MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
+                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
                     }
                     break;
                 case kFormatInt:
@@ -559,7 +559,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits > 32)
                         throw new NotImplementedException("Cannot yet convert unaligned multi-bit fields greater than 32 bits to floats");
                     
-                    var uintValue = (uint)MemoryHelpers.ReadIntFromMultipleBits(valuePtr, bitOffset, sizeInBits);
+                    var uintValue = (uint)MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
                     var maxValue = (uint)((1UL << (int)sizeInBits) - 1); // TODO fix me!
                     var value = NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
                     if (fmt == kFormatSBit)
@@ -623,10 +623,20 @@ namespace UnityEngine.InputSystem.LowLevel
                     {
                         var maxValue = (1 << (int) sizeInBits) - 1;
                         var intValue = (int) (value * maxValue);
-                        MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
+                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
                     }
                     break;
                 }
+                case kFormatInt:
+                    Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
+                    Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
+                    *(int*) valuePtr = NumberHelpers.NormalizedFloatToInt((float)value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
+                    break;
+                case kFormatUInt:
+                    Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=16");
+                    Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
+                    *(uint*) valuePtr = NumberHelpers.NormalizedFloatToUInt((float)value, uint.MinValue, uint.MaxValue);
+                    break;
                 case kFormatShort:
                     Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
@@ -659,8 +669,6 @@ namespace UnityEngine.InputSystem.LowLevel
                     break;
                 // Not supported:
                 // - kFormatSBit
-                // - kFormatInt
-                // - kFormatUInt
                 // - kFormatLong
                 // - kFormatULong
                 // - kFormatFloat
@@ -687,7 +695,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBoolean());
                     else
-                        MemoryHelpers.WriteIntFromMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
+                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
                     break;
                 }
                 case kFormatInt:

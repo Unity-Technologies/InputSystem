@@ -366,7 +366,7 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
-        public static int ReadIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount)
+        public static int ReadMultipleBitsAsInt(void* ptr, uint bitOffset, uint bitCount)
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));
@@ -412,7 +412,7 @@ namespace UnityEngine.InputSystem.Utilities
             throw new NotImplementedException("Reading int straddling int boundary");
         }
 
-        public static void WriteIntFromMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
+        public static void WriteIntAsMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
         {
             if (ptr == null)
                 throw new ArgumentNullException(nameof(ptr));

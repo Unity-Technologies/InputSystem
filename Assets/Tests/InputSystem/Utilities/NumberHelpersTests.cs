@@ -1,7 +1,11 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Linq;
+using System.Text;
+using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
 internal class NumberHelpersTests

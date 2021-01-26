@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Scripting;
@@ -1662,6 +1664,162 @@ partial class CoreTests
     }
 
     #endif
+    
+    [Test]
+    [Category("State")]
+    // single bit
+    [TestCase(InputStateBlock.kFormatBit, 5, 1, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatBit, 10, 1, 1u, 1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 1, 0u, -1, null)]
+    [TestCase(InputStateBlock.kFormatSBit, 25, 1, 1u, 1, null)]
+    // multiple bits
+    [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue)]
+    [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, -1073741825)] // integer overflow, fix me?
+    [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, -1)] // integer overflow, fix me?
+    // primitive types
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 64, 32, 1231231231u, 1231231231, 0.573336720466613769531f)]
+    [TestCase(InputStateBlock.kFormatInt, 96, 32, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatInt, 32, 32, 0x80000000u, int.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 32, 32, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUInt, 64, 32, 1231231231u, 1231231231, 0.286668360233306884766f)]
+    [TestCase(InputStateBlock.kFormatUInt, 96, 32, 0x7fffffffu, int.MaxValue, 0.5f)] // no test for uint.MaxValue
+    [TestCase(InputStateBlock.kFormatShort, 16, 16, 0u, 0, 0.0000152587890625f)]
+    [TestCase(InputStateBlock.kFormatShort, 32, 16, 12312u, 12312, 0.3757534027099609375f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x7fffu, (int)short.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatShort, 48, 16, 0x8000u, (int)short.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 16, 16, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatUShort, 32, 16, 12312u, 12312, 0.18786907196044921875f)]
+    [TestCase(InputStateBlock.kFormatUShort, 48, 16, 0xffffu, (int)ushort.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 8, 8, 0u, 0, 0.0f)]
+    [TestCase(InputStateBlock.kFormatByte, 16, 8, 123u, 123, 0.482352942228317260742f)]
+    [TestCase(InputStateBlock.kFormatByte, 24, 8, 0xffu, 255, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 8, 8, 0u, 0, 0.00392156885936856269836f)]
+    [TestCase(InputStateBlock.kFormatSByte, 16, 8, 123u, 123, 0.968627452850341796875f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x7fu, (int)sbyte.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSByte, 24, 8, 0x80u, (int)sbyte.MinValue, -1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x0u, null, 0.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x3f800000u, null, 1.0f)]
+    [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0xbf800000u, null, -1.0f)]
+    [TestCase(InputStateBlock.kFormatDouble, 64, 64, 0x0u, null, 0.0f)]
+    public unsafe void State_InputStateBlock_ReadWrite(int format, int bitOffset, int bitSize, uint bitValue, int? expectedIntValue = null, float? expectedFloatValue = null)
+    {
+        const int bufferSize = 16; // make buffer a bit larger to have guard bits
+        if (bitOffset + bitSize > bufferSize * 8)
+            throw new ArgumentException(
+                $"bit offset and bit size are outside of data buffer range ({bitOffset}, {bitSize})");
+
+        var dataRead = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+        var dataWrite = (byte*)UnsafeUtility.Malloc(bufferSize, 8, Allocator.Temp);
+
+        for (var testOperation = 0; testOperation < 3; ++testOperation)
+        {
+            // write all 1's so we can track some false negatives
+            UnsafeUtility.MemSet(dataRead, 0xff, bufferSize);
+
+            // clear bits that are 0
+            for (var i = 0; i < bitSize; ++i)
+            {
+                var value = (bitValue >> i) & 1;
+                if (value != 0)
+                    continue;
+                var bytePosition = (i + bitOffset) / 8;
+                var bitPosition = (i + bitOffset) % 8;
+                dataRead[bytePosition] &= (byte) ~(1UL << bitPosition);
+            }
+
+            // prepare write array
+            for (var i = 0; i < bufferSize; ++i)
+                dataWrite[i] = (byte) ~dataRead[i];
+
+            var block = new InputStateBlock
+            {
+                format = new FourCC(format),
+                byteOffset = (uint) (bitOffset / 8),
+                bitOffset = (uint) (bitOffset % 8),
+                sizeInBits = (uint) bitSize
+            };
+
+            var testWrittenBinaryData = false;
+
+            switch (testOperation)
+            {
+                case 0:
+                    if (expectedIntValue.HasValue)
+                    {
+                        testWrittenBinaryData = true;
+                        Assert.That(block.ReadInt(dataRead), Is.EqualTo(expectedIntValue.Value));
+                        block.WriteInt(dataWrite, expectedIntValue.Value);
+                        Assert.That(block.ReadInt(dataWrite), Is.EqualTo(expectedIntValue.Value));
+                    }
+                    break;
+                case 1:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedFloatValue == -1.0f || expectedFloatValue == 0.0f || expectedFloatValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0f : 0.00005f;
+                        Assert.That(block.ReadFloat(dataRead), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                        block.WriteFloat(dataWrite, expectedFloatValue.Value);
+                        Assert.That(block.ReadFloat(dataWrite), Is.EqualTo(expectedFloatValue.Value).Within(desiredPrecision));
+                    }
+                    break;
+                case 2:
+                    if (expectedFloatValue.HasValue)
+                    {
+                        var expectedDoubleValue = (double)expectedFloatValue;
+                        
+                        // While this test should be able to test precise floats, we do some computations with hard to predict precision.
+                        // Hence leaving some precision slack for now.
+                        testWrittenBinaryData = expectedDoubleValue == -1.0f || expectedDoubleValue == 0.0f || expectedDoubleValue == 1.0f;
+
+                        var desiredPrecision = testWrittenBinaryData ? 0.0 : 0.00005;
+                        Assert.That(block.ReadDouble(dataRead), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                        block.WriteDouble(dataWrite, expectedDoubleValue);
+                        Assert.That(block.ReadDouble(dataWrite), Is.EqualTo(expectedDoubleValue).Within(desiredPrecision));
+                    }
+                    break;
+            }
+
+            if (!testWrittenBinaryData) continue;
+
+            // now all bits except for expected bits should be different
+            var validWrite = true;
+            for (var i = 0; i < bufferSize * 8; ++i)
+            {
+                var bytePosition = i / 8;
+                var bitPosition = i % 8;
+                var readBit = (dataRead[bytePosition] & (byte) (1UL << bitPosition)) != 0 ? 1 : 0;
+                var writeBit = (dataWrite[bytePosition] & (byte) (1UL << bitPosition)) != 0 ? 1 : 0;
+                validWrite &= (i >= bitOffset && i < bitOffset + bitSize)
+                    ? readBit == writeBit
+                    : readBit != writeBit;
+            }
+
+            if (!validWrite)
+            {
+                var sb = new StringBuilder();
+                sb.Append($"Offset {bitOffset} size {bitSize} in bits, read, write, xor:\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataRead[i / 8] & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append((dataWrite[i / 8] & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                sb.Append("\n");
+                for (var i = 0; i < bufferSize * 8; ++i)
+                    sb.Append(((dataRead[i / 8] ^ dataWrite[i / 8]) & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                throw new AssertionException($"Written data is not matching expected data: {sb}");
+            }
+        }
+
+        UnsafeUtility.Free(dataRead, Allocator.Temp);
+        UnsafeUtility.Free(dataWrite, Allocator.Temp);
+    }
 
     [Test]
     [Category("State")]

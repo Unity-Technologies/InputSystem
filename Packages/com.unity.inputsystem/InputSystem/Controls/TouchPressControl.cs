@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Controls
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            var intValue = MemoryHelpers.ReadIntFromMultipleBits(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            var intValue = MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
             var phaseValue = (TouchPhase)intValue;
 
             var value = 0.0f;
