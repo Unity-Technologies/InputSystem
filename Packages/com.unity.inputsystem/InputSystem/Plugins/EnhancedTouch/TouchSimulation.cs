@@ -380,6 +380,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         {
         }
 
+        // Disable warnings about unused parameters.
+        #pragma warning disable CA1801
+
         ////TODO: [Obsolete]
         protected void InstallStateChangeMonitors(int startIndex = 0)
         {
