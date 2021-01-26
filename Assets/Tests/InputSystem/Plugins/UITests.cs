@@ -40,8 +40,11 @@ internal class UITests : InputTestFixture
             var cameraRect = camera.rect;
             var cameraPixelRect = camera.pixelRect;
 
-            return new Vector2(cameraPixelRect.x + x / 640f * cameraRect.width * cameraPixelRect.width,
+            var result = new Vector2(cameraPixelRect.x + x / 640f * cameraRect.width * cameraPixelRect.width,
                 cameraPixelRect.y + y / 480f * cameraRect.height * cameraPixelRect.height);
+
+            // Pixel-snap. Not sure where this is coming from but Mac tests are failing without this.
+            return new Vector2(Mathf.Floor(result.x), Mathf.Floor(result.y));
         }
 
         public bool IsWithinRect(Vector2 screenPoint, GameObject gameObject)
