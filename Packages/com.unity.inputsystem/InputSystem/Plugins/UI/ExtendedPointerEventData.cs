@@ -86,6 +86,11 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        internal static int TouchIdFromPointerId(int pointerId)
+        {
+            return pointerId & 0xff;
+        }
+
         ////TODO: adder pressure and tile support (probably add after 1.0; probably should have separate actions)
         /*
         /// <summary>

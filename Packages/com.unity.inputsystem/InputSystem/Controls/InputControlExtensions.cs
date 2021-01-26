@@ -1656,6 +1656,13 @@ namespace UnityEngine.InputSystem
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ControlBuilder IsButton(bool value)
+            {
+                control.isButton = value;
+                return this;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Finish()
             {
                 control.isSetupFinished = true;

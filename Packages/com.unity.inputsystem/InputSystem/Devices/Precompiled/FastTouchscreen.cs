@@ -1169,6 +1169,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Press")
                 .WithLayout(kTouchPressLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -1532,6 +1533,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Primary Touch Touch Contact?")
                 .WithShortDisplayName("Primary Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -1576,6 +1578,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Primary Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1599,6 +1602,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Primary Touch Tap")
                 .WithLayout(kButtonLayout)
                 .WithUsages(0, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2091,6 +2095,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -2135,6 +2140,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2157,6 +2163,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2523,6 +2530,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -2567,6 +2575,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2589,6 +2598,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2955,6 +2965,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -2999,6 +3010,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3021,6 +3033,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3387,6 +3400,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -3431,6 +3445,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3453,6 +3468,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3819,6 +3835,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -3863,6 +3880,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3885,6 +3903,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -4251,6 +4270,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -4295,6 +4315,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -4317,6 +4338,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -4683,6 +4705,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -4727,6 +4750,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -4749,6 +4773,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -5115,6 +5140,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -5159,6 +5185,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -5181,6 +5208,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -5547,6 +5575,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -5591,6 +5620,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -5613,6 +5643,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -5979,6 +6010,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Touch Contact?")
                 .WithShortDisplayName("Touch Touch Contact?")
                 .WithLayout(kTouchPressLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -6023,6 +6055,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("Touch Indirect Touch?")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -6045,6 +6078,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Touch Tap")
                 .WithShortDisplayName("Touch Tap")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
