@@ -165,6 +165,9 @@ internal class UITests : InputTestFixture
     //       of to the previous click).
     [UnityTest]
     [Category("UI")]
+    #if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+    #endif
     // All pointer input goes through a single code path. Goes for Pointer-derived devices as well as for TrackedDevice input but
     // also any other input that can deliver point and click functionality.
     //
@@ -1076,6 +1079,9 @@ internal class UITests : InputTestFixture
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = -1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = -1)]
+    #if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+    #endif
     public IEnumerator UI_CanDriveUIFromMultiplePointers(UIPointerBehavior pointerBehavior)
     {
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
@@ -1532,6 +1538,9 @@ internal class UITests : InputTestFixture
         }
     }
 
+    #if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+    #endif
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanDriveUIFromMultipleTrackedDevices()
