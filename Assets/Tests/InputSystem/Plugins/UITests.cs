@@ -34,7 +34,7 @@ internal class UITests : InputTestFixture
         public UICallbackReceiver rightChildReceiver;
 
         // Assume a 640x480 resolution and translate the given coordinates from a resolution
-        // in that space to coordinates in the current camera sceen space.
+        // in that space to coordinates in the current camera screen space.
         public Vector2 From640x480ToScreen(float x, float y)
         {
             var cameraRect = camera.rect;
@@ -42,6 +42,12 @@ internal class UITests : InputTestFixture
 
             return new Vector2(cameraPixelRect.x + x / 640f * cameraRect.width * cameraPixelRect.width,
                 cameraPixelRect.y + y / 480f * cameraRect.height * cameraPixelRect.height);
+        }
+
+        public bool IsWithinRect(Vector2 screenPoint, GameObject gameObject)
+        {
+            var transform = gameObject.GetComponent<RectTransform>();
+            return RectTransformUtility.RectangleContainsScreenPoint(transform, screenPoint, camera, default);
         }
     }
 
@@ -265,13 +271,6 @@ internal class UITests : InputTestFixture
         var secondScreenPosition = scene.From640x480ToScreen(100, 200);
         var thirdScreenPosition = scene.From640x480ToScreen(350, 200);
 
-        if (isTracked)
-        {
-            firstScreenPosition = scene.From640x480ToScreen(28.936f, 240);
-            secondScreenPosition = scene.From640x480ToScreen(80.006f, 240);
-            thirdScreenPosition = scene.From640x480ToScreen(560, 240);
-        }
-
         // Move pointer over left child.
         currentTime = 1;
         runtime.unscaledGameTime = 1;
@@ -295,6 +294,15 @@ internal class UITests : InputTestFixture
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
+
+        if (isTracked)
+        {
+            // Different screen geometries will lead to different ray intersection points from tracked devices.
+            // Only check whether we reported a position inside of leftGameObject.
+            Assert.That(scene.IsWithinRect(scene.leftChildReceiver.events[0].pointerData.position, scene.leftGameObject), Is.True);
+
+            firstScreenPosition = scene.leftChildReceiver.events[0].pointerData.position;
+        }
 
         // For both regular pointers and touch, pointer enter is the first event.
         // NOTE: This is different to StandaloneInputModule where for mouse, click comes before pointer enter.
@@ -628,8 +636,17 @@ internal class UITests : InputTestFixture
         scene.eventSystem.InvokeUpdate();
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
-
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+
+        if (isTracked)
+        {
+            // Different screen geometries will lead to different ray intersection points from tracked devices.
+            // Only check whether we reported a position inside of leftGameObject.
+            Assert.That(scene.IsWithinRect(scene.leftChildReceiver.events[0].pointerData.position, scene.leftGameObject), Is.True);
+
+            secondScreenPosition = scene.leftChildReceiver.events[0].pointerData.position;
+        }
+
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.BeginDrag));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.device, Is.SameAs(device));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(clickButton));
@@ -710,11 +727,20 @@ internal class UITests : InputTestFixture
 
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
         Assert.That(scene.parentReceiver.events, Is.Empty); // Should not have seen pointer enter/exit on parent.
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+
+        if (isTracked)
+        {
+            // Different screen geometries will lead to different ray intersection points from tracked devices.
+            // Only check whether we reported a position inside of rightGameObject.
+            Assert.That(scene.IsWithinRect(scene.leftChildReceiver.events[0].pointerData.position, scene.rightGameObject), Is.True);
+
+            thirdScreenPosition = scene.leftChildReceiver.events[0].pointerData.position;
+        }
 
         // Input module (like StandaloneInputModule on mouse path) processes move first which is why
         // we get an exit *before* a drag even though it would make more sense the other way round.
 
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
         Assert.That(scene.leftChildReceiver.events[0].type, Is.EqualTo(EventType.PointerExit));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
         Assert.That(scene.leftChildReceiver.events[0].pointerData.pointerId, Is.EqualTo(pointerId));
@@ -1161,22 +1187,22 @@ internal class UITests : InputTestFixture
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And // System transparently switched from mouse2 to trackedDevice1.
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y))); // Exits at position of trackedDevice1.
+                            scene.IsWithinRect(e.pointerData.position, scene.leftGameObject))); // Exits at position of trackedDevice1.
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y)));
+                            scene.IsWithinRect(e.pointerData.position, scene.leftGameObject)));
                 Assert.That(scene.leftChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerExit).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
+                            scene.IsWithinRect(e.pointerData.position, scene.rightGameObject)));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
+                            scene.IsWithinRect(e.pointerData.position, scene.rightGameObject)));
                 break;
 
             case UIPointerBehavior.AllPointersAsIs:
@@ -1195,12 +1221,12 @@ internal class UITests : InputTestFixture
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice1).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, leftPosition.x) && Mathf.Approximately(e.pointerData.position.y, leftPosition.y)));
+                            scene.IsWithinRect(e.pointerData.position, scene.leftGameObject)));
                 Assert.That(scene.rightChildReceiver.events,
                     Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerEnter).And
                         .Matches((UICallbackReceiver.Event e) => e.pointerData.device == trackedDevice2).And
                         .Matches((UICallbackReceiver.Event e) =>
-                            Mathf.Approximately(e.pointerData.position.x, rightPosition.x) && Mathf.Approximately(e.pointerData.position.y, rightPosition.y)));
+                            scene.IsWithinRect(e.pointerData.position, scene.rightGameObject)));
                 break;
         }
 
