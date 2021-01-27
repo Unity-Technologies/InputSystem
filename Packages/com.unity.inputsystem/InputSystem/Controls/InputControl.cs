@@ -786,9 +786,9 @@ namespace UnityEngine.InputSystem
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
-        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(ResolveDeviceIndex());
+        protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(GetDeviceIndex());
 
-        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(ResolveDeviceIndex());
+        protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(GetDeviceIndex());
 
         protected internal unsafe void* defaultStatePtr => InputStateBuffers.s_DefaultStateBuffer;
 
@@ -857,6 +857,7 @@ namespace UnityEngine.InputSystem
             ConfigUpToDate = 1 << 0,
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
+            IsButton = 1 << 3,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
             UsesStateFromOtherControl = 1 << 6,
         }
@@ -870,6 +871,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.SetupFinished;
                 else
                     m_ControlFlags &= ~ControlFlags.SetupFinished;
+            }
+        }
+
+        internal bool isButton
+        {
+            get => (m_ControlFlags & ControlFlags.IsButton) == ControlFlags.IsButton;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.IsButton;
+                else
+                    m_ControlFlags &= ~ControlFlags.IsButton;
             }
         }
 
@@ -925,7 +938,7 @@ namespace UnityEngine.InputSystem
                 list[i].BakeOffsetIntoStateBlockRecursive(offset);
         }
 
-        internal int ResolveDeviceIndex()
+        internal int GetDeviceIndex()
         {
             var deviceIndex = m_Device.m_DeviceIndex;
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
