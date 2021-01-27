@@ -16,11 +16,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             var settings = InputSystem.settings.iOS;
-            if (!settings.MotionUsage.Enabled)
+            if (!settings.motionUsage.enabled)
                 return;
             var plistPath = pathToBuiltProject + "/Info.plist";
             var contents = File.ReadAllText(plistPath);
-            var description = InputSystem.settings.iOS.MotionUsage.UsageDescription;
+            var description = InputSystem.settings.iOS.motionUsage.usageDescription;
 #if UNITY_IOS || UNITY_TVOS
             var plist = new UnityEditor.iOS.Xcode.PlistDocument();
             plist.ReadFromString(contents);

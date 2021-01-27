@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     /// Describes the access for motion related features.
     /// </summary>
     /// <remarks>Enum values map values from CoreMotion.framework/Headers/CMAuthorization.h</remarks>
-    public enum MotionAuthorizationStatus : int
+    public enum MotionAuthorizationStatus
     {
         /// <summary>
         /// The access status was not yet determined.
@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal unsafe struct iOSStepCounterState : IInputStateTypeInfo
+    internal struct iOSStepCounterState : IInputStateTypeInfo
     {
         public static FourCC kFormat = new FourCC('I', 'S', 'C', 'S');
         public FourCC format => kFormat;
@@ -49,7 +49,8 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     /// Step Counter (also known as pedometer) sensor for iOS.
     /// </summary>
     /// <remarks>
-    /// You need to enable Motion Usage in Input System settings, before using this sensor.
+    /// You need to enable Motion Usage in Input System settings (see <see cref="InputSettings.iOSSettings.motionUsage"/>), to be allowed
+    /// to access the sensor on the user's device.
     /// <example>
     /// <code>
     /// void Start()
@@ -64,6 +65,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     /// </code>
     /// </example>
     /// </remarks>
+    /// <seealso cref="InputSettings.iOSSettings.motionUsage"/>
     [InputControlLayout(stateType = typeof(iOSStepCounterState), variants = "StepCounter", hideInUI = true)]
     public class iOSStepCounter : StepCounter
     {
@@ -118,7 +120,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
 
             if (t == EnableDeviceCommand.Type)
             {
-                if (InputSystem.settings.iOS.MotionUsage.Enabled == false)
+                if (InputSystem.settings.iOS.motionUsage.enabled == false)
                 {
                     Debug.LogError("Please enable Motion Usage in Input Settings before using Step Counter.");
                     return kCommandFailure;
@@ -159,7 +161,6 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
                 return kCommandSuccess;
             }
 
-            Debug.LogWarning($"Unhandled command of type {t.ToString()}");
             return kCommandFailure;
         }
 
