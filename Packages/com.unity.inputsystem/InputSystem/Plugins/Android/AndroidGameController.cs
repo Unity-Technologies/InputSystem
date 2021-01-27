@@ -142,9 +142,9 @@ namespace UnityEngine.InputSystem.Android
     /// Most of the gamepads:
     /// - ELAN PLAYSTATION(R)3 Controller
     /// - My-Power CO.,LTD. PS(R) Controller Adaptor
-    /// (Following tested with: Nvidia Shield TV - Android 9; Galaxy Note 20 Ultra - Android 11; Galaxy S9+ - Android 10)
-    /// - Sony Interactive Entertainment Wireless
-    /// - Xbox Wireless Controller (Xbox One)
+    /// (Following tested and work with: Nvidia Shield TV (OS 9); Galaxy Note 20 Ultra (OS 11); Galaxy S9+ (OS 10.0))
+    /// - Sony Interactive Entertainment Wireless (PS4 DualShock) (Also tested and DOES NOT WORK with Galaxy S9 (OS 8.0); Galaxy S8 (OS 7.0); Xiaomi Mi Note2 (OS 8.0))
+    /// - Xbox Wireless Controller (Xbox One) (Also tested and works on Samsung Galaxy S8 (OS 7.0); Xiaomi Mi Note2 (OS 8.0))
     /// - NVIDIA Controller v01.03/v01.04
     /// - (Add more)
     /// map buttons in the following way:
@@ -165,10 +165,12 @@ namespace UnityEngine.InputSystem.Android
     ///       If you connect gamepad to a phone for L2/R2 only AXIS_BRAKE/AXIS_GAS come. AXIS_LTRIGGER, AXIS_RTRIGGER are not invoked.
     ///       That's why we map triggers only to AXIS_BRAKE/AXIS_GAS
     ///       Nvidia Shield also reports KEYCODE_BACK instead of KEYCODE_BUTTON_SELECT, so Options(XboxOne Controller)/View(DualShock)/Select buttons do not work
+    /// PS4 controller is officially supported from Android 10 and higher (https://www.playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android)
+    /// However, some devices with older OS have fixed PS4 controller support on their drivers this leads to following situation:
     /// Some gamepads on Android devices (with same Android number version) might have different mappings
     ///  For ex., Dualshock, on NVidia Shield Console (OS 8.0) all buttons correctly map according to rules in AndroidGameControllerState
     ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonL1, rightShoulder -> AndroidKeyCode.ButtonR1, etc
-    ///           But, on Samsung Galaxy S9 (OS 8.0), the mapping is different
+    ///           But, on Samsung Galaxy S9 (OS 8.0), the mapping is different (Same for Xiaomi Mi Note2 (OS 8.0), Samsung Galaxy S8 (OS 7.0))
     ///           when clicking left shoulder it will go to AndroidKeyCode.ButtonY, rightShoulder -> AndroidKeyCode.ButtonZ, etc
     ///  So even though Android version is 8.0 in both cases, Dualshock will only correctly work on NVidia Shield Console
     ///  It's obvious that this depends on the driver and not Android OS, thus we can only assume Samsung in this case doesn't properly support Dualshock in their drivers
