@@ -52,7 +52,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         internal static string DocFxZip { get { return Path.Combine(PackageUIDocumentationRoot, "docfx-2.51.7z"); } }
         internal static string DocFxRoot { get { return Path.Combine(DocumentationBuildRoot, "docfx-2.51"); } }
         internal static string DocFxExecutable {get { return Path.Combine(DocFxRoot, "docfx.exe"); }}
-        internal static string DocFxTemplateRoot {get { return Path.Combine(PackageUIDocumentationRoot, "docfx_packages~"); }}
+        internal static string DocFxTemplateRoot {get { return Path.Combine(PackageUIDocumentationRoot, "docfx_packages"); }}
         internal static string EditorMonoPath {get { return Path.Combine(EditorApplication.applicationContentsPath, "MonoBleedingEdge/bin/mono"); }}
         internal static string MonoZip { get { return Path.Combine(PackageUIDocumentationRoot, "mono-5.16.0.7z"); } }
         internal static string MonoLinuxZip {get { return Path.Combine(PackageUIDocumentationRoot, "mono-linux-5.16.0.7z"); }}
@@ -336,8 +336,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             EditorUtility.ClearProgressBar();
             return log;
         }
-
-
+        
         /// <summary>
         /// Sets up a doc build by copying files to a build folder, creating a docFx config and top-level TOC.
         /// </summary>
@@ -397,14 +396,10 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             // then copy it into the build folder
             if (packageInfo.source != PackageSource.Embedded)
             {
-                FileUtil.CopyFileOrDirectory(
+                FileUtils.DirectoryCopyIgnorePaths(
                     Path.GetFullPath(string.Format("Packages/{0}", packageInfo.name)),
                     Path.Combine(packageCloneFolder, packageInfo.name));
             }
-
-            // Remove ignored folders in the generated doc
-            foreach (string dirPath in Directory.GetDirectories(packageCloneFolder, ".*", SearchOption.AllDirectories))
-                FileUtil.DeleteFileOrDirectory(dirPath);
 
             // When used from the cache (which is read-only), it is important to set the folder properties to write.
             FileUtils.SetFolderPermission(buildFolder);

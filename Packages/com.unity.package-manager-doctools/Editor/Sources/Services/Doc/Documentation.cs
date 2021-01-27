@@ -123,7 +123,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         /// <param name="packageInfo">The package info object</param>
         /// <param name="version">Version in Semantic version format -- eg: 1.2.0</param>
         ///<param name="outputFolder">(Optional) Output folder where the doc site should be created.</param>
-        public (string buildLog, string shortVersionId) Generate(PackageInfo packageInfo, string version, string outputFolder = null)
+        public (string, string) Generate(PackageInfo packageInfo, string version, string outputFolder = null)
         {
             string buildlog = "Nothing generated.";
             var packageName = packageInfo.name;
@@ -151,10 +151,10 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
         {
             if (string.IsNullOrEmpty(absoluteLatestShortVersionId))
                 absoluteLatestShortVersionId = GetShortVersionId(packageName, latestVersionId);
-
+            
             Builder.BuildRedirectToLatestPage(packageName, GetShortVersionId(packageName, latestVersionId), absoluteLatestShortVersionId, outputFolder);
         }
-
+        
         /// <summary>
         /// Generate metadata for a package.
         /// </summary>

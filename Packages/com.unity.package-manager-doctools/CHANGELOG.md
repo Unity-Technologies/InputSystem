@@ -4,8 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.7.0-preview] - 2020-10-29
+## [1.7.1-preview] - 2021-1-14
+- Remove * characters from link titles xrefmap files to avoid unexpected character errors
+
+## [1.7.0-preview] - 2020-12-3
 - Return the build log string from Documentation.Generate function.
+- Avoid copying ignored folders
 
 ## [1.6.1-preview.2] - 2020-09-28
 - Include the Linux Mono archive that was accidentally omitted from the previous release.

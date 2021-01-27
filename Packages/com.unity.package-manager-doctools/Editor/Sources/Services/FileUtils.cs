@@ -1,7 +1,9 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security;
 using System.Security.Permissions;
@@ -17,6 +19,42 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
             FileUtil.ReplaceFile(file, Path.Combine(destinationDir, fileName));
         }
 
+        private static void GetAllNonHiddenFolders(string path, IList<string> paths)
+        {
+            var directories = Directory.GetDirectories(path, "*.*", SearchOption.TopDirectoryOnly).ToList();
+            {
+                var hiddenDirectories = Directory.GetDirectories(path, ".*", SearchOption.TopDirectoryOnly).ToList();
+                directories.RemoveAll(p => hiddenDirectories.Contains(p));
+            }
+            foreach (var subDirectory in directories)
+            {
+                paths.Add(subDirectory);
+                GetAllNonHiddenFolders(subDirectory, paths);
+            }
+        }
+        
+        /// <summary>
+        /// Copies folders and avoids accessing ignored folders to avoid file access violations.
+        /// </summary>
+        /// <param name="SourcePath">Source folder to copy from</param>
+        /// <param name="DestinationPath">Destination folder to copy to</param>
+        internal static void DirectoryCopyIgnorePaths(string SourcePath, string DestinationPath)
+        {
+            var directories = new List<string>();
+            GetAllNonHiddenFolders(SourcePath, directories);
+
+            //Now Create all of the directories
+            foreach (string dirPath in directories)
+                Directory.CreateDirectory(dirPath.Replace(SourcePath, DestinationPath));
+
+            //Copy all the files & Replaces any files with the same name
+            foreach (string dirPath in directories)
+            {
+                foreach (var filePath in  Directory.GetFiles(dirPath, "*.*", SearchOption.TopDirectoryOnly))
+                    File.Copy(filePath, filePath.Replace(SourcePath, DestinationPath), true);
+            }
+        }
+        
         // Need to re-create this method since Unity's FileUtil equivalent (with overwrite) is internal only
         // From: https://stackoverflow.com/questions/58744/copy-the-entire-contents-of-a-directory-in-c-sharp
         private static void DirectoryCopy(string SourcePath, string DestinationPath)

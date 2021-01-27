@@ -1,0 +1,10 @@
+- name: Manual
+  href: manual/
+  homepage: manual/index.md
+- name: Scripting API
+  href: api/
+  homepage: api/index.md
+- name: Changelog
+  href: changelog/
+- name: License
+  href: license/
