@@ -555,6 +555,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Any Key")
                 .WithLayout(kAnyKeyLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -577,6 +578,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Escape")
                 .WithLayout(kKeyLayout)
                 .WithUsages(0, 2)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -599,6 +601,7 @@ namespace UnityEngine.InputSystem
                 .WithName("space")
                 .WithDisplayName("Space")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -622,6 +625,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Enter")
                 .WithLayout(kKeyLayout)
                 .WithUsages(2, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -644,6 +648,7 @@ namespace UnityEngine.InputSystem
                 .WithName("tab")
                 .WithDisplayName("Tab")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -666,6 +671,7 @@ namespace UnityEngine.InputSystem
                 .WithName("backquote")
                 .WithDisplayName("`")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -688,6 +694,7 @@ namespace UnityEngine.InputSystem
                 .WithName("quote")
                 .WithDisplayName("'")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -710,6 +717,7 @@ namespace UnityEngine.InputSystem
                 .WithName("semicolon")
                 .WithDisplayName(";")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -732,6 +740,7 @@ namespace UnityEngine.InputSystem
                 .WithName("comma")
                 .WithDisplayName(",")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -754,6 +763,7 @@ namespace UnityEngine.InputSystem
                 .WithName("period")
                 .WithDisplayName(".")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -776,6 +786,7 @@ namespace UnityEngine.InputSystem
                 .WithName("slash")
                 .WithDisplayName("/")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -798,6 +809,7 @@ namespace UnityEngine.InputSystem
                 .WithName("backslash")
                 .WithDisplayName("\\")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -820,6 +832,7 @@ namespace UnityEngine.InputSystem
                 .WithName("leftBracket")
                 .WithDisplayName("[")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -842,6 +855,7 @@ namespace UnityEngine.InputSystem
                 .WithName("rightBracket")
                 .WithDisplayName("]")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -864,6 +878,7 @@ namespace UnityEngine.InputSystem
                 .WithName("minus")
                 .WithDisplayName("-")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -886,6 +901,7 @@ namespace UnityEngine.InputSystem
                 .WithName("equals")
                 .WithDisplayName("=")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -908,6 +924,7 @@ namespace UnityEngine.InputSystem
                 .WithName("upArrow")
                 .WithDisplayName("Up Arrow")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -930,6 +947,7 @@ namespace UnityEngine.InputSystem
                 .WithName("downArrow")
                 .WithDisplayName("Down Arrow")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -952,6 +970,7 @@ namespace UnityEngine.InputSystem
                 .WithName("leftArrow")
                 .WithDisplayName("Left Arrow")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -974,6 +993,7 @@ namespace UnityEngine.InputSystem
                 .WithName("rightArrow")
                 .WithDisplayName("Right Arrow")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -996,6 +1016,7 @@ namespace UnityEngine.InputSystem
                 .WithName("a")
                 .WithDisplayName("A")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1018,6 +1039,7 @@ namespace UnityEngine.InputSystem
                 .WithName("b")
                 .WithDisplayName("B")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1040,6 +1062,7 @@ namespace UnityEngine.InputSystem
                 .WithName("c")
                 .WithDisplayName("C")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1062,6 +1085,7 @@ namespace UnityEngine.InputSystem
                 .WithName("d")
                 .WithDisplayName("D")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1084,6 +1108,7 @@ namespace UnityEngine.InputSystem
                 .WithName("e")
                 .WithDisplayName("E")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1106,6 +1131,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f")
                 .WithDisplayName("F")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1128,6 +1154,7 @@ namespace UnityEngine.InputSystem
                 .WithName("g")
                 .WithDisplayName("G")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1150,6 +1177,7 @@ namespace UnityEngine.InputSystem
                 .WithName("h")
                 .WithDisplayName("H")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1172,6 +1200,7 @@ namespace UnityEngine.InputSystem
                 .WithName("i")
                 .WithDisplayName("I")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1194,6 +1223,7 @@ namespace UnityEngine.InputSystem
                 .WithName("j")
                 .WithDisplayName("J")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1216,6 +1246,7 @@ namespace UnityEngine.InputSystem
                 .WithName("k")
                 .WithDisplayName("K")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1238,6 +1269,7 @@ namespace UnityEngine.InputSystem
                 .WithName("l")
                 .WithDisplayName("L")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1260,6 +1292,7 @@ namespace UnityEngine.InputSystem
                 .WithName("m")
                 .WithDisplayName("M")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1282,6 +1315,7 @@ namespace UnityEngine.InputSystem
                 .WithName("n")
                 .WithDisplayName("N")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1304,6 +1338,7 @@ namespace UnityEngine.InputSystem
                 .WithName("o")
                 .WithDisplayName("O")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1326,6 +1361,7 @@ namespace UnityEngine.InputSystem
                 .WithName("p")
                 .WithDisplayName("P")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1348,6 +1384,7 @@ namespace UnityEngine.InputSystem
                 .WithName("q")
                 .WithDisplayName("Q")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1370,6 +1407,7 @@ namespace UnityEngine.InputSystem
                 .WithName("r")
                 .WithDisplayName("R")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1392,6 +1430,7 @@ namespace UnityEngine.InputSystem
                 .WithName("s")
                 .WithDisplayName("S")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1414,6 +1453,7 @@ namespace UnityEngine.InputSystem
                 .WithName("t")
                 .WithDisplayName("T")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1436,6 +1476,7 @@ namespace UnityEngine.InputSystem
                 .WithName("u")
                 .WithDisplayName("U")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1458,6 +1499,7 @@ namespace UnityEngine.InputSystem
                 .WithName("v")
                 .WithDisplayName("V")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1480,6 +1522,7 @@ namespace UnityEngine.InputSystem
                 .WithName("w")
                 .WithDisplayName("W")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1502,6 +1545,7 @@ namespace UnityEngine.InputSystem
                 .WithName("x")
                 .WithDisplayName("X")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1524,6 +1568,7 @@ namespace UnityEngine.InputSystem
                 .WithName("y")
                 .WithDisplayName("Y")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1546,6 +1591,7 @@ namespace UnityEngine.InputSystem
                 .WithName("z")
                 .WithDisplayName("Z")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1568,6 +1614,7 @@ namespace UnityEngine.InputSystem
                 .WithName("1")
                 .WithDisplayName("1")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1590,6 +1637,7 @@ namespace UnityEngine.InputSystem
                 .WithName("2")
                 .WithDisplayName("2")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1612,6 +1660,7 @@ namespace UnityEngine.InputSystem
                 .WithName("3")
                 .WithDisplayName("3")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1634,6 +1683,7 @@ namespace UnityEngine.InputSystem
                 .WithName("4")
                 .WithDisplayName("4")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1656,6 +1706,7 @@ namespace UnityEngine.InputSystem
                 .WithName("5")
                 .WithDisplayName("5")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1678,6 +1729,7 @@ namespace UnityEngine.InputSystem
                 .WithName("6")
                 .WithDisplayName("6")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1700,6 +1752,7 @@ namespace UnityEngine.InputSystem
                 .WithName("7")
                 .WithDisplayName("7")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1722,6 +1775,7 @@ namespace UnityEngine.InputSystem
                 .WithName("8")
                 .WithDisplayName("8")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1744,6 +1798,7 @@ namespace UnityEngine.InputSystem
                 .WithName("9")
                 .WithDisplayName("9")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1766,6 +1821,7 @@ namespace UnityEngine.InputSystem
                 .WithName("0")
                 .WithDisplayName("0")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1789,6 +1845,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Left Shift")
                 .WithLayout(kKeyLayout)
                 .WithUsages(3, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1812,6 +1869,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Right Shift")
                 .WithLayout(kKeyLayout)
                 .WithUsages(4, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1836,6 +1894,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kDiscreteButtonLayout)
                 .WithUsages(5, 1)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1858,6 +1917,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Left Alt")
                 .WithLayout(kKeyLayout)
                 .WithUsages(6, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1882,6 +1942,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kKeyLayout)
                 .WithUsages(7, 1)
                 .WithAliases(0, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1906,6 +1967,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kDiscreteButtonLayout)
                 .WithUsages(8, 1)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1928,6 +1990,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Left Control")
                 .WithLayout(kKeyLayout)
                 .WithUsages(9, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1951,6 +2014,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Right Control")
                 .WithLayout(kKeyLayout)
                 .WithUsages(10, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1975,6 +2039,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kDiscreteButtonLayout)
                 .WithUsages(11, 1)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1998,6 +2063,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kKeyLayout)
                 .WithUsages(12, 1)
                 .WithAliases(1, 3)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2022,6 +2088,7 @@ namespace UnityEngine.InputSystem
                 .WithLayout(kKeyLayout)
                 .WithUsages(13, 1)
                 .WithAliases(4, 3)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2045,6 +2112,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Context Menu")
                 .WithLayout(kKeyLayout)
                 .WithUsages(14, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2067,6 +2135,7 @@ namespace UnityEngine.InputSystem
                 .WithName("backspace")
                 .WithDisplayName("Backspace")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2089,6 +2158,7 @@ namespace UnityEngine.InputSystem
                 .WithName("pageDown")
                 .WithDisplayName("Page Down")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2111,6 +2181,7 @@ namespace UnityEngine.InputSystem
                 .WithName("pageUp")
                 .WithDisplayName("Page Up")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2133,6 +2204,7 @@ namespace UnityEngine.InputSystem
                 .WithName("home")
                 .WithDisplayName("Home")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2155,6 +2227,7 @@ namespace UnityEngine.InputSystem
                 .WithName("end")
                 .WithDisplayName("End")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2177,6 +2250,7 @@ namespace UnityEngine.InputSystem
                 .WithName("insert")
                 .WithDisplayName("Insert")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2199,6 +2273,7 @@ namespace UnityEngine.InputSystem
                 .WithName("delete")
                 .WithDisplayName("Delete")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2221,6 +2296,7 @@ namespace UnityEngine.InputSystem
                 .WithName("capsLock")
                 .WithDisplayName("Caps Lock")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2243,6 +2319,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numLock")
                 .WithDisplayName("Num Lock")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2265,6 +2342,7 @@ namespace UnityEngine.InputSystem
                 .WithName("printScreen")
                 .WithDisplayName("Print Screen")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2287,6 +2365,7 @@ namespace UnityEngine.InputSystem
                 .WithName("scrollLock")
                 .WithDisplayName("Scroll Lock")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2309,6 +2388,7 @@ namespace UnityEngine.InputSystem
                 .WithName("pause")
                 .WithDisplayName("Pause/Break")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2331,6 +2411,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadEnter")
                 .WithDisplayName("Numpad Enter")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2353,6 +2434,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadDivide")
                 .WithDisplayName("Numpad /")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2375,6 +2457,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadMultiply")
                 .WithDisplayName("Numpad *")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2397,6 +2480,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadPlus")
                 .WithDisplayName("Numpad +")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2419,6 +2503,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadMinus")
                 .WithDisplayName("Numpad -")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2441,6 +2526,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadPeriod")
                 .WithDisplayName("Numpad .")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2463,6 +2549,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpadEquals")
                 .WithDisplayName("Numpad =")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2485,6 +2572,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad1")
                 .WithDisplayName("Numpad 1")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2507,6 +2595,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad2")
                 .WithDisplayName("Numpad 2")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2529,6 +2618,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad3")
                 .WithDisplayName("Numpad 3")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2551,6 +2641,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad4")
                 .WithDisplayName("Numpad 4")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2573,6 +2664,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad5")
                 .WithDisplayName("Numpad 5")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2595,6 +2687,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad6")
                 .WithDisplayName("Numpad 6")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2617,6 +2710,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad7")
                 .WithDisplayName("Numpad 7")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2639,6 +2733,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad8")
                 .WithDisplayName("Numpad 8")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2661,6 +2756,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad9")
                 .WithDisplayName("Numpad 9")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2683,6 +2779,7 @@ namespace UnityEngine.InputSystem
                 .WithName("numpad0")
                 .WithDisplayName("Numpad 0")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2705,6 +2802,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f1")
                 .WithDisplayName("F1")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2727,6 +2825,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f2")
                 .WithDisplayName("F2")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2749,6 +2848,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f3")
                 .WithDisplayName("F3")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2771,6 +2871,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f4")
                 .WithDisplayName("F4")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2793,6 +2894,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f5")
                 .WithDisplayName("F5")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2815,6 +2917,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f6")
                 .WithDisplayName("F6")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2837,6 +2940,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f7")
                 .WithDisplayName("F7")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2859,6 +2963,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f8")
                 .WithDisplayName("F8")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2881,6 +2986,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f9")
                 .WithDisplayName("F9")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2903,6 +3009,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f10")
                 .WithDisplayName("F10")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2925,6 +3032,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f11")
                 .WithDisplayName("F11")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2947,6 +3055,7 @@ namespace UnityEngine.InputSystem
                 .WithName("f12")
                 .WithDisplayName("F12")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2969,6 +3078,7 @@ namespace UnityEngine.InputSystem
                 .WithName("OEM1")
                 .WithDisplayName("OEM1")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -2991,6 +3101,7 @@ namespace UnityEngine.InputSystem
                 .WithName("OEM2")
                 .WithDisplayName("OEM2")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3013,6 +3124,7 @@ namespace UnityEngine.InputSystem
                 .WithName("OEM3")
                 .WithDisplayName("OEM3")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3035,6 +3147,7 @@ namespace UnityEngine.InputSystem
                 .WithName("OEM4")
                 .WithDisplayName("OEM4")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3057,6 +3170,7 @@ namespace UnityEngine.InputSystem
                 .WithName("OEM5")
                 .WithDisplayName("OEM5")
                 .WithLayout(kKeyLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -3080,6 +3194,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("IMESelected")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),

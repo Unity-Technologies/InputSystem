@@ -1378,7 +1378,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: this should reset the device to its default state
-        public void EnableOrDisableDevice(InputDevice device, bool enable)
+        public void EnableOrDisableDevice(InputDevice device, bool enable, bool keepSendingEvents = false)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
@@ -1399,7 +1399,7 @@ namespace UnityEngine.InputSystem
                 var command = EnableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);
             }
-            else
+            else if (!keepSendingEvents)
             {
                 var command = DisableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);

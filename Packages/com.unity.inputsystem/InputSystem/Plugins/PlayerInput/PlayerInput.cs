@@ -415,7 +415,7 @@ namespace UnityEngine.InputSystem
                 if (m_NeverAutoSwitchControlSchemes == value)
                     return;
                 m_NeverAutoSwitchControlSchemes = value;
-                if (enabled)
+                if (m_Enabled)
                 {
                     if (!value && !m_OnUnpairedDeviceUsedHooked)
                         StartListeningForUnpairedDeviceActivity();

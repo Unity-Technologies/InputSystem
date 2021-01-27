@@ -1080,4 +1080,32 @@ internal class EnhancedTouchTests : InputTestFixture
 
         Assert.That(TouchSimulation.instance.simulatedTouchscreen, Is.SameAs(device));
     }
+
+    [Test]
+    [Category("EnhancedTouch")]
+    public unsafe void EnhancedTouch_TouchSimulation_DisablesPointerDevicesWithoutDisablingEvents()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var pen = InputSystem.AddDevice<Pen>();
+
+        runtime.SetDeviceCommandCallback(mouse, (id, command) =>
+        {
+            Assert.That(command->type, Is.Not.EqualTo(DisableDeviceCommand.Type));
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        TouchSimulation.Enable();
+
+        Assert.That(mouse.enabled, Is.False);
+        Assert.That(pen.enabled, Is.False);
+
+        InputSystem.QueueStateEvent(mouse, new MouseState
+        {
+            position = new Vector2(123, 234),
+        }.WithButton(MouseButton.Left));
+        InputSystem.Update();
+
+        Assert.That(Touchscreen.current.touches[0].isInProgress, Is.True);
+        Assert.That(Touchscreen.current.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+    }
 }
