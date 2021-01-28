@@ -250,15 +250,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 case kFormatBit:
                     if (sizeInBits == 1)
                         return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : 0;
-                    return MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
+                    return (int)MemoryHelpers.ReadMultipleBitsAsUInt(valuePtr, bitOffset, sizeInBits);
                 case kFormatSBit:
-                {
                     if (sizeInBits == 1)
                         return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1 : -1;
-                    var halfMax = (int)(1UL << (int)sizeInBits) / 2; // TODO fix me!
-                    var unsignedValue = MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
-                    return unsignedValue - halfMax;
-                }
+                    return MemoryHelpers.ReadExcessKMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
                 case kFormatInt:
                 case kFormatUInt:
                     Debug.Assert(sizeInBits == 32, "INT and UINT state must have sizeInBits=32");
@@ -305,16 +301,13 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value != 0);
                     else
-                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
+                        MemoryHelpers.WriteUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, (uint)value);
                     break;
                 case kFormatSBit:
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value > 0);
                     else
-                    {
-                        var halfMax = (1 << (int) sizeInBits) / 2; // TODO fix me!
-                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value + halfMax);
-                    }
+                        MemoryHelpers.WriteIntAsExcessKMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
                 case kFormatInt:
                 case kFormatUInt:
@@ -365,20 +358,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 // of its integer size (e.g. only goes from [0..128]), processors or the parameters
                 // above have to be used to re-process the resulting float values.
                 case kFormatBit:
-                case kFormatSBit:
-                {
                     if (sizeInBits == 1)
-                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : (fmt == kFormatSBit ? -1.0f : 0.0f);
-                    if (sizeInBits > 32)
-                        throw new NotImplementedException("Cannot yet convert unaligned multi-bit fields greater than 32 bits to floats");
-                    
-                    var uintValue = (uint)MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
-                    var maxValue = (uint)((1UL << (int)sizeInBits) - 1); // TODO fix me!
-                    var value = NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
-                    if (fmt == kFormatSBit)
-                        value = value * 2.0f - 1.0f;
-                    return value;
-                }
+                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : 0.0f;
+                    return MemoryHelpers.ReadMultipleBitsAsNormalizedUInt(valuePtr, bitOffset, sizeInBits);
+                case kFormatSBit:
+                    if (sizeInBits == 1)
+                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : -1.0f;
+                    return MemoryHelpers.ReadMultipleBitsAsNormalizedUInt(valuePtr, bitOffset, sizeInBits) * 2.0f - 1.0f;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -430,11 +416,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
                     else
-                    {
-                        var maxValue = (1 << (int) sizeInBits) - 1; // TODO fix me!
-                        var intValue = (int) (value * maxValue);
-                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
-                    }
+                        MemoryHelpers.WriteNormalizedUintAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
@@ -491,10 +473,10 @@ namespace UnityEngine.InputSystem.LowLevel
             switch (fmt)
             {
                 case kFormatBit:
-                    if(sizeInBits == 1)
+                    if (sizeInBits == 1)
                         return value >= 0.5f;
-                    var maxValue = (1 << (int)sizeInBits) - 1; // TODO fix me!
-                    return (int)(value * maxValue);
+                    ////FIXME: is this supposed to be int or uint?
+                    return (int)NumberHelpers.NormalizedFloatToUInt(value, 0, (uint) ((1UL << (int) sizeInBits) - 1));
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -552,20 +534,13 @@ namespace UnityEngine.InputSystem.LowLevel
                 // of its integer size (e.g. only goes from [0..128]), processors or the parameters
                 // above have to be used to re-process the resulting float values.
                 case kFormatBit:
-                case kFormatSBit:
-                {
                     if (sizeInBits == 1)
-                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0 : (fmt == kFormatSBit ? -1.0 : 0.0);
-                    if (sizeInBits > 32)
-                        throw new NotImplementedException("Cannot yet convert unaligned multi-bit fields greater than 32 bits to floats");
-                    
-                    var uintValue = (uint)MemoryHelpers.ReadMultipleBitsAsInt(valuePtr, bitOffset, sizeInBits);
-                    var maxValue = (uint)((1UL << (int)sizeInBits) - 1); // TODO fix me!
-                    var value = NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
-                    if (fmt == kFormatSBit)
-                        value = value * 2.0f - 1.0f;
-                    return value;
-                }
+                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : 0.0f;
+                    return MemoryHelpers.ReadMultipleBitsAsNormalizedUInt(valuePtr, bitOffset, sizeInBits);
+                case kFormatSBit:
+                    if (sizeInBits == 1)
+                        return MemoryHelpers.ReadSingleBit(valuePtr, bitOffset) ? 1.0f : -1.0f;
+                    return MemoryHelpers.ReadMultipleBitsAsNormalizedUInt(valuePtr, bitOffset, sizeInBits) * 2.0f - 1.0f;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -616,17 +591,11 @@ namespace UnityEngine.InputSystem.LowLevel
             switch (fmt)
             {
                 case kFormatBit:
-                {
-                    if(sizeInBits == 1)
+                    if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
                     else
-                    {
-                        var maxValue = (1 << (int) sizeInBits) - 1;
-                        var intValue = (int) (value * maxValue);
-                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, intValue);
-                    }
+                        MemoryHelpers.WriteNormalizedUintAsMultipleBits(valuePtr, bitOffset, sizeInBits, (float)value);
                     break;
-                }
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -686,18 +655,18 @@ namespace UnityEngine.InputSystem.LowLevel
             switch (fmt)
             {
                 case kFormatBit:
-                case kFormatSBit:
-                {
-                    if (sizeInBits > 32)
-                        throw new NotImplementedException(
-                            "Cannot yet write primitive values into bitfields wider than 32 bits");
-
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBoolean());
                     else
-                        MemoryHelpers.WriteIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
+                        MemoryHelpers.WriteUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToUInt32());
                     break;
-                }
+                case kFormatSBit:
+                    if (sizeInBits == 1)
+                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value.ToBoolean());
+                    else
+                        ////REVIEW: previous implementation was writing int32 as two's complement here
+                        MemoryHelpers.WriteIntAsExcessKMultipleBits(valuePtr, bitOffset, sizeInBits, value.ToInt32());
+                    break;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");

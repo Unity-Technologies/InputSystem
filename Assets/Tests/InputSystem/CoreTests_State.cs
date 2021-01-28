@@ -1676,9 +1676,9 @@ partial class CoreTests
     [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101)]
     [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue)]
     [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue)]
-    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, -1073741825)] // integer overflow, fix me?
+    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, 1073741823)] // excess-K
     [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1)]
-    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, -1)] // integer overflow, fix me?
+    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, int.MaxValue)] // excess-K
     // primitive types
     [TestCase(InputStateBlock.kFormatInt, 32, 32, 0u, 0, 0.0f)]
     [TestCase(InputStateBlock.kFormatInt, 64, 32, 1231231231u, 1231231231, 0.573336720466613769531f)]
