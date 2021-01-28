@@ -2679,11 +2679,16 @@ partial class CoreTests
         //Give action maps stable internal names (just like actions)
         var map = new InputActionMap("test");
 
-        map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick")
+        var action1 = map.AddAction(name: "action1", expectedControlLayout: "Button", binding: "/gamepad/leftStick");
+        action1
             .AddBinding("/gamepad/rightStick")
             .WithGroup("group")
             .WithProcessor("deadzone");
         map.AddAction(name: "action2", binding: "/gamepad/buttonSouth", interactions: "tap,slowTap(duration=0.1)");
+
+        // Add binding with an empty path and make sure we persist that correctly.
+        // https://fogbugz.unity3d.com/f/cases/1231968/
+        action1.AddBinding("");
 
         var json = map.ToJson();
         var maps = InputActionMap.FromJson(json);
@@ -2698,8 +2703,12 @@ partial class CoreTests
         Assert.That(maps[0].actions[1].id, Is.EqualTo(map["action2"].id));
         Assert.That(maps[0].actions[0].expectedControlType, Is.EqualTo("Button"));
         Assert.That(maps[0].actions[1].expectedControlType, Is.Null);
-        Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(2));
+        Assert.That(maps[0].actions[0].bindings, Has.Count.EqualTo(3));
         Assert.That(maps[0].actions[1].bindings, Has.Count.EqualTo(1));
+        Assert.That(maps[0].actions[0].bindings[0].path, Is.EqualTo("/gamepad/leftStick"));
+        Assert.That(maps[0].actions[0].bindings[1].path, Is.EqualTo("/gamepad/rightStick"));
+        Assert.That(maps[0].actions[0].bindings[2].path, Is.Not.Null);
+        Assert.That(maps[0].actions[0].bindings[2].path, Is.Empty);
         Assert.That(maps[0].actions[0].bindings[0].groups, Is.Null);
         Assert.That(maps[0].actions[0].bindings[1].groups, Is.EqualTo("group"));
         Assert.That(maps[0].actions[0].bindings[0].processors, Is.Null);

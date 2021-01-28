@@ -48,6 +48,7 @@ however, it has to be formatted properly to pass verification tests.
   action.AddBinding("<Gamepad>/button*"); // Will only receive buttonWest, buttonEast, and buttonNorth.
   ```
   * This also means that `InputAction.controls` will now only contain any control at most once.
+- Fixed JSON serialization of action maps not preserving empty binding paths ([case 1231968](https://issuetracker.unity3d.com/issues/cloning-actionmap-through-json-converts-empty-paths-to-null-which-is-not-allowed)).
 
 ### Added
 
