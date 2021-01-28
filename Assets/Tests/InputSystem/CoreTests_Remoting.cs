@@ -406,17 +406,17 @@ partial class CoreTests
             local.StartSending();
         }
 
-        ~FakeRemote()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
             if (runtime != null)
             {
                 runtime.Dispose();
                 runtime = null;
+            }
+            if (manager != null)
+            {
+                Object.Destroy(manager.m_Settings);
+                manager.Destroy();
             }
         }
     }

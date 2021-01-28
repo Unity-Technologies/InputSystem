@@ -13,6 +13,9 @@ using UnityEngine.Serialization;
 ////REVIEW: I think this would be much better served by having a composite type input for each of the three basic types of input (pointer, navigation, tracked)
 ////        I.e. there'd be a PointerInput, a NavigationInput, and a TrackedInput composite. This would solve several problems in one go and make
 ////        it much more obvious which inputs go together.
+////        NOTE: This does not actually solve the problem. Even if, for example, we have a PointerInput value struct and a PointerInputComposite
+////              that binds the individual inputs to controls, and then we use it to bind touch0 as a pointer input source, there may still be multiple
+////              touchscreens and thus multiple touches coming in through the same composite. This leads back to the same situation.
 
 ////REVIEW: The current input model has too much complexity for pointer input; find a way to simplify this.
 
@@ -635,22 +638,43 @@ namespace UnityEngine.InputSystem.UI
                 property.action.canceled -= actionCallback;
             }
 
+            var oldActionNull = property?.action == null;
+            var oldActionEnabled = property?.action != null && property.action.enabled;
+
             property = newValue;
 
             #if DEBUG
-            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough && newValue.action.m_Type != InputActionType.Button)
+            // We source inputs from arbitrary pointers through a set of pointer-related actions (point, click, etc). This means that in any frame,
+            // multiple pointers may pipe input through to the same action and we do not want the disambiguation code in InputActionState.ShouldIgnoreControlStateChange()
+            // to prevent input from getting to us. Thus, these actions should generally be set to InputActionType.PassThrough.
+            //
+            // We treat navigation actions differently as there is only a single NavigationModel for the UI that all navigation input feeds into.
+            // Thus, those actions should be configured with disambiguation active (i.e. Move should be a Value action and Submit and Cancel should
+            // be Button actions). This is especially important for Submit and Cancel as we get proper press and release action this way.
+            if (newValue != null && newValue.action != null && newValue.action.type != InputActionType.PassThrough && !IsNavigationAction(newValue))
             {
-                Debug.LogWarning("Non-button actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
-                    + $"input from multiple devices (action {newValue.action} is set to {newValue.action.type})", this);
+                Debug.LogWarning("Pointer-related actions used with the UI input module should generally be set to Pass-Through type so that the module can properly distinguish between "
+                    + $"input from multiple pointers (action {newValue.action} is set to {newValue.action.type})", this);
             }
             #endif
 
-            if (newValue != null && actionCallback != null && actionsHooked)
+            if (newValue?.action != null && actionCallback != null && actionsHooked)
             {
                 property.action.performed += actionCallback;
                 property.action.canceled += actionCallback;
             }
+
+            if (isActiveAndEnabled && newValue?.action != null && (oldActionEnabled || oldActionNull))
+                newValue.action.Enable();
         }
+
+        #if DEBUG
+        private bool IsNavigationAction(InputActionReference reference)
+        {
+            return reference == m_SubmitAction || reference == m_CancelAction || reference == m_MoveAction;
+        }
+
+        #endif
 
         /// <summary>
         /// An <see cref="InputAction"/> delivering a <see cref="Vector2"/> 2D screen position
@@ -661,6 +685,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Together with <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/>, this forms the basis for pointer-type UI input.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
         ///
         /// <example>
         /// <code>
@@ -698,6 +725,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
         ///
         /// <example>
         /// <code>
@@ -741,6 +771,9 @@ namespace UnityEngine.InputSystem.UI
         /// Note that together with <see cref="point"/>, this action is necessary for a pointer to be functional. The other clicks
         /// and <see cref="scrollWheel"/> are optional, however.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -783,6 +816,9 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
         ///
         /// <example>
         /// <code>
@@ -832,6 +868,9 @@ namespace UnityEngine.InputSystem.UI
         /// Note that the action is optional. A pointer is fully functional with just <see cref="point"/>
         /// and <see cref="leftClick"/> alone.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Button"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -877,6 +916,9 @@ namespace UnityEngine.InputSystem.UI
         /// This action together with <see cref="submit"/> and <see cref="cancel"/> form the sources for navigation-style
         /// UI input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector2"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -917,6 +959,8 @@ namespace UnityEngine.InputSystem.UI
         /// This action together with <see cref="move"/> and <see cref="cancel"/> form the sources for navigation-style
         /// UI input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.Button"/>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -956,6 +1000,8 @@ namespace UnityEngine.InputSystem.UI
         ///
         /// This action together with <see cref="move"/> and <see cref="submit"/> form the sources for navigation-style
         /// UI input.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.Button"/>.
         ///
         /// <example>
         /// <code>
@@ -998,6 +1044,9 @@ namespace UnityEngine.InputSystem.UI
         /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
         ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Quaternion"</c>.
+        ///
         /// <example>
         /// <code>
         /// var asset = ScriptableObject.Create&lt;InputActionAsset&gt;();
@@ -1036,6 +1085,9 @@ namespace UnityEngine.InputSystem.UI
         /// UI input from <see cref="TrackedDevice"/>. Other than that, UI input for tracked devices is no different from "normal"
         /// pointer-type input. This means that <see cref="leftClick"/>, <see cref="rightClick"/>, <see cref="middleClick"/>, and
         /// <see cref="scrollWheel"/> can all be used for tracked device input like for regular pointer input.
+        ///
+        /// This action should have its <see cref="InputAction.type"/> set to <see cref="InputActionType.PassThrough"/> and its
+        /// <see cref="InputAction.expectedControlType"/> set to <c>"Vector3"</c>.
         ///
         /// <example>
         /// <code>
@@ -1210,9 +1262,23 @@ namespace UnityEngine.InputSystem.UI
             ////        making that setup explicit in actions may be quite awkward and not nearly as robust.
             // Determine the pointer (and touch) ID. We default the pointer ID to the device
             // ID of the InputDevice.
+            var controlParent = control.parent;
+            var touchControlIndex = m_PointerTouchControls.IndexOfReference(controlParent);
+            if (touchControlIndex != -1)
+            {
+                // For touches, we cache a reference to the control of a pointer so that we don't
+                // have to continuously do ReadValue() on the touch ID control.
+                m_CurrentPointerId = m_PointerIds[touchControlIndex];
+                m_CurrentPointerIndex = touchControlIndex;
+                m_CurrentPointerType = UIPointerType.Touch;
+
+                return touchControlIndex;
+            }
+
             var pointerId = device.deviceId;
             var touchId = 0;
-            var controlParent = control.parent;
+
+            // Need to check if it's a touch so that we get a correct pointerId.
             if (controlParent is TouchControl touchControl)
                 touchId = touchControl.touchId.ReadValue();
             // Could be it's a toplevel control on Touchscreen (like "<Touchscreen>/position"). In that case,
@@ -1231,15 +1297,18 @@ namespace UnityEngine.InputSystem.UI
             // NOTE: This is a linear search but m_PointerIds is only IDs and the number of concurrent pointers
             //       should be very low at any one point (in fact, we don't generally expect to have more than one
             //       which is why we are using InlinedArrays).
-            for (var i = 0; i < m_PointerIds.length; i++)
+            if (touchId == 0) // Not necessary for touches; see above.
             {
-                if (m_PointerIds[i] == pointerId)
+                for (var i = 0; i < m_PointerIds.length; i++)
                 {
-                    // Existing entry found. Make it the current pointer.
-                    m_CurrentPointerId = pointerId;
-                    m_CurrentPointerIndex = i;
-                    m_CurrentPointerType = m_PointerStates[i].pointerType;
-                    return i;
+                    if (m_PointerIds[i] == pointerId)
+                    {
+                        // Existing entry found. Make it the current pointer.
+                        m_CurrentPointerId = pointerId;
+                        m_CurrentPointerIndex = i;
+                        m_CurrentPointerType = m_PointerStates[i].pointerType;
+                        return i;
+                    }
                 }
             }
 
@@ -1289,7 +1358,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 if (m_CurrentPointerIndex == -1)
                 {
-                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, device);
+                    m_CurrentPointerIndex = AllocatePointer(pointerId, touchId, pointerType, device, touchId != 0 ? controlParent : null);
                 }
                 else
                 {
@@ -1322,7 +1391,7 @@ namespace UnityEngine.InputSystem.UI
             if (pointerType != UIPointerType.None)
             {
                 // Device has an associated position input. Create a new pointer record.
-                index = AllocatePointer(pointerId, touchId, pointerType, device);
+                index = AllocatePointer(pointerId, touchId, pointerType, device, touchId != 0 ? controlParent : null);
             }
             else
             {
@@ -1374,7 +1443,7 @@ namespace UnityEngine.InputSystem.UI
             return index;
         }
 
-        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device)
+        private int AllocatePointer(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, InputControl touchControl = null)
         {
             // Recover event instance from previous record.
             var eventData = default(ExtendedPointerEventData);
@@ -1392,6 +1461,7 @@ namespace UnityEngine.InputSystem.UI
 
             // Allocate state.
             m_PointerIds.AppendWithCapacity(pointerId);
+            m_PointerTouchControls.AppendWithCapacity(touchControl);
             return m_PointerStates.AppendWithCapacity(new PointerModel(pointerId, touchId, pointerType, device, eventData));
         }
 
@@ -1406,6 +1476,8 @@ namespace UnityEngine.InputSystem.UI
 
         private void RemovePointerAtIndex(int index)
         {
+            if (m_PointerStates[index].eventData.pointerEnter != null)
+                Debug.Log("Foo");
             Debug.Assert(m_PointerStates[index].eventData.pointerEnter == null, "Pointer should have exited all objects before being removed");
 
             // Retain event data so that we can reuse the event the next time we allocate a PointerModel record.
@@ -1415,6 +1487,7 @@ namespace UnityEngine.InputSystem.UI
             // Remove. Note that we may change the order of pointers here. This can save us needless copying
             // and m_CurrentPointerIndex should be the only index we get around for longer.
             m_PointerIds.RemoveAtByMovingTailWithCapacity(index);
+            m_PointerTouchControls.RemoveAtByMovingTailWithCapacity(index);
             m_PointerStates.RemoveAtByMovingTailWithCapacity(index);
             Debug.Assert(m_PointerIds.length == m_PointerStates.length, "Pointer ID array should match state array in length");
 
@@ -1454,14 +1527,17 @@ namespace UnityEngine.InputSystem.UI
             {
                 ref var state = ref GetPointerStateForIndex(i);
                 var device = state.eventData.device;
-                if (!HaveControlForDevice(device, point) &&
-                    !HaveControlForDevice(device, trackedDevicePosition) &&
-                    !HaveControlForDevice(device, trackedDeviceOrientation))
+                if (!device.added || // Check if device was removed altogether.
+                    (!HaveControlForDevice(device, point) &&
+                     !HaveControlForDevice(device, trackedDevicePosition) &&
+                     !HaveControlForDevice(device, trackedDeviceOrientation)))
                 {
                     SendPointerExitEventsAndRemovePointer(i);
                     --i;
                 }
             }
+
+            m_NeedToPurgeStalePointers = false;
         }
 
         private static bool HaveControlForDevice(InputDevice device, InputActionReference actionReference)
@@ -1480,6 +1556,13 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnPoint(InputAction.CallbackContext context)
         {
+            // When a pointer is removed, there's like a non-zero coordinate on the position control and thus
+            // we will see cancellations on the "Point" action. Ignore these as they provide no useful values
+            // and we want to avoid doing a read of touch IDs in GetPointerStateFor() on an already removed
+            // touchscreen.
+            if (CheckForRemovedDevice(ref context))
+                return;
+
             ref var state = ref GetPointerStateFor(ref context);
             state.screenPosition = context.ReadValue<Vector2>();
         }
@@ -1490,6 +1573,9 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnLeftClick(InputAction.CallbackContext context)
         {
+            if (CheckForRemovedDevice(ref context))
+                return;
+
             ref var state = ref GetPointerStateFor(ref context);
             state.leftButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
@@ -1497,6 +1583,9 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnRightClick(InputAction.CallbackContext context)
         {
+            if (CheckForRemovedDevice(ref context))
+                return;
+
             ref var state = ref GetPointerStateFor(ref context);
             state.rightButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
@@ -1504,9 +1593,26 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnMiddleClick(InputAction.CallbackContext context)
         {
+            if (CheckForRemovedDevice(ref context))
+                return;
+
             ref var state = ref GetPointerStateFor(ref context);
             state.middleButton.isPressed = context.ReadValueAsButton();
             state.changedThisFrame = true;
+        }
+
+        private bool CheckForRemovedDevice(ref InputAction.CallbackContext context)
+        {
+            // When a device is removed, we want to simply cancel ongoing pointer
+            // operations. Most importantly, we want to prevent GetPointerStateFor()
+            // doing ReadValue() on touch ID controls when a touchscreen has already
+            // been removed.
+            if (context.canceled && !context.control.device.added)
+            {
+                m_NeedToPurgeStalePointers = true;
+                return true;
+            }
+            return false;
         }
 
         internal const float kPixelPerLine = 20;
@@ -1538,11 +1644,14 @@ namespace UnityEngine.InputSystem.UI
 
         private void OnControlsChanged(object obj)
         {
-            PurgeStalePointers();
+            m_NeedToPurgeStalePointers = true;
         }
 
         public override void Process()
         {
+            if (m_NeedToPurgeStalePointers)
+                PurgeStalePointers();
+
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
             if (!eventSystem.isFocused)
             {
@@ -1701,6 +1810,7 @@ namespace UnityEngine.InputSystem.UI
 
         private bool m_OwnsEnabledState;
         private bool m_ActionsHooked;
+        private bool m_NeedToPurgeStalePointers;
 
         private Action<InputAction.CallbackContext> m_OnPointDelegate;
         private Action<InputAction.CallbackContext> m_OnMoveDelegate;
@@ -1715,9 +1825,10 @@ namespace UnityEngine.InputSystem.UI
         // Pointer-type input (also tracking-type).
         private int m_CurrentPointerId = -1; // Keeping track of the current pointer avoids searches in most cases.
         private int m_CurrentPointerIndex = -1;
-        private UIPointerType m_CurrentPointerType = UIPointerType.None;
-        private InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
-        private InlinedArray<PointerModel> m_PointerStates;
+        internal UIPointerType m_CurrentPointerType = UIPointerType.None;
+        internal InlinedArray<int> m_PointerIds; // Index in this array maps to index in m_PointerStates. Separated out to make searching more efficient (we do a linear search).
+        internal InlinedArray<InputControl> m_PointerTouchControls;
+        internal InlinedArray<PointerModel> m_PointerStates;
 
         // Navigation-type input.
         private NavigationModel m_NavigationState;

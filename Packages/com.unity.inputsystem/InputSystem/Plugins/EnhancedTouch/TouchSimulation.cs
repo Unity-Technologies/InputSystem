@@ -1,4 +1,5 @@
 using System;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -77,14 +78,15 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 throw new ArgumentNullException(nameof(pointer));
 
             // Ignore if already added.
-            if (ArrayHelpers.ContainsReference(m_Sources, m_NumSources, pointer))
+            if (ArrayHelpers.ContainsReference(m_Pointers, m_NumPointers, pointer))
                 return;
 
-            var numPositions = m_NumSources;
-            ArrayHelpers.AppendWithCapacity(ref m_CurrentPositions, ref numPositions, Vector2.zero);
-            var index = ArrayHelpers.AppendWithCapacity(ref m_Sources, ref m_NumSources, pointer);
+            // Add to list.
+            var numPointers = m_NumPointers;
+            ArrayHelpers.AppendWithCapacity(ref m_Pointers, ref m_NumPointers, pointer);
+            ArrayHelpers.AppendWithCapacity(ref m_CurrentPositions, ref numPointers, default);
 
-            InstallStateChangeMonitors(index);
+            InputSystem.DisableDevice(pointer, keepSendingEvents: true);
         }
 
         protected void RemovePointer(Pointer pointer)
@@ -93,229 +95,103 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 throw new ArgumentNullException(nameof(pointer));
 
             // Ignore if not added.
-            var index = m_Sources.IndexOfReference(pointer, m_NumSources);
-            if (index == -1)
+            var pointerIndex = m_Pointers.IndexOfReference(pointer, m_NumPointers);
+            if (pointerIndex == -1)
                 return;
-
-            // Removing the pointer will shift indices of all pointers coming after it. So we uninstall all
-            // monitors starting with the device we're about to remove and then re-install whatever is left
-            // starting at the same index.
-            UninstallStateChangeMonitors(index);
 
             // Cancel all ongoing touches from the pointer.
             for (var i = 0; i < m_Touches.Length; ++i)
             {
-                if (m_Touches[i].touchId == 0 || m_Touches[i].sourceIndex != index)
+                var button = m_Touches[i];
+                if (button != null && button.device != pointer)
                     continue;
 
-                var isPrimary = m_PrimaryTouchIndex == i;
-                var touch = new TouchState
-                {
-                    phase = TouchPhase.Canceled,
-                    position = m_CurrentPositions[index],
-                    touchId = m_Touches[i].touchId,
-                };
-
-                if (isPrimary)
-                {
-                    InputState.Change(simulatedTouchscreen.primaryTouch, touch);
-                    m_PrimaryTouchIndex = -1;
-                }
-
-                InputState.Change(simulatedTouchscreen.touches[i], touch);
-
-                m_Touches[i].touchId = 0;
-                m_Touches[i].sourceIndex = 0;
+                UpdateTouch(i, pointerIndex, TouchPhase.Canceled);
             }
 
-            // Remove from arrays.
-            var numPositions = m_NumSources;
-            ArrayHelpers.EraseAtWithCapacity(m_CurrentPositions, ref numPositions, index);
-            ArrayHelpers.EraseAtWithCapacity(m_Sources, ref m_NumSources, index);
+            // Remove from list.
+            var numPointers = m_NumPointers;
+            ArrayHelpers.EraseAtWithCapacity(m_Pointers, ref m_NumPointers, pointerIndex);
+            ArrayHelpers.EraseAtWithCapacity(m_CurrentPositions, ref numPointers, pointerIndex);
 
-            if (index != m_NumSources)
-                InstallStateChangeMonitors(index);
+            // Re-enable the device.
+            InputSystem.EnableDevice(pointer);
         }
 
-        protected void InstallStateChangeMonitors(int startIndex = 0)
+        private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
         {
-            ////REVIEW: just bind to the entire pointer state instead of to individual controls?
-            for (var i = startIndex; i < m_NumSources; ++i)
-            {
-                var pointer = m_Sources[i];
+            var pointerIndex = m_Pointers.IndexOfReference(device, m_NumPointers);
+            if (pointerIndex < 0)
+                return;
 
-                // Monitor position.
-                InputState.AddChangeMonitor(pointer.position, this, i);
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
+                return;
 
-                // Monitor any button that isn't synthetic.
-                var buttonIndex = 0;
-                foreach (var control in pointer.allControls)
-                    if (control is ButtonControl button && !button.synthetic)
-                    {
-                        InputState.AddChangeMonitor(button, this, ((long)(uint)buttonIndex << 32) | (uint)i);
-                        ++buttonIndex;
-                    }
-            }
-        }
-
-        protected void UninstallStateChangeMonitors(int startIndex = 0)
-        {
-            for (var i = startIndex; i < m_NumSources; ++i)
-            {
-                var pointer = m_Sources[i];
-
-                InputState.RemoveChangeMonitor(pointer.position, this, i);
-
-                var buttonIndex = 0;
-                foreach (var control in pointer.allControls)
-                    if (control is ButtonControl button && !button.synthetic)
-                    {
-                        InputState.RemoveChangeMonitor(button, this, ((long)(uint)buttonIndex << 32) | (uint)i);
-                        ++buttonIndex;
-                    }
-            }
-        }
-
-        protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr, long sourceDeviceAndButtonIndex)
-        {
-            var sourceDeviceIndex = sourceDeviceAndButtonIndex & 0xffffffff;
-            if (sourceDeviceIndex < 0 && sourceDeviceIndex >= m_NumSources)
-                throw new ArgumentOutOfRangeException(nameof(sourceDeviceIndex), $"Index {sourceDeviceIndex} out of range; have {m_NumSources} sources");
-
-            ////TODO: this can be simplified a lot if we use events instead of InputState.Change() but doing so requires work on buffering events while processing; also
+            ////TODO: this can be simplified if we use events instead of InputState.Change() but doing so requires work on buffering events while processing; also
             ////       needs extra handling to not lag into the next frame
 
-            if (control is ButtonControl button)
+            ////REVIEW: should we have specialized paths for MouseState and PenState here? (probably can only use for StateEvents)
+
+            // Read pointer position.
+            var positionControl = m_Pointers[pointerIndex].position;
+            var positionStatePtr = positionControl.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+            if (positionStatePtr != null)
+                m_CurrentPositions[pointerIndex] = positionControl.ReadValueFromState(positionStatePtr);
+
+            // End touches for which buttons are no longer pressed.
+            ////REVIEW: There must be a better way to do this
+            for (var i = 0; i < m_Touches.Length; ++i)
             {
-                var buttonIndex = (int)(sourceDeviceAndButtonIndex >> 32);
-                var isPressed = button.isPressed;
-                if (isPressed)
+                var button = m_Touches[i];
+                if (button == null || button.device != device)
+                    continue;
+
+                var buttonStatePtr = button.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+                if (buttonStatePtr == null)
                 {
-                    // Start new touch.
-                    for (var i = 0; i < m_Touches.Length; ++i)
-                    {
-                        // Find unused touch.
-                        if (m_Touches[i].touchId != 0)
-                            continue;
+                    // Button is not contained in event. If we do have a position update, issue
+                    // a move on the button's corresponding touch. This makes us deal with delta
+                    // events that only update pointer positions.
+                    if (positionStatePtr != null)
+                        UpdateTouch(i, pointerIndex, TouchPhase.Moved, eventPtr);
+                }
+                else if (button.ReadValueFromState(buttonStatePtr) < (ButtonControl.s_GlobalDefaultButtonPressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold))
+                    UpdateTouch(i, pointerIndex, TouchPhase.Ended, eventPtr);
+            }
 
-                        var touchId = ++m_LastTouchId;
-                        m_Touches[i] = new SimulatedTouch
-                        {
-                            touchId = touchId,
-                            buttonIndex = buttonIndex,
-                            sourceIndex = (int)sourceDeviceIndex,
-                        };
+            // Add/update touches for buttons that are pressed.
+            foreach (var control in eventPtr.EnumerateControls(InputControlExtensions.Enumerate.IgnoreControlsInDefaultState, device))
+            {
+                if (!control.isButton)
+                    continue;
 
-                        var isPrimary = m_PrimaryTouchIndex == -1;
-                        var position = m_CurrentPositions[sourceDeviceIndex];
-                        var oldTouch = simulatedTouchscreen.touches[i].ReadValue();
+                // Check if it's pressed.
+                var buttonStatePtr = control.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+                Debug.Assert(buttonStatePtr != null, "Button returned from EnumerateControls() must be found in event");
+                var value = 0f;
+                control.ReadValueFromStateIntoBuffer(buttonStatePtr, UnsafeUtility.AddressOf(ref value), 4);
+                if (value <= ButtonControl.s_GlobalDefaultButtonPressPoint)
+                    continue; // Not in default state but also not pressed.
 
-                        var touch = new TouchState
-                        {
-                            touchId = touchId,
-                            position = position,
-                            phase = TouchPhase.Began,
-                            startTime = time,
-                            startPosition = position,
-                            isPrimaryTouch = isPrimary,
-                            tapCount = oldTouch.tapCount,
-                        };
-
-                        if (isPrimary)
-                        {
-                            InputState.Change(simulatedTouchscreen.primaryTouch, touch, eventPtr: eventPtr);
-                            m_PrimaryTouchIndex = i;
-                        }
-                        InputState.Change(simulatedTouchscreen.touches[i], touch, eventPtr: eventPtr);
-
-                        break;
-                    }
+                // See if we have an ongoing touch for the button.
+                var touchIndex = m_Touches.IndexOfReference(control);
+                if (touchIndex < 0)
+                {
+                    // No, so add it.
+                    touchIndex = m_Touches.IndexOfReference((ButtonControl)null);
+                    m_Touches[touchIndex] = (ButtonControl)control;
+                    if (touchIndex >= 0) // If negative, we're at max touch count and can't add more.
+                        UpdateTouch(touchIndex, pointerIndex, TouchPhase.Began, eventPtr);
                 }
                 else
                 {
-                    // End ongoing touch.
-                    for (var i = 0; i < m_Touches.Length; ++i)
-                    {
-                        if (m_Touches[i].buttonIndex != buttonIndex || m_Touches[i].sourceIndex != sourceDeviceIndex ||
-                            m_Touches[i].touchId == 0)
-                            continue;
-
-                        // Detect taps.
-                        var position = m_CurrentPositions[sourceDeviceIndex];
-                        var oldTouch = simulatedTouchscreen.touches[i].ReadValue();
-                        var isTap = time - oldTouch.startTime <= Touchscreen.s_TapTime &&
-                            (position - oldTouch.startPosition).sqrMagnitude <= Touchscreen.s_TapRadiusSquared;
-
-                        var touch = new TouchState
-                        {
-                            touchId = m_Touches[i].touchId,
-                            phase = TouchPhase.Ended,
-                            position = position,
-                            tapCount = (byte)(oldTouch.tapCount + (isTap ? 1 : 0)),
-                            isTap = isTap,
-                            startPosition = oldTouch.startPosition,
-                            startTime = oldTouch.startTime,
-                        };
-
-                        if (m_PrimaryTouchIndex == i)
-                        {
-                            InputState.Change(simulatedTouchscreen.primaryTouch, touch, eventPtr: eventPtr);
-                            ////TODO: check if there's an ongoing touch that can take over
-                            m_PrimaryTouchIndex = -1;
-                        }
-                        InputState.Change(simulatedTouchscreen.touches[i], touch, eventPtr: eventPtr);
-
-                        m_Touches[i].touchId = 0;
-                        break;
-                    }
+                    // Yes, so update it.
+                    UpdateTouch(touchIndex, pointerIndex, TouchPhase.Moved, eventPtr);
                 }
             }
-            else
-            {
-                Debug.Assert(control is InputControl<Vector2>, "Expecting control to be either a button or a position");
-                var positionControl = (InputControl<Vector2>)control;
 
-                // Update recorded position.
-                var position = positionControl.ReadValue();
-                var delta = position - m_CurrentPositions[sourceDeviceIndex];
-                m_CurrentPositions[sourceDeviceIndex] = position;
-
-                // Update position of ongoing touches from this pointer.
-                for (var i = 0; i < m_Touches.Length; ++i)
-                {
-                    if (m_Touches[i].sourceIndex != sourceDeviceIndex || m_Touches[i].touchId == 0)
-                        continue;
-
-                    var oldTouch = simulatedTouchscreen.touches[i].ReadValue();
-                    var isPrimary = m_PrimaryTouchIndex == i;
-                    var touch = new TouchState
-                    {
-                        touchId = m_Touches[i].touchId,
-                        phase = TouchPhase.Moved,
-                        position = position,
-                        delta = delta,
-                        isPrimaryTouch = isPrimary,
-                        tapCount = oldTouch.tapCount,
-                        isTap = false, // Can't be tap as it's a move.
-                        startPosition = oldTouch.startPosition,
-                        startTime = oldTouch.startTime,
-                    };
-
-                    if (isPrimary)
-                        InputState.Change(simulatedTouchscreen.primaryTouch, touch, eventPtr: eventPtr);
-                    InputState.Change(simulatedTouchscreen.touches[i], touch, eventPtr: eventPtr);
-                }
-            }
-        }
-
-        void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
-        {
-            OnSourceControlChangedValue(control, time, eventPtr, monitorIndex);
-        }
-
-        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
-        {
-            // We don't use timers on our monitors.
+            eventPtr.handled = true;
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -365,12 +241,18 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
 
             if (m_Touches == null)
-                m_Touches = new SimulatedTouch[simulatedTouchscreen.touches.Count];
+                m_Touches = new ButtonControl[simulatedTouchscreen.touches.Count];
 
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Added);
 
-            InputSystem.onDeviceChange += OnDeviceChange;
+            if (m_OnDeviceChange == null)
+                m_OnDeviceChange = OnDeviceChange;
+            if (m_OnEvent == null)
+                m_OnEvent = OnEvent;
+
+            InputSystem.onDeviceChange += m_OnDeviceChange;
+            InputSystem.onEvent += m_OnEvent;
         }
 
         protected void OnDisable()
@@ -378,25 +260,84 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             if (simulatedTouchscreen != null && simulatedTouchscreen.added)
                 InputSystem.RemoveDevice(simulatedTouchscreen);
 
-            UninstallStateChangeMonitors();
+            // Re-enable all pointers we disabled.
+            for (var i = 0; i < m_NumPointers; ++i)
+                InputSystem.EnableDevice(m_Pointers[i]);
 
-            m_Sources.Clear(m_NumSources);
-            m_CurrentPositions.Clear(m_NumSources);
+            m_Pointers.Clear(m_NumPointers);
             m_Touches.Clear();
 
-            m_NumSources = 0;
+            m_NumPointers = 0;
             m_LastTouchId = 0;
             m_PrimaryTouchIndex = -1;
 
-            InputSystem.onDeviceChange -= OnDeviceChange;
+            InputSystem.onDeviceChange -= m_OnDeviceChange;
+            InputSystem.onEvent -= m_OnEvent;
         }
 
-        [NonSerialized] private int m_NumSources;
-        [NonSerialized] private Pointer[] m_Sources;
+        private unsafe void UpdateTouch(int touchIndex, int pointerIndex, TouchPhase phase, InputEventPtr eventPtr = default)
+        {
+            var position = m_CurrentPositions[pointerIndex];
+            var touch = new TouchState
+            {
+                phase = phase,
+                position = position
+            };
+            var time = eventPtr.valid ? eventPtr.time : InputState.currentTime;
+
+            var oldTouchState = (TouchState*)((byte*)simulatedTouchscreen.currentStatePtr +
+                simulatedTouchscreen.touches[touchIndex].stateBlock.byteOffset);
+
+            if (phase == TouchPhase.Began)
+            {
+                touch.isPrimaryTouch = m_PrimaryTouchIndex < 0;
+                touch.startTime = time;
+                touch.startPosition = position;
+                touch.touchId = ++m_LastTouchId;
+                touch.tapCount = oldTouchState->tapCount; // Get reset automatically by Touchscreen.
+
+                if (touch.isPrimaryTouch)
+                    m_PrimaryTouchIndex = touchIndex;
+            }
+            else
+            {
+                touch.touchId = oldTouchState->touchId;
+                touch.isPrimaryTouch = m_PrimaryTouchIndex == touchIndex;
+                touch.delta = position - oldTouchState->position;
+                touch.startPosition = oldTouchState->startPosition;
+                touch.startTime = oldTouchState->startTime;
+                touch.tapCount = oldTouchState->tapCount;
+
+                if (phase == TouchPhase.Ended)
+                {
+                    touch.isTap = time - oldTouchState->startTime <= Touchscreen.s_TapTime &&
+                        (position - oldTouchState->startPosition).sqrMagnitude <= Touchscreen.s_TapRadiusSquared;
+                    if (touch.isTap)
+                        ++touch.tapCount;
+                }
+            }
+
+            if (touch.isPrimaryTouch)
+                InputState.Change(simulatedTouchscreen.primaryTouch, touch, eventPtr: eventPtr);
+            InputState.Change(simulatedTouchscreen.touches[touchIndex], touch, eventPtr: eventPtr);
+
+            if (phase.IsEndedOrCanceled())
+            {
+                m_Touches[touchIndex] = null;
+                if (m_PrimaryTouchIndex == touchIndex)
+                    m_PrimaryTouchIndex = -1;
+            }
+        }
+
+        [NonSerialized] private int m_NumPointers;
+        [NonSerialized] private Pointer[] m_Pointers;
         [NonSerialized] private Vector2[] m_CurrentPositions;
-        [NonSerialized] private SimulatedTouch[] m_Touches;
+        [NonSerialized] private ButtonControl[] m_Touches;
+
         [NonSerialized] private int m_LastTouchId;
         [NonSerialized] private int m_PrimaryTouchIndex = -1;
+        [NonSerialized] private Action<InputDevice, InputDeviceChange> m_OnDeviceChange;
+        [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
 
@@ -430,14 +371,32 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         #endif
 
-        /// <summary>
-        /// An ongoing simulated touch.
-        /// </summary>
-        private struct SimulatedTouch
+        ////TODO: Remove IInputStateChangeMonitor from this class when we can break the API
+        void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
         {
-            public int sourceIndex;
-            public int buttonIndex;
-            public int touchId;
+        }
+
+        void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time, long monitorIndex, int timerIndex)
+        {
+        }
+
+        // Disable warnings about unused parameters.
+        #pragma warning disable CA1801
+
+        ////TODO: [Obsolete]
+        protected void InstallStateChangeMonitors(int startIndex = 0)
+        {
+        }
+
+        ////TODO: [Obsolete]
+        protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr,
+            long sourceDeviceAndButtonIndex)
+        {
+        }
+
+        ////TODO: [Obsolete]
+        protected void UninstallStateChangeMonitors(int startIndex = 0)
+        {
         }
     }
 }

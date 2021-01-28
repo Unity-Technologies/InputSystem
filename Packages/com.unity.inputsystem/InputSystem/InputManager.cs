@@ -1378,7 +1378,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: this should reset the device to its default state
-        public void EnableOrDisableDevice(InputDevice device, bool enable)
+        public void EnableOrDisableDevice(InputDevice device, bool enable, bool keepSendingEvents = false)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
@@ -1399,7 +1399,7 @@ namespace UnityEngine.InputSystem
                 var command = EnableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);
             }
-            else
+            else if (!keepSendingEvents)
             {
                 var command = DisableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);
@@ -2257,14 +2257,7 @@ namespace UnityEngine.InputSystem
 
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
-            InputUpdate.s_LastUpdateType = updateType;
-            if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
-            {
-                // We want to update step counts to be correct in OnNextUpdate() and onBeforeUpdate callbacks.
-                // We use a boolean flag to tell OnUpdate() that we've already incremented the count.
-                ++InputUpdate.s_UpdateStepCount;
-                InputUpdate.s_HaveUpdatedStepCount = true;
-            }
+            InputUpdate.OnBeforeUpdate(updateType);
 
             // For devices that have state callbacks, tell them we're carrying state over
             // into the next frame.
@@ -2586,20 +2579,9 @@ namespace UnityEngine.InputSystem
             // Store current time offset.
             InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = m_Runtime.currentTimeOffsetToRealtimeSinceStartup;
 
-            InputUpdate.s_LastUpdateType = updateType;
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
-            var isBeforeRenderUpdate = false;
-            if (updateType == InputUpdateType.Dynamic || updateType == InputUpdateType.Manual || updateType == InputUpdateType.Fixed)
-            {
-                if (!InputUpdate.s_HaveUpdatedStepCount)
-                    ++InputUpdate.s_UpdateStepCount;
-                InputUpdate.s_HaveUpdatedStepCount = false;
-            }
-            else if (updateType == InputUpdateType.BeforeRender)
-            {
-                isBeforeRenderUpdate = true;
-            }
+            InputUpdate.OnUpdate(updateType);
 
             // See if we're supposed to only take events up to a certain time.
             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
@@ -2650,7 +2632,7 @@ namespace UnityEngine.InputSystem
 
                 // In before render updates, we only take state events and only those for devices
                 // that have before render updates enabled.
-                if (isBeforeRenderUpdate)
+                if (updateType == InputUpdateType.BeforeRender)
                 {
                     while (remainingEventCount > 0)
                     {

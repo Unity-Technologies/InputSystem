@@ -1708,6 +1708,11 @@ namespace UnityEngine.InputSystem
         /// Disable the given device, i.e. "mute" it.
         /// </summary>
         /// <param name="device">Device to disable. If already disabled, the method will do nothing.</param>
+        /// <param name="keepSendingEvents">If true, no <see cref="LowLevel.DisableDeviceCommand"/> will be sent
+        /// for the device. This means that the backend sending input events will not be notified about the device
+        /// being disabled and will thus keep sending events. This can be useful when input is being rerouted from
+        /// one device to another. For example, <see cref="TouchSimulation"/> uses this to disable the <see cref="Mouse"/>
+        /// while redirecting its events to input on a <see cref="Touchscreen"/>.<br/><br/>This parameter is false by default.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <remarks>
         /// A disabled device will not receive input and will remain in its default state. It will remain
@@ -1727,9 +1732,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="EnableDevice"/>
         /// <seealso cref="InputDevice.enabled"/>
-        public static void DisableDevice(InputDevice device)
+        public static void DisableDevice(InputDevice device, bool keepSendingEvents = false)
         {
-            s_Manager.EnableOrDisableDevice(device, false);
+            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents: keepSendingEvents);
         }
 
         public static bool TrySyncDevice(InputDevice device)
@@ -2147,6 +2152,11 @@ namespace UnityEngine.InputSystem
         /// callback for each event which originates from a recognized device, before then proceeding
         /// to process the event. However, if any of the callbacks sets <see cref="InputEvent.handled"/>
         /// to true, the event will be skipped and ignored.
+        ///
+        /// Note that a device that is disabled (see <see cref="InputDevice.enabled"/>) may still get
+        /// this event signalled for it. A <see cref="DisableDeviceCommand"/> will usually be sent to
+        /// backends when a device is disabled but a backend may or may not respond to the command and
+        /// thus may or may not keep sending events for the device.
         ///
         /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
         /// Instead, they are consumed in the order they are produced. This means that they
@@ -3156,7 +3166,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
             XR.XRSupport.Initialize();
             #endif
 

@@ -100,8 +100,9 @@ namespace UnityEngine.InputSystem.Utilities
             return ContainsReference(array, array.Length, value);
         }
 
-        public static bool ContainsReference<TValue>(TValue[] array, int count, TValue value)
-            where TValue : class
+        public static bool ContainsReference<TFirst, TSecond>(TFirst[] array, int count, TSecond value)
+            where TSecond : class
+            where TFirst : TSecond
         {
             return IndexOfReference(array, value, count) != -1;
         }
@@ -154,14 +155,16 @@ namespace UnityEngine.InputSystem.Utilities
             return -1;
         }
 
-        public static int IndexOfReference<TValue>(this TValue[] array, TValue value, int count = -1)
-            where TValue : class
+        public static int IndexOfReference<TFirst, TSecond>(this TFirst[] array, TSecond value, int count = -1)
+            where TSecond : class
+            where TFirst : TSecond
         {
             return IndexOfReference(array, value, 0, count);
         }
 
-        public static int IndexOfReference<TValue>(this TValue[] array, TValue value, int startIndex, int count)
-            where TValue : class
+        public static int IndexOfReference<TFirst, TSecond>(this TFirst[] array, TSecond value, int startIndex, int count)
+            where TSecond : class
+            where TFirst : TSecond
         {
             if (array == null)
                 return -1;

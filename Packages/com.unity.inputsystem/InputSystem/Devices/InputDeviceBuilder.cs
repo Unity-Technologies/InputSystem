@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -393,6 +394,7 @@ namespace UnityEngine.InputSystem.Layouts
             control.synthetic = controlItem.isSynthetic;
             if (control.noisy)
                 m_Device.noisy = true;
+            control.isButton = control is ButtonControl;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
