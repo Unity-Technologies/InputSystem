@@ -1,0 +1,22 @@
+diff --git a/Editor/Sources/Services/Doc/Documentation.cs b/Editor/Sources/Services/Doc/Documentation.cs
+index 67e0ea527bf8b86cc3ac55c98e5f434fef6c8d2f..0f3e83179193ad16a7e8f1683d2e9fe6f5475b75 100644
+--- a/Editor/Sources/Services/Doc/Documentation.cs
++++ b/Editor/Sources/Services/Doc/Documentation.cs
+@@ -123,7 +123,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
+         /// <param name="packageInfo">The package info object</param>
+         /// <param name="version">Version in Semantic version format -- eg: 1.2.0</param>
+         ///<param name="outputFolder">(Optional) Output folder where the doc site should be created.</param>
+-        public string Generate(PackageInfo packageInfo, string version, string outputFolder = null)
++        public (string, string) Generate(PackageInfo packageInfo, string version, string outputFolder = null)
+         {
+             string buildlog = "Nothing generated.";
+             var packageName = packageInfo.name;
+@@ -132,7 +132,7 @@ namespace UnityEditor.PackageManager.DocumentationTools.UI
+             if (!Builder.TryBuildRedirectToManual(packageName, shortVersionId, outputFolder))
+                 buildlog = Builder.BuildWithProgress(packageInfo, shortVersionId, outputFolder);                    // Always re-build
+ 
+-            return buildlog;
++            return (buildlog, shortVersionId);
+         }
+ 
+         /// <summary>

@@ -33,6 +33,7 @@ Packages/com.unity.inputsystem/**/*.api
 Packages/com.unity.inputsystem/**/*.api.meta
 
 Packages/com.unity.package-manager-ui/
+Packages/com.unity.package-manager-doctools/
 
 .Editor
 .bin
