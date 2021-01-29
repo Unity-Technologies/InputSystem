@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using NUnit.Framework;
 using System.Runtime.InteropServices;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Linux;
@@ -226,6 +227,7 @@ internal class LinuxTests : InputTestFixture
 
         public TestSDLJoystick WithButton(SDLButtonUsage usage, bool value = true)
         {
+            Debug.Assert((int)SDLButtonUsage.Count <= 32);
             var bitMask = 1 << ((int)usage - 1);
 
             if (value)

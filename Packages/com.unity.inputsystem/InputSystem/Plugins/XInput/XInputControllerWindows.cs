@@ -79,7 +79,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWindowsState WithButton(Button button)
         {
-            buttons |= (ushort)((uint)1 << (int)button);
+            Debug.Assert((int)button < 16);
+            buttons |= (ushort)(1U << (int)button);
             return this;
         }
     }

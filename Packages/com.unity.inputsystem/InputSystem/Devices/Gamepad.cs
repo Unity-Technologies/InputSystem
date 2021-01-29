@@ -158,7 +158,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
             foreach (var button in buttons)
             {
-                var bit = (uint)1 << (int)button;
+                Debug.Assert((int)button < 32);
+                var bit = 1U << (int)button;
                 this.buttons |= bit;
             }
         }
@@ -172,7 +173,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>GamepadState with a modified <see cref="buttons"/> mask.</returns>
         public GamepadState WithButton(GamepadButton button, bool value = true)
         {
-            var bit = (uint)1 << (int)button;
+            Debug.Assert((int)button < 32);
+            var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;
             else

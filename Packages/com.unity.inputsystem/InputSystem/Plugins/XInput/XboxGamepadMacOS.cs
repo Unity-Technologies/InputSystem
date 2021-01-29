@@ -97,7 +97,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerOSXState WithButton(Button button)
         {
-            buttons |= (ushort)((uint)1 << (int)button);
+            Debug.Assert((int)button < 16);
+            buttons |= (ushort)(1U << (int)button);
             return this;
         }
     }
@@ -174,7 +175,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWirelessOSXState WithButton(Button button)
         {
-            buttons |= (uint)1 << (int)button;
+            Debug.Assert((int)button < 32);
+            buttons |= 1U << (int)button;
             return this;
         }
 

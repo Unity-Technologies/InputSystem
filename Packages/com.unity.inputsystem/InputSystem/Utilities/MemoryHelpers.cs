@@ -55,64 +55,19 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static void WriteSingleBit(void* ptr, uint bitOffset, bool value)
         {
-            if (bitOffset < 8)
-            {
-                if (value)
-                    *(byte*)ptr |= (byte)(1 << (int)bitOffset);
-                else
-                    *(byte*)ptr &= (byte)~(1 << (int)bitOffset);
-            }
-            else if (bitOffset < 32)
-            {
-                if (value)
-                    *(int*)ptr |= 1 << (int)bitOffset;
-                else
-                    *(int*)ptr &= ~(1 << (int)bitOffset);
-            }
+            var byteOffset = bitOffset >> 3;
+            bitOffset &= 7;
+            if (value)
+                *((byte*)ptr + byteOffset) |= (byte)(1U << (int)bitOffset);
             else
-            {
-                var byteOffset = bitOffset / 8;
-                bitOffset %= 8;
-
-                if (value)
-                    *((byte*)ptr + byteOffset) |= (byte)(1 << (int)bitOffset);
-                else
-                    *((byte*)ptr + byteOffset) &= (byte)~(1 << (int)bitOffset);
-            }
+                *((byte*)ptr + byteOffset) &= (byte)~(1U << (int)bitOffset);
         }
 
         public static bool ReadSingleBit(void* ptr, uint bitOffset)
         {
-            ////TODO: currently this is not actually enforced...
-            // The layout code makes sure that bitfields are either 8bit or multiples
-            // of 32bits. So we always safely read either a byte or int. Handling
-            // the 8bit and 32bit case directly will lead to nicely aligned memory
-            // accesses if the state has been laid out that way.
-
-            int bits;
-
-            if (bitOffset < 8)
-            {
-                bits = *(byte*)ptr;
-            }
-            else if (bitOffset < 32)
-            {
-                bits = *(int*)ptr;
-            }
-            else
-            {
-                // Long bitfield. Compute an offset to the byte we need and fetch
-                // only that byte. Adjust the bit offset to be for that byte.
-                // On this path, we may end up doing memory accesses that the CPU
-                // doesn't like much.
-
-                var byteOffset = bitOffset / 8;
-                bitOffset %= 8;
-
-                bits = *((byte*)ptr + byteOffset);
-            }
-
-            return (bits & (1 << (int)bitOffset)) != 0;
+            var byteOffset = bitOffset >> 3;
+            bitOffset &= 7;
+            return (*((byte*)ptr + byteOffset) & (1U << (int)bitOffset)) != 0;
         }
 
         public static void MemCpyBitRegion(void* destination, void* source, uint bitOffset, uint bitCount)

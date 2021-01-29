@@ -110,10 +110,12 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <returns>Same PenState with an updated <see cref="buttons"/> mask.</returns>
         public PenState WithButton(PenButton button, bool state = true)
         {
+            Debug.Assert((int)button < 16);
+            var bit = 1U << (int)button;
             if (state)
-                buttons |= (ushort)(1 << (int)button);
+                buttons |= (ushort)bit;
             else
-                buttons &= (ushort)~(1 << (int)button);
+                buttons &= (ushort)~bit;
             return this;
         }
 

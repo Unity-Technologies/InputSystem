@@ -60,9 +60,9 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
         [FieldOffset(8)] public ushort rightStickX;
         [FieldOffset(10)] public ushort rightStickY;
 
-        public float leftTrigger => ((buttons & (1 << (int)Button.ZL)) != 0) ? 1f : 0f;
+        public float leftTrigger => ((buttons & (1U << (int)Button.ZL)) != 0) ? 1f : 0f;
 
-        public float rightTrigger => ((buttons & (1 << (int)Button.ZR)) != 0) ? 1f : 0f;
+        public float rightTrigger => ((buttons & (1U << (int)Button.ZR)) != 0) ? 1f : 0f;
 
         public enum Button
         {
@@ -89,7 +89,8 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
         public SwitchProControllerHIDInputState WithButton(Button button, bool value = true)
         {
-            var bit = (uint)1 << (int)button;
+            Debug.Assert((int)button < 32);
+            var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;
             else

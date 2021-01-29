@@ -603,18 +603,21 @@ namespace UnityEngine.InputSystem
 
         internal static uint EncodeStateOffsetToControlMapEntry(uint controlIndex, uint stateOffsetInBits, uint stateSizeInBits)
         {
-            Debug.Assert(controlIndex < (1 << kControlIndexBits), "Control index beyond what is supported");
-            Debug.Assert(stateOffsetInBits < (1 << kStateOffsetBits), "State offset beyond what is supported");
-            Debug.Assert(stateSizeInBits < (1 << kStateSizeBits), "State size beyond what is supported");
+            Debug.Assert(kControlIndexBits < 32);
+            Debug.Assert(kStateOffsetBits < 32);
+            Debug.Assert(kStateSizeBits < 32);
+            Debug.Assert(controlIndex < (1U << kControlIndexBits), "Control index beyond what is supported");
+            Debug.Assert(stateOffsetInBits < (1U << kStateOffsetBits), "State offset beyond what is supported");
+            Debug.Assert(stateSizeInBits < (1U << kStateSizeBits), "State size beyond what is supported");
             return stateOffsetInBits << (kControlIndexBits + kStateSizeBits) | stateSizeInBits << kControlIndexBits | controlIndex;
         }
 
         internal static void DecodeStateOffsetToControlMapEntry(uint entry, out uint controlIndex,
             out uint stateOffset, out uint stateSize)
         {
-            controlIndex = entry & (1 << kControlIndexBits) - 1;
+            controlIndex = entry & (1U << kControlIndexBits) - 1;
             stateOffset = entry >> (kControlIndexBits + kStateSizeBits);
-            stateSize = (entry >> kControlIndexBits) & (((1 << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
+            stateSize = (entry >> kControlIndexBits) & (((1U << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
         }
 
         // NOTE: We don't store processors in a combined array the same way we do for
