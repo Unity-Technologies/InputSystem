@@ -9,6 +9,9 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Added
+- Support for Device Simulator touchscreen input.
+
 ### Changed
 
 - An upper limit of 1024 controls per device and 1kb of memory state per device has been introduced.
