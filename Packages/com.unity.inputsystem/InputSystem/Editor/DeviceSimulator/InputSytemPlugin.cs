@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.DeviceSimulation;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Editor
@@ -20,11 +18,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnCreate()
         {
-            var playerSettings = Resources.FindObjectsOfTypeAll<PlayerSettings>()[0];
-            SerializedObject playerSettingsSerialized = new SerializedObject(playerSettings);
-
-            var activeInputHandler = playerSettingsSerialized.FindProperty("activeInputHandler").intValue;
-            m_InputSystemEnabled = activeInputHandler == 1 || activeInputHandler == 2;
+            m_InputSystemEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
             if (m_InputSystemEnabled)
             {
                 deviceSimulator.touchScreenInput += OnTouchEvent;
@@ -33,7 +27,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_DisabledDevices = new List<InputDevice>();
                 foreach (var device in InputSystem.devices)
                 {
-                    if (device.native && device is Mouse && device.enabled)
+                    if (device.native && (device is Mouse || device is Pen) && device.enabled)
                     {
                         InputSystem.DisableDevice(device);
                         m_DisabledDevices.Add(device);
