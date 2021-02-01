@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEditor.DeviceSimulation;
 using UnityEngine.InputSystem.LowLevel;
 
@@ -21,17 +20,15 @@ namespace UnityEngine.InputSystem.Editor
             m_InputSystemEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
             if (m_InputSystemEnabled)
             {
+                m_DisabledDevices = new List<InputDevice>();
+
                 deviceSimulator.touchScreenInput += OnTouchEvent;
+                InputSystem.onDeviceChange += OnDeviceChange;
 
                 // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
-                m_DisabledDevices = new List<InputDevice>();
                 foreach (var device in InputSystem.devices)
                 {
-                    if (device.native && (device is Mouse || device is Pen) && device.enabled)
-                    {
-                        InputSystem.DisableDevice(device);
-                        m_DisabledDevices.Add(device);
-                    }
+                    DisableConflictingDevice(device);
                 }
 
                 m_SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
@@ -50,6 +47,21 @@ namespace UnityEngine.InputSystem.Editor
                     phase = ToInputSystem(touchEvent.phase),
                     position = touchEvent.position
                 });
+        }
+
+        private void DisableConflictingDevice(InputDevice device)
+        {
+            if (device.native && (device is Mouse || device is Pen) && device.enabled)
+            {
+                InputSystem.DisableDevice(device);
+                m_DisabledDevices.Add(device);
+            }
+        }
+
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
+                DisableConflictingDevice(device);
         }
 
         private static UnityEngine.InputSystem.TouchPhase ToInputSystem(UnityEditor.DeviceSimulation.TouchPhase original)
@@ -76,11 +88,14 @@ namespace UnityEngine.InputSystem.Editor
             if (m_InputSystemEnabled)
             {
                 deviceSimulator.touchScreenInput -= OnTouchEvent;
+                InputSystem.onDeviceChange -= OnDeviceChange;
+
                 if (m_SimulatorTouchscreen != null)
                     InputSystem.RemoveDevice(m_SimulatorTouchscreen);
                 foreach (var device in m_DisabledDevices)
                 {
-                    InputSystem.EnableDevice(device);
+                    if (device.added)
+                        InputSystem.EnableDevice(device);
                 }
             }
         }
