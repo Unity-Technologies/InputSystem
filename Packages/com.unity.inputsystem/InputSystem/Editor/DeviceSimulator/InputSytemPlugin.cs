@@ -9,8 +9,9 @@ namespace UnityEngine.InputSystem.Editor
 {
     internal class InputSystemPlugin : DeviceSimulatorPlugin
     {
+        internal Touchscreen SimulatorTouchscreen;
+
         private bool m_InputSystemEnabled;
-        private Touchscreen m_SimulatorTouchscreen;
         private List<InputDevice> m_DisabledDevices;
 
         public override string title => "Input System";
@@ -22,7 +23,9 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_DisabledDevices = new List<InputDevice>();
 
-                deviceSimulator.touchScreenInput += OnTouchEvent;
+                // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
+                if (deviceSimulator != null)
+                    deviceSimulator.touchScreenInput += OnTouchEvent;
                 InputSystem.onDeviceChange += OnDeviceChange;
 
                 // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
@@ -31,16 +34,16 @@ namespace UnityEngine.InputSystem.Editor
                     DisableConflictingDevice(device);
                 }
 
-                m_SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
+                SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
             }
         }
 
-        private void OnTouchEvent(TouchEvent touchEvent)
+        internal void OnTouchEvent(TouchEvent touchEvent)
         {
             // Input System does not accept 0 as id
             var id = touchEvent.touchId + 1;
 
-            InputSystem.QueueStateEvent(m_SimulatorTouchscreen,
+            InputSystem.QueueStateEvent(SimulatorTouchscreen,
                 new TouchState
                 {
                     touchId = id,
@@ -87,11 +90,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_InputSystemEnabled)
             {
-                deviceSimulator.touchScreenInput -= OnTouchEvent;
+                // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
+                if (deviceSimulator != null)
+                    deviceSimulator.touchScreenInput -= OnTouchEvent;
                 InputSystem.onDeviceChange -= OnDeviceChange;
 
-                if (m_SimulatorTouchscreen != null)
-                    InputSystem.RemoveDevice(m_SimulatorTouchscreen);
+                if (SimulatorTouchscreen != null)
+                    InputSystem.RemoveDevice(SimulatorTouchscreen);
                 foreach (var device in m_DisabledDevices)
                 {
                     if (device.added)
