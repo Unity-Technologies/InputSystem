@@ -5,6 +5,8 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 
+////REVIEW: remove users automatically when exiting play mode?
+
 ////REVIEW: do we need to handle the case where devices are added to a user that are each associated with a different user account
 
 ////REVIEW: how should we handle pairings of devices *not* called for by a control scheme? should that result in a failed match?
@@ -399,6 +401,45 @@ namespace UnityEngine.InputSystem.Users
                     s_OnUnpairedDeviceUsed.RemoveAtWithCapacity(index);
                 if (s_OnUnpairedDeviceUsed.length == 0)
                     UnhookFromDeviceStateChange();
+            }
+        }
+
+        /// <summary>
+        /// Callback that works in combination with <see cref="onUnpairedDeviceUsed"/>. If all callbacks
+        /// added to this event return <c>false</c> for a
+        /// </summary>
+        /// <remarks>
+        /// Checking a given event for activity of interest is relatively fast but is still costlier than
+        /// not doing it all. In case only certain devices are of interest for <see cref="onUnpairedDeviceUsed"/>,
+        /// this "pre-filter" can be used to quickly reject entire devices and thus skip looking closer at
+        /// an event.
+        ///
+        /// The first argument is the <see cref="InputDevice"/> than an event has been received for.
+        /// The second argument is the <see cref="InputEvent"/> that is being looked at.
+        ///
+        /// A callback should return <c>true</c> if it wants <see cref="onUnpairedDeviceUsed"/> to proceed
+        /// looking at the event and should return <c>false</c> if the event should be skipped.
+        ///
+        /// If multiple callbacks are added to the event, it is enough for any single one callback
+        /// to return <c>true</c> for the event to get looked at.
+        /// </remarks>
+        /// <seealso cref="onUnpairedDeviceUsed"/>
+        /// <seealso cref="listenForUnpairedDeviceActivity"/>
+        public static event Func<InputDevice, InputEventPtr, bool> onPrefilterUnpairedDeviceActivity
+        {
+            add
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                s_OnPreFilterUnpairedDeviceUsed.AppendWithCapacity(value);
+            }
+            remove
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                var index = s_OnPreFilterUnpairedDeviceUsed.IndexOf(value);
+                if (index != -1)
+                    s_OnPreFilterUnpairedDeviceUsed.RemoveAtWithCapacity(index);
             }
         }
 
@@ -1672,7 +1713,7 @@ namespace UnityEngine.InputSystem.Users
         //
         // NOTE: This also means that unpaired device activity will *only* be detected from events,
         //       NOT from state changes applied directly through InputState.Change.
-        private static unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
+        private static void OnEvent(InputEventPtr eventPtr, InputDevice device)
         {
             Debug.Assert(s_ListenForUnpairedDeviceActivity != 0,
                 "This should only be called while listening for unpaired device activity");
@@ -1680,7 +1721,8 @@ namespace UnityEngine.InputSystem.Users
                 return;
 
             // Ignore any state change not triggered from a state event.
-            if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+            var eventType = eventPtr.type;
+            if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                 return;
 
             // See if it's a device not belonging to any user.
@@ -1692,61 +1734,35 @@ namespace UnityEngine.InputSystem.Users
 
             Profiler.BeginSample("InputCheckForUnpairedDeviceActivity");
 
-            ////TODO: allow filtering (e.g. by device requirements on user actions)
+            // Apply the pre-filter. If there's callbacks and none of them return true,
+            // we early out and ignore the event entirely.
+            if (!DelegateHelpers.InvokeCallbacksSafe_AnyCallbackReturnsTrue(
+                ref s_OnPreFilterUnpairedDeviceUsed, device, eventPtr, "InputUser.onPreFilterUnpairedDeviceActivity"))
+                return;
 
-            // Go through controls and for any one that isn't noisy or synthetic, find out
-            // if we have a magnitude greater than zero.
-            var controls = device.allControls;
-            for (var i = 0; i < controls.Count; ++i)
+            // Go through the changed controls in the event and look for ones actuated
+            // above a magnitude of a little above zero.
+            foreach (var control in eventPtr.EnumerateChangedControls(device: device, magnitudeThreshold: 0.0001f))
             {
-                var control = controls[i];
-                if (control.noisy || control.synthetic)
-                    continue;
-
-                // Ignore non-leaf controls.
-                if (control.children.Count > 0)
-                    continue;
-
-                // Ignore controls that aren't part of the event.
-                var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                if (statePtr == null)
-                    continue;
-
-                // Check for default state. Cheaper check than magnitude evaluation
-                // which may involve several virtual method calls.
-                if (control.CheckStateIsAtDefault(statePtr))
-                    continue;
-
-                // Ending up here is costly. We now do per-control work that may involve
-                // walking all over the place in the InputControl machinery.
-                //
-                // NOTE: We already know the control has moved away from its default state
-                //       so in case it does not support magnitudes, we assume that the
-                //       control has changed value, too.
-                var magnitude = control.EvaluateMagnitude(statePtr);
-                if (magnitude > 0 || magnitude == -1)
+                var deviceHasBeenPaired = false;
+                for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
                 {
-                    // Yes, something was actuated on the device.
-                    var deviceHasBeenPaired = false;
-                    for (var n = 0; n < s_OnUnpairedDeviceUsed.length; ++n)
+                    var pairingStateVersionBefore = s_PairingStateVersion;
+
+                    s_OnUnpairedDeviceUsed[n](control, eventPtr);
+
+                    if (pairingStateVersionBefore != s_PairingStateVersion
+                        && FindUserPairedToDevice(device) != null)
                     {
-                        var pairingStateVersionBefore = s_PairingStateVersion;
-
-                        s_OnUnpairedDeviceUsed[n](control, eventPtr);
-
-                        if (pairingStateVersionBefore != s_PairingStateVersion
-                            && FindUserPairedToDevice(device) != null)
-                        {
-                            deviceHasBeenPaired = true;
-                            break;
-                        }
-                    }
-
-                    // If the device was paired in one of the callbacks, stop processing
-                    // changes on it.
-                    if (deviceHasBeenPaired)
+                        deviceHasBeenPaired = true;
                         break;
+                    }
                 }
+
+                // If the device was paired in one of the callbacks, stop processing
+                // changes on it.
+                if (deviceHasBeenPaired)
+                    break;
             }
 
             Profiler.EndSample();
@@ -1903,6 +1919,7 @@ namespace UnityEngine.InputSystem.Users
         private static InlinedArray<OngoingAccountSelection> s_OngoingAccountSelections;
         private static InlinedArray<Action<InputUser, InputUserChange, InputDevice>> s_OnChange;
         private static InlinedArray<Action<InputControl, InputEventPtr>> s_OnUnpairedDeviceUsed;
+        private static InlinedArray<Func<InputDevice, InputEventPtr, bool>> s_OnPreFilterUnpairedDeviceUsed;
         private static Action<object, InputActionChange> s_ActionChangeDelegate;
         private static Action<InputDevice, InputDeviceChange> s_OnDeviceChangeDelegate;
         private static Action<InputEventPtr, InputDevice> s_OnEventDelegate;
@@ -1980,9 +1997,10 @@ namespace UnityEngine.InputSystem.Users
             s_AllUsers = null;
             s_AllUserData = null;
             s_AllPairedDevices = null;
-            s_OngoingAccountSelections = new InlinedArray<OngoingAccountSelection>();
-            s_OnChange = new InlinedArray<Action<InputUser, InputUserChange, InputDevice>>();
-            s_OnUnpairedDeviceUsed = new InlinedArray<Action<InputControl, InputEventPtr>>();
+            s_OngoingAccountSelections = default;
+            s_OnChange = default;
+            s_OnUnpairedDeviceUsed = default;
+            s_OnPreFilterUnpairedDeviceUsed = default;
             s_OnDeviceChangeDelegate = null;
             s_OnEventDelegate = null;
             s_OnDeviceChangeHooked = false;

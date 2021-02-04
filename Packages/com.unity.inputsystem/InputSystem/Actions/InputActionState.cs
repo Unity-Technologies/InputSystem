@@ -1023,7 +1023,7 @@ namespace UnityEngine.InputSystem
                     // Check actuation level.
                     var actuation = ComputeMagnitude(ref trigger);
                     var actionState = &actionStates[actionIndex];
-                    var pressPoint = controls[controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                    var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
                     if (!actionState->isPressed && actuation >= pressPoint)
                     {
                         actionState->pressedInUpdate = InputUpdate.s_UpdateStepCount;
@@ -1451,6 +1451,15 @@ namespace UnityEngine.InputSystem
                         var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                         if (actuation <= threshold)
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
+                        else
+                        {
+                            // ShouldIgnoreControlStateChange may have switched one from control to another,
+                            // so make sure we update the trigger state here regardless of whether we changed
+                            // phase or not.
+                            actionState->controlIndex = trigger.controlIndex;
+                            actionState->bindingIndex = trigger.bindingIndex;
+                            actionState->magnitude = actuation;
+                        }
                     }
                     else if (actionState->isPassThrough)
                     {

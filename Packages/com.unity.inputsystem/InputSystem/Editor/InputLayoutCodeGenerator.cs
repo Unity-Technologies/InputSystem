@@ -104,6 +104,10 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine("using UnityEngine.InputSystem.LowLevel;");
             writer.WriteLine("using UnityEngine.InputSystem.Utilities;");
             writer.WriteLine("");
+            writer.WriteLine("// Suppress warnings from local variables for control references");
+            writer.WriteLine("// that we don't end up using.");
+            writer.WriteLine("#pragma warning disable CS0219");
+            writer.WriteLine("");
             if (@namespace != "")
                 writer.WriteLine("namespace " + @namespace);
             writer.BeginBlock();
@@ -150,68 +154,18 @@ namespace UnityEngine.InputSystem.Editor
             writer.WriteLine();
             foreach (var layout in usedControlLayouts)
                 writer.WriteLine($"var k{layout}Layout = new InternedString(\"{layout}\");");
+
             for (var i = 0; i < controlCount; ++i)
             {
                 var control = allControls[i];
-                var controlType = control.GetType();
                 var controlVariableName = MakeControlVariableName(control);
-                var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
 
                 writer.WriteLine("");
                 writer.WriteLine($"// {control.path}");
-                writer.WriteLine($"var {controlVariableName} = new {controlType.FullName.Replace('+', '.')}{controlFieldInits};");
-                writer.WriteLine($"{controlVariableName}.Setup()");
-                writer.WriteLine($"    .At(this, {i})");
-                writer.WriteLine(control.parent == device
-                    ? "    .WithParent(this)"
-                    : $"    .WithParent({MakeControlVariableName(control.parent)})");
-                if (control.children.Count > 0)
-                    writer.WriteLine($"    .WithChildren({control.m_ChildStartIndex}, {control.m_ChildCount})");
-                writer.WriteLine($"    .WithName(\"{control.name}\")");
-                writer.WriteLine($"    .WithDisplayName(\"{control.m_DisplayNameFromLayout.Replace("\\", "\\\\")}\")");
-                if (!string.IsNullOrEmpty(control.m_ShortDisplayNameFromLayout))
-                    writer.WriteLine($"    .WithShortDisplayName(\"{control.m_ShortDisplayNameFromLayout.Replace("\\", "\\\\")}\")");
-                writer.WriteLine($"    .WithLayout(k{control.layout}Layout)");
-                if (control.usages.Count > 0)
-                    writer.WriteLine($"    .WithUsages({control.m_UsageStartIndex}, {control.m_UsageCount})");
-                if (control.aliases.Count > 0)
-                    writer.WriteLine($"    .WithAliases({control.m_AliasStartIndex}, {control.m_AliasCount})");
-                if (control.noisy)
-                    writer.WriteLine("    .IsNoisy(true)");
-                if (control.synthetic)
-                    writer.WriteLine("    .IsSynthetic(true)");
-                writer.WriteLine("    .WithStateBlock(new InputStateBlock");
-                writer.WriteLine("    {");
-                writer.WriteLine($"        format = new FourCC({(int)control.stateBlock.format}),");
-                writer.WriteLine($"        byteOffset = {control.stateBlock.byteOffset},");
-                writer.WriteLine($"        bitOffset = {control.stateBlock.bitOffset},");
-                writer.WriteLine($"        sizeInBits = {control.stateBlock.sizeInBits}");
-                writer.WriteLine("    })");
-                if (control.hasDefaultState)
-                    writer.WriteLine($"    .WithDefaultState({control.m_DefaultState})");
-                if (control.m_MinValue != default || control.m_MaxValue != default)
-                    writer.WriteLine($"    .WithMinAndMax({control.m_MinValue}, {control.m_MaxValue})");
-                foreach (var processor in control.GetProcessors())
-                {
-                    var isEditorWindowSpaceProcessor = processor is EditorWindowSpaceProcessor;
-                    if (isEditorWindowSpaceProcessor)
-                        writer.WriteLine("    #if UNITY_EDITOR");
-
-                    var processorType = processor.GetType().FullName.Replace("+", ".");
-                    var valueType = InputProcessor.GetValueTypeFromType(processor.GetType());
-                    var fieldInits = processor.GetInitializersForPublicPrimitiveTypeFields();
-
-                    writer.WriteLine($"    .WithProcessor<InputProcessor<{valueType}>, {valueType}>(new {processorType}{fieldInits})");
-
-                    if (isEditorWindowSpaceProcessor)
-                        writer.WriteLine("    #endif");
-                }
-                writer.WriteLine("    .Finish();");
-
-                if (control is KeyControl key)
-                    writer.WriteLine($"{controlVariableName}.keyCode = UnityEngine.InputSystem.Key.{key.keyCode};");
-                else if (control is DpadControl.DpadAxisControl dpadAxis)
-                    writer.WriteLine($"{controlVariableName}.component = {dpadAxis.component};");
+                var parentName = "this";
+                if (control.parent != device)
+                    parentName = MakeControlVariableName(control.parent);
+                writer.WriteLine($"var {controlVariableName} = {NameOfControlMethod(controlVariableName)}(k{control.layout}Layout, {parentName});");
             }
 
             // Initialize usages array.
@@ -252,8 +206,43 @@ namespace UnityEngine.InputSystem.Editor
                 writer.EmitControlGetterInitializers(control, controlVariableName, controlGetterProperties);
             }
 
+            // State offset to control index map.
+            if (device.m_StateOffsetToControlMap != null)
+            {
+                writer.WriteLine();
+                writer.WriteLine("// State offset to control index map.");
+                writer.WriteLine("builder.WithStateOffsetToControlIndexMap(new uint[]");
+                writer.WriteLine("{");
+                ++writer.indentLevel;
+                var map = device.m_StateOffsetToControlMap;
+                var entryCount = map.Length;
+                for (var index = 0; index < entryCount;)
+                {
+                    if (index != 0)
+                        writer.WriteLine();
+                    // 10 entries a line.
+                    writer.WriteIndent();
+                    for (var i = 0; i < 10 && index < entryCount; ++index, ++i)
+                        writer.Write((index != 0 ? ", " : "") + map[index] + "u");
+                }
+                writer.WriteLine();
+                --writer.indentLevel;
+                writer.WriteLine("});");
+            }
+
+            writer.WriteLine();
             writer.WriteLine("builder.Finish();");
             writer.EndBlock();
+
+            for (var i = 0; i < controlCount; ++i)
+            {
+                var control = allControls[i];
+                var controlType = control.GetType();
+                var controlVariableName = MakeControlVariableName(control);
+                var controlFieldInits = control.GetInitializersForPublicPrimitiveTypeFields();
+                writer.WriteLine();
+                EmitControlMethod(writer, controlVariableName, controlType, controlFieldInits, i, control);
+            }
 
             writer.EndBlock();
             writer.EndBlock();
@@ -262,6 +251,80 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine($"#endif // {defines}");
 
             return writer.buffer.ToString();
+        }
+
+        private static string NameOfControlMethod(string controlVariableName)
+        {
+            return $"Initialize_{controlVariableName}";
+        }
+
+        // We emit this as a separate method instead of directly inline to avoid generating a single massive constructor method
+        // as these can lead to large build times with il2cpp and C++ compilers (https://fogbugz.unity3d.com/f/cases/1282090/).
+        private static void EmitControlMethod(InputActionCodeGenerator.Writer writer, string controlVariableName, Type controlType,
+            string controlFieldInits, int i, InputControl control)
+        {
+            var controlTypeName = controlType.FullName.Replace('+', '.');
+            writer.WriteLine($"private {controlTypeName} {NameOfControlMethod(controlVariableName)}(InternedString k{control.layout}Layout, InputControl parent)");
+            writer.BeginBlock();
+            writer.WriteLine($"var {controlVariableName} = new {controlTypeName}{controlFieldInits};");
+            writer.WriteLine($"{controlVariableName}.Setup()");
+            writer.WriteLine($"    .At(this, {i})");
+            writer.WriteLine("    .WithParent(parent)");
+            if (control.children.Count > 0)
+                writer.WriteLine($"    .WithChildren({control.m_ChildStartIndex}, {control.m_ChildCount})");
+            writer.WriteLine($"    .WithName(\"{control.name}\")");
+            writer.WriteLine($"    .WithDisplayName(\"{control.m_DisplayNameFromLayout.Replace("\\", "\\\\")}\")");
+            if (!string.IsNullOrEmpty(control.m_ShortDisplayNameFromLayout))
+                writer.WriteLine(
+                    $"    .WithShortDisplayName(\"{control.m_ShortDisplayNameFromLayout.Replace("\\", "\\\\")}\")");
+            writer.WriteLine($"    .WithLayout(k{control.layout}Layout)");
+            if (control.usages.Count > 0)
+                writer.WriteLine($"    .WithUsages({control.m_UsageStartIndex}, {control.m_UsageCount})");
+            if (control.aliases.Count > 0)
+                writer.WriteLine($"    .WithAliases({control.m_AliasStartIndex}, {control.m_AliasCount})");
+            if (control.noisy)
+                writer.WriteLine("    .IsNoisy(true)");
+            if (control.synthetic)
+                writer.WriteLine("    .IsSynthetic(true)");
+            if (control is ButtonControl)
+                writer.WriteLine("    .IsButton(true)");
+            writer.WriteLine("    .WithStateBlock(new InputStateBlock");
+            writer.WriteLine("    {");
+            writer.WriteLine($"        format = new FourCC({(int) control.stateBlock.format}),");
+            writer.WriteLine($"        byteOffset = {control.stateBlock.byteOffset},");
+            writer.WriteLine($"        bitOffset = {control.stateBlock.bitOffset},");
+            writer.WriteLine($"        sizeInBits = {control.stateBlock.sizeInBits}");
+            writer.WriteLine("    })");
+            if (control.hasDefaultState)
+                writer.WriteLine($"    .WithDefaultState({control.m_DefaultState})");
+            if (control.m_MinValue != default || control.m_MaxValue != default)
+                writer.WriteLine($"    .WithMinAndMax({control.m_MinValue}, {control.m_MaxValue})");
+            foreach (var processor in control.GetProcessors())
+            {
+                var isEditorWindowSpaceProcessor = processor is EditorWindowSpaceProcessor;
+                if (isEditorWindowSpaceProcessor)
+                    writer.WriteLine("    #if UNITY_EDITOR");
+
+                var processorType = processor.GetType().FullName.Replace("+", ".");
+                var valueType = InputProcessor.GetValueTypeFromType(processor.GetType());
+                var fieldInits = processor.GetInitializersForPublicPrimitiveTypeFields();
+
+                writer.WriteLine(
+                    $"    .WithProcessor<InputProcessor<{valueType}>, {valueType}>(new {processorType}{fieldInits})");
+
+                if (isEditorWindowSpaceProcessor)
+                    writer.WriteLine("    #endif");
+            }
+
+            writer.WriteLine("    .Finish();");
+
+            if (control is KeyControl key)
+                writer.WriteLine($"{controlVariableName}.keyCode = UnityEngine.InputSystem.Key.{key.keyCode};");
+            else if (control is DpadControl.DpadAxisControl dpadAxis)
+                writer.WriteLine($"{controlVariableName}.component = {dpadAxis.component};");
+
+            writer.WriteLine($"return {controlVariableName};");
+            writer.EndBlock();
         }
 
         private static string MakeControlVariableName(InputControl control)

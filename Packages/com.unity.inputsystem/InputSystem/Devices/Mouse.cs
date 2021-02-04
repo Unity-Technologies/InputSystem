@@ -305,11 +305,7 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr"></param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            var statePtr = currentStatePtr;
-
-            scroll.x.AccumulateValueInEvent(statePtr, eventPtr);
-            scroll.y.AccumulateValueInEvent(statePtr, eventPtr);
-
+            scroll.AccumulateValueInEvent(currentStatePtr, eventPtr);
             base.OnStateEvent(eventPtr);
         }
 

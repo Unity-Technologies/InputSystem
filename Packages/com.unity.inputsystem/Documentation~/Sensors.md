@@ -1,5 +1,19 @@
 # Sensor support
 
+* [Sampling Frequency](#sampling-frequency)
+* [Accelerometer](#accelerometer)
+* [Gyroscope](#gyroscope)
+* [GravitySensor](#gravitysensor)
+* [AttitudeSensor](#attitudesensor)
+* [LinearAccelerationSensor](#linearaccelerationsensor)
+* [MagneticFieldSensor](#magneticfieldsensor)
+* [LightSensor](#lightsensor)
+* [PressureSensor](#pressuresensor)
+* [ProximitySensor](#proximitysensor)
+* [HumiditySensor](#humiditysensor)
+* [AmbientTemperatureSensor](#ambienttemperaturesensor)
+* [StepCounter](#stepcounter)
+
 Sensors are [`InputDevices`](Devices.md) that measure environmental characteristics of the device that the content is running on. Unity currently supports sensors on iOS and Android. Android supports a wider range of sensors than iOS.
 
 Unlike other devices, sensors are disabled by default. To enable a sensor, call [`InputSystem.EnableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice_)).
@@ -8,7 +22,7 @@ Unlike other devices, sensors are disabled by default. To enable a sensor, call 
 InputSystem.EnableDevice(Gyroscope.current);
 ```
 
-To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_).
+To disable a sensor, call [`InputSystem.DisableDevice()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_).
 
 ```
 InputSystem.DisableDevice(Gyroscope.current);
@@ -36,7 +50,7 @@ Each sensor Device implements a single Control which represents the data read by
 |[`ProximitySensor`](#proximitysensor)|Yes|No|[`distance`](../api/UnityEngine.InputSystem.ProximitySensor.html#UnityEngine_InputSystem_ProximitySensor_distance)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 |[`HumiditySensor`](#humiditysensor)|Yes|No|[`relativeHumidity`](../api/UnityEngine.InputSystem.HumiditySensor.html#UnityEngine_InputSystem_HumiditySensor_relativeHumidity)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
 |[`AmbientTemperatureSensor`](#ambienttemperaturesensor)|Yes|No|[`ambientTemperature`](../api/UnityEngine.InputSystem.AmbientTemperatureSensor.html#UnityEngine_InputSystem_AmbientTemperatureSensor_ambientTemperature)|[`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html)|
-|[`StepCounter`](#stepcounter)|Yes|No|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
+|[`StepCounter`](#stepcounter)|Yes|Yes|[`stepCounter`](../api/UnityEngine.InputSystem.StepCounter.html#UnityEngine_InputSystem_StepCounter_stepCounter)|[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|
 
 ## Sampling frequency
 
@@ -97,3 +111,5 @@ This Input Device represents the ambient air temperature measured by the device 
 ## <a name="stepcounter"></a>[`StepCounter`](../api/UnityEngine.InputSystem.StepCounter.html)
 
 This Input Device represents the user's footstep count as measured by the device which is running the content.
+
+>NOTE: To access the pedometer on iOS/tvOS devices, you need to enable the [__Motion Usage__ setting](Settings.md#iostvos) in the [Input Settings](Settings.md).

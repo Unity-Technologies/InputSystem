@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
@@ -1707,6 +1708,11 @@ namespace UnityEngine.InputSystem
         /// Disable the given device, i.e. "mute" it.
         /// </summary>
         /// <param name="device">Device to disable. If already disabled, the method will do nothing.</param>
+        /// <param name="keepSendingEvents">If true, no <see cref="LowLevel.DisableDeviceCommand"/> will be sent
+        /// for the device. This means that the backend sending input events will not be notified about the device
+        /// being disabled and will thus keep sending events. This can be useful when input is being rerouted from
+        /// one device to another. For example, <see cref="TouchSimulation"/> uses this to disable the <see cref="Mouse"/>
+        /// while redirecting its events to input on a <see cref="Touchscreen"/>.<br/><br/>This parameter is false by default.</param>
         /// <exception cref="ArgumentNullException"><paramref name="device"/> is <c>null</c>.</exception>
         /// <remarks>
         /// A disabled device will not receive input and will remain in its default state. It will remain
@@ -1726,9 +1732,9 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="EnableDevice"/>
         /// <seealso cref="InputDevice.enabled"/>
-        public static void DisableDevice(InputDevice device)
+        public static void DisableDevice(InputDevice device, bool keepSendingEvents = false)
         {
-            s_Manager.EnableOrDisableDevice(device, false);
+            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents: keepSendingEvents);
         }
 
         public static bool TrySyncDevice(InputDevice device)
@@ -2146,6 +2152,11 @@ namespace UnityEngine.InputSystem
         /// callback for each event which originates from a recognized device, before then proceeding
         /// to process the event. However, if any of the callbacks sets <see cref="InputEvent.handled"/>
         /// to true, the event will be skipped and ignored.
+        ///
+        /// Note that a device that is disabled (see <see cref="InputDevice.enabled"/>) may still get
+        /// this event signalled for it. A <see cref="DisableDeviceCommand"/> will usually be sent to
+        /// backends when a device is disabled but a backend may or may not respond to the command and
+        /// thus may or may not keep sending events for the device.
         ///
         /// Note that the input system does NOT sort events by timestamps (<see cref="InputEvent.time"/>).
         /// Instead, they are consumed in the order they are produced. This means that they
@@ -2899,8 +2910,11 @@ namespace UnityEngine.InputSystem
         #if !UNITY_EDITOR
         private static bool ShouldEnableRemoting()
         {
-            ////FIXME: is there a better way to detect whether we are running tests?
-            var isRunningTests = Application.productName == "UnityTestFramework";
+#if UNITY_INCLUDE_TESTS
+            var isRunningTests = true;
+#else
+            var isRunningTests = false;
+#endif
             if (isRunningTests)
                 return false; // Don't remote while running tests.
             return true;
@@ -3152,7 +3166,7 @@ namespace UnityEngine.InputSystem
             Switch.SwitchSupportHID.Initialize();
             #endif
 
-            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
+            #if (UNITY_EDITOR || UNITY_STANDALONE || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH) && UNITY_INPUT_SYSTEM_ENABLE_XR && ENABLE_VR
             XR.XRSupport.Initialize();
             #endif
 
@@ -3219,6 +3233,7 @@ namespace UnityEngine.InputSystem
             Mouse.s_PlatformMouseDevice = null;
 
             InputUser.ResetGlobals();
+            EnhancedTouchSupport.Reset();
             Profiling.Profiler.EndSample();
         }
 
@@ -3292,6 +3307,7 @@ namespace UnityEngine.InputSystem
 
             ////FIXME: does not preserve global state in InputActionState
             ////TODO: preserve InputUser state
+            ////TODO: preserve EnhancedTouchSupport state
 
             s_SavedStateStack.Push(new State
             {

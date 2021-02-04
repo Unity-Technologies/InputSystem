@@ -1259,7 +1259,7 @@ namespace UnityEngine.InputSystem
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
                     m_Id = string.IsNullOrEmpty(id) ? null : id,
-                    path = string.IsNullOrEmpty(path) ? null : path,
+                    path = path,
                     action = string.IsNullOrEmpty(action) ? null : action,
                     interactions = string.IsNullOrEmpty(interactions) ? null : interactions,
                     processors = string.IsNullOrEmpty(processors) ? null : processors,

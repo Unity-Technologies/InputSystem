@@ -13,6 +13,10 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+// Suppress warnings from local variables for control references
+// that we don't end up using.
+#pragma warning disable CS0219
+
 namespace UnityEngine.InputSystem
 {
     internal partial class FastMouse : UnityEngine.InputSystem.Mouse
@@ -34,400 +38,67 @@ namespace UnityEngine.InputSystem
             var kIntegerLayout = new InternedString("Integer");
 
             // /Mouse/position
-            var ctrlMouseposition = new UnityEngine.InputSystem.Controls.Vector2Control();
-            ctrlMouseposition.Setup()
-                .At(this, 0)
-                .WithParent(this)
-                .WithChildren(13, 2)
-                .WithName("position")
-                .WithDisplayName("Position")
-                .WithLayout(kVector2Layout)
-                .WithUsages(0, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447379762),
-                    byteOffset = 0,
-                    bitOffset = 0,
-                    sizeInBits = 64
-                })
-                #if UNITY_EDITOR
-                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.EditorWindowSpaceProcessor())
-                #endif
-                .Finish();
+            var ctrlMouseposition = Initialize_ctrlMouseposition(kVector2Layout, this);
 
             // /Mouse/delta
-            var ctrlMousedelta = new UnityEngine.InputSystem.Controls.Vector2Control();
-            ctrlMousedelta.Setup()
-                .At(this, 1)
-                .WithParent(this)
-                .WithChildren(15, 2)
-                .WithName("delta")
-                .WithDisplayName("Delta")
-                .WithLayout(kVector2Layout)
-                .WithUsages(1, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447379762),
-                    byteOffset = 8,
-                    bitOffset = 0,
-                    sizeInBits = 64
-                })
-                .Finish();
+            var ctrlMousedelta = Initialize_ctrlMousedelta(kVector2Layout, this);
 
             // /Mouse/scroll
-            var ctrlMousescroll = new UnityEngine.InputSystem.Controls.Vector2Control();
-            ctrlMousescroll.Setup()
-                .At(this, 2)
-                .WithParent(this)
-                .WithChildren(17, 2)
-                .WithName("scroll")
-                .WithDisplayName("Scroll")
-                .WithLayout(kVector2Layout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447379762),
-                    byteOffset = 16,
-                    bitOffset = 0,
-                    sizeInBits = 64
-                })
-                .Finish();
+            var ctrlMousescroll = Initialize_ctrlMousescroll(kVector2Layout, this);
 
             // /Mouse/press
-            var ctrlMousepress = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMousepress.Setup()
-                .At(this, 3)
-                .WithParent(this)
-                .WithName("press")
-                .WithDisplayName("Press")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 0,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMousepress = Initialize_ctrlMousepress(kButtonLayout, this);
 
             // /Mouse/leftButton
-            var ctrlMouseleftButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMouseleftButton.Setup()
-                .At(this, 4)
-                .WithParent(this)
-                .WithName("leftButton")
-                .WithDisplayName("Left Button")
-                .WithShortDisplayName("LMB")
-                .WithLayout(kButtonLayout)
-                .WithUsages(4, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 0,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMouseleftButton = Initialize_ctrlMouseleftButton(kButtonLayout, this);
 
             // /Mouse/rightButton
-            var ctrlMouserightButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMouserightButton.Setup()
-                .At(this, 5)
-                .WithParent(this)
-                .WithName("rightButton")
-                .WithDisplayName("Right Button")
-                .WithShortDisplayName("RMB")
-                .WithLayout(kButtonLayout)
-                .WithUsages(5, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 1,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMouserightButton = Initialize_ctrlMouserightButton(kButtonLayout, this);
 
             // /Mouse/middleButton
-            var ctrlMousemiddleButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMousemiddleButton.Setup()
-                .At(this, 6)
-                .WithParent(this)
-                .WithName("middleButton")
-                .WithDisplayName("Middle Button")
-                .WithShortDisplayName("MMB")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 2,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMousemiddleButton = Initialize_ctrlMousemiddleButton(kButtonLayout, this);
 
             // /Mouse/forwardButton
-            var ctrlMouseforwardButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMouseforwardButton.Setup()
-                .At(this, 7)
-                .WithParent(this)
-                .WithName("forwardButton")
-                .WithDisplayName("Forward")
-                .WithLayout(kButtonLayout)
-                .WithUsages(6, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 3,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMouseforwardButton = Initialize_ctrlMouseforwardButton(kButtonLayout, this);
 
             // /Mouse/backButton
-            var ctrlMousebackButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlMousebackButton.Setup()
-                .At(this, 8)
-                .WithParent(this)
-                .WithName("backButton")
-                .WithDisplayName("Back")
-                .WithLayout(kButtonLayout)
-                .WithUsages(7, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 24,
-                    bitOffset = 4,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlMousebackButton = Initialize_ctrlMousebackButton(kButtonLayout, this);
 
             // /Mouse/pressure
-            var ctrlMousepressure = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousepressure.Setup()
-                .At(this, 9)
-                .WithParent(this)
-                .WithName("pressure")
-                .WithDisplayName("Pressure")
-                .WithLayout(kAxisLayout)
-                .WithUsages(8, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 32,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .WithDefaultState(1)
-                .Finish();
+            var ctrlMousepressure = Initialize_ctrlMousepressure(kAxisLayout, this);
 
             // /Mouse/radius
-            var ctrlMouseradius = new UnityEngine.InputSystem.Controls.Vector2Control();
-            ctrlMouseradius.Setup()
-                .At(this, 10)
-                .WithParent(this)
-                .WithChildren(19, 2)
-                .WithName("radius")
-                .WithDisplayName("Radius")
-                .WithLayout(kVector2Layout)
-                .WithUsages(9, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447379762),
-                    byteOffset = 40,
-                    bitOffset = 0,
-                    sizeInBits = 64
-                })
-                .Finish();
+            var ctrlMouseradius = Initialize_ctrlMouseradius(kVector2Layout, this);
 
             // /Mouse/pointerId
-            var ctrlMousepointerId = new UnityEngine.InputSystem.Controls.IntegerControl();
-            ctrlMousepointerId.Setup()
-                .At(this, 11)
-                .WithParent(this)
-                .WithName("pointerId")
-                .WithDisplayName("pointerId")
-                .WithLayout(kDigitalLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 48,
-                    bitOffset = 0,
-                    sizeInBits = 1
-                })
-                .Finish();
+            var ctrlMousepointerId = Initialize_ctrlMousepointerId(kDigitalLayout, this);
 
             // /Mouse/clickCount
-            var ctrlMouseclickCount = new UnityEngine.InputSystem.Controls.IntegerControl();
-            ctrlMouseclickCount.Setup()
-                .At(this, 12)
-                .WithParent(this)
-                .WithName("clickCount")
-                .WithDisplayName("Click Count")
-                .WithLayout(kIntegerLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1431521364),
-                    byteOffset = 28,
-                    bitOffset = 0,
-                    sizeInBits = 16
-                })
-                .Finish();
+            var ctrlMouseclickCount = Initialize_ctrlMouseclickCount(kIntegerLayout, this);
 
             // /Mouse/position/x
-            var ctrlMousepositionx = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousepositionx.Setup()
-                .At(this, 13)
-                .WithParent(ctrlMouseposition)
-                .WithName("x")
-                .WithDisplayName("Position X")
-                .WithShortDisplayName("Position X")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 0,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousepositionx = Initialize_ctrlMousepositionx(kAxisLayout, ctrlMouseposition);
 
             // /Mouse/position/y
-            var ctrlMousepositiony = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousepositiony.Setup()
-                .At(this, 14)
-                .WithParent(ctrlMouseposition)
-                .WithName("y")
-                .WithDisplayName("Position Y")
-                .WithShortDisplayName("Position Y")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 4,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousepositiony = Initialize_ctrlMousepositiony(kAxisLayout, ctrlMouseposition);
 
             // /Mouse/delta/x
-            var ctrlMousedeltax = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousedeltax.Setup()
-                .At(this, 15)
-                .WithParent(ctrlMousedelta)
-                .WithName("x")
-                .WithDisplayName("Delta X")
-                .WithShortDisplayName("Delta X")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 8,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousedeltax = Initialize_ctrlMousedeltax(kAxisLayout, ctrlMousedelta);
 
             // /Mouse/delta/y
-            var ctrlMousedeltay = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousedeltay.Setup()
-                .At(this, 16)
-                .WithParent(ctrlMousedelta)
-                .WithName("y")
-                .WithDisplayName("Delta Y")
-                .WithShortDisplayName("Delta Y")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 12,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousedeltay = Initialize_ctrlMousedeltay(kAxisLayout, ctrlMousedelta);
 
             // /Mouse/scroll/x
-            var ctrlMousescrollx = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousescrollx.Setup()
-                .At(this, 17)
-                .WithParent(ctrlMousescroll)
-                .WithName("x")
-                .WithDisplayName("Scroll Left/Right")
-                .WithShortDisplayName("Scroll Left/Right")
-                .WithLayout(kAxisLayout)
-                .WithUsages(2, 1)
-                .WithAliases(0, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 16,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousescrollx = Initialize_ctrlMousescrollx(kAxisLayout, ctrlMousescroll);
 
             // /Mouse/scroll/y
-            var ctrlMousescrolly = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMousescrolly.Setup()
-                .At(this, 18)
-                .WithParent(ctrlMousescroll)
-                .WithName("y")
-                .WithDisplayName("Scroll Up/Down")
-                .WithShortDisplayName("Scroll Wheel")
-                .WithLayout(kAxisLayout)
-                .WithUsages(3, 1)
-                .WithAliases(1, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 20,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMousescrolly = Initialize_ctrlMousescrolly(kAxisLayout, ctrlMousescroll);
 
             // /Mouse/radius/x
-            var ctrlMouseradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMouseradiusx.Setup()
-                .At(this, 19)
-                .WithParent(ctrlMouseradius)
-                .WithName("x")
-                .WithDisplayName("Radius X")
-                .WithShortDisplayName("Radius X")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 40,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMouseradiusx = Initialize_ctrlMouseradiusx(kAxisLayout, ctrlMouseradius);
 
             // /Mouse/radius/y
-            var ctrlMouseradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
-            ctrlMouseradiusy.Setup()
-                .At(this, 20)
-                .WithParent(ctrlMouseradius)
-                .WithName("y")
-                .WithDisplayName("Radius Y")
-                .WithShortDisplayName("Radius Y")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1179407392),
-                    byteOffset = 44,
-                    bitOffset = 0,
-                    sizeInBits = 32
-                })
-                .Finish();
+            var ctrlMouseradiusy = Initialize_ctrlMouseradiusy(kAxisLayout, ctrlMouseradius);
 
             // Usages.
             builder.WithControlUsage(0, new InternedString("Point"), ctrlMouseposition);
@@ -466,7 +137,480 @@ namespace UnityEngine.InputSystem
             ctrlMousescroll.y = ctrlMousescrolly;
             ctrlMouseradius.x = ctrlMouseradiusx;
             ctrlMouseradius.y = ctrlMouseradiusy;
+
+            // State offset to control index map.
+            builder.WithStateOffsetToControlIndexMap(new uint[]
+            {
+                32781u, 16809998u, 33587215u, 50364432u, 67141649u, 83918866u, 100664323u, 100664324u, 101188613u, 101712902u
+                , 102237191u, 102761480u, 117456908u, 134250505u, 167804947u, 184582164u, 201327627u
+            });
+
             builder.Finish();
+        }
+
+        private UnityEngine.InputSystem.Controls.Vector2Control Initialize_ctrlMouseposition(InternedString kVector2Layout, InputControl parent)
+        {
+            var ctrlMouseposition = new UnityEngine.InputSystem.Controls.Vector2Control();
+            ctrlMouseposition.Setup()
+                .At(this, 0)
+                .WithParent(parent)
+                .WithChildren(13, 2)
+                .WithName("position")
+                .WithDisplayName("Position")
+                .WithLayout(kVector2Layout)
+                .WithUsages(0, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447379762),
+                    byteOffset = 0,
+                    bitOffset = 0,
+                    sizeInBits = 64
+                })
+                #if UNITY_EDITOR
+                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.EditorWindowSpaceProcessor())
+                #endif
+                .Finish();
+            return ctrlMouseposition;
+        }
+
+        private UnityEngine.InputSystem.Controls.Vector2Control Initialize_ctrlMousedelta(InternedString kVector2Layout, InputControl parent)
+        {
+            var ctrlMousedelta = new UnityEngine.InputSystem.Controls.Vector2Control();
+            ctrlMousedelta.Setup()
+                .At(this, 1)
+                .WithParent(parent)
+                .WithChildren(15, 2)
+                .WithName("delta")
+                .WithDisplayName("Delta")
+                .WithLayout(kVector2Layout)
+                .WithUsages(1, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447379762),
+                    byteOffset = 8,
+                    bitOffset = 0,
+                    sizeInBits = 64
+                })
+                .Finish();
+            return ctrlMousedelta;
+        }
+
+        private UnityEngine.InputSystem.Controls.Vector2Control Initialize_ctrlMousescroll(InternedString kVector2Layout, InputControl parent)
+        {
+            var ctrlMousescroll = new UnityEngine.InputSystem.Controls.Vector2Control();
+            ctrlMousescroll.Setup()
+                .At(this, 2)
+                .WithParent(parent)
+                .WithChildren(17, 2)
+                .WithName("scroll")
+                .WithDisplayName("Scroll")
+                .WithLayout(kVector2Layout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447379762),
+                    byteOffset = 16,
+                    bitOffset = 0,
+                    sizeInBits = 64
+                })
+                .Finish();
+            return ctrlMousescroll;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMousepress(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMousepress = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMousepress.Setup()
+                .At(this, 3)
+                .WithParent(parent)
+                .WithName("press")
+                .WithDisplayName("Press")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 0,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMousepress;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMouseleftButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMouseleftButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMouseleftButton.Setup()
+                .At(this, 4)
+                .WithParent(parent)
+                .WithName("leftButton")
+                .WithDisplayName("Left Button")
+                .WithShortDisplayName("LMB")
+                .WithLayout(kButtonLayout)
+                .WithUsages(4, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 0,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMouseleftButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMouserightButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMouserightButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMouserightButton.Setup()
+                .At(this, 5)
+                .WithParent(parent)
+                .WithName("rightButton")
+                .WithDisplayName("Right Button")
+                .WithShortDisplayName("RMB")
+                .WithLayout(kButtonLayout)
+                .WithUsages(5, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 1,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMouserightButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMousemiddleButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMousemiddleButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMousemiddleButton.Setup()
+                .At(this, 6)
+                .WithParent(parent)
+                .WithName("middleButton")
+                .WithDisplayName("Middle Button")
+                .WithShortDisplayName("MMB")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 2,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMousemiddleButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMouseforwardButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMouseforwardButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMouseforwardButton.Setup()
+                .At(this, 7)
+                .WithParent(parent)
+                .WithName("forwardButton")
+                .WithDisplayName("Forward")
+                .WithLayout(kButtonLayout)
+                .WithUsages(6, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 3,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMouseforwardButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlMousebackButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlMousebackButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlMousebackButton.Setup()
+                .At(this, 8)
+                .WithParent(parent)
+                .WithName("backButton")
+                .WithDisplayName("Back")
+                .WithLayout(kButtonLayout)
+                .WithUsages(7, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 24,
+                    bitOffset = 4,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlMousebackButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousepressure(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousepressure = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousepressure.Setup()
+                .At(this, 9)
+                .WithParent(parent)
+                .WithName("pressure")
+                .WithDisplayName("Pressure")
+                .WithLayout(kAxisLayout)
+                .WithUsages(8, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 32,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .WithDefaultState(1)
+                .Finish();
+            return ctrlMousepressure;
+        }
+
+        private UnityEngine.InputSystem.Controls.Vector2Control Initialize_ctrlMouseradius(InternedString kVector2Layout, InputControl parent)
+        {
+            var ctrlMouseradius = new UnityEngine.InputSystem.Controls.Vector2Control();
+            ctrlMouseradius.Setup()
+                .At(this, 10)
+                .WithParent(parent)
+                .WithChildren(19, 2)
+                .WithName("radius")
+                .WithDisplayName("Radius")
+                .WithLayout(kVector2Layout)
+                .WithUsages(9, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447379762),
+                    byteOffset = 40,
+                    bitOffset = 0,
+                    sizeInBits = 64
+                })
+                .Finish();
+            return ctrlMouseradius;
+        }
+
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlMousepointerId(InternedString kDigitalLayout, InputControl parent)
+        {
+            var ctrlMousepointerId = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlMousepointerId.Setup()
+                .At(this, 11)
+                .WithParent(parent)
+                .WithName("pointerId")
+                .WithDisplayName("pointerId")
+                .WithLayout(kDigitalLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 48,
+                    bitOffset = 0,
+                    sizeInBits = 1
+                })
+                .Finish();
+            return ctrlMousepointerId;
+        }
+
+        private UnityEngine.InputSystem.Controls.IntegerControl Initialize_ctrlMouseclickCount(InternedString kIntegerLayout, InputControl parent)
+        {
+            var ctrlMouseclickCount = new UnityEngine.InputSystem.Controls.IntegerControl();
+            ctrlMouseclickCount.Setup()
+                .At(this, 12)
+                .WithParent(parent)
+                .WithName("clickCount")
+                .WithDisplayName("Click Count")
+                .WithLayout(kIntegerLayout)
+                .IsSynthetic(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1431521364),
+                    byteOffset = 28,
+                    bitOffset = 0,
+                    sizeInBits = 16
+                })
+                .Finish();
+            return ctrlMouseclickCount;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousepositionx(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousepositionx = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousepositionx.Setup()
+                .At(this, 13)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Position X")
+                .WithShortDisplayName("Position X")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 0,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousepositionx;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousepositiony(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousepositiony = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousepositiony.Setup()
+                .At(this, 14)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Position Y")
+                .WithShortDisplayName("Position Y")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 4,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousepositiony;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltax(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousedeltax = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousedeltax.Setup()
+                .At(this, 15)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Delta X")
+                .WithShortDisplayName("Delta X")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 8,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousedeltax;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousedeltay(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousedeltay = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousedeltay.Setup()
+                .At(this, 16)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Delta Y")
+                .WithShortDisplayName("Delta Y")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 12,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousedeltay;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrollx(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousescrollx = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousescrollx.Setup()
+                .At(this, 17)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Scroll Left/Right")
+                .WithShortDisplayName("Scroll Left/Right")
+                .WithLayout(kAxisLayout)
+                .WithUsages(2, 1)
+                .WithAliases(0, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 16,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousescrollx;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMousescrolly(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMousescrolly = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMousescrolly.Setup()
+                .At(this, 18)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Scroll Up/Down")
+                .WithShortDisplayName("Scroll Wheel")
+                .WithLayout(kAxisLayout)
+                .WithUsages(3, 1)
+                .WithAliases(1, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 20,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMousescrolly;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMouseradiusx(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMouseradiusx = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMouseradiusx.Setup()
+                .At(this, 19)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Radius X")
+                .WithShortDisplayName("Radius X")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 40,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMouseradiusx;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlMouseradiusy(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlMouseradiusy = new UnityEngine.InputSystem.Controls.AxisControl();
+            ctrlMouseradiusy.Setup()
+                .At(this, 20)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Radius Y")
+                .WithShortDisplayName("Radius Y")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1179407392),
+                    byteOffset = 44,
+                    bitOffset = 0,
+                    sizeInBits = 32
+                })
+                .Finish();
+            return ctrlMouseradiusy;
         }
     }
 }

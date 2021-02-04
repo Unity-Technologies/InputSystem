@@ -15,6 +15,10 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
+// Suppress warnings from local variables for control references
+// that we don't end up using.
+#pragma warning disable CS0219
+
 namespace UnityEngine.InputSystem.DualShock
 {
     internal partial class FastDualShock4GamepadHID : UnityEngine.InputSystem.DualShock.DualShock4GamepadHID
@@ -37,750 +41,115 @@ namespace UnityEngine.InputSystem.DualShock
             var kDiscreteButtonLayout = new InternedString("DiscreteButton");
 
             // /DualShock4GamepadHID/leftStick
-            var ctrlDualShock4GamepadHIDleftStick = new UnityEngine.InputSystem.Controls.StickControl();
-            ctrlDualShock4GamepadHIDleftStick.Setup()
-                .At(this, 0)
-                .WithParent(this)
-                .WithChildren(19, 6)
-                .WithName("leftStick")
-                .WithDisplayName("Left Stick")
-                .WithShortDisplayName("LS")
-                .WithLayout(kStickLayout)
-                .WithUsages(0, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447244354),
-                    byteOffset = 1,
-                    bitOffset = 0,
-                    sizeInBits = 16
-                })
-                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.StickDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStick = Initialize_ctrlDualShock4GamepadHIDleftStick(kStickLayout, this);
 
             // /DualShock4GamepadHID/rightStick
-            var ctrlDualShock4GamepadHIDrightStick = new UnityEngine.InputSystem.Controls.StickControl();
-            ctrlDualShock4GamepadHIDrightStick.Setup()
-                .At(this, 1)
-                .WithParent(this)
-                .WithChildren(25, 6)
-                .WithName("rightStick")
-                .WithDisplayName("Right Stick")
-                .WithShortDisplayName("RS")
-                .WithLayout(kStickLayout)
-                .WithUsages(1, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1447244354),
-                    byteOffset = 3,
-                    bitOffset = 0,
-                    sizeInBits = 16
-                })
-                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.StickDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStick = Initialize_ctrlDualShock4GamepadHIDrightStick(kStickLayout, this);
 
             // /DualShock4GamepadHID/dpad
-            var ctrlDualShock4GamepadHIDdpad = new UnityEngine.InputSystem.Controls.DpadControl();
-            ctrlDualShock4GamepadHIDdpad.Setup()
-                .At(this, 2)
-                .WithParent(this)
-                .WithChildren(31, 6)
-                .WithName("dpad")
-                .WithDisplayName("D-Pad")
-                .WithLayout(kDpadLayout)
-                .WithUsages(2, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .WithDefaultState(8)
-                .Finish();
+            var ctrlDualShock4GamepadHIDdpad = Initialize_ctrlDualShock4GamepadHIDdpad(kDpadLayout, this);
 
             // /DualShock4GamepadHID/buttonWest
-            var ctrlDualShock4GamepadHIDbuttonWest = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDbuttonWest.Setup()
-                .At(this, 3)
-                .WithParent(this)
-                .WithName("buttonWest")
-                .WithDisplayName("Square")
-                .WithShortDisplayName("Square")
-                .WithLayout(kButtonLayout)
-                .WithUsages(3, 1)
-                .WithAliases(0, 2)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 4,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDbuttonWest = Initialize_ctrlDualShock4GamepadHIDbuttonWest(kButtonLayout, this);
 
             // /DualShock4GamepadHID/buttonSouth
-            var ctrlDualShock4GamepadHIDbuttonSouth = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDbuttonSouth.Setup()
-                .At(this, 4)
-                .WithParent(this)
-                .WithName("buttonSouth")
-                .WithDisplayName("Cross")
-                .WithShortDisplayName("Cross")
-                .WithLayout(kButtonLayout)
-                .WithUsages(4, 2)
-                .WithAliases(2, 2)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 5,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDbuttonSouth = Initialize_ctrlDualShock4GamepadHIDbuttonSouth(kButtonLayout, this);
 
             // /DualShock4GamepadHID/buttonEast
-            var ctrlDualShock4GamepadHIDbuttonEast = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDbuttonEast.Setup()
-                .At(this, 5)
-                .WithParent(this)
-                .WithName("buttonEast")
-                .WithDisplayName("Circle")
-                .WithShortDisplayName("Circle")
-                .WithLayout(kButtonLayout)
-                .WithUsages(6, 2)
-                .WithAliases(4, 2)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 6,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDbuttonEast = Initialize_ctrlDualShock4GamepadHIDbuttonEast(kButtonLayout, this);
 
             // /DualShock4GamepadHID/buttonNorth
-            var ctrlDualShock4GamepadHIDbuttonNorth = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDbuttonNorth.Setup()
-                .At(this, 6)
-                .WithParent(this)
-                .WithName("buttonNorth")
-                .WithDisplayName("Triangle")
-                .WithShortDisplayName("Triangle")
-                .WithLayout(kButtonLayout)
-                .WithAliases(6, 2)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 7,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDbuttonNorth = Initialize_ctrlDualShock4GamepadHIDbuttonNorth(kButtonLayout, this);
 
             // /DualShock4GamepadHID/leftShoulder
-            var ctrlDualShock4GamepadHIDleftShoulder = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDleftShoulder.Setup()
-                .At(this, 7)
-                .WithParent(this)
-                .WithName("leftShoulder")
-                .WithDisplayName("L1")
-                .WithShortDisplayName("L1")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 0,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftShoulder = Initialize_ctrlDualShock4GamepadHIDleftShoulder(kButtonLayout, this);
 
             // /DualShock4GamepadHID/rightShoulder
-            var ctrlDualShock4GamepadHIDrightShoulder = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDrightShoulder.Setup()
-                .At(this, 8)
-                .WithParent(this)
-                .WithName("rightShoulder")
-                .WithDisplayName("R1")
-                .WithShortDisplayName("R1")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 1,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightShoulder = Initialize_ctrlDualShock4GamepadHIDrightShoulder(kButtonLayout, this);
 
             // /DualShock4GamepadHID/leftTriggerButton
-            var ctrlDualShock4GamepadHIDleftTriggerButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDleftTriggerButton.Setup()
-                .At(this, 9)
-                .WithParent(this)
-                .WithName("leftTriggerButton")
-                .WithDisplayName("leftTriggerButton")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 2,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftTriggerButton = Initialize_ctrlDualShock4GamepadHIDleftTriggerButton(kButtonLayout, this);
 
             // /DualShock4GamepadHID/rightTriggerButton
-            var ctrlDualShock4GamepadHIDrightTriggerButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDrightTriggerButton.Setup()
-                .At(this, 10)
-                .WithParent(this)
-                .WithName("rightTriggerButton")
-                .WithDisplayName("rightTriggerButton")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 3,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightTriggerButton = Initialize_ctrlDualShock4GamepadHIDrightTriggerButton(kButtonLayout, this);
 
             // /DualShock4GamepadHID/select
-            var ctrlDualShock4GamepadHIDselect = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDselect.Setup()
-                .At(this, 11)
-                .WithParent(this)
-                .WithName("select")
-                .WithDisplayName("Share")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 4,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDselect = Initialize_ctrlDualShock4GamepadHIDselect(kButtonLayout, this);
 
             // /DualShock4GamepadHID/start
-            var ctrlDualShock4GamepadHIDstart = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDstart.Setup()
-                .At(this, 12)
-                .WithParent(this)
-                .WithName("start")
-                .WithDisplayName("Options")
-                .WithLayout(kButtonLayout)
-                .WithUsages(8, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 5,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDstart = Initialize_ctrlDualShock4GamepadHIDstart(kButtonLayout, this);
 
             // /DualShock4GamepadHID/leftStickPress
-            var ctrlDualShock4GamepadHIDleftStickPress = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDleftStickPress.Setup()
-                .At(this, 13)
-                .WithParent(this)
-                .WithName("leftStickPress")
-                .WithDisplayName("L3")
-                .WithShortDisplayName("L3")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 6,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickPress = Initialize_ctrlDualShock4GamepadHIDleftStickPress(kButtonLayout, this);
 
             // /DualShock4GamepadHID/rightStickPress
-            var ctrlDualShock4GamepadHIDrightStickPress = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDrightStickPress.Setup()
-                .At(this, 14)
-                .WithParent(this)
-                .WithName("rightStickPress")
-                .WithDisplayName("R3")
-                .WithShortDisplayName("R3")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 6,
-                    bitOffset = 7,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickPress = Initialize_ctrlDualShock4GamepadHIDrightStickPress(kButtonLayout, this);
 
             // /DualShock4GamepadHID/systemButton
-            var ctrlDualShock4GamepadHIDsystemButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDsystemButton.Setup()
-                .At(this, 15)
-                .WithParent(this)
-                .WithName("systemButton")
-                .WithDisplayName("System")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 7,
-                    bitOffset = 0,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDsystemButton = Initialize_ctrlDualShock4GamepadHIDsystemButton(kButtonLayout, this);
 
             // /DualShock4GamepadHID/touchpadButton
-            var ctrlDualShock4GamepadHIDtouchpadButton = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDtouchpadButton.Setup()
-                .At(this, 16)
-                .WithParent(this)
-                .WithName("touchpadButton")
-                .WithDisplayName("Touchpad Press")
-                .WithLayout(kButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 7,
-                    bitOffset = 1,
-                    sizeInBits = 1
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDtouchpadButton = Initialize_ctrlDualShock4GamepadHIDtouchpadButton(kButtonLayout, this);
 
             // /DualShock4GamepadHID/leftTrigger
-            var ctrlDualShock4GamepadHIDleftTrigger = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDleftTrigger.Setup()
-                .At(this, 17)
-                .WithParent(this)
-                .WithName("leftTrigger")
-                .WithDisplayName("L2")
-                .WithShortDisplayName("L2")
-                .WithLayout(kButtonLayout)
-                .WithUsages(9, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 8,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftTrigger = Initialize_ctrlDualShock4GamepadHIDleftTrigger(kButtonLayout, this);
 
             // /DualShock4GamepadHID/rightTrigger
-            var ctrlDualShock4GamepadHIDrightTrigger = new UnityEngine.InputSystem.Controls.ButtonControl();
-            ctrlDualShock4GamepadHIDrightTrigger.Setup()
-                .At(this, 18)
-                .WithParent(this)
-                .WithName("rightTrigger")
-                .WithDisplayName("R2")
-                .WithShortDisplayName("R2")
-                .WithLayout(kButtonLayout)
-                .WithUsages(10, 1)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 9,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightTrigger = Initialize_ctrlDualShock4GamepadHIDrightTrigger(kButtonLayout, this);
 
             // /DualShock4GamepadHID/leftStick/up
-            var ctrlDualShock4GamepadHIDleftStickup = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftStickup.Setup()
-                .At(this, 19)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("up")
-                .WithDisplayName("Left Stick Up")
-                .WithShortDisplayName("LS Up")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 2,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickup = Initialize_ctrlDualShock4GamepadHIDleftStickup(kButtonLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/leftStick/x
-            var ctrlDualShock4GamepadHIDleftStickx = new UnityEngine.InputSystem.Controls.AxisControl { normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftStickx.Setup()
-                .At(this, 20)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("x")
-                .WithDisplayName("Left Stick X")
-                .WithShortDisplayName("LS X")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 1,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(-1, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickx = Initialize_ctrlDualShock4GamepadHIDleftStickx(kAxisLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/leftStick/y
-            var ctrlDualShock4GamepadHIDleftSticky = new UnityEngine.InputSystem.Controls.AxisControl { invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftSticky.Setup()
-                .At(this, 21)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("y")
-                .WithDisplayName("Left Stick Y")
-                .WithShortDisplayName("LS Y")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 2,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(-1, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftSticky = Initialize_ctrlDualShock4GamepadHIDleftSticky(kAxisLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/leftStick/down
-            var ctrlDualShock4GamepadHIDleftStickdown = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftStickdown.Setup()
-                .At(this, 22)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("down")
-                .WithDisplayName("Left Stick Down")
-                .WithShortDisplayName("LS Down")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 2,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickdown = Initialize_ctrlDualShock4GamepadHIDleftStickdown(kButtonLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/leftStick/left
-            var ctrlDualShock4GamepadHIDleftStickleft = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftStickleft.Setup()
-                .At(this, 23)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("left")
-                .WithDisplayName("Left Stick Left")
-                .WithShortDisplayName("LS Left")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 1,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickleft = Initialize_ctrlDualShock4GamepadHIDleftStickleft(kButtonLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/leftStick/right
-            var ctrlDualShock4GamepadHIDleftStickright = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDleftStickright.Setup()
-                .At(this, 24)
-                .WithParent(ctrlDualShock4GamepadHIDleftStick)
-                .WithName("right")
-                .WithDisplayName("Left Stick Right")
-                .WithShortDisplayName("LS Right")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 1,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDleftStickright = Initialize_ctrlDualShock4GamepadHIDleftStickright(kButtonLayout, ctrlDualShock4GamepadHIDleftStick);
 
             // /DualShock4GamepadHID/rightStick/up
-            var ctrlDualShock4GamepadHIDrightStickup = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightStickup.Setup()
-                .At(this, 25)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("up")
-                .WithDisplayName("Right Stick Up")
-                .WithShortDisplayName("RS Up")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 4,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickup = Initialize_ctrlDualShock4GamepadHIDrightStickup(kButtonLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/rightStick/x
-            var ctrlDualShock4GamepadHIDrightStickx = new UnityEngine.InputSystem.Controls.AxisControl { normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightStickx.Setup()
-                .At(this, 26)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("x")
-                .WithDisplayName("Right Stick X")
-                .WithShortDisplayName("RS X")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 3,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(-1, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickx = Initialize_ctrlDualShock4GamepadHIDrightStickx(kAxisLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/rightStick/y
-            var ctrlDualShock4GamepadHIDrightSticky = new UnityEngine.InputSystem.Controls.AxisControl { invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightSticky.Setup()
-                .At(this, 27)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("y")
-                .WithDisplayName("Right Stick Y")
-                .WithShortDisplayName("RS Y")
-                .WithLayout(kAxisLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 4,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(-1, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightSticky = Initialize_ctrlDualShock4GamepadHIDrightSticky(kAxisLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/rightStick/down
-            var ctrlDualShock4GamepadHIDrightStickdown = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightStickdown.Setup()
-                .At(this, 28)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("down")
-                .WithDisplayName("Right Stick Down")
-                .WithShortDisplayName("RS Down")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 4,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickdown = Initialize_ctrlDualShock4GamepadHIDrightStickdown(kButtonLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/rightStick/left
-            var ctrlDualShock4GamepadHIDrightStickleft = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightStickleft.Setup()
-                .At(this, 29)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("left")
-                .WithDisplayName("Right Stick Left")
-                .WithShortDisplayName("RS Left")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 3,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickleft = Initialize_ctrlDualShock4GamepadHIDrightStickleft(kButtonLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/rightStick/right
-            var ctrlDualShock4GamepadHIDrightStickright = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
-            ctrlDualShock4GamepadHIDrightStickright.Setup()
-                .At(this, 30)
-                .WithParent(ctrlDualShock4GamepadHIDrightStick)
-                .WithName("right")
-                .WithDisplayName("Right Stick Right")
-                .WithShortDisplayName("RS Right")
-                .WithLayout(kButtonLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1113150533),
-                    byteOffset = 3,
-                    bitOffset = 0,
-                    sizeInBits = 8
-                })
-                .WithDefaultState(127)
-                .WithMinAndMax(0, 1)
-                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
-                .Finish();
+            var ctrlDualShock4GamepadHIDrightStickright = Initialize_ctrlDualShock4GamepadHIDrightStickright(kButtonLayout, ctrlDualShock4GamepadHIDrightStick);
 
             // /DualShock4GamepadHID/dpad/x
-            var ctrlDualShock4GamepadHIDdpadx = new UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl();
-            ctrlDualShock4GamepadHIDdpadx.Setup()
-                .At(this, 31)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("x")
-                .WithDisplayName("D-Pad X")
-                .WithShortDisplayName("D-Pad X")
-                .WithLayout(kDpadAxisLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .Finish();
-            ctrlDualShock4GamepadHIDdpadx.component = 0;
+            var ctrlDualShock4GamepadHIDdpadx = Initialize_ctrlDualShock4GamepadHIDdpadx(kDpadAxisLayout, ctrlDualShock4GamepadHIDdpad);
 
             // /DualShock4GamepadHID/dpad/y
-            var ctrlDualShock4GamepadHIDdpady = new UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl();
-            ctrlDualShock4GamepadHIDdpady.Setup()
-                .At(this, 32)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("y")
-                .WithDisplayName("D-Pad Y")
-                .WithShortDisplayName("D-Pad Y")
-                .WithLayout(kDpadAxisLayout)
-                .IsSynthetic(true)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .Finish();
-            ctrlDualShock4GamepadHIDdpady.component = 1;
+            var ctrlDualShock4GamepadHIDdpady = Initialize_ctrlDualShock4GamepadHIDdpady(kDpadAxisLayout, ctrlDualShock4GamepadHIDdpad);
 
             // /DualShock4GamepadHID/dpad/up
-            var ctrlDualShock4GamepadHIDdpadup = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 7, maxValue = 1, wrapAtValue = 7, nullValue = 8 };
-            ctrlDualShock4GamepadHIDdpadup.Setup()
-                .At(this, 33)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("up")
-                .WithDisplayName("D-Pad Up")
-                .WithShortDisplayName("D-Pad Up")
-                .WithLayout(kDiscreteButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDdpadup = Initialize_ctrlDualShock4GamepadHIDdpadup(kDiscreteButtonLayout, ctrlDualShock4GamepadHIDdpad);
 
             // /DualShock4GamepadHID/dpad/down
-            var ctrlDualShock4GamepadHIDdpaddown = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 3, maxValue = 5 };
-            ctrlDualShock4GamepadHIDdpaddown.Setup()
-                .At(this, 34)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("down")
-                .WithDisplayName("D-Pad Down")
-                .WithShortDisplayName("D-Pad Down")
-                .WithLayout(kDiscreteButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDdpaddown = Initialize_ctrlDualShock4GamepadHIDdpaddown(kDiscreteButtonLayout, ctrlDualShock4GamepadHIDdpad);
 
             // /DualShock4GamepadHID/dpad/left
-            var ctrlDualShock4GamepadHIDdpadleft = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 5, maxValue = 7 };
-            ctrlDualShock4GamepadHIDdpadleft.Setup()
-                .At(this, 35)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("left")
-                .WithDisplayName("D-Pad Left")
-                .WithShortDisplayName("D-Pad Left")
-                .WithLayout(kDiscreteButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDdpadleft = Initialize_ctrlDualShock4GamepadHIDdpadleft(kDiscreteButtonLayout, ctrlDualShock4GamepadHIDdpad);
 
             // /DualShock4GamepadHID/dpad/right
-            var ctrlDualShock4GamepadHIDdpadright = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 1, maxValue = 3 };
-            ctrlDualShock4GamepadHIDdpadright.Setup()
-                .At(this, 36)
-                .WithParent(ctrlDualShock4GamepadHIDdpad)
-                .WithName("right")
-                .WithDisplayName("D-Pad Right")
-                .WithShortDisplayName("D-Pad Right")
-                .WithLayout(kDiscreteButtonLayout)
-                .WithStateBlock(new InputStateBlock
-                {
-                    format = new FourCC(1112101920),
-                    byteOffset = 5,
-                    bitOffset = 0,
-                    sizeInBits = 4
-                })
-                .WithMinAndMax(0, 1)
-                .Finish();
+            var ctrlDualShock4GamepadHIDdpadright = Initialize_ctrlDualShock4GamepadHIDdpadright(kDiscreteButtonLayout, ctrlDualShock4GamepadHIDdpad);
 
             // Usages.
             builder.WithControlUsage(0, new InternedString("Primary2DMotion"), ctrlDualShock4GamepadHIDleftStick);
@@ -851,7 +220,902 @@ namespace UnityEngine.InputSystem.DualShock
             ctrlDualShock4GamepadHIDdpad.right = ctrlDualShock4GamepadHIDdpadright;
             ctrlDualShock4GamepadHIDdpad.x = ctrlDualShock4GamepadHIDdpadx;
             ctrlDualShock4GamepadHIDdpad.y = ctrlDualShock4GamepadHIDdpady;
+
+            // State offset to control index map.
+            builder.WithStateOffsetToControlIndexMap(new uint[]
+            {
+                4202516u, 4202519u, 4202520u, 8396819u, 8396821u, 8396822u, 12591130u, 12591133u, 12591134u, 16785433u
+                , 16785435u, 16785436u, 20975647u, 20975648u, 20975649u, 20975650u, 20975651u, 20975652u, 23069699u, 23593988u
+                , 24118277u, 24642566u, 25166855u, 25691144u, 26215433u, 26739722u, 27264011u, 27788300u, 28312589u, 28836878u
+                , 29361167u, 29885456u, 33562641u, 37756946u
+            });
+
             builder.Finish();
+        }
+
+        private UnityEngine.InputSystem.Controls.StickControl Initialize_ctrlDualShock4GamepadHIDleftStick(InternedString kStickLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStick = new UnityEngine.InputSystem.Controls.StickControl();
+            ctrlDualShock4GamepadHIDleftStick.Setup()
+                .At(this, 0)
+                .WithParent(parent)
+                .WithChildren(19, 6)
+                .WithName("leftStick")
+                .WithDisplayName("Left Stick")
+                .WithShortDisplayName("LS")
+                .WithLayout(kStickLayout)
+                .WithUsages(0, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447244354),
+                    byteOffset = 1,
+                    bitOffset = 0,
+                    sizeInBits = 16
+                })
+                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.StickDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStick;
+        }
+
+        private UnityEngine.InputSystem.Controls.StickControl Initialize_ctrlDualShock4GamepadHIDrightStick(InternedString kStickLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStick = new UnityEngine.InputSystem.Controls.StickControl();
+            ctrlDualShock4GamepadHIDrightStick.Setup()
+                .At(this, 1)
+                .WithParent(parent)
+                .WithChildren(25, 6)
+                .WithName("rightStick")
+                .WithDisplayName("Right Stick")
+                .WithShortDisplayName("RS")
+                .WithLayout(kStickLayout)
+                .WithUsages(1, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1447244354),
+                    byteOffset = 3,
+                    bitOffset = 0,
+                    sizeInBits = 16
+                })
+                .WithProcessor<InputProcessor<UnityEngine.Vector2>, UnityEngine.Vector2>(new UnityEngine.InputSystem.Processors.StickDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStick;
+        }
+
+        private UnityEngine.InputSystem.Controls.DpadControl Initialize_ctrlDualShock4GamepadHIDdpad(InternedString kDpadLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpad = new UnityEngine.InputSystem.Controls.DpadControl();
+            ctrlDualShock4GamepadHIDdpad.Setup()
+                .At(this, 2)
+                .WithParent(parent)
+                .WithChildren(31, 6)
+                .WithName("dpad")
+                .WithDisplayName("D-Pad")
+                .WithLayout(kDpadLayout)
+                .WithUsages(2, 1)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .WithDefaultState(8)
+                .Finish();
+            return ctrlDualShock4GamepadHIDdpad;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDbuttonWest(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDbuttonWest = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDbuttonWest.Setup()
+                .At(this, 3)
+                .WithParent(parent)
+                .WithName("buttonWest")
+                .WithDisplayName("Square")
+                .WithShortDisplayName("Square")
+                .WithLayout(kButtonLayout)
+                .WithUsages(3, 1)
+                .WithAliases(0, 2)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 4,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDbuttonWest;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDbuttonSouth(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDbuttonSouth = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDbuttonSouth.Setup()
+                .At(this, 4)
+                .WithParent(parent)
+                .WithName("buttonSouth")
+                .WithDisplayName("Cross")
+                .WithShortDisplayName("Cross")
+                .WithLayout(kButtonLayout)
+                .WithUsages(4, 2)
+                .WithAliases(2, 2)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 5,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDbuttonSouth;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDbuttonEast(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDbuttonEast = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDbuttonEast.Setup()
+                .At(this, 5)
+                .WithParent(parent)
+                .WithName("buttonEast")
+                .WithDisplayName("Circle")
+                .WithShortDisplayName("Circle")
+                .WithLayout(kButtonLayout)
+                .WithUsages(6, 2)
+                .WithAliases(4, 2)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 6,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDbuttonEast;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDbuttonNorth(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDbuttonNorth = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDbuttonNorth.Setup()
+                .At(this, 6)
+                .WithParent(parent)
+                .WithName("buttonNorth")
+                .WithDisplayName("Triangle")
+                .WithShortDisplayName("Triangle")
+                .WithLayout(kButtonLayout)
+                .WithAliases(6, 2)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 7,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDbuttonNorth;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftShoulder(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftShoulder = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDleftShoulder.Setup()
+                .At(this, 7)
+                .WithParent(parent)
+                .WithName("leftShoulder")
+                .WithDisplayName("L1")
+                .WithShortDisplayName("L1")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 0,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftShoulder;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightShoulder(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightShoulder = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDrightShoulder.Setup()
+                .At(this, 8)
+                .WithParent(parent)
+                .WithName("rightShoulder")
+                .WithDisplayName("R1")
+                .WithShortDisplayName("R1")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 1,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightShoulder;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftTriggerButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftTriggerButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDleftTriggerButton.Setup()
+                .At(this, 9)
+                .WithParent(parent)
+                .WithName("leftTriggerButton")
+                .WithDisplayName("leftTriggerButton")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 2,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftTriggerButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightTriggerButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightTriggerButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDrightTriggerButton.Setup()
+                .At(this, 10)
+                .WithParent(parent)
+                .WithName("rightTriggerButton")
+                .WithDisplayName("rightTriggerButton")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 3,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightTriggerButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDselect(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDselect = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDselect.Setup()
+                .At(this, 11)
+                .WithParent(parent)
+                .WithName("select")
+                .WithDisplayName("Share")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 4,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDselect;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDstart(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDstart = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDstart.Setup()
+                .At(this, 12)
+                .WithParent(parent)
+                .WithName("start")
+                .WithDisplayName("Options")
+                .WithLayout(kButtonLayout)
+                .WithUsages(8, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 5,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDstart;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftStickPress(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickPress = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDleftStickPress.Setup()
+                .At(this, 13)
+                .WithParent(parent)
+                .WithName("leftStickPress")
+                .WithDisplayName("L3")
+                .WithShortDisplayName("L3")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 6,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickPress;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightStickPress(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickPress = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDrightStickPress.Setup()
+                .At(this, 14)
+                .WithParent(parent)
+                .WithName("rightStickPress")
+                .WithDisplayName("R3")
+                .WithShortDisplayName("R3")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 6,
+                    bitOffset = 7,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickPress;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDsystemButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDsystemButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDsystemButton.Setup()
+                .At(this, 15)
+                .WithParent(parent)
+                .WithName("systemButton")
+                .WithDisplayName("System")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 7,
+                    bitOffset = 0,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDsystemButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDtouchpadButton(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDtouchpadButton = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDtouchpadButton.Setup()
+                .At(this, 16)
+                .WithParent(parent)
+                .WithName("touchpadButton")
+                .WithDisplayName("Touchpad Press")
+                .WithLayout(kButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 7,
+                    bitOffset = 1,
+                    sizeInBits = 1
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDtouchpadButton;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftTrigger(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftTrigger = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDleftTrigger.Setup()
+                .At(this, 17)
+                .WithParent(parent)
+                .WithName("leftTrigger")
+                .WithDisplayName("L2")
+                .WithShortDisplayName("L2")
+                .WithLayout(kButtonLayout)
+                .WithUsages(9, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 8,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftTrigger;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightTrigger(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightTrigger = new UnityEngine.InputSystem.Controls.ButtonControl();
+            ctrlDualShock4GamepadHIDrightTrigger.Setup()
+                .At(this, 18)
+                .WithParent(parent)
+                .WithName("rightTrigger")
+                .WithDisplayName("R2")
+                .WithShortDisplayName("R2")
+                .WithLayout(kButtonLayout)
+                .WithUsages(10, 1)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 9,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightTrigger;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftStickup(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickup = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftStickup.Setup()
+                .At(this, 19)
+                .WithParent(parent)
+                .WithName("up")
+                .WithDisplayName("Left Stick Up")
+                .WithShortDisplayName("LS Up")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 2,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickup;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlDualShock4GamepadHIDleftStickx(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickx = new UnityEngine.InputSystem.Controls.AxisControl { normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftStickx.Setup()
+                .At(this, 20)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Left Stick X")
+                .WithShortDisplayName("LS X")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 1,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(-1, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickx;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlDualShock4GamepadHIDleftSticky(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftSticky = new UnityEngine.InputSystem.Controls.AxisControl { invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftSticky.Setup()
+                .At(this, 21)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Left Stick Y")
+                .WithShortDisplayName("LS Y")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 2,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(-1, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftSticky;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftStickdown(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickdown = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftStickdown.Setup()
+                .At(this, 22)
+                .WithParent(parent)
+                .WithName("down")
+                .WithDisplayName("Left Stick Down")
+                .WithShortDisplayName("LS Down")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 2,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickdown;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftStickleft(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickleft = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftStickleft.Setup()
+                .At(this, 23)
+                .WithParent(parent)
+                .WithName("left")
+                .WithDisplayName("Left Stick Left")
+                .WithShortDisplayName("LS Left")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 1,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickleft;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDleftStickright(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDleftStickright = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDleftStickright.Setup()
+                .At(this, 24)
+                .WithParent(parent)
+                .WithName("right")
+                .WithDisplayName("Left Stick Right")
+                .WithShortDisplayName("LS Right")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 1,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDleftStickright;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightStickup(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickup = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightStickup.Setup()
+                .At(this, 25)
+                .WithParent(parent)
+                .WithName("up")
+                .WithDisplayName("Right Stick Up")
+                .WithShortDisplayName("RS Up")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 4,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickup;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlDualShock4GamepadHIDrightStickx(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickx = new UnityEngine.InputSystem.Controls.AxisControl { normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightStickx.Setup()
+                .At(this, 26)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("Right Stick X")
+                .WithShortDisplayName("RS X")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 3,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(-1, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickx;
+        }
+
+        private UnityEngine.InputSystem.Controls.AxisControl Initialize_ctrlDualShock4GamepadHIDrightSticky(InternedString kAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightSticky = new UnityEngine.InputSystem.Controls.AxisControl { invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightSticky.Setup()
+                .At(this, 27)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("Right Stick Y")
+                .WithShortDisplayName("RS Y")
+                .WithLayout(kAxisLayout)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 4,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(-1, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightSticky;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightStickdown(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickdown = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightStickdown.Setup()
+                .At(this, 28)
+                .WithParent(parent)
+                .WithName("down")
+                .WithDisplayName("Right Stick Down")
+                .WithShortDisplayName("RS Down")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 4,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickdown;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightStickleft(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickleft = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMax = 0.5f, invert = true, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightStickleft.Setup()
+                .At(this, 29)
+                .WithParent(parent)
+                .WithName("left")
+                .WithDisplayName("Right Stick Left")
+                .WithShortDisplayName("RS Left")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 3,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickleft;
+        }
+
+        private UnityEngine.InputSystem.Controls.ButtonControl Initialize_ctrlDualShock4GamepadHIDrightStickright(InternedString kButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDrightStickright = new UnityEngine.InputSystem.Controls.ButtonControl { clamp = UnityEngine.InputSystem.Controls.AxisControl.Clamp.BeforeNormalize, clampMin = 0.5f, clampMax = 1f, normalize = true, normalizeMax = 1f, normalizeZero = 0.5f };
+            ctrlDualShock4GamepadHIDrightStickright.Setup()
+                .At(this, 30)
+                .WithParent(parent)
+                .WithName("right")
+                .WithDisplayName("Right Stick Right")
+                .WithShortDisplayName("RS Right")
+                .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1113150533),
+                    byteOffset = 3,
+                    bitOffset = 0,
+                    sizeInBits = 8
+                })
+                .WithDefaultState(127)
+                .WithMinAndMax(0, 1)
+                .WithProcessor<InputProcessor<System.Single>, System.Single>(new UnityEngine.InputSystem.Processors.AxisDeadzoneProcessor())
+                .Finish();
+            return ctrlDualShock4GamepadHIDrightStickright;
+        }
+
+        private UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl Initialize_ctrlDualShock4GamepadHIDdpadx(InternedString kDpadAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpadx = new UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl();
+            ctrlDualShock4GamepadHIDdpadx.Setup()
+                .At(this, 31)
+                .WithParent(parent)
+                .WithName("x")
+                .WithDisplayName("D-Pad X")
+                .WithShortDisplayName("D-Pad X")
+                .WithLayout(kDpadAxisLayout)
+                .IsSynthetic(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .Finish();
+            ctrlDualShock4GamepadHIDdpadx.component = 0;
+            return ctrlDualShock4GamepadHIDdpadx;
+        }
+
+        private UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl Initialize_ctrlDualShock4GamepadHIDdpady(InternedString kDpadAxisLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpady = new UnityEngine.InputSystem.Controls.DpadControl.DpadAxisControl();
+            ctrlDualShock4GamepadHIDdpady.Setup()
+                .At(this, 32)
+                .WithParent(parent)
+                .WithName("y")
+                .WithDisplayName("D-Pad Y")
+                .WithShortDisplayName("D-Pad Y")
+                .WithLayout(kDpadAxisLayout)
+                .IsSynthetic(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .Finish();
+            ctrlDualShock4GamepadHIDdpady.component = 1;
+            return ctrlDualShock4GamepadHIDdpady;
+        }
+
+        private UnityEngine.InputSystem.Controls.DiscreteButtonControl Initialize_ctrlDualShock4GamepadHIDdpadup(InternedString kDiscreteButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpadup = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 7, maxValue = 1, wrapAtValue = 7, nullValue = 8 };
+            ctrlDualShock4GamepadHIDdpadup.Setup()
+                .At(this, 33)
+                .WithParent(parent)
+                .WithName("up")
+                .WithDisplayName("D-Pad Up")
+                .WithShortDisplayName("D-Pad Up")
+                .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDdpadup;
+        }
+
+        private UnityEngine.InputSystem.Controls.DiscreteButtonControl Initialize_ctrlDualShock4GamepadHIDdpaddown(InternedString kDiscreteButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpaddown = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 3, maxValue = 5 };
+            ctrlDualShock4GamepadHIDdpaddown.Setup()
+                .At(this, 34)
+                .WithParent(parent)
+                .WithName("down")
+                .WithDisplayName("D-Pad Down")
+                .WithShortDisplayName("D-Pad Down")
+                .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDdpaddown;
+        }
+
+        private UnityEngine.InputSystem.Controls.DiscreteButtonControl Initialize_ctrlDualShock4GamepadHIDdpadleft(InternedString kDiscreteButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpadleft = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 5, maxValue = 7 };
+            ctrlDualShock4GamepadHIDdpadleft.Setup()
+                .At(this, 35)
+                .WithParent(parent)
+                .WithName("left")
+                .WithDisplayName("D-Pad Left")
+                .WithShortDisplayName("D-Pad Left")
+                .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDdpadleft;
+        }
+
+        private UnityEngine.InputSystem.Controls.DiscreteButtonControl Initialize_ctrlDualShock4GamepadHIDdpadright(InternedString kDiscreteButtonLayout, InputControl parent)
+        {
+            var ctrlDualShock4GamepadHIDdpadright = new UnityEngine.InputSystem.Controls.DiscreteButtonControl { minValue = 1, maxValue = 3 };
+            ctrlDualShock4GamepadHIDdpadright.Setup()
+                .At(this, 36)
+                .WithParent(parent)
+                .WithName("right")
+                .WithDisplayName("D-Pad Right")
+                .WithShortDisplayName("D-Pad Right")
+                .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
+                .WithStateBlock(new InputStateBlock
+                {
+                    format = new FourCC(1112101920),
+                    byteOffset = 5,
+                    bitOffset = 0,
+                    sizeInBits = 4
+                })
+                .WithMinAndMax(0, 1)
+                .Finish();
+            return ctrlDualShock4GamepadHIDdpadright;
         }
     }
 }
