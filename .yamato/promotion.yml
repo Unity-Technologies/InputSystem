@@ -17,5 +17,3 @@ promote:
     artifacts:
       paths:
         - "upm-ci~/**/*"
-  dependencies:
-    - .yamato/publish-samples.yml
