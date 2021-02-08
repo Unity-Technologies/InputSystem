@@ -160,6 +160,11 @@ namespace UnityEngine.InputSystem
             if (map.enabled)
                 throw new InvalidOperationException(
                     $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
+            if (map.asset != null)
+                foreach (var assetMap in map.asset.actionMaps)
+                    if (assetMap.enabled)
+                        throw new InvalidOperationException(
+                            $"Cannot add action '{name}' to map '{map}' while any of the maps in the parent input asset are enabled, found '{assetMap}' currently enabled.");
             if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
