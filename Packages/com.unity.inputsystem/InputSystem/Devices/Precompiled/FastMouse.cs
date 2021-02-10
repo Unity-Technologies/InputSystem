@@ -137,6 +137,14 @@ namespace UnityEngine.InputSystem
             ctrlMousescroll.y = ctrlMousescrolly;
             ctrlMouseradius.x = ctrlMouseradiusx;
             ctrlMouseradius.y = ctrlMouseradiusy;
+
+            // State offset to control index map.
+            builder.WithStateOffsetToControlIndexMap(new uint[]
+            {
+                32781u, 16809998u, 33587215u, 50364432u, 67141649u, 83918866u, 100664323u, 100664324u, 101188613u, 101712902u
+                , 102237191u, 102761480u, 117456908u, 134250505u, 167804947u, 184582164u, 201327627u
+            });
+
             builder.Finish();
         }
 
@@ -218,6 +226,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Press")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -241,6 +250,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("LMB")
                 .WithLayout(kButtonLayout)
                 .WithUsages(4, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -264,6 +274,7 @@ namespace UnityEngine.InputSystem
                 .WithShortDisplayName("RMB")
                 .WithLayout(kButtonLayout)
                 .WithUsages(5, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -286,6 +297,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Middle Button")
                 .WithShortDisplayName("MMB")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -308,6 +320,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Forward")
                 .WithLayout(kButtonLayout)
                 .WithUsages(6, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -330,6 +343,7 @@ namespace UnityEngine.InputSystem
                 .WithDisplayName("Back")
                 .WithLayout(kButtonLayout)
                 .WithUsages(7, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),

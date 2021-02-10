@@ -118,9 +118,6 @@ partial class CoreTests
 
     [Test]
     [Category("Remote")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254567")]
-#endif
     public void Remote_EventsAreSentToRemotes()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -409,17 +406,17 @@ partial class CoreTests
             local.StartSending();
         }
 
-        ~FakeRemote()
-        {
-            Dispose();
-        }
-
         public void Dispose()
         {
             if (runtime != null)
             {
                 runtime.Dispose();
                 runtime = null;
+            }
+            if (manager != null)
+            {
+                Object.Destroy(manager.m_Settings);
+                manager.Destroy();
             }
         }
     }

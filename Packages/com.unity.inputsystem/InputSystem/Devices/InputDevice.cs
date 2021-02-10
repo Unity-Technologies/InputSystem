@@ -522,17 +522,23 @@ namespace UnityEngine.InputSystem
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
+            var commandPtr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
             // Give callbacks first shot.
             var manager = InputSystem.s_Manager;
             var callbacks = manager.m_DeviceCommandCallbacks;
             for (var i = 0; i < callbacks.length; ++i)
             {
-                var result = callbacks[i](this, (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+                var result = callbacks[i](this, commandPtr);
                 if (result.HasValue)
                     return result.Value;
             }
 
-            return InputRuntime.s_Instance.DeviceCommand(deviceId, ref command);
+            return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
+        }
+
+        protected virtual unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
+        {
+            return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);
         }
 
         [Flags]
@@ -581,6 +587,35 @@ namespace UnityEngine.InputSystem
         // See 'InputControl.children'.
         // NOTE: The device's own children are part of this array as well.
         internal InputControl[] m_ChildrenForEachControl;
+
+        // An ordered list of ints each containing a bit offset into the state of the device (*without* the added global
+        // offset), a bit count for the size of the state of the control, and an associated index into m_ChildrenForEachControl
+        // for the corresponding control.
+        // NOTE: This contains *leaf* controls only.
+        internal uint[] m_StateOffsetToControlMap;
+
+        // ATM we pack everything into 32 bits. Given we're operating on bit offsets and counts, this imposes some tight limits
+        // on controls and their associated state memory. Should this turn out to be a problem, bump m_StateOffsetToControlMap
+        // to a ulong[] and up the counts here to account for having 64 bits available instead of only 32.
+        internal const int kControlIndexBits = 10; // 1024 controls max.
+        internal const int kStateOffsetBits = 13; // 1024 bytes max state size for entire device.
+        internal const int kStateSizeBits = 9; // 64 bytes max for an individual leaf control.
+
+        internal static uint EncodeStateOffsetToControlMapEntry(uint controlIndex, uint stateOffsetInBits, uint stateSizeInBits)
+        {
+            Debug.Assert(controlIndex < (1 << kControlIndexBits), "Control index beyond what is supported");
+            Debug.Assert(stateOffsetInBits < (1 << kStateOffsetBits), "State offset beyond what is supported");
+            Debug.Assert(stateSizeInBits < (1 << kStateSizeBits), "State size beyond what is supported");
+            return stateOffsetInBits << (kControlIndexBits + kStateSizeBits) | stateSizeInBits << kControlIndexBits | controlIndex;
+        }
+
+        internal static void DecodeStateOffsetToControlMapEntry(uint entry, out uint controlIndex,
+            out uint stateOffset, out uint stateSize)
+        {
+            controlIndex = entry & (1 << kControlIndexBits) - 1;
+            stateOffset = entry >> (kControlIndexBits + kStateSizeBits);
+            stateSize = (entry >> kControlIndexBits) & (((1 << (kControlIndexBits + kStateSizeBits)) - 1) >> kControlIndexBits);
+        }
 
         // NOTE: We don't store processors in a combined array the same way we do for
         //       usages and children as that would require lots of casting from 'object'.

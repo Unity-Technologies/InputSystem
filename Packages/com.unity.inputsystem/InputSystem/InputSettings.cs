@@ -38,7 +38,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <seealso cref="InputSystem.settings"/>
     /// <seealso cref="InputSystem.onSettingsChange"/>
-    public class InputSettings : ScriptableObject
+    public partial class InputSettings : ScriptableObject
     {
         /// <summary>
         /// Determine how the input system updates, i.e. processes pending input events.

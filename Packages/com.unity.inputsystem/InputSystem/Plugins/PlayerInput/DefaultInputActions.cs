@@ -302,7 +302,7 @@ namespace UnityEngine.InputSystem
             ""actions"": [
                 {
                     ""name"": ""Navigate"",
-                    ""type"": ""Value"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""c95b2375-e6d9-4b88-9c4c-c5e76515df4b"",
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem
                 },
                 {
                     ""name"": ""Click"",
-                    ""type"": ""Button"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""3c7022bf-7922-4f7c-a998-c437916075ad"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
@@ -350,7 +350,7 @@ namespace UnityEngine.InputSystem
                 },
                 {
                     ""name"": ""MiddleClick"",
-                    ""type"": ""Button"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""dad70c86-b58c-4b17-88ad-f5e53adf419e"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
@@ -358,7 +358,7 @@ namespace UnityEngine.InputSystem
                 },
                 {
                     ""name"": ""RightClick"",
-                    ""type"": ""Button"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""44b200b1-1557-4083-816c-b22cbdf77ddf"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",

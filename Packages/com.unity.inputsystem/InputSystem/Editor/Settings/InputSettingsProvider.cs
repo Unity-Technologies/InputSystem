@@ -126,9 +126,18 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_SupportedDevices.DoLayoutList();
 
+                EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                m_iOSProvider.OnGUI();
+
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private static void ShowPlatformSettings()
+        {
+            // Would be nice to get BuildTargetDiscovery.GetBuildTargetInfoList since that contains information about icons etc
         }
 
         private static void CreateNewSettingsAsset(string relativePath)
@@ -301,6 +310,8 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUI.LabelField(rect, m_Settings.supportedDevices[index]);
                 }
             };
+
+            m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
         }
 
         private void Apply()
@@ -367,6 +378,8 @@ namespace UnityEngine.InputSystem.Editor
         GUIContent m_DefaultHoldTimeContent;
         GUIContent m_TapRadiusContent;
         GUIContent m_MultiTapDelayTimeContent;
+
+        [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 
         private static InputSettingsProvider s_Instance;
 

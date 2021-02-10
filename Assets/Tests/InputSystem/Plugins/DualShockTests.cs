@@ -145,15 +145,17 @@ internal class DualShockTests : InputTestFixture
 
     [Test]
     [Category("Devices")]
-    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID()
+    [TestCase(0x54C, 0x9CC)]
+    [TestCase(0x54C, 0x5C4)]
+    public void Devices_SupportsDualShockAsHID_WithJustPIDAndVID(int vendorId, int productId)
     {
         var device = InputSystem.AddDevice(new InputDeviceDescription
         {
             interfaceName = "HID",
             capabilities = new HID.HIDDeviceDescriptor
             {
-                vendorId = 0x54C,
-                productId = 0x9CC,
+                vendorId = vendorId,
+                productId = productId,
             }.ToJson()
         });
 

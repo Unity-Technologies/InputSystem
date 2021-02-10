@@ -1,0 +1,10 @@
+[version]
+repoconfig = 5
+
+[format]
+path-ignore=<<EOT
+^(
+ Packages/com\.unity\.package-manager-doctools
+|Tools/CodeAnalyzerTestProject
+)/
+EOT

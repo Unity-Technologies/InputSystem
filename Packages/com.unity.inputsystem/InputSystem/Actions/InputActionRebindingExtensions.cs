@@ -1672,6 +1672,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            ////REVIEW: This API has been confusing for users who usually will do something like WithControlsExcluding("Mouse"); find a more intuitive way to do this
             /// <summary>
             /// Prevent specific controls from being considered as candidate controls.
             /// </summary>
@@ -1920,41 +1921,38 @@ namespace UnityEngine.InputSystem
             private unsafe void OnEvent(InputEventPtr eventPtr, InputDevice device)
             {
                 // Ignore if not a state event.
-                if (!eventPtr.IsA<StateEvent>() && !eventPtr.IsA<DeltaStateEvent>())
+                var eventType = eventPtr.type;
+                if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                     return;
 
                 ////TODO: add callback that shows the candidate *and* the event to the user (this is particularly useful when we are suppressing
                 ////      and thus throwing away events)
 
-                // Go through controls and see if there's anything interesting in the event.
+                // Go through controls in the event and see if there's anything interesting.
                 // NOTE: We go through quite a few steps and operations here. However, the chief goal here is trying to be as robust
                 //       as we can in isolating the control the user really means to single out. If this code here does its job, that
                 //       control should always pop up as the first entry in the candidates list (if the configuration of the rebind
                 //       operation is otherwise sane).
-                var controls = device.allControls;
-                var controlCount = controls.Count;
                 var haveChangedCandidates = false;
                 var suppressEvent = false;
-                for (var i = 0; i < controlCount; ++i)
+                var controlEnumerationFlags =
+                    InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
+                    | InputControlExtensions.Enumerate.IncludeNonLeafControls
+                    | InputControlExtensions.Enumerate.IncludeSyntheticControls;
+                if ((m_Flags & Flags.DontIgnoreNoisyControls) != 0)
+                    controlEnumerationFlags |= InputControlExtensions.Enumerate.IncludeNoisyControls;
+                foreach (var control in eventPtr.EnumerateControls(controlEnumerationFlags, device))
                 {
-                    var control = controls[i];
-
-                    // Skip controls that have no state in the event.
-                    var statePtr = control.GetStatePtrFromStateEvent(eventPtr);
-                    if (statePtr == null)
-                        continue;
+                    var statePtr = control.GetStatePtrFromStateEventUnchecked(eventPtr, eventType);
+                    Debug.Assert(statePtr != null, "If EnumerateControls() returns a control, GetStatePtrFromStateEvent should not return null for it");
 
                     // If the control that cancels has been actuated, abort the operation now.
                     if (!string.IsNullOrEmpty(m_CancelBinding) && InputControlPath.Matches(m_CancelBinding, control) &&
-                        !control.CheckStateIsAtDefault(statePtr) && control.HasValueChangeInState(statePtr))
+                        control.HasValueChangeInState(statePtr))
                     {
                         OnCancel();
                         break;
                     }
-
-                    // Skip noisy controls.
-                    if (control.noisy && (m_Flags & Flags.DontIgnoreNoisyControls) == 0)
-                        continue;
 
                     // If controls must not match certain paths, make sure the control doesn't.
                     if (m_ExcludePathCount > 0 && HavePathMatch(control, m_ExcludePaths, m_ExcludePathCount))
@@ -1990,9 +1988,9 @@ namespace UnityEngine.InputSystem
                         // However, when such a control goes back to default state, we want to reset that recorded value. This makes
                         // sure that if, for example, a key is down when the rebind started, when the key is released and then pressed
                         // again, we don't compare to the previously recorded magnitude of 1 but rather to 0.
-                        var staringActuationIndex = m_StartingActuationControls.IndexOfReference(control);
-                        if (staringActuationIndex != -1)
-                            m_StaringActuationMagnitudes[staringActuationIndex] = 0;
+                        var startingActuationIndex = m_StartingActuationControls.IndexOfReference(control);
+                        if (startingActuationIndex != -1)
+                            m_StaringActuationMagnitudes[startingActuationIndex] = 0;
 
                         continue;
                     }
