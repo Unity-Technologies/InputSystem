@@ -1,3 +1,7 @@
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#if TARGET_OS_IOS
+
 #include <CoreMotion/CoreMotion.h>
 
 #define ENABLE_STEP_COUNTER_LOGGING 1
@@ -150,3 +154,6 @@ extern "C" int _iOSStepCounterIsEnabled(int deviceId)
 {
     return s_Wrapper.IsEnabled() ? 1 : 0;
 }
+
+#endif
+#endif
