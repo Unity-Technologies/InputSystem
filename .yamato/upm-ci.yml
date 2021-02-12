@@ -76,7 +76,7 @@ run_ios_{{ editor.version }}:
           - "build/test-results/**"
 		  
 build_tvos_{{ editor.version }}:
-  name: Build Tests on {{ editor.version }} on tvOS
+  name: Build Tests on {{ editor.version }} on tvos
   agent:
     type: Unity::VM::osx
     image: mobile/macos-10.13-testing:stable
