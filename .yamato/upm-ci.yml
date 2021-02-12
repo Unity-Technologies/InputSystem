@@ -162,7 +162,7 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}  
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
-	- .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
     {% endfor %}
   triggers:
     cancel_old_ci: true
