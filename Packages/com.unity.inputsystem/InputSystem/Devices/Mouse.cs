@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Returns "MOUS".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public static FourCC Format => new FourCC('M', 'O', 'U', 'S');
+        public static FourCC Format => FourCCs.kInputFourCCMouseState;
 
         /// <summary>
         /// Screen-space position of the mouse in pixels.

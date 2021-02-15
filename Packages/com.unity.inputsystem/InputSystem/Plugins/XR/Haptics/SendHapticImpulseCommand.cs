@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SendHapticImpulseCommand : IInputDeviceCommandInfo
     {
-        static FourCC Type => new FourCC('X', 'H', 'I', '0');
+        static FourCC Type => FourCCs.kInputFourCCXREventHapticSendImpulse;
 
         private const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(int) + (sizeof(float) * 2);
 

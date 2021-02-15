@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(bool))]
     public struct QueryCanRunInBackground : IInputDeviceCommandInfo
     {
-        public static FourCC Type => new FourCC('Q', 'R', 'I', 'B');
+        public static FourCC Type => FourCCs.kInputFourCCIOCTLQueryRunInBackground;
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
 

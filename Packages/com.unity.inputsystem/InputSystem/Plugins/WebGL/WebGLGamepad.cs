@@ -74,7 +74,7 @@ namespace UnityEngine.InputSystem.WebGL.LowLevel
 
         public FourCC format
         {
-            get { return new FourCC('H', 'T', 'M', 'L'); }
+            get { return FourCCs.kInputFourCCWebGLState; }
         }
 
         public WebGLGamepadState WithButton(GamepadButton button, float value = 1)

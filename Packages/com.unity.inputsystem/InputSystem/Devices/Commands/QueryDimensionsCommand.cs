@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QueryDimensionsCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('D', 'I', 'M', 'S'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLDeviceDimensions; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 

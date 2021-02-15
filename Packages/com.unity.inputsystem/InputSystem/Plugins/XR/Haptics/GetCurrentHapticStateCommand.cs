@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct GetCurrentHapticStateCommand : IInputDeviceCommandInfo
     {
-        static FourCC Type => new FourCC('X', 'H', 'S', '0');
+        static FourCC Type => FourCCs.kInputFourCCXREventHapticGetState;
 
         const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(uint) * 2);
 

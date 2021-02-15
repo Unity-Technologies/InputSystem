@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct QueryKeyNameCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type => new FourCC('K', 'Y', 'C', 'F');
+        public static FourCC Type => FourCCs.kInputFourCCIOCTLGetKeyInfo;
 
         internal const int kMaxNameLength = 256;
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxNameLength + 4;

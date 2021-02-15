@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct iOSGameControllerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat = new FourCC('I', 'G', 'C', ' ');
+        public static FourCC kFormat = FourCCs.kInputFourCCiOSGameControllerState;
         public const int MaxButtons = (int)iOSButton.Select + 1;
         public const int MaxAxis = (int)iOSAxis.RightStickY + 1;
 

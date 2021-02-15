@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
         internal const uint kAxisOffset = sizeof(uint) * (uint)((MaxButtons + 31) / 32);
 
-        public static FourCC kFormat = new FourCC('A', 'G', 'C', ' ');
+        public static FourCC kFormat = FourCCs.kInputFourCCAndroidGameControllerState;
 
         [InputControl(name = "buttonSouth", bit = (uint)AndroidKeyCode.ButtonA, variants = kVariantGamepad)]
         [InputControl(name = "buttonWest", bit = (uint)AndroidKeyCode.ButtonX, variants = kVariantGamepad)]

@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem.Linux
         {
             var builder = new InputControlLayout.Builder
             {
-                stateFormat = new FourCC('L', 'J', 'O', 'Y'),
+                stateFormat = FourCCs.kInputFourCCLinuxJoystickState,
                 extendsLayout = m_ParentLayout
             };
 

@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct QueryEnabledStateCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type => new FourCC('Q', 'E', 'N', 'B');
+        public static FourCC Type => FourCCs.kInputFourCCIOCTLQueryDeviceEnabled;
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(bool);
 

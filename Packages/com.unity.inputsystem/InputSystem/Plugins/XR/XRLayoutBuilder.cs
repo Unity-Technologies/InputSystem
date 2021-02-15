@@ -184,7 +184,7 @@ namespace UnityEngine.InputSystem.XR
         {
             var builder = new InputControlLayout.Builder
             {
-                stateFormat = new FourCC('X', 'R', 'S', '0'),
+                stateFormat = FourCCs.kInputFourCCXRSDKState,
                 extendsLayout = parentLayout,
                 updateBeforeRender = true
             };

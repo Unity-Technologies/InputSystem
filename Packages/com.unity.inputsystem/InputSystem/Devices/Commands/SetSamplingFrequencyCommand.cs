@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct SetSamplingFrequencyCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('S', 'S', 'P', 'L'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLSetSamplingFrequency; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float);
 

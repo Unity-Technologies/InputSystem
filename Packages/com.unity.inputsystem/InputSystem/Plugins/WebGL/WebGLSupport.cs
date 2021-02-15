@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.WebGL
                 {
                     type = typeof(WebGLJoystick),
                     extendsLayout = "Joystick",
-                    stateFormat = new FourCC('H', 'T', 'M', 'L')
+                    stateFormat = FourCCs.kInputFourCCWebGLState
                 };
 
                 // Best guess: Treat first two axes as stick

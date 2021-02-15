@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct EnableDeviceCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('E', 'N', 'B', 'L'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLEnableDevice; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 

@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
 {
     internal struct AccelerometerState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('A', 'C', 'C', 'L');
+        public static FourCC kFormat => FourCCs.kInputFourCCAccelerometerState;
 
         [InputControl(displayName = "Acceleration", processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;
@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal struct GyroscopeState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('G', 'Y', 'R', 'O');
+        public static FourCC kFormat => FourCCs.kInputFourCCGyroscopeState;
 
         [InputControl(displayName = "Angular Velocity", processors = "CompensateDirection", noisy = true)]
         public Vector3 angularVelocity;
@@ -33,7 +33,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal struct GravityState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('G', 'R', 'V', ' ');
+        public static FourCC kFormat => FourCCs.kInputFourCCGravityState;
 
         [InputControl(displayName = "Gravity", processors = "CompensateDirection", noisy = true)]
         public Vector3 gravity;
@@ -43,7 +43,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal struct AttitudeState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('A', 'T', 'T', 'D');
+        public static FourCC kFormat => FourCCs.kInputFourCCAttitudeState;
 
         [InputControl(displayName = "Attitude", processors = "CompensateRotation", noisy = true)]
         public Quaternion attitude;
@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal struct LinearAccelerationState : IInputStateTypeInfo
     {
-        public static FourCC kFormat => new FourCC('L', 'A', 'A', 'C');
+        public static FourCC kFormat => FourCCs.kInputFourCCLinearAccelerationState;
 
         [InputControl(displayName = "Acceleration", processors = "CompensateDirection", noisy = true)]
         public Vector3 acceleration;

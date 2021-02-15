@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Returns "KEYS".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public static FourCC Format => new FourCC('K', 'E', 'Y', 'S');
+        public static FourCC Format => FourCCs.kInputFourCCKeyboardState;
 
         private const int kSizeInBits = Keyboard.KeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;

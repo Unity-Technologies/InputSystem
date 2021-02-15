@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 28)]
     public struct GamepadState : IInputStateTypeInfo
     {
-        public static FourCC Format => new FourCC('G', 'P', 'A', 'D');
+        public static FourCC Format => FourCCs.kInputFourCCGamepadState;
 
         // On consoles, we use the platform defaults as the gamepad-wide default names.
         #if UNITY_XBOX_ONE || UNITY_SWITCH

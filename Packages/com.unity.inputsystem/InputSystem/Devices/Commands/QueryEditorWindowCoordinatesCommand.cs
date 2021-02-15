@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal struct QueryEditorWindowCoordinatesCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type => new FourCC('E', 'W', 'P', 'S');
+        public static FourCC Type => FourCCs.kInputFourCCIOCTLGetEditorWindowCoordinates;
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + sizeof(float) * 2;
 

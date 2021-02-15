@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Returns "PEN ".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public static FourCC Format => new FourCC('P', 'E', 'N');
+        public static FourCC Format => FourCCs.kInputFourCCPenState;
 
         /// <summary>
         /// Current screen-space position of the pen.

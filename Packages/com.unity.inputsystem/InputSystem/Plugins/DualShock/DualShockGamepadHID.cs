@@ -71,7 +71,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         ////TODO: touchpad
 
-        public FourCC format => new FourCC('H', 'I', 'D');
+        public FourCC format => FourCCs.kInputFourCCHIDState;
     }
 
     /// <summary>
@@ -137,7 +137,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         public FourCC format
         {
-            get { return new FourCC('H', 'I', 'D'); }
+            get { return FourCCs.kInputFourCCHIDState; }
         }
     }
 
@@ -147,7 +147,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal unsafe struct DualShockHIDOutputReport : IInputDeviceCommandInfo
     {
-        public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
+        public static FourCC Type => FourCCs.kInputFourCCIOCTLHIDWriteOutputReport;
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 32;
         internal const int kReportId = 5;

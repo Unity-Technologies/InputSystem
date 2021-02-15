@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
     public unsafe struct RequestSyncCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('S', 'Y', 'N', 'C'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLRequestSyncDevice; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 

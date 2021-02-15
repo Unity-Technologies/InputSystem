@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + kMaxNameLength)]
     public unsafe struct QueryKeyboardLayoutCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('K', 'B', 'L', 'T'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLGetKeyboardLayout; } }
 
         internal const int kMaxNameLength = 256;
 

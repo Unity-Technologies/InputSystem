@@ -8,7 +8,7 @@ namespace UnityEngine.InputSystem.XR.Haptics
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct SendBufferedHapticCommand : IInputDeviceCommandInfo
     {
-        static FourCC Type => new FourCC('X', 'H', 'U', '0');
+        static FourCC Type => FourCCs.kInputFourCCXREventHapticSendBuffer;
 
         private const int kMaxHapticBufferSize = 1024;
         private const int kSize = InputDeviceCommand.kBaseCommandSize + (sizeof(int) * 2) + (kMaxHapticBufferSize * sizeof(byte));

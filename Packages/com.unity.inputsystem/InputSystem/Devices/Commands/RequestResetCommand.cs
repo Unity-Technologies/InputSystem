@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
     public unsafe struct RequestResetCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('R', 'S', 'E', 'T'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLRequestResetDevice; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 

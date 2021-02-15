@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = 4)]
     internal struct XInputControllerWindowsState : IInputStateTypeInfo
     {
-        public FourCC format => new FourCC('X', 'I', 'N', 'P');
+        public FourCC format => FourCCs.kInputFourCCXInputState;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1027:MarkEnumsWithFlags", Justification = "False positive")]
         public enum Button

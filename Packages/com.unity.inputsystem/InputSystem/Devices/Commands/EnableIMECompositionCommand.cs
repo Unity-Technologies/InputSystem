@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(byte))]
     public unsafe struct EnableIMECompositionCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('I', 'M', 'E', 'M'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLSetIMEMode; } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + +sizeof(uint);
 

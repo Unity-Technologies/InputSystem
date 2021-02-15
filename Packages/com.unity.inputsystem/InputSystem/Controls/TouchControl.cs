@@ -196,7 +196,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </remarks>
         public TouchControl()
         {
-            m_StateBlock.format = new FourCC('T', 'O', 'U', 'C');
+            m_StateBlock.format = FourCCs.kInputFourCCTouchState;
         }
 
         /// <inheritdoc />

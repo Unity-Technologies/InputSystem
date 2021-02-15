@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
     [StructLayout(LayoutKind.Sequential)]
     internal unsafe struct AndroidSensorState : IInputStateTypeInfo
     {
-        public static FourCC kFormat = new FourCC('A', 'S', 'S', ' ');
+        public static FourCC kFormat = FourCCs.kInputFourCCAndroidSensorState;
 
         ////FIXME: Sensors to check if values matches old system
         // Accelerometer - OK

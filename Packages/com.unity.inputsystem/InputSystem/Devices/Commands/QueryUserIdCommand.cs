@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     internal unsafe struct QueryUserIdCommand : IInputDeviceCommandInfo
     {
-        public static FourCC Type { get { return new FourCC('U', 'S', 'E', 'R'); } }
+        public static FourCC Type { get { return FourCCs.kInputFourCCIOCTLUserId; } }
 
         public const int kMaxIdLength = 256;
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + kMaxIdLength * 2;

@@ -73,7 +73,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Returns "TOUC".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public static FourCC Format => new FourCC('T', 'O', 'U', 'C');
+        public static FourCC Format => FourCCs.kInputFourCCTouchState;
 
         ////REVIEW: this should really be a uint
         /// <summary>
@@ -337,7 +337,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Returns "TSCR".</value>
         /// <seealso cref="InputStateBlock.format"/>
-        public static FourCC Format => new FourCC('T', 'S', 'C', 'R');
+        public static FourCC Format => FourCCs.kInputFourCCTouchscreenState;
 
         /// <summary>
         /// Maximum number of touches that can be tracked at the same time.

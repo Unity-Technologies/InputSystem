@@ -52,15 +52,15 @@ namespace UnityEngine.InputSystem.HID
         /// Command code for querying the HID report descriptor from a device.
         /// </summary>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
-        public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'D'); } }
+        public static FourCC QueryHIDReportDescriptorDeviceCommandType { get { return FourCCs.kInputFourCCIOCTLGetHIDReportDescriptor; } }
 
         /// <summary>
         /// Command code for querying the HID report descriptor size in bytes from a device.
         /// </summary>
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
-        public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
+        public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return FourCCs.kInputFourCCIOCTLGetHIDReportDescriptorSize; } }
 
-        public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }
+        public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return FourCCs.kInputFourCCIOCTLGetParsedHIDReportDescriptor; } }
 
         /// <summary>
         /// The HID device descriptor as received from the system.
@@ -334,7 +334,7 @@ namespace UnityEngine.InputSystem.HID
                     displayName = displayName,
                     type = deviceType,
                     extendsLayout = parentLayout,
-                    stateFormat = new FourCC('H', 'I', 'D')
+                    stateFormat = FourCCs.kInputFourCCHIDState
                 };
 
                 var xElement = Array.Find(hidDescriptor.elements,
