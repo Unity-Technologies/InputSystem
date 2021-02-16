@@ -827,7 +827,7 @@ class APIVerificationTests
         var regex = new Regex("\\(.*images\\/(?<filename>[^\\)]*)", RegexOptions.IgnoreCase);
 
         // Add files here if you want to ignore them being unreferenced.
-        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InteractionsDiagram.sdxml" };
+        var unreferencedIgnoreList = new[] { "InputArchitectureLowLevel.sdxml", "InputArchitectureHighLevel.sdxml", "InteractionsDiagram.sdxml" };
 
         var missingImages = false;
         var unusedImages = false;
