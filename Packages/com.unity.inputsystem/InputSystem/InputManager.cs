@@ -12,7 +12,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
-
+using UnityEngine.InputSystem.XInput;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 #endif
@@ -2624,6 +2624,12 @@ namespace UnityEngine.InputSystem
 
             var totalEventLag = 0.0;
 
+            foreach (var inputDevice in devices)
+            {
+                if (inputDevice is XInputControllerWindows)
+                    ((XInputControllerWindows)inputDevice).Update(eventBuffer, this);
+            }
+
             // Handle events.
             while (remainingEventCount > 0)
             {
@@ -3037,6 +3043,14 @@ namespace UnityEngine.InputSystem
             }
 
             m_StateChangeMonitorTimeouts.SetLength(remainingTimeoutCount);
+        }
+
+        internal unsafe void UpdateDeviceState<TState>(int deviceIndex, void* statePtr) where TState : struct
+        {
+            if (!m_StateBuffers.m_PlayerStateBuffers.valid) return;
+
+            var deviceStatePtr = m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex);
+            UnsafeUtility.MemCpy(deviceStatePtr, statePtr, UnsafeUtility.SizeOf<TState>());
         }
 
         internal unsafe bool UpdateState(InputDevice device, InputEvent* eventPtr, InputUpdateType updateType)
@@ -3513,5 +3527,17 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_EDITOR || DEVELOPMENT_BUILD
+        public unsafe bool GetStateForDevice<T>(int deviceIndex, out T state) where T:unmanaged
+        {
+            state = default;
+
+            if (m_StateBuffers.m_PlayerStateBuffers.valid)
+            {
+                state = *(T*)m_StateBuffers.m_PlayerStateBuffers.GetFrontBuffer(deviceIndex);
+                return true;
+            }
+
+            return false;
+        }
     }
 }

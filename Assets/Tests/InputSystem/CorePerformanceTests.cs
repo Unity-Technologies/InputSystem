@@ -9,6 +9,9 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.XInput;
+using UnityEngine.InputSystem.XInput.LowLevel;
+using Random = UnityEngine.Random;
 
 ////TODO: add test for domain reload logic
 
@@ -62,6 +65,25 @@ internal class CorePerformanceTests : InputTestFixture
                 InputSystem.QueueStateEvent(mouse, default(MouseState));
             InputSystem.Update();
         })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    public void Performance_UpdateGamepad100TimesInFrame()
+    {
+        var gamepad = InputSystem.AddDevice<XInputControllerWindows>();
+
+        Measure.Method(() =>
+            {
+                Random.InitState(123);
+
+                for (var i = 0; i < 100; ++i)
+                    InputSystem.QueueStateEvent(gamepad, new XInputControllerWindowsState{leftStickX = (short) (Random.value * Int16.MaxValue)  });
+                InputSystem.Update();
+            })
             .MeasurementCount(100)
             .WarmupCount(5)
             .Run();

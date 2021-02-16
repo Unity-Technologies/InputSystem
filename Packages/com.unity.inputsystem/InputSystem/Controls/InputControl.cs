@@ -974,6 +974,9 @@ namespace UnityEngine.InputSystem
 
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
+        public TValue currentValue { get; private set; }
+        public TValue previousValue { get; private set; }
+
         /// <summary>
         /// Get the control's current value as read from <see cref="InputControl.currentStatePtr"/>
         /// </summary>
@@ -983,10 +986,11 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public TValue ReadValue()
         {
-            unsafe
-            {
-                return ReadValueFromState(currentStatePtr);
-            }
+            return currentValue;
+            // unsafe
+            // {
+            //     return ReadValueFromState(currentStatePtr);
+            // }
         }
 
         ////REVIEW: is 'frame' really the best wording here?
@@ -996,10 +1000,11 @@ namespace UnityEngine.InputSystem
         /// <returns>The control's value in the previous frame.</returns>
         public TValue ReadValueFromPreviousFrame()
         {
-            unsafe
-            {
-                return ReadValueFromState(previousFrameStatePtr);
-            }
+            return previousValue;
+            // unsafe
+            // {
+            //     return ReadValueFromState(previousFrameStatePtr);
+            // }
         }
 
         /// <summary>
@@ -1189,5 +1194,13 @@ namespace UnityEngine.InputSystem
         #endif
 
         internal InputProcessor<TValue>[] processors => m_ProcessorStack.ToArray();
+
+        public event Action<InputControl, TValue, TValue> onStateChanged;
+
+        internal void UpdateState(TValue value)
+        {
+            previousValue = currentValue;
+            currentValue = ProcessValue(value);
+        }
     }
 }

@@ -1,5 +1,10 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
+using System;
+using System.Linq;
 using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Profiling;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.XInput.LowLevel;
@@ -95,6 +100,54 @@ namespace UnityEngine.InputSystem.XInput
     [Preserve]
     public class XInputControllerWindows : XInputController
     {
+        internal unsafe void Update(InputEventBuffer eventBuffer, InputManager inputManager)
+        {
+            var profileMarker = new ProfilerMarker("XInput::Update");
+            profileMarker.Begin();
+
+            var success = inputManager.GetStateForDevice(m_DeviceIndex, out XInputControllerWindowsState deviceState);
+            if (!success)
+                throw new InvalidOperationException($"Couldn't find state for device {m_DeviceIndex}");
+
+            var fourCC = new FourCC('X', 'I', 'N', 'P');
+            void* statePtr = null;
+            var previousState = deviceState;
+            foreach (var eventPtr in eventBuffer)
+            {
+                if (eventPtr.type != StateEvent.Type)
+                    continue;
+
+                var stateEvent = StateEvent.FromUnchecked(eventPtr);
+                if (stateEvent->stateFormat != fourCC)
+                    continue;
+
+                statePtr = stateEvent->state;
+                var eventState = *(XInputControllerWindowsState*)statePtr;
+
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.A, buttonSouth);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.B, buttonEast);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.Y, buttonNorth);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.X, buttonWest);
+
+                if(eventState.leftStickX != deviceState.leftStickX || eventState.leftStickY != deviceState.leftStickY)
+                    leftStick.UpdateState(new Vector2(eventState.leftStickX, eventState.leftStickY));
+
+                previousState = eventState;
+            }
+
+            // update the state from the last state event
+            if(statePtr != null)
+                inputManager.UpdateDeviceState<XInputControllerWindowsState>(m_DeviceIndex, statePtr);
+
+            profileMarker.End();
+        }
+
+        private void SetButtonState(XInputControllerWindowsState previousState, XInputControllerWindowsState currentState, XInputControllerWindowsState.Button button, ButtonControl buttonControl)
+        {
+            var buttonMask = (uint) 1 << (int) button;
+            if ((previousState.buttons & buttonMask) != (currentState.buttons & buttonMask))
+                buttonControl.UpdateState(currentState.buttons & buttonMask);
+        }
     }
 }
 #endif // UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
