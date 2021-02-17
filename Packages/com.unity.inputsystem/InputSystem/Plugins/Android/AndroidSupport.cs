@@ -29,61 +29,12 @@ namespace UnityEngine.InputSystem.Android
                 matches: new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("AndroidGameController"));
+            InputSystem.RegisterLayout<DualShock4GamepadAndroid>();
+            InputSystem.RegisterLayout<XboxOneGamepadAndroid>();
 
             ////TODO: capability matching does not yet support bitmasking so these remain handled by OnFindLayoutForDevice for now
-
-            const string kDpadHatSettings = @"
-        { ""name"" : ""dpad"", ""offset"" : 88, ""format"" : ""VEC2"", ""sizeInBits"" : 64 },
-        { ""name"" : ""dpad/right"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/left"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" },
-        { ""name"" : ""dpad/down"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=0,clampMax=1"" },
-        { ""name"" : ""dpad/up"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""parameters"" : ""clamp=3,clampConstant=0,clampMin=-1,clampMax=0,invert"" }
-";
-            InputSystem.RegisterLayout(@"
-{
-    ""name"" : ""AndroidGamepadWithDpadAxes"",
-    ""extend"" : ""AndroidGamepad"",
-    ""hideInUI"" : true,
-    ""controls"" : [
-    " + kDpadHatSettings + @"
-    ]
-}
-            ");
-            InputSystem.RegisterLayout(@"
-{
-    ""name"" : ""AndroidGamepadWithDpadButtons"",
-    ""extend"" : ""AndroidGamepad"",
-    ""hideInUI"" : true,
-    ""controls"" : [
-        { ""name"" : ""dpad"", ""offset"" : 0, ""bit"" : 19, ""sizeInBits"" : 4 },
-        { ""name"" : ""dpad/left"", ""bit"" : 21 },
-        { ""name"" : ""dpad/right"", ""bit"" : 22 },
-        { ""name"" : ""dpad/up"", ""bit"" : 19 },
-        { ""name"" : ""dpad/down"", ""bit"" : 20 }
-    ]
-}
-            ");
-
-            ////TODO: why do I have to set layout here for leftTrigger, shouldn't it come from child control ?
-            InputSystem.RegisterLayout(string.Format(@"
-{{
-    ""name"" : ""AndroidGamepadXboxController"",
-    ""extend"" : ""AndroidGamepad"",
-    ""displayName"" : ""Android Xbox Gamepad"",
-    ""controls"" : [
-        {0},
-        {{ ""name"" : ""leftTrigger"", ""layout"" : ""Button"", ""offset"" : {1}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightTrigger"", ""layout"" : ""Button"", ""offset"" : {2}, ""format"" : ""FLT"", ""parameters"" : ""normalize=true,normalizeMin=-1,normalizeMax=1,normalizeZero=-1"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightStick"", ""layout"" : ""Stick"", ""offset"" : {3}, ""format"" : ""VEC2"", ""variant"" : ""{4}"" }},
-        {{ ""name"" : ""rightStick/x"", ""offset"" : 0, ""bit"" : 0, ""format"" : ""FLT"", ""variant"" : ""{4}""  }},
-        {{ ""name"" : ""rightStick/y"", ""offset"" : 4, ""bit"" : 0, ""format"" : ""FLT"", ""variant"" : ""{4}"" }}
-    ]
-}}"
-                , kDpadHatSettings
-                , (uint)AndroidAxis.Z * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidAxis.Rz * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , (uint)AndroidAxis.Rx * sizeof(float) + AndroidGameControllerState.kAxisOffset
-                , AndroidGameControllerState.kVariantGamepad));
+            InputSystem.RegisterLayout<AndroidGamepadWithDpadAxes>();
+            InputSystem.RegisterLayout<AndroidGamepadWithDpadButtons>();
 
             InputSystem.RegisterProcessor<AndroidCompensateDirectionProcessor>();
             InputSystem.RegisterProcessor<AndroidCompensateRotationProcessor>();
@@ -181,14 +132,21 @@ namespace UnityEngine.InputSystem.Android
 
                     // Vendor Ids, Product Ids can be found here http://www.linux-usb.org/usb.ids
                     const int kVendorMicrosoft = 0x045e;
+                    const int kVendorSony = 0x054c;
 
-                    if (caps.vendorId == kVendorMicrosoft &&
-                        caps.motionAxes != null &&
-                        caps.motionAxes.Contains(AndroidAxis.Rx) &&
-                        caps.motionAxes.Contains(AndroidAxis.Ry) &&
+                    // Tested with controllers: PS4 DualShock; XboxOne; Nvidia Shield
+                    // Tested on devices: Shield console Android 9; Galaxy s9+ Android 10
+                    if (caps.motionAxes.Contains(AndroidAxis.Z) &&
+                        caps.motionAxes.Contains(AndroidAxis.Rz) &&
                         caps.motionAxes.Contains(AndroidAxis.HatX) &&
                         caps.motionAxes.Contains(AndroidAxis.HatY))
-                        return "AndroidGamepadXboxController";
+                    {
+                        if (caps.vendorId == kVendorMicrosoft)
+                            return "XboxOneGamepadAndroid";
+                        if (caps.vendorId == kVendorSony)
+                            return "DualShock4GamepadAndroid";
+                    }
+
 
                     // Fallback to generic gamepads
                     if (caps.motionAxes.Contains(AndroidAxis.HatX) &&

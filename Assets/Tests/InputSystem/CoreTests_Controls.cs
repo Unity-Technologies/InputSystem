@@ -1032,9 +1032,6 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-#if UNITY_ANDROID && !UNITY_EDITOR
-    [Ignore("Case 1254559")]
-#endif
     public void Controls_CanTurnControlPathIntoHumanReadableText()
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
