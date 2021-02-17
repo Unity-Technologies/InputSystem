@@ -135,3 +135,7 @@ On other platforms Unity, uses derived classes to represent Xbox controllers:
 ## Switch
 
 The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.
+
+>__Note__: This support does not currently work for Switch Pro controllers connected via wired USB. Instead, the Switch Pro controller *must* be connected via Bluetooth. This is due to the controller using a prioprietary communication protocol on top of HID which does not allow treating the controller like any other HID.
+
+>__Note__: Switch Joy-Cons are not currently supported on desktop.
