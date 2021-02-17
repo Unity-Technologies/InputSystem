@@ -11,7 +11,15 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+#### Actions
+
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Actions embedded into `MonoBehaviours` not showing bindings added directly from within constructors ([case 1291334](https://issuetracker.unity3d.com/issues/input-action-binding-doesnt-show-up-in-the-inspector-when-set-using-a-script)).
+  ```CSharp
+  public class MyMB : MonoBehaviour {
+    // This would end up not showing the binding in the inspector.
+    public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
+  ```
 
 ## [1.1.0-preview.3] - 2021-02-04
 

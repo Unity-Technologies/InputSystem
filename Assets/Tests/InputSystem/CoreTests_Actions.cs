@@ -4059,6 +4059,44 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1291334/
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_IgnoreActionNameInBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+
+        // This can't actually be done through the public API but it can be done
+        // with serialized data.
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].action, Is.Empty);
+        Assert.That(action.bindings[1].action, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_CanBeRenamed()
+    {
+        Assert.Fail();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].action, Is.Empty);
+        Assert.That(action.bindings[1].action, Is.Empty);
+    }
+
     /*
     TODO: Implement WithChild and ChainedWith
     [Test]
