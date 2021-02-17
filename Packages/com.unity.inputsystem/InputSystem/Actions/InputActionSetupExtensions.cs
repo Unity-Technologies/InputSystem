@@ -150,6 +150,7 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentException"><paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is enabled (see <see cref="InputActionMap.enabled"/>)
         /// -or- <paramref name="map"/> already contains an action called <paramref name="name"/> (case-insensitive).</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> parent InputActionAsset has one or more maps enabled (see <see cref="InputActionAsset.enabled"/>).</exception>
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
