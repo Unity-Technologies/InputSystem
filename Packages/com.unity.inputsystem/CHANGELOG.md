@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Inputs in game view sometimes not working if running under editor, as we were not checking game view focus state after domain reload.
 
 ## [1.1.0-preview.3] - 2021-02-04
 

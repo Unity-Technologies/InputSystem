@@ -161,6 +161,8 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        public bool isFocused => Application.isFocused;
+
         public float pollingFrequency
         {
             get => m_PollingFrequency;
