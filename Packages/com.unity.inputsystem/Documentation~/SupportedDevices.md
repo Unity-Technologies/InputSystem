@@ -28,7 +28,7 @@ Support for the following Devices doesn't require specialized support of particu
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
 |PS4|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5)|Yes (5, 6)|Yes (5, 6)|No|Yes|No|Sometimes (2)|
-|Switch|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
+|Switch|Yes (8)|Yes (8)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|No|No|No|No|Yes|Yes|No|No|No|No|
 
 >__Notes__:
@@ -39,6 +39,7 @@ Support for the following Devices doesn't require specialized support of particu
 >5. Unity doesn't support the gyro or accelerometer on PS4 controllers on platforms other than the PlayStation 4 console. Unity also doesn't support the DualShock 4 USB Wireless Adaptor.
 >6. Unity supports Made for iOS (Mfi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
 >7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
+>8. Switch Joy-Cons are not currently supported on Windows and Mac. Also, Switch Pro controllers are supported only when connected via Bluetooth but not when connected via wired USB.
 
 ### WebGL
 
