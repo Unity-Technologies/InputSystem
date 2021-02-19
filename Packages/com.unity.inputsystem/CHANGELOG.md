@@ -12,6 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Now we don't refresh device debugger views on every state event, but only do it once per frame, this somewhat helps with UI performance when debugging high refresh rate devices like 1+ Khz gaming mice.
 
 ## [1.1.0-preview.3] - 2021-02-04
 

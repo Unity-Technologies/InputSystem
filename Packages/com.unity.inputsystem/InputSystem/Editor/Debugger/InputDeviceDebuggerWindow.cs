@@ -265,6 +265,12 @@ namespace UnityEngine.InputSystem.Editor
 
             GUILayout.EndHorizontal();
 
+            if (m_ReloadEventTree)
+            {
+                m_ReloadEventTree = false;
+                m_EventTree.Reload();
+            }
+
             var rect = EditorGUILayout.GetControlRect(GUILayout.ExpandHeight(true));
             m_EventTree.OnGUI(rect);
         }
@@ -296,11 +302,7 @@ namespace UnityEngine.InputSystem.Editor
                 };
             }
 
-            m_EventTrace.onEvent += _ =>
-            {
-                ////FIXME: this is very inefficient
-                m_EventTree.Reload();
-            };
+            m_EventTrace.onEvent += _ => m_ReloadEventTree = true; 
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 
@@ -356,6 +358,7 @@ namespace UnityEngine.InputSystem.Editor
         private InputControlTreeView m_ControlTree;
         private InputEventTreeView m_EventTree;
         private bool m_NeedControlValueRefresh;
+        private bool m_ReloadEventTree;
         private InputEventTrace.ReplayController m_ReplayController;
         private InputEventTrace m_EventTrace;
 
@@ -400,18 +403,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDeviceStateChange(InputDevice device, InputEventPtr eventPtr)
         {
-            ////REVIEW: Ideally we would defer the refresh until we repaint. That way, we would not refresh on every single
-            ////        state change but rather only once for a repaint. However, for some reason, if we move the refresh
-            ////        into OnGUI, something in Unity blows up and takes forever. It seems that we are invalidating some
-            ////        cached material data over and over and over so that OnGUI suddenly becomes crazy expensive.
-
-            ////FIXME: Reading values here means we won't be showing the effect of EditorWindowSpaceProcessor correctly. In the
-            ////       input update, there is no current EditorWindow so no window to be relative to. However, even if we read the
-            ////       values in OnGUI(), the result would always be relative to the debugger window (that'd probably be fine).
-
             if (InputState.currentUpdateType != InputSystem.s_Manager.defaultUpdateType)
                 return;
-            m_ControlTree?.RefreshControlValues();
+            m_NeedControlValueRefresh = true;
             Repaint();
         }
 
