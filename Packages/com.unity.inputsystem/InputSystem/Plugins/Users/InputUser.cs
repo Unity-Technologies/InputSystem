@@ -41,6 +41,9 @@ namespace UnityEngine.InputSystem.Users
     /// <see cref="RuntimePlatform.WSAPlayerX64"/>, and <see cref="RuntimePlatform.WSAPlayerARM"/>. Note that
     /// for WSA/UWP apps, the "User Account Information" capability must be enabled for the app in order for
     /// user information to come through on input devices.
+    ///
+    /// Note that the InputUser API, like <see cref="InputAction"/>) is a play mode-only feature. When exiting play mode,
+    /// all users are automatically removed and all devices automatically unpaired.
     /// </remarks>
     /// <seealso cref="InputUserChange"/>
     public struct InputUser : IEquatable<InputUser>
@@ -1984,6 +1987,10 @@ namespace UnityEngine.InputSystem.Users
 
         internal static void ResetGlobals()
         {
+            UnhookFromActionChange();
+            UnhookFromDeviceChange();
+            UnhookFromDeviceStateChange();
+
             // Release native memory held by control scheme match results.
             for (var i = 0; i < s_AllUserCount; ++i)
                 s_AllUserData[i].controlSchemeMatch.Dispose();

@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
@@ -2413,6 +2414,34 @@ partial class CoreTests
 
         Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_RemovesAllInputUsersAndStopsListeningForUnpairedDeviceActivity()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, ptr) => {};
+
+        Assert.That(user.valid, Is.True);
+        Assert.That(InputUser.all, Has.Count.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(user.valid, Is.False);
+        Assert.That(InputUser.all, Has.Count.Zero);
+
+        // Send an event to make sure InputUser removed its event hook.
+        Press(gamepad.buttonSouth);
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.

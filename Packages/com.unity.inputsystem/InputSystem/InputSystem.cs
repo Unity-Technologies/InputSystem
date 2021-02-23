@@ -3061,6 +3061,9 @@ namespace UnityEngine.InputSystem
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
 
+                    // Nuke all InputUsers.
+                    InputUser.ResetGlobals();
+
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
 
