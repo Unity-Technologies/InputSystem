@@ -421,6 +421,32 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
+    public void Users_PairingDeviceToUserWithLostDevice_DoesNotCauseLostDevicesToBeCleared_ExceptWhenAlsoUnpairingExistingDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var user = InputUser.PerformPairingWithDevice(gamepad1);
+
+        InputSystem.RemoveDevice(gamepad1);
+
+        Assert.That(user.pairedDevices, Is.Empty);
+        Assert.That(user.lostDevices, Is.EquivalentTo(new[] { gamepad1 }));
+
+        InputUser.PerformPairingWithDevice(gamepad2, user: user);
+
+        Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad2 }));
+        Assert.That(user.lostDevices, Is.EquivalentTo(new[] { gamepad1 }));
+
+        InputUser.PerformPairingWithDevice(gamepad3, user: user, options: InputUserPairingOptions.UnpairCurrentDevicesFromUser);
+
+        Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(user.lostDevices, Is.Empty);
+    }
+
+    [Test]
+    [Category("Users")]
     public void Users_CannotPairSameDeviceToUserMoreThanOnce()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -465,6 +491,63 @@ internal class UserTests : InputTestFixture
             new UserChange(user2, InputUserChange.DevicePaired, gamepad1),
             new UserChange(user1, InputUserChange.DeviceUnpaired, gamepad1),
         }));
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanUnpairDevices_WhenUserHasLostDevices()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+        var gamepad3 = InputSystem.AddDevice<Gamepad>();
+
+        var user1 = InputUser.PerformPairingWithDevice(gamepad1);
+        var user2 = InputUser.PerformPairingWithDevice(gamepad2);
+
+        InputSystem.RemoveDevice(gamepad1);
+        InputSystem.RemoveDevice(gamepad2);
+
+        Assert.That(user1.pairedDevices, Is.Empty);
+        Assert.That(user1.lostDevices, Is.EquivalentTo(new[] { gamepad1 }));
+        Assert.That(user2.pairedDevices, Is.Empty);
+        Assert.That(user2.lostDevices, Is.EquivalentTo(new[] { gamepad2 }));
+
+        user1.UnpairDevices();
+
+        Assert.That(user1.pairedDevices, Is.Empty);
+        Assert.That(user1.lostDevices, Is.Empty);
+        Assert.That(user2.pairedDevices, Is.Empty);
+        Assert.That(user2.lostDevices, Is.EquivalentTo(new[] { gamepad2 }));
+
+        InputUser.PerformPairingWithDevice(gamepad3, user: user2, options: InputUserPairingOptions.UnpairCurrentDevicesFromUser);
+
+        Assert.That(user1.pairedDevices, Is.Empty);
+        Assert.That(user1.lostDevices, Is.Empty);
+        Assert.That(user2.pairedDevices, Is.EquivalentTo(new[] { gamepad3 }));
+        Assert.That(user2.lostDevices, Is.Empty);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanUnpairDevices_FromCallback()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+        InputUser.PerformPairingWithDevice(mouse); // Noise.
+
+        InputUser.onChange +=
+            (inputUser, change, arg3) =>
+        {
+            if (change == InputUserChange.DeviceLost)
+                inputUser.UnpairDevices();
+        };
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(user.pairedDevices, Is.Empty);
+        Assert.That(user.lostDevices, Is.Empty);
     }
 
     [Test]
@@ -907,7 +990,9 @@ internal class UserTests : InputTestFixture
 
     [Test]
     [Category("Users")]
-    public void Users_CanDetectLossOfAndRegainingOfDevice()
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Users_CanDetectLossOfAndRegainingOfDevice(bool deviceIsOptional)
     {
         var gamepad1 = InputSystem.AddDevice<Gamepad>();
         var gamepad2 = InputSystem.AddDevice<Gamepad>();
@@ -916,8 +1001,8 @@ internal class UserTests : InputTestFixture
         InputUser.PerformPairingWithDevice(gamepad1);
         var user2 = InputUser.PerformPairingWithDevice(gamepad2);
 
-        var gamepadScheme = new InputControlScheme("Gamepad")
-            .WithRequiredDevice("<Gamepad>");
+        var gamepadScheme = new InputControlScheme("Gamepad");
+        gamepadScheme = gamepadScheme.WithDevice("<Gamepad>", required: !deviceIsOptional);
 
         var actions = new InputActionMap();
         user2.AssociateActionsWithUser(actions);
@@ -927,6 +1012,7 @@ internal class UserTests : InputTestFixture
         InputUser.onChange +=
             (usr, change, device) => { receivedChanges.Add(new UserChange(usr, change, device)); };
 
+        // Remove unrelated device. Shouldn't affect the user.
         InputSystem.RemoveDevice(gamepad3);
 
         Assert.That(receivedChanges, Is.Empty);
@@ -934,9 +1020,10 @@ internal class UserTests : InputTestFixture
         Assert.That(user2.lostDevices, Is.Empty);
         Assert.That(user2.controlSchemeMatch[0].control, Is.SameAs(gamepad2));
 
+        // Now make the user lose a device.
         InputSystem.RemoveDevice(gamepad2);
 
-        Assert.That(user2.hasMissingRequiredDevices, Is.True);
+        Assert.That(user2.hasMissingRequiredDevices, Is.EqualTo(!deviceIsOptional));
         Assert.That(user2.lostDevices, Is.EquivalentTo(new[] { gamepad2 }));
         Assert.That(user2.actions.devices, Is.Empty);
         Assert.That(user2.controlSchemeMatch[0].control, Is.Null);
@@ -1023,6 +1110,38 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
         Assert.That(receivedUser, Is.EqualTo(user));
         Assert.That(receivedDevice, Is.Null);
+    }
+
+    [Test]
+    [Category("Users")]
+    public void Users_CanDisconnectAndReconnectDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+
+        var changes = new List<InputUserChange>();
+        InputUser.onChange +=
+            (u, change, device) =>
+        {
+            Assert.That(u, Is.EqualTo(user));
+            Assert.That(device, Is.SameAs(gamepad));
+            changes.Add(change);
+        };
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(changes, Is.EquivalentTo(new[] { InputUserChange.DeviceLost, InputUserChange.DeviceUnpaired }));
+        Assert.That(user.lostDevices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(user.pairedDevices, Is.Empty);
+
+        changes.Clear();
+
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(changes, Is.EquivalentTo(new[] { InputUserChange.DeviceRegained, InputUserChange.DevicePaired }));
+        Assert.That(user.lostDevices, Is.Empty);
+        Assert.That(user.pairedDevices, Is.EquivalentTo(new[] { gamepad }));
     }
 
     [Test]

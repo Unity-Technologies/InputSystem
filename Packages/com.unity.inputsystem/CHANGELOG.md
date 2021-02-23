@@ -9,9 +9,29 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased]
 
+### Changed
+
+- Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
+  * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
+
+#### Actions
+
+- When removing/unplugging a device, it will now also be removed from the device list of `InputActionMap.devices` and `InputActionAsset.devices`.
+  ```CSharp
+  var gamepad = InputSystem.AddDevice<Gamepad>();
+  var actions = new MyGeneratedActions();
+  actions.devices = new[] { gamepad };
+  InputSystem.RemoveDevice(gamepad);
+  // `actions.devices` is now an empty array.
+  ```
+
 ### Fixed
 
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+
+#### Actions
+
+- Fixed `IndexOutOfRangeException` and `null` elements in `InputUser.lostDevices` when an `InputUser` loses a devices from a control scheme with only optional devices ([case 1275148](https://issuetracker.unity3d.com/issues/disconnecting-and-reconnecting-input-device-causes-exception-in-inputuser)).
 
 ## [1.1.0-preview.3] - 2021-02-04
 

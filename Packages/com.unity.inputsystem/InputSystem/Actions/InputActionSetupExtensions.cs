@@ -908,6 +908,13 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
+        public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
+        {
+            if (required)
+                return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
+        }
+
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
