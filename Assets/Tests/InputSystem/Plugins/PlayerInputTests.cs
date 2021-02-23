@@ -1369,8 +1369,6 @@ internal class PlayerInputTests : InputTestFixture
             new Message("OnDeviceRegained", playerInput),////REVIEW: Should this come *after* OnControlsChanged?
             new Message("OnControlsChanged", playerInput),
         }));
-
-        //what if we query controls *inside* the callback?
     }
 
     [Test]
