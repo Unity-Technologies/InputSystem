@@ -4071,11 +4071,11 @@ partial class CoreTests
         // This can't actually be done through the public API but it can be done
         // with serialized data.
         action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
-        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "");
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/rightStick", action: "");
 
-        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick, gamepad.rightStick }));
         Assert.That(action.bindings, Has.Count.EqualTo(2));
-        Assert.That(action.bindings[0].action, Is.Empty);
+        Assert.That(action.bindings[0].action, Is.EqualTo("DoesNotExist"));
         Assert.That(action.bindings[1].action, Is.Empty);
     }
 
@@ -4083,18 +4083,22 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_SingletonActions_CanBeRenamed()
     {
-        Assert.Fail();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        var action = new InputAction();
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
 
-        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
-        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "");
+        Assert.That(action.name, Is.Null);
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
 
-        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick }));
-        Assert.That(action.bindings, Has.Count.EqualTo(2));
-        Assert.That(action.bindings[0].action, Is.Empty);
-        Assert.That(action.bindings[1].action, Is.Empty);
+        action.Rename("first");
+
+        Assert.That(action.name, Is.EqualTo("first"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        action.Rename("second");
+
+        Assert.That(action.name, Is.EqualTo("second"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
     }
 
     /*
