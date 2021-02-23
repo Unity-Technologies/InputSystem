@@ -3542,6 +3542,64 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var map = new InputActionMap();
+        var action1 = map.AddAction("action", binding: "<Gamepad>/buttonSouth");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var action2 = asset.AddActionMap("map").AddAction("action", binding: "<Gamepad>/buttonSouth");
+
+        map.devices = new[] { gamepad };
+        asset.devices = new[] { gamepad };
+
+        Assert.That(action1.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+        Assert.That(action2.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        var controlsChanged = new List<IInputActionCollection>();
+        InputSystem.onActionChange +=
+            (o, change) =>
+        {
+            if (change == InputActionChange.BoundControlsChanged)
+                controlsChanged.Add((IInputActionCollection)o);
+        };
+
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(map.devices, Is.Not.Null); // Empty mask is different from no mask at all.
+        Assert.That(map.devices, Is.EquivalentTo(new InputDevice[0]));
+        Assert.That(action1.controls, Is.Empty);
+        Assert.That(asset.devices, Is.Not.Null); // Empty mask is different from no mask at all.
+        Assert.That(asset.devices, Is.EquivalentTo(new InputDevice[0]));
+        Assert.That(action2.controls, Is.Empty);
+
+        // We want to have gotten two notifications only for BoundControlsChanged, i.e. only
+        // a single binding resolution pass for each collection and not multiple.
+        Assert.That(controlsChanged, Has.Count.EqualTo(2));
+        Assert.That(controlsChanged, Has.Exactly(1).SameAs(map));
+        Assert.That(controlsChanged, Has.Exactly(1).SameAs(asset));
+
+        controlsChanged.Clear();
+
+        // When adding the device back, we do not restore the previous mask.
+        InputSystem.AddDevice(gamepad);
+
+        Assert.That(map.devices, Is.Not.Null); // Empty mask is different from no mask at all.
+        Assert.That(map.devices, Is.EquivalentTo(new InputDevice[0]));
+        Assert.That(action1.controls, Is.Empty);
+        Assert.That(asset.devices, Is.Not.Null); // Empty mask is different from no mask at all.
+        Assert.That(asset.devices, Is.EquivalentTo(new InputDevice[0]));
+        Assert.That(action2.controls, Is.Empty);
+
+        // Adding the device should *not* have triggered binding re-resolution in
+        // this case.
+        Assert.That(controlsChanged, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ControlsUpdateWhenDeviceIsRemoved_WhileActionIsDisabled()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();

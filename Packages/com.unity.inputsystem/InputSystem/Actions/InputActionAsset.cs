@@ -924,8 +924,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] internal InputActionState m_SharedStateForAllMaps;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal int m_DevicesCount = -1;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [Serializable]
         internal struct WriteFileJson

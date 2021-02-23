@@ -739,8 +739,8 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] private int m_DevicesCount = -1;
-        [NonSerialized] private InputDevice[] m_DevicesArray;
+        [NonSerialized] internal int m_DevicesCount = -1;
+        [NonSerialized] internal InputDevice[] m_DevicesArray;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
