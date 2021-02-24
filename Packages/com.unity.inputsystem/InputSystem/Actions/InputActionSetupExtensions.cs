@@ -493,12 +493,7 @@ namespace UnityEngine.InputSystem
             else
                 ArrayHelpers.InsertAt(ref map.m_Bindings, bindingIndex, binding);
 
-            // Invalidate per-action binding sets so that this gets refreshed if
-            // anyone queries it.
-            map.ClearPerActionCachedBindingData();
-
-            // Make sure bindings get re-resolved.
-            map.LazyResolveBindings();
+            InvalidateActionMap(map);
 
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
@@ -506,6 +501,19 @@ namespace UnityEngine.InputSystem
                 map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
 
             return bindingIndex;
+        }
+
+        private static void InvalidateActionMap(InputActionMap map)
+        {
+            if(map.asset != null)
+                map.asset.MarkAsDirty();
+
+            // Invalidate per-action binding sets so that this gets refreshed if
+            // anyone queries it.
+            map.ClearPerActionCachedBindingData();
+
+            // Make sure bindings get re-resolved.
+            map.LazyResolveBindings();
         }
 
         /// <summary>

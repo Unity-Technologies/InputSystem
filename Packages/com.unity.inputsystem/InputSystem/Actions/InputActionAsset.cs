@@ -954,5 +954,12 @@ namespace UnityEngine.InputSystem
                         map.m_Asset = asset;
             }
         }
+
+        internal void MarkAsDirty()
+        {
+#if UNITY_EDITOR
+            InputSystem.TrackDirtyInputActionAsset(this);
+#endif
+        }
     }
 }

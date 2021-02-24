@@ -3098,6 +3098,27 @@ namespace UnityEngine.InputSystem
                         settings.OnChange();
                     }
 
+                    // reload input action assets marked as dirty from disk
+                    if (s_TrackedDirtyAssets == null)
+                        return;
+
+                    foreach (var assetGuid in s_TrackedDirtyAssets)
+                    {
+                        var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+
+                        if (string.IsNullOrEmpty(assetPath))
+                        {
+                            Debug.LogWarning($"Input action asset change tracking was tracking asset with GUID '{assetGuid}' but it wasn't found in the asset " +
+                                             $"database on exiting play mode. If you have added bindings to this asset during this play mode session, you may need " +
+                                             $"to reimport the asset from disk to remove the added bindings from memory.");
+                            continue;
+                        }
+
+                        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+                    }
+
+                    s_TrackedDirtyAssets.Clear();
+
                     break;
             }
         }
@@ -3385,6 +3406,28 @@ namespace UnityEngine.InputSystem
                 device.NotifyAdded();
         }
 
+        private static HashSet<string> s_TrackedDirtyAssets;
+
+        /// <summary>
+        /// Keep track of InputActionAsset assets that we want to re-load on exiting play mode. We need to do this because
+        /// some user actions, such as adding a new input binding at runtime, change the in-memory representation of the
+        /// input action asset and those changes survive when exiting play mode. If the developer were to re-open an input
+        /// action asset in the editor that had been changed this way, they would see the new bindings that had been added
+        /// during play mode which is not what we typically want to happen.
+        ///
+        /// This is fixed by simply force re-loading from disk any asset that has been marked as dirty.
+        /// </summary>
+        /// <param name="asset"></param>
+        internal static void TrackDirtyInputActionAsset(InputActionAsset asset)
+        {
+            if (s_TrackedDirtyAssets == null)
+                s_TrackedDirtyAssets = new HashSet<string>();
+
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string assetGuid, out long _) == false)
+                return;
+
+            s_TrackedDirtyAssets.Add(assetGuid);
+        }
 #endif
     }
 }
