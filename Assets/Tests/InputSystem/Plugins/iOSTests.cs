@@ -13,7 +13,7 @@ using UnityEngine.InputSystem.XInput;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 
-internal class iOSTests : InputTestFixture
+internal class iOSTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

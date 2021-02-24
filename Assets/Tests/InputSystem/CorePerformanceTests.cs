@@ -16,7 +16,7 @@ using UnityEngine.InputSystem.Users;
 //            editor preferences and restart editor) when running tests here. If debugging is enabled,
 //            the code will run A LOT slower.
 
-internal class CorePerformanceTests : InputTestFixture
+internal class CorePerformanceTests : CoreTestsFixture
 {
     public override void Setup()
     {

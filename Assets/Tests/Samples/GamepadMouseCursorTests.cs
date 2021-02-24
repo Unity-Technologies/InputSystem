@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.TestTools.Utils;
 
-public class GamepadMouseCursorTests : InputTestFixture
+public class GamepadMouseCursorTests : CoreTestsFixture
 {
     [Test]
     [Category("UI")]

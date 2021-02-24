@@ -19,7 +19,7 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 #pragma warning disable CS0649
 ////TODO: app focus handling
 
-internal class UITests : InputTestFixture
+internal class UITests : CoreTestsFixture
 {
     private struct TestObjects
     {
