@@ -2247,24 +2247,29 @@ namespace UnityEngine.InputSystem
                 var compositeObject = composites[compositeIndex];
                 Debug.Assert(compositeObject != null, "Composite object is null");
 
-                var compositeOfType = compositeObject as InputBindingComposite<TValue>;
-                if (compositeOfType == null)
-                {
-                    var compositeType = compositeObject.GetType();
-                    while (compositeType != null && !compositeType.IsGenericType)
-                        compositeType = compositeType.BaseType;
-
-                    throw new InvalidOperationException(
-                        $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(compositeType.GetGenericArguments()[0])}')");
-                }
-
                 var context = new InputBindingCompositeContext
                 {
                     m_State = this,
                     m_BindingIndex = compositeBindingIndex
                 };
 
-                value = compositeOfType.ReadValue(ref context);
+                var compositeOfType = compositeObject as InputBindingComposite<TValue>;
+                if (compositeOfType == null)
+                {
+                    // Composite is not derived from InputBindingComposite<TValue>. Do an explicit value
+                    // type check here. Might be a composite like OneModifierComposite that dynamically
+                    // determines its value type based on what its parts are bound to.
+                    var valueType = compositeObject.valueType;
+                    if (!valueType.IsAssignableFrom(typeof(TValue)))
+                        throw new InvalidOperationException(
+                            $"Cannot read value of type '{typeof(TValue).Name}' from composite '{compositeObject}' bound to action '{GetActionOrNull(bindingIndex)}' (composite is a '{compositeIndex.GetType().Name}' with value type '{TypeHelpers.GetNiceTypeName(valueType)}')");
+
+                    compositeObject.ReadValue(ref context, UnsafeUtility.AddressOf(ref value), UnsafeUtility.SizeOf<TValue>());
+                }
+                else
+                {
+                    value = compositeOfType.ReadValue(ref context);
+                }
 
                 // Switch bindingIndex to that of composite so that we use the right processors.
                 bindingIndex = compositeBindingIndex;
