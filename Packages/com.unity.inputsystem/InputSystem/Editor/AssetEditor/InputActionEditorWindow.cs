@@ -355,7 +355,8 @@ namespace UnityEngine.InputSystem.Editor
                 onSelectionChanged = OnActionTreeSelectionChanged,
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 drawMinusButton = false,
-                title = "Actions",
+                title = ("Actions", "A list of InputActions in the InputActionMap selected in the left pane. Also, for each InputAction, the list "
+                    + "of bindings that determine the controls that can trigger the action.\n\nThe name of each action must be unique within its InputActionMap."),
             };
 
             // Create tree in left pane showing action maps.
@@ -367,7 +368,8 @@ namespace UnityEngine.InputSystem.Editor
                 onSerializedObjectModified = ApplyAndReloadTrees,
                 onHandleAddNewAction = m_ActionsTree.AddNewAction,
                 drawMinusButton = false,
-                title = "Action Maps",
+                title = ("Action Maps", "A list of InputActionMaps in the asset. Each map can be enabled and disabled separately at runtime and holds "
+                    + "its own collection of InputActions which are listed in the middle pane (along with their InputBindings).")
             };
             m_ActionMapsTree.Reload();
             m_ActionMapsTree.ExpandAll();
@@ -691,16 +693,23 @@ namespace UnityEngine.InputSystem.Editor
 
             EditorGUI.LabelField(rect, GUIContent.none, InputActionTreeView.Styles.backgroundWithBorder);
             var headerRect = new Rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2);
-            EditorGUI.LabelField(headerRect, "Properties", InputActionTreeView.Styles.columnHeaderLabel);
 
             if (m_BindingPropertyView != null)
             {
+                if (m_BindingPropertiesTitle == null)
+                    m_BindingPropertiesTitle = new GUIContent("Binding Properties", "The properties for the InputBinding selected in the "
+                        + "'Actions' pane on the left.");
+                EditorGUI.LabelField(headerRect, m_BindingPropertiesTitle, InputActionTreeView.Styles.columnHeaderLabel);
                 m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_BindingPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
             }
             else if (m_ActionPropertyView != null)
             {
+                if (m_ActionPropertiesTitle == null)
+                    m_ActionPropertiesTitle = new GUIContent("Action Properties", "The properties for the InputAction selected in the "
+                        + "'Actions' pane on the left.");
+                EditorGUI.LabelField(headerRect, m_ActionPropertiesTitle, InputActionTreeView.Styles.columnHeaderLabel);
                 m_PropertiesScroll = EditorGUILayout.BeginScrollView(m_PropertiesScroll);
                 m_ActionPropertyView.OnGUI();
                 EditorGUILayout.EndScrollView();
@@ -787,6 +796,8 @@ namespace UnityEngine.InputSystem.Editor
         [SerializeField] private InputActionEditorToolbar m_Toolbar;
         [SerializeField] private GUIContent m_DirtyTitle;
         [SerializeField] private GUIContent m_Title;
+        [NonSerialized] private GUIContent m_ActionPropertiesTitle;
+        [NonSerialized] private GUIContent m_BindingPropertiesTitle;
 
         private InputBindingPropertiesView m_BindingPropertyView;
         private InputActionPropertiesView m_ActionPropertyView;

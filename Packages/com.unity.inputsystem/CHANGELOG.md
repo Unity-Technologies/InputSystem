@@ -13,6 +13,10 @@ however, it has to be formatted properly to pass verification tests.
 
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
 
+#### Actions
+
+- Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+
 ## [1.1.0-preview.3] - 2021-02-04
 
 ### Changed
