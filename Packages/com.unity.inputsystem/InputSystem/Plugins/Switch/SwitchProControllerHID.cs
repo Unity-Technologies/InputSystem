@@ -112,6 +112,9 @@ namespace UnityEngine.InputSystem.Switch
     /// <summary>
     /// A Nintendo Switch Pro controller connected to a desktop mac/windows PC using the HID interface.
     /// </summary>
+    /// <remarks>
+    /// This controller currently only works when connected via Bluetooth but not when connected over USB.
+    /// </remarks>
     [InputControlLayout(stateType = typeof(SwitchProControllerHIDInputState), displayName = "Switch Pro Controller")]
     [Scripting.Preserve]
     public class SwitchProControllerHID : Gamepad
