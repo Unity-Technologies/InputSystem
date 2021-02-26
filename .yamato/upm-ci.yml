@@ -74,6 +74,26 @@ run_ios_{{ editor.version }}:
     logs:
         paths:
           - "build/test-results/**"
+		  
+build_tvos_{{ editor.version }}:
+  name: Build Tests on {{ editor.version }} on tvos
+  agent:
+    type: Unity::VM::osx
+    image: mobile/macos-10.13-testing:stable
+    flavor: b1.large
+  commands:
+    - pip install unity-downloader-cli --index-url https://artifactory.prd.it.unity3d.com/artifactory/api/pypi/pypi/simple
+    - unity-downloader-cli -c Editor -c AppleTV -u {{ editor.version }} --fast -w
+    - curl -s https://artifactory.prd.it.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+    - chmod +x ./utr
+    - ./utr --suite=playmode --platform=tvOS --editor-location=.Editor --testproject=. --player-save-path=build/players --artifacts_path=build/logs --build-only --report-performance-data --performance-project-id=InputSystem
+  artifacts:
+    players:
+        paths:
+          - "build/players/**"
+    logs:
+        paths:
+          - "build/logs/**"
   
 {% for backend in scripting_backends %}
 build_android_{{ editor.version }}_{{ backend.name }}:
@@ -142,6 +162,7 @@ all_tests:
     - .yamato/upm-ci.yml#run_android_{{ editor.version }}_{{ backend.name }}  
     {% endfor %}
     - .yamato/upm-ci.yml#run_ios_{{ editor.version }}
+    - .yamato/upm-ci.yml#build_tvos_{{ editor.version }}
     {% endfor %}
   triggers:
     cancel_old_ci: true
