@@ -302,7 +302,7 @@ namespace UnityEngine.InputSystem.Editor
                 };
             }
 
-            m_EventTrace.onEvent += _ => m_ReloadEventTree = true; 
+            m_EventTrace.onEvent += _ => m_ReloadEventTree = true;
             if (!m_EventTraceDisabled)
                 m_EventTrace.Enable();
 
