@@ -21,6 +21,11 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
 
+#### Actions
+
+- Fixed multi-taps not working when multiple controls were bound to an action ([case 1267805](https://issuetracker.unity3d.com/issues/input-system-multi-tap-interaction-doesnt-get-triggered-when-there-are-2-or-more-bindings-in-the-active-control-scheme)).
+  * When there were multiple controls bound to an action, this bug would get triggered by any interaction that did not result in a phase change on the action.
+
 ## [1.1.0-preview.3] - 2021-02-04
 
 ### Changed

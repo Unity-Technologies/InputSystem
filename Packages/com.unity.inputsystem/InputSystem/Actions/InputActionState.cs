@@ -1198,6 +1198,8 @@ namespace UnityEngine.InputSystem
                 if (trigger.magnitude > 0 && triggerControlIndex != actionState->controlIndex && actionState->magnitude > 0)
                     actionState->hasMultipleConcurrentActuations = true;
 
+                // Keep recorded magnitude in action state up to date.
+                actionState->magnitude = trigger.magnitude;
                 Profiler.EndSample();
                 return false;
             }
@@ -1234,6 +1236,8 @@ namespace UnityEngine.InputSystem
                 // If we don't have multiple controls that are currently actuated, it's simple.
                 if (!actionState->hasMultipleConcurrentActuations)
                 {
+                    // Keep recorded magnitude in action state up to date.
+                    actionState->magnitude = trigger.magnitude;
                     Profiler.EndSample();
                     return false;
                 }
@@ -1319,6 +1323,13 @@ namespace UnityEngine.InputSystem
                     trigger.controlIndex = controlWithHighestActuation;
                     trigger.bindingIndex = bindingWithHighestActuation;
                     trigger.magnitude = highestActuationLevel;
+
+                    // We're switching the action to a different control so regardless of whether
+                    // the processing of the control state change results in a call to ChangePhaseOfAction,
+                    // we need to record this or the disambiguation code may start ignoring valid input.
+                    actionState->controlIndex = controlWithHighestActuation;
+                    actionState->bindingIndex = bindingWithHighestActuation;
+                    actionState->magnitude = highestActuationLevel;
 
                     Profiler.EndSample();
                     return false;
@@ -1451,15 +1462,6 @@ namespace UnityEngine.InputSystem
                         var threshold = pressPoint * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
                         if (actuation <= threshold)
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
-                        else
-                        {
-                            // ShouldIgnoreControlStateChange may have switched one from control to another,
-                            // so make sure we update the trigger state here regardless of whether we changed
-                            // phase or not.
-                            actionState->controlIndex = trigger.controlIndex;
-                            actionState->bindingIndex = trigger.bindingIndex;
-                            actionState->magnitude = actuation;
-                        }
                     }
                     else if (actionState->isPassThrough)
                     {
@@ -1559,15 +1561,16 @@ namespace UnityEngine.InputSystem
                 ToCombinedMapAndControlAndBindingIndex(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex);
 
             // If there's already a timeout running, cancel it first.
-            if (interactionStates[interactionIndex].isTimerRunning)
-                StopTimeout(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex, interactionIndex);
+            ref var interactionState = ref interactionStates[interactionIndex];
+            if (interactionState.isTimerRunning)
+                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
+                    interactionIndex);
 
             // Add new timeout.
             manager.AddStateChangeMonitorTimeout(control, this, currentTime + seconds, monitorIndex,
                 interactionIndex);
 
             // Update state.
-            ref var interactionState = ref interactionStates[interactionIndex];
             interactionState.isTimerRunning = true;
             interactionState.timerStartTime = currentTime;
             interactionState.timerDuration = seconds;
@@ -1637,15 +1640,17 @@ namespace UnityEngine.InputSystem
                 phaseAfterPerformedOrCanceled = phaseAfterPerformed;
 
             // Any time an interaction changes phase, we cancel all pending timeouts.
-            if (interactionStates[interactionIndex].isTimerRunning)
-                StopTimeout(trigger.mapIndex, trigger.controlIndex, trigger.bindingIndex, trigger.interactionIndex);
+            ref var interactionState = ref interactionStates[interactionIndex];
+            if (interactionState.isTimerRunning)
+                StopTimeout(trigger.mapIndex, interactionState.triggerControlIndex, trigger.bindingIndex,
+                    trigger.interactionIndex);
 
             // Update interaction state.
-            interactionStates[interactionIndex].phase = newPhase;
-            interactionStates[interactionIndex].triggerControlIndex = trigger.controlIndex;
-            interactionStates[interactionIndex].startTime = trigger.startTime;
+            interactionState.phase = newPhase;
+            interactionState.triggerControlIndex = trigger.controlIndex;
+            interactionState.startTime = trigger.startTime;
             if (newPhase == InputActionPhase.Performed)
-                interactionStates[interactionIndex].performedTime = trigger.time;
+                interactionState.performedTime = trigger.time;
 
             // See if it affects the phase of an associated action.
             var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
@@ -1745,7 +1750,7 @@ namespace UnityEngine.InputSystem
             }
             else if (newPhase == InputActionPhase.Performed && phaseAfterPerformed != InputActionPhase.Waiting)
             {
-                interactionStates[interactionIndex].phase = phaseAfterPerformed;
+                interactionState.phase = phaseAfterPerformed;
             }
             else if (newPhase == InputActionPhase.Performed || newPhase == InputActionPhase.Canceled)
             {
