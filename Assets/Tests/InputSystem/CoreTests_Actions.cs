@@ -8517,7 +8517,7 @@ partial class CoreTests
 
         var map2 = new InputActionMap("map2");
         map2.AddAction(name: "action2", binding: "<Gamepad>/rightStick");
-        
+
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.AddActionMap(map1);
         asset.AddActionMap(map2);
