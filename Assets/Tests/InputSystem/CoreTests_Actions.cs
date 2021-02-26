@@ -8510,6 +8510,41 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_AddingActionToAssetWithEnabledActions_ThrowsException()
+    {
+        var map1 = new InputActionMap("map1");
+        map1.AddAction(name: "action1", binding: "<Gamepad>/leftStick");
+
+        var map2 = new InputActionMap("map2");
+        map2.AddAction(name: "action2", binding: "<Gamepad>/rightStick");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        // toggle enable so we get a similar state as user would when they're trying to add an action in runtime
+        asset.Enable();
+        asset.Disable();
+
+        // adding an action to a map when asset is disable works
+        map1.AddAction("action3");
+        Assert.That(map1.actions, Has.Count.EqualTo(2));
+        Assert.That(map1.actions[1].name, Is.EqualTo("action3"));
+
+        // enable action, but disable first map
+        asset.Enable();
+        map1.Disable();
+
+        // adding an action now should fail with a descriptive exception
+        Assert.That(() => map1.AddAction("action4"),
+            Throws.InvalidOperationException.With.Message.Contains("action4")
+                .And.With.Message.Contains("map1")
+                .And.With.Message.Contains("map2"));
+        Assert.That(map1.actions, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    [Category("Actions")]
     [Ignore("TODO")]
     public void TODO_Actions_ReResolvingBindings_DoesNotAllocate_IfXXX()
     {

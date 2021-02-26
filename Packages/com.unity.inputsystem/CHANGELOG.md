@@ -11,12 +11,16 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
+- Adding an action to a `InputActionMap` that is part of an `InputActionAsset` now requires all actions in the asset to be disabled ([case 1288335](https://issuetracker.unity3d.com/issues/adding-actions-at-runtime-to-existing-map-from-asset-triggers-assertion-error)).
+  * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
 - `InputTestFixture` no longer deletes the `GameObject`s in the current scene in its `TearDown` ([case 1286987](https://issuetracker.unity3d.com/issues/input-system-inputtestfixture-destroys-test-scene)).
   * This was added for the sake of the Input System's own tests but should not have been in the public fixture.
 
 ### Fixed
 
 - Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Fixed inputs in game view sometimes not working when running in the editor, as initial focus state could end up being incorrect.
+- Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
