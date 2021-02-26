@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     onBuildTree = () => BuildTree(property),
                     onDoubleClick = OnItemDoubleClicked,
-                    title = property.displayName,
+                    title = (property.displayName, property.GetTooltip()),
                     // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
                     // really know where this is coming from. This works around it by adding an arbitrary offset...
                     foldoutOffset = 14,
