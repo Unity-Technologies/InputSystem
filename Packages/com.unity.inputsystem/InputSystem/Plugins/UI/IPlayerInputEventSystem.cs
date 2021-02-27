@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 namespace UnityEngine.InputSystem.UI
 {
     /// <summary>
-    /// An interface that allows event systems to restirct which transforms can a InputSystemUIInputModule's pointer interact with.
+    /// An interface that allows event systems to restrict which transforms can a InputSystemUIInputModule's pointer interact with.
     /// </summary>
     public interface IPlayerInputEventSystem
     {
