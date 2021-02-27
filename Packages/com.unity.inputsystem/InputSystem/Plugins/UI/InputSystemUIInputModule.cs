@@ -263,13 +263,13 @@ namespace UnityEngine.InputSystem.UI
             state.OnFrameFinished();
         }
 
-        // if we are using a MultiplayerEventSystem, ignore any transforms
-        // not under the current MultiplayerEventSystem's root.
+        // if we are using a IPlayerInputEventSystem, ignore any transforms
+        // the IPlayerInputEventSystem rejects.
         private bool PointerShouldIgnoreTransform(Transform t)
         {
-            if (eventSystem is MultiplayerEventSystem multiplayerEventSystem && multiplayerEventSystem.playerRoot != null)
+            if (eventSystem is IPlayerInputEventSystem playerInputEventSystem)
             {
-                if (!t.IsChildOf(multiplayerEventSystem.playerRoot.transform))
+				if (!playerInputEventSystem.CanPlayerInputPointAtTarget(t))
                     return true;
             }
             return false;

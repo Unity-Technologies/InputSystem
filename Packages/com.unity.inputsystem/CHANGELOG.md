@@ -25,6 +25,12 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
 
+### Added
+
+- Added 'IPlayerInputEventSystem' to remove the 'MultiplayerEventSystem' dependency in 'InputSystemUIInputModule'.
+   * This allows controlling what a 'PointerModel' can target.
+   * This can be used, for example, to create an event system that allows every player to use multiple 'playerRoot's across different scenes.
+
 ## [1.1.0-preview.3] - 2021-02-04
 
 ### Changed

@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.UI
     /// the navigation links stay within the player's hierarchy.
     /// </remarks>
     [HelpURL(InputSystem.kDocUrl + "/manual/UISupport.html#multiplayereventsystem-component")]
-    public class MultiplayerEventSystem : EventSystem
+    public class MultiplayerEventSystem : EventSystem, IPlayerInputEventSystem
     {
         [Tooltip("If set, only process mouse events for any game objects which are children of this game object.")]
         [SerializeField] private GameObject m_PlayerRoot;
@@ -25,6 +25,14 @@ namespace UnityEngine.InputSystem.UI
             set => m_PlayerRoot = value;
         }
 
+		public bool CanPlayerInputPointAtTarget(Transform target)
+		{
+			if (!playerRoot)
+				return true;
+			
+			return target.IsChildOf(playerRoot.transform);
+		}
+		
         protected override void Update()
         {
             var originalCurrent = current;
