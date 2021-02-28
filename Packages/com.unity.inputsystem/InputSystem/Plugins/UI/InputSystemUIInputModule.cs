@@ -269,7 +269,7 @@ namespace UnityEngine.InputSystem.UI
         {
             if (eventSystem is IPlayerInputEventSystem playerInputEventSystem)
             {
-				if (!playerInputEventSystem.CanPlayerInputPointAtTarget(t))
+                if (!playerInputEventSystem.CanPlayerInputPointAtTarget(t))
                     return true;
             }
             return false;

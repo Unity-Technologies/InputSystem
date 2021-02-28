@@ -25,14 +25,14 @@ namespace UnityEngine.InputSystem.UI
             set => m_PlayerRoot = value;
         }
 
-		public bool CanPlayerInputPointAtTarget(Transform target)
-		{
-			if (!playerRoot)
-				return true;
-			
-			return target.IsChildOf(playerRoot.transform);
-		}
-		
+        public bool CanPlayerInputPointAtTarget(Transform target)
+        {
+            if (!playerRoot)
+                return true;
+            
+            return target.IsChildOf(playerRoot.transform);
+        }
+        
         protected override void Update()
         {
             var originalCurrent = current;
