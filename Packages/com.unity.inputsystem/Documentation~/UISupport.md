@@ -1,5 +1,9 @@
 # UI support
 
+* [`InputSystemUIInputModule` Component](#inputsystemuiinputmodule-component)
+* [`MultiplayerEventSystem` Component](#multiplayereventsystem-component)
+* [`VirtualMouseInput` Component](#virtualmouseinput-component)
+
 You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
 >NOTE: The Input System package does not currently support IMGUI or UIElements.
@@ -107,3 +111,25 @@ The Input System can also handle multiple separate UI instances on the screen co
 Unlike the [`EventSystem`](https://docs.unity3d.com/Manual/script-EventSystem.html) component, you can have multiple [`MultiplayerEventSystems`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) active in the Scene at the same time. That way, you can have multiple players, each with their own [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) and [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) components, and each player can have their own set of Actions driving their own UI instance. If you are using the [`PlayerInput`](Components.md#playerinput-component) component, you can also set up [`PlayerInput`](Components.md#playerinput-component) to automatically configure the player's [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) to use the player's Actions. See the documentation on [`PlayerInput`](Components.md#ui-input) to learn how.
 
 The properties of the [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component are identical with those from the [Event System](https://docs.unity3d.com/Manual/script-EventSystem.html). Additionally, the [`MultiplayerEventSystem`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) component adds a [`playerRoot`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot) property, which you can set to a GameObject that contains all the UI [selectables](https://docs.unity3d.com/Manual/script-Selectable.html) this event system should handle in its hierarchy. Mouse input that this event system processes then ignores any UI selectables which are not on any GameObject in the Hierarchy under  [`Player Root`](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html#UnityEngine_InputSystem_UI_MultiplayerEventSystem_playerRoot).
+
+## `VirtualMouseInput` Component
+
+With gamepads and joysticks, the UI can be operated using the [navigation Actions](#navigation-type-input). However, making a UI work well with navigation usually involves extra work. An alternative is to allow gamepads and joysticks to operate the UI by driving the cursor from a "virtual mouse cursor".
+
+>__Note:__ To see an example of a [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) setup, you can check out the `Gamepad Mouse Cursor` [sample](Installation.md#installing-samples) that comes with the Input System package.
+
+To set this up, follow these steps:
+
+1. Create a UI `GameObject` with an `Image` component that represents a software mouse cursor as a child of the `Canvas` the cursor should operate on. Set the anchor position of the object's `RectTransform` to be in the bottom left. Also, it is generally advisable to make it the last child of the `Canvas` so that the cursor draws on top of everything else.
+2. Add a [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component to the object and link the `Image` component and the `RectTransform` of the cursor object to the `Cursor Graphic` and `Cursor Transform` properties respectively.
+3. If you want the virtual mouse to control the system mouse cursor, if available, set [`Cursor Mode`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html#UnityEngine_InputSystem_UI_VirtualMouseInput_cursorMode) to `Hardware Cursor If Available`. In this mode, the `Cursor Graphic` will be hidden when a system `Mouse` is present and [`Mouse.WarpCursorPosition`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_Vector2_) is used to move the system mouse cursor instead of the software cursor. The transform linked through `Cursor Transform` is not updated in that case.
+4. Configure input to drive the virtual mouse by either adding bindings on the various actions (such as `Stick Action`) or toggle `Use Reference` on and link existing actions from an `.inputactions` asset.
+5. Make sure that the `InputSystemUIInputModule` on the UI's `EventSystem` is __not__ set up for receiving navigation input from the same devices feeding into `VirtualMouseInput`. If, for example, `VirtualMouseInput` is set up to receive input from gamepads and `Move`, `Submit`, and `Cancel` on `InputSystemUIInputModule` are also linked to the gamepad, then the UI will receive input from the gamepad on two channels.
+
+![VirtualMouseInput](Images/VirtualMouseInput.png)
+
+At runtime, the component will add a virtual [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) device which will then get picked up by the [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component. The controls of the `Mouse` will be fed input based on the actions configured on the [`VirtualMouseInput`](../api/UnityEngine.InputSystem.UI.VirtualMouseInput.html) component.
+
+Note that the resulting [`Mouse`](../api/UnityEngine.InputSystem.Mouse.html) input is visible in all code picking up input from the mouse device. The component can thus also be used for mouse simulation elsewhere, not just with [`InputSystemUIInputModule`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html).
+
+>__Note:__ It is **important** to not also set up gamepads and joysticks for [navigation input](#navigation-type-input). If **both** are configured, input is triggered twice. Once via the pointer input path and once via the navigation input path. If you see buttons being presed twice, for example, this is likely the problem.
