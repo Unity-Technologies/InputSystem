@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Adding an action to a `InputActionMap` that is part of an `InputActionAsset` now requires all actions in the asset to be disabled ([case 1288335](https://issuetracker.unity3d.com/issues/adding-actions-at-runtime-to-existing-map-from-asset-triggers-assertion-error)).
   * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
+- Enabled XR device support on Magic Leap (Lumin).
 
 ### Fixed
 
@@ -26,6 +27,10 @@ however, it has to be formatted properly to pass verification tests.
 #### Actions
 
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+
+### Added
+
+- Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
@@ -97,8 +102,8 @@ however, it has to be formatted properly to pass verification tests.
                   Debug.Log($"Button {button} was pressed");
       }
   ```
-  - Added support for Step Counter sensors for iOS.
-    * You need to enable **Motion Usage** under Input System settings before using the sensor. You can also manually add **Privacy - Motion Usage Description** to your application's Info.plist file.
+- Added support for Step Counter sensors for iOS.
+  * You need to enable **Motion Usage** under Input System settings before using the sensor. You can also manually add **Privacy - Motion Usage Description** to your application's Info.plist file.
 
 ## [1.1.0-preview.2] - 2020-10-23
 
