@@ -54,6 +54,7 @@ however, it has to be formatted properly to pass verification tests.
   * Regression introduced in 1.1-preview.2.
 - Fixed `Touch.activeTouches` having incorrect touch phases after calling `EnhancedTouch.Disable()` and then `EnhancedTouch.Enable()` ([case 1286865](https://issuetracker.unity3d.com/issues/new-input-system-began-moved-and-ended-touch-phases-are-not-reported-when-a-second-scene-is-loaded)).
 - Fixed compile errors related to XR/AR on console platforms.
+- Fixed issue with devices with usages not reporting them correctly in the remote profiler.
 
 #### Actions
 
