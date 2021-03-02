@@ -574,7 +574,7 @@ namespace UnityEngine.InputSystem
                 }
                 device.m_Description = data.description;
                 device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
-                foreach(var usage in data.usages)
+                foreach (var usage in data.usages)
                     receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(usage));
 
                 // Remember it.
@@ -687,11 +687,11 @@ namespace UnityEngine.InputSystem
                         if (!data.usages.Contains(deviceUsage))
                             receiver.m_LocalManager.RemoveDeviceUsage(device, new InternedString(deviceUsage));
                     }
-                    
+
                     foreach (var dataUsage in data.usages)
                     {
                         var internedDataUsage = new InternedString(dataUsage);
-                        if(!device.usages.Contains(internedDataUsage))
+                        if (!device.usages.Contains(internedDataUsage))
                             receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(dataUsage));
                     }
                 }
