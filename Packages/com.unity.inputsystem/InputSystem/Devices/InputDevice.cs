@@ -603,9 +603,9 @@ namespace UnityEngine.InputSystem
 
         internal static uint EncodeStateOffsetToControlMapEntry(uint controlIndex, uint stateOffsetInBits, uint stateSizeInBits)
         {
-            Debug.Assert(kControlIndexBits < 32);
-            Debug.Assert(kStateOffsetBits < 32);
-            Debug.Assert(kStateSizeBits < 32);
+            Debug.Assert(kControlIndexBits < 32, $"Expected kControlIndexBits < 32, so we fit into the 32 bit wide bitmask, but found kControlIndexBits == {kControlIndexBits}");
+            Debug.Assert(kStateOffsetBits < 32, $"Expected kStateOffsetBits < 32, so we fit into the 32 bit wide bitmask, but found kStateOffsetBits == {kStateOffsetBits}");
+            Debug.Assert(kStateSizeBits < 32, $"Expected kStateSizeBits < 32, so we fit into the 32 bit wide bitmask, but found kStateSizeBits == {kStateSizeBits}");
             Debug.Assert(controlIndex < (1U << kControlIndexBits), "Control index beyond what is supported");
             Debug.Assert(stateOffsetInBits < (1U << kStateOffsetBits), "State offset beyond what is supported");
             Debug.Assert(stateSizeInBits < (1U << kStateSizeBits), "State size beyond what is supported");

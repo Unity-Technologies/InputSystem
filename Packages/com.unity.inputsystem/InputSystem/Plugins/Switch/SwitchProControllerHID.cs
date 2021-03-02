@@ -89,7 +89,7 @@ namespace UnityEngine.InputSystem.Switch.LowLevel
 
         public SwitchProControllerHIDInputState WithButton(Button button, bool value = true)
         {
-            Debug.Assert((int)button < 32);
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask, but found button == {(int)button}");
             var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;

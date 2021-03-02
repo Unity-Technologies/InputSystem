@@ -217,7 +217,7 @@ internal class LinuxTests : InputTestFixture
     [StructLayout(LayoutKind.Explicit)]
     private struct TestSDLJoystick : IInputStateTypeInfo
     {
-        [FieldOffset(0)] public int buttons;
+        [FieldOffset(0)] public uint buttons;
         [FieldOffset(4)] public int xAxis;
         [FieldOffset(8)] public int yAxis;
         [FieldOffset(12)] public int rotateZAxis;
@@ -227,8 +227,8 @@ internal class LinuxTests : InputTestFixture
 
         public TestSDLJoystick WithButton(SDLButtonUsage usage, bool value = true)
         {
-            Debug.Assert((int)SDLButtonUsage.Count <= 32);
-            var bitMask = 1 << ((int)usage - 1);
+            Debug.Assert((int)SDLButtonUsage.Count <= 32, $"Expected SDLButtonUsage.Count <= 32, so we fit into the 32 bit wide bitmask, but found SDLButtonUsage.Count == {(int)SDLButtonUsage.Count}");
+            var bitMask = 1U << ((int)usage - 1);
 
             if (value)
                 buttons |= bitMask;

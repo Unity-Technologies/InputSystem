@@ -1705,7 +1705,7 @@ partial class CoreTests
     [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0x3f800000u, null, 1.0f)]
     [TestCase(InputStateBlock.kFormatFloat, 64, 32, 0xbf800000u, null, -1.0f)]
     [TestCase(InputStateBlock.kFormatDouble, 64, 64, 0x0u, null, 0.0f)]
-    public unsafe void State_InputStateBlock_ReadWrite(int format, int bitOffset, int bitSize, uint bitValue, int? expectedIntValue = null, float? expectedFloatValue = null)
+    public unsafe void State_CanReadAndWriteBitFormat(int format, int bitOffset, int bitSize, uint bitValue, int? expectedIntValue = null, float? expectedFloatValue = null)
     {
         const int bufferSize = 16; // make buffer a bit larger to have guard bits
         if (bitOffset + bitSize > bufferSize * 8)

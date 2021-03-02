@@ -393,7 +393,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var byteValue = (byte)value;
                 byteValue <<= (int)bitOffset;
-                var mask = ~((0xFF >> (8 - (int)bitCount)) << (int)bitOffset);
+                var mask = ~((0xFFU >> (8 - (int)bitCount)) << (int)bitOffset);
                 *(byte*)ptr = (byte)((*(byte*)ptr & mask) | byteValue);
                 return;
             }
@@ -403,7 +403,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var ushortValue = (ushort)value;
                 ushortValue <<= (int)bitOffset;
-                var mask = ~((0xFFFF >> (16 - (int)bitCount)) << (int)bitOffset);
+                var mask = ~((0xFFFFU >> (16 - (int)bitCount)) << (int)bitOffset);
                 *(ushort*)ptr = (ushort)((*(ushort*)ptr & mask) | ushortValue);
                 return;
             }
@@ -413,7 +413,7 @@ namespace UnityEngine.InputSystem.Utilities
             {
                 var uintValue = (uint)value;
                 uintValue <<= (int)bitOffset;
-                var mask = ~((0xFFFFFFFF >> (32 - (int)bitCount)) << (int)bitOffset);
+                var mask = ~((0xFFFFFFFFU >> (32 - (int)bitCount)) << (int)bitOffset);
                 *(uint*)ptr = (*(uint*)ptr & mask) | uintValue;
                 return;
             }

@@ -102,7 +102,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="buttons"/>
         public MouseState WithButton(MouseButton button, bool state = true)
         {
-            Debug.Assert((int)button < 16);
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask, but found button == {(int)button}");
             var bit = 1U << (int)button;
             if (state)
                 buttons |= (ushort)bit;

@@ -79,7 +79,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 
         public XInputControllerWindowsState WithButton(Button button)
         {
-            Debug.Assert((int)button < 16);
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask, but found button == {(int)button}");
             buttons |= (ushort)(1U << (int)button);
             return this;
         }
