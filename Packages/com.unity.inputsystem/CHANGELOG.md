@@ -13,7 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Adding an action to a `InputActionMap` that is part of an `InputActionAsset` now requires all actions in the asset to be disabled ([case 1288335](https://issuetracker.unity3d.com/issues/adding-actions-at-runtime-to-existing-map-from-asset-triggers-assertion-error)).
   * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
-- The `VirtualMouseInput` component is now part of the Input System DLL. It was previously packaged with the `Gamepad Mouse Cursor` sample.
+- The `VirtualMouseInput` component is now part of the Input System assembly. It was previously packaged with the `Gamepad Mouse Cursor` sample.
   * The component has a different GUID from before, so existing setups that use the component from the sample are not broken. To use the built-in component you must explicitly switch over.
 
 ### Fixed
