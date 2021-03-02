@@ -513,6 +513,7 @@ namespace UnityEngine.InputSystem
                 public string name;
                 public string layout;
                 public int deviceId;
+                public string[] usages;
                 public InputDeviceDescription description;
             }
 
@@ -525,7 +526,8 @@ namespace UnityEngine.InputSystem
                     name = device.name,
                     layout = device.layout,
                     deviceId = device.deviceId,
-                    description = device.description
+                    description = device.description,
+                    usages = device.usages.Select(x => x.ToString()).ToArray()
                 };
 
                 return new Message
@@ -572,6 +574,8 @@ namespace UnityEngine.InputSystem
                 }
                 device.m_Description = data.description;
                 device.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
+                foreach(var usage in data.usages)
+                    receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(usage));
 
                 // Remember it.
                 var record = new RemoteInputDevice
@@ -678,10 +682,18 @@ namespace UnityEngine.InputSystem
                 var device = receiver.TryGetDeviceByRemoteId(data.deviceId, senderIndex);
                 if (device != null)
                 {
-                    ////TODO: clearing usages and setting multiple usages
-
-                    if (data.usages.Length == 1)
-                        receiver.m_LocalManager.SetDeviceUsage(device, new InternedString(data.usages[0]));
+                    foreach (var deviceUsage in device.usages)
+                    {
+                        if (!data.usages.Contains(deviceUsage))
+                            receiver.m_LocalManager.RemoveDeviceUsage(device, new InternedString(deviceUsage));
+                    }
+                    
+                    foreach (var dataUsage in data.usages)
+                    {
+                        var internedDataUsage = new InternedString(dataUsage);
+                        if(!device.usages.Contains(internedDataUsage))
+                            receiver.m_LocalManager.AddDeviceUsage(device, new InternedString(dataUsage));
+                    }
                 }
             }
         }
