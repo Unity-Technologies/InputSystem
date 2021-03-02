@@ -4059,6 +4059,48 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1291334/
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_IgnoreActionNameInBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+
+        // This can't actually be done through the public API but it can be done
+        // with serialized data.
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/rightStick", action: "");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick, gamepad.rightStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].action, Is.EqualTo("DoesNotExist"));
+        Assert.That(action.bindings[1].action, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_CanBeRenamed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        Assert.That(action.name, Is.Null);
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        action.Rename("first");
+
+        Assert.That(action.name, Is.EqualTo("first"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        action.Rename("second");
+
+        Assert.That(action.name, Is.EqualTo("second"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+    }
+
     /*
     TODO: Implement WithChild and ChainedWith
     [Test]
@@ -8535,6 +8577,41 @@ partial class CoreTests
         Assert.That(component.actionProperty.action, Is.Null);
 
         Assert.DoesNotThrow(() => component.actionProperty.GetHashCode());
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_AddingActionToAssetWithEnabledActions_ThrowsException()
+    {
+        var map1 = new InputActionMap("map1");
+        map1.AddAction(name: "action1", binding: "<Gamepad>/leftStick");
+
+        var map2 = new InputActionMap("map2");
+        map2.AddAction(name: "action2", binding: "<Gamepad>/rightStick");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(map1);
+        asset.AddActionMap(map2);
+
+        // toggle enable so we get a similar state as user would when they're trying to add an action in runtime
+        asset.Enable();
+        asset.Disable();
+
+        // adding an action to a map when asset is disable works
+        map1.AddAction("action3");
+        Assert.That(map1.actions, Has.Count.EqualTo(2));
+        Assert.That(map1.actions[1].name, Is.EqualTo("action3"));
+
+        // enable action, but disable first map
+        asset.Enable();
+        map1.Disable();
+
+        // adding an action now should fail with a descriptive exception
+        Assert.That(() => map1.AddAction("action4"),
+            Throws.InvalidOperationException.With.Message.Contains("action4")
+                .And.With.Message.Contains("map1")
+                .And.With.Message.Contains("map2"));
+        Assert.That(map1.actions, Has.Count.EqualTo(2));
     }
 
     [Test]

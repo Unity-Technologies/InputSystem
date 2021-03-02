@@ -64,6 +64,13 @@ internal class DualShockTests : InputTestFixture
         Assert.That(gamepad.leftStickButton.isPressed);
         Assert.That(gamepad.rightStickButton.isPressed);
 
+        ////REVIEW: Should we just kill these buttons? Do they provide any value?
+        // PS controller adds buttons for the left and right trigger. Make sure these are marked as
+        // synthetic so they don't get picked up as double input.
+        // https://fogbugz.unity3d.com/f/cases/1293734
+        Assert.That(gamepad["leftTriggerButton"].synthetic, Is.True);
+        Assert.That(gamepad["rightTriggerButton"].synthetic, Is.True);
+
         return gamepad;
         // Sensors not (yet?) supported. Needs figuring out how to interpret the HID data.
     }

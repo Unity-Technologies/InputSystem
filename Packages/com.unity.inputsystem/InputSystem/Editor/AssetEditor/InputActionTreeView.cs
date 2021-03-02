@@ -1346,10 +1346,11 @@ namespace UnityEngine.InputSystem.Editor
         public float foldoutOffset { get; set; }
 
         public Action<SerializedProperty> onHandleAddNewAction { get; set; }
-        public string title
+
+        public (string, string) title
         {
-            get => m_Title?.text;
-            set => m_Title = new GUIContent(value);
+            get => (m_Title?.text, m_Title?.tooltip);
+            set => m_Title = new GUIContent(value.Item1, value.Item2);
         }
 
         public new float totalHeight
