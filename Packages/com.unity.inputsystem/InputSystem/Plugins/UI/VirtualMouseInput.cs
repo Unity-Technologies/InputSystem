@@ -1,3 +1,4 @@
+#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.UI;
@@ -609,3 +610,4 @@ namespace UnityEngine.InputSystem.UI
         }
     }
 }
+#endif // PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
