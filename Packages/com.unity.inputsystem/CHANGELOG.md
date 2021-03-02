@@ -23,6 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
 - Fixed PS4- and PS3-specific `rightTriggerButton` and `leftTriggerButton` controls not being marked as synthetic and thus conflicting with `rightTrigger` and `leftTrigger` input ([case 1293734](https://issuetracker.unity3d.com/issues/input-system-when-binding-gamepad-controls-triggerbutton-gets-bound-instead-of-triggeraxis)).
   * This manifested itself, for example, when using interactive rebinding and seeing `rightTriggerButton` getting picked instead of the expected `rightTrigger` control.
+- Fixing HID fallback correctly supporting fields with `reportSizeInBits` of 32 bits, which is also reported by vJoy device driver ([case 1189859](https://issuetracker.unity3d.com/issues/inputsystem-error-when-vjoy-is-installed)).
 
 #### Actions
 
@@ -69,7 +70,6 @@ however, it has to be formatted properly to pass verification tests.
   * Regression introduced in 1.1-preview.2.
 - Fixed `Touch.activeTouches` having incorrect touch phases after calling `EnhancedTouch.Disable()` and then `EnhancedTouch.Enable()` ([case 1286865](https://issuetracker.unity3d.com/issues/new-input-system-began-moved-and-ended-touch-phases-are-not-reported-when-a-second-scene-is-loaded)).
 - Fixed compile errors related to XR/AR on console platforms.
-- Fixing HID fallback correctly supporting fields with `reportSizeInBits` of 32 bits, which is also reported by vJoy device driver ([case 1189859](https://issuetracker.unity3d.com/issues/inputsystem-error-when-vjoy-is-installed)).
 
 #### Actions
 
