@@ -51,8 +51,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(5)] public byte buttons1;
         [InputControl(name = "leftShoulder", bit = 0)]
         [InputControl(name = "rightShoulder", bit = 1)]
-        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2)]
-        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 2, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 3, synthetic = true)]
         [InputControl(name = "select", displayName = "Share", bit = 4)]
         [InputControl(name = "start", displayName = "Options", bit = 5)]
         [InputControl(name = "leftStickPress", bit = 6)]
@@ -92,8 +92,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [InputControl(name = "dpad/down", bit = 6)]
         [InputControl(name = "dpad/left", bit = 7)]
         [FieldOffset(2)] public byte buttons1;
-        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0)]
-        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1)]
+        [InputControl(name = "leftTriggerButton", layout = "Button", bit = 0, synthetic = true)]
+        [InputControl(name = "rightTriggerButton", layout = "Button", bit = 1, synthetic = true)]
         [InputControl(name = "leftShoulder", bit = 2)]
         [InputControl(name = "rightShoulder", bit = 3)]
         [InputControl(name = "buttonNorth", displayName = "Triangle", bit = 4)]

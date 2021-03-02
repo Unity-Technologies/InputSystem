@@ -133,7 +133,7 @@ namespace UnityEngine.InputSystem.Editor
             #if UNITY_INPUT_SYSTEM_ENABLE_UI
             // UI config section.
             if (m_UIPropertyText == null)
-                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.tooltip);
+                m_UIPropertyText = EditorGUIUtility.TrTextContent("UI Input Module", m_UIInputModuleProperty.GetTooltip());
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_UIInputModuleProperty, m_UIPropertyText);
             if (EditorGUI.EndChangeCheck())
@@ -153,7 +153,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Camera section.
             if (m_CameraPropertyText == null)
-                m_CameraPropertyText = EditorGUIUtility.TrTextContent("Camera", m_CameraProperty.tooltip);
+                m_CameraPropertyText = EditorGUIUtility.TrTextContent("Camera", m_CameraProperty.GetTooltip());
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_CameraProperty, m_CameraPropertyText);
             if (EditorGUI.EndChangeCheck())
