@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed inputs in game view sometimes not working when running in the editor, as initial focus state could end up being incorrect.
 - Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
+- Fixed issue with devices with usages not reporting them correctly in the remote profiler.
 
 #### Actions
 
@@ -54,7 +55,6 @@ however, it has to be formatted properly to pass verification tests.
   * Regression introduced in 1.1-preview.2.
 - Fixed `Touch.activeTouches` having incorrect touch phases after calling `EnhancedTouch.Disable()` and then `EnhancedTouch.Enable()` ([case 1286865](https://issuetracker.unity3d.com/issues/new-input-system-began-moved-and-ended-touch-phases-are-not-reported-when-a-second-scene-is-loaded)).
 - Fixed compile errors related to XR/AR on console platforms.
-- Fixed issue with devices with usages not reporting them correctly in the remote profiler.
 
 #### Actions
 
