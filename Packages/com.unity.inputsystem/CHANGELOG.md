@@ -20,6 +20,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed inputs in game view sometimes not working when running in the editor, as initial focus state could end up being incorrect.
 - Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
+- Fixed PS4- and PS3-specific `rightTriggerButton` and `leftTriggerButton` controls not being marked as synthetic and thus conflicting with `rightTrigger` and `leftTrigger` input ([case 1293734](https://issuetracker.unity3d.com/issues/input-system-when-binding-gamepad-controls-triggerbutton-gets-bound-instead-of-triggeraxis)).
+  * This manifested itself, for example, when using interactive rebinding and seeing `rightTriggerButton` getting picked instead of the expected `rightTrigger` control.
 
 #### Actions
 

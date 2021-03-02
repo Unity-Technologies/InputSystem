@@ -458,6 +458,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("leftTriggerButton")
                 .WithDisplayName("leftTriggerButton")
                 .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
                 .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
@@ -480,6 +481,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("rightTriggerButton")
                 .WithDisplayName("rightTriggerButton")
                 .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
                 .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
