@@ -18,7 +18,6 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- Delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
 - Fixed inputs in game view sometimes not working when running in the editor, as initial focus state could end up being incorrect.
 - Fixed bad performance in Input Debugger with high-frequency devices (e.g. 1+ KHz gaming mice). Before, high event volumes led to excessive refreshes of debugger data.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
@@ -27,6 +26,13 @@ however, it has to be formatted properly to pass verification tests.
 
 #### Actions
 
+- Fixed delete key not working in the input actions editor ([case 1282090](https://issuetracker.unity3d.com/issues/input-system-delete-key-doesnt-work-in-the-input-actions-window)).
+- Fixed actions embedded into `MonoBehaviours` not showing bindings added directly from within constructors ([case 1291334](https://issuetracker.unity3d.com/issues/input-action-binding-doesnt-show-up-in-the-inspector-when-set-using-a-script)).
+  ```CSharp
+  public class MyMB : MonoBehaviour {
+    // This would end up not showing the binding in the inspector.
+    public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
+  ```
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
 
 ### Added
