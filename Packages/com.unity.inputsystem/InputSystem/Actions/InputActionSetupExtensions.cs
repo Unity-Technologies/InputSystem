@@ -493,18 +493,8 @@ namespace UnityEngine.InputSystem
             else
                 ArrayHelpers.InsertAt(ref map.m_Bindings, bindingIndex, binding);
 
-            InvalidateActionMap(map);
-
-            // If we're looking at a singleton action, make sure m_Bindings is up to date just
-            // in case the action gets serialized.
-            if (map.m_SingletonAction != null)
-                map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
-
-            return bindingIndex;
-        }
-
-        private static void InvalidateActionMap(InputActionMap map)
-        {
+            // Make sure this asset is reloaded from disk when exiting play mode so it isn't inadvertently
+            // changed between play sessions. Only applies when running in the editor.
             if(map.asset != null)
                 map.asset.MarkAsDirty();
 
@@ -514,6 +504,13 @@ namespace UnityEngine.InputSystem
 
             // Make sure bindings get re-resolved.
             map.LazyResolveBindings();
+
+            // If we're looking at a singleton action, make sure m_Bindings is up to date just
+            // in case the action gets serialized.
+            if (map.m_SingletonAction != null)
+                map.m_SingletonAction.m_SingletonActionBindings = map.m_Bindings;
+
+            return bindingIndex;
         }
 
         /// <summary>
@@ -850,6 +847,8 @@ namespace UnityEngine.InputSystem
                     $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
 
             ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
+            
+            asset.MarkAsDirty();
         }
 
         /// <summary>

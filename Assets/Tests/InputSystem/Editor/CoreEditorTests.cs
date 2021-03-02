@@ -9,28 +9,20 @@ using UnityEngine.TestTools;
 
 internal class CoreEditorTests
 {
+    private readonly string m_TestAssetPath = $"Assets/__TestInputAsset.{InputActionAsset.Extension}";
+
+    // https://issuetracker.unity3d.com/issues/inputsystem-runtime-rebinds-are-leaking-into-inputactions-asset
+    // https://fogbugz.unity3d.com/f/cases/1190502/
     [UnityTest]
     [Category("Actions")]
     public IEnumerator Actions_InteractiveRebinding_NewBindingsAreRemovedFromAssetOnExitingPlayMode()
     {
-        var assetPath = $"Assets/{Path.GetRandomFileName().Substring(0, 8)}.{InputActionAsset.Extension}";
-        
-        // store the asset path in editor prefs so we can still access it after the domain reload on entering/exiting playmode
-        EditorPrefs.SetString("assetPath", assetPath);
-
-        var inputActionMap = new InputActionMap("actionMap");
-        inputActionMap.AddAction("action1");
-        
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(inputActionMap);
-
-        File.WriteAllText(assetPath, asset.ToJson());
-        AssetDatabase.ImportAsset(assetPath);
+        CreateTestInputAsset();
 
         yield return new EnterPlayMode();
 
         // reload the input action asset after the domain reload
-        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(EditorPrefs.GetString("assetPath"));
+        var asset = LoadTestInputAsset();
         var action = asset.FindAction("action1");
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -47,10 +39,45 @@ internal class CoreEditorTests
 
         yield return new ExitPlayMode();
 
-        var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(EditorPrefs.GetString("assetPath"));
+        var actualAsset = LoadTestInputAsset();
         Assert.That(actualAsset.actionMaps[0].actions[0].bindings.Count, Is.Zero);
 
-        AssetDatabase.DeleteAsset(EditorPrefs.GetString("assetPath"));
-        EditorPrefs.DeleteKey("assetPath");
+        AssetDatabase.DeleteAsset(m_TestAssetPath);
+    }
+
+    [UnityTest]
+    [Category("Actions")]
+    public IEnumerator Actions_NewControlSchemesAreRemovedFromAssetOnExitingPlayMode()
+    {
+        CreateTestInputAsset();
+
+        yield return new EnterPlayMode();
+
+        var asset = LoadTestInputAsset();
+        asset.AddControlScheme("testControlScheme");
+
+        yield return new ExitPlayMode();
+
+        var actualAsset = LoadTestInputAsset();
+        Assert.That(actualAsset.controlSchemes.Count, Is.Zero);
+
+        AssetDatabase.DeleteAsset(m_TestAssetPath);
+    }
+
+    private void CreateTestInputAsset()
+    {
+        var inputActionMap = new InputActionMap("actionMap");
+        inputActionMap.AddAction("action1");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(inputActionMap);
+
+        File.WriteAllText(m_TestAssetPath, asset.ToJson());
+        AssetDatabase.ImportAsset(m_TestAssetPath);
+    }
+
+    private InputActionAsset LoadTestInputAsset()
+    {
+        return AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
     }
 }

@@ -3107,12 +3107,7 @@ namespace UnityEngine.InputSystem
                         var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
 
                         if (string.IsNullOrEmpty(assetPath))
-                        {
-                            Debug.LogWarning($"Input action asset change tracking was tracking asset with GUID '{assetGuid}' but it wasn't found in the asset " +
-                                             $"database on exiting play mode. If you have added bindings to this asset during this play mode session, you may need " +
-                                             $"to reimport the asset from disk to remove the added bindings from memory.");
                             continue;
-                        }
 
                         AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
                     }
