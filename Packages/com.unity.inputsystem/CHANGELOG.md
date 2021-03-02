@@ -37,6 +37,8 @@ however, it has to be formatted properly to pass verification tests.
   * This is to address the problem of mouse input leading to __both__ mouse and touch input happening concurrently. Instead, enabling touch simulation will now effectively __replace__ mouse and pen input with touch input.
   * Devices such `Mouse` and `Pen` will remain in place but will not get updated. Events received for them will be consumed by `TouchSimulation`.
 - Enabled XR device support on Switch.
+- Enabled XR device support on Lumin (Magic Leap).
+- Added ability to force XR Support in a project by defining UNITY_INPUT_FORCE_XR_PLUGIN.
 
 ### Fixed
 
@@ -97,6 +99,7 @@ however, it has to be formatted properly to pass verification tests.
   ```
   - Added support for Step Counter sensors for iOS.
     * You need to enable **Motion Usage** under Input System settings before using the sensor. You can also manually add **Privacy - Motion Usage Description** to your application's Info.plist file.
+  - Add Lumin 
 
 ## [1.1.0-preview.2] - 2020-10-23
 
