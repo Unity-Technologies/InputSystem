@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 
 - Adding an action to a `InputActionMap` that is part of an `InputActionAsset` now requires all actions in the asset to be disabled ([case 1288335](https://issuetracker.unity3d.com/issues/adding-actions-at-runtime-to-existing-map-from-asset-triggers-assertion-error)).
   * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
+- Enabled XR device support on Magic Leap (Lumin).
 
 ### Fixed
 
@@ -37,7 +38,6 @@ however, it has to be formatted properly to pass verification tests.
   * This is to address the problem of mouse input leading to __both__ mouse and touch input happening concurrently. Instead, enabling touch simulation will now effectively __replace__ mouse and pen input with touch input.
   * Devices such `Mouse` and `Pen` will remain in place but will not get updated. Events received for them will be consumed by `TouchSimulation`.
 - Enabled XR device support on Switch.
-- Enabled XR device support on Lumin (Magic Leap).
 - Added ability to force XR Support in a project by defining UNITY_INPUT_FORCE_XR_PLUGIN.
 
 ### Fixed
