@@ -4059,6 +4059,48 @@ partial class CoreTests
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1291334/
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_IgnoreActionNameInBindings()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction();
+
+        // This can't actually be done through the public API but it can be done
+        // with serialized data.
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/leftStick", action: "DoesNotExist");
+        action.GetOrCreateActionMap().AddBinding("<Gamepad>/rightStick", action: "");
+
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.leftStick, gamepad.rightStick }));
+        Assert.That(action.bindings, Has.Count.EqualTo(2));
+        Assert.That(action.bindings[0].action, Is.EqualTo("DoesNotExist"));
+        Assert.That(action.bindings[1].action, Is.Empty);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void Actions_SingletonActions_CanBeRenamed()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+
+        Assert.That(action.name, Is.Null);
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        action.Rename("first");
+
+        Assert.That(action.name, Is.EqualTo("first"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+
+        action.Rename("second");
+
+        Assert.That(action.name, Is.EqualTo("second"));
+        Assert.That(action.controls, Is.EquivalentTo(new[] { gamepad.buttonSouth }));
+    }
+
     /*
     TODO: Implement WithChild and ChainedWith
     [Test]
