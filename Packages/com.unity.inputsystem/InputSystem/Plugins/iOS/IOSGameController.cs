@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
             buttonValues[(int)button] = rawValue;
 
             Debug.Assert((int)button < 32);
-            var bit = 1U << (int) button;
+            var bit = 1U << (int)button;
             if (value)
                 buttons |= bit;
             else

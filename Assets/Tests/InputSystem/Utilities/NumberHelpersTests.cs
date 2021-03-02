@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -46,7 +46,7 @@ internal class NumberHelpersTests
         var integer = NumberHelpers.NormalizedFloatToInt(result, minValue, maxValue);
         Assert.That(integer, Is.EqualTo(Mathf.Clamp(value, minValue, maxValue)));
     }
-    
+
     [Test]
     [Category("Utilities")]
     // out of boundary tests
@@ -72,7 +72,7 @@ internal class NumberHelpersTests
     {
         var result = NumberHelpers.UIntToNormalizedFloat(value, minValue, maxValue);
         Assert.That(result, Is.EqualTo(expected).Within(float.Epsilon));
-        
+
         var integer = NumberHelpers.NormalizedFloatToUInt(result, minValue, maxValue);
         Assert.That(integer, Is.EqualTo(Clamp(value, minValue, maxValue)));
     }

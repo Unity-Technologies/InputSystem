@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Utilities
                 return intMinValue;
             if (value >= 1.0f)
                 return intMaxValue;
-            return (int)(value * ((double) intMaxValue - intMinValue) + intMinValue);
+            return (int)(value * ((double)intMaxValue - intMinValue) + intMinValue);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -70,7 +70,7 @@ namespace UnityEngine.InputSystem.Utilities
                 return 1.0f;
             return (float)(((double)value - minValue) / ((double)maxValue - minValue));
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint NormalizedFloatToUInt(float value, uint uintMinValue, uint uintMaxValue)
         {
@@ -78,7 +78,7 @@ namespace UnityEngine.InputSystem.Utilities
                 return uintMinValue;
             if (value >= 1.0f)
                 return uintMaxValue;
-            return (uint)(value * ((double) uintMaxValue - uintMinValue) + uintMinValue);
+            return (uint)(value * ((double)uintMaxValue - uintMinValue) + uintMinValue);
         }
     }
 }

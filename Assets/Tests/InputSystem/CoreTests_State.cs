@@ -1664,7 +1664,7 @@ partial class CoreTests
     }
 
     #endif
-    
+
     [Test]
     [Category("State")]
     // single bit
@@ -1728,19 +1728,19 @@ partial class CoreTests
                     continue;
                 var bytePosition = (i + bitOffset) / 8;
                 var bitPosition = (i + bitOffset) % 8;
-                dataRead[bytePosition] &= (byte) ~(1UL << bitPosition);
+                dataRead[bytePosition] &= (byte)~(1UL << bitPosition);
             }
 
             // prepare write array
             for (var i = 0; i < bufferSize; ++i)
-                dataWrite[i] = (byte) ~dataRead[i];
+                dataWrite[i] = (byte)~dataRead[i];
 
             var block = new InputStateBlock
             {
                 format = new FourCC(format),
-                byteOffset = (uint) (bitOffset / 8),
-                bitOffset = (uint) (bitOffset % 8),
-                sizeInBits = (uint) bitSize
+                byteOffset = (uint)(bitOffset / 8),
+                bitOffset = (uint)(bitOffset % 8),
+                sizeInBits = (uint)bitSize
             };
 
             var testWrittenBinaryData = false;
@@ -1773,7 +1773,7 @@ partial class CoreTests
                     if (expectedFloatValue.HasValue)
                     {
                         var expectedDoubleValue = (double)expectedFloatValue;
-                        
+
                         // While this test should be able to test precise floats, we do some computations with hard to predict precision.
                         // Hence leaving some precision slack for now.
                         testWrittenBinaryData = expectedDoubleValue == -1.0f || expectedDoubleValue == 0.0f || expectedDoubleValue == 1.0f;
@@ -1794,8 +1794,8 @@ partial class CoreTests
             {
                 var bytePosition = i / 8;
                 var bitPosition = i % 8;
-                var readBit = (dataRead[bytePosition] & (byte) (1UL << bitPosition)) != 0 ? 1 : 0;
-                var writeBit = (dataWrite[bytePosition] & (byte) (1UL << bitPosition)) != 0 ? 1 : 0;
+                var readBit = (dataRead[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
+                var writeBit = (dataWrite[bytePosition] & (byte)(1UL << bitPosition)) != 0 ? 1 : 0;
                 validWrite &= (i >= bitOffset && i < bitOffset + bitSize)
                     ? readBit == writeBit
                     : readBit != writeBit;
@@ -1806,13 +1806,13 @@ partial class CoreTests
                 var sb = new StringBuilder();
                 sb.Append($"Offset {bitOffset} size {bitSize} in bits, read, write, xor:\n");
                 for (var i = 0; i < bufferSize * 8; ++i)
-                    sb.Append((dataRead[i / 8] & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                    sb.Append((dataRead[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
                 sb.Append("\n");
                 for (var i = 0; i < bufferSize * 8; ++i)
-                    sb.Append((dataWrite[i / 8] & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                    sb.Append((dataWrite[i / 8] & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
                 sb.Append("\n");
                 for (var i = 0; i < bufferSize * 8; ++i)
-                    sb.Append(((dataRead[i / 8] ^ dataWrite[i / 8]) & (byte) (1UL << (i % 8))) != 0 ? '1' : '0');
+                    sb.Append(((dataRead[i / 8] ^ dataWrite[i / 8]) & (byte)(1UL << (i % 8))) != 0 ? '1' : '0');
                 throw new AssertionException($"Written data is not matching expected data: {sb}");
             }
         }

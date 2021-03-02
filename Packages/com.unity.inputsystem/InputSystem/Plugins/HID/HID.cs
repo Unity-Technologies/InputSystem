@@ -545,13 +545,13 @@ namespace UnityEngine.InputSystem.HID
                     if (isSigned)
                     {
                         var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
-                        var maxValue = (int) ((1UL << (reportSizeInBits - 1)) - 1);
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
                         return NumberHelpers.IntToNormalizedFloat(logicalMin, minValue, maxValue) * 2.0f - 1.0f;
                     }
                     else
                     {
                         Debug.Assert(logicalMin >= 0);
-                        var maxValue = (uint) ((1UL << reportSizeInBits) - 1);
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
                         return NumberHelpers.UIntToNormalizedFloat((uint)logicalMin, 0, maxValue);
                     }
                 }
@@ -564,13 +564,13 @@ namespace UnityEngine.InputSystem.HID
                     if (isSigned)
                     {
                         var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
-                        var maxValue = (int) ((1UL << (reportSizeInBits - 1)) - 1);
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
                         return NumberHelpers.IntToNormalizedFloat(logicalMax, minValue, maxValue) * 2.0f - 1.0f;
                     }
                     else
                     {
                         Debug.Assert(logicalMax >= 0);
-                        var maxValue = (uint) ((1UL << reportSizeInBits) - 1);
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
                         return NumberHelpers.UIntToNormalizedFloat((uint)logicalMax, 0, maxValue);
                     }
                 }

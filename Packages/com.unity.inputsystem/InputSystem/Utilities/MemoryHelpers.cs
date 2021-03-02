@@ -434,7 +434,7 @@ namespace UnityEngine.InputSystem.Utilities
             // int is already represented as two's complement
             return (int)ReadMultipleBitsAsUInt(ptr, bitOffset, bitCount);
         }
-        
+
         /// <summary>
         /// Writes bits memory region as two's complement integer, up to and including 32 bits, least-significant bit first (LSB).
         /// </summary>
@@ -445,9 +445,9 @@ namespace UnityEngine.InputSystem.Utilities
         public static void WriteIntAsTwosComplementMultipleBits(void* ptr, uint bitOffset, uint bitCount, int value)
         {
             // int is already represented as two's complement, so write as-is
-            WriteUIntAsMultipleBits(ptr, bitOffset, bitCount, (uint) value);
+            WriteUIntAsMultipleBits(ptr, bitOffset, bitCount, (uint)value);
         }
-        
+
         /// <summary>
         /// Reads bits memory region as excess-K integer where K is set to (2^bitCount)/2, up to and including 32 bits, least-significant bit first (LSB).
         /// For example reading 0 as 8 bits will result in -128. Reading 0xff as 8 bits will result in 127.
@@ -463,7 +463,7 @@ namespace UnityEngine.InputSystem.Utilities
             var halfMax = (long)((1UL << (int)bitCount) / 2);
             return (int)(value - halfMax);
         }
-        
+
         /// <summary>
         /// Writes bits memory region as excess-K integer where K is set to (2^bitCount)/2, up to and including 32 bits, least-significant bit first (LSB).
         /// </summary>
@@ -493,7 +493,7 @@ namespace UnityEngine.InputSystem.Utilities
             var maxValue = (uint)((1UL << (int)bitCount) - 1);
             return NumberHelpers.UIntToNormalizedFloat(uintValue, 0, maxValue);
         }
-        
+
         /// <summary>
         /// Writes bits memory region as normalized unsigned integer, up to and including 32 bits, least-significant bit first (LSB).
         /// </summary>

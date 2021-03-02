@@ -421,22 +421,22 @@ namespace UnityEngine.InputSystem.LowLevel
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
-                    *(int*) valuePtr = (int)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
+                    *(int*)valuePtr = (int)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
                     break;
                 case kFormatUInt:
                     Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
-                    *(uint*) valuePtr = NumberHelpers.NormalizedFloatToUInt(value, uint.MinValue, uint.MaxValue);
+                    *(uint*)valuePtr = NumberHelpers.NormalizedFloatToUInt(value, uint.MinValue, uint.MaxValue);
                     break;
                 case kFormatShort:
                     Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "SHRT state must be byte-aligned");
-                    *(short*) valuePtr = (short)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, short.MinValue, short.MaxValue);
+                    *(short*)valuePtr = (short)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, short.MinValue, short.MaxValue);
                     break;
                 case kFormatUShort:
                     Debug.Assert(sizeInBits == 16, "USHT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "USHT state must be byte-aligned");
-                    *(ushort*) valuePtr = (ushort)NumberHelpers.NormalizedFloatToUInt(value, ushort.MinValue, ushort.MaxValue);
+                    *(ushort*)valuePtr = (ushort)NumberHelpers.NormalizedFloatToUInt(value, ushort.MinValue, ushort.MaxValue);
                     break;
                 case kFormatByte:
                     Debug.Assert(sizeInBits == 8, "BYTE state must have sizeInBits=8");
@@ -446,7 +446,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 case kFormatSByte:
                     Debug.Assert(sizeInBits == 8, "SBYT state must have sizeInBits=8");
                     Debug.Assert(bitOffset == 0, "SBYT state must be byte-aligned");
-                    *(sbyte*) valuePtr = (sbyte)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, sbyte.MinValue, sbyte.MaxValue);
+                    *(sbyte*)valuePtr = (sbyte)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, sbyte.MinValue, sbyte.MaxValue);
                     break;
                 case kFormatFloat:
                     Debug.Assert(sizeInBits == 32, "FLT state must have sizeInBits=32");
@@ -476,7 +476,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         return value >= 0.5f;
                     ////FIXME: is this supposed to be int or uint?
-                    return (int)NumberHelpers.NormalizedFloatToUInt(value, 0, (uint) ((1UL << (int) sizeInBits) - 1));
+                    return (int)NumberHelpers.NormalizedFloatToUInt(value, 0, (uint)((1UL << (int)sizeInBits) - 1));
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -599,12 +599,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
-                    *(int*) valuePtr = NumberHelpers.NormalizedFloatToInt((float)value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
+                    *(int*)valuePtr = NumberHelpers.NormalizedFloatToInt((float)value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
                     break;
                 case kFormatUInt:
                     Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
-                    *(uint*) valuePtr = NumberHelpers.NormalizedFloatToUInt((float)value, uint.MinValue, uint.MaxValue);
+                    *(uint*)valuePtr = NumberHelpers.NormalizedFloatToUInt((float)value, uint.MinValue, uint.MaxValue);
                     break;
                 case kFormatShort:
                     Debug.Assert(sizeInBits == 16, "SHRT state must have sizeInBits=16");
