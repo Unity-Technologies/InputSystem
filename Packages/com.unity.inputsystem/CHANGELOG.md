@@ -34,15 +34,12 @@ however, it has to be formatted properly to pass verification tests.
     public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
   ```
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+- Fixed `NullReferenceException` when reading values through `InputAction.CallbackContext` on a `OneModifierComposite` or `TwoModifierComposite` binding.
 
 ### Added
 
 - Enabled XR device support on Magic Leap (Lumin).
 - Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
-
-#### Actions
-
-- Fixed `NullReferenceException` when reading values through `InputAction.CallbackContext` on a `OneModifierComposite` or `TwoModifierComposite` binding.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
