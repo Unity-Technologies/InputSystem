@@ -36,6 +36,7 @@ however, it has to be formatted properly to pass verification tests.
     public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
   ```
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+- Fixed `NullReferenceException` when reading values through `InputAction.CallbackContext` on a `OneModifierComposite` or `TwoModifierComposite` binding.
 
 ### Added
 

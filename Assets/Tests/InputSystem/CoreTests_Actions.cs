@@ -7196,6 +7196,35 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateBindingWithOneModifier_AndReadValueFromActionCallback()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Touchscreen>/press")
+            .With("Binding", "<Touchscreen>/primaryTouch/position");
+
+        var values = new List<Vector2>();
+        action.started += ctx => values.Add(ctx.ReadValue<Vector2>());
+        action.performed += ctx => values.Add(ctx.ReadValue<Vector2>());
+        action.canceled += ctx => values.Add(ctx.ReadValue<Vector2>());
+
+        action.Enable();
+
+        BeginTouch(1, new Vector2(123, 234));
+
+        Assert.That(values, Is.EquivalentTo(new[] { new Vector2(123, 234), new Vector2(123, 234) }));
+
+        values.Clear();
+
+        EndTouch(1, new Vector2(234, 345));
+
+        Assert.That(values, Is.EquivalentTo(new[] { default(Vector2) }));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateBindingWithTwoModifiers()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
