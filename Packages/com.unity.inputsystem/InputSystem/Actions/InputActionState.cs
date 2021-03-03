@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public int* enabledControls => memory.enabledControls;
+        public uint* enabledControls => (uint*)memory.enabledControls;
 
         public bool isProcessingControlStateChange => m_InProcessControlStateChange;
 
@@ -779,19 +779,19 @@ namespace UnityEngine.InputSystem
         private bool IsControlEnabled(int controlIndex)
         {
             var intIndex = controlIndex / 32;
-            var intMask = 1 << (controlIndex % 32);
-            return (enabledControls[intIndex] & intMask) != 0;
+            var mask = 1U << (controlIndex % 32);
+            return (enabledControls[intIndex] & mask) != 0;
         }
 
         private void SetControlEnabled(int controlIndex, bool state)
         {
             var intIndex = controlIndex / 32;
-            var intMask = 1 << (controlIndex % 32);
+            var mask = 1U << (controlIndex % 32);
 
             if (state)
-                enabledControls[intIndex] |= intMask;
+                enabledControls[intIndex] |= mask;
             else
-                enabledControls[intIndex] &= ~intMask;
+                enabledControls[intIndex] &= ~mask;
         }
 
         private void HookOnBeforeUpdate()
