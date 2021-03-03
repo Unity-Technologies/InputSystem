@@ -34,9 +34,8 @@ namespace UnityEngine.InputSystem.Controls
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
-            ////REVIEW: seems like all signed data in state buffers is in excess-K format, do we have any that is in two's complement format?
-            var intValue = MemoryHelpers.ReadTwosComplementMultipleBitsAsInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
-            var phaseValue = (TouchPhase)intValue;
+            var uintValue = MemoryHelpers.ReadMultipleBitsAsUInt(valuePtr, m_StateBlock.bitOffset, m_StateBlock.sizeInBits);
+            var phaseValue = (TouchPhase)uintValue;
 
             var value = 0.0f;
             if (phaseValue == TouchPhase.Began || phaseValue == TouchPhase.Stationary ||

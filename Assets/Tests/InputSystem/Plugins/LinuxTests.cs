@@ -227,7 +227,8 @@ internal class LinuxTests : InputTestFixture
 
         public TestSDLJoystick WithButton(SDLButtonUsage usage, bool value = true)
         {
-            Debug.Assert((int)SDLButtonUsage.Count <= 32, $"Expected SDLButtonUsage.Count <= 32, so we fit into the 32 bit wide bitmask, but found SDLButtonUsage.Count == {(int)SDLButtonUsage.Count}");
+            // checking <= here because Count equals to largest button value + 1, so the actual value will be < 32 
+            Debug.Assert((int)SDLButtonUsage.Count <= 32, $"Expected SDLButtonUsage.Count <= 32, so we fit into the 32 bit wide bitmask");
             var bitMask = 1U << ((int)usage - 1);
 
             if (value)

@@ -501,7 +501,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <param name="bitOffset">Offset in bits from the pointer to the start of the unsigned integer.</param>
         /// <param name="bitCount">Number of bits to read.</param>
         /// <param name="value">Normalized value to write.</param>
-        public static void WriteNormalizedUintAsMultipleBits(void* ptr, uint bitOffset, uint bitCount, float value)
+        public static void WriteNormalizedUIntAsMultipleBits(void* ptr, uint bitOffset, uint bitCount, float value)
         {
             var maxValue = (uint)((1UL << (int)bitCount) - 1);
             var uintValue = NumberHelpers.NormalizedFloatToUInt(value, 0, maxValue);

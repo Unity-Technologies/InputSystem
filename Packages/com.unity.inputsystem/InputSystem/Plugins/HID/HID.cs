@@ -550,7 +550,7 @@ namespace UnityEngine.InputSystem.HID
                     }
                     else
                     {
-                        Debug.Assert(logicalMin >= 0, $"Expected logicalMin to be unsigned, but logicalMin == {logicalMin}");
+                        Debug.Assert(logicalMin >= 0, $"Expected logicalMin to be unsigned");
                         var maxValue = (uint)((1UL << reportSizeInBits) - 1);
                         return NumberHelpers.UIntToNormalizedFloat((uint)logicalMin, 0, maxValue);
                     }
@@ -569,7 +569,7 @@ namespace UnityEngine.InputSystem.HID
                     }
                     else
                     {
-                        Debug.Assert(logicalMax >= 0, $"Expected logicalMax to be unsigned, but logicalMax == {logicalMax}");
+                        Debug.Assert(logicalMax >= 0, $"Expected logicalMax to be unsigned");
                         var maxValue = (uint)((1UL << reportSizeInBits) - 1);
                         return NumberHelpers.UIntToNormalizedFloat((uint)logicalMax, 0, maxValue);
                     }

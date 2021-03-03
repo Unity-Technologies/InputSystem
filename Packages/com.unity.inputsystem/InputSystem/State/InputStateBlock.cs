@@ -416,7 +416,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
                     else
-                        MemoryHelpers.WriteNormalizedUintAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
+                        MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
@@ -594,7 +594,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     if (sizeInBits == 1)
                         MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.5f);
                     else
-                        MemoryHelpers.WriteNormalizedUintAsMultipleBits(valuePtr, bitOffset, sizeInBits, (float)value);
+                        MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, (float)value);
                     break;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
