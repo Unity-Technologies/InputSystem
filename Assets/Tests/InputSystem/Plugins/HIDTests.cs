@@ -489,12 +489,13 @@ internal class HIDTests : InputTestFixture
     struct SimpleAxisState : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
-        [FieldOffset(1)] public ushort x;
-        [FieldOffset(3)] public short y;
+        [FieldOffset(1)] public ushort rz;
+        [FieldOffset(3)] public short vz;
         [FieldOffset(5)] public byte rx;
         [FieldOffset(6)] public sbyte ry;
         [FieldOffset(7)] public ushort vx;
         [FieldOffset(9)] public short vy;
+        [FieldOffset(11)] public int x;
 
         public FourCC format => new FourCC('H', 'I', 'D');
     }
@@ -535,6 +536,8 @@ internal class HIDTests : InputTestFixture
                 .AddElement(HID.GenericDesktop.Vx, 16).WithLogicalMinMax(0, 10000)
                 // 16bit [-10000..10000]
                 .AddElement(HID.GenericDesktop.Vy, 16).WithLogicalMinMax(-10000, 10000)
+                // 32bit [int min..int max]
+                .AddElement(HID.GenericDesktop.X, 32).WithLogicalMinMax(int.MinValue, int.MaxValue)
                 .Finish();
 
         runtime.ReportNewInputDevice(
@@ -553,12 +556,13 @@ internal class HIDTests : InputTestFixture
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MinValue,
-            y = short.MinValue,
+            rz = ushort.MinValue,
+            vz = short.MinValue,
             rx = byte.MinValue,
             ry = sbyte.MinValue,
             vx = 0,
             vy = -10000,
+            x = int.MinValue
         });
         InputSystem.Update();
 
@@ -568,17 +572,19 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001)); // Inverted
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001));
 
         // Test upper bound.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MaxValue,
-            y = short.MaxValue,
+            rz = ushort.MaxValue,
+            vz = short.MaxValue,
             rx = byte.MaxValue,
             ry = sbyte.MaxValue,
             vx = 10000,
             vy = 10000,
+            x = int.MaxValue
         });
         InputSystem.Update();
 
@@ -588,17 +594,19 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(-1).Within(0.0001)); // Inverted
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(1).Within(0.0001));
 
         // Test center.
         InputSystem.QueueStateEvent(device, new SimpleAxisState
         {
             reportId = 1,
-            x = ushort.MaxValue / 2,
-            y = 0,
+            rz = ushort.MaxValue / 2,
+            vz = 0,
             rx = byte.MaxValue / 2,
             ry = 0,
             vx = 10000 / 2,
             vy = 0,
+            x = 0
         });
         InputSystem.Update();
 
@@ -609,6 +617,7 @@ internal class HIDTests : InputTestFixture
         Assert.That(device["Ry"].ReadValueAsObject(), Is.EqualTo(0).Within(0.004));
         Assert.That(device["Vx"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
         Assert.That(device["Vy"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
+        Assert.That(device["X"].ReadValueAsObject(), Is.EqualTo(0).Within(0.0001));
     }
 
     // https://github.com/Unity-Technologies/InputSystem/issues/134
