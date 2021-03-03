@@ -23,7 +23,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
 - Fixed PS4- and PS3-specific `rightTriggerButton` and `leftTriggerButton` controls not being marked as synthetic and thus conflicting with `rightTrigger` and `leftTrigger` input ([case 1293734](https://issuetracker.unity3d.com/issues/input-system-when-binding-gamepad-controls-triggerbutton-gets-bound-instead-of-triggeraxis)).
   * This manifested itself, for example, when using interactive rebinding and seeing `rightTriggerButton` getting picked instead of the expected `rightTrigger` control.
-- Fixed issue with devices with usages not reporting them correctly in the remote profiler.
+- Fixed changes to usages of devices in remote player not being reflected in Input Debugger.
 
 #### Actions
 
