@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     onBuildTree = () => BuildTree(property),
                     onDoubleClick = OnItemDoubleClicked,
-                    title = property.displayName,
+                    title = (property.displayName, property.GetTooltip()),
                     // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
                     // really know where this is coming from. This works around it by adding an arbitrary offset...
                     foldoutOffset = 14,
@@ -73,8 +73,25 @@ namespace UnityEngine.InputSystem.Editor
             if (name.EndsWith(suffix))
                 name = name.Substring(0, name.Length - suffix.Length);
 
+            // If it's a singleton action, we also need to adjust the InputBinding.action
+            // property values in its binding list.
+            var singleActionBindings = actionProperty.FindPropertyRelative("m_SingletonActionBindings");
+            if (singleActionBindings != null)
+            {
+                var bindingCount = singleActionBindings.arraySize;
+                for (var i = 0; i < bindingCount; ++i)
+                {
+                    var binding = singleActionBindings.GetArrayElementAtIndex(i);
+                    var actionNameProperty = binding.FindPropertyRelative("m_Action");
+                    actionNameProperty.stringValue = name;
+                }
+            }
+
             nameProperty.stringValue = name;
-            nameProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            actionProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+
+            EditorUtility.SetDirty(actionProperty.serializedObject.targetObject);
         }
 
         private void OnItemDoubleClicked(ActionTreeItemBase item)

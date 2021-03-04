@@ -58,9 +58,9 @@ namespace UnityEngine.InputSystem.Android.LowLevel
             fixed(uint* buttonsPtr = buttons)
             {
                 if (value)
-                    buttonsPtr[(int)code / 32] |= (uint)1 << ((int)code % 32);
+                    buttonsPtr[(int)code / 32] |= 1U << ((int)code % 32);
                 else
-                    buttonsPtr[(int)code / 32] &= ~((uint)1 << ((int)code % 32));
+                    buttonsPtr[(int)code / 32] &= ~(1U << ((int)code % 32));
             }
             return this;
         }

@@ -108,7 +108,7 @@ namespace UnityEngine.InputSystem.Editor
             // Enabled-by-default.
             var allowJoiningProperty = serializedObject.FindProperty("m_AllowJoining");
             if (m_AllowingJoiningLabel == null)
-                m_AllowingJoiningLabel = new GUIContent("Joining Enabled By Default", allowJoiningProperty.tooltip);
+                m_AllowingJoiningLabel = new GUIContent("Joining Enabled By Default", allowJoiningProperty.GetTooltip());
             EditorGUILayout.PropertyField(allowJoiningProperty, m_AllowingJoiningLabel);
 
             // Max player count.
@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem.Editor
             // Split-screen toggle.
             var splitScreenProperty = serializedObject.FindProperty("m_SplitScreen");
             if (m_SplitScreenLabel == null)
-                m_SplitScreenLabel = new GUIContent("Enable Split-Screen", splitScreenProperty.tooltip);
+                m_SplitScreenLabel = new GUIContent("Enable Split-Screen", splitScreenProperty.GetTooltip());
             EditorGUILayout.PropertyField(splitScreenProperty, m_SplitScreenLabel);
             if (!splitScreenProperty.boolValue)
                 return;
@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.Editor
             var maintainAspectRatioProperty = serializedObject.FindProperty("m_MaintainAspectRatioInSplitScreen");
             if (m_MaintainAspectRatioLabel == null)
                 m_MaintainAspectRatioLabel =
-                    new GUIContent("Maintain Aspect Ratio", maintainAspectRatioProperty.tooltip);
+                    new GUIContent("Maintain Aspect Ratio", maintainAspectRatioProperty.GetTooltip());
             EditorGUILayout.PropertyField(maintainAspectRatioProperty, m_MaintainAspectRatioLabel);
 
             // Fixed-number toggle.
@@ -174,7 +174,7 @@ namespace UnityEngine.InputSystem.Editor
             // Split-screen area.
             var splitScreenAreaProperty = serializedObject.FindProperty("m_SplitScreenRect");
             if (m_SplitScreenAreaLabel == null)
-                m_SplitScreenAreaLabel = new GUIContent("Screen Rectangle", splitScreenAreaProperty.tooltip);
+                m_SplitScreenAreaLabel = new GUIContent("Screen Rectangle", splitScreenAreaProperty.GetTooltip());
             EditorGUILayout.PropertyField(splitScreenAreaProperty, m_SplitScreenAreaLabel);
 
             --EditorGUI.indentLevel;
