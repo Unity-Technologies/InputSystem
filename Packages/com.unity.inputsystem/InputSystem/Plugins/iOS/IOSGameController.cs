@@ -79,10 +79,12 @@ namespace UnityEngine.InputSystem.iOS.LowLevel
         {
             buttonValues[(int)button] = rawValue;
 
+            Debug.Assert((int)button < 32, $"Expected button < 32, so we fit into the 32 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (value)
-                buttons |= (uint)1 << (int)button;
+                buttons |= bit;
             else
-                buttons &= ~(uint)1 << (int)button;
+                buttons &= ~bit;
 
             return this;
         }

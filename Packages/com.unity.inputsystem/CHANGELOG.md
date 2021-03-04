@@ -23,6 +23,9 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed compile error on tvOS due to step counter support for iOS added in `1.1.0-preview.3`.
 - Fixed PS4- and PS3-specific `rightTriggerButton` and `leftTriggerButton` controls not being marked as synthetic and thus conflicting with `rightTrigger` and `leftTrigger` input ([case 1293734](https://issuetracker.unity3d.com/issues/input-system-when-binding-gamepad-controls-triggerbutton-gets-bound-instead-of-triggeraxis)).
   * This manifested itself, for example, when using interactive rebinding and seeing `rightTriggerButton` getting picked instead of the expected `rightTrigger` control.
+- Fixed changes to usages of devices in remote player not being reflected in Input Debugger.
+- Fixed exceptions and incorrect values with HIDs using 32-bit fields ([case 1189859](https://issuetracker.unity3d.com/issues/inputsystem-error-when-vjoy-is-installed)).
+  * This happened, for example, with vJoy installed.
 
 #### Actions
 
@@ -34,6 +37,7 @@ however, it has to be formatted properly to pass verification tests.
     public InputAction action = new InputAction(binding: "<Gamepad>/leftStick");
   ```
 - Fixed tooltips not appearing for elements of the Input Actions editor window ([case 1311595](https://issuetracker.unity3d.com/issues/no-tooltips-appear-when-hovering-over-parts-of-input-action-editor-window)).
+- Fixed `NullReferenceException` when reading values through `InputAction.CallbackContext` on a `OneModifierComposite` or `TwoModifierComposite` binding.
 
 ### Added
 
@@ -42,6 +46,11 @@ however, it has to be formatted properly to pass verification tests.
    * This can be used, for example, to create an event system that allows every player to use multiple 'playerRoot's across different scenes.
 - Enabled XR device support on Magic Leap (Lumin).
 - Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
+
+#### Actions
+
+- Fixed multi-taps not working when multiple controls were bound to an action ([case 1267805](https://issuetracker.unity3d.com/issues/input-system-multi-tap-interaction-doesnt-get-triggered-when-there-are-2-or-more-bindings-in-the-active-control-scheme)).
+  * When there were multiple controls bound to an action, this bug would get triggered by any interaction that did not result in a phase change on the action.
 
 ## [1.1.0-preview.3] - 2021-02-04
 

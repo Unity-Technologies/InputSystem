@@ -1785,18 +1785,10 @@ partial class CoreTests
             // got started.
             Set(gamepad.leftStick, new Vector2(0.345f, 0.456f));
 
-            var actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[0].action, Is.SameAs(stickAction));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f))).Using(Vector2EqualityComparer.Instance));
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[1].control, Is.SameAs(gamepad.leftStick));
-            Assert.That(actions[1].action, Is.SameAs(stickAction));
-            Assert.That(actions[1].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f))).Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace, Started(stickAction, control: gamepad.leftStick,
+                value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))
+                    .AndThen(Performed(stickAction, control: gamepad.leftStick,
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))));
 
             trace.Clear();
 
@@ -1810,13 +1802,8 @@ partial class CoreTests
             // taking over stickAction.
             Set(gamepad.rightStick, new Vector2(0.456f, 0.567f));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].action, Is.SameAs(stickAction));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.456f, 0.567f))).Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace, Performed(stickAction, control: gamepad.rightStick,
+                value: new StickDeadzoneProcessor().Process(new Vector2(0.456f, 0.567f))));
 
             trace.Clear();
 
@@ -1828,13 +1815,7 @@ partial class CoreTests
             // Finally, reset the right stick. stickAction should be canceled.
             Set(gamepad.rightStick, Vector2.zero);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.rightStick));
-            Assert.That(actions[0].action, Is.SameAs(stickAction));
-            Assert.That(actions[0].ReadValue<Vector2>(),
-                Is.EqualTo(Vector2.zero).Using(Vector2EqualityComparer.Instance));
+            Assert.That(trace, Canceled(stickAction, control: gamepad.rightStick, value: Vector2.zero));
 
             trace.Clear();
 
@@ -1844,56 +1825,36 @@ partial class CoreTests
             Set(gamepad.leftTrigger, 1.0f);
             Press(gamepad.dpad.right);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(2));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftTrigger));
-            Assert.That(actions[0].action, Is.SameAs(compositeAction));
-            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(-1).Within(0.00001)); // Negative because of axis composite.
-            Assert.That(actions[1].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[1].control, Is.SameAs(gamepad.leftTrigger));
-            Assert.That(actions[1].action, Is.SameAs(compositeAction));
-            Assert.That(actions[1].ReadValue<float>(), Is.EqualTo(-1).Within(0.00001));
+            Assert.That(trace,
+                Started(compositeAction, control: gamepad.leftTrigger, value: -1f)
+                    .AndThen(Performed(compositeAction, control: gamepad.leftTrigger, value: -1f)));
 
             trace.Clear();
 
             // Now release the left trigger. dpad/right should take over and keep the action going.
             Set(gamepad.leftTrigger, 0);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.left));
-            Assert.That(actions[0].action, Is.SameAs(compositeAction));
-            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(trace, Performed(compositeAction, control: gamepad.dpad.left, value: 1f));
 
             trace.Clear();
 
             // Finally, release dpad/right, too. The action should cancel.
             Release(gamepad.dpad.right);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Canceled));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.dpad.right));
-            Assert.That(actions[0].action, Is.SameAs(compositeAction));
-            Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
+            Assert.That(trace, Canceled(compositeAction, control: gamepad.dpad.right, value: 0f));
 
             trace.Clear();
 
             // Press both shoulder buttons and then release one of them. This should leave
             // the hold still going.
             Press(gamepad.leftShoulder);
+            Assert.That(holdAction.activeControl, Is.SameAs(gamepad.leftShoulder));
             Press(gamepad.rightShoulder);
+            Assert.That(holdAction.activeControl, Is.SameAs(gamepad.leftShoulder));
             Release(gamepad.leftShoulder);
+            Assert.That(holdAction.activeControl, Is.SameAs(gamepad.rightShoulder));
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Started));
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftShoulder));
-            Assert.That(actions[0].action, Is.SameAs(holdAction));
-            Assert.That(actions[0].interaction, Is.TypeOf<HoldInteraction>());
-            Assert.That(actions[0].ReadValue<float>(), Is.EqualTo(1).Within(0.00001));
+            Assert.That(trace, Started(holdAction, control: gamepad.leftShoulder, value: 1f));
 
             trace.Clear();
 
@@ -1902,14 +1863,7 @@ partial class CoreTests
             runtime.currentTime += 10;
             Release(gamepad.rightShoulder);
 
-            actions = trace.ToArray();
-            Assert.That(actions, Has.Length.EqualTo(1));
-            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
-            // Again, conflict resolution locking us to first control in composite.
-            Assert.That(actions[0].control, Is.SameAs(gamepad.leftShoulder));
-            Assert.That(actions[0].action, Is.SameAs(holdAction));
-            Assert.That(actions[0].interaction, Is.TypeOf<HoldInteraction>());
-            Assert.That(actions[0].ReadValue<float>(), Is.Zero.Within(0.00001));
+            Assert.That(trace, Performed(holdAction, control: gamepad.rightShoulder, value: 0f));
 
             trace.Clear();
 
@@ -1940,7 +1894,8 @@ partial class CoreTests
             // However, it also turns out that our stripping code may not keep the order of controls when rewriting the
             // updated assemblies, which makes this test indeterministic in players. So we test for the specific callbacks
             // only in the editor. In players, we just make sure that the first and last callbacks match our expectations.
-            actions = trace.ToArray();
+
+            var actions = trace.ToArray();
 
             #if UNITY_EDITOR
             Assert.That(actions, Has.Length.EqualTo(5));
@@ -7241,6 +7196,35 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    public void Actions_CanCreateBindingWithOneModifier_AndReadValueFromActionCallback()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var action = new InputAction();
+        action.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Touchscreen>/press")
+            .With("Binding", "<Touchscreen>/primaryTouch/position");
+
+        var values = new List<Vector2>();
+        action.started += ctx => values.Add(ctx.ReadValue<Vector2>());
+        action.performed += ctx => values.Add(ctx.ReadValue<Vector2>());
+        action.canceled += ctx => values.Add(ctx.ReadValue<Vector2>());
+
+        action.Enable();
+
+        BeginTouch(1, new Vector2(123, 234));
+
+        Assert.That(values, Is.EquivalentTo(new[] { new Vector2(123, 234), new Vector2(123, 234) }));
+
+        values.Clear();
+
+        EndTouch(1, new Vector2(234, 345));
+
+        Assert.That(values, Is.EquivalentTo(new[] { default(Vector2) }));
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_CanCreateBindingWithTwoModifiers()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
@@ -7558,6 +7542,38 @@ partial class CoreTests
         Release(keyboard.aKey);
         Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
         Assert.That(wasCanceled, Is.True);
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1267805/
+    [Test]
+    [Category("Actions")]
+    public void Actions_OnActionWithMultipleBindings_InteractionIgnoringInput_DoesNotCauseDisambiguationToGetStuck()
+    {
+        // This test checks whether InputActionState.ShouldIgnoreStateChange() does
+        // the right thing even if an interaction does not trigger any phase change
+        // on an input. In that situation, we still need to update the action state
+        // or the "disambiguation" code will end up looking at outdated data.
+
+        InputSystem.settings.defaultTapTime = 1;
+        InputSystem.settings.multiTapDelayTime = 1;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var action = new InputAction(interactions: "multitap(tapCount=2)");
+        action.AddBinding("<Keyboard>/space");
+        action.AddBinding("<Keyboard>/a");
+        action.Enable();
+
+        currentTime = 1;
+        Press(keyboard.spaceKey);
+        currentTime = 1.5f;
+        Release(keyboard.spaceKey);
+        currentTime = 2;
+        Press(keyboard.spaceKey);
+        currentTime = 2.5f;
+        Release(keyboard.spaceKey);
+
+        Assert.That(action.WasPerformedThisFrame());
     }
 
     [Test]
