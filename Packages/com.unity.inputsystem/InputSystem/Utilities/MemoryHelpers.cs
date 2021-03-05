@@ -336,7 +336,7 @@ namespace UnityEngine.InputSystem.Utilities
                 throw new ArgumentException("Trying to read more than 32 bits as int", nameof(bitCount));
 
             // Shift the pointer up on larger bitmasks and retry.
-            if (bitOffset > 32)
+            if (bitOffset >= 32)
             {
                 var newBitOffset = (int)bitOffset % 32;
                 var intOffset = ((int)bitOffset - newBitOffset) / 32;

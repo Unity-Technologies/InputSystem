@@ -5,6 +5,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEditorInternal;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.Profiling;
 using UnityEngineInternal.Input;
 
 namespace UnityEngine.InputSystem.DmytroRnD
@@ -17,18 +18,24 @@ namespace UnityEngine.InputSystem.DmytroRnD
 
         internal static void NativeSetup()
         {
+            return;
             Devices = new NativeDeviceState[0];
             Graph.Setup();
+
             IsInitialized = true;
         }
 
         internal static void NativeClear()
         {
+            return;
+            
             for (var i = 0; i < Devices.Length; ++i)
                 Devices[i].Clear();
             Devices = new NativeDeviceState[0];
 
             Graph.Clear();
+
+            // m_TestPreDemuxer.Clear();
 
             IsInitialized = false;
         }
@@ -39,6 +46,10 @@ namespace UnityEngine.InputSystem.DmytroRnD
 
         internal static unsafe void NativeUpdate(NativeInputUpdateType updateType, NativeInputEventBuffer* buffer)
         {
+            return;
+            
+            Profiler.BeginSample("Core.NativeUpdate");
+
             // it could be a case, that we get a callback before anything is set at all
             if (!IsInitialized)
             {
@@ -46,7 +57,7 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 IsInitialized = true;
             }
 
-            Graph.DropOldStates(Graph.MinTimestampAtCurrentUpdate); // min timestamp from last update 
+            //Graph.DropOldStates(Graph.MinTimestampAtCurrentUpdate); // min timestamp from last update 
 
             long? minTimestamp = null;
             long? maxTimestamp = null;
@@ -71,7 +82,7 @@ namespace UnityEngine.InputSystem.DmytroRnD
                     : timestamp;
                 maxTimestamp = maxTimestamp.HasValue
                     ? timestamp > maxTimestamp.Value ? timestamp : maxTimestamp.Value
-                    : timestamp;                    
+                    : timestamp;
 
                 if (deviceId >= Devices.Length || !Devices[deviceId].IsInitialized(deviceId)
                 ) // unknown or uninitialized device
@@ -80,7 +91,7 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 switch (inputEvent->type)
                 {
                     case NativeInputEventType.DeviceRemoved:
-#if UNITY_EDITOR
+#if false && UNITY_EDITOR
                         SurviveDomainReload.Remove(inputEvent->deviceId);
 #endif
                         Devices[deviceId].Clear();
@@ -96,13 +107,19 @@ namespace UnityEngine.InputSystem.DmytroRnD
                         var afterStateEvent = afterInputEvent + sizeof(NativeStateEvent);
 
                         // calculate all changed bits since last device state change 
-                        var changedBits = Devices[deviceId].PreDemux(inputEvent->deviceId, afterStateEvent,
-                            inputEvent->sizeInBytes - sizeof(NativeInputEvent) - sizeof(NativeStateEvent));
+                        //var changedBits = Devices[deviceId].PreDemux(inputEvent->deviceId, afterStateEvent,
+                        //    inputEvent->sizeInBytes - sizeof(NativeInputEvent) - sizeof(NativeStateEvent));
 
                         switch (stateEvent->Type)
                         {
                             case NativeStateEventType.Mouse:
-                                MouseDemux.Demux(ref Graph, deviceId, timestamp, changedBits, afterStateEvent);
+                                //MouseDemux.Demux(ref Graph, deviceId, timestamp, changedBits, afterStateEvent);
+
+                                // m_TestPreDemuxer.PreDemux(afterStateEvent, 30);
+                                // ProgrammableDemuxer.Demux(m_TestPreDemuxer.GetState(),
+                                //     m_TestPreDemuxer.GetChangedBitsBitMask(), m_TestPreDemuxer.GetLength(),
+                                //     m_TestDemuxerConfig);
+
                                 break;
                             case NativeStateEventType.Keyboard:
                                 break;
@@ -143,7 +160,9 @@ namespace UnityEngine.InputSystem.DmytroRnD
                         break;
                 }
             }
-            
+
+            /*
+
             // this is very sketchy at the moment, needs proper frame cursors instead
             // we need "cursor ahead of this one" abstraction here, not just adding 1ns blindly
             if (minTimestamp.HasValue)
@@ -159,7 +178,8 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 if (minTimestamp.Value < Graph.MaxTimestampAtCurrentUpdate)
                 {
                     var diff = Math.Abs(minTimestamp.Value - Graph.MaxTimestampAtCurrentUpdate);
-                    Debug.LogError($"unstable input frame boundary clock {Graph.MaxTimestampAtCurrentUpdate} -> {minTimestamp.Value} diff {TimestampHelper.ConvertToSeconds(diff) * 1000000.0} us");
+                    Debug.LogError(
+                        $"unstable input frame boundary clock {Graph.MaxTimestampAtCurrentUpdate} -> {minTimestamp.Value} diff {TimestampHelper.ConvertToSeconds(diff) * 1000000.0} us");
                 }
 
                 Graph.MinTimestampAtCurrentUpdate = minTimestamp.Value;
@@ -180,15 +200,21 @@ namespace UnityEngine.InputSystem.DmytroRnD
                 Debug.Log("was pressed");
             if (Graph.DebugMouseLeftWasReleasedThisFrame())
                 Debug.Log("was released");
+                
 
             DebuggerWindow.RefreshCurrent();
+                */
+
+            Profiler.EndSample();
         }
 
         internal static unsafe void NativeDeviceDiscovered(int deviceId, string deviceDescriptorJson)
         {
-#if UNITY_EDITOR
+#if false && UNITY_EDITOR
             SurviveDomainReload.Preserve(deviceId, deviceDescriptorJson);
 #endif
+            // TODO disable me
+            return;
 
             var deviceDescriptor = JsonUtility.FromJson<NativeDeviceDescriptor>(deviceDescriptorJson);
             Debug.Log($"DRND: device discovered {deviceId} -> {deviceDescriptorJson}");
@@ -214,7 +240,6 @@ namespace UnityEngine.InputSystem.DmytroRnD
         }
     }
 }
-
 
 /*
 [BurstCompile(CompileSynchronously = true)]
