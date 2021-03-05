@@ -891,6 +891,13 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
+        internal void MarkAsDirty()
+        {
+#if UNITY_EDITOR
+            InputSystem.TrackDirtyInputActionAsset(this);
+#endif
+        }
+
         private void ReResolveIfNecessary()
         {
             if (m_SharedStateForAllMaps == null)
@@ -953,13 +960,6 @@ namespace UnityEngine.InputSystem
                     foreach (var map in asset.m_ActionMaps)
                         map.m_Asset = asset;
             }
-        }
-
-        internal void MarkAsDirty()
-        {
-#if UNITY_EDITOR
-            InputSystem.TrackDirtyInputActionAsset(this);
-#endif
         }
     }
 }
