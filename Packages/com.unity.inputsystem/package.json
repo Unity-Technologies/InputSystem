@@ -13,5 +13,8 @@
 		"touch",
 		"vr",
 		"xr"
-	]
+	],
+	"dependencies": {
+		"com.unity.burst": "1.5.0-pre.3"
+	}
 }

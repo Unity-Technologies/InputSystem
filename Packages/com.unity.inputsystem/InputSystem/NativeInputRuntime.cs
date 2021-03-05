@@ -50,6 +50,8 @@ namespace UnityEngine.InputSystem.LowLevel
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
                     {
+                        DmytroRnD.Core.NativeUpdate(updateType, eventBufferPtr);
+                        
                         var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
                             eventBufferPtr->eventCount,
                             sizeInBytes: eventBufferPtr->sizeInBytes,
@@ -94,7 +96,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 // This is stupid but the enum prevents us from jacking the delegate in directly.
                 // This means we get a double dispatch here :(
                 if (value != null)
-                    NativeInputSystem.onBeforeUpdate = updateType => value((InputUpdateType)updateType);
+                    NativeInputSystem.onBeforeUpdate = updateType =>
+                    {
+                        DmytroRnD.Core.NativeBeforeUpdate(updateType);
+                        value((InputUpdateType) updateType);
+                    };
                 else
                     NativeInputSystem.onBeforeUpdate = null;
                 m_OnBeforeUpdate = value;
@@ -119,7 +125,11 @@ namespace UnityEngine.InputSystem.LowLevel
         public Action<int, string> onDeviceDiscovered
         {
             get => NativeInputSystem.onDeviceDiscovered;
-            set => NativeInputSystem.onDeviceDiscovered = value;
+            set => NativeInputSystem.onDeviceDiscovered = (i, s) =>
+            {
+                DmytroRnD.Core.NativeDeviceDiscovered(i, s);
+                value(i, s);
+            };
         }
 
         public Action onShutdown
