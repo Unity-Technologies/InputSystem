@@ -1776,10 +1776,10 @@ internal class UITests : InputTestFixture
         // Point device at left child.
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
         scene.eventSystem.InvokeUpdate();
-        
+
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
-        
+
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
         Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
 
@@ -1790,15 +1790,15 @@ internal class UITests : InputTestFixture
         Assert.That(raycastResult.module, Is.EqualTo(eventRaycastResult.module));
         Assert.That(raycastResult.screenPosition, Is.EqualTo(eventRaycastResult.screenPosition));
         Assert.That(raycastResult.gameObject, Is.EqualTo(eventRaycastResult.gameObject));
-        
+
         // Move back off the object
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
         scene.eventSystem.InvokeUpdate();
-        
+
         raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.False);
     }
-    
+
     #if UNITY_IOS || UNITY_TVOS
     [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
     #endif
@@ -1814,7 +1814,7 @@ internal class UITests : InputTestFixture
 
         var xrTrackingOrigin = new GameObject("XRStage").transform;
         scene.uiModule.xrTrackingOrigin = xrTrackingOrigin;
-        
+
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = new InputActionMap("map");
         asset.AddActionMap(map);
@@ -1832,10 +1832,10 @@ internal class UITests : InputTestFixture
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
 
         yield return null;
-        
+
         var trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.False);
-        
+
         // Point device at left child.
         Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
         scene.eventSystem.InvokeUpdate();
@@ -1847,13 +1847,13 @@ internal class UITests : InputTestFixture
         // Rotate so right object is targetted
         xrTrackingOrigin.rotation = Quaternion.Euler(0f, 60, 0f);
         scene.eventSystem.InvokeUpdate();
-        
+
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.True);
         Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.rightGameObject));
 
         xrTrackingOrigin.position = Vector3.up * 1000f;
-        
+
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.False);
     }

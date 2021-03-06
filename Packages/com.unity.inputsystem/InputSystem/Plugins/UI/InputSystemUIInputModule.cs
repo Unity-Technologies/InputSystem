@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 return m_PointerStates[stateIndex].eventData.pointerCurrentRaycast;
             }
-            
+
             return default;
         }
 
@@ -259,7 +259,7 @@ namespace UnityEngine.InputSystem.UI
                     position = m_XRTrackingOrigin.TransformPoint(position);
                     rotation = m_XRTrackingOrigin.rotation * rotation;
                 }
-                
+
                 eventData.trackedDeviceOrientation = rotation;
                 eventData.trackedDevicePosition = position;
             }
@@ -617,8 +617,8 @@ namespace UnityEngine.InputSystem.UI
         [Tooltip("Scales the Eventsystem.DragThreshold, for tracked devices, to make selection easier.")]
         // Hide this while we still have to figure out what to do with this.
         private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
-        
-        [Tooltip("Transform representing the real world origin for tracking devices.")] 
+
+        [Tooltip("Transform representing the real world origin for tracking devices.")]
         [SerializeField]
         private Transform m_XRTrackingOrigin;
 
