@@ -43,6 +43,8 @@ however, it has to be formatted properly to pass verification tests.
 
 - Enabled XR device support on Magic Leap (Lumin).
 - Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
+- InputSystemUIInputModule now has an xrTrackingOrigin property. When assigned, this will transform all tracked device positions and rotations from it's local space into Unity's world space.
+- Added InputSystemUIInputModule.GetLastRaycastResult. This returns the most recent raycast result and can be used to draw ray visualizations or get information on the most recent UI object hit.
 
 #### Actions
 
