@@ -88,6 +88,8 @@ namespace UnityEngine.InputSystem.LowLevel
             set => m_Event.type = (NativeInputEventType)(int)value;
         }
 
+        public int nativeType => (int) m_Event.type;
+
         /// <summary>
         /// Total size of the event in bytes.
         /// </summary>

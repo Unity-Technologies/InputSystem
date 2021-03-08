@@ -1,6 +1,7 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_WSA
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Profiling;
@@ -15,7 +16,7 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
 {
     // IMPORTANT: State layout is XINPUT_GAMEPAD
     [StructLayout(LayoutKind.Explicit, Size = 4)]
-    internal struct XInputControllerWindowsState : IInputStateTypeInfo
+    public struct XInputControllerWindowsState : IInputStateTypeInfo
     {
         public FourCC format => new FourCC('X', 'I', 'N', 'P');
 
@@ -100,6 +101,8 @@ namespace UnityEngine.InputSystem.XInput
     [Preserve]
     public class XInputControllerWindows : XInputController
     {
+        private FourCC m_FourCc = new FourCC('X', 'I', 'N', 'P');
+
         internal unsafe void Update(InputEventBuffer eventBuffer, InputManager inputManager)
         {
             var profileMarker = new ProfilerMarker("XInput::Update");
@@ -109,44 +112,96 @@ namespace UnityEngine.InputSystem.XInput
             if (!success)
                 throw new InvalidOperationException($"Couldn't find state for device {m_DeviceIndex}");
 
-            var fourCC = new FourCC('X', 'I', 'N', 'P');
+            var buttonControlSouth = buttonSouth;
+            var buttonControlEast = buttonEast;
+            var buttonControlNorth = buttonNorth;
+            var buttonControlWest = buttonWest;
+            var leftStickControl = leftStick;
+            var rightStickControl = rightStick;
+            var leftShoulderButtonControl = leftShoulder;
+            var rightShoulderButtonControl = rightShoulder;
+            var leftTriggerLocal = leftTrigger;
+            var rightTriggerLocal = rightTrigger;
+            var leftStickButtonControl = leftStickButton;
+            var rightStickButtonControl = rightStickButton;
+            var dpadControl = dpad;
+
+
             void* statePtr = null;
             var previousState = deviceState;
-            foreach (var eventPtr in eventBuffer)
+            var eventCount = eventBuffer.eventCount;
+            var eventOffsets = eventBuffer.eventOffsets;
+            var eventbufferPtr = eventBuffer.bufferPtr;
+
+            for (var i = 0; i < eventCount; i++)
             {
-                if (eventPtr.type != StateEvent.Type)
+                var eventPtr = (InputEvent*)((byte*)eventbufferPtr.data + eventOffsets[i]);
+
+                if (eventPtr->nativeType != StateEvent.Type)
                     continue;
 
                 var stateEvent = StateEvent.FromUnchecked(eventPtr);
-                if (stateEvent->stateFormat != fourCC)
+                if (stateEvent->stateFormat != m_FourCc)
                     continue;
 
                 statePtr = stateEvent->state;
                 var eventState = *(XInputControllerWindowsState*)statePtr;
 
-                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.A, buttonSouth);
-                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.B, buttonEast);
-                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.Y, buttonNorth);
-                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.X, buttonWest);
 
-                if(eventState.leftStickX != deviceState.leftStickX || eventState.leftStickY != deviceState.leftStickY)
-                    leftStick.UpdateState(new Vector2(eventState.leftStickX, eventState.leftStickY));
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.A, buttonControlSouth);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.B, buttonControlEast);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.Y, buttonControlNorth);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.X, buttonControlWest);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.LeftShoulder, buttonControlWest);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.LeftShoulder, buttonControlWest);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.LeftThumbstickPress, leftStickButtonControl);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.RightThumbstickPress, rightStickButtonControl);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.LeftShoulder, leftShoulderButtonControl);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.RightShoulder, rightShoulderButtonControl);
+
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.DPadDown, dpadControl.down);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.DPadRight, dpadControl.right);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.DPadUp, dpadControl.up);
+                SetButtonState(previousState, eventState, XInputControllerWindowsState.Button.DPadLeft, dpadControl.left);
+
+                var eventLeftStickX = eventState.leftStickX;
+                var deviceLeftStickX = deviceState.leftStickX;
+                var eventLeftStickY = eventState.leftStickY;
+                var deviceLeftStickY = deviceState.leftStickY;
+
+                var eventRightStickX = eventState.rightStickX;
+                var deviceRightStickX = deviceState.rightStickX;
+                var eventRightStickY = eventState.rightStickY;
+                var deviceRightStickY = deviceState.rightStickY;
+
+                if (eventLeftStickX != deviceLeftStickX || eventLeftStickY != deviceLeftStickY)
+                    leftStickControl.NotifyListeners(new Vector2(eventLeftStickX, eventLeftStickY));
+
+                if (eventRightStickX != deviceRightStickX || eventRightStickY != deviceRightStickY)
+                    rightStickControl.NotifyListeners(new Vector2(eventRightStickX, eventRightStickY));
+
+                if (eventState.leftTrigger != deviceState.leftTrigger)
+                    leftTriggerLocal.NotifyListeners(eventState.leftTrigger);
+
+                if (eventState.rightTrigger != deviceState.rightTrigger)
+                    rightTriggerLocal.NotifyListeners(eventState.rightTrigger);
 
                 previousState = eventState;
             }
 
             // update the state from the last state event
-            if(statePtr != null)
+            if (statePtr != null)
                 inputManager.UpdateDeviceState<XInputControllerWindowsState>(m_DeviceIndex, statePtr);
 
             profileMarker.End();
         }
 
-        private void SetButtonState(XInputControllerWindowsState previousState, XInputControllerWindowsState currentState, XInputControllerWindowsState.Button button, ButtonControl buttonControl)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetButtonState(in XInputControllerWindowsState previousState, in XInputControllerWindowsState currentState, in XInputControllerWindowsState.Button button, ButtonControl buttonControl)
         {
-            var buttonMask = (uint) 1 << (int) button;
+            var buttonMask = 1 << ((int)button);
             if ((previousState.buttons & buttonMask) != (currentState.buttons & buttonMask))
-                buttonControl.UpdateState(currentState.buttons & buttonMask);
+                buttonControl.NotifyListeners(currentState.buttons & buttonMask);
         }
     }
 }

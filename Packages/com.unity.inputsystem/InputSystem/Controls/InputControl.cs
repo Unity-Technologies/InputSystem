@@ -1197,10 +1197,9 @@ namespace UnityEngine.InputSystem
 
         public event Action<InputControl, TValue, TValue> onStateChanged;
 
-        internal void UpdateState(TValue value)
+        internal void NotifyListeners(in TValue value)
         {
-            previousValue = currentValue;
-            currentValue = ProcessValue(value);
+            
         }
     }
 }

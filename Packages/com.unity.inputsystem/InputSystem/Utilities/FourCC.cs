@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -72,6 +73,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <returns>The four characters of the code packed into one <c>int</c>. Character order is
         /// little endian. "ABCD" is stored with A in the highest order 8 bits and D in the
         /// lowest order 8 bits.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator int(FourCC fourCC)
         {
             return fourCC.m_Code;
@@ -84,6 +86,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// little endian. "ABCD" is stored with A in the highest order 8 bits and D in the
         /// lowest order 8 bits.</param>
         /// <returns>The FourCC converted from <paramref name="i"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator FourCC(int i)
         {
             return new FourCC(i);
@@ -139,6 +142,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <param name="right">Second FourCC.</param>
         /// <returns>True if the two FourCCs are equal, i.e. have the same exact
         /// character codes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator==(FourCC left, FourCC right)
         {
             return left.m_Code == right.m_Code;
@@ -151,6 +155,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <param name="right">Second FourCC.</param>
         /// <returns>True if the two FourCCs are not equal, i.e. do not have the same exact
         /// character codes.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator!=(FourCC left, FourCC right)
         {
             return left.m_Code != right.m_Code;

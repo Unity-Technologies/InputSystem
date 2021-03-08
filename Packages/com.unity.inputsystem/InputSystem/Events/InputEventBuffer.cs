@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
@@ -82,6 +83,11 @@ namespace UnityEngine.InputSystem.LowLevel
             get { return (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer); }
         }
 
+        public NativeArray<ushort> eventOffsets
+        {
+            get { return m_EventOffsets; }
+        }
+
         public InputEventBuffer(InputEvent* eventPtr, int eventCount, int sizeInBytes = -1, int capacityInBytes = -1)
             : this()
         {
@@ -98,9 +104,16 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr,
                     capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
+                m_EventOffsets = new NativeArray<ushort>(eventCount, Allocator.Persistent);
                 m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : BufferSizeUnknown;
                 m_EventCount = eventCount;
                 m_WeOwnTheBuffer = false;
+
+                var bufferStartPtr = (byte*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer);
+                for (var i = 1; i < eventCount; i++)
+                {
+                    m_EventOffsets[i] = (ushort) (m_EventOffsets[i - 1] + (ushort) ((InputEvent*)(bufferStartPtr + m_EventOffsets[i - 1]))->sizeInBytes.AlignToMultipleOf(InputEvent.kAlignment));
+                }
             }
         }
 
@@ -110,8 +123,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 throw new ArgumentException("buffer has no data but eventCount is > 0", nameof(eventCount));
             if (sizeInBytes > buffer.Length)
                 throw new ArgumentOutOfRangeException(nameof(sizeInBytes));
-
+        
             m_Buffer = buffer;
+            m_EventOffsets = new NativeArray<ushort>(eventCount, Allocator.Persistent);
             m_WeOwnTheBuffer = false;
             m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : buffer.Length;
             m_EventCount = eventCount;
@@ -162,6 +176,8 @@ namespace UnityEngine.InputSystem.LowLevel
                     throw new NotImplementedException("NativeArray long support");
                 var newBuffer =
                     new NativeArray<byte>((int)newCapacity, Allocator.Persistent, NativeArrayOptions.ClearMemory);
+                var newEventOffsetsArray = new NativeArray<ushort>((int) newCapacity, Allocator.Persistent,
+                    NativeArrayOptions.ClearMemory);
 
                 if (m_Buffer.IsCreated)
                 {
@@ -170,7 +186,13 @@ namespace UnityEngine.InputSystem.LowLevel
                         m_Buffer.Dispose();
                 }
 
+                if (m_EventOffsets.IsCreated)
+                {
+                    UnsafeUtility.MemCpy(newEventOffsetsArray.GetUnsafePtr(), m_EventOffsets.GetUnsafeReadOnlyPtr(), m_EventOffsets.Length * UnsafeUtility.SizeOf<int>());
+                }
+
                 m_Buffer = newBuffer;
+                m_EventOffsets = newEventOffsetsArray;
                 m_WeOwnTheBuffer = true;
             }
 
@@ -179,6 +201,8 @@ namespace UnityEngine.InputSystem.LowLevel
             m_SizeInBytes += alignedSizeInBytes;
             ++m_EventCount;
 
+            m_EventOffsets[m_EventCount] = (ushort) (m_EventOffsets[m_EventCount - 1] + alignedSizeInBytes);
+            
             return eventPtr;
         }
 
@@ -218,6 +242,16 @@ namespace UnityEngine.InputSystem.LowLevel
             if (m_SizeInBytes != BufferSizeUnknown)
                 m_SizeInBytes = 0;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public InputEvent* GetEvent(int eventIndex)
+        {
+            Debug.Assert(eventIndex < m_EventCount, "Event index is greater than the number of events");
+
+            return (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer) +
+                                     UnsafeUtility.ReadArrayElement<ushort>(m_EventOffsets.GetUnsafeReadOnlyPtr(), eventIndex);
+        }
+
 
         /// <summary>
         /// Advance the read position to the next event in the buffer, preserving or not preserving the
@@ -285,8 +319,11 @@ namespace UnityEngine.InputSystem.LowLevel
                 return;
 
             Debug.Assert(m_Buffer.IsCreated, "Buffer has not been created");
-
             m_Buffer.Dispose();
+
+            Debug.Assert(m_EventOffsets.IsCreated, "Event offsets buffer has not been created");
+            m_EventOffsets.Dispose();
+
             m_WeOwnTheBuffer = false;
             m_SizeInBytes = 0;
             m_EventCount = 0;
@@ -312,6 +349,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         private NativeArray<byte> m_Buffer;
+        private NativeArray<ushort> m_EventOffsets; // store the offsets of each event in the buffer including alignments
         private long m_SizeInBytes;
         private int m_EventCount;
         private bool m_WeOwnTheBuffer; ////FIXME: what we really want is access to NativeArray's allocator label

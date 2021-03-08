@@ -80,12 +80,21 @@ internal class CorePerformanceTests : InputTestFixture
             {
                 Random.InitState(123);
 
-                for (var i = 0; i < 100; ++i)
-                    InputSystem.QueueStateEvent(gamepad, new XInputControllerWindowsState{leftStickX = (short) (Random.value * Int16.MaxValue)  });
+                for (var i = 0; i < 10; ++i)
+                    InputSystem.QueueStateEvent(gamepad, new XInputControllerWindowsState
+                    {
+                        leftStickX = (short) (Random.value * Int16.MaxValue),
+                        leftStickY = (short) (Random.value * Int16.MaxValue),
+                        rightStickX = (short) (Random.value * Int16.MaxValue),
+                        rightStickY = (short) (Random.value * Int16.MaxValue),
+                        leftTrigger = (byte) (Random.value * 255),
+                        rightTrigger = (byte) (Random.value * 255),
+                        buttons = (ushort) (Random.value * UInt16.MaxValue),
+                    });
                 InputSystem.Update();
             })
-            .MeasurementCount(100)
-            .WarmupCount(5)
+            .MeasurementCount(1)
+            .WarmupCount(1)
             .Run();
     }
 
