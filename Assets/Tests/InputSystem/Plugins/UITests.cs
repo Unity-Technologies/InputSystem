@@ -1853,6 +1853,7 @@ internal class UITests : InputTestFixture
         Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.rightGameObject));
 
         xrTrackingOrigin.position = Vector3.up * 1000f;
+        scene.eventSystem.InvokeUpdate();
 
         trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(trackedDeviceRaycast.isValid, Is.False);
