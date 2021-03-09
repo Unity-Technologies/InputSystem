@@ -26,6 +26,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed changes to usages of devices in remote player not being reflected in Input Debugger.
 - Fixed exceptions and incorrect values with HIDs using 32-bit fields ([case 1189859](https://issuetracker.unity3d.com/issues/inputsystem-error-when-vjoy-is-installed)).
   * This happened, for example, with vJoy installed.
+- Fixed `Retrieving array element that was out of bounds` and `SerializedProperty ... has disappeared!` errors when deleting multiple action bindings in the input asset editor ([case 1300506](https://issuetracker.unity3d.com/issues/errors-are-thrown-in-the-console-when-deleting-multiple-bindings)).
 
 #### Actions
 
