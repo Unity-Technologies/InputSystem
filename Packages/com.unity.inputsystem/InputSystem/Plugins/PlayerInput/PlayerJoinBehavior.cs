@@ -18,7 +18,7 @@ namespace UnityEngine.InputSystem
         JoinPlayersWhenJoinActionIsTriggered,
 
         /// <summary>
-        /// Do not join players automatically. Call <see cref="JoinPlayerFromUI"/> or <see cref="JoinPlayerFromAction"/>
+        /// Do not join players automatically. Call <see cref="PlayerInputManager.JoinPlayerFromUI"/> or <see cref="PlayerInputManager.JoinPlayerFromAction"/>
         /// explicitly in order to join new players. Alternatively, just create GameObjects with <see cref="PlayerInput"/>
         /// components directly and they will be joined automatically.
         /// </summary>
