@@ -1615,7 +1615,10 @@ namespace UnityEngine.InputSystem.UI
             return false;
         }
 
-        internal const float kPixelPerLine = 20;
+        // Due to different input systems at Unity all piping input into UI,
+        // we need to have a consistent scroll speed across the board.
+        // Hence this constant should be equal to Windows WHEEL_DELTA constant.
+        internal const float kPixelPerLine = 120.0f;
 
         private void OnScroll(InputAction.CallbackContext context)
         {
