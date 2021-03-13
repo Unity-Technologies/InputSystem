@@ -2628,6 +2628,8 @@ namespace UnityEngine.InputSystem
             {
                 if (inputDevice is XInputControllerWindows)
                     ((XInputControllerWindows)inputDevice).Update(eventBuffer, this);
+                else if (inputDevice is Keyboard)
+                    ((Keyboard) inputDevice).Update(eventBuffer, this);
             }
 
             // Handle events.

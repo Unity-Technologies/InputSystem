@@ -100,6 +100,31 @@ internal class CorePerformanceTests : InputTestFixture
 
     [Test, Performance]
     [Category("Performance")]
+    public void Performance_UpdateKeyboard100TimesInFrame()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Measure.Method(() =>
+            {
+                for (var i = 0; i < 100; ++i)
+                {
+                    var keyboardState = new KeyboardState();
+                    for (var j = 0; j < 1; j++)
+                    {
+                        keyboardState.Set((Key) j, i % 2 == 0);
+                        // keyboardState.Set((Key) j + 64, i % 2 == 0);
+                    }
+                    InputSystem.QueueStateEvent(keyboard, keyboardState);
+                }
+                InputSystem.Update();
+            })
+            .MeasurementCount(100)
+            .WarmupCount(5)
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
     [TestCase(true)]
     [TestCase(false)]
     public void Performance_TwoTouchesOverThreeFrames(bool enableEnhancedTouch)

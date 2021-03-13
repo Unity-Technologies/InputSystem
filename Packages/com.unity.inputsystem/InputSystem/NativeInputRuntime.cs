@@ -79,6 +79,8 @@ namespace UnityEngine.InputSystem.LowLevel
                             eventBufferPtr->eventCount = 0;
                             eventBufferPtr->sizeInBytes = 0;
                         }
+
+                        buffer.Dispose();
                     };
                 else
                     NativeInputSystem.onUpdate = null;

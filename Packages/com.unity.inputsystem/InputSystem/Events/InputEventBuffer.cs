@@ -104,7 +104,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 m_Buffer = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<byte>(eventPtr,
                     capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
-                m_EventOffsets = new NativeArray<ushort>(eventCount, Allocator.Persistent);
+                m_EventOffsets = new NativeArray<ushort>(eventCount, Allocator.Temp);
                 m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : BufferSizeUnknown;
                 m_EventCount = eventCount;
                 m_WeOwnTheBuffer = false;

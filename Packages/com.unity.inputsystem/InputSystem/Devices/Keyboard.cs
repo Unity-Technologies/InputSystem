@@ -1,10 +1,16 @@
 using System;
 using System.Runtime.InteropServices;
+using Unity.Burst;
+using Unity.Collections;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
+using Unity.Mathematics;
+using Unity.Profiling;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.XInput.LowLevel;
 
 ////FIXME: display names for keys should be localized key names, not just printable characters (e.g. "Space" should be called "Leertaste")
 
@@ -28,7 +34,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     /// <seealso cref="Keyboard"/>
     // NOTE: This layout has to match the KeyboardInputState layout used in native!
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public unsafe struct KeyboardState : IInputStateTypeInfo
     {
         /// <summary>
@@ -156,9 +162,17 @@ namespace UnityEngine.InputSystem.LowLevel
         [InputControl(name = "OEM4", layout = "Key", bit = (int)Key.OEM4)]
         [InputControl(name = "OEM5", layout = "Key", bit = (int)Key.OEM5)]
         [InputControl(name = "IMESelected", layout = "Button", bit = (int)Key.IMESelected, synthetic = true)]
+        [FieldOffset(0)]
         public fixed byte keys[kSizeInBytes];
 
-        public KeyboardState(params Key[] pressedKeys)
+        [FieldOffset(0)] public uint byte0;
+        [FieldOffset(4)] public uint byte4;
+        [FieldOffset(8)] public uint byte8;
+        [FieldOffset(12)] public ushort byte12;
+
+        
+
+        public KeyboardState(params Key[] pressedKeys) : this()
         {
             if (pressedKeys == null)
                 throw new ArgumentNullException(nameof(pressedKeys));
@@ -870,6 +884,135 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Total number of key controls.</value>
         public const int KeyCount = (int)Key.OEM5;
+
+        private const int MaxDetectableChangedKeys = 16;
+
+        internal unsafe void Update(InputEventBuffer eventBuffer, InputManager inputManager)
+        {
+            var profileMarker = new ProfilerMarker("Keyboard::Update");
+            profileMarker.Begin();
+
+            var success = inputManager.GetStateForDevice(m_DeviceIndex, out KeyboardState deviceState);
+            if (!success)
+                throw new InvalidOperationException($"Couldn't find state for device {m_DeviceIndex}");
+
+            void* statePtr = null;
+            var eventCount = eventBuffer.eventCount;
+            var eventOffsets = eventBuffer.eventOffsets;
+            var eventbufferPtr = eventBuffer.bufferPtr;
+
+            var keyboardStates = new NativeArray<KeyboardState>(eventCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var keyboardStateCount = 0;
+
+            for (var i = 0; i < eventCount; i++)
+            {
+                var eventPtr = (InputEvent*)((byte*)eventbufferPtr.data + eventOffsets[i]);
+
+                if (eventPtr->nativeType != StateEvent.Type)
+                    continue;
+
+                var stateEvent = StateEvent.FromUnchecked(eventPtr);
+                if (stateEvent->stateFormat != KeyboardState.Format)
+                    continue;
+
+                statePtr = stateEvent->state;
+                keyboardStates[keyboardStateCount++] = *(KeyboardState*)statePtr;
+            }
+
+            var burstMarker = new ProfilerMarker("Keyboard::FindChangedKeys");
+            burstMarker.Begin();
+
+            var setBitPositions = new NativeArray<int>(MaxDetectableChangedKeys * keyboardStateCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var setBitCounts = new NativeArray<int>(keyboardStateCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+            var findChangedKeysJob = new ProcessKeyEventsJob
+            {
+                EventCount = keyboardStateCount,
+                InitialState = deviceState,
+                Events = keyboardStates,
+                Positions = setBitPositions,
+                SetBitsCounts = setBitCounts,
+            };
+            findChangedKeysJob.Run();
+
+            burstMarker.End();
+
+            for (var i = 0; i < keyboardStateCount; i++)
+            {
+                for (var j = 0; j < setBitCounts[i]; j++)
+                {
+                    var key = setBitPositions[i * MaxDetectableChangedKeys + j];
+                    keys[key & ~(1 << 7)].NotifyListeners((key >> 7) & 0x1);
+                }
+            }
+
+            setBitCounts.Dispose();
+            setBitPositions.Dispose();
+            keyboardStates.Dispose();
+
+            if (statePtr != null)
+                inputManager.UpdateDeviceState<KeyboardState>(m_DeviceIndex, statePtr);
+
+            profileMarker.End();
+        }
+
+        [BurstCompile]
+        private unsafe struct ProcessKeyEventsJob : IJob
+        {
+            public int EventCount;
+            public KeyboardState InitialState;
+
+            [ReadOnly] public NativeArray<KeyboardState> Events;
+            [WriteOnly] public NativeArray<int> Positions;
+            [WriteOnly] public NativeArray<int> SetBitsCounts;
+
+            public void Execute()
+            {
+                var previousKeyboardState = new uint4(InitialState.byte0, InitialState.byte4, InitialState.byte8, InitialState.byte12);
+                var positionsPtr = (int*)Positions.GetUnsafePtr();
+
+                for (var i = 0; i < EventCount; i++)
+                {
+                    var eventState = Events[i];
+                    var keys = new uint4(eventState.byte0, eventState.byte4, eventState.byte8, eventState.byte12);
+
+                    var changedStates = previousKeyboardState ^ keys;
+                    SetBitsCounts[i] = ReadSetBitPositions((ulong*) &changedStates, (ulong*) &keys, positionsPtr);
+
+                    positionsPtr += MaxDetectableChangedKeys;
+                    previousKeyboardState = keys;
+                }
+            }
+
+            private int ReadSetBitPositions(ulong* changedStates, ulong* keyStates, int* positions)
+            {
+                var pos = 0;
+                var bitset = *changedStates;
+                var keys = *keyStates;
+                while (bitset != 0 && pos < MaxDetectableChangedKeys - 1)
+                {
+                    var r = math.tzcnt(bitset);
+
+                    // put the actual key press state (0 or 1) in bit 8 of the position value so we have any easy place to read it from
+                    // later on
+                    var value = (int)(((keys >> r) & 0x1) << 7) | r;
+                    *(positions + pos++) = value;
+                    bitset &= bitset - 1;
+                }
+
+                bitset = *(changedStates + 1);
+                keys = *(keyStates + 1);
+
+                while (bitset != 0 && pos < MaxDetectableChangedKeys - 1)
+                {
+                    var r = math.tzcnt(bitset);
+                    var value = (int)(((keys >> r) & 0x1) << 7) | (64 + r);
+                    *(positions + pos++) = value;
+                    bitset &= bitset - 1;
+                }
+
+                return pos;
+            }
+        }
 
         /// <summary>
         /// Event that is fired for every single character entered on the keyboard.

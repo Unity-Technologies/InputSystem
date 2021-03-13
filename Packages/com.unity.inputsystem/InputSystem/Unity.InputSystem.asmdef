@@ -1,7 +1,10 @@
 {
     "name": "Unity.InputSystem",
+    "rootNamespace": "",
     "references": [
-        "Unity.ugui"
+        "Unity.ugui",
+        "Unity.Burst",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

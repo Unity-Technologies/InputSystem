@@ -53,7 +53,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     /// <seealso cref="InputEventPtr"/>
     // NOTE: This has to be layout compatible with native events.
-    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Size = kBaseEventSize)]
     public struct InputEvent
     {
         private const uint kHandledMask = 0x80000000;
