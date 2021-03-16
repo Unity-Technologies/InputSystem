@@ -1943,7 +1943,7 @@ namespace UnityEngine.InputSystem.Users
             if (!s_OnActionChangeHooked)
                 return;
             InputSystem.onActionChange -= OnActionChange;
-            s_OnActionChangeHooked = true;
+            s_OnActionChangeHooked = false;
         }
 
         private static void HookIntoDeviceChange()
