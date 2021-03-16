@@ -1106,7 +1106,7 @@ namespace UnityEngine.InputSystem.HID
         /// <remarks>
         /// Note that some of the values are actually ranges.
         /// </remarks>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum UsagePage
         {
             Undefined = 0x00,
@@ -1139,7 +1139,7 @@ namespace UnityEngine.InputSystem.HID
         /// <summary>
         /// Usages in the GenericDesktop HID usage page.
         /// </summary>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum GenericDesktop
         {
             Undefined = 0x00,

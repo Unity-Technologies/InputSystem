@@ -552,7 +552,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Compare the control's current state to the state stored in <paramref name="statePtr"/>.
         /// </summary>
-        /// <param name="statePtr">State memory containing the control's <see cref="stateBlock"/>.</param>
+        /// <param name="statePtr">State memory containing the control's <see cref="InputControl.stateBlock"/>.</param>
         /// <returns>True if </returns>
         /// <seealso cref="InputControl.currentStatePtr"/>
         /// <remarks>
@@ -815,9 +815,10 @@ namespace UnityEngine.InputSystem
         /// <param name="control">Control to change the value of.</param>
         /// <param name="value">New value for the control.</param>
         /// <param name="time">Optional time at which the value change should take effect. If set, this will become
-        /// the <see cref="InputEvent.time"/> of the queued event. If the time is in the future, the event will not
-        /// be processed until it falls within the time of an input update slice (except if <see cref="InputSettings.timesliceEvents"/>
-        /// is false, in which case the event will invariably be consumed in the next update).</param>
+        /// the <see cref="InputEvent.time"/> of the queued event. If the time is in the future and the update mode is
+        /// set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/>, the event will not be processed until
+        /// it falls within the time of an input update slice. Otherwise, the event will invariably be consumed in the
+        /// next input update (see <see cref="InputSystem.Update"/>).</param>
         /// <typeparam name="TValue">Type of value.</typeparam>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         public static void QueueValueChange<TValue>(this InputControl<TValue> control, TValue value, double time = -1)
@@ -846,7 +847,7 @@ namespace UnityEngine.InputSystem
         /// <param name="newState">Event containing the new state about to be written to the device.</param>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
         /// <remarks>
-        /// This method reads the current, unprocessed value of the control from <see cref="currentStatePtr"/>
+        /// This method reads the current, unprocessed value of the control from <see cref="InputControl.currentStatePtr"/>
         /// and then adds it to the value of the control found in <paramref name="newState"/>.
         ///
         /// Note that the method does nothing if a value for the control is not contained in <paramref name="newState"/>.

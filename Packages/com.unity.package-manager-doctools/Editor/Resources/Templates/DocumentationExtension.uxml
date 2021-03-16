@@ -1,6 +1,0 @@
-<UXML xmlns:ui="UnityEngine.Experimental.UIElements">
-    <ui:VisualElement name="extensionContainer">
-      <ui:Button name="generateButton" text="Generate Documentation"/>
-      <ui:Toggle name="verbose" text="Verbose"/>
-    </ui:VisualElement>
-</UXML>

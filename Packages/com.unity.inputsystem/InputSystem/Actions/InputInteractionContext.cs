@@ -135,12 +135,12 @@ namespace UnityEngine.InputSystem
         /// {
         ///     public void Process(ref IInputInteractionContext context)
         ///     {
-        ///         if (context.isWaiting && context.ControlIsActuated())
+        ///         if (context.isWaiting &amp;&amp; context.ControlIsActuated())
         ///         {
         ///             // We've waited for input and got it. Start the interaction.
         ///             context.Started();
         ///         }
-        ///         else if (context.isStarted && !context.ControlIsActuated())
+        ///         else if (context.isStarted &amp;&amp; !context.ControlIsActuated())
         ///         {
         ///             // Interaction has been completed.
         ///             context.Performed();

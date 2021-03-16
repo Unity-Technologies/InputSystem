@@ -244,6 +244,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
+                ////TODO: make this a flag and query only once; also, allow C# devices to just set the flag directly and not perform an IOCTL at all
                 var command = QueryCanRunInBackground.Create();
                 if (ExecuteCommand(ref command) >= 0)
                     return command.canRunInBackground;
@@ -515,9 +516,9 @@ namespace UnityEngine.InputSystem
         /// the device API. This is most useful for devices implemented in the native Unity runtime
         /// which, through the command interface, may provide custom, device-specific functions.
         ///
-        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396"
-        /// target="_blank">DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man2/ioctl.2.html"
-        /// target="_blank">ioctl</a> on UNIX-like systems.
+        /// This is a low-level API. It works in a similar way to <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa363216%28v=vs.85%29.aspx?f=255&amp;MSPPError=-2147217396" target="_blank">
+        /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl" target="_blank">ioctl</a>
+        /// on UNIX-like systems.
         /// </remarks>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo

@@ -30,7 +30,7 @@ In addition to the [Controls inherited from `Pointer`](Pointers.md#controls), Mo
 
 On desktop platforms (Windows, Mac, Linux, and UWP), you can move the mouse cursor via code. Note that this moves the system's actual mouse cursor, not just Unity's internally-stored mouse position. This means that the user sees the cursor jumping to a different position, which is generally considered to be bad UX practice. It's advisable to only do this if the cursor is hidden (see the [`Cursor` API documentation](https://docs.unity3d.com/ScriptReference/Cursor.html) for more information).
 
-To move the cursor to a different position, use [`Mouse.WarpCursorPosition`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_Vector2_). The coordinates are expressed as Unity screen coordinates, just like [`Mouse.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position).
+To move the cursor to a different position, use [`Mouse.WarpCursorPosition`](../api/UnityEngine.InputSystem.Mouse.html#UnityEngine_InputSystem_Mouse_WarpCursorPosition_UnityEngine_Vector2_). The coordinates are expressed as Unity screen coordinates, just like [`Mouse.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position).
 
 ```
     Mouse.current.WarpCursorPosition(new Vector2(123, 234));
