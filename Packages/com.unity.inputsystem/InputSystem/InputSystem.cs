@@ -121,9 +121,10 @@ namespace UnityEngine.InputSystem
         /// Register a control layout based on a type.
         /// </summary>
         /// <param name="type">Type to derive a control layout from. Must be derived from <see cref="InputControl"/>.</param>
-        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type (<see cref="Type.Name"/>) will be used.</param>
+        /// <param name="name">Name to use for the layout. If null or empty, the short name of the type (<c>Type.Name</c>) will be used.</param>
         /// <param name="matches">Optional device matcher. If this is supplied, the layout will automatically
         /// be instantiated for newly discovered devices that match the description.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="type"/> is <c>null</c>.</exception>
         /// <remarks>
         /// When the layout is instantiated, the system will reflect on all public fields and properties of the type
         /// which have a value type derived from <see cref="InputControl"/> or which are annotated with <see cref="InputControlAttribute"/>.
@@ -222,7 +223,6 @@ namespace UnityEngine.InputSystem
         ///
         /// See <see cref="Controls.StickControl"/> or <see cref="Gamepad"/> for examples of layouts.
         /// </remarks>
-        /// <exception cref="ArgumentNullException"><paramref name="type"/> is null.</exception>
         /// <seealso cref="InputControlLayout"/>
         public static void RegisterLayout(Type type, string name = null, InputDeviceMatcher? matches = null)
         {
@@ -412,7 +412,7 @@ namespace UnityEngine.InputSystem
         /// Layout builders are most useful for procedurally building device layouts from metadata
         /// supplied by external systems. A good example is <see cref="HID"/> where the "HID" standard
         /// includes a way for input devices to describe their various inputs and outputs in the form
-        /// of a <see cref="HID.HIDDeviceDescriptor"/>. While not sufficient to build a perfectly robust
+        /// of a <see cref="UnityEngine.InputSystem.HID.HID.HIDDeviceDescriptor"/>. While not sufficient to build a perfectly robust
         /// <see cref="InputDevice"/>, these descriptions are usually enough to at least make the device
         /// work out-of-the-box to some extent.
         ///
@@ -443,7 +443,7 @@ namespace UnityEngine.InputSystem
         /// <see cref="InputControlLayout"/>.
         /// </remarks>
         /// <seealso cref="InputControlLayout.Builder"/>
-        /// <seealso cref="onFindLayoutForDevice"/>
+        /// <seealso cref="InputSystem.onFindLayoutForDevice"/>
         public static void RegisterLayoutBuilder(Func<InputControlLayout> buildMethod, string name,
             string baseLayout = null, InputDeviceMatcher? matches = null)
         {
@@ -858,7 +858,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBinding.processors"/>
         /// <seealso cref="InputAction.processors"/>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
-        /// <seealso cref="InputParameterEditor{TObject}"/>
+        /// <seealso cref="UnityEngine.InputSystem.Editor.InputParameterEditor{TObject}"/>
         public static void RegisterProcessor(Type type, string name = null)
         {
             if (type == null)
@@ -986,7 +986,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBinding.processors"/>
         /// <seealso cref="InputAction.processors"/>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
-        /// <seealso cref="InputParameterEditor{TObject}"/>
+        /// <seealso cref="UnityEngine.InputSystem.Editor.InputParameterEditor{TObject}"/>
         public static void RegisterProcessor<T>(string name = null)
         {
             RegisterProcessor(typeof(T), name);
@@ -2144,9 +2144,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Every time the input system updates (see <see cref="InputSettings.updateMode"/>
         /// or <see cref="Update"/> for details about when and how this happens),
-        /// it flushes all events from the internal event buffer that are due in the current
-        /// update (<see cref="InputSettings.timesliceEvents"/> for details about when events
-        /// may be postponed to a subsequent frame).
+        /// it flushes all events from the internal event buffer.
         ///
         /// As the input system reads events from the buffer one by one, it will trigger this
         /// callback for each event which originates from a recognized device, before then proceeding
@@ -2179,7 +2177,7 @@ namespace UnityEngine.InputSystem
         ///        mouse.leftButton.ReadValueFromEvent(eventPtr, out var lmbDown);
         ///        mouse.rightButton.ReadValueFromEvent(eventPtr, out var rmbDown);
         ///
-        ///        if (lmbDown > 0 && rmbDown > 0)
+        ///        if (lmbDown > 0 &amp;&amp; rmbDown > 0)
         ///            mouse.middleButton.WriteValueIntoEvent(1f, eventPtr);
         ///    };
         /// </code>
@@ -2232,7 +2230,7 @@ namespace UnityEngine.InputSystem
         /// is within the update window of the input system.
         ///
         /// As part of queuing, the event will receive its own unique ID (see <see cref="InputEvent.eventId"/>).
-        /// Note that this ID will be written into the memory buffer referenced by <see cref="eventPtr"/>
+        /// Note that this ID will be written into the memory buffer referenced by <paramref cref="eventPtr"/>
         /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
         /// was queued.
         ///
@@ -2242,7 +2240,7 @@ namespace UnityEngine.InputSystem
         /// var gamepad = Gamepad.all[0];
         /// using (StateEvent.From(gamepad, out var eventPtr))
         /// {
-        ///     gamepad.leftStick.WriteValueIntoEvent(new Vector2(0.123, 0.234), eventPtr);
+        ///     gamepad.leftStick.WriteValueIntoEvent(new Vector2(0.123f, 0.234f), eventPtr);
         ///     InputSystem.QueueEvent(eventPtr);
         /// }
         /// </code>
@@ -2259,6 +2257,33 @@ namespace UnityEngine.InputSystem
             s_Manager.QueueEvent(eventPtr);
         }
 
+        /// <summary>
+        /// Add an event to the internal event queue.
+        /// </summary>
+        /// <param name="inputEvent">Event to add to the internal event buffer.</param>
+        /// <remarks>
+        /// The event will be copied in full to the internal event buffer. The internal event
+        /// buffer is flushed on the next input system update (see <see cref="Update"/>).
+        /// Note that if input is process in <c>FixedUpdate()</c> (see <see cref="InputSettings.updateMode"/>),
+        /// then the event may not get processed until its <see cref="InputEvent.time"/> timestamp
+        /// is within the update window of the input system.
+        ///
+        /// As part of queuing, the event will receive its own unique ID (see <see cref="InputEvent.eventId"/>).
+        /// Note that this ID will be written into <paramref name="inputEvent"/>
+        /// meaning that after calling this method, you will see the event ID with which the event
+        /// was queued.
+        ///
+        /// <example>
+        /// <code>
+        /// // Queue a disconnect event on the first gamepad.
+        /// var inputEvent = DeviceRemoveEvent(Gamepad.all[0].deviceId);
+        /// InputSystem.QueueEvent(inputEvent);
+        /// </code>
+        /// </example>
+        /// </remarks>
+        /// <seealso cref="Update"/>
+        /// <seealso cref="onEvent"/>
+        /// <seealso cref="onBeforeUpdate"/>
         public static void QueueEvent<TEvent>(ref TEvent inputEvent)
             where TEvent : struct, IInputEventTypeInfo
         {
@@ -2283,7 +2308,8 @@ namespace UnityEngine.InputSystem
         /// <param name="device">Device whose input state to update</param>
         /// <param name="state"></param>
         /// <param name="time">Timestamp for the event. If not supplied, the current time is used. Note
-        /// that if the given time is in the future and timeslicing is active (<see cref="InputSettings.timesliceEvents"/>,
+        /// that if the given time is in the future and events processed in
+        /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a> (see <see cref="InputSettings.updateMode"/>),
         /// the event will only get processed once the actual time has caught up with the given time.</param>
         /// <typeparam name="TState">Type of input state, such as <see cref="MouseState"/>. Must match the expected
         /// type of state of <paramref name="device"/>.</typeparam>
@@ -2720,9 +2746,9 @@ namespace UnityEngine.InputSystem
         /// {
         ///     public void Process(ref InputInteractionContext context)
         ///     {
-        ///         if (context.isWaiting && !context.controlHasDefaultValue)
+        ///         if (context.isWaiting &amp;&amp; !context.controlHasDefaultValue)
         ///             context.Started();
-        ///         else if (context.isStarted && context.controlHasDefaultValue)
+        ///         else if (context.isStarted &amp;&amp; context.controlHasDefaultValue)
         ///             context.Performed();
         ///     }
         /// }

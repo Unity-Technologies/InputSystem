@@ -10,7 +10,6 @@
         "Unity.PerformanceTesting",
         "Unity.Coding.Editor"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,
@@ -24,6 +23,12 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.package-manager-doctools",
+            "expression": "1.0",
+            "define": "HAVE_DOCTOOLS_INSTALLED"
+        }
+    ],
     "noEngineReferences": false
 }

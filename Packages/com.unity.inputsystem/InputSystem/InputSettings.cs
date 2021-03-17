@@ -493,8 +493,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// By default, the input system will run event processing as part of the player loop. In the default configuration,
-        /// the processing will happens once before every every dynamic update (<see cref="Update"/>), i.e. <see cref="ProcessEventsInDynamicUpdate"/>
-        /// is the default behavior.
+        /// the processing will happens once before every every dynamic update (<a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>),
+        /// i.e. <see cref="ProcessEventsInDynamicUpdate"/> is the default behavior.
         ///
         /// There are two types of updates not governed by UpdateMode. One is <see cref="InputUpdateType.Editor"/> which
         /// will always be enabled in the editor and govern input updates for <see cref="UnityEditor.EditorWindow"/>s in
@@ -506,26 +506,26 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputSystem.Update"/>
         /// <seealso cref="InputUpdateType"/>
-        /// <seealso cref="MonoBehaviour.FixedUpdate"/>
-        /// <seealso cref="MonoBehaviour.Update"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html"/>
+        /// <seealso href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html"/>
         public enum UpdateMode
         {
             // Removed: ProcessEventsInBothFixedAndDynamicUpdate=0
 
             /// <summary>
-            /// Automatically run input updates right before every <see cref="MonoBehaviour.Update"/>.
+            /// Automatically run input updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a>.
             ///
             /// In this mode, no processing happens specifically for fixed updates. Querying input state in
-            /// <see cref="MonoBehaviour.FixedUpdate"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the dynamic update state is returned.
             /// </summary>
             ProcessEventsInDynamicUpdate = 1,
 
             /// <summary>
-            /// Automatically input run updates right before every <see cref="MonoBehaviour.FixedUpdate"/>.
+            /// Automatically input run updates right before every <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html">FixedUpdate</a>.
             ///
             /// In this mode, no processing happens specifically for dynamic updates. Querying input state in
-            /// <see cref="MonoBehaviour.Update"/> will result in errors being logged in the editor and in
+            /// <a href="https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html">Update</a> will result in errors being logged in the editor and in
             /// development builds. In release player builds, the value of the fixed update state is returned.
             /// </summary>
             ProcessEventsInFixedUpdate,
