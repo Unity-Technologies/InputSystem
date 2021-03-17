@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 
@@ -11,6 +12,9 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            if (property.serializedObject.isEditingMultipleObjects)
+                return EditorGUI.GetPropertyHeight(property);
+
             InitTreeIfNeeded(property);
             return GetOrCreateViewData(property).TreeView.totalHeight;
         }
@@ -22,6 +26,14 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            // don't use the custom property drawer when multi-editing for now. Just show the default
+            // UI.
+            if (property.serializedObject.isEditingMultipleObjects)
+            {
+                EditorGUI.PropertyField(position, property, label, true);
+                return;
+            }
+
             InitTreeIfNeeded(property);
 
             EditorGUI.BeginProperty(position, label, property);
