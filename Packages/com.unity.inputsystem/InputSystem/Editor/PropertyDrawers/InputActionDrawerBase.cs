@@ -185,6 +185,11 @@ namespace UnityEngine.InputSystem.Editor
         protected abstract TreeViewItem BuildTree(SerializedProperty property);
         protected abstract string GetSuffixToRemoveFromPropertyDisplayName();
 
+        // Unity creates a single instance of a property drawer to draw multiple instances of the property drawer type,
+        // so we can't store state in the property drawer for each item. We do need that though, because each InputAction
+        // needs to have it's own instance of the InputActionTreeView to correctly draw it's own bindings. So what we do
+        // is keep this array around that stores a tree view instance for each unique property path that the property
+        // drawer encounters. The tree view will be recreated if we detect that the property being drawn has changed.
         private Dictionary<string, InputActionDrawerViewData> m_PerPropertyViewData;
 
         internal class PropertiesViewPopup : EditorWindow
