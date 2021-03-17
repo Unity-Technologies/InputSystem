@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Editor
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             InitTreeIfNeeded(property);
-            return m_TreeView.totalHeight;
+            return GetOrCreateViewData(property).TreeView.totalHeight;
         }
 
         public override bool CanCacheInspectorGUI(SerializedProperty property)
@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginProperty(position, label, property);
             SetNameIfNotSet(property);
 
-            m_TreeView.OnGUI(position);
+            GetOrCreateViewData(property).TreeView.OnGUI(position);
 
             EditorGUI.EndProperty();
         }
@@ -38,21 +38,56 @@ namespace UnityEngine.InputSystem.Editor
             //       changing behind our backs by undo/redo here. Being a PropertyDrawer, we will automatically
             //       get recreated by Unity when it touches our serialized data.
 
-            if (m_TreeView == null)
+            var viewData = GetOrCreateViewData(property);
+            var propertyIsClone = IsPropertyAClone(property);
+
+            if (viewData.TreeView != null && !propertyIsClone)
+                return;
+            
+            if (propertyIsClone)
             {
-                // Create tree and populate it.
-                m_TreeView = new InputActionTreeView(property.serializedObject)
-                {
-                    onBuildTree = () => BuildTree(property),
-                    onDoubleClick = OnItemDoubleClicked,
-                    title = (property.displayName, property.GetTooltip()),
-                    // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
-                    // really know where this is coming from. This works around it by adding an arbitrary offset...
-                    foldoutOffset = 14,
-                    drawActionPropertiesButton = true
-                };
-                m_TreeView.Reload();
+                property.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue = "";
+                property.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue = "Input Action";
+                property.FindPropertyRelative(nameof(InputAction.m_SingletonActionBindings)).ClearArray();
+                property.serializedObject.ApplyModifiedProperties();
             }
+                
+            viewData.TreeView = new InputActionTreeView(property.serializedObject)
+            {
+                onBuildTree = () => BuildTree(property),
+                onDoubleClick = item => OnItemDoubleClicked(item, property),
+                // With the tree in the inspector, the foldouts are drawn too far to the left. I don't
+                // really know where this is coming from. This works around it by adding an arbitrary offset...
+                foldoutOffset = 14,
+                drawActionPropertiesButton = true,
+                title = ("Input Action", property.GetTooltip())
+            };
+            viewData.TreeView.Reload();
+        }
+
+        private static bool IsPropertyAClone(SerializedProperty property)
+        {
+            // When a new item is added to a collection through the inspector, the default behaviour is
+            // to create a clone of the previous item. Here we look at all InputActions that appear before
+            // the current one and compare their Ids to determine if we have a clone. We don't look passed
+            // the current item because Unity will be calling this property drawer for each input action
+            // in the collection in turn. If the user just added a new input action, and it's a clone, as
+            // we work our way down the list, we'd end up thinking that an existing input action was a clone
+            // of the newly added one, instead of the other way around. If we do have a clone, we need to
+            // clear out some properties of the InputAction (id, name, and singleton action bindings) and
+            // recreate the tree view.
+
+            var array = property.GetArrayPropertyFromElement();
+            var index = property.GetIndexOfArrayElement();
+
+            for (var i = 0; i < index; i++)
+            {
+                if (property.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue == array
+                    .GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputAction.m_Id)).stringValue) 
+                    return true;
+            }
+
+            return false;
         }
 
         private void SetNameIfNotSet(SerializedProperty actionProperty)
@@ -94,24 +129,26 @@ namespace UnityEngine.InputSystem.Editor
             EditorUtility.SetDirty(actionProperty.serializedObject.targetObject);
         }
 
-        private void OnItemDoubleClicked(ActionTreeItemBase item)
+        private void OnItemDoubleClicked(ActionTreeItemBase item, SerializedProperty property)
         {
+            var viewData = GetOrCreateViewData(property);
+
             // Double-clicking on binding or action item opens property popup.
             PropertiesViewBase propertyView = null;
             if (item is BindingTreeItem)
             {
-                if (m_ControlPickerState == null)
-                    m_ControlPickerState = new InputControlPickerState();
+                if (viewData.ControlPickerState == null)
+                    viewData.ControlPickerState = new InputControlPickerState();
                 propertyView = new InputBindingPropertiesView(item.property,
-                    controlPickerState: m_ControlPickerState,
+                    controlPickerState: viewData.ControlPickerState,
                     expectedControlLayout: item.expectedControlLayout,
                     onChange:
-                    change => m_TreeView.Reload());
+                    change => viewData.TreeView.Reload());
             }
             else if (item is ActionTreeItem)
             {
                 propertyView = new InputActionPropertiesView(item.property,
-                    onChange: change => m_TreeView.Reload());
+                    onChange: change => viewData.TreeView.Reload());
             }
 
             if (propertyView != null)
@@ -121,11 +158,22 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private InputActionDrawerViewData GetOrCreateViewData(SerializedProperty property)
+        {
+            m_PerPropertyViewData ??= new Dictionary<string, InputActionDrawerViewData>();
+
+            if (m_PerPropertyViewData.TryGetValue(property.propertyPath, out var data)) return data;
+
+            data = new InputActionDrawerViewData();
+            m_PerPropertyViewData.Add(property.propertyPath, data);
+
+            return data;
+        }
+
         protected abstract TreeViewItem BuildTree(SerializedProperty property);
         protected abstract string GetSuffixToRemoveFromPropertyDisplayName();
 
-        private InputActionTreeView m_TreeView;
-        private InputControlPickerState m_ControlPickerState;
+        private Dictionary<string, InputActionDrawerViewData> m_PerPropertyViewData;
 
         internal class PropertiesViewPopup : EditorWindow
         {
@@ -143,6 +191,12 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             private PropertiesViewBase m_PropertyView;
+        }
+
+        private class InputActionDrawerViewData
+        {
+            public InputActionTreeView TreeView;
+            public InputControlPickerState ControlPickerState;
         }
     }
 }
