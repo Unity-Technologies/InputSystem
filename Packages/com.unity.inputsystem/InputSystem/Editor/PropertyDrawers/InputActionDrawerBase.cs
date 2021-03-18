@@ -46,12 +46,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             
             if (propertyIsClone)
-            {
-                property.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue = "";
-                property.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue = "Input Action";
-                property.FindPropertyRelative(nameof(InputAction.m_SingletonActionBindings)).ClearArray();
-                property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
-            }
+                ResetProperty(property);
                 
             viewData.TreeView = new InputActionTreeView(property.serializedObject)
             {
@@ -61,34 +56,9 @@ namespace UnityEngine.InputSystem.Editor
                 // really know where this is coming from. This works around it by adding an arbitrary offset...
                 foldoutOffset = 14,
                 drawActionPropertiesButton = true,
-                title = ("Input Action", property.GetTooltip())
+                title = (GetPropertyTitle(property), property.GetTooltip())
             };
             viewData.TreeView.Reload();
-        }
-
-        private static bool IsPropertyAClone(SerializedProperty property)
-        {
-            // When a new item is added to a collection through the inspector, the default behaviour is
-            // to create a clone of the previous item. Here we look at all InputActions that appear before
-            // the current one and compare their Ids to determine if we have a clone. We don't look passed
-            // the current item because Unity will be calling this property drawer for each input action
-            // in the collection in turn. If the user just added a new input action, and it's a clone, as
-            // we work our way down the list, we'd end up thinking that an existing input action was a clone
-            // of the newly added one, instead of the other way around. If we do have a clone, we need to
-            // clear out some properties of the InputAction (id, name, and singleton action bindings) and
-            // recreate the tree view.
-
-            var array = property.GetArrayPropertyFromElement();
-            var index = property.GetIndexOfArrayElement();
-
-            for (var i = 0; i < index; i++)
-            {
-                if (property.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue == array
-                    .GetArrayElementAtIndex(i).FindPropertyRelative(nameof(InputAction.m_Id)).stringValue) 
-                    return true;
-            }
-
-            return false;
         }
 
         private void SetNameIfNotSet(SerializedProperty actionProperty)
@@ -128,6 +98,13 @@ namespace UnityEngine.InputSystem.Editor
             actionProperty.serializedObject.ApplyModifiedPropertiesWithoutUndo();
 
             EditorUtility.SetDirty(actionProperty.serializedObject.targetObject);
+        }
+
+        private static string GetPropertyTitle(SerializedProperty property)
+        {
+            return property.type == nameof(InputActionMap) ? 
+                $"Input Action Map {property.GetIndexOfArrayElement()}" : 
+                $"Input Action {property.GetIndexOfArrayElement()}";
         }
 
         private void OnItemDoubleClicked(ActionTreeItemBase item, SerializedProperty property)
@@ -173,6 +150,8 @@ namespace UnityEngine.InputSystem.Editor
 
         protected abstract TreeViewItem BuildTree(SerializedProperty property);
         protected abstract string GetSuffixToRemoveFromPropertyDisplayName();
+        protected abstract bool IsPropertyAClone(SerializedProperty property);
+        protected abstract void ResetProperty(SerializedProperty property);
 
         // Unity creates a single instance of a property drawer to draw multiple instances of the property drawer type,
         // so we can't store state in the property drawer for each item. We do need that though, because each InputAction
