@@ -83,7 +83,7 @@ namespace UnityEngine.InputSystem.Utilities
 
         public int IndexOf(TValue value)
         {
-            return Array.IndexOf(m_Array, value);
+            return Array.IndexOf(m_Array, value, m_StartIndex, m_Length);
         }
 
         /// <summary>
