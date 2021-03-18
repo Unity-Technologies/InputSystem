@@ -1,13 +1,18 @@
 # UI support
 
 * [InputSystemUIInputModule component](#inputsystemuiinputmodule-component)
+  * [How the bindings work](#how-the-bindings-work)
+    * [Pointer-type input](#pointer-type-input)
+    * [Navigation-type input](#navigation-type-input)
+    * [Tracked-type input](#tracked-type-input)
 * [MultiplayerEventSystem component](#multiplayereventsystem-component)
 * [VirtualMouseInput component](#virtualmouseinput-component)
+* [UI Toolkit support](#ui-toolkit-support)
 
 You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
 >[!NOTE]
->The Input System package does not support IMGUI or UIElements.
+>The Input System package does not support IMGUI. If you have `OnGUI` methods in your *player* code (editor code is unaffected), no input events in those methods will be received when "Active Input Handling" in Unity's [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to "Input System Package". While you can restore functionality by putting the setting on "Both", this will result in input getting processed twice.
 
 ## InputSystemUIInputModule component
 
@@ -119,6 +124,9 @@ The properties of the [MultiplayerEventSystem](../api/UnityEngine.InputSystem.UI
 
 ## VirtualMouseInput Component
 
+>[!NOTE]
+>The `VirtualMouseInput` component is not yet supported in combination with [UI Toolkit](#ui-toolkit-support). At the moment, it only works in combination with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system. However, pointer input generated from a `VirtualMouseInput` component *will* be received in UI Toolkit as well.
+
 If your application uses gamepads and joysticks as an input, you can use the [navigation Actions](#navigation-type-input) to operate the UI. However, it usually involves extra work to make the UI work well with navigation. An alternative way to operate the UI is to allow gamepads and joysticks to drive the cursor from a "virtual mouse cursor".
 
 >[!TIP]
@@ -142,3 +150,27 @@ Note that the resulting [Mouse](../api/UnityEngine.InputSystem.Mouse.html) input
 
 >[!NOTE]
 >Do not set up gamepads and joysticks for [navigation input](#navigation-type-input) while using VirtualMouseInput. If both VirtualMouseInput and navigation are configured, input is triggered twice: once via the pointer input path, and once via the navigation input path. If you encounter problems such as where buttons are pressed twice, this is likely the problem.
+
+# UI Toolkit support
+
+As of Unity 2021.2, [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is supported as an alternative to the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system for implementing UIs in players.
+
+Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) and [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is based on the same [`EventSystem`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/EventSystem.html) and [`BaseInputModule`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/InputModules.html) subsystem. In other words, the same input setup based on [`InputSystemUIInputModule`](#inputsystemuiinputmodule-component) supports input in either UI solution and nothing extra needs to be done.
+
+Internally, UI Toolkit will install an event listener in the form of the `PanelEventHandler` component which intercepts events sent by `InputSystemUIInputModule` and translates them into UI Toolkit-specific events that are then routed into the visual tree. Note that if you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
+
+>[!NOTE]
+>XR ([tracked-type input](#tracked-type input)) is not yet supported in combination with UI Toolkit. This means that devices such as VR controllers cannot yet be used to operate interfaces created with UI Toolkit.
+
+There are some additional things worth noting:
+
+* Raycasting is handled internally by UI Toolkit. No separate raycaster component is needed like for uGUI. This also means that [`TrackedDeviceRaycaster`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) will not work together with UI Toolkit.
+* A pointer click and a gamepad submit action are distinct at the event level in UI Toolkit. This means that if you, for example, do
+  ```CSharp
+  button.RegisterCallback<ClickEvent>(_ => ButtonWasClicked());
+  ```
+  the handler will __not__ be invoked when the button is "clicked" with the gamepad (a `NavigationSubmitEvent` and not a `ClickEvent`). If, however, you do
+  ```CSharp
+  button.clicked += () => ButtonWasClicked();
+  ```
+  the handle will be invoked in both cases.
