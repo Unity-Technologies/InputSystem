@@ -1629,9 +1629,9 @@ internal class UITests : InputTestFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -30, 0)),
-                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerEnter)
                 #if UNITY_2021_1_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
+                , OneEvent("type", EventType.PointerMove)
                 #endif
             )
         );
@@ -1649,9 +1649,9 @@ internal class UITests : InputTestFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -31, 0)),
-                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerEnter)
                 #if UNITY_2021_1_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
+                , OneEvent("type", EventType.PointerMove)
                 #endif
             )
         );
@@ -1721,9 +1721,9 @@ internal class UITests : InputTestFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
-                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerEnter)
                 #if UNITY_2021_1_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
+                , OneEvent("type", EventType.PointerMove)
                 #endif
             )
         );
@@ -1753,9 +1753,9 @@ internal class UITests : InputTestFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
-                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerEnter)
                 #if UNITY_2021_1_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
+                , OneEvent("type", EventType.PointerMove)
                 #endif
             )
         );
