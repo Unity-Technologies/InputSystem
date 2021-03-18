@@ -288,8 +288,15 @@ namespace UnityEngine.InputSystem.UI
             ProcessPointerMovement(eventData, currentPointerTarget);
         }
 
+        #if false
         private void ProcessPointerMovement(ExtendedPointerEventData eventData, GameObject currentPointerTarget)
         {
+            #if UNITY_2021_1_OR_NEWER
+            // We explicitly check for movement to make sure we're not sending move events when
+            // the pointer hasn't actually changed position.
+            var wasMoved = eventData.IsPointerMoving();
+            #endif
+
             // If we have no target or pointerEnter has been deleted,
             // we just send exit events to anything we are tracking
             // and then exit.
@@ -297,9 +304,10 @@ namespace UnityEngine.InputSystem.UI
             {
                 for (var i = 0; i < eventData.hovered.Count; ++i)
                 {
-#if UNITY_2021_1_OR_NEWER
-                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
-#endif
+                    #if UNITY_2021_1_OR_NEWER
+                    if (wasMoved)
+                        ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
+                    #endif
                     ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
                 }
 
@@ -314,16 +322,16 @@ namespace UnityEngine.InputSystem.UI
 
             if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
             {
-#if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_1_OR_NEWER
                 // Maybe this should change in the future. The documentation for pressure, radius, etc. suggests we
                 // send pointerMove if anything at all has changed. Perhaps IsPointerMoving should reflect changes in
                 // any of the variables, not just "delta"?
-                if (eventData.IsPointerMoving())
+                if (wasMoved)
                 {
                     for (var i = 0; i < eventData.hovered.Count; ++i)
                         ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
                 }
-#endif
+                #endif
                 return;
             }
 
@@ -335,9 +343,10 @@ namespace UnityEngine.InputSystem.UI
             {
                 for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
                 {
-#if UNITY_2021_1_OR_NEWER
-                    ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
-#endif
+                    #if UNITY_2021_1_OR_NEWER
+                    if (wasMoved)
+                        ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+                    #endif
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
                     eventData.hovered.Remove(current.gameObject);
                 }
@@ -351,9 +360,75 @@ namespace UnityEngine.InputSystem.UI
                      current = current.parent)
                 {
                     ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
-#if UNITY_2021_1_OR_NEWER
-                    ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
-#endif
+                    #if UNITY_2021_1_OR_NEWER
+                    if (wasMoved)
+                        ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+                    #endif
+                    eventData.hovered.Add(current.gameObject);
+                }
+            }
+        }
+
+        #endif
+
+        private void ProcessPointerMovement(ExtendedPointerEventData eventData, GameObject currentPointerTarget)
+        {
+            #if UNITY_2021_1_OR_NEWER
+            // If the pointer moved, send move events to all UI elements the pointer is
+            // currently over.
+            var wasMoved = eventData.IsPointerMoving();
+            if (wasMoved)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerMoveHandler);
+            }
+            #endif
+
+            // If we have no target or pointerEnter has been deleted,
+            // we just send exit events to anything we are tracking
+            // and then exit.
+            if (currentPointerTarget == null || eventData.pointerEnter == null)
+            {
+                for (var i = 0; i < eventData.hovered.Count; ++i)
+                    ExecuteEvents.Execute(eventData.hovered[i], eventData, ExecuteEvents.pointerExitHandler);
+
+                eventData.hovered.Clear();
+
+                if (currentPointerTarget == null)
+                {
+                    eventData.pointerEnter = null;
+                    return;
+                }
+            }
+
+            if (eventData.pointerEnter == currentPointerTarget && currentPointerTarget)
+                return;
+
+            var commonRoot = FindCommonRoot(eventData.pointerEnter, currentPointerTarget)?.transform;
+
+            // We walk up the tree until a common root and the last entered and current entered object is found.
+            // Then send exit and enter events up to, but not including, the common root.
+            if (eventData.pointerEnter != null)
+            {
+                for (var current = eventData.pointerEnter.transform; current != null && current != commonRoot; current = current.parent)
+                {
+                    ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerExitHandler);
+                    eventData.hovered.Remove(current.gameObject);
+                }
+            }
+
+            eventData.pointerEnter = currentPointerTarget;
+            if (currentPointerTarget != null)
+            {
+                for (var current = currentPointerTarget.transform;
+                     current != null && current != commonRoot && !PointerShouldIgnoreTransform(current);
+                     current = current.parent)
+                {
+                    ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerEnterHandler);
+                    #if UNITY_2021_1_OR_NEWER
+                    if (wasMoved)
+                        ExecuteEvents.Execute(current.gameObject, eventData, ExecuteEvents.pointerMoveHandler);
+                    #endif
                     eventData.hovered.Add(current.gameObject);
                 }
             }
@@ -592,6 +667,8 @@ namespace UnityEngine.InputSystem.UI
         // Hide this while we still have to figure out what to do with this.
         private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
+        private bool m_IgnoreFocus;
+
         /// <summary>
         /// Delay in seconds between an initial move action and a repeated move action while <see cref="move"/> is actuated.
         /// </summary>
@@ -625,6 +702,18 @@ namespace UnityEngine.InputSystem.UI
         {
             get => m_MoveRepeatRate;
             set => m_MoveRepeatRate = value;
+        }
+
+        ////REVIEW: keeping this internal for now; should be revisited when focus branch lands
+        /// <summary>
+        /// If true, then <c>EventSystem.isFocused</c> is ignored when processing input. The default value is false.
+        /// </summary>
+        /// <remarks>Whether to ignore <c>EventSystem.isFocused</c> in <see cref="Process"/>. Default is false.</remarks>
+        /// <seealso cref="Process"/>
+        internal bool ignoreFocus
+        {
+            get => m_IgnoreFocus;
+            set => m_IgnoreFocus = value;
         }
 
         [Obsolete("'repeatRate' has been obsoleted; use 'moveRepeatRate' instead. (UnityUpgradable) -> moveRepeatRate", false)]
@@ -1687,7 +1776,7 @@ namespace UnityEngine.InputSystem.UI
                 PurgeStalePointers();
 
             // Reset devices of changes since we don't want to spool up changes once we gain focus.
-            if (!eventSystem.isFocused)
+            if (!eventSystem.isFocused && !m_IgnoreFocus)
             {
                 for (var i = 0; i < m_PointerStates.length; ++i)
                     m_PointerStates[i].OnFrameFinished();
