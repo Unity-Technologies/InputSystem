@@ -3099,7 +3099,7 @@ internal class UITests : InputTestFixture
 
             var events = (List<UICallbackReceiver.Event>)actual;
 
-            static bool Compare(string propertyPath, UICallbackReceiver.Event evt, object value)
+            bool Compare(string propertyPath, UICallbackReceiver.Event evt, object value)
             {
                 var eventObject = propertyPath == "type" ? (object)evt : evt.data;
                 object eventPropertyValue = null;
