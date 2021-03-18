@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem.Editor
 
             for (var i = 0; i < index; i++)
             {
-                if (property.FindPropertyRelative(nameof(InputActionMap.m_Id))?.stringValue == 
+                if (property.FindPropertyRelative(nameof(InputActionMap.m_Id))?.stringValue ==
                     array.GetArrayElementAtIndex(i)?.FindPropertyRelative(nameof(InputActionMap.m_Id))?.stringValue)
                     return true;
             }
@@ -51,7 +51,7 @@ namespace UnityEngine.InputSystem.Editor
         protected override void ResetProperty(SerializedProperty property)
         {
             if (property == null) return;
-            
+
             property.SetStringValue(nameof(InputActionMap.m_Id), "");
             property.SetStringValue(nameof(InputActionMap.m_Name), "Input Action Map");
             property.FindPropertyRelative(nameof(InputActionMap.m_Actions))?.ClearArray();

@@ -44,10 +44,10 @@ namespace UnityEngine.InputSystem.Editor
 
             if (viewData.TreeView != null && !propertyIsClone)
                 return;
-            
+
             if (propertyIsClone)
                 ResetProperty(property);
-                
+
             viewData.TreeView = new InputActionTreeView(property.serializedObject)
             {
                 onBuildTree = () => BuildTree(property),
@@ -102,8 +102,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private static string GetPropertyTitle(SerializedProperty property)
         {
-            return property.type == nameof(InputActionMap) ? 
-                $"Input Action Map {property.GetIndexOfArrayElement()}" : 
+            return property.type == nameof(InputActionMap) ?
+                $"Input Action Map {property.GetIndexOfArrayElement()}" :
                 $"Input Action {property.GetIndexOfArrayElement()}";
         }
 
