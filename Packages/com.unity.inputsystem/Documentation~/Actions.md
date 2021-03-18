@@ -184,6 +184,8 @@ asset.AddActionMap(gameplayMap);
 var lookAction = gameplayMap.AddAction("look", "<Gamepad>/leftStick");
 ```
 
+Note that actions created in this way during Play Mode in the editor will **not** persist in the Input Action Asset after you have exited Play Mode. This enables you to test your game in a realistic manner in the editor without having to worry about inadvertently modifying the asset.
+
 #### Default Actions
 
 An [asset](./ActionAssets.md) called `DefaultInputActions.inputactions` containing a default setup of Actions comes with the Input System Package. You can reference this asset directly in your projects like any other Unity asset. However, the asset is also available in code form through the [`DefaultInputActions`](../api/UnityEngine.InputSystem.DefaultInputActions.html) class.

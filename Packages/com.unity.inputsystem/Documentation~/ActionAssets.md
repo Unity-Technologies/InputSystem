@@ -189,3 +189,6 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 The [`PlayerInput`](Components.md#playerinput-component) component provides a convenient way to handle input for one or multiple players. It requires you to set up all your Actions in an Input Action Asset, which you can then assign to the [`PlayerInput`](Components.md#playerinput-component) component. [`PlayerInput`](Components.md#playerinput-component) can then automatically handle activating Action Maps and selecting Control Schemes for you. To learn more, see the documentation on [GameObject Components for Input](Components.md).
 
 ![PlayerInput](Images/PlayerInput.png)
+
+### Modifying Input Action Assets at runtime
+There are several ways of modifying an input action asset at runtime. See [`Creating Actions in code`](Actions.md#creating-actions-in-code) and [`Changing Bindings`](ActionBindings.md#changing-bindings) for some examples. It should be noted that modifications to an Input Action Asset made in this way during Play Mode in the editor will **not** persist in the Input Action Asset after you have exited Play Mode. This enables you to test your game in a realistic manner in the editor without having to worry about inadvertently modifying the asset.

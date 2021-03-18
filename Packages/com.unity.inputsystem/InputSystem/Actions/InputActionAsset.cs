@@ -35,6 +35,12 @@ namespace UnityEngine.InputSystem
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>
+    /// 
+    /// Note that when running in Play Mode in the editor, modifications made to an InputActionAsset using
+    /// the API will <b>not</b> survive the transition back to Edit Mode. Modified assets are tracked and
+    /// reloaded from disk when exiting Play Mode. This is done so that you can realistically test the input
+    /// related functionality of your game i.e. control rebinding etc, without inadvertently changing
+    /// the input asset.
     ///
     /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
     /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
@@ -63,7 +69,7 @@ namespace UnityEngine.InputSystem
     /// internals.
     ///
     /// Note also that all action maps in an asset share binding state. This means that if
-    /// one map in an asset has to resolve its bindings, all maps in the asset have to.
+    /// one map in an asset has to resolve its bindings, all maps in the asset have to. 
     /// </remarks>
     public class InputActionAsset : ScriptableObject, IInputActionCollection2
     {
