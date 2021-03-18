@@ -12,9 +12,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            if (property.serializedObject.isEditingMultipleObjects)
-                return EditorGUI.GetPropertyHeight(property);
-
             InitTreeIfNeeded(property);
             return GetOrCreateViewData(property).TreeView.totalHeight;
         }
@@ -26,14 +23,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            // don't use the custom property drawer when multi-editing for now. Just show the default
-            // UI.
-            if (property.serializedObject.isEditingMultipleObjects)
-            {
-                EditorGUI.PropertyField(position, property, label, true);
-                return;
-            }
-
             InitTreeIfNeeded(property);
 
             EditorGUI.BeginProperty(position, label, property);
@@ -61,7 +50,7 @@ namespace UnityEngine.InputSystem.Editor
                 property.FindPropertyRelative(nameof(InputAction.m_Id)).stringValue = "";
                 property.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue = "Input Action";
                 property.FindPropertyRelative(nameof(InputAction.m_SingletonActionBindings)).ClearArray();
-                property.serializedObject.ApplyModifiedProperties();
+                property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
             }
                 
             viewData.TreeView = new InputActionTreeView(property.serializedObject)
