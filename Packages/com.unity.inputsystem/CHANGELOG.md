@@ -104,6 +104,7 @@ however, it has to be formatted properly to pass verification tests.
   * Puts an upper limit on the number of event bytes processed in a single update.
   * If exceeded, any additional event data will get thrown away and an error will be issued.
   * Set to 5MB by default.
+- Added `UNITY_INCLUDE_TESTS` define constraints to our test assemblies, which is 2019.2+ equivalent to `"optionalUnityReferences": ["TestAssemblies"]`.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
