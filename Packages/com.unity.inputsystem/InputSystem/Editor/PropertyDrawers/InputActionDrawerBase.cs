@@ -138,7 +138,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private InputActionDrawerViewData GetOrCreateViewData(SerializedProperty property)
         {
-            m_PerPropertyViewData ??= new Dictionary<string, InputActionDrawerViewData>();
+            if (m_PerPropertyViewData == null)
+                m_PerPropertyViewData = new Dictionary<string, InputActionDrawerViewData>();
 
             if (m_PerPropertyViewData.TryGetValue(property.propertyPath, out var data)) return data;
 
