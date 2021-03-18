@@ -8,10 +8,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Mono.Cecil;
+#if HAVE_DOCTOOLS_INSTALLED
 using UnityEditor.PackageManager.DocumentationTools.UI;
+#endif
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
+using UnityEditor;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine;
@@ -180,10 +183,15 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DoesNotHaveDisallowedPublicFields()
     {
+        #if HAVE_DOCTOOLS_INSTALLED
         var disallowedPublicFields = GetInputSystemPublicFields().Where(field => !field.HasConstant && !(field.IsInitOnly && field.IsStatic) && !IsTypeWhichCanHavePublicFields(field.DeclaringType));
         Assert.That(disallowedPublicFields, Is.Empty);
+        #endif
     }
 
     private static string DocsForType(TypeDefinition type, string docsFolder)
@@ -436,34 +444,74 @@ class APIVerificationTests
         return false;
     }
 
-    private static string GenerateDocsDirectory()
+    #if HAVE_DOCTOOLS_INSTALLED
+    ////TODO: move this to a fixture setup so that it runs *once* for all API checks in a test run
+    private static string GenerateDocsDirectory(out string log)
     {
-        const string docsFolder = "Temp/docstest";
+        // DocumentationBuilder users C:/temp on Windows to avoid deeply nested paths that go
+        // beyond the Windows path limit. However, on Yamato agent, C:/temp does not exist.
+        // Create it manually here.
+        #if UNITY_EDITOR_WIN
+        Directory.CreateDirectory("C:/temp");
+        #endif
+        var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
         Directory.CreateDirectory(docsFolder);
-        Documentation.Instance.Generate("com.unity.inputsystem", InputSystem.version.ToString(), docsFolder);
-        return docsFolder;
+        var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
+        var(buildLog, shortVersionId) = Documentation.Instance.Generate(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
+        log = buildLog;
+        return Path.Combine(docsFolder, shortVersionId);
+    }
+
+    #endif
+
+    [Test]
+    [Category("API")]
+    #if UNITY_EDITOR_OSX
+    [Explicit] // Fails due to file system permissions on yamato, but works locally.
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
+    public void API_DoesNotHaveUndocumentedPublicTypes()
+    {
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
+        var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
+        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types, the docs are generated in {docsFolder}");
+        #endif
     }
 
     [Test]
     [Category("API")]
-#if UNITY_EDITOR_OSX
+    #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
-#endif
-    public void API_DoesNotHaveUndocumentedPublicTypes()
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
+    public void API_DocsDoNotHaveXMLDocErrors()
     {
-        var docsFolder = GenerateDocsDirectory();
-        var undocumentedTypes = GetInputSystemPublicTypes().Where(type => !IgnoreTypeForDocs(type) && string.IsNullOrEmpty(TypeSummary(type, docsFolder)));
-        Assert.That(undocumentedTypes, Is.Empty, $"Got {undocumentedTypes.Count()} undocumented types, the docs are generated in {docsFolder}");
+        #if HAVE_DOCTOOLS_INSTALLED
+        GenerateDocsDirectory(out var log);
+        var lines = log.Split('\n');
+        Assert.That(lines.Where(l => l.Contains("Badly formed XML")), Is.Empty);
+        Assert.That(lines.Where(l => l.Contains("Invalid cref")), Is.Empty);
+        #endif
     }
 
     [Test]
     [Category("API")]
     [Ignore("Still needs a lot of documentation work to happen")]
+    #if !HAVE_DOCTOOLS_INSTALLED
+    //[Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DoesNotHaveUndocumentedPublicMethods()
     {
-        var docsFolder = GenerateDocsDirectory();
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
         var undocumentedMethods = GetInputSystemPublicMethods().Where(m =>  !IgnoreMethodForDocs(m) && string.IsNullOrEmpty(MethodSummary(m, docsFolder)));
         Assert.That(undocumentedMethods, Is.Empty, $"Got {undocumentedMethods.Count()} undocumented methods.");
+        #endif
     }
 
     private static HtmlDocument LoadHtmlDocument(string htmlFile, Dictionary<string, HtmlDocument> htmlFileCache)
@@ -560,8 +608,9 @@ class APIVerificationTests
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
 
+        #if HAVE_DOCTOOLS_INSTALLED
         // Ensure the links are actually valid.
-        var docsFolder = GenerateDocsDirectory();
+        var docsFolder = GenerateDocsDirectory(out _);
         var brokenHelpUrls =
             monoBehaviourTypesHelpUrls.Where(
                 s =>
@@ -583,6 +632,7 @@ class APIVerificationTests
                 });
 
         Assert.That(brokenHelpUrls, Is.Empty);
+        #endif
     }
 
     private const string kAPIDirectory = "Tools/API";
@@ -805,17 +855,22 @@ class APIVerificationTests
     ////      be great to have some way of diagnosing links that have gone stale
     [Test]
     [Category("API")]
-#if UNITY_EDITOR_OSX
+    #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
-#endif
+    #endif
+    #if !HAVE_DOCTOOLS_INSTALLED
+    [Ignore("Must install com.unity.package-manager-doctools package to be able to run this test")]
+    #endif
     public void API_DocumentationManualDoesNotHaveMissingInternalLinks()
     {
-        var docsFolder = GenerateDocsDirectory();
+        #if HAVE_DOCTOOLS_INSTALLED
+        var docsFolder = GenerateDocsDirectory(out _);
         var unresolvedLinks = new List<string>();
         var htmlFileCache = new Dictionary<string, HtmlDocument>();
         foreach (var htmlFile in Directory.EnumerateFiles(Path.Combine(docsFolder, "manual")))
             CheckHTMLFileLinkConsistency(htmlFile, unresolvedLinks, htmlFileCache);
         Assert.That(unresolvedLinks, Is.Empty);
+        #endif
     }
 
     [Test]

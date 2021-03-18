@@ -493,7 +493,7 @@ namespace UnityEngine.InputSystem
         /// whenever the value of the control changes (including the first time; i.e. it will first
         /// trigger <see cref="InputActionPhase.Started"/> and then <see cref="InputActionPhase.Performed"/>
         /// right after) whereas <see cref="InputActionType.Button"/> will trigger <see cref="InputActionPhase.Performed"/>
-        /// as soon as the button press threshold (<see cref="InputSettings.buttonPressThreshold"/>)
+        /// as soon as the button press threshold (<see cref="InputSettings.defaultButtonPressPoint"/>)
         /// has been crossed.
         ///
         /// Note that both interactions and the action <see cref="type"/> can affect the phases
@@ -1085,7 +1085,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var fire = playerInput.actions["fire"];
-        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        /// if (fire.WasPressedThisFrame() &amp;&amp; fire.IsPressed())
         ///     StartFiring();
         /// else if (fire.WasReleasedThisFrame())
         ///     StopFiring();
@@ -1131,7 +1131,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// var fire = playerInput.actions["fire"];
-        /// if (fire.WasPressedThisFrame() && fire.IsPressed())
+        /// if (fire.WasPressedThisFrame() &amp;&amp; fire.IsPressed())
         ///     StartFiring();
         /// else if (fire.WasReleasedThisFrame())
         ///     StopFiring();
@@ -1216,7 +1216,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Return the completion percentage of the timeout (if any) running on the current interaction.
         /// </summary>
-        /// <returns>A value &ge; 0 (no progress) and &le; 1 (finished) indicating the level of completion
+        /// <returns>A value &gt;= 0 (no progress) and &lt;= 1 (finished) indicating the level of completion
         /// of the currently running timeout.</returns>
         /// <remarks>
         /// This method is useful, for example, when providing UI feedback for an ongoing action. If, say,
@@ -1265,12 +1265,12 @@ namespace UnityEngine.InputSystem
         ///         holdAction = new InputAction(type: InputActionType.Button, interactions: "hold(duration=2)");
         ///
         ///         // Show the UI object when the hold starts and hide it when it ends.
-        ///         holdAction.started += _ => uiObjectToScale.SetActive(true);
-        ///         holdAction.canceled += _ => uiObjectToScale.SetActive(false);
+        ///         holdAction.started += _ =&gt; uiObjectToScale.SetActive(true);
+        ///         holdAction.canceled += _ =&gt; uiObjectToScale.SetActive(false);
         ///
         ///         // If you want to play a visual effect when the action performs, you can initiate from
         ///         // the performed callback.
-        ///         holdAction.performed += _ => /* InitiateVisualEffectWhenHoldIsComplete() */;
+        ///         holdAction.performed += _ =&gt; /* InitiateVisualEffectWhenHoldIsComplete() */;
         ///     }
         ///
         ///     holdAction.Enable();

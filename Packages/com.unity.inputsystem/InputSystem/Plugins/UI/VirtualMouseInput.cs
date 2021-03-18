@@ -158,7 +158,7 @@ namespace UnityEngine.InputSystem.UI
         public Mouse virtualMouse => m_VirtualMouse;
 
         /// <summary>
-        /// The Vector2 stick input that drives the mouse cursor, i.e. <see cref="Mouse.position"/> on
+        /// The Vector2 stick input that drives the mouse cursor, i.e. <see cref="Pointer.position"/> on
         /// <see cref="virtualMouse"/> and the <a
         /// href="https://docs.unity3d.com/ScriptReference/RectTransform-anchoredPosition.html">anchoredPosition</a>
         /// on <see cref="cursorTransform"/> (if set).
