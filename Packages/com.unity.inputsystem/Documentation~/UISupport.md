@@ -12,7 +12,7 @@
 You can use the Input System package to control any in-game UI created with the [Unity UI package](https://docs.unity3d.com/Manual/UISystem.html). The integration between the Input System and the UI system is handled by the [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) component.
 
 >[!NOTE]
->The Input System package does not support IMGUI. If you have `OnGUI` methods in your *player* code (editor code is unaffected), no input events in those methods will be received when "Active Input Handling" in Unity's [Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to "Input System Package". While you can restore functionality by putting the setting on "Both", this will result in input getting processed twice.
+>The Input System package does not support IMGUI. If you have `OnGUI` methods in your player code (Editor code is unaffected), Unity does not receive any input events in those methods when the **Active Input Handling** [Player Setting](https://docs.unity3d.com/Manual/class-PlayerSettings.html) is set to **Input System Package**. To restore functionality you can change the setting to **Both**, but this means that Unity processes the input twice.
 
 ## InputSystemUIInputModule component
 
@@ -66,7 +66,8 @@ To the UI, a pointer is a position from which clicks and scrolls can be triggere
 
 Multiple pointer Devices may feed input into a single UI input module. Also, in the case of [Touchscreen](../api/UnityEngine.InputSystem.Touchscreen.html), a single Device can have the ability to have multiple concurrent pointers (each finger contact is one pointer).
 
->IMPORTANT: Because multiple pointer Devices can feed into the same set of Actions, it is important to set the [action type](./Actions.md#action-types) to [PassThrough](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_PassThrough). This ensures that no filtering is applied to input on these actions and that instead every input is relayed as is.
+>[!IMPORTANT]
+>Because multiple pointer Devices can feed into the same set of Actions, it is important to set the [action type](./Actions.md#action-types) to [PassThrough](../api/UnityEngine.InputSystem.InputActionType.html#UnityEngine_InputSystem_InputActionType_PassThrough). This ensures that no filtering is applied to input on these actions and that instead every input is relayed as is.
 
 From the perspective of [InputSystemUIInputModule](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html), each [InputDevice](../api/UnityEngine.InputSystem.InputDevice.html) that has one or more controls bound to one of the pointer-type actions is considered a unique pointer. Also, for each [Touchscreen](../api/UnityEngine.InputSystem.Touchscreen.html) devices, each separate [TouchControl](../api/UnityEngine.InputSystem.Controls.TouchControl.html) that has one or more of its controls bound to the those actions is considered its own unique pointer as well. Each pointer receives a unique [pointerId](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.PointerEventData.html#UnityEngine_EventSystems_PointerEventData_pointerId) which generally corresponds to the [deviceId](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId) of the pointer. However, for touch, this will be a combination of [deviceId](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_deviceId) and [touchId](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId). Use [ExtendedPointerEventData.touchId](../api/UnityEngine.InputSystem.UI.ExtendedPointerEventData.html#UnityEngine_InputSystem_UI_ExtendedPointerEventData_touchId) to find the ID for a touch event.
 
@@ -125,7 +126,7 @@ The properties of the [MultiplayerEventSystem](../api/UnityEngine.InputSystem.UI
 ## VirtualMouseInput Component
 
 >[!NOTE]
->The `VirtualMouseInput` component is not yet supported in combination with [UI Toolkit](#ui-toolkit-support). At the moment, it only works in combination with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system. However, pointer input generated from a `VirtualMouseInput` component *will* be received in UI Toolkit as well.
+>While pointer input generated from a `VirtualMouseInput` component is received in UI Toolkit, the `VirtualMouseInput` component is not officially supported for use with [UI Toolkit](#ui-toolkit-support). At the moment, it only works in combination with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system.
 
 If your application uses gamepads and joysticks as an input, you can use the [navigation Actions](#navigation-type-input) to operate the UI. However, it usually involves extra work to make the UI work well with navigation. An alternative way to operate the UI is to allow gamepads and joysticks to drive the cursor from a "virtual mouse cursor".
 
@@ -155,22 +156,22 @@ Note that the resulting [Mouse](../api/UnityEngine.InputSystem.Mouse.html) input
 
 As of Unity 2021.2, [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is supported as an alternative to the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) system for implementing UIs in players.
 
-Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) and [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is based on the same [`EventSystem`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/EventSystem.html) and [`BaseInputModule`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/InputModules.html) subsystem. In other words, the same input setup based on [`InputSystemUIInputModule`](#inputsystemuiinputmodule-component) supports input in either UI solution and nothing extra needs to be done.
+Input support for both [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) and [UI Toolkit](https://docs.unity3d.com/Manual/UIElements.html) is based on the same [EventSystem](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/EventSystem.html) and [BaseInputModule](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/manual/InputModules.html) subsystem. In other words, the same input setup based on [InputSystemUIInputModule](#inputsystemuiinputmodule-component) supports input in either UI solution and nothing extra needs to be done.
 
-Internally, UI Toolkit will install an event listener in the form of the `PanelEventHandler` component which intercepts events sent by `InputSystemUIInputModule` and translates them into UI Toolkit-specific events that are then routed into the visual tree. Note that if you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
+Internally, UI Toolkit installs an event listener in the form of the `PanelEventHandler` component which intercepts events that `InputSystemUIInputModule` sends and translates them into UI Toolkit-specific events that are then routed into the visual tree. If you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
 
 >[!NOTE]
->XR ([tracked-type input](#tracked-type input)) is not yet supported in combination with UI Toolkit. This means that devices such as VR controllers cannot yet be used to operate interfaces created with UI Toolkit.
+>XR ([tracked-type input](#tracked-type input)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
 
 There are some additional things worth noting:
 
-* Raycasting is handled internally by UI Toolkit. No separate raycaster component is needed like for uGUI. This also means that [`TrackedDeviceRaycaster`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) will not work together with UI Toolkit.
+* UI Toolkit handles raycasting internally. No separate raycaster component is needed like for uGUI. This means that [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html) does not work together with UI Toolkit.
 * A pointer click and a gamepad submit action are distinct at the event level in UI Toolkit. This means that if you, for example, do
   ```CSharp
   button.RegisterCallback<ClickEvent>(_ => ButtonWasClicked());
   ```
-  the handler will __not__ be invoked when the button is "clicked" with the gamepad (a `NavigationSubmitEvent` and not a `ClickEvent`). If, however, you do
+  the handler is not invoked when the button is "clicked" with the gamepad (a `NavigationSubmitEvent` and not a `ClickEvent`). If, however, you do
   ```CSharp
   button.clicked += () => ButtonWasClicked();
   ```
-  the handle will be invoked in both cases.
+  the handle is invoked in both cases.
