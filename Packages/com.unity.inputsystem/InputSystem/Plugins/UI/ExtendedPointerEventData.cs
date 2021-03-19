@@ -161,7 +161,7 @@ namespace UnityEngine.InputSystem.UI
                     if (pen == otherPen)
                     {
                         return UIElements.PointerId.penPointerIdBase +
-                            Mathf.Clamp(n, 0, UIElements.PointerId.penPointerCount - 1);
+                            Mathf.Min(n, UIElements.PointerId.penPointerCount - 1);
                     }
                     n++;
                 }
