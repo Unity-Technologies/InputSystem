@@ -3404,13 +3404,13 @@ namespace UnityEngine.InputSystem
         private static HashSet<string> s_TrackedDirtyAssets;
 
         /// <summary>
-        /// Keep track of InputActionAsset assets that we want to re-load on exiting play mode. We need to do this because
+        /// Keep track of InputActionAsset assets that you want to re-load on exiting Play mode. This is useful because
         /// some user actions, such as adding a new input binding at runtime, change the in-memory representation of the
-        /// input action asset and those changes survive when exiting play mode. If the developer were to re-open an input
-        /// action asset in the editor that had been changed this way, they would see the new bindings that had been added
-        /// during play mode which is not what we typically want to happen.
+        /// input action asset and those changes survive when exiting Play mode. If you re-open an Input
+        /// Action Asset in the Editor that has been changed this way, you see the new bindings that have been added
+        /// during Play mode which you might not typically want to happen.
         ///
-        /// This is fixed by simply force re-loading from disk any asset that has been marked as dirty.
+        /// You can avoid this by force re-loading from disk any asset that has been marked as dirty.
         /// </summary>
         /// <param name="asset"></param>
         internal static void TrackDirtyInputActionAsset(InputActionAsset asset)
