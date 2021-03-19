@@ -16,16 +16,16 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// An asset containing action maps and control schemes.
+    /// An asset that contains action maps and control schemes.
     /// </summary>
     /// <remarks>
     /// InputActionAssets can be created in code but are usually stored in JSON format on
-    /// disk with the ".inputactions" extension and are imported by Unity using a custom
+    /// disk with the ".inputactions" extension. Unity imports them with a custom
     /// importer.
     ///
     /// To create an InputActionAsset in code, use the <c>Singleton</c> API and populate the
     /// asset with the methods found in <see cref="InputActionSetupExtensions"/>. Alternatively,
-    /// you can load an InputActionAsset directly from a string in JSON format using <see cref="FromJson"/>.
+    /// you can use <see cref="FromJson"/> to load an InputActionAsset directly from a string in JSON format.
     ///
     /// <example>
     /// <code>
@@ -36,13 +36,13 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     /// 
-    /// Note that when running in Play Mode in the editor, modifications made to an InputActionAsset using
-    /// the API will <b>not</b> survive the transition back to Edit Mode. Modified assets are tracked and
-    /// reloaded from disk when exiting Play Mode. This is done so that you can realistically test the input
-    /// related functionality of your game i.e. control rebinding etc, without inadvertently changing
+    /// If you use the API to modify an InputActionAsset while in Play mode,
+    /// it does not survive the transition back to Edit Mode. Unity tracks and reloads modified assets
+    /// from disk when exiting Play mode. This is done so that you can realistically test the input
+    /// related functionality of your application i.e. control rebinding etc, without inadvertently changing
     /// the input asset.
     ///
-    /// Each asset can contain arbitrary many action maps that can be enabled and disabled individually
+    /// Each asset can contain arbitrary many action maps that you can enable and disable individually
     /// (see <see cref="InputActionMap.Enable"/> and <see cref="InputActionMap.Disable"/>) or in bulk
     /// (see <see cref="Enable"/> and <see cref="Disable"/>). The name of each action map must be unique.
     /// The list of action maps can be queried from <see cref="actionMaps"/>.
