@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -23,6 +22,10 @@ using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 using Is = UnityEngine.TestTools.Constraints.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 #if UNITY_2021_2_OR_NEWER
 using UnityEngine.UIElements;
