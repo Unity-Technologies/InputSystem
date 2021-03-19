@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || UNITY_STANDALONE_LINUX
 using NUnit.Framework;
 using System.Runtime.InteropServices;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Linux;
@@ -216,7 +217,7 @@ internal class LinuxTests : CoreTestsFixture
     [StructLayout(LayoutKind.Explicit)]
     private struct TestSDLJoystick : IInputStateTypeInfo
     {
-        [FieldOffset(0)] public int buttons;
+        [FieldOffset(0)] public uint buttons;
         [FieldOffset(4)] public int xAxis;
         [FieldOffset(8)] public int yAxis;
         [FieldOffset(12)] public int rotateZAxis;
@@ -226,7 +227,9 @@ internal class LinuxTests : CoreTestsFixture
 
         public TestSDLJoystick WithButton(SDLButtonUsage usage, bool value = true)
         {
-            var bitMask = 1 << ((int)usage - 1);
+            // checking <= here because Count equals to largest button value + 1, so the actual value will be < 32
+            Debug.Assert((int)SDLButtonUsage.Count <= 32, $"Expected SDLButtonUsage.Count <= 32, so we fit into the 32 bit wide bitmask");
+            var bitMask = 1U << ((int)usage - 1);
 
             if (value)
                 buttons |= bitMask;
