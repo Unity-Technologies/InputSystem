@@ -2804,8 +2804,10 @@ internal class UITests : InputTestFixture
     {
         public void Setup()
         {
+            #if UNITY_EDITOR
             EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
                 { path = "Assets/Tests/InputSystem/Assets/UITKTestScene.unity", enabled = true }).ToArray();
+            #endif
         }
     }
     #endif
