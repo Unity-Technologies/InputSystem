@@ -1023,6 +1023,39 @@ internal class UserTests : InputTestFixture
         Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
         Assert.That(receivedUser, Is.EqualTo(user));
         Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        // Remove user and then add new one.
+        var oldUser = user;
+        user.UnpairDevicesAndRemoveUser();
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(oldUser));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        user = InputUser.PerformPairingWithDevice(gamepad1);
+        user.AssociateActionsWithUser(actions);
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
+
+        receivedChange = null;
+        receivedUser = null;
+        receivedDevice = null;
+
+        action.ApplyBindingOverride("<Gamepad>/leftTrigger");
+
+        Assert.That(receivedChange, Is.EqualTo(InputUserChange.ControlsChanged));
+        Assert.That(receivedUser, Is.EqualTo(user));
+        Assert.That(receivedDevice, Is.Null);
     }
 
     [Test]
