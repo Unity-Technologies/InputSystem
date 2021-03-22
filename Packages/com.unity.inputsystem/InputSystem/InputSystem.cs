@@ -3423,6 +3423,7 @@ namespace UnityEngine.InputSystem
             foreach (var device in devices)
                 device.NotifyAdded();
         }
+
 #endif
     }
 }
