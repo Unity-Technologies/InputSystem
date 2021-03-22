@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.WebGL;
 using UnityEngine.InputSystem.WebGL.LowLevel;
 
-internal class WebGLTests : InputTestFixture
+internal class WebGLTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.Users;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 [SuppressMessage("ReSharper", "CheckNamespace")]
-internal class UserTests : InputTestFixture
+internal class UserTests : CoreTestsFixture
 {
     [Test]
     [Category("Users")]

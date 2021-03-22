@@ -11,7 +11,7 @@ using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.XInput.LowLevel;
 #endif
 
-internal class XInputTests : InputTestFixture
+internal class XInputTests : CoreTestsFixture
 {
     ////TODO: refactor this into two tests that send actual state and test the wiring
     ////TODO: enable everything in the editor always and test
