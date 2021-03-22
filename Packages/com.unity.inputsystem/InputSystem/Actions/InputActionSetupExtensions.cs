@@ -150,6 +150,7 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentException"><paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is enabled (see <see cref="InputActionMap.enabled"/>)
         /// -or- <paramref name="map"/> already contains an action called <paramref name="name"/> (case-insensitive).</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> parent InputActionAsset has one or more maps enabled (see <see cref="InputActionAsset.enabled"/>).</exception>
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
@@ -160,6 +161,11 @@ namespace UnityEngine.InputSystem
             if (map.enabled)
                 throw new InvalidOperationException(
                     $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
+            if (map.asset != null)
+                foreach (var assetMap in map.asset.actionMaps)
+                    if (assetMap.enabled)
+                        throw new InvalidOperationException(
+                            $"Cannot add action '{name}' to map '{map}' while any of the maps in the parent input asset are enabled, found '{assetMap}' currently enabled.");
             if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
@@ -299,7 +305,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Add a binding that references the given <paramref name="control"/> and triggers
-        /// the given <seealso cref="action"/>.
+        /// the given <paramref cref="action"/>.
         /// </summary>
         /// <param name="action">Action to trigger.</param>
         /// <param name="control">Control to bind to. The full <see cref="InputControl.path"/> of the control will

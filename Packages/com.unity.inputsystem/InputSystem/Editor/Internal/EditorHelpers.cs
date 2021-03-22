@@ -2,7 +2,6 @@
 using System;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.VersionControl;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -10,6 +9,24 @@ namespace UnityEngine.InputSystem.Editor
     {
         public static Action<string> SetSystemCopyBufferContents = s => EditorGUIUtility.systemCopyBuffer = s;
         public static Func<string> GetSystemCopyBufferContents = () => EditorGUIUtility.systemCopyBuffer;
+
+        // SerializedProperty.tooltip *should* give us the tooltip as per [Tooltip] attribute. Alas, for some
+        // reason, it's not happening.
+        public static string GetTooltip(this SerializedProperty property)
+        {
+            if (!string.IsNullOrEmpty(property.tooltip))
+                return property.tooltip;
+
+            var field = property.GetField();
+            if (field != null)
+            {
+                var tooltipAttribute = field.GetCustomAttribute<TooltipAttribute>();
+                if (tooltipAttribute != null)
+                    return tooltipAttribute.tooltip;
+            }
+
+            return string.Empty;
+        }
 
         public static void RestartEditorAndRecompileScripts(bool dryRun = false)
         {

@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem.Editor
             this.pathProperty = pathProperty;
             this.onModified = onModified;
             m_PickerState = pickerState ?? new InputControlPickerState();
-            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.tooltip);
+            m_PathLabel = label ?? new GUIContent(pathProperty.displayName, pathProperty.GetTooltip());
         }
 
         public void Dispose()

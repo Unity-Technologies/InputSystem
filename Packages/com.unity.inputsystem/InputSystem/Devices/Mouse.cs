@@ -26,7 +26,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space position of the mouse in pixels.
         /// </summary>
         /// <value>Position of mouse on screen.</value>
-        /// <seealso cref="Mouse.position"/>
+        /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point")]
         [FieldOffset(0)]
         public Vector2 position;
@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// Screen-space motion delta of the mouse in pixels.
         /// </summary>
         /// <value>Mouse movement.</value>
-        /// <seealso cref="Mouse.delta"/>
+        /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion")]
         [FieldOffset(8)]
         public Vector2 delta;
@@ -102,7 +102,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="buttons"/>
         public MouseState WithButton(MouseButton button, bool state = true)
         {
-            var bit = 1 << (int)button;
+            Debug.Assert((int)button < 16, $"Expected button < 16, so we fit into the 16 bit wide bitmask");
+            var bit = 1U << (int)button;
             if (state)
                 buttons |= (ushort)bit;
             else

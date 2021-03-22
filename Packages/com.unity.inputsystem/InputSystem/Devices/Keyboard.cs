@@ -1579,7 +1579,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// The Print Screen key. The key sitting in-between <see cref="f12Key"/>
-        /// to the left and <see cref="scrolLockKey"/> to the right. May also
+        /// to the left and <see cref="scrollLockKey"/> to the right. May also
         /// be labeled "F13".
         /// </summary>
         /// <value>Control representing the print screen key.</value>
@@ -1954,7 +1954,7 @@ namespace UnityEngine.InputSystem
         /// Look up a key control by its key code.
         /// </summary>
         /// <param name="key">Key code of key control to return.</param>
-        /// <exception cref="ArgumentOutOfRangeException">The given <see cref="key"/> is not valid.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The given <paramref cref="key"/> is not valid.</exception>
         /// <remarks>
         /// This is equivalent to <c>allKeys[(int)key - 1]</c>.
         /// </remarks>

@@ -108,6 +108,12 @@ namespace UnityEngine.InputSystem.LowLevel
         Action<bool> onPlayerFocusChanged { get; set; }
 
         /// <summary>
+        // Is true when the player or game view has focus.
+        /// </summary>
+        /// <seealso cref="Application.isFocused"/>
+        bool isFocused { get; }
+
+        /// <summary>
         /// Set delegate to invoke when system is shutting down.
         /// </summary>
         Action onShutdown { get; set; }

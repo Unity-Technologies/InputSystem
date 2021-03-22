@@ -1928,6 +1928,57 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanDeleteMultipleBindings()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map1");
+        var action1 = map1.AddAction("action1");
+        action1.AddBinding("<Gamepad>/leftStick");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/dpad");
+
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"), true);
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"), true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
+
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Is.Null);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CanDeleteComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();

@@ -31,7 +31,7 @@ namespace UnityEngine.InputSystem.Composites
     /// </example>
     ///
     /// However, this can also be used to "gate" other types of controls. For example, a "look"
-    /// action could be bound to mouse <see cref="Mouse.delta"/> such that the <see cref="Keyboard.altKey"/> on the
+    /// action could be bound to mouse <see cref="Pointer.delta"/> such that the <see cref="Keyboard.altKey"/> on the
     /// keyboard has to be pressed in order for the player to be able to look around.
     ///
     /// <example>
