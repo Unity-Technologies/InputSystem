@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -475,6 +476,15 @@ namespace UnityEngine.InputSystem.Users
                     UnhookFromDeviceStateChange();
                 s_ListenForUnpairedDeviceActivity = value;
             }
+        }
+
+        public override string ToString()
+        {
+            if (!valid)
+                return $"<Invalid> (id: {m_Id})";
+
+            var deviceList = string.Join(",", pairedDevices);
+            return $"User #{index} (id: {m_Id}, devices: {deviceList}, actions: {actions})";
         }
 
         /// <summary>
@@ -1943,7 +1953,7 @@ namespace UnityEngine.InputSystem.Users
             if (!s_OnActionChangeHooked)
                 return;
             InputSystem.onActionChange -= OnActionChange;
-            s_OnActionChangeHooked = true;
+            s_OnActionChangeHooked = false;
         }
 
         private static void HookIntoDeviceChange()
