@@ -2465,7 +2465,7 @@ partial class CoreTests
         Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
     }
-    
+
     [Test]
     [Category("Editor")]
     public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
@@ -2475,7 +2475,7 @@ partial class CoreTests
             .AddControlScheme("AddedControlScheme"), "Add control scheme");
         AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
             .RemoveControlScheme("ControlSchemeToRemove"), "Remove control scheme");
-        
+
         // Action maps
         AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
             .AddActionMap("NewActionMap"), "Add action map");
@@ -2484,7 +2484,7 @@ partial class CoreTests
         AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
             .FindActionMap("ActionMapToModify")
             .AddAction("NewAction"), "Add action");
-        
+
         // Actions
         AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
             .FindActionMap("DefaultActionMap")

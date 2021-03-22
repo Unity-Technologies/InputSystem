@@ -3423,6 +3423,7 @@ namespace UnityEngine.InputSystem
 
             s_TrackedDirtyAssets.Add(assetGuid);
         }
+
 #endif
     }
 }

@@ -35,7 +35,7 @@ namespace UnityEngine.InputSystem
     /// action1Map.AddAction("action1", binding: "&lt;Keyboard&gt;/space");
     /// </code>
     /// </example>
-    /// 
+    ///
     /// If you use the API to modify an InputActionAsset while in Play mode,
     /// it does not survive the transition back to Edit Mode. Unity tracks and reloads modified assets
     /// from disk when exiting Play mode. This is done so that you can realistically test the input
@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem
     /// internals.
     ///
     /// Note also that all action maps in an asset share binding state. This means that if
-    /// one map in an asset has to resolve its bindings, all maps in the asset have to. 
+    /// one map in an asset has to resolve its bindings, all maps in the asset have to.
     /// </remarks>
     public class InputActionAsset : ScriptableObject, IInputActionCollection2
     {

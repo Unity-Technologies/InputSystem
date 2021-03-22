@@ -198,7 +198,7 @@ namespace UnityEngine.InputSystem
                 action.m_Processors = processors;
             }
 
-            if(map.asset != null)
+            if (map.asset != null)
                 map.asset.MarkAsDirty();
 
             map.ClearPerActionCachedBindingData();
@@ -503,7 +503,7 @@ namespace UnityEngine.InputSystem
 
             // Make sure this asset is reloaded from disk when exiting play mode so it isn't inadvertently
             // changed between play sessions. Only applies when running in the editor.
-            if(map.asset != null)
+            if (map.asset != null)
                 map.asset.MarkAsDirty();
 
             // Invalidate per-action binding sets so that this gets refreshed if
@@ -858,7 +858,7 @@ namespace UnityEngine.InputSystem
                     $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
 
             ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
-            
+
             asset.MarkAsDirty();
         }
 
