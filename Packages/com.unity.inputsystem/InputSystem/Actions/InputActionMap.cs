@@ -261,54 +261,12 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionAsset.devices"/>
         public ReadOnlyArray<InputDevice>? devices
         {
-            get
-            {
-                if (m_DevicesCount < 0)
-                {
-                    // Return asset's device list if we have none (only if we're part of an asset).
-                    if (asset != null)
-                        return asset.devices;
-                    return null;
-                }
-                return new ReadOnlyArray<InputDevice>(m_DevicesArray, 0, m_DevicesCount);
-            }
+            // Return asset's device list if we have none (only if we're part of an asset).
+            get => m_Devices.Get() ?? m_Asset?.devices;
             set
             {
-                if (value == null)
-                {
-                    if (m_DevicesCount < 0)
-                        return; // No change.
-
-                    if (m_DevicesArray != null & m_DevicesCount > 0)
-                        Array.Clear(m_DevicesArray, 0, m_DevicesCount);
-                    m_DevicesCount = -1;
-                }
-                else
-                {
-                    // See if the array actually changes content. Avoids re-resolving when there
-                    // is no need to.
-                    if (m_DevicesCount == value.Value.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DevicesCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DevicesArray[i], value.Value[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-                        if (noChange)
-                            return;
-                    }
-
-                    if (m_DevicesCount > 0)
-                        m_DevicesArray.Clear(ref m_DevicesCount);
-                    m_DevicesCount = 0;
-                    ArrayHelpers.AppendListWithCapacity(ref m_DevicesArray, ref m_DevicesCount, value.Value);
-                }
-
-                LazyResolveBindings();
+                if (m_Devices.Set(value))
+                    LazyResolveBindings();
             }
         }
 
@@ -356,9 +314,6 @@ namespace UnityEngine.InputSystem
 
         public InputActionMap()
         {
-            // For some reason, when using UnityEngine.Object.Instantiate the -1 initialization
-            // does not come through except if explicitly done here in the default constructor.
-            m_DevicesCount = -1;
         }
 
         /// <summary>
@@ -370,7 +325,6 @@ namespace UnityEngine.InputSystem
             : this()
         {
             m_Name = name;
-            m_DevicesCount = -1;
         }
 
         /// <summary>
@@ -739,12 +693,83 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private bool m_NeedToResolveBindings;
         [NonSerialized] internal InputBinding? m_BindingMask;
 
-        [NonSerialized] internal int m_DevicesCount = -1;
-        [NonSerialized] internal InputDevice[] m_DevicesArray;
+        [NonSerialized] internal DeviceArray m_Devices;
 
         [NonSerialized] internal InlinedArray<Action<InputAction.CallbackContext>> m_ActionCallbacks;
 
         internal static int s_DeferBindingResolution;
+
+        internal struct DeviceArray
+        {
+            private bool m_HaveValue;
+            private int m_DeviceCount;
+            private InputDevice[] m_DeviceArray; // May have extra capacity; we won't let go once allocated.
+
+            public int IndexOf(InputDevice device)
+            {
+                if (m_DeviceCount > 0)
+                    return m_DeviceArray.IndexOfReference(device, m_DeviceCount);
+                return -1;
+            }
+
+            public bool Remove(InputDevice device)
+            {
+                var index = IndexOf(device);
+                if (index < 0)
+                    return false;
+                m_DeviceArray.EraseAtWithCapacity(ref m_DeviceCount, index);
+                return true;
+            }
+
+            public ReadOnlyArray<InputDevice>? Get()
+            {
+                if (!m_HaveValue)
+                    return null;
+                return new ReadOnlyArray<InputDevice>(m_DeviceArray, 0, m_DeviceCount);
+            }
+
+            public bool Set(ReadOnlyArray<InputDevice>? devices)
+            {
+                if (!devices.HasValue)
+                {
+                    if (!m_HaveValue)
+                        return false; // No change.
+                    if (m_DeviceCount > 0)
+                        Array.Clear(m_DeviceArray, 0, m_DeviceCount);
+                    m_DeviceCount = 0;
+                    m_HaveValue = false;
+                }
+                else
+                {
+                    // See if the array actually changes content. Avoids re-resolving when there
+                    // is no need to.
+                    var array = devices.Value;
+                    if (m_HaveValue && m_DeviceCount == array.Count)
+                    {
+                        var noChange = true;
+                        for (var i = 0; i < m_DeviceCount; ++i)
+                        {
+                            if (!ReferenceEquals(m_DeviceArray[i], array[i]))
+                            {
+                                noChange = false;
+                                break;
+                            }
+                        }
+
+                        if (noChange)
+                            return false;
+                    }
+
+                    if (m_DeviceCount > 0)
+                        m_DeviceArray.Clear(ref m_DeviceCount);
+                    m_HaveValue = true;
+                    m_DeviceCount = 0;
+                    ArrayHelpers.AppendListWithCapacity(ref m_DeviceArray, ref m_DeviceCount, array);
+                }
+
+                return true;
+            }
+        }
 
         /// <summary>
         /// Return the list of bindings for just the given actions.

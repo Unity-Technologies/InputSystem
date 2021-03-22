@@ -3756,23 +3756,8 @@ namespace UnityEngine.InputSystem
                         for (var n = 0; n < state.totalMapCount; ++n)
                         {
                             var map = state.maps[n];
-                            var indexOfDevice = map.m_DevicesArray.IndexOfReference(device, map.m_DevicesCount);
-                            if (indexOfDevice < 0)
-                            {
-                                // Map doesn't have the device in its list but asset (if any) may have.
-                                var asset = map.asset;
-                                if (asset == null)
-                                    continue;
-                                indexOfDevice = asset.m_DevicesArray.IndexOfReference(device, asset.m_DevicesCount);
-                                if (indexOfDevice < 0)
-                                    continue;
-
-                                asset.m_DevicesArray.EraseAtWithCapacity(ref asset.m_DevicesCount, indexOfDevice);
-                                break;
-                            }
-
-                            map.m_DevicesArray.EraseAtWithCapacity(ref map.m_DevicesCount, indexOfDevice);
-                            break;
+                            map.m_Devices.Remove(device);
+                            map.asset?.m_Devices.Remove(device);
                         }
 
                         break;
