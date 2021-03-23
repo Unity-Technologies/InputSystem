@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -796,6 +797,34 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+    }
+
+    [Test]
+    [Category("Controls")]
+    [TestCase("<Gamepad>{LeftHand}foo/*/left", "layout:Gamepad,usage:LeftHand,name:foo", "wildcard:", "name:left")]
+    [TestCase("<Keyboard>/#(;)", "layout:Keyboard", "displayName:;")]
+    public void Controls_CanParseControlPath(string path, params string[] parts)
+    {
+        var parsed = InputControlPath.Parse(path).ToArray();
+
+        Assert.That(parsed, Has.Length.EqualTo(parts.Length));
+        Assert.That(parsed.Zip(parts, (a, b) =>
+        {
+            var properties = b.Split(',');
+            return properties.All(p =>
+            {
+                var nameAndValue = p.Split(':').ToArray();
+                switch (nameAndValue[0])
+                {
+                    case "layout": return a.layout == nameAndValue[1];
+                    case "usage": return a.usages.Count() == 1 && a.usages.First() == nameAndValue[1];
+                    case "name": return a.name == nameAndValue[1];
+                    case "displayName": return a.displayName == nameAndValue[1];
+                    case "wildcard": return a.isWildcard;
+                }
+                return false;
+            });
+        }), Has.All.True);
     }
 
     [Test]

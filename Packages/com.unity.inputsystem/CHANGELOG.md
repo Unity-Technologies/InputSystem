@@ -48,6 +48,18 @@ however, it has to be formatted properly to pass verification tests.
 
 - Enabled XR device support on Magic Leap (Lumin).
 - Added ability to force XR Support in a project by defining `UNITY_INPUT_FORCE_XR_PLUGIN`.
+- Added an API to parse control paths.
+  ```CSharp
+  var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
+
+  Debug.Log(parsed.Length); // Prints 2.
+  Debug.Log(parsed[0].layout); // Prints "XRController".
+  Debug.Log(parsed[0].name); // Prints an empty string.
+  Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
+  Debug.Log(parsed[1].layout); // Prints null.
+  Debug.Log(parsed[1].name); // Prints "trigger".
+  ```
+  * Can, for example, be used with `InputBinding.path`.
 
 #### Actions
 
