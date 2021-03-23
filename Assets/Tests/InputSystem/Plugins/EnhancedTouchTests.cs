@@ -17,7 +17,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using UnityEngine.InputSystem.Editor;
 #endif
 
-internal class EnhancedTouchTests : InputTestFixture
+internal class EnhancedTouchTests : CoreTestsFixture
 {
     private TouchSimulation m_OldTouchSimulationInstance;
 

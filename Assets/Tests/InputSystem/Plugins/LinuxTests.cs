@@ -8,7 +8,7 @@ using UnityEngine.InputSystem.Linux;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
-internal class LinuxTests : InputTestFixture
+internal class LinuxTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

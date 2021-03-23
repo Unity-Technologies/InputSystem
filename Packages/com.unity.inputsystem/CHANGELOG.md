@@ -15,6 +15,8 @@ however, it has to be formatted properly to pass verification tests.
   * This used to trigger an `Assert` at runtime but now properly throws an `InvalidOperationException`.
 - The `VirtualMouseInput` component is now part of the Input System assembly. It was previously packaged with the `Gamepad Mouse Cursor` sample.
   * The component has a different GUID from before, so existing setups that use the component from the sample are not broken. To use the built-in component you must explicitly switch over.
+- `InputTestFixture` no longer deletes the `GameObject`s in the current scene in its `TearDown` ([case 1286987](https://issuetracker.unity3d.com/issues/input-system-inputtestfixture-destroys-test-scene)).
+  * This was added for the sake of the Input System's own tests but should not have been in the public fixture.
 
 ### Fixed
 

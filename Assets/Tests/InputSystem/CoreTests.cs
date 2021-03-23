@@ -1,5 +1,3 @@
-using UnityEngine.InputSystem;
-
-internal partial class CoreTests : InputTestFixture
+internal partial class CoreTests : CoreTestsFixture
 {
 }
