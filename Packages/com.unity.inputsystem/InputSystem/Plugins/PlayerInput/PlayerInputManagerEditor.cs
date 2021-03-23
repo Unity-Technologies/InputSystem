@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine.InputSystem.Users;
 
@@ -102,6 +103,8 @@ namespace UnityEngine.InputSystem.Editor
                 var playerPrefabProperty = serializedObject.FindProperty("m_PlayerPrefab");
                 EditorGUILayout.PropertyField(playerPrefabProperty);
 
+                ValidatePlayerPrefab(joinBehaviorProperty, playerPrefabProperty);
+
                 --EditorGUI.indentLevel;
             }
 
@@ -126,6 +129,36 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
                 maxPlayerCountProperty.intValue = -1;
+        }
+
+        private static void ValidatePlayerPrefab(SerializedProperty joinBehaviorProperty,
+            SerializedProperty playerPrefabProperty)
+        {
+            if ((PlayerJoinBehavior)joinBehaviorProperty.intValue != PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed)
+                return;
+
+            if (playerPrefabProperty.objectReferenceValue == null)
+                return;
+
+            var playerInput = ((GameObject)playerPrefabProperty.objectReferenceValue)
+                .GetComponentInChildren<PlayerInput>();
+
+            if (playerInput == null)
+            {
+                EditorGUILayout.HelpBox("No PlayerInput component found in player prefab", MessageType.Info);
+                return;
+            }
+
+            if (playerInput.actions == null)
+            {
+                EditorGUILayout.HelpBox("PlayerInput component has no input action asset assigned", MessageType.Info);
+                return;
+            }
+
+            if (playerInput.actions.controlSchemes.Any(c => c.deviceRequirements.Count > 0) == false)
+                EditorGUILayout.HelpBox("Join Players When Button Is Pressed behavior will not work when the Input Action Asset " +
+                    "assigned to the PlayerInput component has no required devices in any control scheme.",
+                    MessageType.Info);
         }
 
         private void DoSplitScreenSectionUI()

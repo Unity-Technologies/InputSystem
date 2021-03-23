@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -272,6 +273,8 @@ namespace UnityEngine.InputSystem
             switch (m_JoinBehavior)
             {
                 case PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed:
+                    ValidateInputActionAsset();
+
                     if (!m_UnpairedDeviceUsedDelegateHooked)
                     {
                         if (m_UnpairedDeviceUsedDelegate == null)
@@ -659,6 +662,31 @@ namespace UnityEngine.InputSystem
                     return true;
 
             return false;
+        }
+
+        private void ValidateInputActionAsset()
+        {
+            if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
+                return;
+
+            var actions = m_PlayerPrefab.GetComponentInChildren<PlayerInput>().actions;
+            if (actions == null)
+                return;
+
+            var isValid = true;
+            foreach (var controlScheme in actions.controlSchemes)
+            {
+                if (controlScheme.deviceRequirements.Count > 0)
+                    break;
+
+                isValid = false;
+            }
+
+            if (!isValid)
+                Debug.LogWarning("The input action asset in the player prefab assigned to PlayerInputManager has " +
+                    "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
+                    "will not work unless the expected input devices are listed as requirements in the input " +
+                    "action asset.");
         }
 
         /// <summary>
