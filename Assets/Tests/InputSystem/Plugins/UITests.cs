@@ -2755,7 +2755,10 @@ internal class UITests : InputTestFixture
 
             yield return null;
 
-            Set(mouse.position, uiButton.layout.center, queueEventOnly: true);
+            var buttonCenter = new Vector2(uiButton.layout.center.x, Screen.height - uiButton.layout.center.y);
+            var scrollViewCenter = new Vector2(scrollView.layout.center.x, Screen.height - scrollView.layout.center.y);
+
+            Set(mouse.position, buttonCenter, queueEventOnly: true);
             Press(mouse.leftButton, queueEventOnly: true);
 
             ////TODO: look at BaseInput and whether we need to override it in order for IME to go through our codepaths
@@ -2775,7 +2778,7 @@ internal class UITests : InputTestFixture
 
             // Put mouse in upper right corner and scroll down.
             Assert.That(scrollView.verticalScroller.value, Is.Zero);
-            Set(mouse.position, scrollView.layout.center, queueEventOnly: true);
+            Set(mouse.position, scrollViewCenter, queueEventOnly: true);
             yield return null;
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
