@@ -825,8 +825,8 @@ namespace UnityEngine.InputSystem
             var oldName = action.m_Name;
             action.m_Name = newName;
 
-            if (actionMap.asset != null)
-                actionMap.asset.MarkAsDirty();
+            if (actionMap?.asset != null)
+                actionMap?.asset.MarkAsDirty();
 
             // Update bindings.
             var bindings = action.GetOrCreateActionMap().m_Bindings;
