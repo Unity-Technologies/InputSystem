@@ -196,9 +196,6 @@ namespace UnityEngine.InputSystem.UI
         // Mouse, pen, touch, and tracked device pointer input all go through here.
         private void ProcessPointer(ref PointerModel state)
         {
-            if (!state.changedThisFrame)
-                return;
-
             var eventData = state.eventData;
 
             // Sync position.
@@ -242,6 +239,14 @@ namespace UnityEngine.InputSystem.UI
             state.leftButton.CopyPressStateTo(eventData);
 
             ProcessPointerMovement(ref state, eventData);
+
+            // We always need to process move-related events in order to get PointerEnter and Exit events
+            // when we change UI state (e.g. show/hide objects) without moving the pointer. This unfortunately
+            // also means that we will invariably raycast on every update.
+            // However, after that, early out at this point when there's no changes to the pointer state.
+            if (!state.changedThisFrame)
+                return;
+
             ProcessPointerButton(ref state.leftButton, eventData);
             ProcessPointerButtonDrag(ref state.leftButton, eventData);
             ProcessPointerScroll(ref state, eventData);

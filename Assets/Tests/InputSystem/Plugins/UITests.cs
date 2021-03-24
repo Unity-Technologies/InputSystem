@@ -1118,6 +1118,39 @@ internal class UITests : CoreTestsFixture
         }
     }
 
+    // https://fogbugz.unity3d.com/f/cases/1232705/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanReceivePointerExitsWhenChangingUIStateWithoutMovingPointer()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
+
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+
+        scene.parentReceiver.events.Clear();
+
+        // Hide the left GO. Should send a pointer exit.
+        scene.leftGameObject.SetActive(false);
+        yield return null;
+
+        // We already disabled the left GO so ExecuteEvents will refuse to send OnPointerExit
+        // to it. However, we should see the exit on the still-active parent.
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerExit),
+                AllEvents("position", scene.From640x480ToScreen(100, 100)),
+                AllEvents("pointerEnter", scene.leftGameObject)
+            )
+        );
+    }
+
     [UnityTest]
     [Category("UI")]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = -1)]
