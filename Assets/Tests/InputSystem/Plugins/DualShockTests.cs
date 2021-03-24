@@ -15,7 +15,7 @@ using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.HID;
 #endif
 
-internal class DualShockTests : InputTestFixture
+internal class DualShockTests : CoreTestsFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
     public DualShockGamepad Devices_SupportsDualShockAsHID<TDevice, TState>(TState state)

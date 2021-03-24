@@ -16,8 +16,6 @@
 {% endif %}
     # Get latest version of doctools package. Automatically makes the documentation tests in APIVerification go live.
     - git clone git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-    # Currently, we require a modification to the doctools sources so slap it on there.
-    - git apply --directory=Packages/com.unity.package-manager-doctools Tools/doctools.patch
     # We keep the samples in Assets/ as they otherwise won't get imported and you can't
     # really work with them. Move them into the package for when we run upm-ci here.
     - mv ./Assets/Samples ./Packages/com.unity.inputsystem

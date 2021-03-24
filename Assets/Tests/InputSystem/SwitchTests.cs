@@ -9,7 +9,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Switch.LowLevel;
 using UnityEngine.InputSystem.Processors;
 
-internal class SwitchTests : InputTestFixture
+internal class SwitchTests : CoreTestsFixture
 {
 #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
     [Test]

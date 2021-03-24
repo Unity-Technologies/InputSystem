@@ -3098,6 +3098,22 @@ namespace UnityEngine.InputSystem
                         settings.OnChange();
                     }
 
+                    // reload input action assets marked as dirty from disk
+                    if (s_TrackedDirtyAssets == null)
+                        return;
+
+                    foreach (var assetGuid in s_TrackedDirtyAssets)
+                    {
+                        var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
+
+                        if (string.IsNullOrEmpty(assetPath))
+                            continue;
+
+                        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
+                    }
+
+                    s_TrackedDirtyAssets.Clear();
+
                     break;
             }
         }
@@ -3119,6 +3135,29 @@ namespace UnityEngine.InputSystem
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
                 settings = newSettings;
             }
+        }
+
+        private static HashSet<string> s_TrackedDirtyAssets;
+
+        /// <summary>
+        /// Keep track of InputActionAsset assets that you want to re-load on exiting Play mode. This is useful because
+        /// some user actions, such as adding a new input binding at runtime, change the in-memory representation of the
+        /// input action asset and those changes survive when exiting Play mode. If you re-open an Input
+        /// Action Asset in the Editor that has been changed this way, you see the new bindings that have been added
+        /// during Play mode which you might not typically want to happen.
+        ///
+        /// You can avoid this by force re-loading from disk any asset that has been marked as dirty.
+        /// </summary>
+        /// <param name="asset"></param>
+        internal static void TrackDirtyInputActionAsset(InputActionAsset asset)
+        {
+            if (s_TrackedDirtyAssets == null)
+                s_TrackedDirtyAssets = new HashSet<string>();
+
+            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string assetGuid, out long _) == false)
+                return;
+
+            s_TrackedDirtyAssets.Add(assetGuid);
         }
 
 #else

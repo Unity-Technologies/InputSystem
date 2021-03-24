@@ -457,9 +457,9 @@ class APIVerificationTests
         var docsFolder = Path.GetFullPath(Path.Combine(Application.dataPath, "../Temp/docstest"));
         Directory.CreateDirectory(docsFolder);
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
-        var(buildLog, shortVersionId) = Documentation.Instance.Generate(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
+        var(buildLog, folderName) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsFolder);
         log = buildLog;
-        return Path.Combine(docsFolder, shortVersionId);
+        return Path.Combine(docsFolder, folderName);
     }
 
     #endif
