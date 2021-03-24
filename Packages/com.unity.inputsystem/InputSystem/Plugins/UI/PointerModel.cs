@@ -69,19 +69,79 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
+        public float pressure
+        {
+            get => m_Pressure;
+            set
+            {
+                if (m_Pressure != value)
+                {
+                    changedThisFrame = true;
+                    m_Pressure = value;
+                }
+            }
+        }
+
+        public float azimuthAngle
+        {
+            get => m_AzimuthAngle;
+            set
+            {
+                if (m_AzimuthAngle != value)
+                {
+                    changedThisFrame = true;
+                    m_AzimuthAngle = value;
+                }
+            }
+        }
+
+        public float altitudeAngle
+        {
+            get => m_AltitudeAngle;
+            set
+            {
+                if (m_AltitudeAngle != value)
+                {
+                    changedThisFrame = true;
+                    m_AltitudeAngle = value;
+                }
+            }
+        }
+
+        public float twist
+        {
+            get => m_Twist;
+            set
+            {
+                if (m_Twist != value)
+                {
+                    changedThisFrame = true;
+                    m_Twist = value;
+                }
+            }
+        }
+
+        public Vector2 radius
+        {
+            get => m_Radius;
+            set
+            {
+                if (m_Radius != value)
+                {
+                    changedThisFrame = true;
+                    m_Radius = value;
+                }
+            }
+        }
+
         public ButtonState leftButton;
         public ButtonState rightButton;
         public ButtonState middleButton;
         public ExtendedPointerEventData eventData;
 
-        public PointerModel(int pointerId, int touchId, UIPointerType pointerType, InputDevice device, ExtendedPointerEventData eventData)
+        public PointerModel(ExtendedPointerEventData eventData)
         {
             this.eventData = eventData;
-
-            eventData.pointerId = pointerId;
-            eventData.touchId = touchId;
-            eventData.pointerType = pointerType;
-            eventData.device = device;
 
             changedThisFrame = false;
 
@@ -93,6 +153,12 @@ namespace UnityEngine.InputSystem.UI
             m_ScrollDelta = default;
             m_WorldOrientation = default;
             m_WorldPosition = default;
+
+            m_Pressure = default;
+            m_AzimuthAngle = default;
+            m_AltitudeAngle = default;
+            m_Twist = default;
+            m_Radius = default;
         }
 
         public void OnFrameFinished()
@@ -108,6 +174,23 @@ namespace UnityEngine.InputSystem.UI
         private Vector2 m_ScrollDelta;
         private Vector3 m_WorldPosition;
         private Quaternion m_WorldOrientation;
+
+        private float m_Pressure;
+        private float m_AzimuthAngle;
+        private float m_AltitudeAngle;
+        private float m_Twist;
+        private Vector2 m_Radius;
+
+        public void CopyTouchOrPenStateFrom(PointerEventData eventData)
+        {
+#if UNITY_2021_1_OR_NEWER
+            pressure = eventData.pressure;
+            azimuthAngle = eventData.azimuthAngle;
+            altitudeAngle = eventData.altitudeAngle;
+            twist = eventData.twist;
+            radius = eventData.radius;
+#endif
+        }
 
         // State related to pressing and releasing individual bodies. Retains those parts of
         // PointerInputEvent that are specific to presses and releases.

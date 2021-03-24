@@ -2,6 +2,7 @@
 using System.Text;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -22,6 +23,13 @@ namespace UnityEngine.InputSystem.UI
             : base(eventSystem)
         {
         }
+
+        /// <summary>
+        /// The <see cref="InputControl"/> that generated the pointer input.
+        /// The device associated with this control should be the same as this event's device.
+        /// </summary>
+        /// <seealso cref="device"/>
+        public InputControl control { get; set; }
 
         /// <summary>
         /// The <see cref="InputDevice"/> that generated the pointer input.
@@ -52,6 +60,8 @@ namespace UnityEngine.InputSystem.UI
         /// </summary>
         public UIPointerType pointerType { get; set; }
 
+        public int uiToolkitPointerId { get; set; }
+
         /// <summary>
         /// For <see cref="UIPointerType.Tracked"/> type pointer input, this is the world-space position of
         /// the <see cref="TrackedDevice"/>.
@@ -70,6 +80,7 @@ namespace UnityEngine.InputSystem.UI
         {
             var stringBuilder = new StringBuilder();
             stringBuilder.Append(base.ToString());
+            stringBuilder.AppendLine("<b>button</b>: " + button); // Defined in PointerEventData but PointerEventData.ToString() does not include it.
             stringBuilder.AppendLine("<b>device</b>: " + device);
             stringBuilder.AppendLine("<b>pointerType</b>: " + pointerType);
             stringBuilder.AppendLine("<b>touchId</b>: " + touchId);
@@ -91,7 +102,7 @@ namespace UnityEngine.InputSystem.UI
             return pointerId & 0xff;
         }
 
-        ////TODO: adder pressure and tile support (probably add after 1.0; probably should have separate actions)
+        ////TODO: add pressure and tilt support (probably add after 1.0; probably should have separate actions)
         /*
         /// <summary>
         /// If supported by the input device, this is the pressure level of the pointer contact. This is generally
@@ -106,6 +117,63 @@ namespace UnityEngine.InputSystem.UI
         /// </summary>
         public Vector2 tilt { get; set; }
         */
+
+        internal void ReadDeviceState()
+        {
+            if (control.parent is Pen pen)
+            {
+                uiToolkitPointerId = GetPenPointerId(pen);
+                #if UNITY_2021_1_OR_NEWER
+                pressure = pen.pressure.EvaluateMagnitude();
+                azimuthAngle = (pen.tilt.ReadValue().x + 1) * Mathf.PI / 2;
+                altitudeAngle = (pen.tilt.ReadValue().y + 1) * Mathf.PI / 2;
+                twist = pen.twist.ReadValue() * Mathf.PI * 2;
+                #endif
+            }
+            else if (control.parent is TouchControl touchControl)
+            {
+                uiToolkitPointerId = GetTouchPointerId(touchControl);
+                #if UNITY_2021_1_OR_NEWER
+                pressure = touchControl.pressure.EvaluateMagnitude();
+                radius = touchControl.radius.ReadValue();
+                #endif
+            }
+            else if (control.parent is Touchscreen touchscreen)
+            {
+                uiToolkitPointerId = GetTouchPointerId(touchscreen.primaryTouch);
+                #if UNITY_2021_1_OR_NEWER
+                pressure = touchscreen.pressure.EvaluateMagnitude();
+                radius = touchscreen.radius.ReadValue();
+                #endif
+            }
+            else
+            {
+                uiToolkitPointerId = UIElements.PointerId.mousePointerId;
+            }
+        }
+
+        private static int GetPenPointerId(Pen pen)
+        {
+            var n = 0;
+            foreach (var otherDevice in InputSystem.devices)
+                if (otherDevice is Pen otherPen)
+                {
+                    if (pen == otherPen)
+                    {
+                        return UIElements.PointerId.penPointerIdBase +
+                            Mathf.Min(n, UIElements.PointerId.penPointerCount - 1);
+                    }
+                    n++;
+                }
+            return UIElements.PointerId.penPointerIdBase;
+        }
+
+        private static int GetTouchPointerId(TouchControl touchControl)
+        {
+            var i = ((Touchscreen)touchControl.device).touches.IndexOfReference(touchControl);
+            return UIElements.PointerId.touchPointerIdBase +
+                Mathf.Clamp(i, 0, UIElements.PointerId.touchPointerCount - 1);
+        }
     }
 
     /// <summary>
