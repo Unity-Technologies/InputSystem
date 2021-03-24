@@ -70,6 +70,7 @@ namespace UnityEngine.InputSystem
                     $"An action map called '{map.name}' already exists in the asset");
 
             ArrayHelpers.Append(ref asset.m_ActionMaps, map);
+            asset.MarkAsDirty();
             map.m_Asset = asset;
         }
 
@@ -98,6 +99,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
+            asset.MarkAsDirty();
             map.m_Asset = null;
         }
 
@@ -196,6 +198,9 @@ namespace UnityEngine.InputSystem
                 action.m_Processors = processors;
             }
 
+            if (map.asset != null)
+                map.asset.MarkAsDirty();
+
             map.ClearPerActionCachedBindingData();
             map.LazyResolveBindings();
 
@@ -237,6 +242,9 @@ namespace UnityEngine.InputSystem
 
             action.m_ActionMap = null;
             action.m_SingletonActionBindings = bindingsForAction;
+
+            if (actionMap.asset != null)
+                actionMap.asset.MarkAsDirty();
 
             actionMap.ClearPerActionCachedBindingData();
 
@@ -492,6 +500,11 @@ namespace UnityEngine.InputSystem
                 bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
             else
                 ArrayHelpers.InsertAt(ref map.m_Bindings, bindingIndex, binding);
+
+            // Make sure this asset is reloaded from disk when exiting play mode so it isn't inadvertently
+            // changed between play sessions. Only applies when running in the editor.
+            if (map.asset != null)
+                map.asset.MarkAsDirty();
 
             // Invalidate per-action binding sets so that this gets refreshed if
             // anyone queries it.
@@ -812,6 +825,9 @@ namespace UnityEngine.InputSystem
             var oldName = action.m_Name;
             action.m_Name = newName;
 
+            if (actionMap?.asset != null)
+                actionMap?.asset.MarkAsDirty();
+
             // Update bindings.
             var bindings = action.GetOrCreateActionMap().m_Bindings;
             var bindingCount = bindings.LengthSafe();
@@ -842,6 +858,8 @@ namespace UnityEngine.InputSystem
                     $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
 
             ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
+
+            asset.MarkAsDirty();
         }
 
         /// <summary>
@@ -907,6 +925,8 @@ namespace UnityEngine.InputSystem
             var index = asset.FindControlSchemeIndex(name);
             if (index != -1)
                 ArrayHelpers.EraseAt(ref asset.m_ControlSchemes, index);
+
+            asset.MarkAsDirty();
         }
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
