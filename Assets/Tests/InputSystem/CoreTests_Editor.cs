@@ -2550,15 +2550,22 @@ partial class CoreTests
         asset.AddActionMap("ActionMapToModify");
         asset.AddControlScheme("ControlSchemeToRemove");
 
-
         File.WriteAllText(m_TestAssetPath, asset.ToJson());
         AssetDatabase.ImportAsset(m_TestAssetPath);
         asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         var originalJson = asset.ToJson();
         AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var assetGuid, out long _);
 
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
         asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         action?.Invoke(asset);
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
