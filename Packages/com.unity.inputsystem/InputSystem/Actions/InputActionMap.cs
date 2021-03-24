@@ -707,9 +707,7 @@ namespace UnityEngine.InputSystem
 
             public int IndexOf(InputDevice device)
             {
-                if (m_DeviceCount > 0)
-                    return m_DeviceArray.IndexOfReference(device, m_DeviceCount);
-                return -1;
+                return m_DeviceArray.IndexOfReference(device, m_DeviceCount);
             }
 
             public bool Remove(InputDevice device)
@@ -744,21 +742,8 @@ namespace UnityEngine.InputSystem
                     // See if the array actually changes content. Avoids re-resolving when there
                     // is no need to.
                     var array = devices.Value;
-                    if (m_HaveValue && m_DeviceCount == array.Count)
-                    {
-                        var noChange = true;
-                        for (var i = 0; i < m_DeviceCount; ++i)
-                        {
-                            if (!ReferenceEquals(m_DeviceArray[i], array[i]))
-                            {
-                                noChange = false;
-                                break;
-                            }
-                        }
-
-                        if (noChange)
-                            return false;
-                    }
+                    if (m_HaveValue && array.Count == m_DeviceCount && array.HaveEqualReferences(m_DeviceArray, m_DeviceCount))
+                        return false;
 
                     if (m_DeviceCount > 0)
                         m_DeviceArray.Clear(ref m_DeviceCount);
