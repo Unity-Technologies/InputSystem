@@ -7,7 +7,7 @@ using UnityEngine.InputSystem.Samples.RebindUI;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-public class RebindingUITests : InputTestFixture
+public class RebindingUITests : CoreTestsFixture
 {
     [Test]
     [Category("Samples")]
