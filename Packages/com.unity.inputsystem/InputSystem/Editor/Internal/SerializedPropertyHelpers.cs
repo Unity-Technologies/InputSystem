@@ -379,6 +379,13 @@ namespace UnityEngine.InputSystem.Editor
         {
             return GetField(property)?.FieldType;
         }
+
+        public static void SetStringValue(this SerializedProperty property, string propertyName, string value)
+        {
+            var propertyRelative = property?.FindPropertyRelative(propertyName);
+            if (propertyRelative != null)
+                propertyRelative.stringValue = value;
+        }
     }
 }
 #endif // UNITY_EDITOR

@@ -12,7 +12,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
 
-internal class OnScreenTests : InputTestFixture
+internal class OnScreenTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

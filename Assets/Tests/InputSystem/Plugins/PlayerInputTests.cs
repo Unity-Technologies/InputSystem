@@ -21,7 +21,7 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
 /// </summary>
-internal class PlayerInputTests : InputTestFixture
+internal class PlayerInputTests : CoreTestsFixture
 {
     public override void TearDown()
     {
