@@ -636,7 +636,7 @@ namespace UnityEngine.InputSystem.UI
         [Tooltip("Transform representing the real world origin for tracking devices.")]
         [SerializeField]
         private Transform m_XRTrackingOrigin;
-        
+
         private bool m_IgnoreFocus;
 
         /// <summary>
