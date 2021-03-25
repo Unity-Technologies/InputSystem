@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
@@ -232,7 +233,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
         /// <seealso cref="InputActionMap"/>
         /// <seealso cref="InputActionAsset"/>
-        /// <seealso cref="InputUserChange.BindingsChanged"/>
+        /// <seealso cref="InputUserChange.ControlsChanged"/>
         public IInputActionCollection actions => s_AllUserData[index].actions;
 
         /// <summary>
@@ -241,7 +242,7 @@ namespace UnityEngine.InputSystem.Users
         /// <remarks>
         /// This is null by default.
         ///
-        /// Any time the value of this property changes (whether by <see cref="SetControlScheme"/>
+        /// Any time the value of this property changes (whether by <see cref="ActivateControlScheme(string)"/>
         /// or by automatic switching), a notification is sent on <see cref="onChange"/> with
         /// <see cref="InputUserChange.ControlSchemeChanged"/>.
         ///
@@ -475,6 +476,15 @@ namespace UnityEngine.InputSystem.Users
                     UnhookFromDeviceStateChange();
                 s_ListenForUnpairedDeviceActivity = value;
             }
+        }
+
+        public override string ToString()
+        {
+            if (!valid)
+                return $"<Invalid> (id: {m_Id})";
+
+            var deviceList = string.Join(",", pairedDevices);
+            return $"User #{index} (id: {m_Id}, devices: {deviceList}, actions: {actions})";
         }
 
         /// <summary>
@@ -885,7 +895,7 @@ namespace UnityEngine.InputSystem.Users
         ///         unsafe
         ///         {
         ///             // We're only looking for QueryPairedUserAccountCommand and InitiateUserAccountPairingCommand here.
-        ///             if (commandPtr->type != QueryPairedUserAccountCommand.Type && commandPtr->type != InitiateUserAccountPairingCommand)
+        ///             if (commandPtr->type != QueryPairedUserAccountCommand.Type &amp;&amp; commandPtr->type != InitiateUserAccountPairingCommand)
         ///                 return null; // Command not handled.
         ///
         ///             // Check if device is the one your interested in. As an example, we look for Switch gamepads
@@ -1943,7 +1953,7 @@ namespace UnityEngine.InputSystem.Users
             if (!s_OnActionChangeHooked)
                 return;
             InputSystem.onActionChange -= OnActionChange;
-            s_OnActionChangeHooked = true;
+            s_OnActionChangeHooked = false;
         }
 
         private static void HookIntoDeviceChange()

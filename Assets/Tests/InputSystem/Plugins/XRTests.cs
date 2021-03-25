@@ -19,7 +19,7 @@ using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 
 using DeviceRole = UnityEngine.XR.InputDeviceRole;
 
-internal class XRTests : InputTestFixture
+internal class XRTests : CoreTestsFixture
 {
     [Test]
     [Category("Devices")]

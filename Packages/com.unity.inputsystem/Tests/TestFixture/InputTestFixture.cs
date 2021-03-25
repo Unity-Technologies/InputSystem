@@ -7,7 +7,6 @@ using NUnit.Framework.Constraints;
 using Unity.Collections;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
-using UnityEngine.SceneManagement;
 using UnityEngine.TestTools.Utils;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -146,17 +145,6 @@ namespace UnityEngine.InputSystem
 
             try
             {
-                // Destroy any GameObject in the current scene that isn't hidden and isn't the
-                // test runner object. Do this first so that any cleanup finds the system in the
-                // state it expects.
-                var scene = SceneManager.GetActiveScene();
-                foreach (var go in scene.GetRootGameObjects())
-                {
-                    if (go.hideFlags != 0 || go.name.Contains("tests runner"))
-                        continue;
-                    Object.DestroyImmediate(go);
-                }
-
                 InputSystem.Restore();
                 runtime.Dispose();
 

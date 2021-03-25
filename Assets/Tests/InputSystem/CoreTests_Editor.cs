@@ -1927,6 +1927,57 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_ActionTree_CanDeleteMultipleBindings()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map1 = asset.AddActionMap("map1");
+        var action1 = map1.AddAction("action1");
+        action1.AddBinding("<Gamepad>/leftStick");
+        action1.AddBinding("<Gamepad>/buttonSouth");
+        action1.AddBinding("<Gamepad>/dpad");
+
+        var so = new SerializedObject(asset);
+        var modified = false;
+        var selectionChanged = false;
+        var tree = new InputActionTreeView(so)
+        {
+            onBuildTree = () => InputActionTreeView.BuildFullTree(so),
+            onSerializedObjectModified = () =>
+            {
+                Assert.That(modified, Is.False);
+                modified = true;
+            },
+            onSelectionChanged = () =>
+            {
+                Assert.That(selectionChanged, Is.False);
+                selectionChanged = true;
+            }
+        };
+        tree.Reload();
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[0]"));
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[1]"), true);
+        selectionChanged = false;
+        tree.SelectItem(tree.FindItemByPropertyPath("m_ActionMaps.Array.data[0].m_Bindings.Array.data[2]"), true);
+        selectionChanged = false;
+        tree.DeleteDataOfSelectedItems();
+
+        Assert.That(selectionChanged, Is.True);
+        Assert.That(modified, Is.True);
+        Assert.That(tree.HasSelection, Is.False);
+        Assert.That(tree.rootItem.children, Is.Not.Null);
+        Assert.That(tree.rootItem.children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0], Is.TypeOf<ActionMapTreeItem>());
+        Assert.That(tree.rootItem.children[0].displayName, Is.EqualTo("map1"));
+        Assert.That(tree.rootItem.children[0].children, Is.Not.Null);
+        Assert.That(tree.rootItem.children[0].children, Has.Count.EqualTo(1));
+        Assert.That(tree.rootItem.children[0].children[0].displayName, Is.EqualTo("action1"));
+        Assert.That(tree.rootItem.children[0].children[0].children, Is.Null);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_ActionTree_CanDeleteComposite()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
@@ -2413,6 +2464,84 @@ partial class CoreTests
 
         Assert.That(InputActionState.s_GlobalList.length, Is.Zero);
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
+    {
+        // Control schemes
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddControlScheme("AddedControlScheme"), "Add control scheme");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveControlScheme("ControlSchemeToRemove"), "Remove control scheme");
+
+        // Action maps
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .AddActionMap("NewActionMap"), "Add action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .RemoveActionMap("ActionMapToRemove"), "Remove action map");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddAction("NewAction"), "Add action");
+
+        // Actions
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .RemoveAction(), "Remove action");
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .Rename("New Action"), "Modify action");
+
+        // Bindings
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("ActionMapToModify")
+            .AddBinding("<Gamepad>/buttonNorth"), "Add new binding");
+
+        AssertAssetIsUnmodifiedAfterExitingPlayMode(asset => asset
+            .FindActionMap("DefaultActionMap")
+            .FindAction("DefaultAction")
+            .ApplyBindingOverride("<Gamepad>/buttonNorth"), "Modify binding");
+    }
+
+    private void AssertAssetIsUnmodifiedAfterExitingPlayMode(Action<InputActionAsset> action, string message = "")
+    {
+        var m_TestAssetPath = $"Assets/__TestInputAsset.{InputActionAsset.Extension}";
+
+        var inputActionMap = new InputActionMap("DefaultActionMap");
+        var inputAction = inputActionMap.AddAction("DefaultAction");
+        inputAction.AddBinding("<Gamepad>/buttonSouth");
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        asset.AddActionMap(inputActionMap);
+
+        asset.AddActionMap("ActionMapToRemove");
+        asset.AddActionMap("ActionMapToModify");
+        asset.AddControlScheme("ControlSchemeToRemove");
+
+
+        File.WriteAllText(m_TestAssetPath, asset.ToJson());
+        AssetDatabase.ImportAsset(m_TestAssetPath);
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        var originalJson = asset.ToJson();
+        AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var assetGuid, out long _);
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        action?.Invoke(asset);
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+
+        var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
+        Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);
     }
 
 #if UNITY_STANDALONE // CodeDom API not available in most players.
