@@ -1817,7 +1817,7 @@ internal class UITests : CoreTestsFixture
         InputSystem.RegisterLayout(kTrackedDeviceWithButton);
 
         var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         var map = new InputActionMap("map");
@@ -1876,7 +1876,7 @@ internal class UITests : CoreTestsFixture
 
         var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
 
-        var scene = CreateUIAndPlayer();
+        var scene = CreateTestUI();
 
         var xrTrackingOrigin = new GameObject("XRStage").transform;
         scene.uiModule.xrTrackingOrigin = xrTrackingOrigin;
