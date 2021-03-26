@@ -1846,7 +1846,12 @@ internal class UITests : CoreTestsFixture
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
 
+        //2021.1 added an additional move event.
+#if UNITY_2021_1_OR_NEWER
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+#else
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
+#endif
         Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
 
         var eventRaycastResult = scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast;
