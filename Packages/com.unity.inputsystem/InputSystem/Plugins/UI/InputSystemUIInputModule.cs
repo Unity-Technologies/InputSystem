@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.UI
         /// <remarks>
         /// This method is for the most recent raycast, but depending on when it's called is not guaranteed to be for the current frame.
         /// This method can be used to determine raycast distances and hit information for visualization.
-        ///
+        /// <br />
         /// Use <see cref="RaycastResult.isValid"/> to determine if pointer hit anything.
         /// </remarks>
         /// <seealso cref="ExtendedPointerEventData.touchId"/>
@@ -633,7 +633,7 @@ namespace UnityEngine.InputSystem.UI
         // Hide this while we still have to figure out what to do with this.
         private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
-        [Tooltip("Transform representing the real world origin for tracking devices.")]
+        [Tooltip("Transform representing the real world origin for tracking devices. When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.")]
         [SerializeField]
         private Transform m_XRTrackingOrigin;
 
@@ -703,6 +703,7 @@ namespace UnityEngine.InputSystem.UI
         /// <summary>
         /// A <see cref="Transform"/> representing the real world origin for tracking devices.
         /// This is used to convert real world positions and rotations for <see cref="UIPointerType.Tracked"/> pointers into Unity's global space.
+        /// When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.
         /// </summary>
         /// <remarks>This will transform all tracked pointers. If unset, or set to null, the Unity world origin will be used as the basis for all tracked positions and rotations.</remarks>
         public Transform xrTrackingOrigin
