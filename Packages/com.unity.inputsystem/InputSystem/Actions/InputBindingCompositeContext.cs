@@ -144,7 +144,7 @@ namespace UnityEngine.InputSystem
                 return default;
 
             return m_State.ReadCompositePartValue<TValue, DefaultComparer<TValue>>
-                    (m_BindingIndex, partNumber, null, out _);
+                    (m_BindingIndex, partNumber, null, out _, ControlValueCache<TValue>.Cache);
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem
             }
 
             var value = m_State.ReadCompositePartValue<TValue, DefaultComparer<TValue>>(m_BindingIndex, partNumber,
-                null, out var controlIndex);
+                null, out var controlIndex, ControlValueCache<TValue>.Cache);
             if (controlIndex != InputActionState.kInvalidIndex)
                 sourceControl = m_State.controls[controlIndex];
             else
@@ -236,7 +236,7 @@ namespace UnityEngine.InputSystem
                 return default;
 
             return m_State.ReadCompositePartValue<TValue, TComparer>(
-                m_BindingIndex, partNumber, null, out _, comparer);
+                m_BindingIndex, partNumber, null, out _, ControlValueCache<TValue>.Cache, comparer);
         }
 
         /// <summary>
@@ -271,7 +271,7 @@ namespace UnityEngine.InputSystem
             }
 
             var value = m_State.ReadCompositePartValue<TValue, TComparer>(m_BindingIndex, partNumber, null,
-                out var controlIndex, comparer);
+                out var controlIndex, ControlValueCache<TValue>.Cache, comparer);
 
             if (controlIndex != InputActionState.kInvalidIndex)
                 sourceControl = m_State.controls[controlIndex];
@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem
 
             var buttonValue = false;
             m_State.ReadCompositePartValue<float, DefaultComparer<float>>(m_BindingIndex, partNumber, &buttonValue,
-                out _);
+                out _, ControlValueCache<float>.Cache);
             return buttonValue;
         }
 

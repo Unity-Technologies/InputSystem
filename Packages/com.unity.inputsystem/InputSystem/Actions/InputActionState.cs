@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -2355,7 +2356,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         internal TValue ReadCompositePartValue<TValue, TComparer>(int bindingIndex, int partNumber,
-            bool* buttonValuePtr, out int controlIndex, TComparer comparer = default)
+            bool* buttonValuePtr, out int controlIndex, in ControlValueCache<TValue> controlValueCache, TComparer comparer = default)
             where TValue : struct
             where TComparer : IComparer<TValue>
         {
@@ -2388,7 +2389,7 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < controlCount; ++i)
                 {
                     var thisControlIndex = controlStartIndex + i;
-                    var value = ReadValue<TValue>(index, thisControlIndex, ignoreComposites: true);
+                    var value = controlValueCache.ReadValue(this, controls[thisControlIndex], index, thisControlIndex, ignoreComposites: true);
 
                     if (isFirstValue)
                     {
@@ -3838,5 +3839,44 @@ namespace UnityEngine.InputSystem
         }
 
         #endregion
+    }
+
+    internal interface IControlValueCache
+    {
+        void Clear();
+    }
+
+    internal static class ControlValueCaches
+    {
+        public static InlinedArray<IControlValueCache> Caches = new InlinedArray<IControlValueCache>();
+    }
+    
+    internal class ControlValueCache<TValue> : IControlValueCache where TValue : struct
+    {
+        public static ControlValueCache<TValue> Cache = new ControlValueCache<TValue>();
+        
+        private Dictionary<InputControl, TValue> _cacheControlDict;
+
+        private ControlValueCache()
+        {
+            ControlValueCaches.Caches.Append(this);
+            _cacheControlDict = new Dictionary<InputControl, TValue>();
+        }
+
+        public void Clear()
+        {
+            _cacheControlDict.Clear();
+        }
+
+        public TValue ReadValue(InputActionState inputActionState, InputControl control, int index, int thisControlIndex,
+            bool ignoreComposites = false)
+        {
+            if (_cacheControlDict.TryGetValue(control, out var value))
+                return value;
+            
+            value = inputActionState.ReadValue<TValue>(index, thisControlIndex, ignoreComposites: ignoreComposites);
+            _cacheControlDict.Add(control, value);
+            return value;
+        }
     }
 }

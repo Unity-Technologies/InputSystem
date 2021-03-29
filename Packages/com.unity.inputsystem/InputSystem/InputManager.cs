@@ -2975,6 +2975,11 @@ namespace UnityEngine.InputSystem
             ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
             var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
+            for (var i = 0; i < ControlValueCaches.Caches.length; i++)
+            {
+                ControlValueCaches.Caches[i].Clear();
+            }
+
             // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
             // signalled state.
             for (var i = 0; i < signals.length; ++i)
