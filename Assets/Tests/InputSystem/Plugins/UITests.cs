@@ -714,7 +714,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
                 // PointerMove.
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("dragging", false),
                 // Again, pointer movement is processed exclusively "from" the left button.
@@ -763,7 +763,7 @@ internal class UITests : CoreTestsFixture
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -794,7 +794,7 @@ internal class UITests : CoreTestsFixture
         // children to another) but *should* have seen a move event.
         Assert.That(scene.parentReceiver.events,
             EventSequence(
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -825,7 +825,7 @@ internal class UITests : CoreTestsFixture
                 // press positions on the moves will be zero.
 
                 // PointerMove.
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("button", PointerEventData.InputButton.Left),
                 OneEvent("pointerEnter", scene.leftGameObject),
@@ -1633,7 +1633,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -30, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1653,7 +1653,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, -31, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1712,7 +1712,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 #endif
                 OneEvent("type", EventType.PointerExit)
@@ -1725,7 +1725,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 30, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -1744,7 +1744,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 #endif
                 OneEvent("type", EventType.PointerExit)
@@ -1757,7 +1757,7 @@ internal class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", Quaternion.Euler(0, 31, 0)),
                 OneEvent("type", EventType.PointerEnter)
-                #if UNITY_2021_1_OR_NEWER
+                #if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
                 #endif
             )
@@ -2934,7 +2934,7 @@ internal class UITests : CoreTestsFixture
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
 
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
         public void OnPointerMove(PointerEventData eventData)
         {
             events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
