@@ -888,10 +888,10 @@ namespace UnityEngine.InputSystem
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
-            #if UNITY_EDITOR
-            if (InputState.currentUpdateType == InputUpdateType.Editor)
-                return;
-            #endif
+            //#if UNITY_EDITOR
+            //if (InputState.currentUpdateType == InputUpdateType.Editor)
+            //    return;
+            //#endif
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
