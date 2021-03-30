@@ -145,17 +145,8 @@ namespace UnityEngine.InputSystem.UI
             else
             {
                 stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
-
-                if (stateIndex == -1)
-                {
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        var eventData = m_PointerStates[i].eventData;
-                        if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
-                            return eventData.pointerEnter != null;
-                    }
-                }
             }
+            
             if (stateIndex == -1)
                 return false;
 
@@ -184,22 +175,10 @@ namespace UnityEngine.InputSystem.UI
         public RaycastResult GetLastRaycastResult(int pointerOrTouchId)
         {
             var stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
-
             if (stateIndex == -1)
-            {
-                for (var i = 0; i < m_PointerStates.length; ++i)
-                {
-                    var eventData = m_PointerStates[i].eventData;
-                    if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
-                        return eventData.pointerCurrentRaycast;
-                }
-            }
-            else
-            {
-                return m_PointerStates[stateIndex].eventData.pointerCurrentRaycast;
-            }
+                return default;
 
-            return default;
+            return m_PointerStates[stateIndex].eventData.pointerCurrentRaycast;
         }
 
         private RaycastResult PerformRaycast(ExtendedPointerEventData eventData)
@@ -1306,14 +1285,22 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        private int GetPointerStateIndexFor(int pointerId)
+        private int GetPointerStateIndexFor(int pointerOrTouchId)
         {
-            if (pointerId == m_CurrentPointerId)
+            if (pointerOrTouchId == m_CurrentPointerId)
                 return m_CurrentPointerIndex;
 
             for (var i = 0; i < m_PointerIds.length; ++i)
-                if (m_PointerIds[i] == pointerId)
+                if (m_PointerIds[i] == pointerOrTouchId)
                     return i;
+            
+            // Search for Device or Touch Ids as a fallback
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                var eventData = m_PointerStates[i].eventData;
+                if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
+                    return i;
+            }
 
             return -1;
         }
