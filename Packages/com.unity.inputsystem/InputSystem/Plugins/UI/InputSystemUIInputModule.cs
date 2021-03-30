@@ -146,7 +146,7 @@ namespace UnityEngine.InputSystem.UI
             {
                 stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
             }
-            
+
             if (stateIndex == -1)
                 return false;
 
@@ -1293,7 +1293,7 @@ namespace UnityEngine.InputSystem.UI
             for (var i = 0; i < m_PointerIds.length; ++i)
                 if (m_PointerIds[i] == pointerOrTouchId)
                     return i;
-            
+
             // Search for Device or Touch Ids as a fallback
             for (var i = 0; i < m_PointerStates.length; ++i)
             {
