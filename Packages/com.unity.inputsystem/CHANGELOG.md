@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
   * The component has a different GUID from before, so existing setups that use the component from the sample are not broken. To use the built-in component you must explicitly switch over.
 - `InputTestFixture` no longer deletes the `GameObject`s in the current scene in its `TearDown` ([case 1286987](https://issuetracker.unity3d.com/issues/input-system-inputtestfixture-destroys-test-scene)).
   * This was added for the sake of the Input System's own tests but should not have been in the public fixture.
+- When creating a new control scheme with a name `All Control Schemes`, `All Control Schemes1` will be created to avoid confusion with implicit `All Control Schemes` scheme ([case 1217379](https://issuetracker.unity3d.com/issues/control-scheme-cannot-be-selected-when-it-is-named-all-control-schemes)).
 
 ### Fixed
 
