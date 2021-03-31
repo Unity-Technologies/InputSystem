@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Scripting;
 
@@ -50,7 +51,13 @@ namespace UnityEngine.InputSystem.Controls
             if (device.ExecuteCommand(ref command) > 0)
             {
                 m_ScanCode = command.scanOrKeyCode;
-                displayName = command.ReadKeyName();
+
+                var rawKeyName = command.ReadKeyName();
+                var textInfo = CultureInfo.CurrentCulture.TextInfo;
+                // We need to lower case first because ToTitleCase preserves upper casing.
+                // For example on Swedish Windows layout right shift display name is "HÖGER SKIFT".
+                // Just passing it to ToTitleCase won't change anything. But passing "höger skift" will return "Höger Skift".
+                displayName = textInfo.ToTitleCase(textInfo.ToLower(rawKeyName));
             }
         }
 

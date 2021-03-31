@@ -2253,7 +2253,7 @@ partial class CoreTests
                         if (keyNameCommand->scanOrKeyCode == (int)Key.A)
                         {
                             scanCode = 0x01;
-                            name = currentLayoutName == "default" ? "m" : "q";
+                            name = currentLayoutName == "default" ? "M" : "RIGHT CTRL";
                         }
 
                         keyNameCommand->scanOrKeyCode = scanCode;
@@ -2267,16 +2267,16 @@ partial class CoreTests
                 });
         }
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("M"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
 
         // Change layout.
         currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("q"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("Right Ctrl"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
     }
 
     [Test]
