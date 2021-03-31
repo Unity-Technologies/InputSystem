@@ -1807,6 +1807,129 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event eventRecord) => eventRecord.pointerData.clickCount == 0));
     }
 
+#if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+#endif
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanGetRaycastResultMatchingEvent()
+    {
+        InputSystem.RegisterLayout(kTrackedDeviceWithButton);
+
+        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
+        var scene = CreateTestUI();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough, binding: "*/devicePosition");
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough, binding: "*/deviceRotation");
+        var clickAction = map.AddAction("click", type: InputActionType.PassThrough, binding: "*/button");
+
+        scene.uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        scene.uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        map.Enable();
+
+        // Point device away from objects.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+        yield return null;
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Point device at left child.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(raycastResult.isValid, Is.True);
+
+        //2021.1 added an additional move event.
+#if UNITY_2021_1_OR_NEWER
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
+#else
+        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
+#endif
+        Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
+
+        var eventRaycastResult = scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast;
+        Assert.That(raycastResult.worldPosition, Is.EqualTo(eventRaycastResult.worldPosition));
+        Assert.That(raycastResult.worldNormal, Is.EqualTo(eventRaycastResult.worldNormal));
+        Assert.That(raycastResult.distance, Is.EqualTo(eventRaycastResult.distance));
+        Assert.That(raycastResult.module, Is.EqualTo(eventRaycastResult.module));
+        Assert.That(raycastResult.screenPosition, Is.EqualTo(eventRaycastResult.screenPosition));
+        Assert.That(raycastResult.gameObject, Is.EqualTo(eventRaycastResult.gameObject));
+
+        // Move back off the object
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(raycastResult.isValid, Is.False);
+    }
+
+    #if UNITY_IOS || UNITY_TVOS
+    [Ignore("Failing on iOS https://jira.unity3d.com/browse/ISX-448")]
+    #endif
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_XRTrackingOriginTransformModifiesTrackedPointers()
+    {
+        InputSystem.RegisterLayout(kTrackedDeviceWithButton);
+
+        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TrackedDeviceWithButton");
+
+        var scene = CreateTestUI();
+
+        var xrTrackingOrigin = new GameObject("XRStage").transform;
+        scene.uiModule.xrTrackingOrigin = xrTrackingOrigin;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = new InputActionMap("map");
+        asset.AddActionMap(map);
+        var trackedPositionAction = map.AddAction("position", type: InputActionType.PassThrough, binding: "*/devicePosition");
+        var trackedOrientationAction = map.AddAction("orientation", type: InputActionType.PassThrough, binding: "*/deviceRotation");
+        var clickAction = map.AddAction("click", type: InputActionType.PassThrough, binding: "*/button");
+
+        scene.uiModule.trackedDevicePosition = InputActionReference.Create(trackedPositionAction);
+        scene.uiModule.trackedDeviceOrientation = InputActionReference.Create(trackedOrientationAction);
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        map.Enable();
+
+        // Point both devices away from objects.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -90, 0));
+
+        yield return null;
+
+        var trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.False);
+
+        // Point device at left child.
+        Set(trackedDevice.deviceRotation, Quaternion.Euler(0, -30, 0));
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.True);
+        Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.leftGameObject));
+
+        // Rotate so right object is targetted
+        xrTrackingOrigin.rotation = Quaternion.Euler(0f, 60, 0f);
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.True);
+        Assert.That(trackedDeviceRaycast.gameObject, Is.EqualTo(scene.rightGameObject));
+
+        xrTrackingOrigin.position = Vector3.up * 1000f;
+        scene.eventSystem.InvokeUpdate();
+
+        trackedDeviceRaycast = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
+        Assert.That(trackedDeviceRaycast.isValid, Is.False);
+    }
+
     [UnityTest]
     [Category("UI")]
     [Ignore("TODO")]
