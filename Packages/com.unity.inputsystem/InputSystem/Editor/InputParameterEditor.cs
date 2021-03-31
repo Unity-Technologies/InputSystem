@@ -202,13 +202,13 @@ namespace UnityEngine.InputSystem.Editor
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUI.BeginDisabledGroup(m_UseDefaultValue);
-                
+
                 var value = m_GetValue();
 
                 if (m_UseDefaultValue)
                     value = m_GetDefaultValue();
-                
-                // If previous value was an epsilon away from default value, it most likely means that value was set by our own code down in this method. 
+
+                // If previous value was an epsilon away from default value, it most likely means that value was set by our own code down in this method.
                 // Revert it back to default to show a nice readable value in UI.
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if ((value - float.Epsilon) == m_DefaultInitializedValue)
@@ -222,14 +222,14 @@ namespace UnityEngine.InputSystem.Editor
                     if (newValue == m_DefaultInitializedValue)
                         // If user sets a value that is equal to default initialized, change value slightly so it doesn't pass potential default checks.
                         ////TODO: refactor all of this to use tri-state values instead, there is no obvious float value that we can use as default (well maybe NaN),
-                        ////so instead it would be better to have a separate bool to show if value is present or not. 
+                        ////so instead it would be better to have a separate bool to show if value is present or not.
                         m_SetValue(newValue + float.Epsilon);
                     else
                         m_SetValue(newValue);
                 }
 
                 EditorGUI.EndDisabledGroup();
-                
+
                 var newUseDefault = GUILayout.Toggle(m_UseDefaultValue, m_ToggleLabel, GUILayout.ExpandWidth(false));
                 if (newUseDefault != m_UseDefaultValue)
                 {
