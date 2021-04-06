@@ -1329,6 +1329,12 @@ namespace UnityEngine.InputSystem
                             m_CurrentControl = m_AllControls[controlIndex];
                         }
 
+                        if ((m_Flags & Enumerate.IncludeNoisyControls) == 0 && m_CurrentControl.noisy)
+                        {
+                            m_CurrentControl = null;
+                            continue;
+                        }
+
                         if ((m_Flags & Enumerate.IncludeSyntheticControls) == 0)
                         {
                             var controlHasSharedState = (m_CurrentControl.m_ControlFlags &
