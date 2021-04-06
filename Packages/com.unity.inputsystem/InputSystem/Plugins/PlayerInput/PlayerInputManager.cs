@@ -694,9 +694,9 @@ namespace UnityEngine.InputSystem
             assetInfo = AssetDatabase.GetAssetPath(actions);
 #endif
             Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
-                             "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
-                             "will not work unless the expected input devices are listed as requirements in the input " +
-                             "action asset.", m_PlayerPrefab);
+                "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
+                "will not work unless the expected input devices are listed as requirements in the input " +
+                "action asset.", m_PlayerPrefab);
         }
 
         /// <summary>
