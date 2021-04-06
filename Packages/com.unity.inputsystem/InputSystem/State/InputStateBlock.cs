@@ -486,8 +486,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 {
                     if (sizeInBits == 1)
                         return value >= 0.0f;
-                    var minValue = (int) -(long) (1UL << ((int)sizeInBits - 1));
-                    var maxValue = (int) ((1UL << ((int)sizeInBits - 1)) - 1);
+                    var minValue = (int)-(long)(1UL << ((int)sizeInBits - 1));
+                    var maxValue = (int)((1UL << ((int)sizeInBits - 1)) - 1);
                     return NumberHelpers.NormalizedFloatToInt(value, minValue, maxValue);
                 }
                 case kFormatInt:
