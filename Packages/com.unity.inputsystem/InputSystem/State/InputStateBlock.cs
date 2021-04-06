@@ -418,13 +418,19 @@ namespace UnityEngine.InputSystem.LowLevel
                     else
                         MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value);
                     break;
+                case kFormatSBit:
+                    if (sizeInBits == 1)
+                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.0f);
+                    else
+                        MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, value * 0.5f + 0.5f);
+                    break;
                 case kFormatInt:
-                    Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
+                    Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
                     *(int*)valuePtr = (int)NumberHelpers.NormalizedFloatToInt(value * 0.5f + 0.5f, int.MinValue, int.MaxValue);
                     break;
                 case kFormatUInt:
-                    Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=16");
+                    Debug.Assert(sizeInBits == 32, "UINT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "UINT state must be byte-aligned");
                     *(uint*)valuePtr = NumberHelpers.NormalizedFloatToUInt(value, uint.MinValue, uint.MaxValue);
                     break;
@@ -459,7 +465,6 @@ namespace UnityEngine.InputSystem.LowLevel
                     *(double*)valuePtr = value;
                     break;
                 // Not supported:
-                // - kFormatSBit
                 // - kFormatLong
                 // - kFormatULong
                 default:
@@ -477,6 +482,14 @@ namespace UnityEngine.InputSystem.LowLevel
                         return value >= 0.5f;
                     ////FIXME: is this supposed to be int or uint?
                     return (int)NumberHelpers.NormalizedFloatToUInt(value, 0, (uint)((1UL << (int)sizeInBits) - 1));
+                case kFormatSBit:
+                {
+                    if (sizeInBits == 1)
+                        return value >= 0.0f;
+                    var minValue = (int)-(long)(1UL << ((int)sizeInBits - 1));
+                    var maxValue = (int)((1UL << ((int)sizeInBits - 1)) - 1);
+                    return NumberHelpers.NormalizedFloatToInt(value, minValue, maxValue);
+                }
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=32");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -510,7 +523,6 @@ namespace UnityEngine.InputSystem.LowLevel
                     Debug.Assert(bitOffset == 0, "DBL state must be byte-aligned");
                     return value;
                 // Not supported:
-                // - kFormatSBit
                 // - kFormatLong
                 // - kFormatULong
                 default:
@@ -596,6 +608,12 @@ namespace UnityEngine.InputSystem.LowLevel
                     else
                         MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, (float)value);
                     break;
+                case kFormatSBit:
+                    if (sizeInBits == 1)
+                        MemoryHelpers.WriteSingleBit(valuePtr, bitOffset, value >= 0.0f);
+                    else
+                        MemoryHelpers.WriteNormalizedUIntAsMultipleBits(valuePtr, bitOffset, sizeInBits, (float)value * 0.5f + 0.5f);
+                    break;
                 case kFormatInt:
                     Debug.Assert(sizeInBits == 32, "INT state must have sizeInBits=16");
                     Debug.Assert(bitOffset == 0, "INT state must be byte-aligned");
@@ -637,7 +655,6 @@ namespace UnityEngine.InputSystem.LowLevel
                     *(double*)valuePtr = value;
                     break;
                 // Not supported:
-                // - kFormatSBit
                 // - kFormatLong
                 // - kFormatULong
                 // - kFormatFloat
