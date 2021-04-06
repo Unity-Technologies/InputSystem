@@ -69,7 +69,7 @@ namespace UnityEngine.InputSystem.Controls
                     displayName = rawKeyName;
                     return;
                 }
-                
+
                 displayName = textInfo.ToTitleCase(keyNameLowerCase);
             }
         }
