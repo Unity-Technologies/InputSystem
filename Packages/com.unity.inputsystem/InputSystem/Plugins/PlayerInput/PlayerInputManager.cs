@@ -1,10 +1,14 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine.Events;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
@@ -664,6 +668,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         private void ValidateInputActionAsset()
         {
             if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
@@ -682,11 +687,16 @@ namespace UnityEngine.InputSystem
                 isValid = false;
             }
 
-            if (!isValid)
-                Debug.LogWarning("The input action asset in the player prefab assigned to PlayerInputManager has " +
-                    "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
-                    "will not work unless the expected input devices are listed as requirements in the input " +
-                    "action asset.");
+            if (isValid) return;
+
+            var assetInfo = actions.name;
+#if UNITY_EDITOR
+            assetInfo = AssetDatabase.GetAssetPath(actions);
+#endif
+            Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
+                             "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
+                             "will not work unless the expected input devices are listed as requirements in the input " +
+                             "action asset.", m_PlayerPrefab);
         }
 
         /// <summary>

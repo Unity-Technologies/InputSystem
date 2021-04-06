@@ -145,13 +145,13 @@ namespace UnityEngine.InputSystem.Editor
 
             if (playerInput == null)
             {
-                EditorGUILayout.HelpBox("No PlayerInput component found in player prefab", MessageType.Info);
+                EditorGUILayout.HelpBox("No PlayerInput component found in player prefab.", MessageType.Info);
                 return;
             }
 
             if (playerInput.actions == null)
             {
-                EditorGUILayout.HelpBox("PlayerInput component has no input action asset assigned", MessageType.Info);
+                EditorGUILayout.HelpBox("PlayerInput component has no input action asset assigned.", MessageType.Info);
                 return;
             }
 
