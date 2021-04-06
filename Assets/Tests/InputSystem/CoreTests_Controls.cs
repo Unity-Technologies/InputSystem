@@ -1073,7 +1073,7 @@ partial class CoreTests
         // Pretend 'a' key is mapped to 'q' in current keyboard layout.
         SetKeyInfo(Key.A, "q");
 
-        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("q [Keyboard]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
     [Preserve]
