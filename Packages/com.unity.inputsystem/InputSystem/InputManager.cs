@@ -1303,6 +1303,9 @@ namespace UnityEngine.InputSystem
             // Let listeners know.
             for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
                 m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+
+            // Try setting next device of same type as current
+            InputSystem.GetDevice(device.GetType())?.MakeCurrent();
         }
 
         public void FlushDisconnectedDevices()

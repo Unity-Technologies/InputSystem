@@ -1565,17 +1565,21 @@ namespace UnityEngine.InputSystem
         public static TDevice GetDevice<TDevice>()
             where TDevice : InputDevice
         {
-            TDevice result = null;
+            return (TDevice)GetDevice(typeof(TDevice));
+        }
+
+        public static InputDevice GetDevice(Type type)
+        {
+            InputDevice result = null;
             var lastUpdateTime = -1.0;
             foreach (var device in devices)
             {
-                var deviceOfType = device as TDevice;
-                if (deviceOfType == null)
+                if (device.GetType() != type)
                     continue;
 
-                if (result == null || deviceOfType.m_LastUpdateTimeInternal > lastUpdateTime)
+                if (result == null || device.m_LastUpdateTimeInternal > lastUpdateTime)
                 {
-                    result = deviceOfType;
+                    result = device;
                     lastUpdateTime = result.m_LastUpdateTimeInternal;
                 }
             }

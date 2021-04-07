@@ -4180,4 +4180,20 @@ partial class CoreTests
         keyboard.SetIMECursorPosition(Vector2.one);
         Assert.That(commandWasSent, Is.True);
     }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_RemovingKeyboardMakesNextKeyboardCurrent()
+    {
+        var keyboard1 = InputSystem.AddDevice<Keyboard>();
+        Press(keyboard1.spaceKey);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
+
+        var keyboard2 = InputSystem.AddDevice<Keyboard>();
+        Press(keyboard2.spaceKey);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard2));
+
+        InputSystem.RemoveDevice(keyboard2);
+        Assert.That(Keyboard.current, Is.EqualTo(keyboard1));
+    }
 }
