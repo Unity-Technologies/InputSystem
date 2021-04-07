@@ -102,9 +102,14 @@ namespace UnityEngine.InputSystem.Editor
 
         private static string GetPropertyTitle(SerializedProperty property)
         {
+            var propertyTitleNumeral = string.Empty;
+
+            if (property.GetParentProperty() != null && property.GetParentProperty().isArray)
+                propertyTitleNumeral = $" {property.GetIndexOfArrayElement()}";
+
             return property.type == nameof(InputActionMap) ?
-                $"Input Action Map {property.GetIndexOfArrayElement()}" :
-                $"Input Action {property.GetIndexOfArrayElement()}";
+                $"Input Action Map{propertyTitleNumeral}" :
+                $"Input Action{propertyTitleNumeral}";
         }
 
         private void OnItemDoubleClicked(ActionTreeItemBase item, SerializedProperty property)
