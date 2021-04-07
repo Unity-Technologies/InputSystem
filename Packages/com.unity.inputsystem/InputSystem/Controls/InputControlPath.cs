@@ -1140,7 +1140,7 @@ namespace UnityEngine.InputSystem
             internal Substring m_DisplayName;
 
             /// <summary>
-            /// Name of the layout (the part in-between '&lt;' and '&gt;') referenced in the component or <c>null</c> if no layout
+            /// Name of the layout (the part between '&lt;' and '&gt;') referenced in the component or <c>null</c> if no layout
             /// is specified. In <c>"&lt;Gamepad&gt;/buttonSouth"</c> the first component will return
             /// <c>"Gamepad"</c> from this property and the second component will return <c>null</c>.
             /// </summary>
@@ -1150,7 +1150,7 @@ namespace UnityEngine.InputSystem
             public string layout => m_Layout.ToString();
 
             /// <summary>
-            /// List of device or control usages (the part in-between '{' and '}') referenced in the component or an empty
+            /// List of device or control usages (the part between '{' and '}') referenced in the component or an empty
             /// enumeration. In <c>"&lt;XRController&gt;{RightHand}/trigger"</c>, for example, the
             /// first component will have a single element <c>"RightHand"</c> in the enumeration
             /// and the second component will have an empty enumeration.
@@ -1389,14 +1389,14 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Break a control path down into its components.
+        /// Splits a control path into its separate components.
         /// </summary>
         /// <param name="path">A control path such as <c>"&lt;Gamepad&gt;/buttonSouth"</c>.</param>
         /// <returns>An enumeration of the parsed components. The enumeration is empty if the given
         /// <paramref name="path"/> is empty.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="path"/> is <c>null</c> or empty.</exception>
         /// <remarks>
-        /// This method can be used, for example, to break down a path found in an binding's <see cref="InputBinding.path"/>.
+        /// You can use this method, for example, to separate out the components in a binding's <see cref="InputBinding.path"/>.
         ///
         /// <example>
         /// <code>
