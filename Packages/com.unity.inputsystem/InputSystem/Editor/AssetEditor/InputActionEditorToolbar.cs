@@ -566,7 +566,7 @@ namespace UnityEngine.InputSystem.Editor
             private void DrawNameEditTextField()
             {
                 EditorGUILayout.BeginHorizontal();
-                var labelSize = EditorStyles.label.CalcSize(s_RequirementsLabel);
+                var labelSize = EditorStyles.label.CalcSize(s_ControlSchemeNameLabel);
                 EditorGUILayout.LabelField(s_ControlSchemeNameLabel, GUILayout.Width(labelSize.x));
 
                 GUI.SetNextControlName("ControlSchemeName");
