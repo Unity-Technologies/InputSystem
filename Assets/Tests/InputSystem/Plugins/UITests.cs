@@ -1549,6 +1549,7 @@ internal class UITests : CoreTestsFixture
     }
 
     // https://fogbugz.unity3d.com/f/cases/1190150/
+    // https://fogbugz.unity3d.com/f/cases/1311018/
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanUseTouchSimulationWithUI()
@@ -1564,9 +1565,10 @@ internal class UITests : CoreTestsFixture
             yield return null;
             scene.leftChildReceiver.events.Clear();
 
+            var position = scene.From640x480ToScreen(123, 123);
             InputSystem.QueueStateEvent(mouse, new MouseState
             {
-                position = scene.From640x480ToScreen(123, 123)
+                position = position
             }.WithButton(MouseButton.Left));
             InputSystem.Update();
 
@@ -1590,6 +1592,8 @@ internal class UITests : CoreTestsFixture
                 Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.pointerType == UIPointerType.Touch));
             Assert.That(scene.leftChildReceiver.events,
                 Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.touchId == 1));
+            Assert.That(scene.leftChildReceiver.events,
+                Has.All.Matches((UICallbackReceiver.Event evt) => evt.pointerData.position == position));
 
             // Release the mouse button so the touch ends. TouchSimulation.Disable() will remove
             // the touchscreen and thus cancel ongoing actions (like Point). This should not result
