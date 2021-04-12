@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -2480,6 +2481,90 @@ internal class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    public IEnumerator UI_WhenMultipleInputModulesExist_ActionsAreNotDisabledUntilTheLastInputModuleIsDisabled()
+    {
+        var firstScene = UITestScene.LoadScene();
+        yield return null;
+
+        var secondScene = UITestScene.LoadScene();
+        yield return null;
+
+        var unloadOperation = SceneManager.UnloadSceneAsync(firstScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        var pointAction = secondScene.InputModule.point.action;
+        Assert.That(pointAction.enabled, Is.True);
+
+        unloadOperation = SceneManager.UnloadSceneAsync(secondScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        Assert.That(pointAction.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("UI")]
+    public void UI_WhenDisablingInputModule_ActionsAreNotDisabledIfTheyWereNotEnabledByTheInputModule()
+    {
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var inputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        GameObject.DestroyImmediate(eventSystemGO);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenAssigningInputModuleAction_PreviousOwnedActionsAreDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        var previousAction = inputModule.point.action;
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        Assert.That(previousAction.enabled, Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_WhenAssigningInputModuleAction_ExternalActionsAreNotDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough, binding: "<Mouse>/scroll/x");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        inputModule.point = InputActionReference.Create(pointAction);
+        inputModule.point = InputActionReference.Create(scrollAction);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
+    [UnityTest]
+    [Category("UI")]
     [Ignore("TODO")]
     public IEnumerator TODO_UI_WhenEnabled_InitialPointerPositionIsPickedUp()
     {
@@ -3349,5 +3434,24 @@ internal class UITests : CoreTestsFixture
 
             return new ConstraintResult(this, actual, true);
         }
+    }
+
+    private class UITestScene
+    {
+        private UITestScene(Scene scene)
+        {
+            Scene = scene;
+        }
+
+        public static UITestScene LoadScene(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+            var scene = EditorSceneManager.LoadSceneInPlayMode(s_TestScenePath, new LoadSceneParameters(loadSceneMode));
+            return new UITestScene(scene);
+        }
+
+        public Scene Scene { get; }
+        public InputSystemUIInputModule InputModule => Scene.GetRootGameObjects()[0].GetComponent<InputSystemUIInputModule>();
+
+        private static string s_TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
     }
 }
