@@ -129,6 +129,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// <seealso cref="overridePath"/>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="InputControlPath.Parse"/>
+        /// <seealso cref="InputControl.path"/>
+        /// <seealso cref="InputSystem.FindControl"/>
         public string path
         {
             get => m_Path;

@@ -78,6 +78,18 @@ however, it has to be formatted properly to pass verification tests.
 - `InputSystemUIInputModule` now has an `xrTrackingOrigin` property. When assigned, this will transform all tracked device positions and rotations from it's local space into Unity's world space ([case 1308480](https://issuetracker.unity3d.com/issues/xr-sdk-tracked-device-raycaster-does-not-work-correctly-with-worldspace-canvas-when-xr-camera-is-offset-from-origin)).
 - Added `InputSystemUIInputModule.GetLastRaycastResult`. This returns the most recent raycast result and can be used to draw ray visualizations or get information on the most recent UI object hit.
 - Added `InputStateBlock` support for `kFormatSBit` when working with floats ([case 1258003](https://issuetracker.unity3d.com/issues/hid-exceptions-are-thrown-when-launching-a-project-while-analog-keyboard-is-connected-to-the-machine)).
+- Added an API to parse control paths.
+  ```CSharp
+  var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
+
+  Debug.Log(parsed.Length); // Prints 2.
+  Debug.Log(parsed[0].layout); // Prints "XRController".
+  Debug.Log(parsed[0].name); // Prints an empty string.
+  Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
+  Debug.Log(parsed[1].layout); // Prints null.
+  Debug.Log(parsed[1].name); // Prints "trigger".
+  ```
+  * Can, for example, be used with `InputBinding.path`.
 
 ## [1.1.0-preview.3] - 2021-02-04
 
