@@ -34,33 +34,13 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC Format => new FourCC('G', 'P', 'A', 'D');
 
-        // On consoles, we use the platform defaults as the gamepad-wide default names.
-        #if UNITY_XBOX_ONE || UNITY_SWITCH
-        internal const string ButtonSouthDisplayName = "A";
-        internal const string ButtonNorthDisplayName = "Y";
-        internal const string ButtonWestDisplayName = "B";
-        internal const string ButtonEastDisplayName = "X";
-
-        internal const string ButtonSouthShortDisplayName = "A";
-        internal const string ButtonNorthShortDisplayName = "Y";
-        internal const string ButtonWestShortDisplayName = "X";
-        internal const string ButtonEastShortDisplayName = "B";
-        #elif UNITY_PS4
-        internal const string ButtonSouthDisplayName = "Cross";
-        internal const string ButtonNorthDisplayName = "Triangle";
-        internal const string ButtonWestDisplayName = "Square";
-        internal const string ButtonEastDisplayName = "Circle";
-
+        // On Sony consoles, we use the platform defaults as the gamepad-wide short default names.
+        #if UNITY_PS4 || UNITY_PS5
         internal const string ButtonSouthShortDisplayName = "Cross";
         internal const string ButtonNorthShortDisplayName = "Triangle";
         internal const string ButtonWestShortDisplayName = "Square";
         internal const string ButtonEastShortDisplayName = "East";
         #else
-        internal const string ButtonSouthDisplayName = "Button South";
-        internal const string ButtonNorthDisplayName = "Button North";
-        internal const string ButtonWestDisplayName = "Button West";
-        internal const string ButtonEastDisplayName = "Button East";
-
         internal const string ButtonSouthShortDisplayName = "A";
         internal const string ButtonNorthShortDisplayName = "Y";
         internal const string ButtonWestShortDisplayName = "X";
@@ -84,10 +64,10 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <seealso cref="Gamepad.rightStickButton"/>
         ////REVIEW: do we want the name to correspond to what's actually on the device?
         [InputControl(name = "dpad", layout = "Dpad", usage = "Hatswitch", displayName = "D-Pad", format = "BIT", sizeInBits = 4, bit = 0)]
-        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = ButtonSouthDisplayName, shortDisplayName = ButtonSouthShortDisplayName)]
-        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = ButtonWestDisplayName, shortDisplayName = ButtonWestShortDisplayName)]
-        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = ButtonNorthDisplayName, shortDisplayName = ButtonNorthShortDisplayName)]
-        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = ButtonEastDisplayName, shortDisplayName = ButtonEastShortDisplayName)]
+        [InputControl(name = "buttonSouth", layout = "Button", bit = (uint)GamepadButton.South, usages = new[] { "PrimaryAction", "Submit" }, aliases = new[] { "a", "cross" }, displayName = "Button South", shortDisplayName = ButtonSouthShortDisplayName)]
+        [InputControl(name = "buttonWest", layout = "Button", bit = (uint)GamepadButton.West, usage = "SecondaryAction", aliases = new[] { "x", "square" }, displayName = "Button West", shortDisplayName = ButtonWestShortDisplayName)]
+        [InputControl(name = "buttonNorth", layout = "Button", bit = (uint)GamepadButton.North, aliases = new[] { "y", "triangle" }, displayName = "Button North", shortDisplayName = ButtonNorthShortDisplayName)]
+        [InputControl(name = "buttonEast", layout = "Button", bit = (uint)GamepadButton.East, usages = new[] { "Back", "Cancel" }, aliases = new[] { "b", "circle" }, displayName = "Button East", shortDisplayName = ButtonEastShortDisplayName)]
         ////FIXME: 'Press' naming is inconsistent with 'Button' naming
         [InputControl(name = "leftStickPress", layout = "Button", bit = (uint)GamepadButton.LeftStick, displayName = "Left Stick Press")]
         [InputControl(name = "rightStickPress", layout = "Button", bit = (uint)GamepadButton.RightStick, displayName = "Right Stick Press")]

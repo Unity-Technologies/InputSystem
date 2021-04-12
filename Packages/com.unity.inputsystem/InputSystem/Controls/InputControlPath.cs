@@ -1330,7 +1330,7 @@ namespace UnityEngine.InputSystem
                 {
                     // Check for direct match.
                     var layoutMatches = Substring.Compare(m_Layout, control.layout,
-                        StringComparison.InvariantCultureIgnoreCase) == 0;
+                        StringComparison.OrdinalIgnoreCase) == 0;
                     if (!layoutMatches)
                     {
                         // No direct match but base layout may match.
@@ -1338,7 +1338,7 @@ namespace UnityEngine.InputSystem
                         while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout) && !layoutMatches)
                         {
                             layoutMatches = Substring.Compare(m_Layout, baseLayout.ToString(),
-                                StringComparison.InvariantCultureIgnoreCase) == 0;
+                                StringComparison.OrdinalIgnoreCase) == 0;
                         }
                     }
 
@@ -1356,7 +1356,7 @@ namespace UnityEngine.InputSystem
                             var controlUsages = control.usages;
                             var haveUsageMatch = false;
                             for (var ci = 0; ci < controlUsages.Count; ++ci)
-                                if (Substring.Compare(controlUsages[ci].ToString(), m_Usages[i], StringComparison.InvariantCultureIgnoreCase) == 0)
+                                if (Substring.Compare(controlUsages[ci].ToString(), m_Usages[i], StringComparison.OrdinalIgnoreCase) == 0)
                                 {
                                     haveUsageMatch = true;
                                     break;
@@ -1372,7 +1372,7 @@ namespace UnityEngine.InputSystem
                 if (!m_Name.isEmpty && !isWildcard)
                 {
                     ////FIXME: unlike the matching path we have in MatchControlsRecursive, this does not take aliases into account
-                    if (Substring.Compare(control.name, m_Name, StringComparison.InvariantCultureIgnoreCase) != 0)
+                    if (Substring.Compare(control.name, m_Name, StringComparison.OrdinalIgnoreCase) != 0)
                         return false;
                 }
 
@@ -1380,7 +1380,7 @@ namespace UnityEngine.InputSystem
                 if (!m_DisplayName.isEmpty)
                 {
                     if (Substring.Compare(control.displayName, m_DisplayName,
-                        StringComparison.InvariantCultureIgnoreCase) != 0)
+                        StringComparison.OrdinalIgnoreCase) != 0)
                         return false;
                 }
 

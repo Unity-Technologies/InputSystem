@@ -1072,14 +1072,14 @@ partial class CoreTests
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"), Is.EqualTo("position [LeftHand XR Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo(GamepadState.ButtonSouthDisplayName + " [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
 
         // OmitDevice.
         Assert.That(
             InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth",
-                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo(GamepadState.ButtonSouthDisplayName));
+                InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("Button South"));
         Assert.That(
             InputControlPath.ToHumanReadableString("*/{PrimaryAction}",
                 InputControlPath.HumanReadableStringOptions.OmitDevice), Is.EqualTo("PrimaryAction"));
@@ -1102,7 +1102,7 @@ partial class CoreTests
         // Pretend 'a' key is mapped to 'q' in current keyboard layout.
         SetKeyInfo(Key.A, "q");
 
-        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("q [Keyboard]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
     [Preserve]
