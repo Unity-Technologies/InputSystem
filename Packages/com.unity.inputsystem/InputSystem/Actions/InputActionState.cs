@@ -3740,16 +3740,36 @@ namespace UnityEngine.InputSystem
                 var state = (InputActionState)handle.Target;
 
                 // If this state is not affected by the change, skip.
-                if (change == InputDeviceChange.Added && !state.CanUseDevice(device))
-                    continue;
-                if (change == InputDeviceChange.Removed && !state.IsUsingDevice(device))
-                    continue;
-                if (change == InputDeviceChange.UsageChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
-                    continue;
-                // NOTE: ConfigurationChanges can affect display names of controls which may make a device usable that
-                //       we didn't find anything usable on before.
-                if (change == InputDeviceChange.ConfigurationChanged && !state.IsUsingDevice(device) && !state.CanUseDevice(device))
-                    continue;
+                switch (change)
+                {
+                    case InputDeviceChange.Added:
+                        if (!state.CanUseDevice(device))
+                            continue;
+                        break;
+
+                    case InputDeviceChange.Removed:
+                        if (!state.IsUsingDevice(device))
+                            continue;
+
+                        // If the device is listed in a device mask (on either a map or an asset) in the
+                        // state, remove it (see Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask).
+                        for (var n = 0; n < state.totalMapCount; ++n)
+                        {
+                            var map = state.maps[n];
+                            map.m_Devices.Remove(device);
+                            map.asset?.m_Devices.Remove(device);
+                        }
+
+                        break;
+
+                    // NOTE: ConfigurationChanges can affect display names of controls which may make a device usable that
+                    //       we didn't find anything usable on before.
+                    case InputDeviceChange.ConfigurationChanged:
+                    case InputDeviceChange.UsageChanged:
+                        if (!state.IsUsingDevice(device) && !state.CanUseDevice(device))
+                            continue;
+                        break;
+                }
 
                 // Trigger a lazy-resolve on all action maps in the state.
                 for (var n = 0; n < state.totalMapCount; ++n)
