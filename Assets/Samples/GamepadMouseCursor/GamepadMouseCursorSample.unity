@@ -2009,25 +2009,57 @@ MonoBehaviour:
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings:
-      - m_Name: 1D Axis
-        m_Id: b76568a4-e709-4fcd-93b2-b99122d04ba2
-        m_Path: 1DAxis
+      - m_Name: 2D Vector
+        m_Id: a83458c2-8559-4d6f-8a77-7809c7290bae
+        m_Path: 2DVector
         m_Interactions: 
         m_Processors: 
         m_Groups: 
         m_Action: Scroll Wheel
         m_Flags: 4
-      - m_Name: negative
-        m_Id: c0e5e582-b229-4ea6-bc19-a3fd7ac7dff3
+      - m_Name: up
+        m_Id: 491f64b1-226e-44a0-80a1-9d4b20456c4e
         m_Path: <Gamepad>/leftShoulder
         m_Interactions: 
         m_Processors: 
         m_Groups: 
         m_Action: Scroll Wheel
         m_Flags: 8
-      - m_Name: positive
-        m_Id: f786f144-8986-4e53-a1b9-8c80250fe721
+      - m_Name: up
+        m_Id: 9912df6a-191b-47e6-beab-1f2262610a15
+        m_Path: <Gamepad>/leftTrigger
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Scroll Wheel
+        m_Flags: 8
+      - m_Name: down
+        m_Id: 234888d8-a7d6-4f1c-94a4-2ab86817b4f0
         m_Path: <Gamepad>/rightShoulder
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Scroll Wheel
+        m_Flags: 8
+      - m_Name: down
+        m_Id: dfb6330f-7642-453f-89b3-d5702106ef2a
+        m_Path: <Gamepad>/rightTrigger
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Scroll Wheel
+        m_Flags: 8
+      - m_Name: left
+        m_Id: 866cbbee-34ae-4417-ba9f-7968a8a9857f
+        m_Path: 
+        m_Interactions: 
+        m_Processors: 
+        m_Groups: 
+        m_Action: Scroll Wheel
+        m_Flags: 8
+      - m_Name: right
+        m_Id: f81f6191-cbf1-4408-a009-bb44b34fdaa2
+        m_Path: 
         m_Interactions: 
         m_Processors: 
         m_Groups: 

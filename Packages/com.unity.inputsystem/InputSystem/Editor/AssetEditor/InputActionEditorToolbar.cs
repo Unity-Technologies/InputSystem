@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private string MakeUniqueControlSchemeName(string name)
         {
-            return StringHelpers.MakeUniqueName(name, m_ControlSchemes, x => x.name);
+            return StringHelpers.MakeUniqueName(name, m_ControlSchemes.Select(x => x.name).Append("All Control Schemes"), x => x);
         }
 
         private static string DeviceRequirementToDisplayString(InputControlScheme.DeviceRequirement requirement)

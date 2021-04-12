@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             // clear out some properties of the InputActionMap (id, name, input actions, and bindings) and
             // recreate the tree view.
 
-            if (property == null)
+            if (property?.GetParentProperty() == null || property.GetParentProperty().isArray == false)
                 return false;
 
             var array = property.GetArrayPropertyFromElement();
