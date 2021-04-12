@@ -145,21 +145,40 @@ namespace UnityEngine.InputSystem.UI
             else
             {
                 stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
-
-                if (stateIndex == -1)
-                {
-                    for (var i = 0; i < m_PointerStates.length; ++i)
-                    {
-                        var eventData = m_PointerStates[i].eventData;
-                        if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
-                            return eventData.pointerEnter != null;
-                    }
-                }
             }
+
             if (stateIndex == -1)
                 return false;
 
             return m_PointerStates[stateIndex].eventData.pointerEnter != null;
+        }
+
+        /// <summary>
+        /// Returns the most recent raycast information for a given pointer or touch.
+        /// </summary>
+        /// <param name="pointerOrTouchId">ID of the pointer or touch. Meaning this should correspond to either
+        /// <c>PointerEventData.pointerId</c> or <see cref="ExtendedPointerEventData.touchId"/>. The pointer ID
+        /// generally corresponds to the <see cref="InputDevice.deviceId"/> of the pointer device. An exception
+        /// to this are touches as a <see cref="Touchscreen"/> may have multiple pointers (one for each active
+        /// finger). For touch, you can use the <see cref="TouchControl.touchId"/> of the touch.
+        ///
+        /// Negative values will return an invalid <see cref="RaycastResult"/>.</param>
+        /// <returns>The most recent raycast information.</returns>
+        /// <remarks>
+        /// This method is for the most recent raycast, but depending on when it's called is not guaranteed to be for the current frame.
+        /// This method can be used to determine raycast distances and hit information for visualization.
+        /// <br />
+        /// Use <see cref="RaycastResult.isValid"/> to determine if pointer hit anything.
+        /// </remarks>
+        /// <seealso cref="ExtendedPointerEventData.touchId"/>
+        /// <seealso cref="InputDevice.deviceId"/>
+        public RaycastResult GetLastRaycastResult(int pointerOrTouchId)
+        {
+            var stateIndex = GetPointerStateIndexFor(pointerOrTouchId);
+            if (stateIndex == -1)
+                return default;
+
+            return m_PointerStates[stateIndex].eventData.pointerCurrentRaycast;
         }
 
         private RaycastResult PerformRaycast(ExtendedPointerEventData eventData)
@@ -208,8 +227,16 @@ namespace UnityEngine.InputSystem.UI
             }
             else if (pointerType == UIPointerType.Tracked)
             {
-                eventData.trackedDeviceOrientation = state.worldOrientation;
-                eventData.trackedDevicePosition = state.worldPosition;
+                var position = state.worldPosition;
+                var rotation = state.worldOrientation;
+                if (m_XRTrackingOrigin != null)
+                {
+                    position = m_XRTrackingOrigin.TransformPoint(position);
+                    rotation = m_XRTrackingOrigin.rotation * rotation;
+                }
+
+                eventData.trackedDeviceOrientation = rotation;
+                eventData.trackedDevicePosition = position;
             }
             else
             {
@@ -243,8 +270,9 @@ namespace UnityEngine.InputSystem.UI
             // We always need to process move-related events in order to get PointerEnter and Exit events
             // when we change UI state (e.g. show/hide objects) without moving the pointer. This unfortunately
             // also means that we will invariably raycast on every update.
-            // However, after that, early out at this point when there's no changes to the pointer state.
-            if (!state.changedThisFrame)
+            // However, after that, early out at this point when there's no changes to the pointer state (except
+            // for tracked pointers as the tracking origin may have moved).
+            if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
                 return;
 
             ProcessPointerButton(ref state.leftButton, eventData);
@@ -589,6 +617,10 @@ namespace UnityEngine.InputSystem.UI
         // Hide this while we still have to figure out what to do with this.
         private float m_TrackedDeviceDragThresholdMultiplier = 2.0f;
 
+        [Tooltip("Transform representing the real world origin for tracking devices. When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.")]
+        [SerializeField]
+        private Transform m_XRTrackingOrigin;
+
         private bool m_IgnoreFocus;
 
         /// <summary>
@@ -650,6 +682,18 @@ namespace UnityEngine.InputSystem.UI
         {
             get => moveRepeatDelay;
             set => moveRepeatDelay = value;
+        }
+
+        /// <summary>
+        /// A <see cref="Transform"/> representing the real world origin for tracking devices.
+        /// This is used to convert real world positions and rotations for <see cref="UIPointerType.Tracked"/> pointers into Unity's global space.
+        /// When using the XR Interaction Toolkit, this should be pointing to the XR Rig's Transform.
+        /// </summary>
+        /// <remarks>This will transform all tracked pointers. If unset, or set to null, the Unity world origin will be used as the basis for all tracked positions and rotations.</remarks>
+        public Transform xrTrackingOrigin
+        {
+            get => m_XRTrackingOrigin;
+            set => m_XRTrackingOrigin = value;
         }
 
         /// <summary>
@@ -1246,14 +1290,22 @@ namespace UnityEngine.InputSystem.UI
             }
         }
 
-        private int GetPointerStateIndexFor(int pointerId)
+        private int GetPointerStateIndexFor(int pointerOrTouchId)
         {
-            if (pointerId == m_CurrentPointerId)
+            if (pointerOrTouchId == m_CurrentPointerId)
                 return m_CurrentPointerIndex;
 
             for (var i = 0; i < m_PointerIds.length; ++i)
-                if (m_PointerIds[i] == pointerId)
+                if (m_PointerIds[i] == pointerOrTouchId)
                     return i;
+
+            // Search for Device or Touch Ids as a fallback
+            for (var i = 0; i < m_PointerStates.length; ++i)
+            {
+                var eventData = m_PointerStates[i].eventData;
+                if (eventData.touchId == pointerOrTouchId || (eventData.touchId != 0 && eventData.device.deviceId == pointerOrTouchId))
+                    return i;
+            }
 
             return -1;
         }

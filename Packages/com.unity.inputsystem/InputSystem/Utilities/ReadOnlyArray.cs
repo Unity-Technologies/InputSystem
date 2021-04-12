@@ -215,5 +215,20 @@ namespace UnityEngine.InputSystem.Utilities
                     return i;
             return -1;
         }
+
+        internal static bool HaveEqualReferences<TValue>(this ReadOnlyArray<TValue> array1, IReadOnlyList<TValue> array2, int count = int.MaxValue)
+        {
+            var length1 = Math.Min(array1.Count, count);
+            var length2 = Math.Min(array2.Count, count);
+
+            if (length1 != length2)
+                return false;
+
+            for (var i = 0; i < length1; ++i)
+                if (!ReferenceEquals(array1[i], array2[i]))
+                    return false;
+
+            return true;
+        }
     }
 }
