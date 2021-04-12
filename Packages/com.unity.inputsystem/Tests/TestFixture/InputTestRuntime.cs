@@ -47,6 +47,12 @@ namespace UnityEngine.InputSystem
 
             lock (m_Lock)
             {
+                if (type == InputUpdateType.Dynamic && !dontAdvanceUnscaledGameTimeNextDynamicUpdate)
+                {
+                    unscaledGameTime += 1 / 30f;
+                    dontAdvanceUnscaledGameTimeNextDynamicUpdate = false;
+                }
+
                 if (m_NewDeviceDiscoveries != null && m_NewDeviceDiscoveries.Count > 0)
                 {
                     if (onDeviceDiscovered != null)
@@ -60,7 +66,10 @@ namespace UnityEngine.InputSystem
                 // Advance time *after* onBeforeUpdate so that events generated from onBeforeUpdate
                 // don't get bumped into the following update.
                 if (type == InputUpdateType.Dynamic && !dontAdvanceTimeNextDynamicUpdate)
+                {
                     currentTime += advanceTimeEachDynamicUpdate;
+                    dontAdvanceTimeNextDynamicUpdate = false;
+                }
 
                 if (onUpdate != null)
                 {
@@ -81,8 +90,6 @@ namespace UnityEngine.InputSystem
                     m_EventCount = 0;
                     m_EventWritePosition = 0;
                 }
-
-                dontAdvanceTimeNextDynamicUpdate = false;
             }
         }
 
@@ -324,6 +331,7 @@ namespace UnityEngine.InputSystem
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
         public float unscaledGameTime { get; set; } = 1;
+        public bool dontAdvanceUnscaledGameTimeNextDynamicUpdate { get; set; }
 
         public double advanceTimeEachDynamicUpdate { get; set; } = 1.0 / 60;
 
