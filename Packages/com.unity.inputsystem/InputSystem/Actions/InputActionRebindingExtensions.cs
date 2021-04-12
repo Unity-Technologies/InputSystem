@@ -1892,8 +1892,7 @@ namespace UnityEngine.InputSystem
                 m_Timeout = default;
                 m_WaitSecondsAfterMatch = default;
                 m_Flags = default;
-                m_StartingActuationControls.Clear();
-                m_StartingActuationsCount = 0;
+                m_StartingActuations?.Clear();
                 return this;
             }
 
@@ -1936,8 +1935,7 @@ namespace UnityEngine.InputSystem
                 var haveChangedCandidates = false;
                 var suppressEvent = false;
                 var controlEnumerationFlags =
-                    InputControlExtensions.Enumerate.IgnoreControlsInCurrentState
-                    | InputControlExtensions.Enumerate.IncludeNonLeafControls
+                    InputControlExtensions.Enumerate.IncludeNonLeafControls
                     | InputControlExtensions.Enumerate.IncludeSyntheticControls;
                 if ((m_Flags & Flags.DontIgnoreNoisyControls) != 0)
                     controlEnumerationFlags |= InputControlExtensions.Enumerate.IncludeNoisyControls;
@@ -1988,9 +1986,15 @@ namespace UnityEngine.InputSystem
                         // However, when such a control goes back to default state, we want to reset that recorded value. This makes
                         // sure that if, for example, a key is down when the rebind started, when the key is released and then pressed
                         // again, we don't compare to the previously recorded magnitude of 1 but rather to 0.
-                        var startingActuationIndex = m_StartingActuationControls.IndexOfReference(control);
-                        if (startingActuationIndex != -1)
-                            m_StaringActuationMagnitudes[startingActuationIndex] = 0;
+                        if (!m_StartingActuations.ContainsKey(control))
+                            // ...but we also need to record the first time this control appears in it's default state for the case where
+                            // the user is holding a discrete control when rebinding starts. On the first release, we'll record here a
+                            // starting actuation of 0, then when the key is pressed again, the code below will successfully compare the
+                            // starting value of 0 to the pressed value of 1. If we didn't set this to zero on release, the user would
+                            // have to release the key, press and release again, and on the next press, it would register as actuated.
+                            m_StartingActuations.Add(control, 0);
+
+                        m_StartingActuations[control] = 0;
 
                         continue;
                     }
@@ -1999,21 +2003,12 @@ namespace UnityEngine.InputSystem
                     if (magnitude >= 0)
                     {
                         // Determine starting actuation.
-                        float startingMagnitude;
-                        var startingActuationIndex = m_StartingActuationControls.IndexOfReference(control);
-                        if (startingActuationIndex != -1)
-                        {
-                            // We have seen this control start actuating before and have recorded its starting actuation.
-                            startingMagnitude = m_StaringActuationMagnitudes[startingActuationIndex];
-                        }
-                        else
+                        if (m_StartingActuations.TryGetValue(control, out var startingMagnitude) == false)
                         {
                             // Haven't seen this control changing actuation yet. Record its current actuation as its
                             // starting actuation and ignore the control if we haven't reached our actuation threshold yet.
                             startingMagnitude = control.EvaluateMagnitude();
-                            var count = m_StartingActuationsCount;
-                            ArrayHelpers.AppendWithCapacity(ref m_StartingActuationControls, ref m_StartingActuationsCount, control);
-                            ArrayHelpers.AppendWithCapacity(ref m_StaringActuationMagnitudes, ref count, startingMagnitude);
+                            m_StartingActuations.Add(control, startingMagnitude);
                         }
 
                         // Ignore control if it hasn't exceeded the magnitude threshold relative to its starting actuation yet.
@@ -2252,8 +2247,7 @@ namespace UnityEngine.InputSystem
                 m_Candidates.Clear();
                 m_Candidates.Capacity = 0; // Release our unmanaged memory.
                 m_StartTime = -1;
-                m_StartingActuationControls.Clear();
-                m_StartingActuationsCount = 0;
+                m_StartingActuations.Clear();
 
                 UnhookOnEvent();
                 UnhookOnAfterUpdate();
@@ -2319,11 +2313,9 @@ namespace UnityEngine.InputSystem
             private StringBuilder m_PathBuilder;
             private Flags m_Flags;
 
-            // Controls may already be actuated by the time we start a rebind. For those, we track starting actutations
+            // Controls may already be actuated by the time we start a rebind. For those, we track starting actuations
             // individually and require them to cross the actuation threshold WRT the starting actuation.
-            private int m_StartingActuationsCount;
-            private float[] m_StaringActuationMagnitudes;
-            private InputControl[] m_StartingActuationControls;
+            private Dictionary<InputControl, float> m_StartingActuations = new Dictionary<InputControl, float>();
 
             [Flags]
             private enum Flags

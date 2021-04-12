@@ -1670,15 +1670,15 @@ partial class CoreTests
     // single bit
     [TestCase(InputStateBlock.kFormatBit, 5, 1, 0u, 0, 0.0f)]
     [TestCase(InputStateBlock.kFormatBit, 10, 1, 1u, 1, 1.0f)]
-    [TestCase(InputStateBlock.kFormatSBit, 15, 1, 0u, -1, null)]
-    [TestCase(InputStateBlock.kFormatSBit, 25, 1, 1u, 1, null)]
-    // multiple bits
-    [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101)]
-    [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue)]
-    [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue)]
-    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, 1073741823)] // excess-K
-    [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1)]
-    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, int.MaxValue)] // excess-K
+    [TestCase(InputStateBlock.kFormatSBit, 15, 1, 0u, -1, -1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 25, 1, 1u, 1, 1.0f)]
+    // multiple bits/
+    [TestCase(InputStateBlock.kFormatBit, 5, 16, 0b1101010101010101u, 0b1101010101010101, 0.8333282470703125f)]
+    [TestCase(InputStateBlock.kFormatSBit, 15, 16, 0b1101010101010101u, 0b1101010101010101 + short.MinValue, 0.666656494140625f)]
+    [TestCase(InputStateBlock.kFormatBit, 16, 31, 0x7fffffffu, int.MaxValue, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 31, 0x7fffffffu, 1073741823, 1.0f)] // excess-K
+    [TestCase(InputStateBlock.kFormatBit, 16, 32, uint.MaxValue, -1, 1.0f)]
+    [TestCase(InputStateBlock.kFormatSBit, 24, 32, uint.MaxValue, int.MaxValue, 1.0f)] // excess-K
     // primitive types
     [TestCase(InputStateBlock.kFormatInt, 32, 32, 0u, 0, 0.0f)]
     [TestCase(InputStateBlock.kFormatInt, 64, 32, 1231231231u, 1231231231, 0.573336720466613769531f)]
