@@ -2479,8 +2479,31 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse));
     }
 
+    private class InputSystemUIInputModuleTestScene_Setup : IPrebuildSetup, IPostBuildCleanup
+    {
+        public void Setup()
+        {
+#if UNITY_EDITOR
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
+                { path = UITestScene.TestScenePath, enabled = true }).ToArray();
+#endif
+        }
+
+        public void Cleanup()
+        {
+#if UNITY_EDITOR
+            Debug.Log("Running post build cleanup");
+            var scenes = EditorBuildSettings.scenes.ToList();
+            scenes.RemoveAll(s => s.path == UITestScene.TestScenePath);
+            EditorBuildSettings.scenes = scenes.ToArray();
+#endif
+        }
+    }
+
     [UnityTest]
     [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
     public IEnumerator UI_WhenMultipleInputModulesExist_ActionsAreNotDisabledUntilTheLastInputModuleIsDisabled()
     {
         var firstScene = UITestScene.LoadScene();
@@ -2524,6 +2547,8 @@ internal class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
     public IEnumerator UI_WhenAssigningInputModuleAction_PreviousOwnedActionsAreDisabled()
     {
         var scene = UITestScene.LoadScene();
@@ -2544,6 +2569,8 @@ internal class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
     public IEnumerator UI_WhenAssigningInputModuleAction_ExternalActionsAreNotDisabled()
     {
         var scene = UITestScene.LoadScene();
@@ -3445,13 +3472,17 @@ internal class UITests : CoreTestsFixture
 
         public static UITestScene LoadScene(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
         {
-            var scene = EditorSceneManager.LoadSceneInPlayMode(s_TestScenePath, new LoadSceneParameters(loadSceneMode));
+#if UNITY_EDITOR
+            var scene = EditorSceneManager.LoadSceneInPlayMode(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#else
+            var scene = SceneManager.LoadScene(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#endif
             return new UITestScene(scene);
         }
 
         public Scene Scene { get; }
         public InputSystemUIInputModule InputModule => Scene.GetRootGameObjects()[0].GetComponent<InputSystemUIInputModule>();
 
-        private static string s_TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
+        public const string TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
     }
 }
