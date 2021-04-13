@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -26,6 +25,7 @@ using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 #if UNITY_2021_2_OR_NEWER
