@@ -1,5 +1,6 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
+using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
@@ -215,10 +216,6 @@ namespace UnityEngine.InputSystem.UI
         // Mouse, pen, touch, and tracked device pointer input all go through here.
         private void ProcessPointer(ref PointerModel state)
         {
-            // If pointer type is tracked, and there is a tracking origin, we need to process all events, in case the origin moved.
-            if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
-                return;
-
             var eventData = state.eventData;
 
             // Sync position.
@@ -270,6 +267,15 @@ namespace UnityEngine.InputSystem.UI
             state.leftButton.CopyPressStateTo(eventData);
 
             ProcessPointerMovement(ref state, eventData);
+
+            // We always need to process move-related events in order to get PointerEnter and Exit events
+            // when we change UI state (e.g. show/hide objects) without moving the pointer. This unfortunately
+            // also means that we will invariably raycast on every update.
+            // However, after that, early out at this point when there's no changes to the pointer state (except
+            // for tracked pointers as the tracking origin may have moved).
+            if (!state.changedThisFrame && (xrTrackingOrigin == null || state.pointerType != UIPointerType.Tracked))
+                return;
+
             ProcessPointerButton(ref state.leftButton, eventData);
             ProcessPointerButtonDrag(ref state.leftButton, eventData);
             ProcessPointerScroll(ref state, eventData);
@@ -714,6 +720,7 @@ namespace UnityEngine.InputSystem.UI
             var oldActionNull = property?.action == null;
             var oldActionEnabled = property?.action != null && property.action.enabled;
 
+            DisableInputAction(property);
             property = newValue;
 
             #if DEBUG
@@ -738,7 +745,7 @@ namespace UnityEngine.InputSystem.UI
             }
 
             if (isActiveAndEnabled && newValue?.action != null && (oldActionEnabled || oldActionNull))
-                newValue.action.Enable();
+                EnableInputAction(property);
         }
 
         #if DEBUG
@@ -1251,38 +1258,66 @@ namespace UnityEngine.InputSystem.UI
 
         private void EnableAllActions()
         {
-            if (!IsAnyActionEnabled())
-            {
-                m_PointAction?.action?.Enable();
-                m_LeftClickAction?.action?.Enable();
-                m_RightClickAction?.action?.Enable();
-                m_MiddleClickAction?.action?.Enable();
-                m_MoveAction?.action?.Enable();
-                m_SubmitAction?.action?.Enable();
-                m_CancelAction?.action?.Enable();
-                m_ScrollWheelAction?.action?.Enable();
-                m_TrackedDeviceOrientationAction?.action?.Enable();
-                m_TrackedDevicePositionAction?.action?.Enable();
-                m_OwnsEnabledState = true;
-            }
+            EnableInputAction(m_PointAction);
+            EnableInputAction(m_LeftClickAction);
+            EnableInputAction(m_RightClickAction);
+            EnableInputAction(m_MiddleClickAction);
+            EnableInputAction(m_MoveAction);
+            EnableInputAction(m_SubmitAction);
+            EnableInputAction(m_CancelAction);
+            EnableInputAction(m_ScrollWheelAction);
+            EnableInputAction(m_TrackedDeviceOrientationAction);
+            EnableInputAction(m_TrackedDevicePositionAction);
         }
 
         private void DisableAllActions()
         {
-            if (m_OwnsEnabledState)
+            DisableInputAction(m_PointAction);
+            DisableInputAction(m_LeftClickAction);
+            DisableInputAction(m_RightClickAction);
+            DisableInputAction(m_MiddleClickAction);
+            DisableInputAction(m_MoveAction);
+            DisableInputAction(m_SubmitAction);
+            DisableInputAction(m_CancelAction);
+            DisableInputAction(m_ScrollWheelAction);
+            DisableInputAction(m_TrackedDeviceOrientationAction);
+            DisableInputAction(m_TrackedDevicePositionAction);
+        }
+
+        private void EnableInputAction(InputActionReference inputActionReference)
+        {
+            if (inputActionReference == null ||
+                inputActionReference.m_ActionId == null ||
+                inputActionReference.action == null)
+                return;
+
+            if (s_InputActionReferenceCounts.TryGetValue(inputActionReference.m_ActionId, out var referenceState))
             {
-                m_OwnsEnabledState = false;
-                m_PointAction?.action?.Disable();
-                m_LeftClickAction?.action?.Disable();
-                m_RightClickAction?.action?.Disable();
-                m_MiddleClickAction?.action?.Disable();
-                m_MoveAction?.action?.Disable();
-                m_SubmitAction?.action?.Disable();
-                m_CancelAction?.action?.Disable();
-                m_ScrollWheelAction?.action?.Disable();
-                m_TrackedDeviceOrientationAction?.action?.Disable();
-                m_TrackedDevicePositionAction?.action?.Disable();
+                referenceState.refCount++;
+                s_InputActionReferenceCounts[inputActionReference.m_ActionId] = referenceState;
             }
+            else
+            {
+                // if the action is already enabled but its reference count is zero then it was enabled by
+                // something outside the input module and the input module should never disable it.
+                referenceState = new InputActionReferenceState {refCount = 1, enabledByInputModule = !inputActionReference.action.enabled};
+                s_InputActionReferenceCounts.Add(inputActionReference.m_ActionId, referenceState);
+            }
+
+            inputActionReference.action.Enable();
+        }
+
+        private void DisableInputAction(InputActionReference inputActionReference)
+        {
+            if (!s_InputActionReferenceCounts.TryGetValue(inputActionReference?.m_ActionId ?? string.Empty,
+                out var referenceState))
+                return;
+
+            if (referenceState.refCount - 1 == 0 && referenceState.enabledByInputModule)
+                inputActionReference?.action?.Disable();
+
+            referenceState.refCount--;
+            s_InputActionReferenceCounts[inputActionReference.m_ActionId] = referenceState;
         }
 
         private int GetPointerStateIndexFor(int pointerOrTouchId)
@@ -1914,7 +1949,14 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private bool m_DeselectOnBackgroundClick = true;
         [SerializeField] private UIPointerBehavior m_PointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
 
-        private bool m_OwnsEnabledState;
+        private static Dictionary<string, InputActionReferenceState> s_InputActionReferenceCounts = new Dictionary<string, InputActionReferenceState>();
+
+        private struct InputActionReferenceState
+        {
+            public int refCount;
+            public bool enabledByInputModule;
+        }
+
         private bool m_ActionsHooked;
         private bool m_NeedToPurgeStalePointers;
 

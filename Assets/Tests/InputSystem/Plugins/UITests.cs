@@ -25,6 +25,7 @@ using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 #if UNITY_2021_2_OR_NEWER
@@ -1116,6 +1117,39 @@ internal class UITests : CoreTestsFixture
                 Assert.That(scene.rightChildReceiver.events[0].pointerData.pointerPressRaycast.screenPosition, Is.EqualTo(default(Vector2)));
             }
         }
+    }
+
+    // https://fogbugz.unity3d.com/f/cases/1232705/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanReceivePointerExitsWhenChangingUIStateWithoutMovingPointer()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = CreateTestUI();
+        var actions = new DefaultInputActions();
+        scene.uiModule.point = InputActionReference.Create(actions.UI.Point);
+
+        Set(mouse.position, scene.From640x480ToScreen(100, 100));
+
+        yield return null;
+
+        Assert.That(scene.eventSystem.IsPointerOverGameObject(), Is.True);
+
+        scene.parentReceiver.events.Clear();
+
+        // Hide the left GO. Should send a pointer exit.
+        scene.leftGameObject.SetActive(false);
+        yield return null;
+
+        // We already disabled the left GO so ExecuteEvents will refuse to send OnPointerExit
+        // to it. However, we should see the exit on the still-active parent.
+        Assert.That(scene.parentReceiver.events,
+            EventSequence(
+                OneEvent("type", EventType.PointerExit),
+                AllEvents("position", scene.From640x480ToScreen(100, 100)),
+                AllEvents("pointerEnter", scene.leftGameObject)
+            )
+        );
     }
 
     [UnityTest]
@@ -2445,6 +2479,117 @@ internal class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse));
     }
 
+    private class InputSystemUIInputModuleTestScene_Setup : IPrebuildSetup, IPostBuildCleanup
+    {
+        public void Setup()
+        {
+#if UNITY_EDITOR
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes.Append(new EditorBuildSettingsScene
+                { path = UITestScene.TestScenePath, enabled = true }).ToArray();
+#endif
+        }
+
+        public void Cleanup()
+        {
+#if UNITY_EDITOR
+            Debug.Log("Running post build cleanup");
+            var scenes = EditorBuildSettings.scenes.ToList();
+            scenes.RemoveAll(s => s.path == UITestScene.TestScenePath);
+            EditorBuildSettings.scenes = scenes.ToArray();
+#endif
+        }
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenMultipleInputModulesExist_ActionsAreNotDisabledUntilTheLastInputModuleIsDisabled()
+    {
+        var firstScene = UITestScene.LoadScene();
+        yield return null;
+
+        var secondScene = UITestScene.LoadScene();
+        yield return null;
+
+        var unloadOperation = SceneManager.UnloadSceneAsync(firstScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        var pointAction = secondScene.InputModule.point.action;
+        Assert.That(pointAction.enabled, Is.True);
+
+        unloadOperation = SceneManager.UnloadSceneAsync(secondScene.Scene);
+        yield return new WaitUntil(() => unloadOperation.isDone);
+
+        Assert.That(pointAction.enabled, Is.False);
+    }
+
+    [Test]
+    [Category("UI")]
+    public void UI_WhenDisablingInputModule_ActionsAreNotDisabledIfTheyWereNotEnabledByTheInputModule()
+    {
+        var eventSystemGO = new GameObject();
+        eventSystemGO.AddComponent<EventSystem>();
+        var inputModule = eventSystemGO.AddComponent<InputSystemUIInputModule>();
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        GameObject.DestroyImmediate(eventSystemGO);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_PreviousOwnedActionsAreDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        var previousAction = inputModule.point.action;
+        inputModule.point = InputActionReference.Create(pointAction);
+
+        Assert.That(previousAction.enabled, Is.False);
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    [PostBuildCleanup(typeof(InputSystemUIInputModuleTestScene_Setup))]
+    public IEnumerator UI_WhenAssigningInputModuleAction_ExternalActionsAreNotDisabled()
+    {
+        var scene = UITestScene.LoadScene();
+        yield return null;
+
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var pointAction = map.AddAction("point", type: InputActionType.PassThrough, binding: "<Mouse>/position");
+        var scrollAction = map.AddAction("scroll", type: InputActionType.PassThrough, binding: "<Mouse>/scroll/x");
+
+        map.Enable();
+
+        var inputModule = scene.InputModule;
+        inputModule.point = InputActionReference.Create(pointAction);
+        inputModule.point = InputActionReference.Create(scrollAction);
+
+        Assert.That(pointAction.enabled, Is.True);
+    }
+
     [UnityTest]
     [Category("UI")]
     [Ignore("TODO")]
@@ -3316,5 +3461,28 @@ internal class UITests : CoreTestsFixture
 
             return new ConstraintResult(this, actual, true);
         }
+    }
+
+    private class UITestScene
+    {
+        private UITestScene(Scene scene)
+        {
+            Scene = scene;
+        }
+
+        public static UITestScene LoadScene(LoadSceneMode loadSceneMode = LoadSceneMode.Additive)
+        {
+#if UNITY_EDITOR
+            var scene = EditorSceneManager.LoadSceneInPlayMode(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#else
+            var scene = SceneManager.LoadScene(TestScenePath, new LoadSceneParameters(loadSceneMode));
+#endif
+            return new UITestScene(scene);
+        }
+
+        public Scene Scene { get; }
+        public InputSystemUIInputModule InputModule => Scene.GetRootGameObjects()[0].GetComponent<InputSystemUIInputModule>();
+
+        public const string TestScenePath = "Assets/Tests/InputSystem/Assets/UIInputModuleTestScene.unity";
     }
 }

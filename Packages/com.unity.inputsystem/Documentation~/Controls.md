@@ -88,6 +88,19 @@ The following table explains the use of each field:
 
 You can access the literal path of a given control via its [`InputControl.path`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_path) property.
 
+If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_Parse_System_String_) API.
+
+```CSharp
+var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
+
+Debug.Log(parsed.Length); // Prints 2.
+Debug.Log(parsed[0].layout); // Prints "XRController".
+Debug.Log(parsed[0].name); // Prints an empty string.
+Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
+Debug.Log(parsed[1].layout); // Prints null.
+Debug.Log(parsed[1].name); // Prints "trigger".
+```
+
 ## Control state
 
 Each Control is connected to a block of memory that is considered the Control's "state". You can query the size, format, and location of this block of memory from a Control through the [`InputControl.stateBlock`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_stateBlock) property.
