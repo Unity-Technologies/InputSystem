@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
-        public unsafe void Update(InputUpdateType type)
+        public void Update(InputUpdateType type)
         {
             if (!onShouldRunUpdate.Invoke(type))
                 return;
@@ -64,17 +64,15 @@ namespace UnityEngine.InputSystem
 
                 if (onUpdate != null)
                 {
-                    var buffer = new InputEventBuffer(
-                        (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
-                        m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
+                    var buffer = new InputEventBuffer(m_EventBuffer, m_EventCount, m_EventWritePosition,
+                        // While we run the event loop, ownership of the buffer transfers to InputManager.
+                        transferNativeArrayOwnership: true);
 
                     onUpdate(type, ref buffer);
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
-                    if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
-                        NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
-                        m_EventBuffer = buffer.data;
+                    m_EventBuffer = buffer.data;
                 }
                 else
                 {
@@ -370,12 +368,14 @@ namespace UnityEngine.InputSystem
 
         public int eventCount => m_EventCount;
 
+        internal const int kDefaultEventBufferSize = 1024 * 512;
+
         private bool m_HasFocus = true;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;
         private int m_EventWritePosition;
-        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(1024 * 1024, Allocator.Persistent);
+        private NativeArray<byte> m_EventBuffer = new NativeArray<byte>(kDefaultEventBufferSize, Allocator.Persistent);
         private List<PairedUser> m_UserPairings;
         private List<KeyValuePair<int, string>> m_NewDeviceDiscoveries;
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;

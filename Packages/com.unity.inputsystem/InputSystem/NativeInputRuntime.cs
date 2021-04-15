@@ -49,11 +49,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (value != null)
                     NativeInputSystem.onUpdate =
                         (updateType, eventBufferPtr) =>
-                    {
-                        var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
-                            eventBufferPtr->eventCount,
-                            sizeInBytes: eventBufferPtr->sizeInBytes,
-                            capacityInBytes: eventBufferPtr->capacityInBytes);
+                        {
+                            var buffer = new InputEventBuffer((InputEvent*)eventBufferPtr->eventBuffer,
+                                eventBufferPtr->eventCount,
+                                sizeInBytes: eventBufferPtr->sizeInBytes,
+                                capacityInBytes: eventBufferPtr->capacityInBytes,
+                                transferMemoryOwnership: true); // Allow InputManager to re-allocate the memory block.
 
                         try
                         {
