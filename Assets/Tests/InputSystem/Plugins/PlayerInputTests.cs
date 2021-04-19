@@ -21,7 +21,7 @@ using Is = UnityEngine.TestTools.Constraints.Is;
 /// <summary>
 /// Tests for <see cref="PlayerInput"/> and <see cref="PlayerInputManager"/>.
 /// </summary>
-internal class PlayerInputTests : InputTestFixture
+internal class PlayerInputTests : CoreTestsFixture
 {
     public override void TearDown()
     {
@@ -1320,6 +1320,59 @@ internal class PlayerInputTests : InputTestFixture
 
     [Test]
     [Category("PlayerInput")]
+    public void PlayerInput_CanLoseAndRegainDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        InputSystem.AddDevice<Keyboard>();
+        InputSystem.AddDevice<Mouse>();
+
+        // Start the player out with the gamepad.
+        var go = new GameObject();
+        go.SetActive(false);
+        var listener = go.AddComponent<MessageListener>();
+        var playerInput = go.AddComponent<PlayerInput>();
+        playerInput.neverAutoSwitchControlSchemes = true;
+        playerInput.defaultControlScheme = "Gamepad";
+        playerInput.defaultActionMap = "gameplay";
+        playerInput.actions = InputActionAsset.FromJson(kActions);
+        go.SetActive(true);
+
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.pairedDevices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.lostDevices, Is.Empty);
+
+        // Now make the player lose the gamepad.
+        // NOTE: PlayerInput should *NOT* switch to keyboard&mouse but rather stick
+        //       with the gamepad scheme even though there's a keyboard and a mouse available.
+        //       We want to treat this as a device-lost situation regardless of what other
+        //       devices are available and not switch to them unless the player picks them up.
+        InputSystem.RemoveDevice(gamepad);
+
+        Assert.That(playerInput.devices, Is.Empty);
+        Assert.That(playerInput.user.pairedDevices, Is.Empty);
+        Assert.That(playerInput.user.lostDevices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnControlsChanged", playerInput),
+            new Message("OnDeviceLost", playerInput),
+        }));
+
+        listener.messages.Clear();
+
+        // Add the device back.
+        InputSystem.AddDevice(gamepad);
+        Assert.That(playerInput.devices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.pairedDevices, Is.EquivalentTo(new[] { gamepad }));
+        Assert.That(playerInput.user.lostDevices, Is.Empty);
+        Assert.That(listener.messages, Is.EquivalentTo(new[]
+        {
+            new Message("OnDeviceRegained", playerInput),////REVIEW: Should this come *after* OnControlsChanged?
+            new Message("OnControlsChanged", playerInput),
+        }));
+    }
+
+    [Test]
+    [Category("PlayerInput")]
     [TestCase(PlayerNotifications.SendMessages, typeof(MessageListener))]
     [TestCase(PlayerNotifications.BroadcastMessages, typeof(MessageListener))]
     [TestCase(PlayerNotifications.InvokeUnityEvents, typeof(PlayerInputEventListener))]
@@ -1735,8 +1788,8 @@ internal class PlayerInputTests : InputTestFixture
             Is.EquivalentTo(new[] { gamepad1, gamepad2, gamepad3, gamepad4 }));
 
         // Join two players and make sure we get two screen side-by-side.
-        Press(gamepad1.buttonSouth);
-        Press(gamepad2.buttonSouth);
+        PressAndRelease(gamepad1.buttonSouth);
+        PressAndRelease(gamepad2.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(2));
 
@@ -1761,7 +1814,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[1].camera.rect.height, Is.EqualTo(1));
 
         // Add one more player and make sure we got a 2x2 setup.
-        Press(gamepad3.buttonSouth);
+        PressAndRelease(gamepad3.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(3));
 
@@ -1794,7 +1847,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
 
         // Join one more player and make sure we got a fully filled 2x2 setup.
-        Press(gamepad4.buttonSouth);
+        PressAndRelease(gamepad4.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
 
@@ -1867,7 +1920,7 @@ internal class PlayerInputTests : InputTestFixture
         Assert.That(PlayerInput.all[2].camera.rect.height, Is.EqualTo(0.5).Within(0.00001));
 
         // Join a new player and make sure the upper right slot gets filled.
-        Press(gamepad2.buttonSouth);
+        PressAndRelease(gamepad2.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(4));
 
@@ -1909,7 +1962,7 @@ internal class PlayerInputTests : InputTestFixture
 
         // Join yet another player and make sure the split-screen setup goes to 3x2.
         var gamepad5 = InputSystem.AddDevice<Gamepad>();
-        Press(gamepad5.buttonSouth);
+        PressAndRelease(gamepad5.buttonSouth);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(5));
 

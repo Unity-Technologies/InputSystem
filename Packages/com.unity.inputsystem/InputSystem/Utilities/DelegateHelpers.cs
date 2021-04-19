@@ -94,5 +94,37 @@ namespace UnityEngine.InputSystem.Utilities
             }
             Profiler.EndSample();
         }
+
+        public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref InlinedArray<Func<TValue1, TValue2, bool>> callbacks,
+            TValue1 argument1, TValue2 argument2, string callbackName, object context = null)
+        {
+            if (callbacks.length == 0)
+                return true;
+            Profiler.BeginSample(callbackName);
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                var lengthBefore = callbacks.length;
+
+                try
+                {
+                    if (callbacks[i](argument1, argument2))
+                        return true;
+                }
+                catch (Exception exception)
+                {
+                    if (context != null)
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                    else
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    Debug.LogException(exception);
+                }
+
+                ////REVIEW: is this enough?
+                if (callbacks.length == lengthBefore - 1)
+                    --i;
+            }
+            Profiler.EndSample();
+            return false;
+        }
     }
 }

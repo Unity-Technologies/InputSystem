@@ -565,8 +565,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
             #endif
 
-            ++s_PlayerState.updateStepCount;
-
             // If we have any touches in activeTouches that are ended or canceled,
             // we need to clear them in the next frame.
             if (s_PlayerState.haveActiveTouchesNeedingRefreshNextUpdate)
@@ -598,7 +596,6 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         internal struct FingerAndTouchState
         {
             public InputUpdateType updateMask;
-            public uint updateStepCount;
             public Finger[] fingers;
             public Finger[] activeFingers;
             public Touch[] activeTouches;
@@ -691,7 +688,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 }
                 activeTouchCount = 0;
                 haveActiveTouchesNeedingRefreshNextUpdate = false;
-                var currentUpdateStepCount = s_PlayerState.updateStepCount;
+                var currentUpdateStepCount = InputUpdate.s_UpdateStepCount;
 
                 ////OPTIMIZE: Handle touchscreens that have no activity more efficiently
                 ////FIXME: This is sensitive to history size; we probably need to ensure that the Begans and Endeds/Canceleds of touches are always available to us

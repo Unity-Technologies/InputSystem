@@ -542,10 +542,18 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
                     if (isSigned)
-                        return logicalMin / (float)((maxValue + 1) / 2);
-                    return logicalMin / (float)maxValue;
+                    {
+                        var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
+                        return NumberHelpers.IntToNormalizedFloat(logicalMin, minValue, maxValue) * 2.0f - 1.0f;
+                    }
+                    else
+                    {
+                        Debug.Assert(logicalMin >= 0, $"Expected logicalMin to be unsigned");
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
+                        return NumberHelpers.UIntToNormalizedFloat((uint)logicalMin, 0, maxValue);
+                    }
                 }
             }
 
@@ -553,10 +561,18 @@ namespace UnityEngine.InputSystem.HID
             {
                 get
                 {
-                    var maxValue = (1 << reportSizeInBits) - 1;
                     if (isSigned)
-                        return logicalMax / (float)((maxValue + 1) / 2);
-                    return logicalMax / (float)maxValue;
+                    {
+                        var minValue = (int)-(long)(1UL << (reportSizeInBits - 1));
+                        var maxValue = (int)((1UL << (reportSizeInBits - 1)) - 1);
+                        return NumberHelpers.IntToNormalizedFloat(logicalMax, minValue, maxValue) * 2.0f - 1.0f;
+                    }
+                    else
+                    {
+                        Debug.Assert(logicalMax >= 0, $"Expected logicalMax to be unsigned");
+                        var maxValue = (uint)((1UL << reportSizeInBits) - 1);
+                        return NumberHelpers.UIntToNormalizedFloat((uint)logicalMax, 0, maxValue);
+                    }
                 }
             }
 
@@ -673,17 +689,11 @@ namespace UnityEngine.InputSystem.HID
                 switch (reportSizeInBits)
                 {
                     case 8:
-                        if (isSigned)
-                            return InputStateBlock.FormatSByte;
-                        return InputStateBlock.FormatByte;
+                        return isSigned ? InputStateBlock.FormatSByte : InputStateBlock.FormatByte;
                     case 16:
-                        if (isSigned)
-                            return InputStateBlock.FormatShort;
-                        return InputStateBlock.FormatUShort;
+                        return isSigned ? InputStateBlock.FormatShort : InputStateBlock.FormatUShort;
                     case 32:
-                        if (isSigned)
-                            return InputStateBlock.FormatInt;
-                        return InputStateBlock.FormatUInt;
+                        return isSigned ? InputStateBlock.FormatInt : InputStateBlock.FormatUInt;
                     default:
                         // Generic bitfield value.
                         return InputStateBlock.FormatBit;
@@ -796,15 +806,14 @@ namespace UnityEngine.InputSystem.HID
                                     // logical min and max but in range with respect to what we can store
                                     // in the bits we have.
 
-                                    // Test lower bound.
-                                    var minMinusOne = logicalMin - 1;
-                                    if (minMinusOne >= 0)
-                                        return new PrimitiveValue(minMinusOne);
+                                    // Test lower bound, we can store >= 0.
+                                    if (logicalMin >= 1)
+                                        return new PrimitiveValue(logicalMin - 1);
 
-                                    // Test upper bound.
-                                    var maxPlusOne = logicalMax + 1;
-                                    if (maxPlusOne <= (1 << reportSizeInBits) - 1)
-                                        return new PrimitiveValue(maxPlusOne);
+                                    // Test upper bound, we can store <= maxValue.
+                                    var maxValue = (1UL << reportSizeInBits) - 1;
+                                    if ((ulong)logicalMax < maxValue)
+                                        return new PrimitiveValue(logicalMax + 1);
                                 }
                                 break;
 
@@ -1097,7 +1106,7 @@ namespace UnityEngine.InputSystem.HID
         /// <remarks>
         /// Note that some of the values are actually ranges.
         /// </remarks>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum UsagePage
         {
             Undefined = 0x00,
@@ -1130,7 +1139,7 @@ namespace UnityEngine.InputSystem.HID
         /// <summary>
         /// Usages in the GenericDesktop HID usage page.
         /// </summary>
-        /// <seealso cref="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
+        /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum GenericDesktop
         {
             Undefined = 0x00,

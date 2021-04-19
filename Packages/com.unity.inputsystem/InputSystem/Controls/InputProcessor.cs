@@ -31,9 +31,9 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Process an input value, given as an object, and return the processed value as an object.
         /// </summary>
-        /// <param name="value">A value of type <see cref="valueType"/>.</param>
+        /// <param name="value">A value matching the processor's value type.</param>
         /// <param name="control">Optional control that the value originated from. Must have the same value type
-        /// that the processor has (<see cref="valueType"/>).</param>
+        /// that the processor has.</param>
         /// <returns>A processed value based on <paramref name="value"/>.</returns>
         /// <remarks>
         /// This method allocates GC heap memory. To process values without allocating GC memory, it is necessary to either know

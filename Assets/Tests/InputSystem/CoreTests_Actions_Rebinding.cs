@@ -625,6 +625,35 @@ internal partial class CoreTests
         }
     }
 
+    // Tests that controls with discrete actuations successfully rebind when the control is already
+    // actuated when rebinding begins.
+    // https://fogbugz.unity3d.com/f/cases/1317225/
+    [Test]
+    [Category("Actions")]
+    public void Actions_InteractiveRebinding_WhenDiscreteControlAlreadyPressed_RebindWorksOnNextActuation()
+    {
+        var action = new InputAction(binding: "<Keyboard>/n");
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Press(keyboard.spaceKey);
+
+        using (var rebind = new InputActionRebindingExtensions.RebindingOperation()
+                   .WithAction(action)
+                   .WithMatchingEventsBeingSuppressed()
+                   .Start())
+        {
+            Release(keyboard.spaceKey);
+
+            Assert.That(rebind.completed, Is.False);
+            Assert.That(rebind.candidates, Is.Empty);
+
+            Press(keyboard.spaceKey);
+
+            Assert.That(rebind.completed, Is.True);
+            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Keyboard>/space"));
+        }
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_InteractiveRebinding_CanGetActuationMagnitudeOfCandidateControls()
@@ -1012,7 +1041,7 @@ internal partial class CoreTests
                 (operation, path) =>
                 {
                     receivedOnApplyBindingCall = true;
-                    Assert.That(path, Is.EqualTo("<Gamepad>/leftStick"));
+                    Assert.That(path, Is.EqualTo("<Gamepad>/leftStick/x"));
                 })
                 .Start();
 

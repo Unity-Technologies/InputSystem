@@ -2,7 +2,6 @@
 using System;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.VersionControl;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -11,30 +10,35 @@ namespace UnityEngine.InputSystem.Editor
         public static Action<string> SetSystemCopyBufferContents = s => EditorGUIUtility.systemCopyBuffer = s;
         public static Func<string> GetSystemCopyBufferContents = () => EditorGUIUtility.systemCopyBuffer;
 
+        // SerializedProperty.tooltip *should* give us the tooltip as per [Tooltip] attribute. Alas, for some
+        // reason, it's not happening.
+        public static string GetTooltip(this SerializedProperty property)
+        {
+            if (!string.IsNullOrEmpty(property.tooltip))
+                return property.tooltip;
+
+            var field = property.GetField();
+            if (field != null)
+            {
+                var tooltipAttribute = field.GetCustomAttribute<TooltipAttribute>();
+                if (tooltipAttribute != null)
+                    return tooltipAttribute.tooltip;
+            }
+
+            return string.Empty;
+        }
+
         public static void RestartEditorAndRecompileScripts(bool dryRun = false)
         {
-            // The APIs here are not public. Use reflection to get to them.
-
-            // Delete compilation output.
-            var editorAssembly = typeof(EditorApplication).Assembly;
-            var editorCompilationInterfaceType =
-                editorAssembly.GetType("UnityEditor.Scripting.ScriptCompilation.EditorCompilationInterface");
-            var editorCompilationInstance = editorCompilationInterfaceType.GetProperty("Instance").GetValue(null);
-            var cleanScriptAssembliesMethod = editorCompilationInstance.GetType().GetMethod("CleanScriptAssemblies");
-            if (!dryRun)
-                cleanScriptAssembliesMethod.Invoke(editorCompilationInstance, null);
-            else if (cleanScriptAssembliesMethod == null)
-                throw new MissingMethodException(editorCompilationInterfaceType.FullName, "CleanScriptAssemblies");
-
-            // Restart editor.
+            // The API here are not public. Use reflection to get to them.
             var editorApplicationType = typeof(EditorApplication);
-            var requestCloseAndRelaunchWithCurrentArgumentsMethod =
-                editorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments",
+            var restartEditorAndRecompileScripts =
+                editorApplicationType.GetMethod("RestartEditorAndRecompileScripts",
                     BindingFlags.NonPublic | BindingFlags.Static);
             if (!dryRun)
-                requestCloseAndRelaunchWithCurrentArgumentsMethod.Invoke(null, null);
-            else if (requestCloseAndRelaunchWithCurrentArgumentsMethod == null)
-                throw new MissingMethodException(editorApplicationType.FullName, "RequestCloseAndRelaunchWithCurrentArguments");
+                restartEditorAndRecompileScripts.Invoke(null, null);
+            else if (restartEditorAndRecompileScripts == null)
+                throw new MissingMethodException(editorApplicationType.FullName, "RestartEditorAndRecompileScripts");
         }
 
         public static void CheckOut(string path)

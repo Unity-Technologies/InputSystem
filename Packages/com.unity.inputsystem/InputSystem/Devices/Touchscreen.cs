@@ -640,16 +640,19 @@ namespace UnityEngine.InputSystem
         /// <param name="eventPtr"></param>
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
+            var eventType = eventPtr.type;
+
+            // We don't allow partial updates for TouchStates.
+            if (eventType == DeltaStateEvent.Type)
+                return;
+
             // If it's not a single touch, just take the event state as is (will have to be TouchscreenState).
-            if (eventPtr.stateFormat != TouchState.Format)
+            var stateEventPtr = StateEvent.FromUnchecked(eventPtr);
+            if (stateEventPtr->stateFormat != TouchState.Format)
             {
                 InputState.Change(this, eventPtr);
                 return;
             }
-
-            // We don't allow partial updates for TouchStates.
-            if (eventPtr.IsA<DeltaStateEvent>())
-                return;
 
             Profiler.BeginSample("TouchAllocate");
 
@@ -657,7 +660,6 @@ namespace UnityEngine.InputSystem
             // ReadValue() of the individual TouchControl children. This means that Touchscreen,
             // unlike other devices, is hardwired to a single memory layout only.
 
-            var stateEventPtr = StateEvent.FromUnchecked(eventPtr);
             var statePtr = currentStatePtr;
             var currentTouchState = (TouchState*)((byte*)statePtr + touches[0].stateBlock.byteOffset);
             var primaryTouchState = (TouchState*)((byte*)statePtr + primaryTouch.stateBlock.byteOffset);
@@ -673,7 +675,7 @@ namespace UnityEngine.InputSystem
             }
             else
             {
-                newTouchState = new TouchState();
+                newTouchState = default;
                 UnsafeUtility.MemCpy(UnsafeUtility.AddressOf(ref newTouchState), stateEventPtr->state, stateEventPtr->stateSizeInBytes);
             }
 
@@ -890,8 +892,43 @@ namespace UnityEngine.InputSystem
             // This method is used to give the input system an offset based on which the input system can compute relative
             // offsets into the state of eventPtr for controls that are part of the control hierarchy rooted at 'control'.
 
-            if (!eventPtr.IsA<StateEvent>() || StateEvent.From(eventPtr)->stateFormat != TouchState.Format)
+            if (!eventPtr.IsA<StateEvent>())
                 return false;
+
+            var stateEventPtr = StateEvent.FromUnchecked(eventPtr);
+            if (stateEventPtr->stateFormat != TouchState.Format)
+                return false;
+
+            // If we get a null control and a TouchState event, all the system wants to know is what
+            // state offset to use to make sense of the event.
+            if (control == null)
+            {
+                // We can't say which specific touch this would go to (if any at all) without going through
+                // the same logic that we run through in OnStateEvent. For the sake of just being able to read
+                // out data from a touch event, it'd be enough to return the offset of *any* TouchControl here.
+                // But for the sake of being able to compare the data in an event to that in the Touchscreen,
+                // this would not be enough. Thus we make an attempt here at locating a touch record which *should*
+                // be receiving the event if it were to be processed by OnStateEvent.
+
+                var currentTouchState = (TouchState*)((byte*)currentStatePtr + touches[0].stateBlock.byteOffset);
+                var eventTouchState = (TouchState*)stateEventPtr->state;
+                var eventTouchId = eventTouchState->touchId;
+                var eventTouchPhase = eventTouchState->phase;
+
+                var touchControlCount = touches.Count;
+                for (var i = 0; i < touchControlCount; ++i)
+                {
+                    var touch = &currentTouchState[i];
+                    if (touch->touchId == eventTouchId || (!touch->isInProgress && eventTouchPhase.IsActive()))
+                    {
+                        offset = primaryTouch.m_StateBlock.byteOffset + primaryTouch.m_StateBlock.alignedSizeInBytes - m_StateBlock.byteOffset +
+                            (uint)(i * UnsafeUtility.SizeOf<TouchState>());
+                        return true;
+                    }
+                }
+
+                return false;
+            }
 
             // The only controls we can read out from a TouchState event are those that are part of TouchControl
             // (and part of this Touchscreen).

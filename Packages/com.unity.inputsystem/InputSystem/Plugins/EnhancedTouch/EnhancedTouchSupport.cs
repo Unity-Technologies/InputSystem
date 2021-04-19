@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
 using UnityEngine.InputSystem.LowLevel;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////REVIEW: this *really* should be renamed to TouchPolling or something like that
 
@@ -13,6 +16,8 @@ using UnityEngine.InputSystem.LowLevel;
 ////REVIEW: have TouchTap, TouchSwipe, etc. wrapper MonoBehaviours like LeanTouch?
 
 ////TODO: as soon as we can break the API, remove the EnhancedTouchSupport class altogether and rename UnityEngine.InputSystem.EnhancedTouch to TouchPolling
+
+////FIXME: does not survive domain reloads
 
 namespace UnityEngine.InputSystem.EnhancedTouch
 {
@@ -85,6 +90,10 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onBeforeUpdate += Touch.BeginUpdate;
             InputSystem.onSettingsChange += OnSettingsChange;
 
+            #if UNITY_EDITOR
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeDomainReload;
+            #endif
+
             SetUpState();
         }
 
@@ -106,7 +115,23 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onBeforeUpdate -= Touch.BeginUpdate;
             InputSystem.onSettingsChange -= OnSettingsChange;
 
+            #if UNITY_EDITOR
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeDomainReload;
+            #endif
+
             TearDownState();
+        }
+
+        internal static void Reset()
+        {
+            Touch.s_Touchscreens = default;
+            Touch.s_PlayerState.Destroy();
+            Touch.s_PlayerState = default;
+            #if UNITY_EDITOR
+            Touch.s_EditorState.Destroy();
+            Touch.s_EditorState = default;
+            #endif
+            s_Enabled = 0;
         }
 
         private static void SetUpState()
@@ -122,7 +147,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 OnDeviceChange(device, InputDeviceChange.Added);
         }
 
-        private static void TearDownState()
+        internal static void TearDownState()
         {
             foreach (var device in InputSystem.devices)
                 OnDeviceChange(device, InputDeviceChange.Removed);
@@ -166,6 +191,16 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             TearDownState();
             SetUpState();
         }
+
+        #if UNITY_EDITOR
+        private static void OnBeforeDomainReload()
+        {
+            // We need to release NativeArrays we're holding before losing track of them during domain reloads.
+            Touch.s_PlayerState.Destroy();
+            Touch.s_EditorState.Destroy();
+        }
+
+        #endif
 
         [Conditional("DEVELOPMENT_BUILD")]
         [Conditional("UNITY_EDITOR")]

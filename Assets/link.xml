@@ -1,0 +1,11 @@
+<linker>
+
+    <!-- Stripping triggers errors in test runs like
+         "ArgumentException: Type provided to TestRunCallbackAttribute does not implement ITestRunCallback"
+         This seems to be triggered by the performance testing framework.
+         Disable all stripping on the test framework as a workaround.
+     -->
+    <assembly fullname="UnityEngine.TestRunner" preserve="all"/>
+    <assembly fullname="Unity.PerformanceTesting" preserve="all"/>
+
+</linker>

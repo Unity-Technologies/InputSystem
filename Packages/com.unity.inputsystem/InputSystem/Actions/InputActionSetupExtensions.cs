@@ -70,6 +70,7 @@ namespace UnityEngine.InputSystem
                     $"An action map called '{map.name}' already exists in the asset");
 
             ArrayHelpers.Append(ref asset.m_ActionMaps, map);
+            asset.MarkAsDirty();
             map.m_Asset = asset;
         }
 
@@ -98,6 +99,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             ArrayHelpers.Erase(ref asset.m_ActionMaps, map);
+            asset.MarkAsDirty();
             map.m_Asset = null;
         }
 
@@ -150,6 +152,7 @@ namespace UnityEngine.InputSystem
         /// <exception cref="ArgumentException"><paramref name="name"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException"><paramref name="map"/> is enabled (see <see cref="InputActionMap.enabled"/>)
         /// -or- <paramref name="map"/> already contains an action called <paramref name="name"/> (case-insensitive).</exception>
+        /// <exception cref="InvalidOperationException"><paramref name="map"/> parent InputActionAsset has one or more maps enabled (see <see cref="InputActionAsset.enabled"/>).</exception>
         public static InputAction AddAction(this InputActionMap map, string name, InputActionType type = default, string binding = null,
             string interactions = null, string processors = null, string groups = null, string expectedControlLayout = null)
         {
@@ -160,6 +163,11 @@ namespace UnityEngine.InputSystem
             if (map.enabled)
                 throw new InvalidOperationException(
                     $"Cannot add action '{name}' to map '{map}' while it the map is enabled");
+            if (map.asset != null)
+                foreach (var assetMap in map.asset.actionMaps)
+                    if (assetMap.enabled)
+                        throw new InvalidOperationException(
+                            $"Cannot add action '{name}' to map '{map}' while any of the maps in the parent input asset are enabled, found '{assetMap}' currently enabled.");
             if (map.FindAction(name) != null)
                 throw new InvalidOperationException(
                     $"Cannot add action with duplicate name '{name}' to set '{map.name}'");
@@ -189,6 +197,9 @@ namespace UnityEngine.InputSystem
                 action.m_Interactions = interactions;
                 action.m_Processors = processors;
             }
+
+            if (map.asset != null)
+                map.asset.MarkAsDirty();
 
             map.ClearPerActionCachedBindingData();
             map.LazyResolveBindings();
@@ -231,6 +242,9 @@ namespace UnityEngine.InputSystem
 
             action.m_ActionMap = null;
             action.m_SingletonActionBindings = bindingsForAction;
+
+            if (actionMap.asset != null)
+                actionMap.asset.MarkAsDirty();
 
             actionMap.ClearPerActionCachedBindingData();
 
@@ -299,7 +313,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Add a binding that references the given <paramref name="control"/> and triggers
-        /// the given <seealso cref="action"/>.
+        /// the given <paramref cref="action"/>.
         /// </summary>
         /// <param name="action">Action to trigger.</param>
         /// <param name="control">Control to bind to. The full <see cref="InputControl.path"/> of the control will
@@ -486,6 +500,11 @@ namespace UnityEngine.InputSystem
                 bindingIndex = ArrayHelpers.Append(ref map.m_Bindings, binding);
             else
                 ArrayHelpers.InsertAt(ref map.m_Bindings, bindingIndex, binding);
+
+            // Make sure this asset is reloaded from disk when exiting play mode so it isn't inadvertently
+            // changed between play sessions. Only applies when running in the editor.
+            if (map.asset != null)
+                map.asset.MarkAsDirty();
 
             // Invalidate per-action binding sets so that this gets refreshed if
             // anyone queries it.
@@ -806,6 +825,9 @@ namespace UnityEngine.InputSystem
             var oldName = action.m_Name;
             action.m_Name = newName;
 
+            if (actionMap?.asset != null)
+                actionMap?.asset.MarkAsDirty();
+
             // Update bindings.
             var bindings = action.GetOrCreateActionMap().m_Bindings;
             var bindingCount = bindings.LengthSafe();
@@ -836,6 +858,8 @@ namespace UnityEngine.InputSystem
                     $"Asset '{asset.name}' already contains a control scheme called '{controlScheme.name}'");
 
             ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
+
+            asset.MarkAsDirty();
         }
 
         /// <summary>
@@ -848,6 +872,26 @@ namespace UnityEngine.InputSystem
         /// <returns>Syntax to allow providing additional configuration for the newly added control scheme.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="name"/>
         /// is <c>null</c> or empty.</exception>
+        /// <remarks>
+        /// <example>
+        /// <code>
+        /// // Create an .inputactions asset.
+        /// var asset = ScriptableObject.CreateInstance&lt;InputActionAsset&gt;();
+        ///
+        /// // Add an action map to it.
+        /// var actionMap = asset.AddActionMap("actions");
+        ///
+        /// // Add an action to it and bind it to the A button on the gamepad.
+        /// // Also, associate that binding with the "Gamepad" control scheme.
+        /// var action = actionMap.AddAction("action");
+        /// action.AddBinding("&lt;Gamepad&gt;/buttonSouth", groups: "Gamepad");
+        ///
+        /// // Add a control scheme called "Gamepad" that requires a Gamepad device.
+        /// asset.AddControlScheme("Gamepad")
+        ///     .WithRequiredDevice&lt;Gamepad&gt;();
+        /// </code>
+        /// </example>
+        /// </remarks>
         public static ControlSchemeSyntax AddControlScheme(this InputActionAsset asset, string name)
         {
             if (asset == null)
@@ -881,11 +925,20 @@ namespace UnityEngine.InputSystem
             var index = asset.FindControlSchemeIndex(name);
             if (index != -1)
                 ArrayHelpers.EraseAt(ref asset.m_ControlSchemes, index);
+
+            asset.MarkAsDirty();
         }
 
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
+        }
+
+        public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
+        {
+            if (required)
+                return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
+            return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
