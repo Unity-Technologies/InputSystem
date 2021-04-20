@@ -668,9 +668,9 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        [Conditional("DEVELOPMENT_BUILD"), Conditional("UNITY_EDITOR")]
         private void ValidateInputActionAsset()
         {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
                 return;
 
@@ -697,6 +697,7 @@ namespace UnityEngine.InputSystem
                 "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
                 "will not work unless the expected input devices are listed as requirements in the input " +
                 "action asset.", m_PlayerPrefab);
+#endif
         }
 
         /// <summary>
