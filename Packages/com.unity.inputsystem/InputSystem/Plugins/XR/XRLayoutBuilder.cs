@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.XR
             for (var i = 0; i < stringLength; i++)
             {
                 var letter = original[i];
-                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || (allowPaths && (letter == '/')))
+                if (char.IsUpper(letter) || char.IsLower(letter) || char.IsDigit(letter) || letter == '_' || (allowPaths && (letter == '/')))
                 {
                     sanitizedName.Append(letter);
                 }
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.XR
                 if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
                     matchedLayout = "XRHMD";
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
-                    matchedLayout = "XRController";
+                    matchedLayout = "XRControllerWithRumble";
             }
 
             string layoutName;
