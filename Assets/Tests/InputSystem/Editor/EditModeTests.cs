@@ -1,0 +1,114 @@
+using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.TestTools;
+
+public class EditModeTests : InputTestFixture
+{
+    class InputUpdateCounter
+    {
+        List<InputUpdateType> m_Updates = new List<InputUpdateType>();
+        
+        public List<InputUpdateType> updates => m_Updates;
+        
+        public bool started { get; private set; }
+
+        public void Start()
+        {
+            if (started)
+                return;
+
+            InputSystem.onAfterUpdate += OnAfterUpdate;
+            started = true;
+        }
+
+        public void Stop()
+        {
+            if (!started)
+                return;
+            
+            InputSystem.onAfterUpdate -= OnAfterUpdate;
+            started = false;
+        }
+
+        void OnAfterUpdate()
+        {
+            m_Updates.Add(InputState.currentUpdateType);
+        }
+
+        public void Reset()
+        {
+            m_Updates.Clear();
+        }
+    }
+
+    [Test]
+    [Category("EditMode")]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
+    public void EditMode_RunUpdatesInEditMode_AllowsNonEditorUpdates(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.settings.updateMode = updateMode;
+        var counter = new InputUpdateCounter();
+        counter.Start();
+        
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(counter.updates.Count, Is.EqualTo(1));
+        Assert.That(counter.updates[0], Is.EqualTo(InputUpdateType.Editor));
+        counter.Reset();
+
+        InputSystem.runUpdatesInEditMode = true;
+        
+        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(updateType);
+
+        Assert.That(counter.updates.Count, Is.EqualTo(2));
+        Assert.That(counter.updates[0], Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(counter.updates[1], Is.EqualTo(updateType));
+        counter.Reset();
+        
+        InputSystem.runUpdatesInEditMode = false;
+        runtime.isInPlayMode = true;
+        counter.Stop();
+    }
+
+    [Test]
+    public void EditMode_InputActions_TriggerInEditMode()
+    {
+        runtime.isInPlayMode = false;
+        InputSystem.runUpdatesInEditMode = true;
+        var counter = new InputUpdateCounter();
+        counter.Start();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/leftTrigger");
+
+        int performedCallCount = 0;
+        action.performed += context => performedCallCount++;
+        action.Enable();
+        
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update(InputUpdateType.Dynamic);
+        
+        Assert.That(performedCallCount, Is.EqualTo(0));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
+        
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly:true);
+        InputSystem.Update(InputUpdateType.Dynamic);
+        
+        Assert.That(performedCallCount, Is.EqualTo(1));
+        Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
+        
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.runUpdatesInEditMode = true;
+        runtime.isInPlayMode = true;
+        counter.Stop();
+    }
+}

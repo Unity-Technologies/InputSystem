@@ -92,6 +92,7 @@ however, it has to be formatted properly to pass verification tests.
   Debug.Log(parsed[1].name); // Prints "trigger".
   ```
   * Can, for example, be used with `InputBinding.path`.
+- Added `InputSystem.runUpdatesInEditMode` to enable processing of non-editor updates without entering playmode.
 
 ## [1.1.0-preview.3] - 2021-02-04
 

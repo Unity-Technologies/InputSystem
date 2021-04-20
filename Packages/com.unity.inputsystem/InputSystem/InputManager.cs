@@ -132,7 +132,7 @@ namespace UnityEngine.InputSystem
                 ////TODO: if we're *inside* an update, this should use the current update type
 
                 #if UNITY_EDITOR
-                if (!gameIsPlayingAndHasFocus)
+                if (!gameIsPlaying || !hasInputFocus)
                     return InputUpdateType.Editor;
                 #endif
 
@@ -296,9 +296,34 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+        private bool m_RunUpdatesInEditMode;
+        
+        public bool runUpdatesInEditMode
+        {
+            get => m_RunUpdatesInEditMode;
+            set => m_RunUpdatesInEditMode = value;
+        }
+#endif
+
+        private bool gameIsPlaying =>
+#if UNITY_EDITOR
+            m_Runtime.isInPlayMode && !m_Runtime.isPaused;
+#else
+            true;
+#endif
+        
+        // TODO Should we assume focus is always true outside the editor?
+        private bool hasInputFocus => 
+#if UNITY_EDITOR
+            (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+#else
+            true;
+#endif
+        
+        private bool shouldProcessInputEvents =>
+#if UNITY_EDITOR
+            (gameIsPlaying || runUpdatesInEditMode) && hasInputFocus;
 #else
             true;
 #endif
@@ -2514,10 +2539,10 @@ namespace UnityEngine.InputSystem
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
             // Ignore editor updates when the game is playing and has focus. All input goes to player.
-            if (gameIsPlayingAndHasFocus)
+            if (gameIsPlaying && hasInputFocus)
                 mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates.
-            else if (updateType != InputUpdateType.Editor)
+            else if (updateType != InputUpdateType.Editor && !runUpdatesInEditMode)
                 return false;
 #endif
             return (updateType & mask) != 0;
@@ -2592,14 +2617,14 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+            var timesliceEvents = shouldProcessInputEvents && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
             // Early out if there's no events to process.
             if (eventBuffer.eventCount <= 0)
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
-                if (gameIsPlayingAndHasFocus)
+                if (shouldProcessInputEvents)
                     ProcessStateChangeMonitorTimeouts();
 
                 #if ENABLE_PROFILER
@@ -2879,7 +2904,7 @@ namespace UnityEngine.InputSystem
                 eventBuffer.Reset();
             }
 
-            if (gameIsPlayingAndHasFocus)
+            if (shouldProcessInputEvents)
                 ProcessStateChangeMonitorTimeouts();
 
             ////TODO: fire event that allows code to update state *from* state we just updated
@@ -3224,7 +3249,7 @@ namespace UnityEngine.InputSystem
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
-            if (updateType == InputUpdateType.Editor && !gameIsPlayingAndHasFocus)
+            if (updateType == InputUpdateType.Editor && (!gameIsPlaying || !hasInputFocus))
             {
                 ////REVIEW: This isn't right. The editor does have update ticks which constitute the equivalent of player frames.
                 // The editor doesn't really have a concept of frame-to-frame operation the
