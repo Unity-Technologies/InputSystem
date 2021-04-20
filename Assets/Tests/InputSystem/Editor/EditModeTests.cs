@@ -11,9 +11,9 @@ public class EditModeTests : InputTestFixture
     class InputUpdateCounter
     {
         List<InputUpdateType> m_Updates = new List<InputUpdateType>();
-        
+
         public List<InputUpdateType> updates => m_Updates;
-        
+
         public bool started { get; private set; }
 
         public void Start()
@@ -29,7 +29,7 @@ public class EditModeTests : InputTestFixture
         {
             if (!started)
                 return;
-            
+
             InputSystem.onAfterUpdate -= OnAfterUpdate;
             started = false;
         }
@@ -56,7 +56,7 @@ public class EditModeTests : InputTestFixture
         InputSystem.settings.updateMode = updateMode;
         var counter = new InputUpdateCounter();
         counter.Start();
-        
+
         InputSystem.Update(InputUpdateType.Editor);
         InputSystem.Update(updateType);
 
@@ -65,7 +65,7 @@ public class EditModeTests : InputTestFixture
         counter.Reset();
 
         InputSystem.runUpdatesInEditMode = true;
-        
+
         InputSystem.Update(InputUpdateType.Editor);
         InputSystem.Update(updateType);
 
@@ -73,7 +73,7 @@ public class EditModeTests : InputTestFixture
         Assert.That(counter.updates[0], Is.EqualTo(InputUpdateType.Editor));
         Assert.That(counter.updates[1], Is.EqualTo(updateType));
         counter.Reset();
-        
+
         InputSystem.runUpdatesInEditMode = false;
         runtime.isInPlayMode = true;
         counter.Stop();
@@ -93,19 +93,19 @@ public class EditModeTests : InputTestFixture
         int performedCallCount = 0;
         action.performed += context => performedCallCount++;
         action.Enable();
-        
+
         Set(gamepad.leftTrigger, 0f);
         InputSystem.Update(InputUpdateType.Dynamic);
-        
+
         Assert.That(performedCallCount, Is.EqualTo(0));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0));
-        
-        Set(gamepad.leftTrigger, 0.75f, queueEventOnly:true);
+
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
         InputSystem.Update(InputUpdateType.Dynamic);
-        
+
         Assert.That(performedCallCount, Is.EqualTo(1));
         Assert.That(action.ReadValue<float>(), Is.EqualTo(0.75f).Within(0.00001f));
-        
+
         InputSystem.RemoveDevice(gamepad);
         InputSystem.runUpdatesInEditMode = true;
         runtime.isInPlayMode = true;

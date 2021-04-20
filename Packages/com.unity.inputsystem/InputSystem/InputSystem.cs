@@ -2609,7 +2609,7 @@ namespace UnityEngine.InputSystem
                     s_Manager.onAfterUpdate -= value;
             }
         }
-        
+
 #if UNITY_EDITOR
         /// <summary>
         /// An override to run <see cref="InputUpdateType.Dynamic"/>, <see cref="InputUpdateType.Fixed"/>, and <see cref="InputUpdateType.BeforeRender"/> updates without entering play mode in the Editor.

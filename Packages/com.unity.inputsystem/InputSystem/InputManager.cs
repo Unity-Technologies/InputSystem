@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
         private bool m_RunUpdatesInEditMode;
-        
+
         public bool runUpdatesInEditMode
         {
             get => m_RunUpdatesInEditMode;
@@ -308,19 +308,19 @@ namespace UnityEngine.InputSystem
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
-            m_Runtime.isInPlayMode && !m_Runtime.isPaused;
+                     m_Runtime.isInPlayMode && !m_Runtime.isPaused;
 #else
             true;
 #endif
-        
+
         // TODO Should we assume focus is always true outside the editor?
-        private bool hasInputFocus => 
+        private bool hasInputFocus =>
 #if UNITY_EDITOR
             (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
 #else
             true;
 #endif
-        
+
         private bool shouldProcessInputEvents =>
 #if UNITY_EDITOR
             (gameIsPlaying || runUpdatesInEditMode) && hasInputFocus;
