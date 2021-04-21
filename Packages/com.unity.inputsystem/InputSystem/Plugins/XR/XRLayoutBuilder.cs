@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.XR
                 if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
                     matchedLayout = "XRHMD";
                 else if ((deviceDescriptor.characteristics & controllerCharacteristics) == controllerCharacteristics)
-                    matchedLayout = "XRControllerWithRumble";
+                    matchedLayout = "XRController";
             }
 
             string layoutName;

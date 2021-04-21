@@ -314,7 +314,6 @@ namespace UnityEngine.InputSystem.XR
 
             InputSystem.RegisterLayout<XRHMD>();
             InputSystem.RegisterLayout<XRController>();
-            InputSystem.RegisterLayout<XRControllerWithRumble>();
 
             InputSystem.onFindLayoutForDevice += XRLayoutBuilder.OnFindLayoutForDevice;
 
