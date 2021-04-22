@@ -2235,13 +2235,13 @@ namespace UnityEngine.InputSystem
         /// meaning that after calling <c>QueueEvent</c>, you will see the event ID with which the event
         /// was queued.
         ///
-        /// Events that are queued during event processing while get processed in the same update.
+        /// Events that are queued during event processing will get processed in the same update.
         /// This happens, for example, when queuing input from within <see cref="onEvent"/> or from
         /// action callbacks such as <see cref="InputAction.performed"/>.
         ///
         /// The total size of <see cref="InputEvent"/>s processed in a single update is limited by
         /// <see cref="InputSettings.maxEventBytesPerUpdate"/>. This also prevents deadlocks when
-        /// each processing of an event leads to one or more events additional getting queued.
+        /// each processing of an event leads to one or more additional events getting queued.
         ///
         /// <example>
         /// <code>

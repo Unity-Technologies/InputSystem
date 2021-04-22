@@ -1506,20 +1506,11 @@ namespace UnityEngine.InputSystem
 
         private unsafe void QueueEvent(InputEvent* eventPtr)
         {
-            // If we're currently in OnUpdate(), we'll have an m_CurrentEventBuffer. In that case,
-            // append events directly to that buffer and do *NOT* go into native. While we are in
-            // OnUpdate(), *we* are in control of the event buffer, not the runtime.
-            if (m_CurrentEventBuffer.data.IsCreated)
+            // If we're currently in OnUpdate(), the m_InputEventStream will be active. In that case,
+            // append events directly to that buffer and do *NOT* go into native.
+            if (m_InputEventStream.isActive)
             {
-                // NOTE: This may *reallocate* the buffer! OnUpdate() has checks around its code
-                //       where it calls into other systems to switch its processing over to a new
-                //       buffer, should one have been allocated.
-                //
-                // IMPORTANT: We do allow AppendEvent() to free the current buffer when it needs to
-                //            reallocate. This means that the pointers in OnUpdate() will become
-                //            invalid. It is thus important that OnUpdate() *first* checks for
-                //            reallocation before trying to access event data again.
-                m_CurrentEventBuffer.AppendEvent(eventPtr);
+                m_InputEventStream.Write(eventPtr);
                 return;
             }
 
@@ -1819,6 +1810,7 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
+        private InputEventStream m_InputEventStream = new InputEventStream();
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
@@ -1829,10 +1821,6 @@ namespace UnityEngine.InputSystem
         private bool m_HaveSentStartupAnalytics;
         #endif
 
-        // While we run updates, we keep track of our current event buffer in case we are queuing new
-        // events from within event processing. Outside of OnUpdate(), this is not set.
-        internal InputEventBuffer m_CurrentEventBuffer;
-        
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
@@ -2572,8 +2560,8 @@ namespace UnityEngine.InputSystem
             // NOTE: This is *not* using try/finally as we've seen unreliability in the EndSample()
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
-            
-            Debug.Assert(!m_CurrentEventBuffer.data.IsCreated, "Already have an event buffer set! Was OnUpdate() called recursively?");
+
+            Debug.Assert(!m_InputEventStream.isActive, "Already have an event buffer set! Was OnUpdate() called recursively?");
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -2637,26 +2625,16 @@ namespace UnityEngine.InputSystem
                 return;
             }
 
-            var currentEventReadPtr =
-                (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
             var processingStartTime = Stopwatch.GetTimestamp();
-
-            // When timeslicing events or in before-render updates, we may be leaving events in the buffer
-            // for later processing. We do this by compacting the event buffer and moving events down such
-            // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
-            // of the buffer.
-            var currentEventWritePtr = currentEventReadPtr;
-            var remainingEventCount = eventBuffer.eventCount;
-            var numEventsRetainedInBuffer = 0;
-
             var totalEventLag = 0.0;
 
-            m_CurrentEventBuffer = eventBuffer;
+            m_InputEventStream.SetNativeInputBuffer(ref eventBuffer);
 
             // Handle events.
-            while (remainingEventCount > 0)
+            while (m_InputEventStream.remainingEventCount > 0)
             {
                 InputDevice device = null;
+                var currentEventReadPtr = m_InputEventStream.currentEventPtr;
 
                 Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
 
@@ -2664,7 +2642,7 @@ namespace UnityEngine.InputSystem
                 // that have before render updates enabled.
                 if (updateType == InputUpdateType.BeforeRender)
                 {
-                    while (remainingEventCount > 0)
+                    while (m_InputEventStream.remainingEventCount > 0)
                     {
                         Debug.Assert(!currentEventReadPtr->handled, "Iterated to event in buffer that is already marked as handled");
 
@@ -2674,11 +2652,10 @@ namespace UnityEngine.InputSystem
                              currentEventReadPtr->type == DeltaStateEvent.Type))
                             break;
 
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
+                        currentEventReadPtr = m_InputEventStream.Advance(leaveEventInBuffer: true);
                     }
                 }
-                if (remainingEventCount == 0)
+                if (m_InputEventStream.remainingEventCount == 0)
                     break;
 
                 var currentEventTimeInternal = currentEventReadPtr->internalTime;
@@ -2699,8 +2676,7 @@ namespace UnityEngine.InputSystem
                     (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                      InputSystem.s_SystemObject.enterPlayModeTime == 0))
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
                     continue;
                 }
                 #endif
@@ -2708,8 +2684,7 @@ namespace UnityEngine.InputSystem
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventTimeInternal >= currentTime)
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
+                    m_InputEventStream.Advance(leaveEventInBuffer: true);
                     continue;
                 }
 
@@ -2727,8 +2702,7 @@ namespace UnityEngine.InputSystem
                     m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
                     #endif
 
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
 
                     // No device found matching event. Ignore it.
                     continue;
@@ -2737,24 +2711,13 @@ namespace UnityEngine.InputSystem
                 // Give listeners a shot at the event.
                 if (m_EventListeners.length > 0)
                 {
-                    var eventCountBefore = eventBuffer.eventCount;
                     for (var i = 0; i < m_EventListeners.length; ++i)
                         m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
-                    
-                    // If the listeners have queued additional events, m_CurrentEventBuffer may have
-                    // had to be reallocated to make space for additional events. If so, switch from our
-                    // current buffer to the new one.
-                    if (eventBuffer.bufferPtr != m_CurrentEventBuffer.bufferPtr)
-                        SwitchToNewEventBuffer(m_CurrentEventBuffer, ref eventBuffer, ref currentEventWritePtr, ref currentEventReadPtr); 
-                            
-                    // Adjust event count in case more events have been injected.
-                    remainingEventCount += eventBuffer.eventCount - eventCountBefore;
 
                     // If a listener marks the event as handled, we don't process it further.
                     if (currentEventReadPtr->handled)
                     {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                        m_InputEventStream.Advance(leaveEventInBuffer: false);
                         continue;
                     }
                 }
@@ -2796,11 +2759,10 @@ namespace UnityEngine.InputSystem
                             #endif
                             break;
                         }
-                        
+
                         // Update the state of the device from the event. If the device is an IInputStateCallbackReceiver,
                         // let the device handle the event. If not, we do it ourselves.
                         var haveChangedStateOtherThanNoise = true;
-                        var eventCountBefore = eventBuffer.eventCount;
                         if (deviceIsStateCallbackReceiver)
                         {
                             // NOTE: We leave it to the device to make sure the event has the right format. This allows the
@@ -2820,10 +2782,6 @@ namespace UnityEngine.InputSystem
 
                             haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
                         }
-                        
-                        if (eventBuffer.bufferPtr != m_CurrentEventBuffer.bufferPtr)
-                            SwitchToNewEventBuffer(m_CurrentEventBuffer, ref eventBuffer, ref currentEventWritePtr, ref currentEventReadPtr);
-                        remainingEventCount += eventBuffer.eventCount - eventCountBefore;
 
                         // Update timestamp on device.
                         // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
@@ -2893,8 +2851,7 @@ namespace UnityEngine.InputSystem
                         break;
                 }
 
-                eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                    ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
+                m_InputEventStream.Advance(leaveEventInBuffer: false);
             }
 
             m_Metrics.totalEventProcessingTime += ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
@@ -2902,26 +2859,10 @@ namespace UnityEngine.InputSystem
 
             // Remember how much data we retained so that we don't count it against the next
             // batch of events that we receive.
-            InputUpdate.s_LastUpdateRetainedEventCount = (uint)numEventsRetainedInBuffer;
-            InputUpdate.s_LastUpdateRetainedEventBytes = (uint)((byte*)currentEventWritePtr -
-                (byte*)NativeArrayUnsafeUtility
-                    .GetUnsafeBufferPointerWithoutChecks(eventBuffer
-                    .data));
+            InputUpdate.s_LastUpdateRetainedEventCount = (uint)m_InputEventStream.numEventsRetainedInBuffer;
+            InputUpdate.s_LastUpdateRetainedEventBytes = m_InputEventStream.numBytesRetainedInBuffer;
 
-            // Update event buffer. If we have retained events, update event count
-            // and buffer size. If not, just reset.
-            if (numEventsRetainedInBuffer > 0)
-            {
-                var bufferPtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
-                Debug.Assert((byte*)currentEventWritePtr > (byte*)bufferPtr);
-                var newBufferSize = (byte*)currentEventWritePtr - (byte*)bufferPtr;
-                eventBuffer = new InputEventBuffer((InputEvent*)bufferPtr, numEventsRetainedInBuffer, (int)newBufferSize,
-                    (int)eventBuffer.capacityInBytes);
-            }
-            else
-            {
-                eventBuffer.Reset();
-            }
+            m_InputEventStream.ReleaseNativeInputBuffer(ref eventBuffer);
 
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();
@@ -2935,8 +2876,6 @@ namespace UnityEngine.InputSystem
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback();
             ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
-            
-            m_CurrentEventBuffer = default;
         }
 
         private void InvokeAfterUpdateCallback()
@@ -2950,13 +2889,13 @@ namespace UnityEngine.InputSystem
         {
             var oldBufferPtr = (byte*)buffer.bufferPtr.data;
             var newBufferPtr = (byte*)newBuffer.bufferPtr.data;
-            
+
             // Adjust pointers.
             var currentWriteOffset = (byte*)currentWritePos - oldBufferPtr;
             var currentReadOffset = (byte*)currentReadPos - oldBufferPtr;
             currentReadPos = (InputEvent*)(newBufferPtr + currentReadOffset);
             currentWritePos = (InputEvent*)(newBufferPtr + currentWriteOffset);
-            
+
             // Free old buffer and switch over.
             buffer.Dispose();
             buffer = newBuffer;

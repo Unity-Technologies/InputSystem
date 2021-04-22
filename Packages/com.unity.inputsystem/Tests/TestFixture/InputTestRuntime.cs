@@ -40,7 +40,7 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
-        public void Update(InputUpdateType type)
+        public unsafe void Update(InputUpdateType type)
         {
             if (!onShouldRunUpdate.Invoke(type))
                 return;
@@ -64,15 +64,18 @@ namespace UnityEngine.InputSystem
 
                 if (onUpdate != null)
                 {
-                    var buffer = new InputEventBuffer(m_EventBuffer, m_EventCount, m_EventWritePosition,
-                        // While we run the event loop, ownership of the buffer transfers to InputManager.
-                        transferNativeArrayOwnership: true);
+                    var buffer = new InputEventBuffer(
+                        (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer),
+                        m_EventCount, m_EventWritePosition, m_EventBuffer.Length);
 
                     onUpdate(type, ref buffer);
 
                     m_EventCount = buffer.eventCount;
                     m_EventWritePosition = (int)buffer.sizeInBytes;
-                    m_EventBuffer = buffer.data;
+
+                    if (NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(buffer.data) !=
+                        NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_EventBuffer))
+                        m_EventBuffer = buffer.data;
                 }
                 else
                 {

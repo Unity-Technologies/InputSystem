@@ -101,7 +101,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// allocator.</param>
         /// <exception cref="ArgumentException"><paramref name="eventPtr"/> is <c>null</c> and <paramref name="eventCount"/> is not zero
         /// -or- <paramref name="capacityInBytes"/> is less than <paramref name="sizeInBytes"/>.</exception>
-        public InputEventBuffer(InputEvent* eventPtr, int eventCount, int sizeInBytes = -1, int capacityInBytes = -1, bool transferMemoryOwnership = false)
+        public InputEventBuffer(InputEvent* eventPtr, int eventCount, int sizeInBytes = -1, int capacityInBytes = -1)
             : this()
         {
             if (eventPtr == null && eventCount != 0)
@@ -119,7 +119,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     capacityInBytes > 0 ? capacityInBytes : 0, Allocator.None);
                 m_SizeInBytes = sizeInBytes >= 0 ? sizeInBytes : BufferSizeUnknown;
                 m_EventCount = eventCount;
-                m_WeOwnTheBuffer = transferMemoryOwnership;
+                m_WeOwnTheBuffer = false;
             }
         }
 
@@ -183,7 +183,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <param name="sizeInBytes">Number of bytes to make available for the event including the event header (see <see cref="InputEvent"/>).</param>
         /// <param name="capacityIncrementInBytes">If the buffer needs to be reallocated to accommodate the event, number of
         /// bytes to grow the buffer by.</param>
-        /// <returns>A pointer to block of memory in <see cref="bufferPtr"/>. Store the event data here.</returns>
+        /// <returns>A pointer to a block of memory in <see cref="bufferPtr"/>. Store the event data here.</returns>
         /// <exception cref="ArgumentException"><paramref name="sizeInBytes"/> is less than the size needed for the
         /// header of an <see cref="InputEvent"/>. Will automatically be aligned to a multiple of 4.</exception>
         /// <remarks>
@@ -219,7 +219,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     UnsafeUtility.MemCpy(newBuffer.GetUnsafePtr(),
                         NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(m_Buffer),
                         this.sizeInBytes);
-                    
+
                     if (m_WeOwnTheBuffer)
                         m_Buffer.Dispose();
                 }

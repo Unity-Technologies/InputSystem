@@ -1999,14 +1999,14 @@ partial class CoreTests
         InputSystem.settings.maxEventBytesPerUpdate = StateEvent.GetEventSizeWithPayload<MouseState>() * 2;
 
         var mouse = InputSystem.AddDevice<Mouse>();
-        
+
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
 
         var eventCount = 0;
-        InputSystem.onEvent += (eventPtr, device) => ++eventCount;
-        
+        InputSystem.onEvent += (eventPtr, device) => ++ eventCount;
+
         LogAssert.Expect(LogType.Error, "Exceeded budget for maximum input event throughput per InputSystem.Update(). Discarding remaining events. "
             + "Increase InputSystem.settings.maxEventBytesPerUpdate or set it to 0 to raise the limit.");
 
@@ -2015,18 +2015,18 @@ partial class CoreTests
         Assert.That(eventCount, Is.EqualTo(2));
         Assert.That(mouse.rightButton.isPressed, Is.True);
         Assert.That(mouse.middleButton.isPressed, Is.False);
-        
+
         eventCount = 0;
 
         // Disable the limit.
         InputSystem.settings.maxEventBytesPerUpdate = 0;
-        
+
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Right));
         InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Middle));
-        
+
         InputSystem.Update();
-        
+
         Assert.That(eventCount, Is.EqualTo(3));
         Assert.That(mouse.rightButton.isPressed, Is.False);
         Assert.That(mouse.middleButton.isPressed, Is.True);
@@ -2038,15 +2038,15 @@ partial class CoreTests
     {
         var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        
+
         var numMouseEventsQueued = InputTestRuntime.kDefaultEventBufferSize / StateEvent.GetEventSizeWithPayload<MouseState>() + 1;
         var numMouseEventsReceived = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-            {
-                if (device == mouse)
-                    ++numMouseEventsReceived;
-            };
+        {
+            if (device == mouse)
+                ++numMouseEventsReceived;
+        };
 
         var action = new InputAction(type: InputActionType.Button, binding: "<Keyboard>/space");
         action.performed +=
@@ -2066,6 +2066,6 @@ partial class CoreTests
         Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
         Assert.That(numMouseEventsReceived, Is.EqualTo(numMouseEventsQueued));
     }
-    
+
     ////TODO: test thread-safe QueueEvent
 }
