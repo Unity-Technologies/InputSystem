@@ -1991,6 +1991,7 @@ partial class CoreTests
 
     [Test]
     [Category("Events")]
+    [Ignore("Not implemented yet. Fix as part of https://jira.unity3d.com/browse/ISX-557.")]
     public void Events_MaximumEventLoadPerUpdateIsLimited()
     {
         // Default setting is 5MB.

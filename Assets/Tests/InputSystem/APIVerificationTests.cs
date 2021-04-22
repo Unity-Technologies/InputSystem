@@ -767,6 +767,7 @@ class APIVerificationTests
         public static UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax AddBinding(UnityEngine.InputSystem.InputActionMap actionMap, string path, string interactions = default(string), string groups = default(string), string action = default(string));
         public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
         public static void DisableDevice(UnityEngine.InputSystem.InputDevice device);
+        public InputEventBuffer(Unity.Collections.NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1) {}
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
