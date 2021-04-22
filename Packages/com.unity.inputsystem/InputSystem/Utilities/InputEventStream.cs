@@ -1,4 +1,3 @@
-using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -10,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Calling Advance will first step through the events from the native side, followed by any events
     /// that have been appended.
     /// </summary>
-    internal unsafe class InputEventStream
+    internal unsafe struct InputEventStream
     {
         public bool isActive => m_IsActive;
 
@@ -30,13 +29,19 @@ namespace UnityEngine.InputSystem.LowLevel
                 (byte*)NativeArrayUnsafeUtility
                     .GetUnsafeBufferPointerWithoutChecks(m_NativeBuffer.data));
 
-        public void SetNativeInputBuffer(ref InputEventBuffer eventBuffer)
+        public InputEventStream(ref InputEventBuffer eventBuffer)
         {
             m_CurrentNativeEventWritePtr = m_CurrentNativeEventReadPtr =
                 (InputEvent*)NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(eventBuffer.data);
 
             m_NativeBuffer = eventBuffer;
             m_RemainingNativeEventCount = m_NativeBuffer.eventCount;
+            m_NumEventsRetainedInBuffer = 0;
+
+            m_CurrentAppendEventReadPtr = m_CurrentAppendEventWritePtr = default;
+            m_AppendBuffer = default;
+            m_RemainingAppendEventCount = 0;
+
             m_IsActive = true;
         }
 
@@ -61,9 +66,6 @@ namespace UnityEngine.InputSystem.LowLevel
 
             eventBuffer = m_NativeBuffer;
             m_IsActive = false;
-            m_RemainingNativeEventCount = 0;
-            m_NumEventsRetainedInBuffer = 0;
-            m_RemainingAppendEventCount = 0;
         }
 
         public void Write(InputEvent* eventPtr)

@@ -1810,7 +1810,7 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
-        private InputEventStream m_InputEventStream = new InputEventStream();
+        private InputEventStream m_InputEventStream;
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
@@ -2628,7 +2628,7 @@ namespace UnityEngine.InputSystem
             var processingStartTime = Stopwatch.GetTimestamp();
             var totalEventLag = 0.0;
 
-            m_InputEventStream.SetNativeInputBuffer(ref eventBuffer);
+            m_InputEventStream = new InputEventStream(ref eventBuffer);
 
             // Handle events.
             while (m_InputEventStream.remainingEventCount > 0)
