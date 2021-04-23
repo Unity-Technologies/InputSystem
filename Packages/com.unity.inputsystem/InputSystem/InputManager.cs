@@ -1506,9 +1506,9 @@ namespace UnityEngine.InputSystem
 
         private unsafe void QueueEvent(InputEvent* eventPtr)
         {
-            // If we're currently in OnUpdate(), the m_InputEventStream will be active. In that case,
+            // If we're currently in OnUpdate(), the m_InputEventStream will be open. In that case,
             // append events directly to that buffer and do *NOT* go into native.
-            if (m_InputEventStream.isActive)
+            if (m_InputEventStream.isOpen)
             {
                 m_InputEventStream.Write(eventPtr);
                 return;
@@ -2561,7 +2561,7 @@ namespace UnityEngine.InputSystem
             //       execution (and we're not sure where it's coming from).
             Profiler.BeginSample("InputUpdate");
 
-            Debug.Assert(!m_InputEventStream.isActive, "Already have an event buffer set! Was OnUpdate() called recursively?");
+            Debug.Assert(!m_InputEventStream.isOpen, "Already have an event buffer set! Was OnUpdate() called recursively?");
 
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -2862,7 +2862,7 @@ namespace UnityEngine.InputSystem
             InputUpdate.s_LastUpdateRetainedEventCount = (uint)m_InputEventStream.numEventsRetainedInBuffer;
             InputUpdate.s_LastUpdateRetainedEventBytes = m_InputEventStream.numBytesRetainedInBuffer;
 
-            m_InputEventStream.ReleaseNativeInputBuffer(ref eventBuffer);
+            m_InputEventStream.Close(ref eventBuffer);
 
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();
@@ -2882,23 +2882,6 @@ namespace UnityEngine.InputSystem
         {
             for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
                 m_AfterUpdateListeners[i]();
-        }
-
-        private static unsafe void SwitchToNewEventBuffer(InputEventBuffer newBuffer, ref InputEventBuffer buffer, ref InputEvent* currentWritePos,
-            ref InputEvent* currentReadPos)
-        {
-            var oldBufferPtr = (byte*)buffer.bufferPtr.data;
-            var newBufferPtr = (byte*)newBuffer.bufferPtr.data;
-
-            // Adjust pointers.
-            var currentWriteOffset = (byte*)currentWritePos - oldBufferPtr;
-            var currentReadOffset = (byte*)currentReadPos - oldBufferPtr;
-            currentReadPos = (InputEvent*)(newBufferPtr + currentReadOffset);
-            currentWritePos = (InputEvent*)(newBufferPtr + currentWriteOffset);
-
-            // Free old buffer and switch over.
-            buffer.Dispose();
-            buffer = newBuffer;
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,

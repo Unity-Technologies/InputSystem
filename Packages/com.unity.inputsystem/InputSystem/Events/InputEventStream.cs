@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -11,7 +12,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     internal unsafe struct InputEventStream
     {
-        public bool isActive => m_IsActive;
+        public bool isOpen => m_IsOpen;
 
         public int remainingEventCount => m_RemainingNativeEventCount + m_RemainingAppendEventCount;
 
@@ -42,10 +43,10 @@ namespace UnityEngine.InputSystem.LowLevel
             m_AppendBuffer = default;
             m_RemainingAppendEventCount = 0;
 
-            m_IsActive = true;
+            m_IsOpen = true;
         }
 
-        public void ReleaseNativeInputBuffer(ref InputEventBuffer eventBuffer)
+        public void Close(ref InputEventBuffer eventBuffer)
         {
             // If we have retained events, update event count and buffer size. If not, just reset.
             if (m_NumEventsRetainedInBuffer > 0)
@@ -65,7 +66,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_AppendBuffer.Dispose();
 
             eventBuffer = m_NativeBuffer;
-            m_IsActive = false;
+            m_IsOpen = false;
         }
 
         public void Write(InputEvent* eventPtr)
@@ -73,7 +74,7 @@ namespace UnityEngine.InputSystem.LowLevel
             var wasAlreadyCreated = m_AppendBuffer.data.IsCreated;
             var oldBufferPtr = (byte*)m_AppendBuffer.bufferPtr.data;
 
-            m_AppendBuffer.AppendEvent(eventPtr);
+            m_AppendBuffer.AppendEvent(eventPtr, allocator: Allocator.Temp);
 
             if (!wasAlreadyCreated)
             {
@@ -128,6 +129,6 @@ namespace UnityEngine.InputSystem.LowLevel
         // that the events we leave in the buffer form one contiguous chunk of memory at the beginning
         // of the buffer.
         private int m_NumEventsRetainedInBuffer;
-        private bool m_IsActive;
+        private bool m_IsOpen;
     }
 }
