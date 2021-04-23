@@ -154,6 +154,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// per <see cref="InputEvent.sizeInBytes"/> found in the event's header.</param>
         /// <param name="capacityIncrementInBytes">If the buffer needs to be reallocated to accommodate the event, number of
         /// bytes to grow the buffer by.</param>
+        /// <param name="allocator">If the buffer needs to be reallocated to accommodate the event, the type of allocation to
+        /// use.</param>
         /// <exception cref="ArgumentNullException"><paramref name="eventPtr"/> is <c>null</c>.</exception>
         /// <remarks>
         /// If the buffer's current capacity (see <see cref="capacityInBytes"/>) is smaller than <see cref="InputEvent.sizeInBytes"/>
@@ -179,7 +181,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <param name="sizeInBytes">Number of bytes to make available for the event including the event header (see <see cref="InputEvent"/>).</param>
         /// <param name="capacityIncrementInBytes">If the buffer needs to be reallocated to accommodate the event, number of
         ///     bytes to grow the buffer by.</param>
-        /// <param name="allocator"></param>
+        /// <param name="allocator">If the buffer needs to be reallocated to accommodate the event, the type of allocation to
+        /// use.</param>
         /// <returns>A pointer to a block of memory in <see cref="bufferPtr"/>. Store the event data here.</returns>
         /// <exception cref="ArgumentException"><paramref name="sizeInBytes"/> is less than the size needed for the
         /// header of an <see cref="InputEvent"/>. Will automatically be aligned to a multiple of 4.</exception>
