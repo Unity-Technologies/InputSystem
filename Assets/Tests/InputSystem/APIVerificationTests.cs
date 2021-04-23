@@ -768,6 +768,8 @@ class APIVerificationTests
         public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
         public static void DisableDevice(UnityEngine.InputSystem.InputDevice device);
         public InputEventBuffer(Unity.Collections.NativeArray<byte> buffer, int eventCount, int sizeInBytes = -1) {}
+        public void AppendEvent(UnityEngine.InputSystem.LowLevel.InputEvent* eventPtr, int capacityIncrementInBytes = 2048);
+        public UnityEngine.InputSystem.LowLevel.InputEvent* AllocateEvent(int sizeInBytes, int capacityIncrementInBytes = 2048);
     ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
