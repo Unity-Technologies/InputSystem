@@ -3054,8 +3054,11 @@ internal class UITests : CoreTestsFixture
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
 
-            ////TODO: this line is broken on trunk, figure out why and fix it
-            // Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
+            ////FIXME: as of a time of writing, this line is broken on trunk due to a bug in UITK
+            // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
+            #if UNITY_2021_3_OR_NEWER
+            Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
+            #endif
 
             // Try a button press with the gamepad.
             // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
