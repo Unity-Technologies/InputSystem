@@ -318,7 +318,7 @@ internal class UITests : CoreTestsFixture
         scene.eventSystem.InvokeUpdate();
 
         const int kHaveMovementEvents =
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
             1
 #else
             0
