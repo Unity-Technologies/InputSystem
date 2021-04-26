@@ -1548,10 +1548,25 @@ internal class PlayerInputTests : CoreTestsFixture
     [TestCase("Keyboard", "space", "<Mouse>/position/x", "b", "Mouse")]
     public void PlayerInput_CanJoinPlayersThroughButtonPress(string deviceLayout, string buttonControl, string nonButtonControl, string anotherButtonControl, string secondDeviceLayout = null)
     {
+        InputDevice[] AddDevices()
+        {
+            var firstDevice = InputSystem.AddDevice(deviceLayout);
+
+            var secondDevice = default(InputDevice);
+            if (!string.IsNullOrEmpty(secondDeviceLayout))
+                secondDevice = InputSystem.AddDevice(secondDeviceLayout);
+
+            return secondDevice == null ? new[] { firstDevice } : new[] { firstDevice, secondDevice };
+        }
+
+        var playerPrefabActions = InputActionAsset.FromJson(kActions);
         var playerPrefab = new GameObject();
-        playerPrefab.SetActive(false);
+        var playerPrefabParent = new GameObject();
+        playerPrefab.transform.parent = playerPrefabParent.transform;
+        playerPrefabParent.SetActive(false);
+        playerPrefab.SetActive(true);
         playerPrefab.AddComponent<PlayerInput>();
-        playerPrefab.GetComponent<PlayerInput>().actions = InputActionAsset.FromJson(kActions);
+        playerPrefab.GetComponent<PlayerInput>().actions = playerPrefabActions;
 
         var manager = new GameObject();
         var listener = manager.AddComponent<MessageListener>();
@@ -1559,13 +1574,7 @@ internal class PlayerInputTests : CoreTestsFixture
         managerComponent.joinBehavior = PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed;
         managerComponent.playerPrefab = playerPrefab;
 
-        var device = InputSystem.AddDevice(deviceLayout);
-
-        var secondDevice = default(InputDevice);
-        if (!string.IsNullOrEmpty(secondDeviceLayout))
-            secondDevice = InputSystem.AddDevice(secondDeviceLayout);
-
-        var devices = secondDevice == null ? new[] { device } : new[] { device, secondDevice };
+        var firstPlayerDevices = AddDevices();
 
         // First actuate non-button control and make sure it does NOT result in a join.
         Set((InputControl<float>)InputSystem.FindControl(nonButtonControl), 1f);
@@ -1574,10 +1583,10 @@ internal class PlayerInputTests : CoreTestsFixture
         Assert.That(listener.messages, Is.Empty);
 
         // Now press button and make sure it DOES result in a join.
-        Press((ButtonControl)device[buttonControl]);
+        Press((ButtonControl)firstPlayerDevices[0][buttonControl]);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(1));
-        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(devices));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(firstPlayerDevices));
         Assert.That(PlayerInput.all[0].user.valid, Is.True);
         Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerJoined", PlayerInput.all[0])}));
 
@@ -1585,11 +1594,27 @@ internal class PlayerInputTests : CoreTestsFixture
 
         listener.messages.Clear();
 
-        Release((ButtonControl)device[buttonControl]);
-        Press((ButtonControl)device[anotherButtonControl]);
+        Release((ButtonControl)firstPlayerDevices[0][buttonControl]);
+        Press((ButtonControl)firstPlayerDevices[0][anotherButtonControl]);
 
         Assert.That(PlayerInput.all, Has.Count.EqualTo(1));
         Assert.That(listener.messages, Is.Empty);
+
+        // Add another device or set of devices and join another player.
+        var secondPlayerDevices = AddDevices();
+        Press((ButtonControl)secondPlayerDevices[0][buttonControl]);
+
+        Assert.That(PlayerInput.all, Has.Count.EqualTo(2));
+        Assert.That(PlayerInput.all[0].devices, Is.EquivalentTo(firstPlayerDevices));
+        Assert.That(PlayerInput.all[0].user.valid, Is.True);
+        Assert.That(PlayerInput.all[1].devices, Is.EquivalentTo(secondPlayerDevices));
+        Assert.That(PlayerInput.all[1].user.valid, Is.True);
+        Assert.That(listener.messages, Is.EquivalentTo(new[] { new Message("OnPlayerJoined", PlayerInput.all[1])}));
+
+        // Make sure that no cloning of actions happened on the prefab.
+        // https://fogbugz.unity3d.com/f/cases/1319756/
+        Assert.That(playerPrefab.GetComponent<PlayerInput>().actions, Is.SameAs(playerPrefabActions));
+        Assert.That(playerPrefab.GetComponent<PlayerInput>().m_ActionsInitialized, Is.False);
     }
 
     // https://fogbugz.unity3d.com/f/cases/1226920/
