@@ -321,7 +321,10 @@ namespace UnityEngine.InputSystem.Editor
 
         private string MakeUniqueControlSchemeName(string name)
         {
-            return StringHelpers.MakeUniqueName(name, m_ControlSchemes.Select(x => x.name).Append("All Control Schemes"), x => x);
+            const string presetName = "All Control Schemes";
+            if (m_ControlSchemes == null)
+                return StringHelpers.MakeUniqueName(name, new[] {presetName}, x => x);
+            return StringHelpers.MakeUniqueName(name, m_ControlSchemes.Select(x => x.name).Append(presetName), x => x);
         }
 
         private static string DeviceRequirementToDisplayString(InputControlScheme.DeviceRequirement requirement)
@@ -566,7 +569,7 @@ namespace UnityEngine.InputSystem.Editor
             private void DrawNameEditTextField()
             {
                 EditorGUILayout.BeginHorizontal();
-                var labelSize = EditorStyles.label.CalcSize(s_RequirementsLabel);
+                var labelSize = EditorStyles.label.CalcSize(s_ControlSchemeNameLabel);
                 EditorGUILayout.LabelField(s_ControlSchemeNameLabel, GUILayout.Width(labelSize.x));
 
                 GUI.SetNextControlName("ControlSchemeName");
