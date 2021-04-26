@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 
@@ -2468,6 +2469,34 @@ partial class CoreTests
 
     [Test]
     [Category("Editor")]
+    public void Editor_LeavingPlayMode_RemovesAllInputUsersAndStopsListeningForUnpairedDeviceActivity()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enter play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+        var user = InputUser.PerformPairingWithDevice(gamepad);
+        ++InputUser.listenForUnpairedDeviceActivity;
+        InputUser.onUnpairedDeviceUsed += (control, ptr) => {};
+
+        Assert.That(user.valid, Is.True);
+        Assert.That(InputUser.all, Has.Count.EqualTo(1));
+
+        // Exit play mode.
+        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+        Assert.That(user.valid, Is.False);
+        Assert.That(InputUser.all, Has.Count.Zero);
+
+        // Send an event to make sure InputUser removed its event hook.
+        Press(gamepad.buttonSouth);
+    }
+
+    [Test]
+    [Category("Editor")]
     public void Editor_LeavingPlayMode_DiscardsInputActionAssetChanges()
     {
         // Control schemes
@@ -2521,7 +2550,6 @@ partial class CoreTests
         asset.AddActionMap("ActionMapToModify");
         asset.AddControlScheme("ControlSchemeToRemove");
 
-
         File.WriteAllText(m_TestAssetPath, asset.ToJson());
         AssetDatabase.ImportAsset(m_TestAssetPath);
         asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
@@ -2538,7 +2566,6 @@ partial class CoreTests
         // Exit play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
-
 
         var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);

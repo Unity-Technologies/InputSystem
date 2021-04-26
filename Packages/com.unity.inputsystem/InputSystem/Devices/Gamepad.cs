@@ -583,6 +583,15 @@ namespace UnityEngine.InputSystem
         /// The gamepad last used/connected by the player or <c>null</c> if there is no gamepad connected
         /// to the system.
         /// </summary>
+        /// <remarks>
+        /// When added, a device is automatically made current (see <see cref="InputDevice.MakeCurrent"/>), so
+        /// when connecting a gamepad, it will also become current. After that, it will only become current again
+        /// when input on non-noisy controls (see <see cref="InputControl.noisy"/>) is received.
+        ///
+        /// For local multiplayer scenarios (or whenever there are multiple gamepads that need to be usable
+        /// in a concurrent fashion), it is not recommended to rely on this property. Instead, it is recommended
+        /// to use <see cref="PlayerInput"/> or <see cref="Users.InputUser"/>.
+        /// </remarks>
         /// <seealso cref="InputSettings.filterNoiseOnCurrent"/>
         /// <seealso cref="InputDevice.MakeCurrent"/>
         /// <seealso cref="all"/>
