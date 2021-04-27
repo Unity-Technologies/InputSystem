@@ -308,7 +308,7 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (!m_ActionsInitialized && gameObject.activeSelf)
+                if (!m_ActionsInitialized && gameObject.activeInHierarchy)
                     InitializeActions();
                 return m_Actions;
             }
@@ -321,7 +321,7 @@ namespace UnityEngine.InputSystem
                 if (m_Actions != null)
                 {
                     m_Actions.Disable();
-                    if (m_Enabled)
+                    if (m_ActionsInitialized)
                         UninitializeActions();
                 }
 
@@ -1106,7 +1106,7 @@ namespace UnityEngine.InputSystem
         [NonSerialized] private int m_PlayerIndex = -1;
         [NonSerialized] private bool m_InputActive;
         [NonSerialized] private bool m_Enabled;
-        [NonSerialized] private bool m_ActionsInitialized;
+        [NonSerialized] internal bool m_ActionsInitialized;
         [NonSerialized] private Dictionary<string, string> m_ActionMessageNames;
         [NonSerialized] private InputUser m_InputUser;
         [NonSerialized] private Action<InputAction.CallbackContext> m_ActionTriggeredDelegate;
