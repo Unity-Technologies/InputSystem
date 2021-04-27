@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <param name="buffer">A native array containing <paramref name="eventCount"/> number of input events. The
         /// individual events in the buffer are variable-sized (depending on the type of each event).</param>
         /// <param name="eventCount">The number of events in <paramref name="buffer"/>. Can be zero.</param>
-        /// <param name="sizeInBytes">Total number of bytes of event data in the <see cref="buffer"/>.
+        /// <param name="sizeInBytes">Total number of bytes of event data in the <paramref cref="buffer"/>.
         /// If -1 (default), the size of the actual event data in <paramref name="buffer"/> is considered unknown and has to be determined by walking
         /// <paramref name="eventCount"/> number of events (due to the variable size of each event).</param>
         /// <param name="transferNativeArrayOwnership">If true, ownership of the <c>NativeArray</c> given by <paramref name="buffer"/> is
