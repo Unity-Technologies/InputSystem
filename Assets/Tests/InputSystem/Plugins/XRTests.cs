@@ -117,7 +117,7 @@ internal class XRTests : CoreTestsFixture
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         var createdDevice = InputSystem.devices[0];
 
-        Assert.AreEqual(createdDevice.layout, "XRInputV1::Manufacturer::XRThisLayoutShouldhave1ValidName");
+        Assert.AreEqual(createdDevice.layout, "XRInputV1::__Manufacturer::XR_ThisLayoutShouldhave1ValidName");
     }
 
     [Test]
