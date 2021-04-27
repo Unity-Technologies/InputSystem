@@ -3054,7 +3054,8 @@ internal class UITests : CoreTestsFixture
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
 
-            ////FIXME: as of a time of writing, this line is broken on trunk due to a bug in UITK
+            ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
+            // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
             // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
             #if UNITY_2021_3_OR_NEWER
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
