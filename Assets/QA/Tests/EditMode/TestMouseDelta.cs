@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -15,10 +15,10 @@ public class TestMouseDelta : MonoBehaviour
 
     [SerializeField]
     TestState m_DynamicTestState;
-    
+
     [SerializeField]
     TestState m_EditorTestState;
-    
+
     // Start is called before the first frame update
     void OnEnable()
     {
@@ -30,7 +30,7 @@ public class TestMouseDelta : MonoBehaviour
     {
         InputSystem.onAfterUpdate -= AfterInputSystemUpdate;
     }
-    
+
     void AfterInputSystemUpdate()
     {
         var updateType = InputState.currentUpdateType;

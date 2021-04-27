@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,10 +11,10 @@ public class EditModeGhostCam : MonoBehaviour
 
     [SerializeField, Range(1f, 10f)]
     float m_SpeedMultiplier;
-    
+
     [SerializeField, Range(0.01f, 1f)]
     float m_RotateSpeed;
-    
+
     [SerializeField]
     InputActionReference m_MoveActionReference;
 
@@ -26,7 +26,7 @@ public class EditModeGhostCam : MonoBehaviour
 
     [SerializeField]
     InputActionReference m_SpeedActionReference;
-    
+
     InputAction m_MoveAction;
     InputAction m_LookAction;
     InputAction m_ResetAction;
@@ -38,7 +38,7 @@ public class EditModeGhostCam : MonoBehaviour
         EnableAction(ref m_ResetActionReference, ref m_ResetAction, ResetRequested);
         EnableAction(ref m_SpeedActionReference, ref m_SpeedAction);
     }
-    
+
     void OnDisable()
     {
         DisableAction(ref m_MoveAction);
@@ -58,7 +58,7 @@ public class EditModeGhostCam : MonoBehaviour
         {
             if (performedCallback != null)
                 action.performed += performedCallback;
-            
+
             action.Enable();
         }
     }
@@ -68,11 +68,11 @@ public class EditModeGhostCam : MonoBehaviour
         if (action != null)
         {
             action.Disable();
-            
+
             if (performedCallback != null)
                 action.performed -= performedCallback;
         }
-        
+
         action = null;
     }
 
@@ -82,7 +82,7 @@ public class EditModeGhostCam : MonoBehaviour
         {
             var look = m_LookAction.ReadValue<Vector2>();
             look *= m_RotateSpeed;
-            
+
             var myTransform = transform;
             myTransform.localEulerAngles = myTransform.localEulerAngles + new Vector3(-look.y, look.x, 0f);
         }
@@ -113,7 +113,7 @@ public class EditModeGhostCam : MonoBehaviour
         DisableAction(ref m_LookAction);
         DisableAction(ref m_ResetAction, ResetRequested);
         DisableAction(ref m_SpeedAction);
-        
+
         EnableAction(ref m_MoveActionReference, ref m_MoveAction);
         EnableAction(ref m_LookActionReference, ref m_LookAction);
         EnableAction(ref m_ResetActionReference, ref m_ResetAction, ResetRequested);

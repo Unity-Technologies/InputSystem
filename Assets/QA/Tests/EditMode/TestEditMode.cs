@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +15,7 @@ public class TestEditMode : MonoBehaviour
         set => m_RunUpdatesInEditMode = value;
     }
 
+#if UNITY_EDITOR
     void OnEnable()
     {
         EditorApplication.update += TickEditor;
@@ -39,4 +40,6 @@ public class TestEditMode : MonoBehaviour
     {
         EditorApplication.QueuePlayerLoopUpdate();
     }
+
+#endif
 }

@@ -2810,8 +2810,11 @@ namespace UnityEngine.InputSystem
                         // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
                         //       Only events should. If running play mode updates in editor, we want to defer to the play mode
                         //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
-                        if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime &&
-                            !(updateType == InputUpdateType.Editor && runUpdatesInEditMode))
+                        if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
+#if UNITY_EDITOR
+                            && !(updateType == InputUpdateType.Editor && runUpdatesInEditMode)
+#endif
+                        )
                             device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
                         // Make device current. Again, only do this when receiving events.
@@ -2878,10 +2881,14 @@ namespace UnityEngine.InputSystem
 
                 // Editor updates go into a separate buffer.  If we want to update the player buffer,
                 // we need to keep the events in the queue, and reprocess again once we are in a player-based update loop.
-                bool leaveInBuffer = updateType == InputUpdateType.Editor && 
-                                        runUpdatesInEditMode &&
-                                        (currentEventReadPtr->type == StateEvent.Type ||
-                                        currentEventReadPtr->type == DeltaStateEvent.Type);
+#if UNITY_EDITOR
+                bool leaveInBuffer = updateType == InputUpdateType.Editor &&
+                    runUpdatesInEditMode &&
+                    (currentEventReadPtr->type == StateEvent.Type ||
+                        currentEventReadPtr->type == DeltaStateEvent.Type);
+#else
+                bool leaveInBuffer = false;
+#endif
                 eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
                     ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: leaveInBuffer);
             }
