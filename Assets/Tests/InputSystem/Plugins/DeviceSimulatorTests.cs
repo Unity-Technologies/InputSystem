@@ -1,13 +1,10 @@
 #if UNITY_EDITOR && UNITY_2021_1_OR_NEWER
 
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor.DeviceSimulation;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.TestTools;
@@ -49,6 +46,7 @@ public class DeviceSimulatorTests
         Assert.AreEqual(Touch.activeTouches.Count, 0);
 
         plugin.OnDestroy();
+        EnhancedTouchSupport.Disable();
     }
 
     [Test]
@@ -69,12 +67,19 @@ public class DeviceSimulatorTests
         var touch = new TouchEvent();
         var type = typeof(TouchEvent);
         object touchObject = touch;
-        var touchIdProperty = type.GetField("<touchId>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-        var positionProperty = type.GetField("<position>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-        var phaseProperty = type.GetField("<phase>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-        touchIdProperty.SetValue(touchObject, touchId);
-        positionProperty.SetValue(touchObject, position);
-        phaseProperty.SetValue(touchObject, phase);
+
+        var touchIdAutoBackingField = type.GetField($"<{nameof(TouchEvent.touchId)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+        var positionAutoBackingField = type.GetField($"<{nameof(TouchEvent.position)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+        var phaseAutoBackingField = type.GetField($"<{nameof(TouchEvent.phase)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.NotNull(touchIdAutoBackingField);
+        Assert.NotNull(positionAutoBackingField);
+        Assert.NotNull(phaseAutoBackingField);
+
+        touchIdAutoBackingField.SetValue(touchObject, touchId);
+        positionAutoBackingField.SetValue(touchObject, position);
+        phaseAutoBackingField.SetValue(touchObject, phase);
+
         touch = (TouchEvent)touchObject;
         return touch;
     }
