@@ -541,6 +541,7 @@ namespace UnityEngine.InputSystem.Editor
         public const string k_DuplicateCommand = "Duplicate";
         public const string k_CutCommand = "Cut";
         public const string k_DeleteCommand = "Delete";
+        public const string k_SoftDeleteCommand = "SoftDelete";
 
         public void HandleCopyPasteCommandEvent(Event uiEvent)
         {
@@ -552,6 +553,7 @@ namespace UnityEngine.InputSystem.Editor
                     case k_CutCommand:
                     case k_DuplicateCommand:
                     case k_DeleteCommand:
+                    case k_SoftDeleteCommand:
                         if (HasSelection())
                             uiEvent.Use();
                         break;
@@ -581,6 +583,7 @@ namespace UnityEngine.InputSystem.Editor
                         DuplicateSelection();
                         break;
                     case k_DeleteCommand:
+                    case k_SoftDeleteCommand:
                         DeleteDataOfSelectedItems();
                         break;
                     default:
@@ -1343,10 +1346,11 @@ namespace UnityEngine.InputSystem.Editor
         public float foldoutOffset { get; set; }
 
         public Action<SerializedProperty> onHandleAddNewAction { get; set; }
-        public string title
+
+        public (string, string) title
         {
-            get => m_Title?.text;
-            set => m_Title = new GUIContent(value);
+            get => (m_Title?.text, m_Title?.tooltip);
+            set => m_Title = new GUIContent(value.Item1, value.Item2);
         }
 
         public new float totalHeight

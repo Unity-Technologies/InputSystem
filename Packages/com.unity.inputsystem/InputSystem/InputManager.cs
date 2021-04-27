@@ -1378,7 +1378,7 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: this should reset the device to its default state
-        public void EnableOrDisableDevice(InputDevice device, bool enable)
+        public void EnableOrDisableDevice(InputDevice device, bool enable, bool keepSendingEvents = false)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
@@ -1399,7 +1399,7 @@ namespace UnityEngine.InputSystem
                 var command = EnableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);
             }
-            else
+            else if (!keepSendingEvents)
             {
                 var command = DisableDeviceCommand.Create();
                 device.ExecuteCommand(ref command);
@@ -1682,6 +1682,7 @@ namespace UnityEngine.InputSystem
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
+            m_HasFocus = m_Runtime.isFocused;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)

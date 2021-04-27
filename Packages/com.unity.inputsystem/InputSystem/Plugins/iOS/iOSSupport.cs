@@ -1,5 +1,7 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS
+using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.iOS
 {
@@ -41,6 +43,16 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
+#if UNITY_EDITOR || UNITY_IOS
+            InputSystem.RegisterLayout<iOSStepCounter>();
+            // Don't add devices for InputTestRuntime
+            // TODO: Maybe there should be a better place for adding device from C#
+            if (InputSystem.s_Manager.m_Runtime is NativeInputRuntime)
+            {
+                if (iOSStepCounter.IsAvailable())
+                    InputSystem.AddDevice<iOSStepCounter>();
+            }
+#endif
         }
     }
 }

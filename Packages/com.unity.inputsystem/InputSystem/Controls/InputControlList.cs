@@ -497,7 +497,7 @@ namespace UnityEngine.InputSystem
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
             var controlIndex = !ReferenceEquals(device, control)
-                ? ArrayHelpers.IndexOfReference(device.m_ChildrenForEachControl, control) + 1
+                ? device.m_ChildrenForEachControl.IndexOfReference<InputControl, InputControl>(control) + 1
                 : 0;
 
             // There is a known documented bug with the new Rosyln

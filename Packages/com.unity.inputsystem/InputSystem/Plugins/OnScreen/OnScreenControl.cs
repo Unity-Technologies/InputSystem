@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.OnScreen
             set
             {
                 controlPathInternal = value;
-                if (enabled)
+                if (isActiveAndEnabled)
                     SetupInputControl();
             }
         }
@@ -91,9 +91,9 @@ namespace UnityEngine.InputSystem.OnScreen
 
         private void SetupInputControl()
         {
-            Debug.Assert(m_Control == null);
-            Debug.Assert(m_NextControlOnDevice == null);
-            Debug.Assert(!m_InputEventPtr.valid);
+            Debug.Assert(m_Control == null, "InputControl already initialized");
+            Debug.Assert(m_NextControlOnDevice == null, "Previous InputControl has not been properly uninitialized (m_NextControlOnDevice still set)");
+            Debug.Assert(!m_InputEventPtr.valid, "Previous InputControl has not been properly uninitialized (m_InputEventPtr still set)");
 
             // Nothing to do if we don't have a control path.
             var path = controlPathInternal;

@@ -629,24 +629,9 @@ namespace UnityEngine.InputSystem.Editor
                 if (controlScheme != null)
                     AddChild(userItem, "Control Scheme: " + controlScheme, ref id);
 
-                // Paired devices.
-                var pairedDevices = user.pairedDevices;
-                if (pairedDevices.Count > 0)
-                {
-                    var devicesItem = AddChild(userItem, "Paired Devices", ref id);
-                    foreach (var device in user.pairedDevices)
-                    {
-                        var item = new DeviceItem
-                        {
-                            id = id++,
-                            depth = devicesItem.depth + 1,
-                            displayName = device.ToString(),
-                            device = device,
-                            icon = EditorInputControlLayoutCache.GetIconForLayout(device.layout),
-                        };
-                        devicesItem.AddChild(item);
-                    }
-                }
+                // Paired and lost devices.
+                AddDeviceListToUser("Paired Devices", user.pairedDevices, ref id, userItem);
+                AddDeviceListToUser("Lost Devices", user.lostDevices, ref id, userItem);
 
                 // Actions.
                 var actions = user.actions;
@@ -657,6 +642,30 @@ namespace UnityEngine.InputSystem.Editor
                         AddActionItem(actionsItem, action, ref id);
 
                     parent.children?.Sort((a, b) => string.Compare(a.displayName, b.displayName, StringComparison.CurrentCultureIgnoreCase));
+                }
+            }
+
+            private void AddDeviceListToUser(string title, ReadOnlyArray<InputDevice> devices, ref int id, TreeViewItem userItem)
+            {
+                if (devices.Count == 0)
+                    return;
+
+                var devicesItem = AddChild(userItem, title, ref id);
+                foreach (var device in devices)
+                {
+                    Debug.Assert(device != null, title + " has a null item!");
+                    if (device == null)
+                        continue;
+
+                    var item = new DeviceItem
+                    {
+                        id = id++,
+                        depth = devicesItem.depth + 1,
+                        displayName = device.ToString(),
+                        device = device,
+                        icon = EditorInputControlLayoutCache.GetIconForLayout(device.layout),
+                    };
+                    devicesItem.AddChild(item);
                 }
             }
 

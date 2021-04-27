@@ -286,6 +286,8 @@ namespace UnityEngine.InputSystem.Editor
                 writer.WriteLine("    .IsNoisy(true)");
             if (control.synthetic)
                 writer.WriteLine("    .IsSynthetic(true)");
+            if (control is ButtonControl)
+                writer.WriteLine("    .IsButton(true)");
             writer.WriteLine("    .WithStateBlock(new InputStateBlock");
             writer.WriteLine("    {");
             writer.WriteLine($"        format = new FourCC({(int) control.stateBlock.format}),");

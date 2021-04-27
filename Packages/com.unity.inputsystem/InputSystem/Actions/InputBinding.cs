@@ -129,6 +129,10 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// <seealso cref="overridePath"/>
+        /// <seealso cref="InputControlPath"/>
+        /// <seealso cref="InputControlPath.Parse"/>
+        /// <seealso cref="InputControl.path"/>
+        /// <seealso cref="InputSystem.FindControl"/>
         public string path
         {
             get => m_Path;
@@ -425,6 +429,9 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private string m_Name;
         [SerializeField] internal string m_Id;
+        [Tooltip("Path of the control to bind to. Matched at runtime to controls from InputDevices present at the time.\n\nCan either be "
+            + "graphically from the control picker dropdown UI or edited manually in text mode by clicking the 'T' button. Internally, both "
+            + "methods result in control path strings that look like, for example, \"<Gamepad>/buttonSouth\".")]
         [SerializeField] private string m_Path;
         [SerializeField] private string m_Interactions;
         [SerializeField] private string m_Processors;

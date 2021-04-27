@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
@@ -393,6 +394,7 @@ namespace UnityEngine.InputSystem.Layouts
             control.synthetic = controlItem.isSynthetic;
             if (control.noisy)
                 m_Device.noisy = true;
+            control.isButton = control is ButtonControl;
 
             // Remember the display names from the layout. We later do a proper pass once we have
             // the full hierarchy to set final names.
@@ -866,8 +868,8 @@ namespace UnityEngine.InputSystem.Layouts
             if (m_StateOffsetToControlMap == null)
                 m_StateOffsetToControlMap = new List<uint>();
 
-            if (m_Device.allControls.Count > (1 << InputDevice.kControlIndexBits))
-                throw new NotSupportedException($"Device '{m_Device}' exceeds maximum supported control count of {1 << InputDevice.kControlIndexBits} (has {m_Device.allControls.Count} controls)");
+            if (m_Device.allControls.Count > (1U << InputDevice.kControlIndexBits))
+                throw new NotSupportedException($"Device '{m_Device}' exceeds maximum supported control count of {1U << InputDevice.kControlIndexBits} (has {m_Device.allControls.Count} controls)");
 
             // Device is not in m_ChildrenForEachControl so use index -1.
             FinalizeControlHierarchyRecursive(m_Device, -1, m_Device.m_ChildrenForEachControl);
@@ -878,10 +880,10 @@ namespace UnityEngine.InputSystem.Layouts
             // Make sure we're staying within limits on state offsets and sizes.
             if (control.m_ChildCount == 0)
             {
-                if (control.m_StateBlock.effectiveBitOffset >= (1 << InputDevice.kStateOffsetBits))
-                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit offset of {(1 << InputDevice.kStateOffsetBits) - 1} (bit offset {control.stateBlock.effectiveBitOffset})");
-                if (control.m_StateBlock.sizeInBits >= (1 << InputDevice.kStateSizeBits))
-                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1 << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
+                if (control.m_StateBlock.effectiveBitOffset >= (1U << InputDevice.kStateOffsetBits))
+                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit offset of {(1U << InputDevice.kStateOffsetBits) - 1} (bit offset {control.stateBlock.effectiveBitOffset})");
+                if (control.m_StateBlock.sizeInBits >= (1U << InputDevice.kStateSizeBits))
+                    throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1U << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
             }
 
             // Add all leaf controls to state offset mapping.

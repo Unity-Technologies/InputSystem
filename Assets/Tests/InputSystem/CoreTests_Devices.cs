@@ -1503,45 +1503,37 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_WhenCreationFails_SystemRecoversGracefully()
     {
-        // Create an isolated runtime + input manager.
-        using (var runtime = new InputTestRuntime())
+        // Create a device layout that will fail to instantiate.
+        const string layout = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""controls"" : [
+                    { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
+                ]
+            }
+        ";
+        InputSystem.RegisterLayout(layout);
+
+        // Report two devices, one that will fail creation and one that shouldn't.
+        runtime.ReportNewInputDevice(new InputDeviceDescription
         {
-            var manager = new InputManager();
-            var settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.Initialize(runtime, settings);
+            deviceClass = "TestDevice"
+        }.ToJson());
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            deviceClass = "Gamepad"
+        }.ToJson());
 
-            // Create a device layout that will fail to instantiate.
-            const string layout = @"
-                {
-                    ""name"" : ""TestDevice"",
-                    ""controls"" : [
-                        { ""name"" : ""test"", ""layout"" : ""DoesNotExist"" }
-                    ]
-                }
-            ";
-            manager.RegisterControlLayout(layout);
+        LogAssert.Expect(LogType.Error,
+            new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
 
-            // Report two devices, one that will fail creation and one that shouldn't.
-            runtime.ReportNewInputDevice(new InputDeviceDescription
-            {
-                deviceClass = "TestDevice"
-            }.ToJson());
-            runtime.ReportNewInputDevice(new InputDeviceDescription
-            {
-                deviceClass = "Gamepad"
-            }.ToJson());
+        Assert.That(() => InputSystem.Update(), Throws.Nothing);
 
-            LogAssert.Expect(LogType.Error,
-                new Regex(".*Could not create a device for 'TestDevice'.*Cannot find layout 'DoesNotExist'.*"));
+        // Make sure InputManager kept the gamepad.
+        Assert.That(InputSystem.devices.Count, Is.EqualTo(1));
+        Assert.That(InputSystem.devices, Has.Exactly(1).TypeOf<Gamepad>());
 
-            Assert.That(() => manager.Update(), Throws.Nothing);
-
-            // Make sure InputManager kept the gamepad.
-            Assert.That(manager.devices.Count, Is.EqualTo(1));
-            Assert.That(manager.devices, Has.Exactly(1).TypeOf<Gamepad>());
-
-            LogAssert.NoUnexpectedReceived();
-        }
+        LogAssert.NoUnexpectedReceived();
     }
 
     [Test]
@@ -1551,28 +1543,25 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Mouse>();
 
         bool? disabled = null;
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(device.deviceId,
-                (id, commandPtr) =>
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == DisableDeviceCommand.Type)
                 {
-                    if (commandPtr->type == DisableDeviceCommand.Type)
-                    {
-                        Assert.That(disabled, Is.Null);
-                        disabled = true;
-                        return InputDeviceCommand.GenericSuccess;
-                    }
+                    Assert.That(disabled, Is.Null);
+                    disabled = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
 
-                    if (commandPtr->type == EnableDeviceCommand.Type)
-                    {
-                        Assert.That(disabled, Is.Null);
-                        disabled = false;
-                        return InputDeviceCommand.GenericSuccess;
-                    }
+                if (commandPtr->type == EnableDeviceCommand.Type)
+                {
+                    Assert.That(disabled, Is.Null);
+                    disabled = false;
+                    return InputDeviceCommand.GenericSuccess;
+                }
 
-                    return InputDeviceCommand.GenericFailure;
-                });
-        }
+                return InputDeviceCommand.GenericFailure;
+            });
 
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled, Is.Null);
@@ -1597,6 +1586,40 @@ partial class CoreTests
         Assert.That(device.enabled, Is.True);
         Assert.That(disabled.HasValue, Is.True);
         Assert.That(disabled.Value, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanBeDisabled_WhileLettingItKeepSendingEvents()
+    {
+        var device = InputSystem.AddDevice<Mouse>();
+
+        runtime.SetDeviceCommandCallback(device.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == DisableDeviceCommand.Type)
+                    Assert.Fail("Device should not receive a DisableDeviceCommand");
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        InputSystem.DisableDevice(device, keepSendingEvents: true);
+
+        Assert.That(device.enabled, Is.False);
+
+        var receivedEvent = false;
+        InputSystem.onEvent +=
+            (eventPtr, d) =>
+        {
+            Assert.That(d, Is.SameAs(device));
+            Assert.That(receivedEvent, Is.False);
+            receivedEvent = true;
+        };
+
+        InputSystem.QueueStateEvent(device, new MouseState());
+        InputSystem.Update();
+
+        Assert.That(receivedEvent, Is.True);
     }
 
     [Test]
@@ -2230,7 +2253,7 @@ partial class CoreTests
                         if (keyNameCommand->scanOrKeyCode == (int)Key.A)
                         {
                             scanCode = 0x01;
-                            name = currentLayoutName == "default" ? "m" : "q";
+                            name = currentLayoutName == "default" ? "M" : "RIGHT CTRL";
                         }
 
                         keyNameCommand->scanOrKeyCode = scanCode;
@@ -2244,16 +2267,16 @@ partial class CoreTests
                 });
         }
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("m"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("M"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
 
         // Change layout.
         currentLayoutName = "other";
         InputSystem.QueueConfigChangeEvent(keyboard);
         InputSystem.Update();
 
-        Assert.That(keyboard.aKey.displayName, Is.EqualTo("q"));
-        Assert.That(keyboard.bKey.displayName, Is.EqualTo("other"));
+        Assert.That(keyboard.aKey.displayName, Is.EqualTo("Right Ctrl"));
+        Assert.That(keyboard.bKey.displayName, Is.EqualTo("Other"));
     }
 
     [Test]

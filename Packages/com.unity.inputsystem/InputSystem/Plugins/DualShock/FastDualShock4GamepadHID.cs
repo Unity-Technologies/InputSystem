@@ -316,6 +316,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithLayout(kButtonLayout)
                 .WithUsages(3, 1)
                 .WithAliases(0, 2)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -340,6 +341,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithLayout(kButtonLayout)
                 .WithUsages(4, 2)
                 .WithAliases(2, 2)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -364,6 +366,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithLayout(kButtonLayout)
                 .WithUsages(6, 2)
                 .WithAliases(4, 2)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -387,6 +390,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("Triangle")
                 .WithLayout(kButtonLayout)
                 .WithAliases(6, 2)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -409,6 +413,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("L1")
                 .WithShortDisplayName("L1")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -431,6 +436,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("R1")
                 .WithShortDisplayName("R1")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -452,6 +458,8 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("leftTriggerButton")
                 .WithDisplayName("leftTriggerButton")
                 .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -473,6 +481,8 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("rightTriggerButton")
                 .WithDisplayName("rightTriggerButton")
                 .WithLayout(kButtonLayout)
+                .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -494,6 +504,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("select")
                 .WithDisplayName("Share")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -516,6 +527,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("Options")
                 .WithLayout(kButtonLayout)
                 .WithUsages(8, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -538,6 +550,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("L3")
                 .WithShortDisplayName("L3")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -560,6 +573,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("R3")
                 .WithShortDisplayName("R3")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -581,6 +595,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("systemButton")
                 .WithDisplayName("System")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -602,6 +617,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithName("touchpadButton")
                 .WithDisplayName("Touchpad Press")
                 .WithLayout(kButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -625,6 +641,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("L2")
                 .WithLayout(kButtonLayout)
                 .WithUsages(9, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -648,6 +665,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("R2")
                 .WithLayout(kButtonLayout)
                 .WithUsages(10, 1)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -671,6 +689,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("LS Up")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -744,6 +763,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("LS Down")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -769,6 +789,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("LS Left")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -794,6 +815,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("LS Right")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -819,6 +841,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("RS Up")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -892,6 +915,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("RS Down")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -917,6 +941,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("RS Left")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -942,6 +967,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithShortDisplayName("RS Right")
                 .WithLayout(kButtonLayout)
                 .IsSynthetic(true)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1113150533),
@@ -1012,6 +1038,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("D-Pad Up")
                 .WithShortDisplayName("D-Pad Up")
                 .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1034,6 +1061,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("D-Pad Down")
                 .WithShortDisplayName("D-Pad Down")
                 .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1056,6 +1084,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("D-Pad Left")
                 .WithShortDisplayName("D-Pad Left")
                 .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
@@ -1078,6 +1107,7 @@ namespace UnityEngine.InputSystem.DualShock
                 .WithDisplayName("D-Pad Right")
                 .WithShortDisplayName("D-Pad Right")
                 .WithLayout(kDiscreteButtonLayout)
+                .IsButton(true)
                 .WithStateBlock(new InputStateBlock
                 {
                     format = new FourCC(1112101920),
