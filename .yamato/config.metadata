@@ -6,18 +6,18 @@ editors:
 platforms:
   - name: win
     type: Unity::VM
-    image: package-ci/win10:stable
+    image: package-ci/win10:v1.15.0-713263
     flavor: b1.large
     netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
   - name: win_standalone
     type: Unity::VM
-    image: package-ci/win10:stable
+    image: package-ci/win10:v1.15.0-713263
     flavor: b1.large
     runtime: StandaloneWindows64
     netinstall: choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes --Source https://bfartifactory.bf.unity3d.com/artifactory/api/nuget/unity-choco-local
   - name: win_standalone_il2cpp
     type: Unity::VM
-    image: package-ci/win10:stable
+    image: package-ci/win10:v1.15.0-713263
     flavor: b1.large
     runtime: StandaloneWindows64
     scripting-backend: Il2Cpp
