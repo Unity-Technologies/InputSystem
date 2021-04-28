@@ -23,8 +23,6 @@ using UnityEngine.InputSystem.Editor;
 
 ////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
 
-////TODO: make sure we discard events in editor updates when lockInputToGameView is true and the player isn't running or paused
-
 ////REVIEW: change the event properties over to using IObservable?
 
 ////REVIEW: instead of RegisterInteraction and RegisterProcessor, have a generic RegisterInterface (or something)?
@@ -129,7 +127,8 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                ////TODO: if we're *inside* an update, this should use the current update type
+                if (m_CurrentUpdate != default)
+                    return m_CurrentUpdate;
 
                 #if UNITY_EDITOR
                 if (!gameIsPlayingAndHasFocus)
@@ -298,9 +297,9 @@ namespace UnityEngine.InputSystem
 
         private bool gameIsPlayingAndHasFocus =>
 #if UNITY_EDITOR
-                     m_Runtime.isInPlayMode && !m_Runtime.isPaused && (m_HasFocus || InputEditorUserSettings.lockInputToGameView);
+                     m_Runtime.isInPlayMode && m_HasFocus;
 #else
-            true;
+            m_HasFocus;
 #endif
 
         ////TODO: when registering a layout that exists as a layout of a different type (type vs string vs constructor),
@@ -514,8 +513,7 @@ namespace UnityEngine.InputSystem
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](layoutName.ToString(), change);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, layoutName.ToString(), change, "onLayoutChange");
         }
 
         public void RegisterPrecompiledLayout<TDevice>(string metadata)
@@ -691,8 +689,8 @@ namespace UnityEngine.InputSystem
                 newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
             if (!oldDevice.enabled)
             {
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledStateHasBeenQueried;
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Disabled;
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledInFrontend;
             }
 
             // Re-add.
@@ -783,8 +781,7 @@ namespace UnityEngine.InputSystem
             ////      remove those layouts, too
 
             // Let listeners know.
-            for (var i = 0; i < m_LayoutChangeListeners.length; ++i)
-                m_LayoutChangeListeners[i](name, InputControlLayoutChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_LayoutChangeListeners, name, InputControlLayoutChange.Removed, "onLayoutChange");
         }
 
         public InputControlLayout TryLoadControlLayout(Type type)
@@ -1030,8 +1027,7 @@ namespace UnityEngine.InputSystem
             InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.UsageChanged);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.UsageChanged, "onDeviceChange");
 
             ////REVIEW: This was for the XRController leftHand and rightHand getters but these do lookups dynamically now; remove?
             // Usage may affect current device so update.
@@ -1141,6 +1137,21 @@ namespace UnityEngine.InputSystem
                     m_AvailableDevices[i].isRemoved = false;
             }
 
+            // If we're running in the background, find out whether the device can run in
+            // the background. If not, disable it.
+            var isPlaying = true;
+            #if UNITY_EDITOR
+            isPlaying = m_Runtime.isInPlayMode;
+            #endif
+            if (isPlaying && !m_HasFocus
+                && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus
+                && m_Runtime.runInBackground
+                && device.QueryEnabledStateFromRuntime()
+                && !ShouldRunDeviceInBackground(device))
+            {
+                EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+            }
+
             ////REVIEW: we may want to suppress this during the initial device discovery phase
             // Let actions re-resolve their paths.
             InputActionState.OnDeviceChange(device, InputDeviceChange.Added);
@@ -1169,11 +1180,15 @@ namespace UnityEngine.InputSystem
             ////REVIEW: is this really a good thing to do? just plugging in a device shouldn't make
             ////        it current, no?
             // Make the device current.
-            device.MakeCurrent();
+            if (device.enabled)
+                device.MakeCurrent();
 
             // Notify listeners.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Added);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Added, "onDeviceChange");
+
+            // Request device to send us an initial state update.
+            if (device.enabled)
+                device.RequestSync();
         }
 
         ////TODO: this path should really put the device on the list of available devices
@@ -1250,6 +1265,8 @@ namespace UnityEngine.InputSystem
                 m_StateBuffers.FreeAll();
             }
 
+            ////TODO: When we remove a native device like this, make sure we tell the backend to disable it (and re-enable it when re-add it)
+
             // Update device indices. Do this after reallocating state buffers as that call requires
             // the old indices to still be in place.
             for (var i = deviceIndex; i < m_DevicesCount; ++i)
@@ -1301,8 +1318,7 @@ namespace UnityEngine.InputSystem
             device.NotifyRemoved();
 
             // Let listeners know.
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, InputDeviceChange.Removed);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Removed, "onDeviceChange");
         }
 
         public void FlushDisconnectedDevices()
@@ -1453,38 +1469,132 @@ namespace UnityEngine.InputSystem
             return numFound;
         }
 
-        ////TODO: this should reset the device to its default state
-        public void EnableOrDisableDevice(InputDevice device, bool enable, bool keepSendingEvents = false)
+        // We have three different levels of disabling a device.
+        internal enum DeviceDisableScope
+        {
+            Everywhere, // Device is disabled globally and explicitly. Should neither send nor receive events.
+            InFrontendOnly, // Device is only disabled on managed side but not in backend. Should keep sending events but should not receive them (useful for redirecting their data).
+            TemporaryWhilePlayerIsInBackground, // Device has been disabled automatically and temporarily by system while application is running in the background.
+        }
+
+        public void EnableOrDisableDevice(InputDevice device, bool enable, DeviceDisableScope scope = default)
         {
             if (device == null)
                 throw new ArgumentNullException(nameof(device));
 
-            // Ignore if device already enabled/disabled.
-            if (device.enabled == enable)
-                return;
-
-            // Set/clear flag.
-            if (!enable)
-                device.m_DeviceFlags |= InputDevice.DeviceFlags.Disabled;
-            else
-                device.m_DeviceFlags &= ~InputDevice.DeviceFlags.Disabled;
-
-            // Send command to tell backend about status change.
+            // Synchronize the enable/disabled state of the device.
             if (enable)
             {
-                var command = EnableDeviceCommand.Create();
-                device.ExecuteCommand(ref command);
+                ////REVIEW: Do we really want to allow overriding disabledWhileInBackground like it currently does?
+
+                // Enable device.
+                switch (scope)
+                {
+                    case DeviceDisableScope.Everywhere:
+                        device.disabledWhileInBackground = false;
+                        if (!device.disabledInFrontend && !device.disabledInRuntime)
+                            return;
+                        if (device.disabledInRuntime)
+                        {
+                            device.ExecuteEnableCommand();
+                            device.disabledInRuntime = false;
+                        }
+                        if (device.disabledInFrontend)
+                        {
+                            if (!device.RequestSync())
+                                ResetDevice(device, noResetCommand: true);
+                            device.disabledInFrontend = false;
+                        }
+                        break;
+
+                    case DeviceDisableScope.InFrontendOnly:
+                        device.disabledWhileInBackground = false;
+                        if (!device.disabledInFrontend && device.disabledInRuntime)
+                            return;
+                        if (!device.disabledInRuntime)
+                        {
+                            device.ExecuteDisableCommand();
+                            device.disabledInRuntime = true;
+                        }
+                        if (device.disabledInFrontend)
+                        {
+                            if (!device.RequestSync())
+                                ResetDevice(device, noResetCommand: true);
+                            device.disabledInFrontend = false;
+                        }
+                        break;
+
+                    case DeviceDisableScope.TemporaryWhilePlayerIsInBackground:
+                        if (device.disabledWhileInBackground)
+                        {
+                            if (device.disabledInRuntime)
+                            {
+                                device.ExecuteEnableCommand();
+                                device.disabledInRuntime = false;
+                            }
+                            if (!device.RequestSync())
+                                ResetDevice(device, noResetCommand: true);
+                            device.disabledWhileInBackground = false;
+                        }
+                        break;
+                }
             }
-            else if (!keepSendingEvents)
+            else
             {
-                var command = DisableDeviceCommand.Create();
-                device.ExecuteCommand(ref command);
+                // Disable device.
+                switch (scope)
+                {
+                    case DeviceDisableScope.Everywhere:
+                        device.disabledWhileInBackground = false;
+                        if (device.disabledInFrontend && device.disabledInRuntime)
+                            return;
+                        if (!device.disabledInRuntime)
+                        {
+                            device.ExecuteDisableCommand();
+                            device.disabledInRuntime = true;
+                        }
+                        if (!device.disabledInFrontend)
+                        {
+                            ResetDevice(device, noResetCommand: true);
+                            device.disabledInFrontend = true;
+                        }
+                        break;
+
+                    case DeviceDisableScope.InFrontendOnly:
+                        device.disabledWhileInBackground = false;
+                        if (!device.disabledInRuntime && device.disabledInFrontend)
+                            return;
+                        if (device.disabledInRuntime)
+                        {
+                            device.ExecuteEnableCommand();
+                            device.disabledInRuntime = false;
+                        }
+                        if (!device.disabledInFrontend)
+                        {
+                            ResetDevice(device, noResetCommand: true);
+                            device.disabledInFrontend = true;
+                        }
+                        break;
+
+                    case DeviceDisableScope.TemporaryWhilePlayerIsInBackground:
+                        // Won't flag a device as DisabledWhileInBackground if it is explicitly disabled in
+                        // the frontend.
+                        if (device.disabledInFrontend || device.disabledWhileInBackground)
+                            return;
+                        device.disabledWhileInBackground = true;
+                        ResetDevice(device, noResetCommand: true);
+                        if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        {
+                            device.ExecuteDisableCommand();
+                            device.disabledInRuntime = true;
+                        }
+                        break;
+                }
             }
 
             // Let listeners know.
             var deviceChange = enable ? InputDeviceChange.Enabled : InputDeviceChange.Disabled;
-            for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
-                m_DeviceChangeListeners[i](device, deviceChange);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, deviceChange, "onDeviceChange");
         }
 
         ////TODO: support combining monitors for bitfields
@@ -1650,6 +1760,7 @@ namespace UnityEngine.InputSystem
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
             m_HasFocus = Application.isFocused;
 #if UNITY_EDITOR
+            m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
 #endif
 
@@ -1758,7 +1869,7 @@ namespace UnityEngine.InputSystem
             m_Runtime.onPlayerFocusChanged = OnFocusChanged;
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
             m_Runtime.pollingFrequency = pollingFrequency;
-            m_HasFocus = m_Runtime.isFocused;
+            m_HasFocus = m_Runtime.isPlayerFocused;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -1857,6 +1968,7 @@ namespace UnityEngine.InputSystem
         internal InputDevice[] m_DisconnectedDevices;
 
         private InputUpdateType m_UpdateMask; // Which of our update types are enabled.
+        private InputUpdateType m_CurrentUpdate;
         internal InputStateBuffers m_StateBuffers;
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
@@ -1874,6 +1986,12 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
+
+        // We want to sync devices when the editor comes back into focus. Unfortunately, there's no
+        // callback for this so we have to poll this state.
+        #if UNITY_EDITOR
+        private bool m_EditorIsActive;
+        #endif
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
@@ -2234,6 +2352,10 @@ namespace UnityEngine.InputSystem
                     // new ID, re-add it and notify that we've reconnected.
 
                     device.m_DeviceId = deviceId;
+                    device.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
+                    device.m_DeviceFlags &= ~InputDevice.DeviceFlags.DisabledInFrontend;
+                    device.m_DeviceFlags &= ~InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+
                     AddDevice(device);
 
                     for (var i = 0; i < m_DeviceChangeListeners.length; ++i)
@@ -2315,6 +2437,22 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
+            #endif
+        }
+
+        private void SyncAllDevicesWhenEditorIsActivated()
+        {
+            #if UNITY_EDITOR
+            var isActive = m_Runtime.isEditorActive;
+            if (isActive == m_EditorIsActive)
+                return;
+
+            m_EditorIsActive = isActive;
+            if (m_EditorIsActive)
+            {
+                for (var i = 0; i < m_DevicesCount; ++i)
+                    m_Devices[i].RequestSync();
+            }
             #endif
         }
 
@@ -2490,104 +2628,104 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        private unsafe void OnFocusChanged(bool focus)
+        private bool ShouldRunDeviceInBackground(InputDevice device)
         {
-            ////REVIEW: should we also flush the event queue on focus loss?
+            var runDeviceInBackground =
+                m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices &&
+                device.canRunInBackground;
 
-            // On focus loss, reset devices.
+            // In editor, we may override canRunInBackground depending on the gameViewFocus setting.
+            #if UNITY_EDITOR
+            if (runDeviceInBackground)
+            {
+                if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    runDeviceInBackground = false;
+                else if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    runDeviceInBackground = !(device is Pointer || device is Keyboard);
+            }
+            #endif
+
+            return runDeviceInBackground;
+        }
+
+        internal void OnFocusChanged(bool focus)
+        {
+            #if UNITY_EDITOR
+            SyncAllDevicesWhenEditorIsActivated();
+
+            if (!m_Runtime.isInPlayMode)
+            {
+                m_HasFocus = focus;
+                return;
+            }
+            #endif
+
+            #if UNITY_EDITOR
+            var gameViewFocus = m_Settings.gameViewFocus;
+            #endif
+
+            var runInBackground =
+                #if UNITY_EDITOR
+                // In the editor, the player loop will always be run even if the Game View does not have focus. This
+                // amounts to runInBackground being always true in the editor, regardless of what the setting in
+                // the Player Settings window is.
+                //
+                // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
+                // path as in the player.
+                gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer || m_Runtime.runInBackground;
+                #else
+                m_Runtime.runInBackground;
+                #endif
+
+            var backgroundBehavior = m_Settings.backgroundBehavior;
+            if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
+            {
+                m_HasFocus = focus;
+                return;
+            }
+
             if (!focus)
             {
-                // When running in background is enabled for the application, we only reset devices that aren't
-                // marked as canRunInBackground.
-                var runInBackground = m_Runtime.runInBackground;
-
-                // Find the size of the largest state block. This determines the amount of temporary memory we
-                // need to allocate.
-                var largestDeviceStateBlock = 0;
-                var deviceCount = m_DevicesCount;
-                for (var i = 0; i < deviceCount; ++i)
-                    largestDeviceStateBlock = Math.Max(largestDeviceStateBlock, (int)m_Devices[i].m_StateBlock.alignedSizeInBytes);
-
-                // Allocate temp memory to hold one state event.
-                ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
-                ////        to tell synthetic input (or input sources in general) apart
-                // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
-                //       like any other input. If we don't do that but rather just call UpdateState() with a null event
-                //       pointer, the change will be considered an internal state change and will get ignored by some
-                //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
-                //       by ignoring any change that is not coming from an input event).
-                using (var tempBuffer =
-                           new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + largestDeviceStateBlock, Allocator.Temp))
+                // We only react to loss of focus when we will keep running in the background. If not,
+                // we'll do nothing and just wait for focus to come back (where we then try to sync all devices).
+                if (runInBackground)
                 {
-                    var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
-                    var statePtr = stateEventPtr->state;
-                    var currentTime = m_Runtime.currentTime;
-                    var updateType = defaultUpdateType;
-
-                    for (var i = 0; i < deviceCount; ++i)
+                    for (var i = 0; i < m_DevicesCount; ++i)
                     {
+                        // Determine whether to run this device in the background.
                         var device = m_Devices[i];
-
-                        // Skip disabled devices.
-                        if (!device.enabled)
+                        if (!device.enabled || ShouldRunDeviceInBackground(device))
                             continue;
 
-                        // If the app will keep running in the background and the device is marked as being
-                        // able to run in the background, don't touch it.
-                        if (runInBackground && device.canRunInBackground)
-                            continue;
+                        // Disable the device. This will also soft-reset it.
+                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
 
-                        // Set up the state event.
-                        ref var stateBlock = ref device.m_StateBlock;
-                        var deviceStateBlockSize = stateBlock.alignedSizeInBytes;
-                        stateEventPtr->baseEvent.type = StateEvent.Type;
-                        stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
-                        stateEventPtr->baseEvent.time = currentTime;
-                        stateEventPtr->baseEvent.deviceId = device.deviceId;
-                        stateEventPtr->baseEvent.eventId = -1;
-                        stateEventPtr->stateFormat = device.m_StateBlock.format;
-
-                        // Set up new state.
-                        var defaultStatePtr = device.defaultStatePtr;
-                        if (device.noisy)
-                        {
-                            // The device has noisy controls. We don't want to reset those as they mostly
-                            // represent sensor input and resetting sensor samples to default values isn't a good
-                            // a good idea.
-                            //
-                            // Copy everything from defaultStatePtr except for the bits that are flagged in the
-                            // device's noise mask.
-
-                            var currentStatePtr = device.currentStatePtr;
-                            var noiseMaskPtr = device.noiseMaskPtr;
-
-                            // To preserve values from noisy controls, we need to first copy their current values.
-                            UnsafeUtility.MemCpy(statePtr,
-                                (byte*)currentStatePtr + stateBlock.byteOffset,
-                                deviceStateBlockSize);
-
-                            // And then we copy over default values masked by noise bits.
-                            MemoryHelpers.MemCpyMasked(statePtr,
-                                (byte*)defaultStatePtr + stateBlock.byteOffset,
-                                (int)deviceStateBlockSize,
-                                (byte*)noiseMaskPtr + stateBlock.byteOffset);
-                        }
+                        // In case we invoked a callback that messed with our device array, adjust our index.
+                        var index = m_Devices.IndexOfReference(device, m_DevicesCount);
+                        if (index == -1)
+                            --i;
                         else
-                        {
-                            // No noisy controls in device. Just take the default state and put it in the event
-                            // as is.
-                            UnsafeUtility.MemCpy(statePtr,
-                                (byte*)defaultStatePtr + stateBlock.byteOffset,
-                                deviceStateBlockSize);
-                        }
-
-                        // Perform the reset.
-                        UpdateState(device, updateType, statePtr, 0, deviceStateBlockSize, currentTime,
-                            new InputEventPtr((InputEvent*)stateEventPtr));
-
-                        // Tell the backend to reset.
-                        device.RequestReset();
+                            i = index;
                     }
+                }
+            }
+            else
+            {
+                // On focus gain, reenable and sync devices.
+                for (var i = 0; i < m_DevicesCount; ++i)
+                {
+                    var device = m_Devices[i];
+
+                    // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
+                    if (device.disabledWhileInBackground)
+                        EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                    // Try to sync. If it fails and we didn't run in the background, perform
+                    // a reset instead. This is to cope with backends that are unable to sync but
+                    // may still retain state which now may be outdated because the input device may
+                    // have changed state while we weren't running. So at least make the backend flush
+                    // its state (if any).
+                    else if (device.enabled && !runInBackground && !device.RequestSync())
+                        ResetDevice(device, noResetCommand: true);
                 }
             }
 
@@ -2604,13 +2742,16 @@ namespace UnityEngine.InputSystem
 
             var mask = m_UpdateMask;
 #if UNITY_EDITOR
+            var isPlaying = m_Runtime.isInPlayMode;
+
             // Ignore editor updates when the game is playing and has focus. All input goes to player.
-            if (gameIsPlayingAndHasFocus)
+            if (isPlaying && m_HasFocus)
                 mask &= ~InputUpdateType.Editor;
             // If the player isn't running, the only thing we run is editor updates.
-            else if (updateType != InputUpdateType.Editor)
+            else if (!isPlaying && updateType != InputUpdateType.Editor)
                 return false;
 #endif
+
             return (updateType & mask) != 0;
         }
 
@@ -2641,6 +2782,9 @@ namespace UnityEngine.InputSystem
             // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
             RestoreDevicesAfterDomainReloadIfNecessary();
 
+            // In the editor, we issue a sync on all devices when the editor comes back to the foreground.
+            SyncAllDevicesWhenEditorIsActivated();
+
             if ((updateType & m_UpdateMask) == 0)
             {
                 Profiler.EndSample();
@@ -2658,11 +2802,7 @@ namespace UnityEngine.InputSystem
             }
             #endif
 
-            ////TODO: manual mode must be treated like lockInputToGameView in editor
-
             // Update metrics.
-            m_Metrics.totalEventCount += eventBuffer.eventCount - (int)InputUpdate.s_LastUpdateRetainedEventCount;
-            m_Metrics.totalEventBytes += (int)eventBuffer.sizeInBytes - (int)InputUpdate.s_LastUpdateRetainedEventBytes;
             ++m_Metrics.totalUpdateCount;
 
             InputUpdate.s_LastUpdateRetainedEventCount = 0;
@@ -2673,7 +2813,13 @@ namespace UnityEngine.InputSystem
 
             InputStateBuffers.SwitchTo(m_StateBuffers, updateType);
 
+            m_CurrentUpdate = updateType;
             InputUpdate.OnUpdate(updateType);
+
+            var isPlaying = true;
+            #if UNITY_EDITOR
+            isPlaying = m_Runtime.isInPlayMode;
+            #endif
 
             // See if we're supposed to only take events up to a certain time.
             // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
@@ -2683,10 +2829,36 @@ namespace UnityEngine.InputSystem
             //       in the buffer and having older timestamps will get rejected.
 
             var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
-            var timesliceEvents = gameIsPlayingAndHasFocus && InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
+            var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
+                InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-            // Early out if there's no events to process.
-            if (eventBuffer.eventCount <= 0)
+            // Figure out if we can just flush the buffer and early out.
+            var canFlushBuffer =
+                false
+#if UNITY_EDITOR
+                // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
+                || (!m_HasFocus && m_Settings.gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer &&
+                    (!m_Runtime.runInBackground ||
+                        m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
+#else
+                || (!m_HasFocus && !m_Runtime.runInBackground)
+#endif
+            ;
+            var canEarlyOut =
+                // Early out if there's no events to process.
+                eventBuffer.eventCount == 0
+                || canFlushBuffer ||
+                // If we're in the background and not supposed to process events in this update (but somehow
+                // still ended up here), we're done.
+                (!m_HasFocus &&
+                    ((m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices && updateType != InputUpdateType.Editor)
+#if UNITY_EDITOR
+                        || (m_Settings.gameViewFocus == InputSettings.GameViewFocus.AllDevices && updateType != InputUpdateType.Editor)
+#endif
+                    )
+                );
+
+            if (canEarlyOut)
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
@@ -2697,7 +2869,9 @@ namespace UnityEngine.InputSystem
                 Profiler.EndSample();
                 #endif
                 InvokeAfterUpdateCallback();
-                eventBuffer.Reset();
+                if (canFlushBuffer)
+                    eventBuffer.Reset();
+                m_CurrentUpdate = default;
                 return;
             }
 
@@ -2744,6 +2918,11 @@ namespace UnityEngine.InputSystem
                     break;
 
                 var currentEventTimeInternal = currentEventReadPtr->internalTime;
+                var currentEventType = currentEventReadPtr->type;
+
+                // Decide whether to skip the event.
+                var skipEvent = false;
+                var leaveInBuffer = false;
 
                 // In the editor, we discard all input events that occur in-between exiting edit mode and having
                 // entered play mode as otherwise we'll spill a bunch of UI events that have occurred while the
@@ -2761,76 +2940,113 @@ namespace UnityEngine.InputSystem
                     (currentEventTimeInternal < InputSystem.s_SystemObject.enterPlayModeTime ||
                      InputSystem.s_SystemObject.enterPlayModeTime == 0))
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                    continue;
+                    skipEvent = true;
+                    leaveInBuffer = false;
                 }
+                else
                 #endif
-
                 // If we're timeslicing, check if the event time is within limits.
                 if (timesliceEvents && currentEventTimeInternal >= currentTime)
                 {
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: true);
-                    continue;
+                    skipEvent = true;
+                    leaveInBuffer = true;
                 }
-
-                if (currentEventTimeInternal <= currentTime)
-                    totalEventLag += currentTime - currentEventTimeInternal;
-
-                // Grab device for event. In before-render updates, we already had to
-                // check the device.
-                if (device == null)
-                    device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                if (device == null)
+                else
                 {
+                    // If we can't find the device, ignore the event.
+                    if (device == null)
+                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
+                    if (device == null)
+                    {
+                        #if UNITY_EDITOR
+                        ////TODO: see if this is a device we haven't created and if so, just ignore
+                        m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
+                        #endif
+
+                        skipEvent = true;
+                        leaveInBuffer = false;
+                    }
+
+                    // In the editor, we may need to bump events from editor updates into player updates
+                    // and vice versa.
                     #if UNITY_EDITOR
-                    ////TODO: see if this is a device we haven't created and if so, just ignore
-                    m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
+                    else if (!m_HasFocus && isPlaying)
+                    {
+                        if (m_Settings.gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard &&
+                            m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
+                        {
+                            var isPointerOrKeyboard = device is Pointer || device is Keyboard;
+                            if (updateType != InputUpdateType.Editor)
+                            {
+                                // Let everything but pointer and keyboard input through.
+                                skipEvent = isPointerOrKeyboard;
+                                leaveInBuffer = true;
+                            }
+                            else
+                            {
+                                // Let only pointer and keyboard input through.
+                                skipEvent = !isPointerOrKeyboard;
+                                leaveInBuffer = true;
+                            }
+                        }
+                    }
                     #endif
 
-                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-
-                    // No device found matching event. Ignore it.
-                    continue;
-                }
-
-                // Give listeners a shot at the event.
-                if (m_EventListeners.length > 0)
-                {
-                    for (var i = 0; i < m_EventListeners.length; ++i)
-                        m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
-
-                    // If a listener marks the event as handled, we don't process it further.
-                    if (currentEventReadPtr->handled)
+                    // If device is disabled, we let the event through only in certain cases.
+                    if (!skipEvent && !device.enabled)
                     {
-                        eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
-                            ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: false);
-                        continue;
+                        // Removal and configuration change events should always be processed.
+                        if (currentEventType != DeviceRemoveEvent.Type &&
+                            currentEventType != DeviceConfigurationEvent.Type &&
+                            (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime | InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
+                        {
+                            #if UNITY_EDITOR
+                            // If the device is disabled in the backend, getting events for them
+                            // is something that indicates a problem in the backend so diagnose.
+                            if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
+                                m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
+                            #endif
+
+                            skipEvent = true;
+                            leaveInBuffer = false;
+                        }
+                    }
+
+                    // Give listeners a shot at the event.
+                    if (!skipEvent && m_EventListeners.length > 0)
+                    {
+                        for (var i = 0; i < m_EventListeners.length; ++i)
+                            m_EventListeners[i](new InputEventPtr(currentEventReadPtr), device);
+
+                        // If a listener marks the event as handled, we don't process it further.
+                        if (currentEventReadPtr->handled)
+                        {
+                            skipEvent = true;
+                            leaveInBuffer = false;
+                        }
                     }
                 }
 
+                if (skipEvent)
+                {
+                    eventBuffer.AdvanceToNextEvent(ref currentEventReadPtr, ref currentEventWritePtr,
+                        ref numEventsRetainedInBuffer, ref remainingEventCount, leaveEventInBuffer: leaveInBuffer);
+                    continue;
+                }
+
+                // Update metrics.
+                if (currentEventTimeInternal <= currentTime)
+                    totalEventLag += currentTime - currentEventTimeInternal;
+                ++m_Metrics.totalEventCount;
+                m_Metrics.totalEventBytes += (int)currentEventReadPtr->sizeInBytes;
+
                 // Process.
-                var currentEventType = currentEventReadPtr->type;
                 switch (currentEventType)
                 {
                     case StateEvent.Type:
                     case DeltaStateEvent.Type:
 
                         var eventPtr = new InputEventPtr(currentEventReadPtr);
-
-                        // Ignore state changes if device is disabled.
-                        if (!device.enabled)
-                        {
-                            #if UNITY_EDITOR
-                            m_Diagnostics?.OnEventForDisabledDevice(eventPtr, device);
-                            #endif
-                            break;
-                        }
-
-                        var deviceIsStateCallbackReceiver = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
-                            InputDevice.DeviceFlags.HasStateCallbacks;
 
                         // Ignore the event if the last state update we received for the device was
                         // newer than this state event is. We don't allow devices to go back in time.
@@ -2840,6 +3056,8 @@ namespace UnityEngine.InputSystem
                         //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
                         //       that are generated in the backend and would require considerable work to ensure monotonically
                         //       increasing timestamps across all such streams.
+                        var deviceIsStateCallbackReceiver = (device.m_DeviceFlags & InputDevice.DeviceFlags.HasStateCallbacks) ==
+                            InputDevice.DeviceFlags.HasStateCallbacks;
                         if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
                             !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
                         {
@@ -2973,21 +3191,18 @@ namespace UnityEngine.InputSystem
             if (gameIsPlayingAndHasFocus)
                 ProcessStateChangeMonitorTimeouts();
 
-            ////TODO: fire event that allows code to update state *from* state we just updated
-
             Profiler.EndSample();
 
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
             ////       mess in the event buffer
             ////       same goes for events that someone may queue from a change monitor callback
             InvokeAfterUpdateCallback();
-            ////TODO: check if there's new events in the event buffer; if so, do a pass over those events right away
+            m_CurrentUpdate = default;
         }
 
         private void InvokeAfterUpdateCallback()
         {
-            for (var i = 0; i < m_AfterUpdateListeners.length; ++i)
-                m_AfterUpdateListeners[i]();
+            DelegateHelpers.InvokeCallbacksSafe(ref m_AfterUpdateListeners, "onAfterUpdate");
         }
 
         // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,

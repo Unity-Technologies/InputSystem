@@ -97,9 +97,20 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                var runInBackground = Application.runInBackground;
+                using (new EditorGUI.DisabledScope(!runInBackground))
+                    EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
+                if (!runInBackground)
+                    EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+                EditorGUILayout.PropertyField(m_GameViewFocus, m_GameViewFocusContent);
 
+                EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_FilterNoiseOnCurrent, m_FilterNoiseOnCurrentContent);
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+
+                // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
+                //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
+                //       development players.
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -165,8 +176,7 @@ namespace UnityEngine.InputSystem.Editor
             var dataPath = Application.dataPath + "/";
             if (!path.StartsWith(dataPath, StringComparison.CurrentCultureIgnoreCase))
             {
-                Debug.LogError(string.Format(
-                    "Input settings must be stored in Assets folder of the project (got: '{0}')", path));
+                Debug.LogError($"Input settings must be stored in Assets folder of the project (got: '{path}')");
                 return;
             }
 
@@ -234,6 +244,8 @@ namespace UnityEngine.InputSystem.Editor
             m_SettingsObject = new SerializedObject(m_Settings);
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
+            m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
+            m_GameViewFocus = m_SettingsObject.FindProperty("m_GameViewFocus");
             m_FilterNoiseOnCurrent = m_SettingsObject.FindProperty("m_FilterNoiseOnCurrent");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
             m_DefaultDeadzoneMax = m_SettingsObject.FindProperty("m_DefaultDeadzoneMax");
@@ -246,8 +258,23 @@ namespace UnityEngine.InputSystem.Editor
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
-            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
+            m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on .current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
+            m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
+                + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
+                + "'Reset And Disable Non-Background Devices' soft-resets and disables devices that cannot run in the background while the application does not have focus. Devices "
+                + "that can run in the background remain enabled and will keep receiving input.\n"
+                + "'Reset And Disable All Devices' soft-resets and disables *all* devices while the application does not have focus. No device will receive input while the application "
+                + "is running in the background.\n"
+                + "'Ignore Focus' leaves all devices untouched when application focus changes. While running in the background, all input that is received is processed as if "
+                + "running in the foreground.");
+            m_GameViewFocusContent = new GUIContent("Game View Focus", "Determines how input is treated in the editor with respect to the Game View not having focus.\n\n"
+                + "'Only Pointer And Keyboard' requires Game View focus only for pointers (mice, touch, etc.) and keyboards. Other devices will feed input to the game regardless "
+                + "of whether the Game View is focused or not. Note that this means that input on these devices is not visible in other EditorWindows.\n"
+                + "'All Devices' requires Game View focus for all input devices. While focus is not on the Game View, all input on InputDevices will go to the editor and not "
+                + "the game.\n"
+                + "'Exactly As In Player' causes input to treat 'Background Behavior' exactly as in the player including devices potentially being disabled entirely while the Game View "
+                + "does not have focus. In this setting, no input from the Input System will be visible to EditorWindows.");
             m_DefaultDeadzoneMinContent = new GUIContent("Default Deadzone Min", "Default 'min' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultDeadzoneMaxContent = new GUIContent("Default Deadzone Max", "Default 'max' value for Stick Deadzone and Axis Deadzone processors.");
             m_DefaultButtonPressPointContent = new GUIContent("Default Button Press Point", "The default press point used for Button controls as well as for various interactions. For button controls which have analog physical inputs, this configures how far they need to   be held down to be considered 'pressed'.");
@@ -347,6 +374,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedObject m_SettingsObject;
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
+        [NonSerialized] private SerializedProperty m_BackgroundBehavior;
+        [NonSerialized] private SerializedProperty m_GameViewFocus;
         [NonSerialized] private SerializedProperty m_FilterNoiseOnCurrent;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMax;
@@ -366,18 +395,20 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
         [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
-        GUIContent m_UpdateModeContent;
-        GUIContent m_FilterNoiseOnCurrentContent;
-        GUIContent m_CompensateForScreenOrientationContent;
-        GUIContent m_DefaultDeadzoneMinContent;
-        GUIContent m_DefaultDeadzoneMaxContent;
-        GUIContent m_DefaultButtonPressPointContent;
-        GUIContent m_ButtonReleaseThresholdContent;
-        GUIContent m_DefaultTapTimeContent;
-        GUIContent m_DefaultSlowTapTimeContent;
-        GUIContent m_DefaultHoldTimeContent;
-        GUIContent m_TapRadiusContent;
-        GUIContent m_MultiTapDelayTimeContent;
+        private GUIContent m_UpdateModeContent;
+        private GUIContent m_FilterNoiseOnCurrentContent;
+        private GUIContent m_CompensateForScreenOrientationContent;
+        private GUIContent m_BackgroundBehaviorContent;
+        private GUIContent m_GameViewFocusContent;
+        private GUIContent m_DefaultDeadzoneMinContent;
+        private GUIContent m_DefaultDeadzoneMaxContent;
+        private GUIContent m_DefaultButtonPressPointContent;
+        private GUIContent m_ButtonReleaseThresholdContent;
+        private GUIContent m_DefaultTapTimeContent;
+        private GUIContent m_DefaultSlowTapTimeContent;
+        private GUIContent m_DefaultHoldTimeContent;
+        private GUIContent m_TapRadiusContent;
+        private GUIContent m_MultiTapDelayTimeContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

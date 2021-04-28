@@ -2412,6 +2412,72 @@ partial class CoreTests
         throw new NotImplementedException();
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_WhenNotInPlayMode_AllInputGoesToEditor()
+    {
+        // Give us a setting where in play mode, gamepad input would go to the game
+        // regardless of focus.
+        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.OnlyPointerAndKeyboard;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        runtime.isInPlayMode = false;
+
+        Press(gamepad.buttonSouth);
+        Press(mouse.leftButton);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+        Set(gamepad.leftTrigger, 0.5f, queueEventOnly: true);
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+
+        // Try running a dynamic update. Outside of play mode, this should do nothing.
+        var eventCountBefore = InputSystem.metrics.totalEventCount;
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(InputSystem.metrics.totalEventCount, Is.EqualTo(eventCountBefore));
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(default(Vector2)));
+
+        // Running the editor update now, we should see the event for the gamepad popping up.
+        InputSystem.Update();
+
+        Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f));
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+    }
+
+    [Test]
+    [Category("Editor")]
+    public unsafe void Editor_WhenEditorIsActivated_AllDevicesAreSynced()
+    {
+        runtime.isInPlayMode = false;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var receivedMouseSync = false;
+        runtime.SetDeviceCommandCallback(mouse, (id, commandPtr) =>
+        {
+            if (commandPtr->type == RequestSyncCommand.Type)
+                receivedMouseSync = true;
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        runtime.isEditorActive = false;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.False);
+
+        runtime.isEditorActive = true;
+        InputSystem.Update();
+
+        Assert.That(receivedMouseSync, Is.True);
+    }
+
     // While going into play mode, the editor will be unresponsive. So what will happen is that when the user clicks the
     // play mode button and then moves the mouse around while Unity is busy going into play mode, the game will receive
     // a huge pointer motion delta in one of its first frames. If pointer motion is tied to camera motion, for example,

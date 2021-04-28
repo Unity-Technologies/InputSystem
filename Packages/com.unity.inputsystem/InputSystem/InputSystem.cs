@@ -1734,7 +1734,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputDevice.enabled"/>
         public static void DisableDevice(InputDevice device, bool keepSendingEvents = false)
         {
-            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents: keepSendingEvents);
+            s_Manager.EnableOrDisableDevice(device, false, keepSendingEvents ? InputManager.DeviceDisableScope.InFrontendOnly : default);
         }
 
         /// <summary>
@@ -3143,6 +3143,10 @@ namespace UnityEngine.InputSystem
 
                 case PlayModeStateChange.EnteredPlayMode:
                     s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    break;
+
+                case PlayModeStateChange.ExitingPlayMode:
+                    s_Manager.OnFocusChanged(false);
                     break;
 
                 ////TODO: also nuke all callbacks installed on InputActions and InputActionMaps

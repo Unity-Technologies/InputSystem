@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,6 +13,7 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock;
+using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 using UnityEngine.Scripting;
@@ -507,6 +510,32 @@ partial class CoreTests
         var device = InputSystem.AddDevice<TestDeviceWithDefaultState>();
 
         Assert.That(device["control"].ReadValueAsObject(), Is.EqualTo(0.1234).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_AddingDevice_RequestsSyncFromDevice()
+    {
+        var deviceId = runtime.AllocateDeviceId();
+        runtime.ReportNewInputDevice<Gamepad>(deviceId);
+
+        var receivedSyncRequest = false;
+        runtime.SetDeviceCommandCallback(deviceId,
+            (id, command) =>
+            {
+                if (command->type == RequestSyncCommand.Type)
+                {
+                    Assert.That(receivedSyncRequest, Is.False);
+                    Assert.That(id, Is.EqualTo(deviceId));
+                    receivedSyncRequest = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        InputSystem.Update();
+
+        Assert.That(receivedSyncRequest, Is.True);
     }
 
     [Test]
@@ -1651,20 +1680,56 @@ partial class CoreTests
         Assert.That(receivedChange.Value, Is.EqualTo(InputDeviceChange.Enabled));
     }
 
+    // When a device is reset, it won't receive any more state updates. So, if we don't reset it, actions tied to
+    // the device may get stuck. Thus we reset devices when we disable them.
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_WhenDisabled_StateIsReset()
+    public void Devices_WhenDisabled_StateIsReset()
     {
-        Assert.Fail();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Set(mouse.position, new Vector2(123, 234));
+        Press(mouse.leftButton);
+
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(mouse.leftButton.ReadValue(), Is.EqualTo(1));
+        Assert.That(mouse.rightButton.ReadValue(), Is.Zero);
+
+        InputSystem.DisableDevice(mouse);
+
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(mouse.leftButton.ReadValue(), Is.Zero);
+        Assert.That(mouse.rightButton.ReadValue(), Is.Zero);
     }
 
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_WhenDisabled_RefreshActions()
+    public unsafe void Devices_WhenEnabled_StateIsSynced()
     {
-        Assert.Fail();
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var receivedSyncRequest = false;
+        runtime.SetDeviceCommandCallback(mouse,
+            (id, command) =>
+            {
+                if (command->type == RequestSyncCommand.Type)
+                {
+                    Assert.That(receivedSyncRequest, Is.False);
+                    receivedSyncRequest = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        InputSystem.DisableDevice(mouse);
+
+        Assert.That(receivedSyncRequest, Is.False);
+
+        InputSystem.EnableDevice(mouse);
+
+        Assert.That(receivedSyncRequest, Is.True);
+    }
+
     [Test]
     [Category("Devices")]
     public unsafe void Devices_CanRequestSync()
@@ -1964,8 +2029,7 @@ partial class CoreTests
                         return InputDeviceCommand.GenericSuccess;
                     }
 
-                    Assert.Fail("Should not get other IOCTLs");
-                    return InputDeviceCommand.GenericFailure;
+                    return InputDeviceCommand.GenericSuccess;
                 });
         }
 
@@ -4085,262 +4149,848 @@ partial class CoreTests
         Assert.Fail();
     }
 
-    // NOTE: The focus handling logic will also implicitly take care of canceling and restarting actions.
-
     [Test]
     [Category("Devices")]
-    public unsafe void Devices_WhenFocusIsLost_DevicesAreForciblyReset()
+
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.OnlyPointerAndKeyboard)]
+
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.AllDevices)]
+
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.AllDevices)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.AllDevices)]
+
+    [TestCase(true, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    [TestCase(true, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+
+    [TestCase(false, InputSettings.BackgroundBehavior.IgnoreFocus, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableAllDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    [TestCase(false, InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices, InputSettings.GameViewFocus.ExactlyAsInPlayer)]
+    public unsafe void Devices_CanHandleFocusChanges(bool appRunInBackground, InputSettings.BackgroundBehavior backgroundBehavior, InputSettings.GameViewFocus gameViewFocus)
     {
+        // The constant leads to "Unreachable code detected" warnings.
+        #pragma warning disable CS0162
+
+        const bool kIsEditor =
+        #if UNITY_EDITOR
+            true;
+        #else
+            false;
+        #endif
+
+        // runInBackground=false in UNITY_EDITOR without gameViewFocus=ExactlyAsInPlayer is undefined as
+        // we consider runInBackground to always be on in the editor.
+        if (!appRunInBackground && kIsEditor && gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer)
+            return;
+
+        runtime.runInBackground = appRunInBackground;
+
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+        InputSystem.settings.gameViewFocus = gameViewFocus;
+
+        // Add a device that is disabled from the get-go and should remain disabled.
+        var sensorId = runtime.ReportNewInputDevice<Gyroscope>();
+        runtime.SetDeviceCommandCallback(sensorId, (_, commandPtr) =>
+        {
+            if (commandPtr->type == QueryEnabledStateCommand.Type)
+            {
+                var queryPtr = (QueryEnabledStateCommand*)commandPtr;
+                queryPtr->isEnabled = false;
+                return InputDeviceCommand.GenericSuccess;
+            }
+            if (commandPtr->type == EnableDeviceCommand.Type)
+                Assert.Fail("Device should never be enabled");
+            return InputDeviceCommand.GenericFailure;
+        });
+
+        // Create one device through the native codepath.
+        runtime.ReportNewInputDevice<TrackedDevice>();
+        InputSystem.Update();
+
+        var mouse = InputSystem.AddDevice<Mouse>();
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        var keyboardDeviceReset = false;
-        runtime.SetDeviceCommandCallback(keyboard.deviceId,
-            (id, commandPtr) =>
-            {
-                if (commandPtr->type == RequestResetCommand.Type)
-                {
-                    Assert.That(keyboardDeviceReset, Is.False);
-                    keyboardDeviceReset = true;
-
-                    return InputDeviceCommand.GenericSuccess;
-                }
-
-                return InputDeviceCommand.GenericFailure;
-            });
-
-
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        var gamepadDeviceReset = false;
-        runtime.SetDeviceCommandCallback(gamepad.deviceId,
-            (id, commandPtr) =>
+        var joystick = InputSystem.AddDevice<Joystick>();
+        var trackedDevice = InputSystem.GetDevice<TrackedDevice>();
+        var sensor = InputSystem.GetDevice<Gyroscope>();
+
+        // Add a device that we force-disable. Should remain disabled throughout.
+        var disabledDevice = InputSystem.AddDevice<Pen>();
+        InputSystem.DisableDevice(disabledDevice);
+
+        // Put devices into some non-default state.
+        Set(mouse.position, new Vector2(123, 234));
+        Press(mouse.leftButton);
+        Set(trackedDevice.devicePosition, new Vector3(234, 345, 456));
+        Press(trackedDevice.isTracked);
+        Press(keyboard.spaceKey);
+        Set(gamepad.leftTrigger, 0.5f);
+        Press(joystick.trigger);
+
+        var commands = new List<string>();
+        long DeviceCallback(string device, InputDeviceCommand* command, bool supportSyncCommand, bool canRunInBackground)
+        {
+            if (command->type == QueryCanRunInBackground.Type)
             {
-                if (commandPtr->type == RequestResetCommand.Type)
-                {
-                    Assert.That(gamepadDeviceReset, Is.False);
-                    gamepadDeviceReset = true;
-
-                    return InputDeviceCommand.GenericSuccess;
-                }
-
-                return InputDeviceCommand.GenericFailure;
-            });
-
-        var pointer = InputSystem.AddDevice<Pointer>();
-        var pointerDeviceReset = false;
-        runtime.SetDeviceCommandCallback(pointer.deviceId,
-            (id, commandPtr) =>
-            {
-                if (commandPtr->type == RequestResetCommand.Type)
-                {
-                    Assert.That(pointerDeviceReset, Is.False);
-                    pointerDeviceReset = true;
-
-                    return InputDeviceCommand.GenericSuccess;
-                }
-
-                return InputDeviceCommand.GenericFailure;
-            });
-
-        // Put devices in non-default states.
-        Press(keyboard.aKey);
-        Press(gamepad.buttonSouth);
-        Set(pointer.position, new Vector2(123, 234));
-
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.False);
-
-        // Focus loss should result in reset.
-        runtime.PlayerFocusLost();
-
-        Assert.That(keyboardDeviceReset, Is.True);
-        Assert.That(gamepadDeviceReset, Is.True);
-        Assert.That(pointerDeviceReset, Is.True);
-
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.aKey.isPressed, Is.False);
-        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
-        Assert.That(pointer.position.ReadValue(), Is.EqualTo(default(Vector2)));
-
-        keyboardDeviceReset = false;
-        gamepadDeviceReset = false;
-        pointerDeviceReset = false;
-
-        // Focus gain should not result in a reset.
-        runtime.PlayerFocusGained();
-
-        Assert.That(keyboardDeviceReset, Is.False);
-        Assert.That(gamepadDeviceReset, Is.False);
-        Assert.That(pointerDeviceReset, Is.False);
-
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
-        Assert.That(keyboard.aKey.isPressed, Is.False);
-        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
-        Assert.That(pointer.position.ReadValue(), Is.EqualTo(default(Vector2)));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_WhenFocusIsLost_DevicesAreForciblyReset_ExceptForNoisyControls()
-    {
-        InputSystem.AddDevice<Mouse>(); // Noise.
-
-        const string json = @"
-            {
-                ""name"" : ""NoisyGamepad"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    { ""name"" : ""noisyControl"", ""noisy"" : true, ""layout"" : ""Axis"" }
-                ]
+                ((QueryCanRunInBackground*)command)->canRunInBackground = canRunInBackground;
+                return InputDeviceCommand.GenericSuccess;
             }
-        ";
-
-        InputSystem.RegisterLayout(json);
-        var gamepad = (Gamepad)InputSystem.AddDevice("NoisyGamepad");
-
-        Press(gamepad.buttonSouth);
-        Set(gamepad.leftStick, new Vector2(123, 234));
-        Set((AxisControl)gamepad["noisyControl"], 345.0f);
-
-        runtime.PlayerFocusLost();
-
-        Assert.That(gamepad.CheckStateIsAtDefault(), Is.False);
-        Assert.That(gamepad.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
-        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
-        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(default(Vector2)));
-        Assert.That(((AxisControl)gamepad["noisyControl"]).ReadValue(), Is.EqualTo(345.0).Within(0.00001));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_WhenFocusIsLost_DevicesAreForciblyReset_AndResetsAreObservableStateChanges()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        var changeMonitorTriggered = false;
-        InputState.AddChangeMonitor(gamepad.buttonSouth,
-            (control, d, arg3, arg4) => changeMonitorTriggered = true);
-
-        Press(gamepad.buttonSouth);
-
-        Assert.That(changeMonitorTriggered, Is.True);
-
-        changeMonitorTriggered = false;
-
-        runtime.PlayerFocusLost();
-
-        Assert.That(changeMonitorTriggered, Is.True);
-    }
-
-    [Test]
-    [Category("Devices")]
-    public unsafe void Devices_WhenFocusIsLost_DevicesAreForciblyReset_ExceptThoseMarkedAsReceivingInputInBackground()
-    {
-        // TrackedDevice is all noisy controls. We need at least one non-noisy control to fully
-        // observe the behavior, so create a layout based on TrackedDevice that adds a button.
-        const string json = @"
+            if (command->type == RequestSyncCommand.Type)
             {
-                ""name"" : ""TestTrackedDevice"",
-                ""extend"" : ""TrackedDevice"",
-                ""controls"" : [
-                    { ""name"" : ""Button"", ""layout"" : ""Button"" }
-                ]
+                commands.Add("Sync " + device);
+                return supportSyncCommand ? InputDeviceCommand.GenericSuccess : InputDeviceCommand.GenericFailure;
             }
-        ";
+            if (command->type == RequestResetCommand.Type)
+            {
+                commands.Add("Reset " + device);
+                return InputDeviceCommand.GenericSuccess;
+            }
+            if (command->type == EnableDeviceCommand.Type)
+            {
+                commands.Add("Enable " + device);
+                return InputDeviceCommand.GenericSuccess;
+            }
+            if (command->type == DisableDeviceCommand.Type)
+            {
+                commands.Add("Disable " + device);
+                return InputDeviceCommand.GenericSuccess;
+            }
+            return InputDeviceCommand.GenericFailure;
+        }
 
-        InputSystem.RegisterLayout(json);
-        var trackedDevice = (TrackedDevice)InputSystem.AddDevice("TestTrackedDevice");
-
-        var receivedResetRequest = false;
         runtime.SetDeviceCommandCallback(trackedDevice,
-            (id, commandPtr) =>
+            (id, command) =>
+                DeviceCallback("TrackedDevice", command, true, true));
+        runtime.SetDeviceCommandCallback(mouse,
+            (id, command) =>
+                // Pretend we don't support syncs.
+                DeviceCallback("Mouse", command, false, false));
+        runtime.SetDeviceCommandCallback(gamepad,
+            (id, command) =>
+                DeviceCallback("Gamepad", command, true, true));
+        runtime.SetDeviceCommandCallback(joystick,
+            (id, command) =>
+                DeviceCallback("Joystick", command, false, false));
+        runtime.SetDeviceCommandCallback(keyboard,
+            (id, command) =>
+                DeviceCallback("Keyboard", command, true, false));
+
+        var changes = new List<string>();
+        void DeviceChangeCallback(InputDevice device, InputDeviceChange change)
+        {
+            var devicesOfType = InputSystem.devices.Where(d => d.GetType() == device.GetType());
+            var name = devicesOfType.Count() > 1 ? $"{device.layout}{devicesOfType.IndexOf(device)+1}" : device.layout;
+            changes.Add($"{change} {name}");
+        }
+
+        InputSystem.onDeviceChange += DeviceChangeCallback;
+
+        var eventCount = 0;
+        InputSystem.onEvent += (eventPtr, _) => ++ eventCount;
+
+        Assert.That(trackedDevice.enabled, Is.True);
+        Assert.That(mouse.enabled, Is.True);
+        Assert.That(keyboard.enabled, Is.True);
+        Assert.That(gamepad.enabled, Is.True);
+        Assert.That(joystick.enabled, Is.True);
+        Assert.That(sensor.enabled, Is.False);
+        Assert.That(disabledDevice.enabled, Is.False);
+
+        if (kIsEditor && gameViewFocus != InputSettings.GameViewFocus.ExactlyAsInPlayer)
+        {
+            // In the editor, canRunInBackground is automatically adapted to account both for the fact that "background" means
+            // "Game View not focused (but Unity is still running)" and that "Run In Background" is essentially always on.
+            switch (gameViewFocus)
             {
-                // IOCTL to return true from QueryCanRunInBackground.
-                if (commandPtr->type == QueryCanRunInBackground.Type)
-                {
-                    ((QueryCanRunInBackground*)commandPtr)->canRunInBackground = true;
-                    return InputDeviceCommand.GenericSuccess;
-                }
-                if (commandPtr->type == RequestResetCommand.Type)
-                {
-                    receivedResetRequest = true;
-                    // We still fail it as we don't actually reset.
-                    return InputDeviceCommand.GenericFailure;
-                }
+                case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                    Assert.That(trackedDevice.canRunInBackground, Is.True);
+                    Assert.That(mouse.canRunInBackground, Is.False);
+                    Assert.That(gamepad.canRunInBackground, Is.True);
+                    Assert.That(joystick.canRunInBackground, Is.True);
+                    Assert.That(keyboard.canRunInBackground, Is.False);
+                    break;
 
-                return InputDeviceCommand.GenericFailure;
-            });
+                case InputSettings.GameViewFocus.AllDevices:
+                    Assert.That(trackedDevice.canRunInBackground, Is.False);
+                    Assert.That(mouse.canRunInBackground, Is.False);
+                    Assert.That(gamepad.canRunInBackground, Is.False);
+                    Assert.That(joystick.canRunInBackground, Is.False);
+                    Assert.That(keyboard.canRunInBackground, Is.False);
+                    break;
+            }
+        }
+        else
+        {
+            Assert.That(trackedDevice.canRunInBackground, Is.True);
+            Assert.That(mouse.canRunInBackground, Is.False);
+            Assert.That(gamepad.canRunInBackground, Is.True);
+            Assert.That(joystick.canRunInBackground, Is.False);
+            Assert.That(keyboard.canRunInBackground, Is.False);
+        }
 
-        Set(trackedDevice.devicePosition, new Vector3(123, 234, 345));
-        Press((ButtonControl)trackedDevice["Button"]);
-
-        // First, do it without run-in-background being enabled. This should actually lead to
-        // a reset of the device even though run-in-background is enabled on the device itself.
-        // However, since the app as a whole is not set to run in the background, we still force
-        // a reset.
-        runtime.runInBackground = false;
-
+        // Lose focus.
         runtime.PlayerFocusLost();
 
-        Assert.That(receivedResetRequest, Is.True);
-        Assert.That(trackedDevice.CheckStateIsAtDefault(), Is.False);
-        Assert.That(trackedDevice.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
-        Assert.That(trackedDevice.devicePosition.ReadValue(),
-            Is.EqualTo(new Vector3(123, 234, 345)).Using(Vector3EqualityComparer.Instance));
-        Assert.That(((ButtonControl)trackedDevice["Button"]).ReadValue(), Is.Zero);
+        Assert.That(sensor.enabled, Is.False);
+        Assert.That(disabledDevice.enabled, Is.False);
 
+        if (!appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+        {
+            // No change on focus loss.
+
+            Assert.That(trackedDevice.enabled, Is.True);
+            Assert.That(mouse.enabled, Is.True);
+            Assert.That(keyboard.enabled, Is.True);
+            Assert.That(gamepad.enabled, Is.True);
+            Assert.That(joystick.enabled, Is.True);
+
+            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
+            Assert.That(keyboard.spaceKey.isPressed, Is.True);
+            Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
+            Assert.That(joystick.trigger.isPressed, Is.True);
+            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+            Assert.That(trackedDevice.isTracked.isPressed, Is.True);
+
+            Assert.That(changes, Is.Empty);
+            Assert.That(commands, Is.Empty);
+        }
+        else
+        {
+            switch (backgroundBehavior)
+            {
+                case InputSettings.BackgroundBehavior.IgnoreFocus:
+                    Assert.That(trackedDevice.enabled, Is.True);
+                    Assert.That(mouse.enabled, Is.True);
+                    Assert.That(keyboard.enabled, Is.True);
+                    Assert.That(gamepad.enabled, Is.True);
+                    Assert.That(joystick.enabled, Is.True);
+
+                    Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                    Assert.That(mouse.leftButton.isPressed, Is.True);
+                    Assert.That(keyboard.spaceKey.isPressed, Is.True);
+                    Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
+                    Assert.That(joystick.trigger.isPressed, Is.True);
+                    Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                    Assert.That(trackedDevice.isTracked.isPressed, Is.True);
+
+                    Assert.That(changes, Is.Empty);
+                    Assert.That(commands, Is.Empty);
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
+                    Assert.That(trackedDevice.enabled, Is.False);
+                    Assert.That(mouse.enabled, Is.False);
+                    Assert.That(keyboard.enabled, Is.False);
+                    Assert.That(gamepad.enabled, Is.False);
+                    Assert.That(joystick.enabled, Is.False);
+
+                    Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                    Assert.That(mouse.leftButton.isPressed, Is.False);
+                    Assert.That(keyboard.spaceKey.isPressed, Is.False);
+                    Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+                    Assert.That(joystick.trigger.isPressed, Is.False);
+                    Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                    Assert.That(trackedDevice.isTracked.isPressed, Is.False);
+
+                    Assert.That(changes, Is.EquivalentTo(new[]
+                    {
+                        "Reset Mouse", "Reset Keyboard", "Reset Gamepad", "Reset Joystick", "Reset TrackedDevice",
+                        "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
+                    }));
+                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                        Assert.That(commands, Is.EquivalentTo(new[] { "Disable Mouse", "Disable Keyboard", "Disable Gamepad", "Disable Joystick", "Disable TrackedDevice" }));
+                    else
+                        Assert.That(commands, Is.Empty); // We don't actually disable them in the backend as the editor will continue to receive data.
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
+                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    {
+                        Assert.That(trackedDevice.enabled, Is.True);
+                        Assert.That(mouse.enabled, Is.False);
+                        Assert.That(keyboard.enabled, Is.False);
+                        Assert.That(gamepad.enabled, Is.True);
+                        Assert.That(joystick.enabled, Is.False);
+
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(mouse.leftButton.isPressed, Is.False);
+                        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+                        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
+                        Assert.That(joystick.trigger.isPressed, Is.False);
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                        Assert.That(trackedDevice.isTracked.isPressed, Is.True);
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            "Reset Mouse", "Reset Keyboard", "Reset Joystick",
+                            "Disabled Mouse", "Disabled Keyboard", "Disabled Joystick"
+                        }));
+                        if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                            Assert.That(commands, Is.EquivalentTo(new[] { "Disable Mouse", "Disable Keyboard", "Disable Joystick" }));
+                        else
+                            Assert.That(commands, Is.Empty);
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    {
+                        Assert.That(trackedDevice.enabled, Is.True);
+                        Assert.That(mouse.enabled, Is.False);
+                        Assert.That(keyboard.enabled, Is.False);
+                        Assert.That(gamepad.enabled, Is.True);
+                        Assert.That(joystick.enabled, Is.True);
+
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(mouse.leftButton.isPressed, Is.False);
+                        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+                        Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
+                        Assert.That(joystick.trigger.isPressed, Is.True);
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                        Assert.That(trackedDevice.isTracked.isPressed, Is.True);
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            "Reset Mouse", "Reset Keyboard",
+                            "Disabled Mouse", "Disabled Keyboard"
+                        }));
+                        Assert.That(commands, Is.Empty); // No actual disabling in backend.
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    {
+                        Assert.That(trackedDevice.enabled, Is.False);
+                        Assert.That(mouse.enabled, Is.False);
+                        Assert.That(keyboard.enabled, Is.False);
+                        Assert.That(gamepad.enabled, Is.False);
+                        Assert.That(joystick.enabled, Is.False);
+
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(mouse.leftButton.isPressed, Is.False);
+                        Assert.That(keyboard.spaceKey.isPressed, Is.False);
+                        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+                        Assert.That(joystick.trigger.isPressed, Is.False);
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                        Assert.That(trackedDevice.isTracked.isPressed, Is.False);
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            "Reset Mouse", "Reset Keyboard", "Reset Gamepad", "Reset Joystick", "Reset TrackedDevice",
+                            "Disabled Mouse", "Disabled Keyboard", "Disabled Gamepad", "Disabled Joystick", "Disabled TrackedDevice"
+                        }));
+                        Assert.That(commands, Is.Empty); // We don't actually disable them in the backend as the editor will continue to receive data.
+                    }
+
+                    break;
+            }
+        }
+
+        changes.Clear();
+        commands.Clear();
+
+        InputDevice mouse2 = null;
+        InputDevice mouse3 = null;
+        InputDevice trackedDevice2 = null;
+
+        // If we're set up to process input even when in the background, make sure
+        // this is intact.
+        if (appRunInBackground || kIsEditor)
+        {
+            // Queue a change on each device.
+            Set(mouse.position, new Vector2(333, 444), queueEventOnly: true);
+            Set(trackedDevice.devicePosition, new Vector3(444, 555, 666), queueEventOnly: true);
+            Set(joystick.stick, new Vector2(0.666f, 0.777f), queueEventOnly: true);
+            Press(gamepad.buttonNorth, queueEventOnly: true);
+            Press(keyboard.aKey, queueEventOnly: true);
+
+            // runInBackground=true, ResetAndDisableAllDevices, OnlyPointerAndKeyboard
+            // (a) why don't we early out of event processing?
+            // (b) why are the devices not disabled?
+
+            // Run one player update.
+            InputSystem.Update(InputUpdateType.Dynamic);
+            Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Dynamic),
+                "Expecting to run a player update");
+
+            Assert.That(changes, Is.Empty);
+            Assert.That(commands, Is.Empty);
+
+            switch (backgroundBehavior)
+            {
+                case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
+
+                    if (appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+                    {
+                        // Only background devices should have been affected.
+                        Assert.That(eventCount, Is.EqualTo(2));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(keyboard.aKey.isPressed, Is.False);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True); // canRunInBackground
+                        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666))); // canRunInBackground
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    {
+                        // All devices should be unaffected.
+                        Assert.That(eventCount, Is.Zero);
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(keyboard.aKey.isPressed, Is.False);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    {
+                        // All devices except for mouse and keyboard should be affected.
+                        Assert.That(eventCount, Is.EqualTo(3));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(keyboard.aKey.isPressed, Is.False);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                        Assert.That(joystick.stick.ReadValue(),
+                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                    }
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
+
+                    // All devices should be unaffected.
+                    Assert.That(eventCount, Is.Zero);
+                    Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                    Assert.That(keyboard.aKey.isPressed, Is.False);
+                    Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                    Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                    Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.IgnoreFocus:
+
+                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    {
+                        if (appRunInBackground)
+                        {
+                            // All devices should have been affected.
+                            Assert.That(eventCount, Is.EqualTo(5));
+                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                            Assert.That(keyboard.aKey.isPressed, Is.True);
+                            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                            Assert.That(joystick.stick.ReadValue(),
+                                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                        }
+                        else
+                        {
+                            // All devices should be unaffected.
+                            Assert.That(eventCount, Is.Zero);
+                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                            Assert.That(keyboard.aKey.isPressed, Is.False);
+                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                        }
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    {
+                        // All devices should be unaffected.
+                        Assert.That(eventCount, Is.Zero);
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(keyboard.aKey.isPressed, Is.False);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                        Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    {
+                        // All devices except for mouse and keyboard should be affected.
+                        Assert.That(eventCount, Is.EqualTo(3));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+                        Assert.That(keyboard.aKey.isPressed, Is.False);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                        Assert.That(joystick.stick.ReadValue(),
+                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                    }
+
+                    break;
+            }
+
+            // In the editor, some of the input may have been deferred to the next editor update.
+            // Make sure we see the input coming through.
+            if (kIsEditor)
+            {
+                // Run another empty player update to make sure we don't end up losing the input we've deferred.
+                eventCount = 0;
+                InputSystem.Update(InputUpdateType.Dynamic);
+                Assert.That(eventCount, Is.Zero); // No further events should have been processed.
+
+                // Now run an editor update to force the input through.
+                eventCount = 0;
+                InputSystem.Update(InputUpdateType.Editor);
+
+                Assert.That(InputState.currentUpdateType, Is.EqualTo(InputUpdateType.Editor));
+
+                switch (gameViewFocus)
+                {
+                    case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                        if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices ||
+                            backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
+                        {
+                            // Pointer and mouse input should have gone to editor.
+                            Assert.That(eventCount, Is.EqualTo(2));
+                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                            Assert.That(keyboard.aKey.isPressed, Is.True);
+                            Assert.That(gamepad.buttonNorth.isPressed, Is.False);
+                            Assert.That(joystick.stick.ReadValue(), Is.EqualTo(Vector2.zero));
+                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(Vector3.zero));
+                        }
+                        else
+                        {
+                            // All input should have gone to editor.
+                            Assert.That(eventCount, Is.EqualTo(5));
+                            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                            Assert.That(keyboard.aKey.isPressed, Is.True);
+                            Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                            Assert.That(joystick.stick.ReadValue(),
+                                Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                        }
+                        break;
+
+                    case InputSettings.GameViewFocus.AllDevices:
+                        // All input should have gone to editor.
+                        Assert.That(eventCount, Is.EqualTo(5));
+                        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(333, 444)));
+                        Assert.That(keyboard.aKey.isPressed, Is.True);
+                        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+                        Assert.That(joystick.stick.ReadValue(),
+                            Is.EqualTo(new StickDeadzoneProcessor().Process(new Vector2(0.666f, 0.777f))));
+                        Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(444, 555, 666)));
+                        break;
+
+                    case InputSettings.GameViewFocus.ExactlyAsInPlayer:
+                        // No input should have been deferred.
+                        Assert.That(eventCount, Is.Zero);
+                        break;
+                }
+            }
+
+            // If we're in the background, make sure we handle adding and removing devices properly.
+
+            // Add a pointer device that can run in the background. Need to do this view ReportNewInputDevice
+            // as we have to have the command callback in place by the time we add the device.
+            var mouse2Id = runtime.ReportNewInputDevice<Mouse>();
+            runtime.SetDeviceCommandCallback(mouse2Id,
+                (id, command) =>
+                    DeviceCallback("Mouse2", command, true, true));
+            InputSystem.Update(InputUpdateType.Dynamic);
+            mouse2 = (Mouse)InputSystem.GetDeviceById(mouse2Id);
+
+            // Add device that can't run in the background.
+            mouse3 = InputSystem.AddDevice<Mouse>();
+            runtime.SetDeviceCommandCallback(mouse3,
+                (id, command) =>
+                    DeviceCallback("Mouse3", command, false, false));
+
+            // Add another device that can run in the background.
+            var trackedDevice2Id = runtime.ReportNewInputDevice<TrackedDevice>();
+            runtime.SetDeviceCommandCallback(trackedDevice2Id,
+                (id, command) =>
+                    DeviceCallback("TrackedDevice2", command, false, true));
+            InputSystem.Update(InputUpdateType.Dynamic);
+            trackedDevice2 = InputSystem.GetDeviceById(trackedDevice2Id);
+
+            if (!appRunInBackground)
+            {
+                Assert.That(mouse2.enabled, Is.True);
+                Assert.That(mouse3.enabled, Is.True);
+                Assert.That(trackedDevice2.enabled, Is.True);
+            }
+            else
+            {
+                switch (backgroundBehavior)
+                {
+                    case InputSettings.BackgroundBehavior.IgnoreFocus:
+                        Assert.That(mouse2.enabled, Is.True);
+                        Assert.That(mouse3.enabled, Is.True);
+                        Assert.That(trackedDevice2.enabled, Is.True);
+                        break;
+
+                    case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
+                        Assert.That(mouse2.enabled, Is.False);
+                        Assert.That(mouse3.enabled, Is.False);
+                        Assert.That(trackedDevice2.enabled, Is.False);
+                        break;
+
+                    case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
+                        switch (gameViewFocus)
+                        {
+                            case InputSettings.GameViewFocus.AllDevices:
+                                Assert.That(mouse2.enabled, Is.False);
+                                Assert.That(mouse3.enabled, Is.False);
+                                Assert.That(trackedDevice2.enabled, Is.False);
+                                break;
+
+                            case InputSettings.GameViewFocus.ExactlyAsInPlayer:
+                                Assert.That(mouse2.enabled, Is.True);
+                                Assert.That(mouse3.enabled, Is.False);
+                                Assert.That(trackedDevice2.enabled, Is.True);
+                                break;
+
+                            case InputSettings.GameViewFocus.OnlyPointerAndKeyboard:
+                                Assert.That(mouse2.enabled, Is.False);
+                                Assert.That(mouse3.enabled, Is.False);
+                                Assert.That(trackedDevice2.enabled, Is.True);
+                                break;
+                        }
+                        break;
+                }
+            }
+
+            ////TODO: test manually enabling disabled device
+        }
+
+        changes.Clear();
+        commands.Clear();
+
+        // Regain focus.
         runtime.PlayerFocusGained();
-        receivedResetRequest = false;
 
-        // Next, do the same all over with run-in-background enabled. Now, the device shouldn't reset at all.
-        runtime.runInBackground = true;
-        Press((ButtonControl)trackedDevice["Button"]);
-        runtime.PlayerFocusLost();
+        Assert.That(sensor.enabled, Is.False);
+        Assert.That(disabledDevice.enabled, Is.False);
 
-        Assert.That(receivedResetRequest, Is.False);
-        Assert.That(trackedDevice.CheckStateIsAtDefault(), Is.False);
-        Assert.That(trackedDevice.CheckStateIsAtDefaultIgnoringNoise(), Is.False);
-        Assert.That(trackedDevice.devicePosition.ReadValue(),
-            Is.EqualTo(new Vector3(123, 234, 345)).Using(Vector3EqualityComparer.Instance));
-        Assert.That(((ButtonControl)trackedDevice["Button"]).isPressed, Is.True);
+        if (!appRunInBackground && (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer))
+        {
+            // No change on focus gain.
+
+            Assert.That(trackedDevice.enabled, Is.True);
+            Assert.That(trackedDevice2.enabled, Is.True);
+            Assert.That(mouse.enabled, Is.True);
+            Assert.That(mouse2.enabled, Is.True);
+            Assert.That(mouse3.enabled, Is.True);
+            Assert.That(keyboard.enabled, Is.True);
+            Assert.That(gamepad.enabled, Is.True);
+            Assert.That(joystick.enabled, Is.True);
+
+            Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+            Assert.That(mouse.leftButton.isPressed, Is.True);
+            Assert.That(keyboard.spaceKey.isPressed, Is.True);
+            Assert.That(gamepad.leftTrigger.ReadValue(), Is.EqualTo(0.5f).Using(FloatEqualityComparer.Instance));
+            Assert.That(joystick.trigger.isPressed, Is.True);
+            Assert.That(trackedDevice.devicePosition.ReadValue(), Is.EqualTo(new Vector3(234, 345, 456)));
+            Assert.That(trackedDevice.isTracked.isPressed, Is.True);
+
+            // Enabled devices that do not support syncs will have seen resets.
+            if (kIsEditor)
+                Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse1", "Reset TrackedDevice2", "Reset Mouse3", "Reset Joystick" }));
+            else
+                Assert.That(changes, Is.EquivalentTo(new[] { "Reset Mouse", "Reset Joystick" }));
+
+            // All enabled devices should have received sync requests.
+            if (kIsEditor)
+                Assert.That(commands,
+                    Is.EquivalentTo(new[]
+                    {
+                        "Sync Mouse", "Sync Mouse2", "Sync Mouse3", "Sync TrackedDevice", "Sync TrackedDevice2",
+                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick"
+                    }));
+            else
+                Assert.That(commands,
+                    Is.EquivalentTo(new[]
+                    {
+                        "Sync Mouse", "Sync TrackedDevice",
+                        "Sync Keyboard", "Sync Gamepad", "Sync Joystick"
+                    }));
+        }
+        else
+        {
+            Assert.That(trackedDevice.enabled, Is.True);
+            Assert.That(trackedDevice2.enabled, Is.True);
+            Assert.That(mouse.enabled, Is.True);
+            Assert.That(mouse2.enabled, Is.True);
+            Assert.That(mouse3.enabled, Is.True);
+            Assert.That(keyboard.enabled, Is.True);
+            Assert.That(gamepad.enabled, Is.True);
+            Assert.That(joystick.enabled, Is.True);
+
+            switch (backgroundBehavior)
+            {
+                case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
+
+                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    {
+                        // All non-canRunInBackground devices are re-enabled and receive a sync request.
+
+                        Assert.That(commands,
+                            Is.EquivalentTo(new[]
+                            {
+                                // Going all the way to the backend so we're seeing all this in actual
+                                // commands here.
+                                "Enable Mouse", "Sync Mouse",
+                                "Enable Mouse3", "Sync Mouse3",
+                                "Enable Keyboard", "Sync Keyboard",
+                                "Enable Joystick", "Sync Joystick"
+                            }));
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            // Enabled devices that don't support syncs get reset.
+                            "Reset Mouse1", "Reset Mouse3", "Reset Joystick",
+
+                            "Enabled Mouse1", "Enabled Mouse3",
+                            "Enabled Keyboard", "Enabled Joystick"
+                        }));
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.OnlyPointerAndKeyboard)
+                    {
+                        // Pointers and keyboards are re-enabled and receive a sync request.
+
+                        Assert.That(commands,
+                            Is.EquivalentTo(new[]
+                            {
+                                "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                                "Sync Keyboard",
+                            }));
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            // Enabled devices that don't support syncs get reset.
+                            "Reset Mouse1", "Reset Mouse3",
+
+                            "Enabled Mouse1", "Enabled Mouse2", "Enabled Mouse3", "Enabled Keyboard"
+                        }));
+                    }
+
+                    if (kIsEditor && gameViewFocus == InputSettings.GameViewFocus.AllDevices)
+                    {
+                        // All devices re-enabled and receive a sync request.
+
+                        Assert.That(commands,
+                            Is.EquivalentTo(new[]
+                            {
+                                "Sync Gamepad", "Sync Joystick",
+                                "Sync TrackedDevice", "Sync TrackedDevice2",
+                                "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                                "Sync Keyboard"
+                            }));
+
+                        Assert.That(changes, Is.EquivalentTo(new[]
+                        {
+                            // Enabled devices that don't support syncs get reset.
+                            "Reset Mouse1", "Reset Mouse3", "Reset Joystick", "Reset TrackedDevice2",
+
+                            "Enabled Gamepad", "Enabled Joystick",
+                            "Enabled TrackedDevice1", "Enabled TrackedDevice2",
+                            "Enabled Mouse1", "Enabled Mouse2", "Enabled Mouse3",
+                            "Enabled Keyboard"
+                        }));
+                    }
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
+
+                    // All devices re-enabled and receive a sync request.
+
+                    if (!kIsEditor || gameViewFocus == InputSettings.GameViewFocus.ExactlyAsInPlayer)
+                    {
+                        Assert.That(commands,
+                            Is.EquivalentTo(new[]
+                            {
+                                "Sync Gamepad", "Sync Joystick",
+                                "Sync TrackedDevice", "Sync TrackedDevice2",
+                                "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                                "Sync Keyboard",
+
+                                "Enable Gamepad", "Enable Joystick",
+                                "Enable TrackedDevice", "Enable TrackedDevice2",
+                                "Enable Mouse", "Enable Mouse2", "Enable Mouse3",
+                                "Enable Keyboard"
+                            }));
+                    }
+                    else
+                    {
+                        Assert.That(commands,
+                            Is.EquivalentTo(new[]
+                            {
+                                "Sync Gamepad", "Sync Joystick",
+                                "Sync TrackedDevice", "Sync TrackedDevice2",
+                                "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
+                                "Sync Keyboard"
+                            }));
+                    }
+
+                    Assert.That(changes, Is.EquivalentTo(new[]
+                    {
+                        // Enabled devices that don't support syncs get reset.
+                        "Reset Mouse1", "Reset Mouse3", "Reset Joystick", "Reset TrackedDevice2",
+
+                        "Enabled Gamepad", "Enabled Joystick",
+                        "Enabled TrackedDevice1", "Enabled TrackedDevice2",
+                        "Enabled Mouse1", "Enabled Mouse2", "Enabled Mouse3",
+                        "Enabled Keyboard"
+                    }));
+
+                    break;
+
+                case InputSettings.BackgroundBehavior.IgnoreFocus:
+                    Assert.That(changes, Is.Empty);
+                    Assert.That(commands, Is.Empty);
+                    break;
+            }
+        }
+
+        #pragma warning restore CS0162
     }
 
     [Test]
     [Category("Devices")]
-    public void Devices_WhenFocusIsLost_OngoingTouchesGetCancelled()
+    public void Devices_CanMarkDeviceAsBeingAbleToRunInBackground_ThroughIOCTL()
     {
-        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var deviceId = runtime.ReportNewInputDevice<Gamepad>();
+        runtime.SetCanRunInBackground(deviceId);
 
-        BeginTouch(1, new Vector2(123, 234));
-        BeginTouch(2, new Vector2(234, 345));
+        InputSystem.Update();
 
-        Assert.That(touchscreen.primaryTouch.isInProgress, Is.True);
-        Assert.That(touchscreen.touches[0].isInProgress, Is.True);
-        Assert.That(touchscreen.touches[1].isInProgress, Is.True);
-
-        runtime.PlayerFocusLost();
-
-        Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
-        Assert.That(touchscreen.touches[0].isInProgress, Is.False);
-        Assert.That(touchscreen.touches[1].isInProgress, Is.False);
+        var gamepad = (Gamepad)InputSystem.GetDeviceById(deviceId);
+        Assert.That(gamepad.canRunInBackground, Is.True);
     }
 
-    // Alt-tabbing is only relevant on Windows (Mac uses system key for the same command instead of an application key).
-    ////TODO: investigate relevance on Linux
-    #if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
     [Test]
     [Category("Devices")]
-    [Ignore("TODO")]
-    public void TODO_Devices_AltTabbingDoesNOTAlterKeyboardState()
+    public void Devices_CanMarkDeviceAsBeingAbleToRunInBackground_ThroughLayout()
     {
-        ////TODO: add support for explicitly suppressing alt-tab, if enabled
-        Assert.Fail();
-    }
+        const string json = @"
+            {
+                ""name"" : ""TestDevice"",
+                ""extend"" : ""Gamepad"",
+                ""runInBackground"" : ""enabled""
+            }
+        ";
 
-    #endif
+        InputSystem.RegisterLayout(json);
+        var device = InputSystem.AddDevice("TestDevice");
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Assert.That(device.canRunInBackground, Is.True);
+        Assert.That(gamepad.canRunInBackground, Is.False);
+    }
 
     [Test]
     [Category("Devices")]

@@ -377,6 +377,9 @@ namespace UnityEngine.InputSystem.Editor
             public static readonly GUIContent removeDevice = new GUIContent("Remove Device");
             public static readonly GUIContent enableDevice = new GUIContent("Enable Device");
             public static readonly GUIContent disableDevice = new GUIContent("Disable Device");
+            public static readonly GUIContent syncDevice = new GUIContent("Try to Sync Device");
+            public static readonly GUIContent softResetDevice = new GUIContent("Reset Device (Soft)");
+            public static readonly GUIContent hardResetDevice = new GUIContent("Reset Device (Hard)");
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
@@ -420,6 +423,9 @@ namespace UnityEngine.InputSystem.Editor
                         menu.AddItem(Contents.disableDevice, false, () => InputSystem.DisableDevice(deviceItem.device));
                     else
                         menu.AddItem(Contents.enableDevice, false, () => InputSystem.EnableDevice(deviceItem.device));
+                    menu.AddItem(Contents.syncDevice, false, () => InputSystem.TrySyncDevice(deviceItem.device));
+                    menu.AddItem(Contents.softResetDevice, false, () => ResetDevice(deviceItem.device, false));
+                    menu.AddItem(Contents.hardResetDevice, false, () => ResetDevice(deviceItem.device, true));
                     menu.ShowAsContext();
                 }
 

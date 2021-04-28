@@ -1726,6 +1726,10 @@ namespace UnityEngine.InputSystem.Users
             if (eventType != StateEvent.Type && eventType != DeltaStateEvent.Type)
                 return;
 
+            // Ignore event if device is disabled.
+            if (!device.enabled)
+                return;
+
             // See if it's a device not belonging to any user.
             if (ArrayHelpers.ContainsReference(s_AllPairedDevices, s_AllPairedDeviceCount, device))
             {

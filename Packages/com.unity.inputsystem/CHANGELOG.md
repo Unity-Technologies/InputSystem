@@ -18,6 +18,11 @@ however, it has to be formatted properly to pass verification tests.
 - Generic `Gamepad` now has platform independent long button names. Previously it used different names if editor targeted PS4/Switch consoles (case 1321676).
 - When creating a new control scheme with a name `All Control Schemes`, `All Control Schemes1` will be created to avoid confusion with implicit `All Control Schemes` scheme ([case 1217379](https://issuetracker.unity3d.com/issues/control-scheme-cannot-be-selected-when-it-is-named-all-control-schemes)).
 - Display names of keyboard buttons are now passed through `ToLower` and `ToTitleCase` to enforce consistent casing between different platforms and keyboard layouts ([case 1254705](https://issuetracker.unity3d.com/issues/the-display-names-for-keyboard-keys-in-the-input-debugger-do-not-match-those-defined-in-input-system-package)).
+- Application focus handling behavior has been reworked.
+  * When `runInBackground` is off, no action will be taken on focus loss. When focus comes back, all devices will receive a sync request. Those that don't support it will see a "soft" reset.
+  * When `runInBackground` is on (which, when running in the editor, is considered to always be the case), a new setting `InputSettings.backgroundBehavior` dictates how input is to be handled while the application does not have focus. The default setting of `ResetAndDisableNonBackgroundDevices` will soft-reset and disable all devices for which `InputDevice.canRunInBackground` is false. While in the background, devices that are flagged as `canRunInBackground` will keep running as in the foreground.
+  * In the editor, devices other than `Pointer` and `Keyboard` devices (i.e. anything not used to operate the editor UI) are now by default routing their input to the Game View regardless of focus. This also fixes the problem of gamepad sticks resetting to `(0,0)` on focus loss ([case 1222305](https://issuetracker.unity3d.com/issues/input-system-gamepad-stick-values-are-cached-when-changing-editor-window-focus)).
+  * A new setting `InputSettings.gameViewFocus` has been introduced to determine how Game View focused is handled in the editor with respect to input.
 - Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
   * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
 
@@ -50,6 +55,8 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed blurry icons in input debugger, asset editor, input settings ([case 1299595](https://issuetracker.unity3d.com/issues/inputsystem-supported-device-list-dropdown-icons-present-under-project-settings-are-not-user-friendly)).
 - Fixed UI not working after additively loading scenes with additional InputSystemUIInputModule modules ([case 1251720](https://issuetracker.unity3d.com/issues/input-system-buttons-cannot-be-pressed-after-additively-loading-scenes-with-additional-event-systems)).
 - Fixed no `OnPointerExit` received when changing UI state without moving pointer ([case 1232705](https://issuetracker.unity3d.com/issues/input-system-onpointerexit-is-not-triggered-when-a-ui-element-interrupts-a-mouse-hover)).
+- Controls such as mouse positions are no longer reset when focus is lost.
+- Pressing a uGUI `Button` and then alt-tabbing away, letting go of the button, and then going back to the application will no longer trigger a button click.
 
 #### Actions
 
@@ -105,6 +112,17 @@ however, it has to be formatted properly to pass verification tests.
     InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
     ```
   * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This wil not perform actions even if they trigger on, for example, button release.
+- `InputDevice.canRunInBackground` can now be force-set through layouts.
+   ```CSharp
+   // Force XInputWindows gamepads to not run in the background.
+   InputSystem.RegisterLayoutOverride(@"
+       {
+           ""name"": ""XInputWindowsNoCanRunInBackground"",
+           ""extend"": ""XInputWindows"",
+           ""runInBackground"": ""off""
+       }
+   ");
+   ```
 
 ## [1.1.0-preview.3] - 2021-02-04
 

@@ -10,8 +10,6 @@ using UnityEngine.InputSystem.Utilities;
 
 ////TODO: *kill* variants!
 
-////TODO: allow setting canRunInBackground at the layout level
-
 ////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
 
 ////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
@@ -477,6 +475,34 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>
+        /// Override value for <see cref="InputDevice.canRunInBackground"/>. If this is set by the
+        /// layout, it will prevent <see cref="QueryCanRunInBackground"/> from being issued. However, other
+        /// logic that affects <see cref="InputDevice.canRunInBackground"/> may still force a specific value
+        /// on a device regardless of what's set in the layout.
+        /// </summary>
+        /// <seealso cref="InputDevice.canRunInBackground"/>
+        /// <seealso cref="InputSettings.backgroundBehavior"/>
+        public bool? canRunInBackground
+        {
+            get => (m_Flags & Flags.CanRunInBackgroundIsSet) != 0 ? (bool?)((m_Flags & Flags.CanRunInBackground) != 0) : null;
+            internal set
+            {
+                if (!value.HasValue)
+                {
+                    m_Flags &= ~Flags.CanRunInBackgroundIsSet;
+                }
+                else
+                {
+                    m_Flags |= Flags.CanRunInBackgroundIsSet;
+                    if (value.Value)
+                        m_Flags |= Flags.CanRunInBackground;
+                    else
+                        m_Flags &= ~Flags.CanRunInBackground;
+                }
+            }
+        }
+
         public ControlItem this[string path]
         {
             get
@@ -715,6 +741,12 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                public ControlBuilder DontReset(bool value)
+                {
+                    builder.m_Controls[index].dontReset = value;
+                    return this;
+                }
+
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     builder.m_Controls[index].sizeInBits = sizeInBits;
@@ -943,6 +975,7 @@ namespace UnityEngine.InputSystem.Layouts
                 hideInUI = layoutAttribute?.hideInUI ?? false,
                 m_Description = layoutAttribute?.description,
                 m_DisplayName = layoutAttribute?.displayName,
+                canRunInBackground = layoutAttribute?.canRunInBackgroundInternal,
             };
 
             if (layoutAttribute?.commonUsages != null)
@@ -988,6 +1021,8 @@ namespace UnityEngine.InputSystem.Layouts
             IsGenericTypeOfDevice = 1 << 0,
             HideInUI = 1 << 1,
             IsOverride = 1 << 2,
+            CanRunInBackground = 1 << 3,
+            CanRunInBackgroundIsSet = 1 << 4,
         }
 
         private InputControlLayout(string name, Type type)
@@ -1201,6 +1236,11 @@ namespace UnityEngine.InputSystem.Layouts
             var isNoisy = false;
             if (attribute != null)
                 isNoisy = attribute.noisy;
+
+            // Determine whether it's a dontReset control.
+            var dontReset = false;
+            if (attribute != null)
+                dontReset = attribute.dontReset;
 
             // Determine if it's a synthetic control.
             var isSynthetic = false;
@@ -1554,6 +1594,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string[] extendMultiple;
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
+            public string runInBackground;
             public string[] commonUsages;
             public string displayName;
             public string description;
@@ -1619,7 +1660,19 @@ namespace UnityEngine.InputSystem.Layouts
                     else if (beforeRenderLowerCase == "update")
                         layout.m_UpdateBeforeRender = true;
                     else
-                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}'");
+                        throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}' (should be 'ignore' or 'update')");
+                }
+
+                // CanRunInBackground flag.
+                if (!string.IsNullOrEmpty(runInBackground))
+                {
+                    var runInBackgroundLowerCase = runInBackground.ToLower();
+                    if (runInBackgroundLowerCase == "enabled")
+                        layout.canRunInBackground = true;
+                    else if (runInBackgroundLowerCase == "disabled")
+                        layout.canRunInBackground = false;
+                    else
+                        throw new InvalidOperationException($"Invalid runInBackground setting '{beforeRender}' (should be 'enabled' or 'disabled')");
                 }
 
                 // Add controls.

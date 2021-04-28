@@ -147,6 +147,12 @@ namespace UnityEngine.InputSystem.Layouts
 
                 if (layout.m_UpdateBeforeRender == true)
                     m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.UpdateBeforeRender;
+                if (layout.canRunInBackground != null)
+                {
+                    m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.CanRunInBackgroundHasBeenQueried;
+                    if (layout.canRunInBackground == true)
+                        m_Device.m_DeviceFlags |= InputDevice.DeviceFlags.CanRunInBackground;
+                }
             }
             else if (parent == null)
             {
