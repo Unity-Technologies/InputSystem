@@ -417,8 +417,8 @@ partial class CoreTests
             runtime = new InputTestRuntime();
             manager = new InputManager();
             manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.InstallRuntime(runtime);
             manager.InitializeData();
+            manager.InstallRuntime(runtime);
             manager.ApplySettings();
 
             local = new InputRemoting(InputSystem.s_Manager);
