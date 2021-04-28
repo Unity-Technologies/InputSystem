@@ -88,10 +88,10 @@ namespace UnityEngine.InputSystem
                 // Push current input system state on stack.
                 InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
 
+                // Override the editor messing with logic like canRunInBackground and focus and
+                // make it behave like in the player.
                 #if UNITY_EDITOR
-                // Make sure we're not affected by the user giving focus away from the
-                // game view.
-                InputEditorUserSettings.lockInputToGameView = true;
+                InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.ExactlyAsInPlayer;
                 #endif
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly

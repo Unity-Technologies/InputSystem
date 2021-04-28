@@ -25,6 +25,8 @@ however, it has to be formatted properly to pass verification tests.
   * A new setting `InputSettings.gameViewFocus` has been introduced to determine how Game View focused is handled in the editor with respect to input.
 - Editor: All remaining `InputUser` instances are now removed automatically when exiting play mode. This means that all devices are automatically unpaired.
   * In essence, like `InputAction`, `InputUser` is now considered a player-only feature.
+- Editor: Removed 'Lock Input to Game View' setting in the Input Debugger.
+  * The setting has been replaced by the new 'Game View Focus' project setting.
 
 #### Actions
 

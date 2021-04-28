@@ -345,7 +345,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_WhenPlaying_EditorUpdatesWriteEventIntoPlayerState()
     {
-        InputEditorUserSettings.lockInputToGameView = true;
+        InputSystem.settings.gameViewFocus = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 

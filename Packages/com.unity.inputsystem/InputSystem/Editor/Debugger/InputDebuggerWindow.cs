@@ -208,9 +208,13 @@ namespace UnityEngine.InputSystem.Editor
             m_TreeView.OnGUI(rect);
         }
 
-        private static void ToggleLockInputToGameView()
+        private static void ResetDevice(InputDevice device, bool hard)
         {
-            InputEditorUserSettings.lockInputToGameView = !InputEditorUserSettings.lockInputToGameView;
+            var playerUpdateType = InputDeviceDebuggerWindow.DetermineUpdateTypeToShow(device);
+            var currentUpdateType = InputState.currentUpdateType;
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, playerUpdateType);
+            InputSystem.ResetDevice(device, alsoResetDontResetControls: hard);
+            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
         }
 
         private static void ToggleAddDevicesNotSupportedByProject()
@@ -309,8 +313,6 @@ namespace UnityEngine.InputSystem.Editor
                     ToggleAddDevicesNotSupportedByProject);
                 menu.AddItem(Contents.diagnosticsModeContent, InputSystem.s_Manager.m_Diagnostics != null,
                     ToggleDiagnosticMode);
-                menu.AddItem(Contents.lockInputToGameViewContent, InputEditorUserSettings.lockInputToGameView,
-                    ToggleLockInputToGameView);
                 menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
                 // Add the inverse of "Copy Device Description" which adds a device with the description from
@@ -364,7 +366,6 @@ namespace UnityEngine.InputSystem.Editor
         private static class Contents
         {
             public static readonly GUIContent optionsContent = new GUIContent("Options");
-            public static readonly GUIContent lockInputToGameViewContent = new GUIContent("Lock Input to Game View");
             public static readonly GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
             public static readonly GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
             public static readonly GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
@@ -601,7 +602,6 @@ namespace UnityEngine.InputSystem.Editor
                 AddValueItem(settingsItem, "Default Tap Time", settings.defaultTapTime, ref id);
                 AddValueItem(settingsItem, "Default Slow Tap Time", settings.defaultSlowTapTime, ref id);
                 AddValueItem(settingsItem, "Default Hold Time", settings.defaultHoldTime, ref id);
-                AddValueItem(settingsItem, "Lock Input To Game View", InputEditorUserSettings.lockInputToGameView, ref id);
                 if (settings.supportedDevices.Count > 0)
                 {
                     var supportedDevices = AddChild(settingsItem, "Supported Devices", ref id);

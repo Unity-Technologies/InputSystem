@@ -655,7 +655,9 @@ partial class CoreTests
     [Category("State")]
     public void State_CanSetUpMonitorsForStateChanges_InEditor()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        // InputTestFixture puts this at ExactlyAsInPlayer. Give us a setting that allows
+        // gamepad input to go through to the editor.
+        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.AllDevices;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1625,7 +1627,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_ExcludesEditorInputByDefault()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.gameViewFocus = default;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))
@@ -1644,7 +1646,7 @@ partial class CoreTests
     [Category("State")]
     public void State_RecordingHistory_CanCaptureEditorInput()
     {
-        InputEditorUserSettings.lockInputToGameView = false;
+        InputSystem.settings.gameViewFocus = InputSettings.GameViewFocus.AllDevices;
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
         using (var history = new InputStateHistory<float>(gamepad.leftTrigger))

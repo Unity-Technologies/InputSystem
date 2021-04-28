@@ -32,18 +32,6 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public static bool lockInputToGameView
-        {
-            get => s_Settings.lockInputToGameView;
-            set
-            {
-                if (s_Settings.lockInputToGameView == value)
-                    return;
-                s_Settings.lockInputToGameView = value;
-                OnChange();
-            }
-        }
-
         /// <summary>
         /// If this is true, then if <see cref="InputSettings.supportedDevices"/> is not empty, do
         /// not use it to prevent native devices
@@ -89,7 +77,6 @@ namespace UnityEngine.InputSystem.Editor
         [Serializable]
         internal struct SerializedState
         {
-            public bool lockInputToGameView;
             public bool addDevicesNotSupportedByProject;
             public bool autoSaveInputActionAssets;
             public bool simulateTouch;
