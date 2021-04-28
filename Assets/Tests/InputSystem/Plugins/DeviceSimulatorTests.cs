@@ -17,36 +17,50 @@ public class DeviceSimulatorTests
     [Category("Device Simulator")]
     public IEnumerator InputEventsArePropagated()
     {
-        EnhancedTouchSupport.Enable();
-        var plugin = new InputSystemPlugin();
-        plugin.OnCreate();
-        yield return null;
+        var oldEnabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
+        var newEnabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled;
 
-        plugin.OnTouchEvent(CreateTouch(0, new Vector2(5, 5), UnityEditor.DeviceSimulation.TouchPhase.Began));
-        yield return null;
-        Assert.Greater(Touch.activeTouches.Count, 0);
-        Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
-        Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Began);
+        try
+        {
+            EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = false;
 
-        yield return null;
-        Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
-        Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Stationary);
+            EnhancedTouchSupport.Enable();
+            var plugin = new InputSystemPlugin();
+            plugin.OnCreate();
+            yield return null;
 
-        plugin.OnTouchEvent(CreateTouch(0, new Vector2(10, 10), UnityEditor.DeviceSimulation.TouchPhase.Moved));
-        yield return null;
-        Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(10, 10));
-        Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Moved);
+            plugin.OnTouchEvent(CreateTouch(0, new Vector2(5, 5), UnityEditor.DeviceSimulation.TouchPhase.Began));
+            yield return null;
+            Assert.Greater(Touch.activeTouches.Count, 0);
+            Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
+            Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Began);
 
-        plugin.OnTouchEvent(CreateTouch(0, new Vector2(5, 5), UnityEditor.DeviceSimulation.TouchPhase.Ended));
-        yield return null;
-        Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
-        Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Ended);
+            yield return null;
+            Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
+            Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Stationary);
 
-        yield return null;
-        Assert.AreEqual(Touch.activeTouches.Count, 0);
+            plugin.OnTouchEvent(CreateTouch(0, new Vector2(10, 10), UnityEditor.DeviceSimulation.TouchPhase.Moved));
+            yield return null;
+            Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(10, 10));
+            Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Moved);
 
-        plugin.OnDestroy();
-        EnhancedTouchSupport.Disable();
+            plugin.OnTouchEvent(CreateTouch(0, new Vector2(5, 5), UnityEditor.DeviceSimulation.TouchPhase.Ended));
+            yield return null;
+            Assert.AreEqual(Touch.activeTouches[0].screenPosition, new Vector2(5, 5));
+            Assert.AreEqual(Touch.activeTouches[0].phase, TouchPhase.Ended);
+
+            yield return null;
+            Assert.AreEqual(Touch.activeTouches.Count, 0);
+
+            plugin.OnDestroy();
+            EnhancedTouchSupport.Disable();
+        }
+        finally
+        {
+            EditorPlayerSettingHelpers.oldSystemBackendsEnabled = oldEnabled;
+            EditorPlayerSettingHelpers.newSystemBackendsEnabled = newEnabled;
+        }
     }
 
     [Test]
