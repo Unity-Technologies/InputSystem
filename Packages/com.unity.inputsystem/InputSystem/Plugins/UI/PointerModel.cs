@@ -218,6 +218,12 @@ namespace UnityEngine.InputSystem.UI
                 }
             }
 
+            public bool ignoreNextClick
+            {
+                get => m_IgnoreNextClick;
+                set => m_IgnoreNextClick = value;
+            }
+
             public bool wasPressedThisFrame => m_FramePressState == PointerEventData.FramePressState.Pressed ||
             m_FramePressState == PointerEventData.FramePressState.PressedAndReleased;
             public bool wasReleasedThisFrame => m_FramePressState == PointerEventData.FramePressState.Released ||
@@ -232,6 +238,7 @@ namespace UnityEngine.InputSystem.UI
             private float clickTime; // On Time.unscaledTime timeline, NOT input event time.
             private int clickCount;
             private bool dragging;
+            private bool m_IgnoreNextClick;
 
             public void CopyPressStateTo(PointerEventData eventData)
             {
@@ -251,6 +258,9 @@ namespace UnityEngine.InputSystem.UI
                 eventData.rawPointerPress = rawPressObject;
                 eventData.pointerDrag = dragObject;
                 eventData.dragging = dragging;
+
+                if (ignoreNextClick)
+                    eventData.eligibleForClick = false;
             }
 
             public void CopyPressStateFrom(PointerEventData eventData)
