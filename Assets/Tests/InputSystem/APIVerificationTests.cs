@@ -768,6 +768,14 @@ class APIVerificationTests
         public UnityEngine.InputSystem.InputActionSetupExtensions.CompositeSyntax With(string name, string binding, string groups = default(string));
         public static void DisableDevice(UnityEngine.InputSystem.InputDevice device);
     ")]
+    // These methods have been superseded and have an Obsolete warning on them.
+    [Property("Exclusions", @"1.0.0
+        public static bool TryResetDevice(UnityEngine.InputSystem.InputDevice device);
+    ")]
+    // Enum value that was never functional.
+    [Property("Exclusions", @"1.0.0
+        public const UnityEngine.InputSystem.InputDeviceChange Destroyed = 8;
+    ")]
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();

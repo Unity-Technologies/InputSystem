@@ -407,6 +407,32 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private void ResetActionStatesDrivenBy(InputDevice device)
+        {
+            using (InputActionRebindingExtensions.DeferBindingResolution())
+            {
+                for (var i = 0; i < totalActionCount; ++i)
+                {
+                    var actionState = &actionStates[i];
+
+                    // Skip actions that aren't in progress.
+                    if (actionState->phase == InputActionPhase.Waiting || actionState->phase == InputActionPhase.Disabled)
+                        continue;
+
+                    // Skip actions not from this device.
+                    var controlIndex = actionState->controlIndex;
+                    if (controlIndex == -1)
+                        continue;
+                    var control = controls[controlIndex];
+                    if (control.device != device)
+                        continue;
+
+                    // Reset.
+                    ResetActionState(i);
+                }
+            }
+        }
+
         /// <summary>
         /// Reset the trigger state of the given action such that the action has no record of being triggered.
         /// </summary>
@@ -3722,7 +3748,8 @@ namespace UnityEngine.InputSystem
             ////REVIEW: should we ignore disconnected devices in InputBindingResolver?
             Debug.Assert(
                 change == InputDeviceChange.Added || change == InputDeviceChange.Removed ||
-                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged,
+                change == InputDeviceChange.UsageChanged || change == InputDeviceChange.ConfigurationChanged ||
+                change == InputDeviceChange.Reset,
                 "Should only be called for relevant changes");
 
             for (var i = 0; i < s_GlobalList.length; ++i)
@@ -3769,6 +3796,15 @@ namespace UnityEngine.InputSystem
                         if (!state.IsUsingDevice(device) && !state.CanUseDevice(device))
                             continue;
                         break;
+
+                    // On reset, cancel all actions currently in progress from the device that got reset.
+                    // If we simply let change monitors trigger, we will respond to things like button releases
+                    // that are in fact just resets of buttons to their default state.
+                    case InputDeviceChange.Reset:
+                        if (!state.IsUsingDevice(device))
+                            continue;
+                        state.ResetActionStatesDrivenBy(device);
+                        return; // No re-resolving necessary.
                 }
 
                 // Trigger a lazy-resolve on all action maps in the state.

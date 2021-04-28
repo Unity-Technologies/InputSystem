@@ -94,13 +94,15 @@ To add devices manually, you can call one of the `InputSystem.AddDevice` methods
 // with the Gamepad layout.
 InputSystem.AddDevice<Gamepad>();
 
-// Add a device such that matching process is employed:
+// Add a device such that the matching process is employed:
 InputSystem.AddDevice(new InputDeviceDescription
 {
     interfaceName = "XInput",
     product = "Xbox Controller",
 });
 ```
+
+When a device is added, the Input System automatically issues a [sync request](../api/UnityEngine.LowLevel.RequestSyncCommand.html) on the device. This instructs the device to send an event representing its current state. Whether this request succeeds depends on the whether the given device supports the sync command.
 
 #### Device removal
 
@@ -112,11 +114,30 @@ Note that Devices are not destroyed when removed. Device instances remain valid 
 
 #### Device resets
 
-In the player, Devices are reset when the window loses focus. Each reset sets the state of a Device back to its default state. An exception to this are noisy controls which are left at their current value, based on the assumption that they represent sensor readings that should be left at the last sample rather than snapped back to default values.
+Resetting a Device resets its Controls to their default state. You can do this manually using [`InputSystem.ResetDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_):
 
-The reset happens from within [`Application.focusChanged`](https://docs.unity3d.com/ScriptReference/Application-focusChanged.html). The resets are observable state changes that trigger [`state change monitors`](../api/UnityEngine.InputSystem.LowLevel.IInputStateChangeMonitor.html), and therefore also cancel ongoing Actions tied to the respective input state.
+```CSharp
+    InputSystem.ResetDevice(Gamepad.current);
+```
 
-When [`Application.runInBackground`](https://docs.unity3d.com/ScriptReference/Application-runInBackground.html) (not supported on all platforms) is enabled in the Unity player settings, devices that are marked as able to run in the background via [`InputDevice.canRunInBackground`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_canRunInBackground) are left alone and are not reset. This allows Devices such as HMDs and VR controllers to continuously provide input to a Unity application, even if the application does not have focus.
+There are two types of resets as determined by the second parameter to [`InputSystem.ResetDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_ResetDevice_UnityEngine_InputSystem_InputDevice_System_Boolean_):
+
+|Type|Description|
+|----|-----------|
+|"Soft" Resets|This is the default. With this type, only controls that are *not* marked as [`dontReset`](Layouts.md#control-items) are reset to their default value. This excludes controls such as [`Pointer.position`](../api/UnityEngine.InputSystem.Pointer.html#UnityEngine_InputSystem_Pointer_position) from resets and thus prevents mouse positions resetting to `(0,0)`.|
+|"Hard" Resets|In this type, *all* controls are reset to their default value regardless of whether they have [`dontReset`](Layouts.md#control-items) set or not.|
+
+Resetting Controls this way is visible on [Actions](Actions.md). If you reset a Device that is currently driving one or more Action, the Actions are cancelled. This cancellation is different from sending an event with default state. Whereas the latter may inadvertently [perform](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) Actions (e.g. a button that was pressed would not appear to have been released), a reset will force clean cancellation.
+
+Resets may be triggered automatically by the Input System depending on [application focus](#background-and-focus-change-behavior).
+
+#### Device syncs
+
+A Device may be requested to send an event with its current state through [`RequestSyncCommand`](../api/UnityEngine.InputSystem.LowLevel.RequestSyncCommand.html). It depends on the platform and type of Device whether this is supported or not.
+
+A synchronization request can be explicitly sent using [`InputSystem.TrySyncDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_TrySyncDevice_UnityEngine_InputSystem_InputDevice_). If the device supports sync requests, the method returns true and an [`InputEvent`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html) will have been queued on the device for processing in the next [update](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_).
+
+Synchronization requests are also automatically sent by the Input System in certain situations. See [Background and focus change behavior](#background-and-focus-change-behavior) for more details.
 
 #### Device enabling and disabling
 

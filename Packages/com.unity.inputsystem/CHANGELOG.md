@@ -91,6 +91,20 @@ however, it has to be formatted properly to pass verification tests.
   Debug.Log(parsed[1].name); // Prints "trigger".
   ```
   * Can, for example, be used with `InputBinding.path`.
+- Added the concept of "soft" and "hard" device resets.
+  * In general, resetting a device will reset its state to default values.
+  * Individual controls can be marked as `dontReset` to exclude them from resets. This makes the reset "soft" (default).
+    ```CSharp
+    //  Perform a "soft" reset of the mouse. The mouse position will not be affected
+    // but controls such as buttons will be reset.
+    InputSystem.ResetDevice(Mouse.current);
+    ```
+  * A "hard" reset can be forced through the API. This also resets `dontReset` controls.
+    ```CSharp
+    // Perform a "hard" reset of the mouse. The mouse position will also be reset to (0,0).
+    InputSystem.ResetDevice(Mouse.current, alsoResetDontResetControls: true);
+    ```
+  * Resets will lead to `InputAction`s that are enabled and in-progress from controls that being reset, to be canceled. This wil not perform actions even if they trigger on, for example, button release.
 
 ## [1.1.0-preview.3] - 2021-02-04
 

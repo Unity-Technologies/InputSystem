@@ -2606,6 +2606,8 @@ partial class CoreTests
         Assert.That(device.parent, Is.Null);
         Assert.That(device.device, Is.SameAs(device));
         Assert.That(device.children.Select(x => x.path), Is.EquivalentTo(original.children.Select(x => x.path)));
+        Assert.That(device.hasControlsWithDefaultState, Is.EqualTo(original.hasControlsWithDefaultState));
+        Assert.That(device.hasDontResetControls, Is.EqualTo(original.hasDontResetControls));
 
         Assert.That(device.allControls.Count, Is.EqualTo(original.allControls.Count));
         Assert.That(device.allControls.Select(x => x.name), Is.EquivalentTo(original.allControls.Select(x => x.name)));
@@ -2626,6 +2628,7 @@ partial class CoreTests
         Assert.That(device.allControls.Select(x => x.isSetupFinished), Is.EquivalentTo(original.allControls.Select(x => x.isSetupFinished)));
         Assert.That(device.allControls.Select(x => x.usages), Is.EquivalentTo(original.allControls.Select(x => x.usages)));
         Assert.That(device.allControls.Select(x => x.aliases), Is.EquivalentTo(original.allControls.Select(x => x.aliases)));
+        Assert.That(device.allControls.Select(x => x.dontReset), Is.EquivalentTo(original.allControls.Select(x => x.dontReset)));
 
         // Check that all InputControl getters were initialized correctly.
         Assert.That(

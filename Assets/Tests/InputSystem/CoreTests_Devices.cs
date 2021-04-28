@@ -1579,7 +1579,6 @@ partial class CoreTests
         Assert.That(device.CheckStateIsAtDefault(), Is.True);
 
         // Re-enable device.
-
         disabled = null;
         InputSystem.EnableDevice(device);
 
@@ -1666,6 +1665,251 @@ partial class CoreTests
     public void TODO_Devices_WhenDisabled_RefreshActions()
     {
         Assert.Fail();
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanRequestSync()
+    {
+        var gamepad1 = InputSystem.AddDevice<Gamepad>();
+        var gamepad2 = InputSystem.AddDevice<Gamepad>();
+
+        var receivedSync = false;
+        runtime.SetDeviceCommandCallback(gamepad2,
+            (id, command) =>
+            {
+                if (command->type == RequestSyncCommand.Type)
+                {
+                    Assert.That(receivedSync, Is.False);
+                    receivedSync = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(InputSystem.TrySyncDevice(gamepad1), Is.False);
+        Assert.That(InputSystem.TrySyncDevice(gamepad2), Is.True);
+        Assert.That(receivedSync, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanResetDevice()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var gyro = InputSystem.AddDevice<Gyroscope>();
+
+        const string noisyGamepadJson = @"
+            {
+                ""name"" : ""NoisyGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""gyro"", ""noisy"" : true, ""layout"" : ""Quaternion"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(noisyGamepadJson);
+        var noisyGamepad = (Gamepad)InputSystem.AddDevice("NoisyGamepad");
+
+        var receivedGamepadReset = false;
+        var receivedMouseReset = false;
+        var receivedTouchReset = false;
+        var receivedKeyboardReset = false;
+        var receivedGyroReset = false;
+        var receivedNoisyGamepadReset = false;
+
+        long DeviceCallback(int deviceId, InputDeviceCommand* command, ref bool receivedResetCommand)
+        {
+            if (command->type == RequestResetCommand.Type)
+            {
+                Assert.That(receivedResetCommand, Is.False);
+                receivedResetCommand = true;
+                return InputDeviceCommand.GenericSuccess;
+            }
+            return InputDeviceCommand.GenericFailure;
+        }
+
+        runtime.SetDeviceCommandCallback(gamepad, (id, command) => DeviceCallback(id, command, ref receivedGamepadReset));
+        runtime.SetDeviceCommandCallback(mouse, (id, command) => DeviceCallback(id, command, ref receivedMouseReset));
+        runtime.SetDeviceCommandCallback(touch, (id, command) => DeviceCallback(id, command, ref receivedTouchReset));
+        runtime.SetDeviceCommandCallback(keyboard, (id, command) => DeviceCallback(id, command, ref receivedKeyboardReset));
+        runtime.SetDeviceCommandCallback(gyro, (id, command) => DeviceCallback(id, command, ref receivedGyroReset));
+        runtime.SetDeviceCommandCallback(noisyGamepad, (id, command) => DeviceCallback(id, command, ref receivedNoisyGamepadReset));
+
+        Set(mouse.position, new Vector2(123, 234), queueEventOnly: true);
+        Set(mouse.scroll, new Vector2(9, 8), queueEventOnly: true);
+        Press(mouse.leftButton, queueEventOnly: true);
+        Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), queueEventOnly: true);
+        Set(gamepad.leftTrigger, 0.75f, queueEventOnly: true);
+        Press(gamepad.buttonSouth, queueEventOnly: true);
+        BeginTouch(1, new Vector2(234, 345), queueEventOnly: true);
+        BeginTouch(2, new Vector2(345, 456), queueEventOnly: true);
+        Press(keyboard.spaceKey, queueEventOnly: true);
+        Set(gyro.angularVelocity, new Vector3(456, 567, 678), queueEventOnly: true);
+        Set((QuaternionControl)noisyGamepad["gyro"], Quaternion.Euler(1, 2, 3), queueEventOnly: true);
+        Press(noisyGamepad.buttonSouth, queueEventOnly: true);
+        InputSystem.Update();
+
+        bool? receivedResetDeviceChange = null;
+        InputSystem.onDeviceChange += (d, c) =>
+        {
+            if (c == InputDeviceChange.Reset)
+            {
+                Assert.That(receivedResetDeviceChange, Is.Null);
+                receivedResetDeviceChange = true;
+            }
+        };
+
+        // "Soft" reset mouse.
+        InputSystem.ResetDevice(mouse);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedMouseReset, Is.False);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)));
+        Assert.That(mouse.scroll.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(mouse.leftButton.ReadValue(), Is.Zero);
+
+        receivedMouseReset = false;
+        receivedResetDeviceChange = null;
+
+        // "Hard" reset mouse.
+        InputSystem.ResetDevice(mouse, alsoResetDontResetControls: true);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedMouseReset, Is.True);
+        Assert.That(mouse.position.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(mouse.scroll.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(mouse.leftButton.ReadValue(), Is.Zero);
+
+        receivedResetDeviceChange = null;
+
+        // Reset keyboard. There's no dontReset controls on the device so there's no difference
+        // between a soft and a hard reset.
+        InputSystem.ResetDevice(keyboard);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedKeyboardReset, Is.True);
+        Assert.That(keyboard.allControls, Has.All.Matches((InputControl control) => control.CheckStateIsAtDefault()));
+        Assert.That(keyboard.allControls.OfType<KeyControl>(), Has.All.Matches((KeyControl key) => !key.isPressed));
+        Assert.That(keyboard.CheckStateIsAtDefault(), Is.True);
+
+        receivedResetDeviceChange = null;
+
+        // Reset gamepad.
+        InputSystem.ResetDevice(gamepad);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedGamepadReset, Is.True);
+        Assert.That(gamepad.leftStick.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(gamepad.leftTrigger.ReadValue(), Is.Zero);
+        Assert.That(gamepad.buttonSouth.ReadValue(), Is.Zero);
+
+        receivedResetDeviceChange = null;
+
+        // "Soft" reset noisy gamepad.
+        InputSystem.ResetDevice(noisyGamepad);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedNoisyGamepadReset, Is.False);
+        Assert.That(noisyGamepad.buttonSouth.ReadValue(), Is.Zero);
+        Assert.That(noisyGamepad["gyro"].ReadValueAsObject(), Is.EqualTo(Quaternion.Euler(1, 2, 3)));
+
+        receivedResetDeviceChange = null;
+
+        // "Hard" reset noisy gamepad.
+        InputSystem.ResetDevice(noisyGamepad, alsoResetDontResetControls: true);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedNoisyGamepadReset, Is.True);
+        Assert.That(noisyGamepad.buttonSouth.ReadValue(), Is.Zero);
+        Assert.That(noisyGamepad["gyro"].ReadValueAsObject(), Is.EqualTo(default(Quaternion)));
+
+        receivedResetDeviceChange = null;
+
+        // "Soft" reset touch.
+        InputSystem.ResetDevice(touch);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedTouchReset, Is.False);
+        Assert.That(touch.primaryTouch.touchId.ReadValue(), Is.EqualTo(1));
+        Assert.That(touch.primaryTouch.position.ReadValue(), Is.EqualTo(new Vector2(234, 345)));
+        Assert.That(touch.primaryTouch.press.ReadValue(), Is.Zero);
+        Assert.That(touch.primaryTouch.isInProgress, Is.False);
+        Assert.That(touch.touches[0].touchId.ReadValue(), Is.EqualTo(1));
+        Assert.That(touch.touches[0].position.ReadValue(), Is.EqualTo(new Vector2(234, 345)));
+        Assert.That(touch.touches[0].press.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[0].isInProgress, Is.False);
+        Assert.That(touch.touches[1].touchId.ReadValue(), Is.EqualTo(2));
+        Assert.That(touch.touches[1].position.ReadValue(), Is.EqualTo(new Vector2(345, 456)));
+        Assert.That(touch.touches[1].press.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[1].isInProgress, Is.False);
+
+        receivedResetDeviceChange = null;
+
+        // "Hard" reset touch.
+        InputSystem.ResetDevice(touch, alsoResetDontResetControls: true);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedTouchReset, Is.True);
+        Assert.That(touch.CheckStateIsAtDefault(), Is.True);
+        Assert.That(touch.primaryTouch.touchId.ReadValue(), Is.Zero);
+        Assert.That(touch.primaryTouch.position.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(touch.primaryTouch.press.ReadValue(), Is.Zero);
+        Assert.That(touch.primaryTouch.isInProgress, Is.False);
+        Assert.That(touch.touches[0].touchId.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[0].position.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(touch.touches[0].press.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[0].isInProgress, Is.False);
+        Assert.That(touch.touches[1].touchId.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[1].position.ReadValue(), Is.EqualTo(Vector2.zero));
+        Assert.That(touch.touches[1].press.ReadValue(), Is.Zero);
+        Assert.That(touch.touches[1].isInProgress, Is.False);
+
+        receivedResetDeviceChange = null;
+
+        // "Soft" reset gyro.
+        InputSystem.ResetDevice(gyro);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedGyroReset, Is.False);
+        Assert.That(gyro.CheckStateIsAtDefault(), Is.False);
+        Assert.That(gyro.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+        Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(new Vector3(456, 567, 678)));
+
+        receivedResetDeviceChange = null;
+
+        // "Hard" reset gyro.
+        InputSystem.ResetDevice(gyro, alsoResetDontResetControls: true);
+
+        Assert.That(receivedResetDeviceChange, Is.True);
+        Assert.That(receivedGyroReset, Is.True);
+        Assert.That(gyro.CheckStateIsAtDefault(), Is.True);
+        Assert.That(gyro.CheckStateIsAtDefaultIgnoringNoise(), Is.True);
+        Assert.That(gyro.angularVelocity.ReadValue(), Is.EqualTo(Vector3.zero));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_WhenDeviceIsReset_AndResetsAreObservableStateChanges()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var changeMonitorTriggered = false;
+        InputState.AddChangeMonitor(gamepad.buttonSouth,
+            (control, d, arg3, arg4) => changeMonitorTriggered = true);
+
+        Press(gamepad.buttonSouth);
+
+        Assert.That(changeMonitorTriggered, Is.True);
+
+        changeMonitorTriggered = false;
+
+        InputSystem.ResetDevice(gamepad);
+
+        Assert.That(changeMonitorTriggered, Is.True);
     }
 
     [Test]

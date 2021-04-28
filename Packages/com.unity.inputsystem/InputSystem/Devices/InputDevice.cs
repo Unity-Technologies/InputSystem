@@ -639,6 +639,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal bool hasDontResetControls
+        {
+            get => (m_DeviceFlags & DeviceFlags.HasDontResetControls) != 0;
+            set
+            {
+                if (value)
+                    m_DeviceFlags |= DeviceFlags.HasDontResetControls;
+                else
+                    m_DeviceFlags &= ~DeviceFlags.HasDontResetControls;
+            }
+        }
+
         internal bool hasStateCallbacks
         {
             get => (m_DeviceFlags & DeviceFlags.HasStateCallbacks) == DeviceFlags.HasStateCallbacks;

@@ -90,7 +90,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// After a touch has ended or been canceled, an ID can be reused.
         /// </remarks>
         /// <seealso cref="TouchControl.touchId"/>
-        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true)]
+        [InputControl(displayName = "Touch ID", layout = "Integer", synthetic = true, dontReset = true)]
         [FieldOffset(0)]
         public int touchId;
 
@@ -99,7 +99,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         /// <value>Screen-space position of the touch.</value>
         /// <seealso cref="TouchControl.position"/>
-        [InputControl(displayName = "Position")]
+        [InputControl(displayName = "Position", dontReset = true)]
         [FieldOffset(4)]
         public Vector2 position;
 

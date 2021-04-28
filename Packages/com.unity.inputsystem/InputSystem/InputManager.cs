@@ -1311,6 +1311,82 @@ namespace UnityEngine.InputSystem
             m_DisconnectedDevicesCount = 0;
         }
 
+        public unsafe void ResetDevice(InputDevice device, bool alsoResetDontResetControls = false, bool noResetCommand = false)
+        {
+            if (device == null)
+                throw new ArgumentNullException(nameof(device));
+            if (!device.added)
+                throw new InvalidOperationException($"Device '{device}' has not been added to the system");
+
+            // Trigger reset notification.
+            InputActionState.OnDeviceChange(device, InputDeviceChange.Reset);
+            DelegateHelpers.InvokeCallbacksSafe(ref m_DeviceChangeListeners, device, InputDeviceChange.Reset, "onDeviceChange");
+
+            var defaultStatePtr = device.defaultStatePtr;
+            var deviceStateBlockSize = device.stateBlock.alignedSizeInBytes;
+
+            // Allocate temp memory to hold one state event.
+            ////REVIEW: the need for an event here is sufficiently obscure to warrant scrutiny; likely, there's a better way
+            ////        to tell synthetic input (or input sources in general) apart
+            // NOTE: We wrap the reset in an artificial state event so that it appears to the rest of the system
+            //       like any other input. If we don't do that but rather just call UpdateState() with a null event
+            //       pointer, the change will be considered an internal state change and will get ignored by some
+            //       pieces of code (such as EnhancedTouch which filters out internal state changes of Touchscreen
+            //       by ignoring any change that is not coming from an input event).
+            using (var tempBuffer =
+                       new NativeArray<byte>(InputEvent.kBaseEventSize + sizeof(int) + (int)deviceStateBlockSize, Allocator.Temp))
+            {
+                var stateEventPtr = (StateEvent*)tempBuffer.GetUnsafePtr();
+                var statePtr = stateEventPtr->state;
+                var currentTime = m_Runtime.currentTime;
+
+                // Set up the state event.
+                ref var stateBlock = ref device.m_StateBlock;
+                stateEventPtr->baseEvent.type = StateEvent.Type;
+                stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
+                stateEventPtr->baseEvent.time = currentTime;
+                stateEventPtr->baseEvent.deviceId = device.deviceId;
+                stateEventPtr->baseEvent.eventId = -1;
+                stateEventPtr->stateFormat = device.m_StateBlock.format;
+
+                // Decide whether we perform a soft reset or a hard reset.
+                var isHardReset = alsoResetDontResetControls || !device.hasDontResetControls;
+                if (isHardReset)
+                {
+                    // Perform a hard reset where we wipe the entire device and set a full
+                    // reset request to the backend.
+                    UnsafeUtility.MemCpy(statePtr,
+                        (byte*)defaultStatePtr + stateBlock.byteOffset,
+                        deviceStateBlockSize);
+                }
+                else
+                {
+                    // Perform a soft reset where we exclude any dontReset control (which is automatically
+                    // toggled on for noisy controls) and do *NOT* send a reset request to the backend.
+
+                    var currentStatePtr = device.currentStatePtr;
+                    var resetMaskPtr = m_StateBuffers.resetMaskBuffer;
+
+                    // To preserve values from dontReset controls, we need to first copy their current values.
+                    UnsafeUtility.MemCpy(statePtr,
+                        (byte*)currentStatePtr + stateBlock.byteOffset,
+                        deviceStateBlockSize);
+
+                    // And then we copy over default values masked by dontReset bits.
+                    MemoryHelpers.MemCpyMasked(statePtr,
+                        (byte*)defaultStatePtr + stateBlock.byteOffset,
+                        (int)deviceStateBlockSize,
+                        (byte*)resetMaskPtr + stateBlock.byteOffset);
+                }
+
+                UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
+                    new InputEventPtr((InputEvent*)stateEventPtr));
+
+                if (isHardReset && !noResetCommand)
+                    device.RequestReset();
+            }
+        }
+
         public InputDevice TryGetDevice(string nameOrLayout)
         {
             if (string.IsNullOrEmpty(nameOrLayout))
@@ -1718,6 +1794,7 @@ namespace UnityEngine.InputSystem
                 InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdateType.Dynamic);
                 InputStateBuffers.s_DefaultStateBuffer = m_StateBuffers.defaultStateBuffer;
                 InputStateBuffers.s_NoiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
+                InputStateBuffers.s_ResetMaskBuffer = m_StateBuffers.resetMaskBuffer;
             }
         }
 
@@ -1971,6 +2048,7 @@ namespace UnityEngine.InputSystem
             m_StateBuffers = newBuffers;
             InputStateBuffers.s_DefaultStateBuffer = newBuffers.defaultStateBuffer;
             InputStateBuffers.s_NoiseMaskBuffer = newBuffers.noiseMaskBuffer;
+            InputStateBuffers.s_ResetMaskBuffer = newBuffers.resetMaskBuffer;
 
             // Switch to buffers.
             InputStateBuffers.SwitchTo(m_StateBuffers,
@@ -2034,15 +2112,14 @@ namespace UnityEngine.InputSystem
             Debug.Assert(device != null, "Device must not be null");
             Debug.Assert(device.added, "Device must have been added");
             Debug.Assert(device.stateBlock.byteOffset != InputStateBlock.InvalidOffset, "Device state block offset is invalid");
-            Debug.Assert(
-                device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer,
+            Debug.Assert(device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes <= m_StateBuffers.sizePerBuffer,
                 "Device state block is not contained in state buffer");
 
             var controls = device.allControls;
             var controlCount = controls.Count;
+            var resetMaskBuffer = m_StateBuffers.resetMaskBuffer;
 
             var haveControlsWithDefaultState = device.hasControlsWithDefaultState;
-            var haveNoisyControls = device.noisy;
 
             // Assume that everything in the device is noise. This way we also catch memory regions
             // that are not actually covered by a control and implicitly mark them as noise (e.g. the
@@ -2052,7 +2129,12 @@ namespace UnityEngine.InputSystem
             //       with all-noise as we expect noise mask memory to be cleared on allocation.
             var noiseMaskBuffer = m_StateBuffers.noiseMaskBuffer;
 
-            ////FIXME: this needs to properly take leaf vs non-leaf controls into account
+            // We first toggle all bits *on* and then toggle bits for noisy and dontReset controls *off* individually.
+            // We do this instead of just leaving all bits *off* and then going through controls that aren't noisy/dontReset *on*.
+            // If we did the latter, we'd have the problem that a parent control such as TouchControl would toggle on bits for
+            // the entirety of its state block and thus cover the state of all its child controls.
+            MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)device.stateBlock.byteOffset, 0, (int)device.stateBlock.sizeInBits, false);
+            MemoryHelpers.SetBitsInBuffer(resetMaskBuffer, (int)device.stateBlock.byteOffset, 0, (int)device.stateBlock.sizeInBits, true);
 
             // Go through controls.
             var defaultStateBuffer = m_StateBuffers.defaultStateBuffer;
@@ -2060,7 +2142,11 @@ namespace UnityEngine.InputSystem
             {
                 var control = controls[n];
 
-                if (!control.noisy)
+                // Don't allow controls that hijack state from other controls to set independent noise or dontReset flags.
+                if (control.usesStateFromOtherControl)
+                    continue;
+
+                if (!control.noisy || control.dontReset)
                 {
                     ref var stateBlock = ref control.m_StateBlock;
 
@@ -2068,16 +2154,21 @@ namespace UnityEngine.InputSystem
                     Debug.Assert(stateBlock.bitOffset != InputStateBlock.InvalidOffset, "Bit offset is invalid on control's state block");
                     Debug.Assert(stateBlock.sizeInBits != InputStateBlock.InvalidOffset, "Size is invalid on control's state block");
                     Debug.Assert(stateBlock.byteOffset >= device.stateBlock.byteOffset, "Control's offset is located below device's offset");
-                    if (stateBlock.byteOffset + stateBlock.alignedSizeInBytes >
-                        device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes)
-                        Debug.Log("Foo");
                     Debug.Assert(stateBlock.byteOffset + stateBlock.alignedSizeInBytes <=
                         device.stateBlock.byteOffset + device.stateBlock.alignedSizeInBytes, "Control state block lies outside of state buffer");
 
-                    MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
-                        (int)stateBlock.sizeInBits, true);
+                    // If control isn't noisy, toggle its bits *on* in the noise mask.
+                    if (!control.noisy)
+                        MemoryHelpers.SetBitsInBuffer(noiseMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
+                            (int)stateBlock.sizeInBits, true);
+
+                    // If control shouldn't be reset, toggle its bits *off* in the reset mask.
+                    if (control.dontReset)
+                        MemoryHelpers.SetBitsInBuffer(resetMaskBuffer, (int)stateBlock.byteOffset, (int)stateBlock.bitOffset,
+                            (int)stateBlock.sizeInBits, false);
                 }
 
+                // If control has default state, write it into to the device's default state.
                 if (haveControlsWithDefaultState && control.hasDefaultState)
                     control.m_StateBlock.Write(defaultStateBuffer, control.m_DefaultState);
             }

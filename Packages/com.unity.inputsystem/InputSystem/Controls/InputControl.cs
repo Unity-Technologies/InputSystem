@@ -858,6 +858,7 @@ namespace UnityEngine.InputSystem
             IsNoisy = 1 << 1,
             IsSynthetic = 1 << 2,
             IsButton = 1 << 3,
+            DontReset = 1 << 4,
             SetupFinished = 1 << 5, // Can't be modified once this is set.
             UsesStateFromOtherControl = 1 << 6,
         }
@@ -895,6 +896,18 @@ namespace UnityEngine.InputSystem
                     m_ControlFlags |= ControlFlags.ConfigUpToDate;
                 else
                     m_ControlFlags &= ~ControlFlags.ConfigUpToDate;
+            }
+        }
+
+        internal bool dontReset
+        {
+            get => (m_ControlFlags & ControlFlags.DontReset) == ControlFlags.DontReset;
+            set
+            {
+                if (value)
+                    m_ControlFlags |= ControlFlags.DontReset;
+                else
+                    m_ControlFlags &= ~ControlFlags.DontReset;
             }
         }
 

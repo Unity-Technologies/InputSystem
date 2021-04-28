@@ -252,6 +252,31 @@ namespace UnityEngine.InputSystem.Layouts
             }
 
             /// <summary>
+            /// Get or set whether the control should be excluded when performing a device reset.
+            /// </summary>
+            /// <value>If true, the control will not get reset in a device reset. Off by default.</value>
+            /// <remarks>
+            /// Some controls like, for example, mouse positions do not generally make sense to reset when a
+            /// device is reset. By setting this flag on, the control's state will be excluded in resets.
+            ///
+            /// Note that a full reset can still be forced through <see cref="InputSystem.ResetDevice"/> in
+            /// which case controls that have this flag set will also get reset.
+            /// </remarks>
+            /// <seealso cref="InputSystem.ResetDevice"/>
+            /// <seealso cref="InputControlAttribute.dontReset"/>
+            public bool dontReset
+            {
+                get => (flags & Flags.DontReset) == Flags.DontReset;
+                internal set
+                {
+                    if (value)
+                        flags |= Flags.DontReset;
+                    else
+                        flags &= ~Flags.DontReset;
+                }
+            }
+
+            /// <summary>
             /// Whether the control is introduced by the layout.
             /// </summary>
             /// <value>If true, the control is first introduced by this layout.</value>
@@ -296,6 +321,7 @@ namespace UnityEngine.InputSystem.Layouts
                 result.arraySize = !isArray ? other.arraySize : arraySize;
                 ////FIXME: allow overrides to unset this
                 result.isNoisy = isNoisy || other.isNoisy;
+                result.dontReset = dontReset || other.dontReset;
                 result.isSynthetic = isSynthetic || other.isSynthetic;
                 result.isFirstDefinedInThisLayout = false;
 
@@ -372,6 +398,7 @@ namespace UnityEngine.InputSystem.Layouts
                 IsNoisy = 1 << 1,
                 IsSynthetic = 1 << 2,
                 IsFirstDefinedInThisLayout = 1 << 3,
+                DontReset = 1 << 4,
             }
         }
 
@@ -401,6 +428,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <value>Child controls defined for the layout.</value>
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
+        ////FIXME: this should be a `bool?`
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
 
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
@@ -1217,6 +1245,7 @@ namespace UnityEngine.InputSystem.Layouts
                 isModifyingExistingControl = isModifyingChildControlByPath,
                 isFirstDefinedInThisLayout = true,
                 isNoisy = isNoisy,
+                dontReset = dontReset,
                 isSynthetic = isSynthetic,
                 arraySize = arraySize,
                 defaultState = defaultState,
@@ -1661,6 +1690,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string displayName;
             public string shortDisplayName;
             public bool noisy;
+            public bool dontReset;
             public bool synthetic;
 
             // This should be an object type field and allow any JSON primitive value type as well
@@ -1695,6 +1725,7 @@ namespace UnityEngine.InputSystem.Layouts
                     sizeInBits = sizeInBits,
                     isModifyingExistingControl = name.IndexOf('/') != -1,
                     isNoisy = noisy,
+                    dontReset = dontReset,
                     isSynthetic = synthetic,
                     isFirstDefinedInThisLayout = true,
                     arraySize = arraySize,
@@ -1766,6 +1797,7 @@ namespace UnityEngine.InputSystem.Layouts
                         usages = item.usages.Select(x => x.ToString()).ToArray(),
                         aliases = item.aliases.Select(x => x.ToString()).ToArray(),
                         noisy = item.isNoisy,
+                        dontReset = item.dontReset,
                         synthetic = item.isSynthetic,
                         arraySize = item.arraySize,
                         defaultState = item.defaultState.ToString(),

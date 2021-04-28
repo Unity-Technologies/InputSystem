@@ -1161,6 +1161,7 @@ partial class CoreTests
             device3.stateBlock.alignedSizeInBytes.AlignToMultipleOf(4);
         var sizePerBuffer = overheadPerBuffer + combinedDeviceStateSize * 2; // Front+back
         var sizeOfSingleBuffer = combinedDeviceStateSize;
+        var sizeOfSpecialBuffers = sizeOfSingleBuffer * 3; // Noise mask, default state, and dontReset mask.
 
         const int kDoubleBufferCount =
             #if UNITY_EDITOR
