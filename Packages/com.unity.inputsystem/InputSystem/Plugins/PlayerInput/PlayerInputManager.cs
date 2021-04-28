@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
@@ -272,6 +275,8 @@ namespace UnityEngine.InputSystem
             switch (m_JoinBehavior)
             {
                 case PlayerJoinBehavior.JoinPlayersWhenButtonIsPressed:
+                    ValidateInputActionAsset();
+
                     if (!m_UnpairedDeviceUsedDelegateHooked)
                     {
                         if (m_UnpairedDeviceUsedDelegate == null)
@@ -659,6 +664,38 @@ namespace UnityEngine.InputSystem
                     return true;
 
             return false;
+        }
+
+        private void ValidateInputActionAsset()
+        {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
+                return;
+
+            var actions = m_PlayerPrefab.GetComponentInChildren<PlayerInput>().actions;
+            if (actions == null)
+                return;
+
+            var isValid = true;
+            foreach (var controlScheme in actions.controlSchemes)
+            {
+                if (controlScheme.deviceRequirements.Count > 0)
+                    break;
+
+                isValid = false;
+            }
+
+            if (isValid) return;
+
+            var assetInfo = actions.name;
+#if UNITY_EDITOR
+            assetInfo = AssetDatabase.GetAssetPath(actions);
+#endif
+            Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
+                "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
+                "will not work unless the expected input devices are listed as requirements in the input " +
+                "action asset.", m_PlayerPrefab);
+#endif
         }
 
         /// <summary>
