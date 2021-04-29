@@ -114,8 +114,6 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
                 EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
                 EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
-                EditorGUILayout.PropertyField(m_MaxQueuedEventsPerUpdate, m_MaxQueuedEventsPerUpdateContent);
-                EditorGUILayout.PropertyField(m_MaxEventBytesPerUpdate, m_MaxEventBytesPerUpdateContent);
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -246,8 +244,6 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTime = m_SettingsObject.FindProperty("m_DefaultHoldTime");
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
-            m_MaxQueuedEventsPerUpdate = m_SettingsObject.FindProperty(nameof(m_MaxQueuedEventsPerUpdate));
-            m_MaxEventBytesPerUpdate = m_SettingsObject.FindProperty(nameof(m_MaxEventBytesPerUpdate));
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
             m_FilterNoiseOnCurrentContent = new GUIContent("Filter Noise on current", "If enabled, input from noisy controls will not cause a device to become '.current'.");
@@ -261,8 +257,6 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
-            m_MaxQueuedEventsPerUpdateContent = new GUIContent("Max Queued Events", "Maximum number of events that can be queued during event processing.");
-            m_MaxEventBytesPerUpdateContent = new GUIContent("Max Event Bytes", "Maximum byte count of input events that will be processed in one update.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -363,8 +357,6 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_DefaultHoldTime;
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
-        [NonSerialized] private SerializedProperty m_MaxQueuedEventsPerUpdate;
-        [NonSerialized] private SerializedProperty m_MaxEventBytesPerUpdate;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -386,8 +378,6 @@ namespace UnityEngine.InputSystem.Editor
         GUIContent m_DefaultHoldTimeContent;
         GUIContent m_TapRadiusContent;
         GUIContent m_MultiTapDelayTimeContent;
-        GUIContent m_MaxQueuedEventsPerUpdateContent;
-        GUIContent m_MaxEventBytesPerUpdateContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

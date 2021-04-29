@@ -105,6 +105,8 @@ however, it has to be formatted properly to pass verification tests.
   * Puts an upper limit on the number of event bytes processed in a single update.
   * If exceeded, any additional event data will get thrown away and an error will be issued.
   * Set to 5MB by default.
+- Added a new API-only setting called `InputSystem.settings.maxQueuedEventsPerUpdate`.
+  * This limits the number of events that can be queued during event processing using the `InputSystem.QueueEvent` method. This guards against infinite loops in the case where an action callback queues an event that causes the same action callback to be called again.
 - Added `InputSystemUIInputModule.AssignDefaultActions` to assign default actions when creating ui module in runtime.
 
 ## [1.1.0-preview.3] - 2021-02-04
